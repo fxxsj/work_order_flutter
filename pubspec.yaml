@@ -1,0 +1,28 @@
+name: work_order_app
+description: 工单管理系统（Work Order ERP）
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_adaptive_scaffold: ^0.1.9
+  flutter_colorpicker: ^1.0.3
+  dio: ^5.4.0
+  yaml: ^3.1.2
+  url_launcher: ^6.0.3
+  get: ^4.0.0-nullsafety.2
+  get_storage: ^2.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+  assets:
+    - config/
+    - assets/images/
+    - PRIVACY
