@@ -6,4 +6,5 @@ class Constant {
   static const String KEY_SIDEBAR_EXPANDED = "sidebar_expanded";
   static const String KEY_THEME_MODE = "theme_mode";
   static const String KEY_THEME_COLOR = "theme_color";
+  static const String KEY_FONT_SCALE = "font_scale";
 }

@@ -31,6 +31,7 @@ class MyApp extends StatelessWidget {
     return Obx(() {
       final seed = themeController.seedColor.value;
       final mode = themeController.themeMode.value;
+      final fontScale = themeController.fontScale.value;
       return GetMaterialApp.router(
         routerDelegate: appRouter.routerDelegate,
         routeInformationParser: appRouter.routeInformationParser,
@@ -42,6 +43,13 @@ class MyApp extends StatelessWidget {
         theme: Utils.getThemeData(themeColor: seed, brightness: Brightness.light),
         darkTheme: Utils.getThemeData(themeColor: seed, brightness: Brightness.dark),
         themeMode: mode,
+        builder: (context, child) {
+          final media = MediaQuery.of(context);
+          return MediaQuery(
+            data: media.copyWith(textScaler: TextScaler.linear(fontScale)),
+            child: child ?? const SizedBox.shrink(),
+          );
+        },
       );
     });
   }

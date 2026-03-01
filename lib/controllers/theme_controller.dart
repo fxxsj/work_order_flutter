@@ -9,6 +9,7 @@ class ThemeController extends GetxController {
   final Rx<ThemeMode> themeMode = ThemeMode.system.obs;
   final Rx<Color> seedColor = defaultSeed.obs;
   final Rx<Color> tempColor = defaultSeed.obs;
+  final RxDouble fontScale = 1.0.obs;
 
   final GetStorage _storage = GetStorage();
 
@@ -21,6 +22,11 @@ class ThemeController extends GetxController {
 
     final modeValue = _storage.read(Constant.KEY_THEME_MODE);
     themeMode.value = _parseMode(modeValue?.toString());
+
+    final scaleValue = _storage.read(Constant.KEY_FONT_SCALE);
+    if (scaleValue is num) {
+      fontScale.value = scaleValue.toDouble();
+    }
   }
 
   void setThemeMode(ThemeMode mode) {
@@ -30,6 +36,11 @@ class ThemeController extends GetxController {
 
   void setTempColor(Color color) {
     tempColor.value = color;
+  }
+
+  void setFontScale(double value) {
+    fontScale.value = value;
+    _storage.write(Constant.KEY_FONT_SCALE, value);
   }
 
   void applyColor() {

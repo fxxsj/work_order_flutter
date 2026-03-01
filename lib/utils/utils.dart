@@ -65,7 +65,7 @@ class Utils {
             sidebarText: Color(0xFF334155),
             borderColor: Color(0xFFE2E8F0),
           );
-    return ThemeData(
+    final base = ThemeData(
       useMaterial3: true,
       brightness: currentBrightness,
       colorScheme: scheme,
@@ -119,6 +119,8 @@ class Utils {
       ),
       extensions: [semantic, appColors],
     );
+
+    return base;
   }
 
   static Color currentThemeColor = const Color(0xFF14B8A6);

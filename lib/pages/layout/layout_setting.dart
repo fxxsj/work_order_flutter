@@ -113,6 +113,42 @@ class LayoutSetting extends StatelessWidget {
             );
           }),
           const Divider(thickness: 1),
+          Padding(
+            padding: tilePadding,
+            child: Text('字号大小', style: theme.textTheme.titleSmall),
+          ),
+          Obx(() {
+            final scale = themeController.fontScale.value;
+            return Padding(
+              padding: EdgeInsets.symmetric(horizontal: isXs ? 8 : 12, vertical: 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Text('小'),
+                      Expanded(
+                        child: Slider(
+                          value: scale,
+                          min: 0.9,
+                          max: 1.25,
+                          divisions: 7,
+                          label: scale.toStringAsFixed(2),
+                          onChanged: themeController.setFontScale,
+                        ),
+                      ),
+                      const Text('大'),
+                    ],
+                  ),
+                  Text(
+                    '当前倍率：${scale.toStringAsFixed(2)}',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            );
+          }),
+          const Divider(thickness: 1),
         ],
       ),
     );
