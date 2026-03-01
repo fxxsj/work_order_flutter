@@ -115,14 +115,20 @@ class _ProfilePageState extends State<ProfilePage> {
       };
       final ApiResponse response = await AuthApi.updateProfile(payload);
       if (!response.success) {
-        ToastUtil.showError(response.message ?? '个人信息更新失败');
+        final message = (response.message?.trim().isNotEmpty ?? false)
+            ? response.message!.trim()
+            : '个人信息更新失败';
+        ToastUtil.showError(message);
         return;
       }
       final data = response.data is Map ? Map<String, dynamic>.from(response.data as Map) : <String, dynamic>{};
       final merged = {..._currentUser, ...data};
       _setUser(merged);
       StoreUtil.write(Constant.KEY_CURRENT_USER_INFO, merged);
-      ToastUtil.showSuccess(response.message ?? '个人信息更新成功');
+      final message = (response.message?.trim().isNotEmpty ?? false)
+          ? response.message!.trim()
+          : '个人信息更新成功';
+      ToastUtil.showSuccess(message);
     } finally {
       if (mounted) {
         setState(() {
@@ -148,10 +154,16 @@ class _ProfilePageState extends State<ProfilePage> {
       };
       final ApiResponse response = await AuthApi.changePassword(payload);
       if (!response.success) {
-        ToastUtil.showError(response.message ?? '密码修改失败');
+        final message = (response.message?.trim().isNotEmpty ?? false)
+            ? response.message!.trim()
+            : '密码修改失败';
+        ToastUtil.showError(message);
         return;
       }
-      ToastUtil.showSuccess(response.message ?? '密码修改成功，请重新登录');
+      final message = (response.message?.trim().isNotEmpty ?? false)
+          ? response.message!.trim()
+          : '密码修改成功，请重新登录';
+      ToastUtil.showSuccess(message);
       _resetPasswordForm();
       await Future<void>.delayed(const Duration(seconds: 2));
       Utils.logout();
@@ -281,8 +293,19 @@ class _ProfilePageState extends State<ProfilePage> {
             children: [
               FilledButton(
                 onPressed: _updatingProfile ? null : _handleUpdateProfile,
+                style: FilledButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: theme.colorScheme.onPrimary,
+                ),
                 child: _updatingProfile
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    ? SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.onPrimary),
+                        ),
+                      )
                     : const Text('保存修改'),
               ),
               const SizedBox(width: 12),
@@ -295,6 +318,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildPasswordForm(BuildContext context) {
+    final theme = Theme.of(context);
     return Form(
       key: _passwordFormKey,
       child: Column(
@@ -331,8 +355,19 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 16),
           FilledButton(
             onPressed: _changingPassword ? null : _handleChangePassword,
+            style: FilledButton.styleFrom(
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: theme.colorScheme.onPrimary,
+            ),
             child: _changingPassword
-                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                ? SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.onPrimary),
+                    ),
+                  )
                 : const Text('修改密码'),
           ),
         ],
