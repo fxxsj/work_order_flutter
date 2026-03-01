@@ -45,13 +45,6 @@ class NotificationApi {
           );
         }
       }
-      if (data is List) {
-        final items = data
-            .whereType<Map>()
-            .map((item) => NotificationModel.fromJson(item.cast<String, dynamic>()))
-            .toList();
-        return NotificationPage(items: items, totalCount: items.length);
-      }
     } on DioException catch (err) {
       if (err.response?.statusCode == 404) {
         return const NotificationPage(items: []);

@@ -170,8 +170,9 @@ class _ProfilePageState extends State<ProfilePage> {
       appRouter.go('/login');
     } on DioException catch (err) {
       final data = err.response?.data;
-      final message = data is Map
-          ? (data['error'] ?? data['message'] ?? '密码修改失败')
+      final apiResponse = ApiResponse.fromJson(data);
+      final message = (apiResponse.message?.trim().isNotEmpty ?? false)
+          ? apiResponse.message!.trim()
           : '密码修改失败';
       ToastUtil.showError(message);
     } finally {

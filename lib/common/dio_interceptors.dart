@@ -22,19 +22,6 @@ class AppDioInterceptors extends InterceptorsWrapper {
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
-    if (response.data is Map && response.statusCode != null) {
-      final data = response.data as Map;
-      final hasWrapper = data.containsKey('success') || data.containsKey('code');
-      if (!hasWrapper && response.statusCode! >= 200 && response.statusCode! < 300) {
-        response.data = {
-          'success': true,
-          'code': response.statusCode.toString(),
-          'data': data,
-          'message': '',
-        };
-      }
-    }
-
     final apiResponse = ApiResponse.fromJson(response.data);
     if (apiResponse.code == ResponseCodeConstant.SESSION_EXPIRE_CODE) {
       Utils.logout();
@@ -54,7 +41,10 @@ class AppDioInterceptors extends InterceptorsWrapper {
     if (err.response?.statusCode == 401) {
       if (err.requestOptions.path.contains('/auth/login')) {
         final data = err.response?.data;
-        final errorMsg = data is Map ? (data['error'] ?? '用户名或密码错误') : '用户名或密码错误';
+        final apiResponse = ApiResponse.fromJson(data);
+        final errorMsg = apiResponse.message?.toString().trim().isNotEmpty == true
+            ? apiResponse.message!.trim()
+            : '用户名或密码错误';
         final response = Response(
           requestOptions: err.requestOptions,
           statusCode: 401,
@@ -76,12 +66,8 @@ class AppDioInterceptors extends InterceptorsWrapper {
     }
     final response = err.response;
     final data = response?.data;
-    String? message;
-    if (data is Map) {
-      message = data['error']?.toString() ??
-          data['message']?.toString() ??
-          data['detail']?.toString();
-    }
+    final apiResponse = ApiResponse.fromJson(data);
+    String? message = apiResponse.message;
     if (message == null || message.isEmpty) {
       switch (err.type) {
         case DioExceptionType.connectionTimeout:

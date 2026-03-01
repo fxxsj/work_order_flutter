@@ -2,12 +2,14 @@ class ApiResponse {
   final bool success;
   final String? code;
   final dynamic data;
+  final dynamic errors;
   final String? message;
 
   const ApiResponse({
     required this.success,
     this.code,
     this.data,
+    this.errors,
     this.message,
   });
 
@@ -20,6 +22,7 @@ class ApiResponse {
         success: payload['success'] == true,
         code: payload['code']?.toString(),
         data: payload['data'],
+        errors: payload['errors'],
         message: payload['message']?.toString(),
       );
     }
@@ -33,12 +36,14 @@ class ApiResponse {
     bool? success,
     String? code,
     dynamic data,
+    dynamic errors,
     String? message,
   }) {
     return ApiResponse(
       success: success ?? this.success,
       code: code ?? this.code,
       data: data ?? this.data,
+      errors: errors ?? this.errors,
       message: message ?? this.message,
     );
   }
