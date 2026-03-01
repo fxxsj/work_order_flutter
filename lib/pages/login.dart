@@ -6,7 +6,6 @@ import 'package:work_order_app/models/api_response.dart';
 import 'package:work_order_app/models/user.dart';
 import 'package:work_order_app/router/app_router.dart';
 import 'package:work_order_app/utils/store_util.dart';
-import 'package:get/get.dart';
 
 class Login extends StatefulWidget {
   @override
@@ -182,7 +181,7 @@ class _LoginState extends State<Login> {
         'password': user.password,
       });
       if (!responseBodyApi.success) {
-        Get.snackbar('登录失败', responseBodyApi.message ?? '请检查账号密码', snackPosition: SnackPosition.BOTTOM);
+      _showSnack('登录失败', responseBodyApi.message ?? '请检查账号密码');
         focusNodePassword.requestFocus();
         return;
       }
@@ -203,7 +202,7 @@ class _LoginState extends State<Login> {
         }
       }
       if (token == null || token.toString().isEmpty) {
-        Get.snackbar('登录失败', '请检查账号密码', snackPosition: SnackPosition.BOTTOM);
+      _showSnack('登录失败', '请检查账号密码');
         focusNodePassword.requestFocus();
         return;
       }
@@ -232,5 +231,19 @@ class _LoginState extends State<Login> {
     StoreUtil.init();
 
     appRouter.go('/');
+  }
+
+  void _showSnack(String title, String message) {
+    if (!mounted) {
+      return;
+    }
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) {
+      return;
+    }
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(content: Text('$title：$message')),
+    );
   }
 }

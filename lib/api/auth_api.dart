@@ -13,4 +13,12 @@ class AuthApi {
   static Future<ApiResponse> getCurrentUser() async {
     return HttpClient.get('/auth/user/');
   }
+
+  static Future<ApiResponse> updateProfile(data) async {
+    return HttpClient.put('/auth/update-profile/', data: data);
+  }
+
+  static Future<ApiResponse> changePassword(data) async {
+    return HttpClient.post('/auth/change-password/', data: data);
+  }
 }

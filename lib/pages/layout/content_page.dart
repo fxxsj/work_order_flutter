@@ -4,6 +4,7 @@ import 'package:work_order_app/common/theme_ext.dart';
 import 'package:work_order_app/controllers/notification_controller.dart';
 import 'package:work_order_app/models/notification_model.dart';
 import 'package:work_order_app/pages/layout/nav_config.dart';
+import 'package:work_order_app/pages/profile.dart';
 import 'package:work_order_app/utils/breakpoints_util.dart';
 
 class ContentPage extends StatelessWidget {
@@ -13,6 +14,9 @@ class ContentPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (selectedId == 'profile') {
+      return const ProfilePage();
+    }
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
     final isMd = BreakpointsUtil.isMd(context);
