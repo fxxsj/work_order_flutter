@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:work_order_app/controllers/app_badge_controller.dart';
 import 'package:work_order_app/controllers/notification_controller.dart';
 import 'package:work_order_app/models/notification_model.dart';
 
@@ -21,6 +22,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
     required this.accent,
     required this.subtleText,
     required this.height,
+    required this.isCompactActions,
   });
 
   final bool isMobile;
@@ -38,6 +40,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   final Color accent;
   final Color subtleText;
   final double height;
+  final bool isCompactActions;
 
   @override
   Size get preferredSize => Size.fromHeight(height);
@@ -87,11 +90,23 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
             icon: Icon(isSidebarCollapsed ? Icons.chevron_right : Icons.chevron_left),
             onPressed: onSidebarToggle,
           ),
-        _AppBarChip(
-          label: '今日待办 8',
-          color: primary,
-        ),
-        const SizedBox(width: 8),
+        if (!isCompactActions) ...[
+          Obx(() {
+            final badgeCtrl = Get.find<AppBadgeController>();
+            if (badgeCtrl.isLoading.value) {
+              return const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              );
+            }
+            return _AppBarChip(
+              label: '今日待办 ${badgeCtrl.todoCount.value}',
+              color: primary,
+            );
+          }),
+          const SizedBox(width: 8),
+        ],
         Obx(() {
           final notifyCtrl = Get.find<NotificationController>();
           final unread = notifyCtrl.unreadCount.value;
@@ -124,16 +139,41 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
             ),
           );
         }),
-        IconButton(
-          tooltip: '搜索',
-          icon: const Icon(Icons.search_outlined),
-          onPressed: () {},
-        ),
-        IconButton(
-          tooltip: '外观设置',
-          icon: const Icon(Icons.tune_outlined),
-          onPressed: onSettingTap,
-        ),
+        if (!isCompactActions)
+          IconButton(
+            tooltip: '外观设置',
+            icon: const Icon(Icons.tune_outlined),
+            onPressed: onSettingTap,
+          ),
+        if (isCompactActions)
+          PopupMenuButton<String>(
+            tooltip: '更多操作',
+            onSelected: (value) {
+              if (value == 'settings') {
+                onSettingTap();
+              } else if (value == 'search') {
+                // TODO: wire up search entry point.
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'search', child: Text('搜索')),
+              const PopupMenuItem(value: 'settings', child: Text('外观设置')),
+              PopupMenuItem(
+                value: 'todo',
+                child: Obx(() {
+                  final badgeCtrl = Get.find<AppBadgeController>();
+                  final label = badgeCtrl.isLoading.value
+                      ? '今日待办加载中'
+                      : '今日待办 ${badgeCtrl.todoCount.value}';
+                  return Text(label);
+                }),
+              ),
+            ],
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              child: Icon(Icons.more_vert),
+            ),
+          ),
         Padding(
           padding: const EdgeInsets.only(right: 12),
           child: _AvatarMenu(

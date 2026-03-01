@@ -48,6 +48,23 @@ class Utils {
             surfaceAlt: Color(0xFFF8FAFC),
             shadowStrong: Color(0x22000000),
           );
+    final appColors = currentBrightness == Brightness.dark
+        ? const AppColors(
+            background: Color(0xFF0F172A),
+            surface: Color(0xFF111827),
+            sidebar: Color(0xFF0B1320),
+            subtleText: Color(0xFF94A3B8),
+            sidebarText: Color(0xFFCBD5E1),
+            borderColor: Color(0xFF334155),
+          )
+        : const AppColors(
+            background: Color(0xFFF8FAFC),
+            surface: Colors.white,
+            sidebar: Colors.white,
+            subtleText: Color(0xFF6B7280),
+            sidebarText: Color(0xFF334155),
+            borderColor: Color(0xFFE2E8F0),
+          );
     return ThemeData(
       useMaterial3: true,
       brightness: currentBrightness,
@@ -100,7 +117,7 @@ class Utils {
         backgroundColor: currentBrightness == Brightness.dark ? const Color(0xFF111827) : const Color(0xFF0F172A),
         contentTextStyle: const TextStyle(color: Colors.white),
       ),
-      extensions: [semantic],
+      extensions: [semantic, appColors],
     );
   }
 

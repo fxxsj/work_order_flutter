@@ -9,7 +9,7 @@ import 'package:work_order_app/utils/utils.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
-final List<NavItem> _leafItems = flattenNavItems(navItems);
+final List<NavItem> _leafItems = leafNavItemsByBranch();
 
 final GoRouter appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
@@ -43,7 +43,7 @@ final GoRouter appRouter = GoRouter(
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: item.path ?? '/',
+                path: item.pathPattern ?? item.path ?? '/',
                 name: item.id,
                 pageBuilder: (context, state) => NoTransitionPage(
                   child: ContentPage(selectedId: item.id),

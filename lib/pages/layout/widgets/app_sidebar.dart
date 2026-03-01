@@ -18,7 +18,7 @@ class AppSidebarDrawer extends StatelessWidget {
   final List<NavItem> navItems;
   final Set<String> expandedIds;
   final String currentId;
-  final ValueChanged<String> onToggleExpand;
+  final void Function(String id, bool expanded) onToggleExpand;
   final ValueChanged<String> onSelectId;
   final Color primary;
   final Color sidebarText;
@@ -45,7 +45,7 @@ class AppSidebarDrawer extends StatelessWidget {
             child: ExpansionTile(
               key: PageStorageKey(item.id),
               initiallyExpanded: isExpanded,
-              onExpansionChanged: (_) => onToggleExpand(item.id),
+              onExpansionChanged: (value) => onToggleExpand(item.id, value),
               leading: Icon(item.icon, color: sidebarText, size: 18),
               title: Text(
                 item.label,
@@ -93,7 +93,7 @@ class AppSidebarRail extends StatelessWidget {
   final List<NavItem> navItems;
   final Set<String> expandedIds;
   final String currentId;
-  final ValueChanged<String> onToggleExpand;
+  final void Function(String id, bool expanded) onToggleExpand;
   final ValueChanged<String> onSelectId;
   final Color primary;
   final Color sidebarText;
@@ -132,7 +132,7 @@ class AppSidebarRail extends StatelessWidget {
           isSelected: false,
           isParent: true,
           isExpanded: isExpanded,
-          onTap: () => onToggleExpand(item.id),
+          onTap: () => onToggleExpand(item.id, !isExpanded),
         ));
         if (isExpanded) {
           for (final child in item.children) {

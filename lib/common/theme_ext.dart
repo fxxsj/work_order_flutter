@@ -52,3 +52,56 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
     );
   }
 }
+
+@immutable
+class AppColors extends ThemeExtension<AppColors> {
+  const AppColors({
+    required this.background,
+    required this.surface,
+    required this.sidebar,
+    required this.subtleText,
+    required this.sidebarText,
+    required this.borderColor,
+  });
+
+  final Color background;
+  final Color surface;
+  final Color sidebar;
+  final Color subtleText;
+  final Color sidebarText;
+  final Color borderColor;
+
+  @override
+  AppColors copyWith({
+    Color? background,
+    Color? surface,
+    Color? sidebar,
+    Color? subtleText,
+    Color? sidebarText,
+    Color? borderColor,
+  }) {
+    return AppColors(
+      background: background ?? this.background,
+      surface: surface ?? this.surface,
+      sidebar: sidebar ?? this.sidebar,
+      subtleText: subtleText ?? this.subtleText,
+      sidebarText: sidebarText ?? this.sidebarText,
+      borderColor: borderColor ?? this.borderColor,
+    );
+  }
+
+  @override
+  AppColors lerp(ThemeExtension<AppColors>? other, double t) {
+    if (other is! AppColors) {
+      return this;
+    }
+    return AppColors(
+      background: Color.lerp(background, other.background, t) ?? background,
+      surface: Color.lerp(surface, other.surface, t) ?? surface,
+      sidebar: Color.lerp(sidebar, other.sidebar, t) ?? sidebar,
+      subtleText: Color.lerp(subtleText, other.subtleText, t) ?? subtleText,
+      sidebarText: Color.lerp(sidebarText, other.sidebarText, t) ?? sidebarText,
+      borderColor: Color.lerp(borderColor, other.borderColor, t) ?? borderColor,
+    );
+  }
+}

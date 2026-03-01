@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:work_order_app/constants/breakpoints.dart';
+import 'package:work_order_app/constants/constant.dart';
+import 'package:work_order_app/common/theme_ext.dart';
+import 'package:work_order_app/controllers/app_badge_controller.dart';
+import 'package:work_order_app/controllers/app_scaffold_controller.dart';
 import 'package:work_order_app/controllers/notification_controller.dart';
 import 'package:work_order_app/pages/layout/layout_setting.dart';
 import 'package:work_order_app/pages/layout/nav_config.dart';
 import 'package:work_order_app/pages/layout/widgets/app_header.dart';
 import 'package:work_order_app/pages/layout/widgets/app_sidebar.dart';
+import 'package:work_order_app/pages/layout/widgets/app_overlay.dart';
+import 'package:work_order_app/pages/layout/widgets/content_container.dart';
 import 'package:work_order_app/router/app_router.dart';
 import 'package:work_order_app/utils/breakpoints_util.dart';
+import 'package:work_order_app/utils/store_util.dart';
 import 'package:work_order_app/utils/utils.dart';
 import 'package:get/get.dart';
 
@@ -31,23 +38,34 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
   final ScrollController _railScrollController = ScrollController();
   bool _sidebarCollapsed = false;
   late final NotificationController _notificationController;
+  late final AppScaffoldController _scaffoldController;
   final Set<String> _expandedIds = <String>{};
-  late final Map<String, int> _idToBranchIndex;
   late final Map<String, String> _pathToId;
-  late final List<NavItem> _leafItems;
+  late final Map<String, int> _idToBranchIndex;
 
   @override
   void initState() {
     super.initState();
-    _leafItems = flattenNavItems(navItems);
-    _idToBranchIndex = {
-      for (var i = 0; i < _leafItems.length; i++) _leafItems[i].id: i,
-    };
+    _idToBranchIndex = buildIdToBranchIndex();
     _pathToId = buildPathToIdMap();
+    final collapsed = StoreUtil.read(Constant.KEY_SIDEBAR_COLLAPSED);
+    _sidebarCollapsed = collapsed == true;
+    final savedExpanded = StoreUtil.read(Constant.KEY_SIDEBAR_EXPANDED);
+    if (savedExpanded is List) {
+      _expandedIds.addAll(savedExpanded.map((e) => e.toString()));
+    }
     if (Get.isRegistered<NotificationController>()) {
       _notificationController = Get.find<NotificationController>();
     } else {
       _notificationController = Get.put(NotificationController());
+    }
+    if (!Get.isRegistered<AppBadgeController>()) {
+      Get.put(AppBadgeController());
+    }
+    if (Get.isRegistered<AppScaffoldController>()) {
+      _scaffoldController = Get.find<AppScaffoldController>();
+    } else {
+      _scaffoldController = Get.put(AppScaffoldController());
     }
   }
 
@@ -60,6 +78,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>();
     final size = MediaQuery.sizeOf(context);
     final screenSize = _getScreenSize(size.width);
     final isDark = theme.brightness == Brightness.dark;
@@ -72,20 +91,21 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     final isXl = BreakpointsUtil.isXl(context);
     final is2xl = BreakpointsUtil.is2xl(context);
 
-    final background = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
-    final surface = isDark ? const Color(0xFF111827) : Colors.white;
+    final background = colors?.background ?? (isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC));
+    final surface = colors?.surface ?? (isDark ? const Color(0xFF111827) : Colors.white);
     final primary = theme.primaryColor;
-    final accent = isDark ? const Color(0xFFE5E7EB) : const Color(0xFF111827);
-    final sidebar = isDark ? const Color(0xFF0B1320) : Colors.white;
-    final subtleText = isDark ? const Color(0xFF94A3B8) : const Color(0xFF6B7280);
-    final sidebarText = isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155);
-    final borderColor = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final accent = colors?.sidebarText ?? (isDark ? const Color(0xFFE5E7EB) : const Color(0xFF111827));
+    final sidebar = colors?.sidebar ?? (isDark ? const Color(0xFF0B1320) : Colors.white);
+    final subtleText = colors?.subtleText ?? (isDark ? const Color(0xFF94A3B8) : const Color(0xFF6B7280));
+    final sidebarText = colors?.sidebarText ?? (isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155));
+    final borderColor = colors?.borderColor ?? (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0));
     final appBarHeight = isXs ? 52.0 : 56.0;
     final currentId = _currentId(context);
+    final isActionCompact = size.width < Breakpoints.lg;
 
-    final railExtended = isXl || is2xl;
+    final railExtended = (isXl || is2xl) && !_sidebarCollapsed;
     final railWidth = railExtended ? 214.0 : 59.0;
-    final showDesktopSidebar = !isMobile && (!isDesktop || !_sidebarCollapsed);
+    final showDesktopSidebar = !isMobile;
 
     return Scaffold(
       key: scaffoldKey,
@@ -98,7 +118,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
                   navItems: navItems,
                   expandedIds: _expandedIds,
                   currentId: currentId,
-                  onToggleExpand: _toggleExpand,
+                  onToggleExpand: _setExpanded,
                   onSelectId: _handleSelectId,
                   primary: primary,
                   sidebarText: sidebarText,
@@ -112,8 +132,13 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
         isMobile: isMobile,
         showSidebarToggle: !isMobile,
         isSidebarCollapsed: _sidebarCollapsed,
-        onSidebarToggle: () => setState(() => _sidebarCollapsed = !_sidebarCollapsed),
-        title: buildBreadcrumb(currentId).join(' / '),
+        onSidebarToggle: () {
+          setState(() {
+            _sidebarCollapsed = !_sidebarCollapsed;
+          });
+          StoreUtil.write(Constant.KEY_SIDEBAR_COLLAPSED, _sidebarCollapsed);
+        },
+        title: buildBreadcrumbForPathWith(GoRouterState.of(context).uri.path, _pathToId).join(' / '),
         onMenuTap: () => scaffoldKey.currentState?.openDrawer(),
         onSettingTap: () => scaffoldKey.currentState?.openEndDrawer(),
         onNotificationViewAll: () => _handleSelectId('notifications'),
@@ -124,6 +149,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
         accent: accent,
         subtleText: subtleText,
         height: appBarHeight,
+        isCompactActions: isActionCompact,
       ),
       body: Row(
         children: [
@@ -140,7 +166,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
                 navItems: navItems,
                 expandedIds: _expandedIds,
                 currentId: currentId,
-                onToggleExpand: _toggleExpand,
+                onToggleExpand: _setExpanded,
                 onSelectId: _handleSelectId,
                 primary: primary,
                 sidebarText: sidebarText,
@@ -149,7 +175,18 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
                 controller: _railScrollController,
               ),
             ),
-          Expanded(child: SafeArea(child: widget.navigationShell)),
+          Expanded(
+            child: SafeArea(
+              child: Stack(
+                children: [
+                  ContentContainer(
+                    child: widget.navigationShell,
+                  ),
+                  AppOverlay(controller: _scaffoldController),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -172,14 +209,15 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     appRouter.go('/login');
   }
 
-  void _toggleExpand(String id) {
+  void _setExpanded(String id, bool expanded) {
     setState(() {
-      if (_expandedIds.contains(id)) {
-        _expandedIds.remove(id);
-      } else {
+      if (expanded) {
         _expandedIds.add(id);
+      } else {
+        _expandedIds.remove(id);
       }
     });
+    StoreUtil.write(Constant.KEY_SIDEBAR_EXPANDED, _expandedIds.toList());
   }
 
   ScreenSize _getScreenSize(double width) {
@@ -190,7 +228,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
 
   String _currentId(BuildContext context) {
     final path = GoRouterState.of(context).uri.path;
-    return _pathToId[path] ?? 'dashboard';
+    return matchNavIdWith(path, _pathToId) ?? _pathToId[path] ?? 'dashboard';
   }
 
 
@@ -205,4 +243,3 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     return item.badge;
   }
 }
-

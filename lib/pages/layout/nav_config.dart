@@ -5,6 +5,8 @@ class NavItem {
   final String label;
   final IconData icon;
   final String? path;
+  final String? pathPattern;
+  final List<String>? breadcrumb;
   final List<NavItem> children;
   final String? badge;
 
@@ -13,10 +15,46 @@ class NavItem {
     required this.label,
     required this.icon,
     this.path,
+    this.pathPattern,
+    this.breadcrumb,
     this.children = const [],
     this.badge,
   });
 }
+
+// Keep this in sync with leaf routes. New menu items should be added here
+// to preserve branch order across sidebar reorderings.
+const List<String> branchOrder = [
+  'dashboard',
+  'workorders_list',
+  'workorders_create',
+  'tasks_list',
+  'tasks_board',
+  'tasks_stats',
+  'tasks_history',
+  'tasks_rules',
+  'customers',
+  'departments',
+  'processes',
+  'products',
+  'materials',
+  'product_groups',
+  'artworks',
+  'dies',
+  'foiling',
+  'embossing',
+  'purchase_orders',
+  'sales_orders',
+  'stocks',
+  'delivery',
+  'quality',
+  'invoices',
+  'payments',
+  'costs',
+  'statements',
+  'notifications',
+  'profile',
+];
 
 const List<NavItem> navItems = [
   NavItem(
@@ -127,28 +165,110 @@ List<NavItem> flattenNavItems(List<NavItem> items) {
   return result;
 }
 
+final List<NavItem> _flatNavItems = flattenNavItems(navItems);
+
+List<NavItem> leafNavItemsByBranch() {
+  final leaves = _flatNavItems;
+  final byId = {for (final item in leaves) item.id: item};
+  final ordered = <NavItem>[];
+  for (final id in branchOrder) {
+    final item = byId.remove(id);
+    if (item != null) {
+      ordered.add(item);
+    }
+  }
+  if (byId.isNotEmpty) {
+    final remaining = byId.values.toList()
+      ..sort((a, b) => a.id.compareTo(b.id));
+    ordered.addAll(remaining);
+  }
+  return ordered;
+}
+
+Map<String, int> buildIdToBranchIndex() {
+  final map = <String, int>{};
+  final ordered = leafNavItemsByBranch();
+  for (var i = 0; i < ordered.length; i++) {
+    map[ordered[i].id] = i;
+  }
+  return map;
+}
+
 Map<String, String> buildPathToIdMap() {
   final map = <String, String>{};
-  for (final item in flattenNavItems(navItems)) {
-    if (item.path != null) {
-      map[item.path!] = item.id;
+  for (final item in _flatNavItems) {
+    final path = item.path;
+    if (path != null) {
+      map[path] = item.id;
     }
   }
   return map;
 }
 
+String? matchNavId(String path) {
+  final direct = buildPathToIdMap()[path];
+  if (direct != null) {
+    return direct;
+  }
+  for (final item in _flatNavItems) {
+    final pattern = item.pathPattern ?? item.path;
+    if (pattern == null) {
+      continue;
+    }
+    final regex = _pathPatternToRegex(pattern);
+    if (regex.hasMatch(path)) {
+      return item.id;
+    }
+  }
+  return null;
+}
+
+String? matchNavIdWith(String path, Map<String, String> pathToId) {
+  final direct = pathToId[path];
+  if (direct != null) {
+    return direct;
+  }
+  for (final item in _flatNavItems) {
+    final pattern = item.pathPattern ?? item.path;
+    if (pattern == null) {
+      continue;
+    }
+    final regex = _pathPatternToRegex(pattern);
+    if (regex.hasMatch(path)) {
+      return item.id;
+    }
+  }
+  return null;
+}
+
 List<String> buildBreadcrumb(String id) {
   for (final item in navItems) {
     if (item.id == id) {
-      return ['首页', item.label];
+      return item.breadcrumb ?? ['首页', item.label];
     }
     for (final child in item.children) {
       if (child.id == id) {
-        return ['首页', item.label, child.label];
+        return child.breadcrumb ?? ['首页', item.label, child.label];
       }
     }
   }
   return ['首页'];
+}
+
+List<String> buildBreadcrumbForPath(String path) {
+  final id = matchNavId(path);
+  if (id == null) {
+    return ['首页'];
+  }
+  return buildBreadcrumb(id);
+}
+
+List<String> buildBreadcrumbForPathWith(String path, Map<String, String> pathToId) {
+  final id = matchNavIdWith(path, pathToId);
+  if (id == null) {
+    return ['首页'];
+  }
+  return buildBreadcrumb(id);
 }
 
 String labelFor(String id) {
@@ -159,4 +279,10 @@ String labelFor(String id) {
     }
   }
   return id;
+}
+
+RegExp _pathPatternToRegex(String pattern) {
+  final escaped = pattern.replaceAllMapped(RegExp(r'([.+^${}()|\\])'), (m) => '\\${m[0]}');
+  final replaced = escaped.replaceAllMapped(RegExp(r':([a-zA-Z_][a-zA-Z0-9_]*)'), (_) => r'[^/]+');
+  return RegExp('^${replaced}\$');
 }

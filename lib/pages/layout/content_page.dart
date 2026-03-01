@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:work_order_app/common/theme_ext.dart';
 import 'package:work_order_app/controllers/notification_controller.dart';
 import 'package:work_order_app/models/notification_model.dart';
 import 'package:work_order_app/pages/layout/nav_config.dart';
@@ -13,42 +14,24 @@ class ContentPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final isXs = BreakpointsUtil.isXs(context);
-    final isSm = BreakpointsUtil.isSm(context);
+    final colors = theme.extension<AppColors>();
     final isMd = BreakpointsUtil.isMd(context);
-    final isLg = BreakpointsUtil.isLg(context);
     final isXl = BreakpointsUtil.isXl(context);
     final is2xl = BreakpointsUtil.is2xl(context);
 
-    final background = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
-    final surface = isDark ? const Color(0xFF111827) : Colors.white;
     final primary = theme.primaryColor;
-    final accent = isDark ? const Color(0xFFE5E7EB) : const Color(0xFF111827);
-    final subtleText = isDark ? const Color(0xFF94A3B8) : const Color(0xFF6B7280);
-    final borderColor = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
-    final contentPadding = isXs
-        ? const EdgeInsets.fromLTRB(16, 16, 16, 24)
-        : isSm
-            ? const EdgeInsets.fromLTRB(20, 20, 20, 28)
-            : isMd
-                ? const EdgeInsets.fromLTRB(24, 24, 24, 32)
-                : isLg
-                    ? const EdgeInsets.fromLTRB(24, 24, 24, 32)
-                    : isXl
-                        ? const EdgeInsets.fromLTRB(28, 28, 28, 36)
-                        : const EdgeInsets.fromLTRB(32, 32, 32, 40);
+    final accent = colors?.sidebarText ?? (theme.brightness == Brightness.dark ? const Color(0xFFE5E7EB) : const Color(0xFF111827));
+    final subtleText = colors?.subtleText ?? (theme.brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF6B7280));
+    final borderColor = colors?.borderColor ?? (theme.brightness == Brightness.dark ? const Color(0xFF334155) : const Color(0xFFE2E8F0));
 
     return _ContentArea(
       selectedId: selectedId,
       breadcrumb: buildBreadcrumb(selectedId),
       primary: primary,
       accent: accent,
-      surface: surface,
-      background: background,
+      surface: colors?.surface ?? (theme.brightness == Brightness.dark ? const Color(0xFF111827) : Colors.white),
       subtleText: subtleText,
       borderColor: borderColor,
-      padding: contentPadding,
       gridCount: is2xl
           ? 4
           : isXl
@@ -67,10 +50,8 @@ class _ContentArea extends StatelessWidget {
     required this.primary,
     required this.accent,
     required this.surface,
-    required this.background,
     required this.subtleText,
     required this.borderColor,
-    required this.padding,
     required this.gridCount,
   });
 
@@ -79,79 +60,66 @@ class _ContentArea extends StatelessWidget {
   final Color primary;
   final Color accent;
   final Color surface;
-  final Color background;
   final Color subtleText;
   final Color borderColor;
-  final EdgeInsets padding;
   final int gridCount;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: background,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          return SingleChildScrollView(
-            padding: padding,
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1200),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _HeaderCard(
-                      breadcrumb: breadcrumb,
-                      title: labelFor(selectedId),
-                      primary: primary,
-                      accent: accent,
-                      surface: surface,
-                      subtleText: subtleText,
-                      borderColor: borderColor,
-                    ),
-                    const SizedBox(height: 20),
-                    if (selectedId == 'notifications')
-                      _NotificationCenterView(
-                        primary: primary,
-                        surface: surface,
-                        accent: accent,
-                        subtleText: subtleText,
-                        borderColor: borderColor,
-                      )
-                    else ...[
-                      Wrap(
-                        spacing: 16,
-                        runSpacing: 16,
-                        children: List.generate(gridCount * 2, (index) {
-                          return _StatCard(
-                            width: (width - (gridCount - 1) * 16) / gridCount,
-                            title: '指标 ${index + 1}',
-                            value: '${(index + 1) * 12}',
-                            trend: index.isEven ? '+${index + 2}%' : '-${index + 1}%',
-                            primary: primary,
-                            surface: surface,
-                            subtleText: subtleText,
-                            borderColor: borderColor,
-                          );
-                        }),
-                      ),
-                      const SizedBox(height: 24),
-                      _ListPlaceholder(
-                        title: '核心列表区域',
-                        subtitle: '这里是 $selectedId 的列表或表格布局，占位用于后续业务接入。',
-                        primary: primary,
-                        surface: surface,
-                        subtleText: subtleText,
-                        borderColor: borderColor,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _HeaderCard(
+              breadcrumb: breadcrumb,
+              title: labelFor(selectedId),
+              primary: primary,
+              accent: accent,
+              surface: surface,
+              subtleText: subtleText,
+              borderColor: borderColor,
             ),
-          );
-        },
-      ),
+            const SizedBox(height: 20),
+            if (selectedId == 'notifications')
+              _NotificationCenterView(
+                primary: primary,
+                surface: surface,
+                accent: accent,
+                subtleText: subtleText,
+                borderColor: borderColor,
+              )
+            else ...[
+              Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                children: List.generate(gridCount * 2, (index) {
+                  return _StatCard(
+                    width: (width - (gridCount - 1) * 16) / gridCount,
+                    title: '指标 ${index + 1}',
+                    value: '${(index + 1) * 12}',
+                    trend: index.isEven ? '+${index + 2}%' : '-${index + 1}%',
+                    primary: primary,
+                    surface: surface,
+                    subtleText: subtleText,
+                    borderColor: borderColor,
+                  );
+                }),
+              ),
+              const SizedBox(height: 24),
+              _ListPlaceholder(
+                title: '核心列表区域',
+                subtitle: '这里是 $selectedId 的列表或表格布局，占位用于后续业务接入。',
+                primary: primary,
+                surface: surface,
+                subtleText: subtleText,
+                borderColor: borderColor,
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 }
