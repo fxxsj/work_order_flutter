@@ -24,7 +24,7 @@ class NotificationApi {
   }) async {
     try {
       final ApiResponse response = await HttpClient.get(
-        '/api/notifications/',
+        '/notifications/',
         queryParameters: {
           'page': page,
           'page_size': pageSize,
@@ -63,7 +63,7 @@ class NotificationApi {
 
   static Future<int> fetchUnreadCount() async {
     try {
-      final ApiResponse response = await HttpClient.get('/api/notifications/unread_count/');
+      final ApiResponse response = await HttpClient.get('/notifications/unread_count/');
       final data = response.data;
       if (data is Map && data['unread_count'] != null) {
         return _toInt(data['unread_count']) ?? 0;
@@ -78,7 +78,7 @@ class NotificationApi {
   }
 
   static Future<NotificationModel?> markRead(String id) async {
-    final ApiResponse response = await HttpClient.post('/api/notifications/$id/mark_read/');
+    final ApiResponse response = await HttpClient.post('/notifications/$id/mark_read/');
     final data = response.data;
     if (data is Map && data['notification'] is Map) {
       return NotificationModel.fromJson((data['notification'] as Map).cast<String, dynamic>());
@@ -87,7 +87,7 @@ class NotificationApi {
   }
 
   static Future<int> markAllRead() async {
-    final ApiResponse response = await HttpClient.post('/api/notifications/mark_all_read/');
+    final ApiResponse response = await HttpClient.post('/notifications/mark_all_read/');
     final data = response.data;
     if (data is Map && data['count'] != null) {
       return _toInt(data['count']) ?? 0;

@@ -6,6 +6,7 @@ import 'package:work_order_app/models/api_response.dart';
 import 'package:work_order_app/models/user.dart';
 import 'package:work_order_app/router/app_router.dart';
 import 'package:work_order_app/utils/store_util.dart';
+import 'package:work_order_app/utils/toast_util.dart';
 
 class Login extends StatefulWidget {
   @override
@@ -181,9 +182,9 @@ class _LoginState extends State<Login> {
         'password': user.password,
       });
       if (!responseBodyApi.success) {
-      _showSnack('登录失败', responseBodyApi.message ?? '请检查账号密码');
-        focusNodePassword.requestFocus();
-        return;
+      ToastUtil.showError(responseBodyApi.message ?? '请检查账号密码');
+      focusNodePassword.requestFocus();
+      return;
       }
       final responseData = responseBodyApi.data;
       final responseMap = responseData is Map ? Map<String, dynamic>.from(responseData) : <String, dynamic>{};
@@ -202,9 +203,9 @@ class _LoginState extends State<Login> {
         }
       }
       if (token == null || token.toString().isEmpty) {
-      _showSnack('登录失败', '请检查账号密码');
-        focusNodePassword.requestFocus();
-        return;
+      ToastUtil.showError('请检查账号密码');
+      focusNodePassword.requestFocus();
+      return;
       }
       responseMap['token'] = token;
       _loginSuccess(responseMap);
@@ -233,17 +234,4 @@ class _LoginState extends State<Login> {
     appRouter.go('/');
   }
 
-  void _showSnack(String title, String message) {
-    if (!mounted) {
-      return;
-    }
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    if (messenger == null) {
-      return;
-    }
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(content: Text('$title：$message')),
-    );
-  }
 }

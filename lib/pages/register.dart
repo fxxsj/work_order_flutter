@@ -5,7 +5,7 @@ import 'package:work_order_app/common/theme_ext.dart';
 import 'package:work_order_app/models/api_response.dart';
 import 'package:work_order_app/models/user.dart';
 import 'package:work_order_app/router/app_router.dart';
-import 'package:get/get.dart' hide FormData;
+import 'package:work_order_app/utils/toast_util.dart';
 
 class Register extends StatefulWidget {
   @override
@@ -149,14 +149,11 @@ class _RegisterState extends State {
 
     UserApi.register(formData).then((ApiResponse v) {
       if (!v.success) {
+        ToastUtil.showError(v.message ?? '注册失败，请检查输入信息');
         return;
       }
       _login();
-      Get.snackbar(
-        '注册成功',
-        '账号已创建，请登录',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      ToastUtil.showSuccess('账号已创建，请登录');
     });
   }
 }

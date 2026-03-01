@@ -5,6 +5,7 @@ import 'package:work_order_app/constants/constant.dart';
 import 'package:work_order_app/models/api_response.dart';
 import 'package:work_order_app/router/app_router.dart';
 import 'package:work_order_app/utils/store_util.dart';
+import 'package:work_order_app/utils/toast_util.dart';
 import 'package:work_order_app/utils/utils.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -114,14 +115,14 @@ class _ProfilePageState extends State<ProfilePage> {
       };
       final ApiResponse response = await AuthApi.updateProfile(payload);
       if (!response.success) {
-        _showSnack('更新失败', response.message ?? '个人信息更新失败');
+        ToastUtil.showError(response.message ?? '个人信息更新失败');
         return;
       }
       final data = response.data is Map ? Map<String, dynamic>.from(response.data as Map) : <String, dynamic>{};
       final merged = {..._currentUser, ...data};
       _setUser(merged);
       StoreUtil.write(Constant.KEY_CURRENT_USER_INFO, merged);
-      _showSnack('更新成功', response.message ?? '个人信息更新成功');
+      ToastUtil.showSuccess(response.message ?? '个人信息更新成功');
     } finally {
       if (mounted) {
         setState(() {
@@ -147,10 +148,10 @@ class _ProfilePageState extends State<ProfilePage> {
       };
       final ApiResponse response = await AuthApi.changePassword(payload);
       if (!response.success) {
-        _showSnack('修改失败', response.message ?? '密码修改失败');
+        ToastUtil.showError(response.message ?? '密码修改失败');
         return;
       }
-      _showSnack('修改成功', response.message ?? '密码修改成功，请重新登录');
+      ToastUtil.showSuccess(response.message ?? '密码修改成功，请重新登录');
       _resetPasswordForm();
       await Future<void>.delayed(const Duration(seconds: 2));
       Utils.logout();
@@ -160,7 +161,7 @@ class _ProfilePageState extends State<ProfilePage> {
       final message = data is Map
           ? (data['error'] ?? data['message'] ?? '密码修改失败')
           : '密码修改失败';
-      _showSnack('修改失败', message);
+      ToastUtil.showError(message);
     } finally {
       if (mounted) {
         setState(() {
@@ -174,7 +175,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _emailController.text = _currentUser['email']?.toString() ?? '';
     _firstNameController.text = _currentUser['first_name']?.toString() ?? '';
     _lastNameController.text = _currentUser['last_name']?.toString() ?? '';
-    _showSnack('已重置', '已恢复为原始信息');
+    ToastUtil.showSuccess('已恢复为原始信息');
   }
 
   void _resetPasswordForm() {
@@ -339,17 +340,4 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void _showSnack(String title, String message) {
-    if (!mounted) {
-      return;
-    }
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    if (messenger == null) {
-      return;
-    }
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(content: Text('$title：$message')),
-    );
-  }
 }

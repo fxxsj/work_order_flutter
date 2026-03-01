@@ -7,7 +7,7 @@ import 'package:work_order_app/models/api_response.dart';
 import 'package:work_order_app/utils/store_util.dart';
 import 'package:work_order_app/router/app_router.dart';
 import 'package:work_order_app/utils/utils.dart';
-import 'package:get/get.dart' hide Response;
+import 'package:work_order_app/utils/toast_util.dart';
 
 class AppDioInterceptors extends InterceptorsWrapper {
   @override
@@ -39,12 +39,12 @@ class AppDioInterceptors extends InterceptorsWrapper {
     if (apiResponse.code == ResponseCodeConstant.SESSION_EXPIRE_CODE) {
       Utils.logout();
       appRouter.go('/login');
-      _safeSnack('登录失效', apiResponse.message ?? ResponseCodeConstant.SESSION_EXPIRE_MESSAGE);
+      ToastUtil.showError(apiResponse.message ?? ResponseCodeConstant.SESSION_EXPIRE_MESSAGE);
       return;
     }
 
     if (!apiResponse.success) {
-      _safeSnack('请求失败', apiResponse.message ?? '服务器返回错误');
+      ToastUtil.showError(apiResponse.message ?? '服务器返回错误');
     }
     super.onResponse(response, handler);
   }
@@ -70,18 +70,33 @@ class AppDioInterceptors extends InterceptorsWrapper {
       }
       Utils.logout();
       appRouter.go('/login');
-      _safeSnack('登录失效', '请重新登录');
+      ToastUtil.showError('请重新登录');
       handler.next(err);
       return;
     }
-    _safeSnack('请求失败', '服务器忙，请稍后再试');
+    final response = err.response;
+    final data = response?.data;
+    String? message;
+    if (data is Map) {
+      message = data['error']?.toString() ??
+          data['message']?.toString() ??
+          data['detail']?.toString();
+    }
+    if (message == null || message.isEmpty) {
+      switch (err.type) {
+        case DioExceptionType.connectionTimeout:
+        case DioExceptionType.sendTimeout:
+        case DioExceptionType.receiveTimeout:
+        case DioExceptionType.connectionError:
+          message = '网络连接异常，请检查网络';
+          break;
+        default:
+          final code = response?.statusCode?.toString() ?? '未知错误';
+          final path = err.requestOptions.path;
+          message = '请求失败（$code）：$path';
+      }
+    }
+    ToastUtil.showError(message);
     handler.next(err);
   }
-}
-
-void _safeSnack(String title, String message) {
-  if (Get.overlayContext == null) {
-    return;
-  }
-  Get.snackbar(title, message, snackPosition: SnackPosition.BOTTOM);
 }
