@@ -3,6 +3,7 @@ import 'package:work_order_app/api/auth_api.dart';
 import 'package:work_order_app/constants/constant.dart';
 import 'package:work_order_app/models/api_response.dart';
 import 'package:work_order_app/models/user.dart';
+import 'package:work_order_app/router/app_router.dart';
 import 'package:work_order_app/utils/store_util.dart';
 import 'package:get/get.dart';
 
@@ -158,7 +159,7 @@ class _LoginState extends State<Login> {
   }
 
   void _register() {
-    Get.toNamed('/register');
+    appRouter.go('/register');
   }
 
   Future<void> _login() async {
@@ -229,6 +230,6 @@ class _LoginState extends State<Login> {
     StoreUtil.write(Constant.KEY_CURRENT_USER_INFO, userInfo);
     StoreUtil.init();
 
-    Get.offAllNamed('/');
+    appRouter.go('/');
   }
 }

@@ -5,6 +5,7 @@ import 'package:work_order_app/constants/constant.dart';
 import 'package:work_order_app/constants/response_code_constant.dart';
 import 'package:work_order_app/models/api_response.dart';
 import 'package:work_order_app/utils/store_util.dart';
+import 'package:work_order_app/router/app_router.dart';
 import 'package:work_order_app/utils/utils.dart';
 import 'package:get/get.dart' hide Response;
 
@@ -37,15 +38,13 @@ class AppDioInterceptors extends InterceptorsWrapper {
     final apiResponse = ApiResponse.fromJson(response.data);
     if (apiResponse.code == ResponseCodeConstant.SESSION_EXPIRE_CODE) {
       Utils.logout();
-      Get.offAllNamed('/login');
-      Get.snackbar('登录失效', apiResponse.message ?? ResponseCodeConstant.SESSION_EXPIRE_MESSAGE,
-          snackPosition: SnackPosition.BOTTOM);
+      appRouter.go('/login');
+      _safeSnack('登录失效', apiResponse.message ?? ResponseCodeConstant.SESSION_EXPIRE_MESSAGE);
       return;
     }
 
     if (!apiResponse.success) {
-      Get.snackbar('请求失败', apiResponse.message ?? '服务器返回错误',
-          snackPosition: SnackPosition.BOTTOM);
+      _safeSnack('请求失败', apiResponse.message ?? '服务器返回错误');
     }
     super.onResponse(response, handler);
   }
@@ -70,12 +69,19 @@ class AppDioInterceptors extends InterceptorsWrapper {
         return;
       }
       Utils.logout();
-      Get.offAllNamed('/login');
-      Get.snackbar('登录失效', '请重新登录', snackPosition: SnackPosition.BOTTOM);
+      appRouter.go('/login');
+      _safeSnack('登录失效', '请重新登录');
       handler.next(err);
       return;
     }
-    Get.snackbar('请求失败', '服务器忙，请稍后再试', snackPosition: SnackPosition.BOTTOM);
+    _safeSnack('请求失败', '服务器忙，请稍后再试');
     handler.next(err);
   }
+}
+
+void _safeSnack(String title, String message) {
+  if (Get.overlayContext == null) {
+    return;
+  }
+  Get.snackbar(title, message, snackPosition: SnackPosition.BOTTOM);
 }

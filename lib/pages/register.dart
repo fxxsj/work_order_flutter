@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/api/user_api.dart';
 import 'package:work_order_app/models/api_response.dart';
 import 'package:work_order_app/models/user.dart';
+import 'package:work_order_app/router/app_router.dart';
 import 'package:get/get.dart' hide FormData;
 
 class Register extends StatefulWidget {
@@ -130,7 +131,7 @@ class _RegisterState extends State {
   }
 
   void _login() {
-    Get.offAllNamed('/login');
+    appRouter.go('/login');
   }
 
   void _register() {
