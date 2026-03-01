@@ -124,16 +124,6 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
         NavItem(id: 'statements', label: '对账管理', icon: Icons.summarize_outlined),
       ],
     ),
-    NavItem(
-      id: 'notifications',
-      label: '通知中心',
-      icon: Icons.notifications_outlined,
-    ),
-    NavItem(
-      id: 'profile',
-      label: '个人信息',
-      icon: Icons.person_outline,
-    ),
   ];
 
   @override
