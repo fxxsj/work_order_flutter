@@ -1,20 +1,28 @@
 import 'dart:async';
 
 import 'package:get/get.dart';
+import 'package:work_order_app/api/notification_api.dart';
 import 'package:work_order_app/models/notification_model.dart';
 
 class NotificationController extends GetxController {
   final RxInt unreadCount = 0.obs;
   final RxList<NotificationModel> recentList = <NotificationModel>[].obs;
+  final RxList<NotificationModel> notifications = <NotificationModel>[].obs;
+  final RxBool isLoading = false.obs;
+  final RxBool isLoadingMore = false.obs;
+  final RxBool hasMore = false.obs;
+  final RxInt totalCount = 0.obs;
+  final RxBool showUnreadOnly = false.obs;
 
   Timer? _poller;
-  int _seed = 0;
+  int _page = 1;
+  final int _pageSize = 20;
 
   @override
   void onInit() {
     super.onInit();
-    _loadMockData();
-    _poller = Timer.periodic(const Duration(minutes: 1), (_) => _refreshMockData());
+    refreshAll();
+    _poller = Timer.periodic(const Duration(minutes: 1), (_) => _poll());
   }
 
   @override
@@ -23,74 +31,78 @@ class NotificationController extends GetxController {
     super.onClose();
   }
 
-  void markAllRead() {
-    if (recentList.isEmpty) {
-      unreadCount.value = 0;
+  Future<void> refreshAll() async {
+    isLoading.value = true;
+    _page = 1;
+    final page = await NotificationApi.fetchNotifications(page: _page, pageSize: _pageSize);
+    notifications.assignAll(page.items);
+    totalCount.value = page.totalCount ?? page.items.length;
+    hasMore.value = page.hasMore;
+    await _refreshUnreadCount();
+    await _refreshRecent();
+    isLoading.value = false;
+  }
+
+  Future<void> loadMore() async {
+    if (isLoadingMore.value || !hasMore.value) {
       return;
     }
+    isLoadingMore.value = true;
+    final nextPage = _page + 1;
+    final page = await NotificationApi.fetchNotifications(page: nextPage, pageSize: _pageSize);
+    notifications.addAll(page.items);
+    _page = nextPage;
+    hasMore.value = page.hasMore;
+    totalCount.value = page.totalCount ?? totalCount.value;
+    isLoadingMore.value = false;
+  }
+
+  Future<void> markAllRead() async {
+    await NotificationApi.markAllRead();
+    notifications.value = notifications
+        .map((item) => item.isRead ? item : item.copyWith(isRead: true))
+        .toList();
     recentList.value = recentList
         .map((item) => item.isRead ? item : item.copyWith(isRead: true))
         .toList();
     unreadCount.value = 0;
   }
 
-  void markRead(String id) {
-    final index = recentList.indexWhere((item) => item.id == id);
-    if (index == -1) {
+  Future<void> markRead(String id) async {
+    final updated = await NotificationApi.markRead(id);
+    if (updated == null) {
       return;
     }
-    final item = recentList[index];
-    if (item.isRead) {
-      return;
+    _updateLists(updated);
+    unreadCount.value = unreadCount.value > 0 ? unreadCount.value - 1 : 0;
+  }
+
+  Future<void> _poll() async {
+    await _refreshUnreadCount();
+    await _refreshRecent();
+  }
+
+  Future<void> _refreshUnreadCount() async {
+    unreadCount.value = await NotificationApi.fetchUnreadCount();
+  }
+
+  Future<void> _refreshRecent() async {
+    final page = await NotificationApi.fetchNotifications(page: 1, pageSize: 5);
+    recentList.assignAll(page.items);
+  }
+
+  void _updateLists(NotificationModel updated) {
+    final recentIndex = recentList.indexWhere((item) => item.id == updated.id);
+    if (recentIndex != -1) {
+      recentList[recentIndex] = updated;
     }
-    recentList[index] = item.copyWith(isRead: true);
-    _syncUnreadCount();
-  }
-
-  void _loadMockData() {
-    final now = DateTime.now();
-    recentList.assignAll([
-      NotificationModel(
-        id: 'seed-1',
-        title: '新的审批待处理',
-        body: '采购申请单 PO-2026-031 已提交，请尽快审核。',
-        createdAt: now.subtract(const Duration(minutes: 12)),
-        level: NotificationLevel.warning,
-      ),
-      NotificationModel(
-        id: 'seed-2',
-        title: '设备维保提醒',
-        body: '印刷线 A3 的例行维护将在今日 17:30 开始。',
-        createdAt: now.subtract(const Duration(hours: 1, minutes: 5)),
-      ),
-      NotificationModel(
-        id: 'seed-3',
-        title: '库存预警',
-        body: '牛皮纸库存低于安全线，请安排补货。',
-        createdAt: now.subtract(const Duration(hours: 3)),
-        level: NotificationLevel.urgent,
-      ),
-    ]);
-    _syncUnreadCount();
-  }
-
-  void _refreshMockData() {
-    _seed += 1;
-    final now = DateTime.now();
-    final newItem = NotificationModel(
-      id: 'poll-$_seed',
-      title: '新的工单更新',
-      body: '工单 WO-2026-${100 + _seed} 已进入待验收状态。',
-      createdAt: now,
-    );
-    recentList.insert(0, newItem);
-    if (recentList.length > 5) {
-      recentList.removeLast();
+    final listIndex = notifications.indexWhere((item) => item.id == updated.id);
+    if (listIndex != -1) {
+      notifications[listIndex] = updated;
     }
-    _syncUnreadCount();
   }
 
-  void _syncUnreadCount() {
-    unreadCount.value = recentList.where((item) => !item.isRead).length;
+  void setShowUnreadOnly(bool value) {
+    showUnreadOnly.value = value;
   }
 }

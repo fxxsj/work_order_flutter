@@ -779,7 +779,7 @@ class _AdaptiveAppBar extends StatelessWidget implements PreferredSizeWidget {
             subtleText: subtleText,
             primary: primary,
             showDivider: showDivider,
-            timeLabel: _formatTime(item.createdAt),
+            timeLabel: _formatRelativeTime(item.createdAt),
             onMarkRead: () {
               controller.markRead(item.id);
               Navigator.pop(context);
@@ -814,24 +814,6 @@ class _AdaptiveAppBar extends StatelessWidget implements PreferredSizeWidget {
     return items;
   }
 
-  String _formatTime(DateTime createdAt) {
-    final diff = DateTime.now().difference(createdAt);
-    if (diff.inMinutes < 1) {
-      return '刚刚';
-    }
-    if (diff.inMinutes < 60) {
-      return '${diff.inMinutes}分钟前';
-    }
-    if (diff.inHours < 24) {
-      return '${diff.inHours}小时前';
-    }
-    if (diff.inDays < 7) {
-      return '${diff.inDays}天前';
-    }
-    final hour = createdAt.hour.toString().padLeft(2, '0');
-    final minute = createdAt.minute.toString().padLeft(2, '0');
-    return '${createdAt.month}月${createdAt.day}日 $hour:$minute';
-  }
 }
 
 class _NotificationListItem extends StatelessWidget {
@@ -855,7 +837,7 @@ class _NotificationListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final levelColor = _levelColor(item.level, primary);
+    final levelColor = _levelColorFor(item.level, primary);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
@@ -907,7 +889,7 @@ class _NotificationListItem extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            item.body,
+            item.content,
             style: TextStyle(color: subtleText, fontSize: 12, height: 1.35),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -921,17 +903,6 @@ class _NotificationListItem extends StatelessWidget {
     );
   }
 
-  Color _levelColor(NotificationLevel level, Color primary) {
-    switch (level) {
-      case NotificationLevel.warning:
-        return const Color(0xFFF59E0B);
-      case NotificationLevel.urgent:
-        return const Color(0xFFEF4444);
-      case NotificationLevel.info:
-      default:
-        return primary;
-    }
-  }
 }
 
 class _AvatarMenu extends StatelessWidget {
@@ -1073,31 +1044,41 @@ class _ContentArea extends StatelessWidget {
                       borderColor: borderColor,
                     ),
                     const SizedBox(height: 20),
-                    Wrap(
-                      spacing: 16,
-                      runSpacing: 16,
-                      children: List.generate(gridCount * 2, (index) {
-                        return _StatCard(
-                          width: (width - (gridCount - 1) * 16) / gridCount,
-                          title: '指标 ${index + 1}',
-                          value: '${(index + 1) * 12}',
-                          trend: index.isEven ? '+${index + 2}%' : '-${index + 1}%',
-                          primary: primary,
-                          surface: surface,
-                          subtleText: subtleText,
-                          borderColor: borderColor,
-                        );
-                      }),
-                    ),
-                    const SizedBox(height: 24),
-                    _ListPlaceholder(
-                      title: '核心列表区域',
-                      subtitle: '这里是 $selectedId 的列表或表格布局，占位用于后续业务接入。',
-                      primary: primary,
-                      surface: surface,
-                      subtleText: subtleText,
-                      borderColor: borderColor,
-                    ),
+                    if (selectedId == 'notifications')
+                      _NotificationCenterView(
+                        primary: primary,
+                        surface: surface,
+                        accent: accent,
+                        subtleText: subtleText,
+                        borderColor: borderColor,
+                      )
+                    else ...[
+                      Wrap(
+                        spacing: 16,
+                        runSpacing: 16,
+                        children: List.generate(gridCount * 2, (index) {
+                          return _StatCard(
+                            width: (width - (gridCount - 1) * 16) / gridCount,
+                            title: '指标 ${index + 1}',
+                            value: '${(index + 1) * 12}',
+                            trend: index.isEven ? '+${index + 2}%' : '-${index + 1}%',
+                            primary: primary,
+                            surface: surface,
+                            subtleText: subtleText,
+                            borderColor: borderColor,
+                          );
+                        }),
+                      ),
+                      const SizedBox(height: 24),
+                      _ListPlaceholder(
+                        title: '核心列表区域',
+                        subtitle: '这里是 $selectedId 的列表或表格布局，占位用于后续业务接入。',
+                        primary: primary,
+                        surface: surface,
+                        subtleText: subtleText,
+                        borderColor: borderColor,
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -1183,6 +1164,432 @@ class _ContentArea extends StatelessWidget {
       default:
         return id;
     }
+  }
+}
+
+String _formatRelativeTime(DateTime createdAt) {
+  final diff = DateTime.now().difference(createdAt);
+  if (diff.inMinutes < 1) {
+    return '刚刚';
+  }
+  if (diff.inMinutes < 60) {
+    return '${diff.inMinutes}分钟前';
+  }
+  if (diff.inHours < 24) {
+    return '${diff.inHours}小时前';
+  }
+  if (diff.inDays < 7) {
+    return '${diff.inDays}天前';
+  }
+  final hour = createdAt.hour.toString().padLeft(2, '0');
+  final minute = createdAt.minute.toString().padLeft(2, '0');
+  return '${createdAt.month}月${createdAt.day}日 $hour:$minute';
+}
+
+Color _levelColorFor(NotificationLevel level, Color primary) {
+  switch (level) {
+    case NotificationLevel.warning:
+      return const Color(0xFFF59E0B);
+    case NotificationLevel.urgent:
+      return const Color(0xFFEF4444);
+    case NotificationLevel.info:
+    default:
+      return primary;
+  }
+}
+
+class _NotificationCenterView extends StatelessWidget {
+  const _NotificationCenterView({
+    required this.primary,
+    required this.surface,
+    required this.accent,
+    required this.subtleText,
+    required this.borderColor,
+  });
+
+  final Color primary;
+  final Color surface;
+  final Color accent;
+  final Color subtleText;
+  final Color borderColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = Get.find<NotificationController>();
+    return Obx(() {
+      final showUnreadOnly = controller.showUnreadOnly.value;
+      final allItems = controller.notifications.toList();
+      final items = showUnreadOnly
+          ? allItems.where((item) => !item.isRead).toList()
+          : allItems;
+
+      return Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: borderColor),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _NotificationToolbar(
+              primary: primary,
+              accent: accent,
+              subtleText: subtleText,
+              unreadCount: controller.unreadCount.value,
+              totalCount: controller.totalCount.value,
+              showUnreadOnly: showUnreadOnly,
+              onFilterChange: controller.setShowUnreadOnly,
+              onMarkAllRead: controller.markAllRead,
+              onRefresh: controller.refreshAll,
+            ),
+            const SizedBox(height: 12),
+            if (controller.isLoading.value)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: CircularProgressIndicator(color: primary),
+                ),
+              )
+            else if (items.isEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                decoration: BoxDecoration(
+                  color: primary.withOpacity(0.04),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: borderColor),
+                ),
+                child: Text(
+                  showUnreadOnly ? '暂无未读通知' : '暂无通知',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: subtleText, fontSize: 12),
+                ),
+              )
+            else
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: items.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                itemBuilder: (context, index) {
+                  final item = items[index];
+                  return _NotificationCard(
+                    item: item,
+                    primary: primary,
+                    accent: accent,
+                    subtleText: subtleText,
+                    borderColor: borderColor,
+                    onMarkRead: () => controller.markRead(item.id),
+                  );
+                },
+              ),
+            if (controller.hasMore.value) ...[
+              const SizedBox(height: 14),
+              Center(
+                child: TextButton.icon(
+                  onPressed: controller.isLoadingMore.value
+                      ? null
+                      : () => controller.loadMore(),
+                  icon: controller.isLoadingMore.value
+                      ? SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: primary,
+                          ),
+                        )
+                      : const Icon(Icons.expand_more, size: 16),
+                  label: const Text('加载更多'),
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    });
+  }
+}
+
+class _NotificationToolbar extends StatelessWidget {
+  const _NotificationToolbar({
+    required this.primary,
+    required this.accent,
+    required this.subtleText,
+    required this.unreadCount,
+    required this.totalCount,
+    required this.showUnreadOnly,
+    required this.onFilterChange,
+    required this.onMarkAllRead,
+    required this.onRefresh,
+  });
+
+  final Color primary;
+  final Color accent;
+  final Color subtleText;
+  final int unreadCount;
+  final int totalCount;
+  final bool showUnreadOnly;
+  final ValueChanged<bool> onFilterChange;
+  final VoidCallback onMarkAllRead;
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      runSpacing: 8,
+      spacing: 12,
+      alignment: WrapAlignment.spaceBetween,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '通知中心',
+              style: TextStyle(
+                color: accent,
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              '未读 $unreadCount / 共 $totalCount',
+              style: TextStyle(color: subtleText, fontSize: 12),
+            ),
+          ],
+        ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _FilterChip(
+              label: '全部',
+              selected: !showUnreadOnly,
+              primary: primary,
+              subtleText: subtleText,
+              onTap: () => onFilterChange(false),
+            ),
+            const SizedBox(width: 8),
+            _FilterChip(
+              label: '未读',
+              selected: showUnreadOnly,
+              primary: primary,
+              subtleText: subtleText,
+              onTap: () => onFilterChange(true),
+            ),
+            const SizedBox(width: 12),
+            TextButton(
+              onPressed: onMarkAllRead,
+              child: const Text('全部已读'),
+            ),
+            const SizedBox(width: 4),
+            TextButton.icon(
+              onPressed: onRefresh,
+              icon: const Icon(Icons.refresh, size: 16),
+              label: const Text('刷新'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
+    required this.label,
+    required this.selected,
+    required this.primary,
+    required this.subtleText,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final Color primary;
+  final Color subtleText;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = selected ? primary : subtleText;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected ? primary.withOpacity(0.12) : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withOpacity(0.5)),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600),
+        ),
+      ),
+    );
+  }
+}
+
+class _NotificationCard extends StatelessWidget {
+  const _NotificationCard({
+    required this.item,
+    required this.primary,
+    required this.accent,
+    required this.subtleText,
+    required this.borderColor,
+    required this.onMarkRead,
+  });
+
+  final NotificationModel item;
+  final Color primary;
+  final Color accent;
+  final Color subtleText;
+  final Color borderColor;
+  final VoidCallback onMarkRead;
+
+  @override
+  Widget build(BuildContext context) {
+    final levelColor = _levelColorFor(item.level, primary);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      decoration: BoxDecoration(
+        color: item.isRead ? Colors.transparent : primary.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: levelColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  item.title,
+                  style: TextStyle(
+                    color: accent,
+                    fontWeight: item.isRead ? FontWeight.w600 : FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _formatRelativeTime(item.createdAt),
+                style: TextStyle(color: subtleText, fontSize: 11),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            item.content,
+            style: TextStyle(color: subtleText, fontSize: 13, height: 1.4),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              _TypeTag(
+                label: _notificationTypeLabel(item.notificationType),
+                color: levelColor,
+              ),
+              if (item.workOrderId != null) ...[
+                const SizedBox(width: 8),
+                _TypeTag(
+                  label: '施工单 #${item.workOrderId}',
+                  color: subtleText,
+                ),
+              ],
+              if (item.taskId != null) ...[
+                const SizedBox(width: 8),
+                _TypeTag(
+                  label: '任务 #${item.taskId}',
+                  color: subtleText,
+                ),
+              ],
+              const Spacer(),
+              TextButton(
+                onPressed: item.isRead ? null : onMarkRead,
+                child: Text(item.isRead ? '已读' : '标为已读'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _notificationTypeLabel(String type) {
+    switch (type) {
+      case 'approval_passed':
+        return '审核通过';
+      case 'approval_rejected':
+        return '审核拒绝';
+      case 'reapproval_requested':
+        return '重新审核';
+      case 'task_assigned':
+        return '任务分派';
+      case 'task_due_soon':
+        return '任务预警';
+      case 'process_completed':
+        return '工序完成';
+      case 'workorder_completed':
+        return '施工单完成';
+      case 'task_cancelled':
+        return '任务取消';
+      case 'purchase_order_submitted':
+        return '采购待审';
+      case 'purchase_order_approved':
+        return '采购通过';
+      case 'purchase_order_rejected':
+        return '采购拒绝';
+      case 'purchase_order_received':
+        return '采购收货';
+      case 'low_stock_warning':
+        return '库存预警';
+      case 'system':
+      default:
+        return '系统通知';
+    }
+  }
+}
+
+class _TypeTag extends StatelessWidget {
+  const _TypeTag({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w600,
+          fontSize: 11,
+        ),
+      ),
+    );
   }
 }
 
