@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
       enableLog: false,
       theme: Utils.getThemeData(),
       darkTheme: Utils.getThemeData(brightness: Brightness.dark),
-      initialRoute: '/login',
+      initialRoute: Utils.isLogin() ? '/' : '/login',
       getPages: [
         GetPage(name: '/', page: () => const Layout()),
         GetPage(name: '/login', page: () => Login()),

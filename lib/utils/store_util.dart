@@ -11,6 +11,10 @@ class StoreUtil {
     GetStorage().write(key, value);
   }
 
+  static remove(String key) {
+    GetStorage().remove(key);
+  }
+
   static hasData(String key) {
     return GetStorage().hasData(key);
   }

@@ -22,11 +22,16 @@ class _LoginState extends State<Login> {
   @override
   void initState() {
     super.initState();
-    userNameController.text = user.userName ?? '';
-    passwordController.text = user.password ?? '';
+    final savedUsername = StoreUtil.read(Constant.KEY_REMEMBER_USERNAME);
+    userNameController.text = savedUsername ?? '';
+    passwordController.text = '';
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        focusNodeUserName.requestFocus();
+        if (userNameController.text.isNotEmpty) {
+          focusNodePassword.requestFocus();
+        } else {
+          focusNodeUserName.requestFocus();
+        }
       }
     });
   }
@@ -189,6 +194,7 @@ class _LoginState extends State<Login> {
 
   void _loginSuccess(Map<String, dynamic> responseData) {
     StoreUtil.write(Constant.KEY_TOKEN, responseData['token']);
+    StoreUtil.write(Constant.KEY_REMEMBER_USERNAME, userNameController.text);
     var userInfo = Map<String, dynamic>.from(responseData);
     if (responseData.containsKey('username')) {
       userInfo['userName'] = responseData['username'];

@@ -112,7 +112,8 @@ class Utils {
   }
 
   static logout() {
-    StoreUtil.cleanAll();
+    StoreUtil.remove(Constant.KEY_TOKEN);
+    StoreUtil.remove(Constant.KEY_CURRENT_USER_INFO);
   }
 
   static launchURL(url) async {
