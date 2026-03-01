@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/constants/breakpoints.dart';
+import 'package:work_order_app/controllers/notification_controller.dart';
+import 'package:work_order_app/models/notification_model.dart';
 import 'package:work_order_app/pages/layout/layout_setting.dart';
 import 'package:work_order_app/utils/breakpoints_util.dart';
 import 'package:work_order_app/utils/utils.dart';
@@ -39,6 +41,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
   String selectedId = 'dashboard';
   final ScrollController _railScrollController = ScrollController();
   bool _sidebarCollapsed = false;
+  late final NotificationController _notificationController;
 
   final List<NavItem> navItems = const [
     NavItem(
@@ -125,7 +128,6 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
       id: 'notifications',
       label: '通知中心',
       icon: Icons.notifications_outlined,
-      badge: '3',
     ),
     NavItem(
       id: 'profile',
@@ -133,6 +135,16 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
       icon: Icons.person_outline,
     ),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    if (Get.isRegistered<NotificationController>()) {
+      _notificationController = Get.find<NotificationController>();
+    } else {
+      _notificationController = Get.put(NotificationController());
+    }
+  }
 
   @override
   void dispose() {
@@ -224,6 +236,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
         title: _buildBreadcrumb().join(' / '),
         onMenuTap: () => scaffoldKey.currentState?.openDrawer(),
         onSettingTap: () => scaffoldKey.currentState?.openEndDrawer(),
+        onNotificationViewAll: () => _handleSelect('notifications'),
         onProfileTap: () => _handleSelect('profile'),
         onLogoutTap: _handleLogout,
         primary: primary,
@@ -285,18 +298,11 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                            if (railExtended && item.badge != null)
-                              Container(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: primary,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  item.badge!,
-                                  style: const TextStyle(color: Colors.white, fontSize: 10.5),
-                                ),
+                            if (railExtended)
+                              _RailBadge(
+                                item: item,
+                                primary: primary,
+                                badgeTextForItem: _badgeTextForItem,
                               ),
                           ],
                         ),
@@ -388,27 +394,62 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     for (final item in navItems) {
       children.add(_DrawerSectionHeader(title: item.label));
       if (item.children.isEmpty) {
-        children.add(_DrawerTile(
-          item: item,
-          isSelected: selectedId == item.id,
+        children.add(_buildDrawerTile(
+          item,
           primary: primary,
           sidebarText: sidebarText,
-          onTap: () => _handleSelect(item.id),
         ));
       } else {
         for (final child in item.children) {
-          children.add(_DrawerTile(
-            item: child,
-            isSelected: selectedId == child.id,
+          children.add(_buildDrawerTile(
+            child,
             primary: primary,
             sidebarText: sidebarText,
-            onTap: () => _handleSelect(child.id),
           ));
         }
       }
       children.add(const SizedBox(height: 8));
     }
     return children;
+  }
+
+  Widget _buildDrawerTile(
+    NavItem item, {
+    required Color primary,
+    required Color sidebarText,
+  }) {
+    if (item.id == 'notifications') {
+      return Obx(() {
+        final badgeText = _badgeTextForItem(item);
+        return _DrawerTile(
+          item: item,
+          badgeText: badgeText,
+          isSelected: selectedId == item.id,
+          primary: primary,
+          sidebarText: sidebarText,
+          onTap: () => _handleSelect(item.id),
+        );
+      });
+    }
+    return _DrawerTile(
+      item: item,
+      badgeText: _badgeTextForItem(item),
+      isSelected: selectedId == item.id,
+      primary: primary,
+      sidebarText: sidebarText,
+      onTap: () => _handleSelect(item.id),
+    );
+  }
+
+  String? _badgeTextForItem(NavItem item) {
+    if (item.id == 'notifications') {
+      final count = _notificationController.unreadCount.value;
+      if (count <= 0) {
+        return null;
+      }
+      return count > 99 ? '99+' : '$count';
+    }
+    return item.badge;
   }
 }
 
@@ -434,9 +475,47 @@ class _DrawerSectionHeader extends StatelessWidget {
   }
 }
 
+class _RailBadge extends StatelessWidget {
+  const _RailBadge({
+    required this.item,
+    required this.primary,
+    required this.badgeTextForItem,
+  });
+
+  final NavItem item;
+  final Color primary;
+  final String? Function(NavItem) badgeTextForItem;
+
+  @override
+  Widget build(BuildContext context) {
+    if (item.id == 'notifications') {
+      return Obx(() => _buildBadge(badgeTextForItem(item)));
+    }
+    return _buildBadge(badgeTextForItem(item));
+  }
+
+  Widget _buildBadge(String? text) {
+    if (text == null) {
+      return const SizedBox.shrink();
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: primary,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(color: Colors.white, fontSize: 10.5),
+      ),
+    );
+  }
+}
+
 class _DrawerTile extends StatelessWidget {
   const _DrawerTile({
     required this.item,
+    required this.badgeText,
     required this.isSelected,
     required this.primary,
     required this.sidebarText,
@@ -444,6 +523,7 @@ class _DrawerTile extends StatelessWidget {
   });
 
   final NavItem item;
+  final String? badgeText;
   final bool isSelected;
   final Color primary;
   final Color sidebarText;
@@ -478,7 +558,7 @@ class _DrawerTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              if (item.badge != null)
+              if (badgeText != null)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
@@ -486,7 +566,7 @@ class _DrawerTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    item.badge!,
+                    badgeText!,
                     style: const TextStyle(color: Colors.white, fontSize: 11),
                   ),
                 ),
@@ -507,6 +587,7 @@ class _AdaptiveAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.title,
     required this.onMenuTap,
     required this.onSettingTap,
+    required this.onNotificationViewAll,
     required this.onProfileTap,
     required this.onLogoutTap,
     required this.primary,
@@ -523,6 +604,7 @@ class _AdaptiveAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final VoidCallback onMenuTap;
   final VoidCallback onSettingTap;
+  final VoidCallback onNotificationViewAll;
   final VoidCallback onProfileTap;
   final VoidCallback onLogoutTap;
   final Color primary;
@@ -584,11 +666,34 @@ class _AdaptiveAppBar extends StatelessWidget implements PreferredSizeWidget {
           color: primary,
         ),
         const SizedBox(width: 8),
-        IconButton(
-          tooltip: '通知',
-          icon: const Icon(Icons.notifications_none_outlined),
-          onPressed: () {},
-        ),
+        Obx(() {
+          final notifyCtrl = Get.find<NotificationController>();
+          final unread = notifyCtrl.unreadCount.value;
+          final label = unread > 99 ? '99+' : '$unread';
+          return PopupMenuButton<String>(
+            tooltip: '通知',
+            offset: const Offset(0, 46),
+            constraints: const BoxConstraints(minWidth: 280, maxWidth: 320),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            onSelected: (value) {
+              notifyCtrl.markRead(value);
+            },
+            itemBuilder: (context) => _buildNotificationMenuItems(
+              context,
+              notifyCtrl,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: Badge(
+                isLabelVisible: unread > 0,
+                label: Text(label),
+                backgroundColor: Colors.redAccent,
+                offset: const Offset(6, -6),
+                child: const Icon(Icons.notifications_none_outlined),
+              ),
+            ),
+          );
+        }),
         IconButton(
           tooltip: '搜索',
           icon: const Icon(Icons.search_outlined),
@@ -609,6 +714,233 @@ class _AdaptiveAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ],
     );
+  }
+
+  List<PopupMenuEntry<String>> _buildNotificationMenuItems(
+    BuildContext context,
+    NotificationController controller,
+  ) {
+    final items = <PopupMenuEntry<String>>[];
+    items.add(
+      PopupMenuItem<String>(
+        enabled: false,
+          padding: const EdgeInsets.fromLTRB(14, 10, 10, 4),
+          child: Row(
+            children: [
+              Text(
+                '通知',
+                style: TextStyle(
+                  color: accent,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
+              const Spacer(),
+              TextButton(
+              onPressed: () {
+                controller.markAllRead();
+                Navigator.pop(context);
+              },
+              style: TextButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: const Text('全部已读', style: TextStyle(fontSize: 12)),
+            ),
+          ],
+        ),
+      ),
+    );
+    items.add(const PopupMenuDivider(height: 1));
+    if (controller.recentList.isEmpty) {
+      items.add(
+        PopupMenuItem<String>(
+          enabled: false,
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+          child: Text(
+            '暂无通知',
+            style: TextStyle(color: subtleText, fontSize: 12),
+          ),
+        ),
+      );
+      return items;
+    }
+
+    final sortedList = controller.recentList.toList()
+      ..sort((a, b) {
+        if (a.isRead == b.isRead) {
+          return b.createdAt.compareTo(a.createdAt);
+        }
+        return a.isRead ? 1 : -1;
+      });
+
+    for (int i = 0; i < sortedList.length; i += 1) {
+      final item = sortedList[i];
+      final showDivider = i != sortedList.length - 1;
+      items.add(
+        PopupMenuItem<String>(
+          value: item.id,
+          padding: EdgeInsets.zero,
+          child: _NotificationListItem(
+            item: item,
+            accent: accent,
+            subtleText: subtleText,
+            primary: primary,
+            showDivider: showDivider,
+            timeLabel: _formatTime(item.createdAt),
+            onMarkRead: () {
+              controller.markRead(item.id);
+              Navigator.pop(context);
+            },
+          ),
+        ),
+      );
+    }
+    items.add(const PopupMenuDivider(height: 1));
+    items.add(
+      PopupMenuItem<String>(
+        enabled: false,
+        padding: const EdgeInsets.fromLTRB(14, 6, 14, 10),
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              onNotificationViewAll();
+            },
+            style: TextButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const Text('查看全部', style: TextStyle(fontSize: 12)),
+          ),
+        ),
+      ),
+    );
+    return items;
+  }
+
+  String _formatTime(DateTime createdAt) {
+    final diff = DateTime.now().difference(createdAt);
+    if (diff.inMinutes < 1) {
+      return '刚刚';
+    }
+    if (diff.inMinutes < 60) {
+      return '${diff.inMinutes}分钟前';
+    }
+    if (diff.inHours < 24) {
+      return '${diff.inHours}小时前';
+    }
+    if (diff.inDays < 7) {
+      return '${diff.inDays}天前';
+    }
+    final hour = createdAt.hour.toString().padLeft(2, '0');
+    final minute = createdAt.minute.toString().padLeft(2, '0');
+    return '${createdAt.month}月${createdAt.day}日 $hour:$minute';
+  }
+}
+
+class _NotificationListItem extends StatelessWidget {
+  const _NotificationListItem({
+    required this.item,
+    required this.accent,
+    required this.subtleText,
+    required this.primary,
+    required this.showDivider,
+    required this.timeLabel,
+    required this.onMarkRead,
+  });
+
+  final NotificationModel item;
+  final Color accent;
+  final Color subtleText;
+  final Color primary;
+  final bool showDivider;
+  final String timeLabel;
+  final VoidCallback onMarkRead;
+
+  @override
+  Widget build(BuildContext context) {
+    final levelColor = _levelColor(item.level, primary);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+        color: item.isRead ? Colors.transparent : primary.withOpacity(0.14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: levelColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  item.title,
+                  style: TextStyle(
+                    color: accent,
+                    fontWeight: item.isRead ? FontWeight.w500 : FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                timeLabel,
+                style: TextStyle(color: subtleText, fontSize: 11),
+              ),
+              const SizedBox(width: 6),
+              IconButton(
+                tooltip: '标为已读',
+                icon: const Icon(Icons.done_all, size: 16),
+                color: item.isRead ? subtleText : primary,
+                onPressed: onMarkRead,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            item.body,
+            style: TextStyle(color: subtleText, fontSize: 12, height: 1.35),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          if (showDivider) ...[
+            const SizedBox(height: 10),
+            Divider(height: 1, color: subtleText.withOpacity(0.15)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Color _levelColor(NotificationLevel level, Color primary) {
+    switch (level) {
+      case NotificationLevel.warning:
+        return const Color(0xFFF59E0B);
+      case NotificationLevel.urgent:
+        return const Color(0xFFEF4444);
+      case NotificationLevel.info:
+      default:
+        return primary;
+    }
   }
 }
 
