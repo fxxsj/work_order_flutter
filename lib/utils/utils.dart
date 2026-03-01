@@ -20,18 +20,13 @@ class Utils {
   }
 
   static getThemeData({Color? themeColor, Brightness? brightness}) {
-    if (themeColor != null) {
-      currentThemeColor = themeColor;
-    }
-    if (brightness != null) {
-      currentBrightness = brightness;
-    }
-
+    final resolvedThemeColor = themeColor ?? const Color(0xFF14B8A6);
+    final resolvedBrightness = brightness ?? Brightness.light;
     final scheme = ColorScheme.fromSeed(
-      seedColor: currentThemeColor,
-      brightness: currentBrightness,
+      seedColor: resolvedThemeColor,
+      brightness: resolvedBrightness,
     );
-    final semantic = currentBrightness == Brightness.dark
+    final semantic = resolvedBrightness == Brightness.dark
         ? const AppSemanticColors(
             success: Color(0xFF22C55E),
             warning: Color(0xFFF59E0B),
@@ -48,7 +43,7 @@ class Utils {
             surfaceAlt: Color(0xFFF8FAFC),
             shadowStrong: Color(0x22000000),
           );
-    final appColors = currentBrightness == Brightness.dark
+    final appColors = resolvedBrightness == Brightness.dark
         ? const AppColors(
             background: Color(0xFF0F172A),
             surface: Color(0xFF111827),
@@ -67,13 +62,13 @@ class Utils {
           );
     final base = ThemeData(
       useMaterial3: true,
-      brightness: currentBrightness,
+      brightness: resolvedBrightness,
       colorScheme: scheme,
       primaryColor: scheme.primary,
-      scaffoldBackgroundColor: currentBrightness == Brightness.dark ? const Color(0xFF0B1020) : const Color(0xFFF4F6FA),
+      scaffoldBackgroundColor: resolvedBrightness == Brightness.dark ? const Color(0xFF0B1020) : const Color(0xFFF4F6FA),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: currentBrightness == Brightness.dark ? const Color(0xFF111827) : const Color(0xFFF8FAFC),
+        fillColor: resolvedBrightness == Brightness.dark ? const Color(0xFF111827) : const Color(0xFFF8FAFC),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
         ),
@@ -83,8 +78,8 @@ class Utils {
         ),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: currentBrightness == Brightness.dark ? const Color(0xFF0F172A) : Colors.white,
-        foregroundColor: currentBrightness == Brightness.dark ? const Color(0xFFE5E7EB) : const Color(0xFF111827),
+        backgroundColor: resolvedBrightness == Brightness.dark ? const Color(0xFF0F172A) : Colors.white,
+        foregroundColor: resolvedBrightness == Brightness.dark ? const Color(0xFFE5E7EB) : const Color(0xFF111827),
         elevation: 0,
       ),
       iconTheme: IconThemeData(color: scheme.primary),
@@ -114,7 +109,7 @@ class Utils {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: currentBrightness == Brightness.dark ? const Color(0xFF111827) : const Color(0xFF0F172A),
+        backgroundColor: resolvedBrightness == Brightness.dark ? const Color(0xFF111827) : const Color(0xFF0F172A),
         contentTextStyle: const TextStyle(color: Colors.white),
       ),
       extensions: [semantic, appColors],
@@ -122,9 +117,6 @@ class Utils {
 
     return base;
   }
-
-  static Color currentThemeColor = const Color(0xFF14B8A6);
-  static Brightness currentBrightness = Brightness.light;
 
   static isLogin() {
     return StoreUtil.hasData(Constant.KEY_TOKEN);

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/api/auth_api.dart';
 import 'package:work_order_app/constants/constant.dart';
+import 'package:work_order_app/common/theme_ext.dart';
 import 'package:work_order_app/models/api_response.dart';
 import 'package:work_order_app/models/user.dart';
 import 'package:work_order_app/router/app_router.dart';
@@ -50,9 +51,9 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final background = isDark ? const Color(0xFF0B1020) : const Color(0xFFF4F6FA);
-    final surface = isDark ? const Color(0xFF111827) : Colors.white;
+    final colors = theme.extension<AppColors>()!;
+    final background = colors.background;
+    final surface = colors.surface;
     final primary = theme.colorScheme.primary;
 
     return Scaffold(

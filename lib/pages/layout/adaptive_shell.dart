@@ -78,10 +78,9 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>();
+    final colors = theme.extension<AppColors>()!;
     final size = MediaQuery.sizeOf(context);
     final screenSize = _getScreenSize(size.width);
-    final isDark = theme.brightness == Brightness.dark;
 
     final isMobile = screenSize == ScreenSize.mobile;
     final isDesktop = screenSize == ScreenSize.desktop;
@@ -91,14 +90,14 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     final isXl = BreakpointsUtil.isXl(context);
     final is2xl = BreakpointsUtil.is2xl(context);
 
-    final background = colors?.background ?? (isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC));
-    final surface = colors?.surface ?? (isDark ? const Color(0xFF111827) : Colors.white);
+    final background = colors.background;
+    final surface = colors.surface;
     final primary = theme.primaryColor;
-    final accent = colors?.sidebarText ?? (isDark ? const Color(0xFFE5E7EB) : const Color(0xFF111827));
-    final sidebar = colors?.sidebar ?? (isDark ? const Color(0xFF0B1320) : Colors.white);
-    final subtleText = colors?.subtleText ?? (isDark ? const Color(0xFF94A3B8) : const Color(0xFF6B7280));
-    final sidebarText = colors?.sidebarText ?? (isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155));
-    final borderColor = colors?.borderColor ?? (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0));
+    final accent = colors.sidebarText;
+    final sidebar = colors.sidebar;
+    final subtleText = colors.subtleText;
+    final sidebarText = colors.sidebarText;
+    final borderColor = colors.borderColor;
     final appBarHeight = isXs ? 52.0 : 56.0;
     final currentId = _currentId(context);
     final isActionCompact = size.width < Breakpoints.lg;

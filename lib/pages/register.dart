@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:work_order_app/api/user_api.dart';
+import 'package:work_order_app/common/theme_ext.dart';
 import 'package:work_order_app/models/api_response.dart';
 import 'package:work_order_app/models/user.dart';
 import 'package:work_order_app/router/app_router.dart';
@@ -36,9 +37,9 @@ class _RegisterState extends State {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final background = isDark ? const Color(0xFF0B1020) : const Color(0xFFF4F6FA);
-    final surface = isDark ? const Color(0xFF111827) : Colors.white;
+    final colors = theme.extension<AppColors>()!;
+    final background = colors.background;
+    final surface = colors.surface;
 
     return Scaffold(
       backgroundColor: background,

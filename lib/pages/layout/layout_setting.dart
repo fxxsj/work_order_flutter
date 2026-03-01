@@ -20,14 +20,19 @@ class LayoutSetting extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[
-          Obx(() => DrawerHeader(
-                child: const Text('外观设置'),
-                decoration: BoxDecoration(
-                  color: themeController.tempColor.value,
-                ),
-                margin: EdgeInsets.zero,
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: isXs ? 12 : 16),
-              )),
+          Obx(() {
+            final headerColor = themeController.tempColor.value;
+            final isDarkText = ThemeData.estimateBrightnessForColor(headerColor) == Brightness.dark;
+            return DrawerHeader(
+              child: Text(
+                '外观设置',
+                style: TextStyle(color: isDarkText ? Colors.white : Colors.black),
+              ),
+              decoration: BoxDecoration(color: headerColor),
+              margin: EdgeInsets.zero,
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: isXs ? 12 : 16),
+            );
+          }),
           Padding(
             padding: tilePadding,
             child: Text('主题模式', style: theme.textTheme.titleSmall),
@@ -82,15 +87,13 @@ class LayoutSetting extends StatelessWidget {
             final seed = themeController.seedColor.value;
             final temp = themeController.tempColor.value;
             final dirty = seed.value != temp.value;
+            final buttonIsDark = ThemeData.estimateBrightnessForColor(temp) == Brightness.dark;
             return Padding(
               padding: EdgeInsets.symmetric(horizontal: isXs ? 8 : 12, vertical: 6),
               child: Column(
                 children: [
                   Row(
                     children: [
-                      CircleAvatar(radius: 10, backgroundColor: temp),
-                      const SizedBox(width: 8),
-                      Text('当前颜色', style: theme.textTheme.bodySmall),
                       const Spacer(),
                       TextButton(
                         onPressed: () => themeController.resetColor(),
@@ -98,7 +101,16 @@ class LayoutSetting extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       FilledButton(
-                        onPressed: dirty ? themeController.applyColor : null,
+                        onPressed: dirty
+                            ? () {
+                                themeController.applyColor();
+                                Navigator.of(context).pop();
+                              }
+                            : null,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: temp,
+                          foregroundColor: buttonIsDark ? Colors.white : Colors.black,
+                        ),
                         child: const Text('应用'),
                       ),
                     ],

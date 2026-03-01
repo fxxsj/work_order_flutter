@@ -14,22 +14,22 @@ class ContentPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>();
+    final colors = theme.extension<AppColors>()!;
     final isMd = BreakpointsUtil.isMd(context);
     final isXl = BreakpointsUtil.isXl(context);
     final is2xl = BreakpointsUtil.is2xl(context);
 
     final primary = theme.primaryColor;
-    final accent = colors?.sidebarText ?? (theme.brightness == Brightness.dark ? const Color(0xFFE5E7EB) : const Color(0xFF111827));
-    final subtleText = colors?.subtleText ?? (theme.brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF6B7280));
-    final borderColor = colors?.borderColor ?? (theme.brightness == Brightness.dark ? const Color(0xFF334155) : const Color(0xFFE2E8F0));
+    final accent = colors.sidebarText;
+    final subtleText = colors.subtleText;
+    final borderColor = colors.borderColor;
 
     return _ContentArea(
       selectedId: selectedId,
       breadcrumb: buildBreadcrumb(selectedId),
       primary: primary,
       accent: accent,
-      surface: colors?.surface ?? (theme.brightness == Brightness.dark ? const Color(0xFF111827) : Colors.white),
+      surface: colors.surface,
       subtleText: subtleText,
       borderColor: borderColor,
       gridCount: is2xl
