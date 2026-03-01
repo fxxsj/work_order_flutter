@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/utils/breakpoints_util.dart';
-import 'package:work_order_app/utils/utils.dart';
+import 'package:work_order_app/controllers/theme_controller.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:get/get.dart';
 
@@ -13,45 +13,105 @@ class LayoutSetting extends StatelessWidget {
     final isSm = BreakpointsUtil.isSm(context);
     final tilePadding = EdgeInsets.symmetric(horizontal: isXs ? 12 : 16, vertical: isXs ? 4 : 6);
     final density = isXs || isSm ? VisualDensity.compact : VisualDensity.standard;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final picker = BlockPicker(
-      pickerColor: Theme.of(context).colorScheme.primary,
-      onColorChanged: (v) {
-        Get.changeTheme(Utils.getThemeData(themeColor: v));
-      },
-    );
-
-    final themeMode = Switch.adaptive(
-      onChanged: (value) {
-        Get.changeTheme(Utils.getThemeData(brightness: value ? Brightness.dark : Brightness.light));
-      },
-      value: isDark,
-    );
+    final themeController = Get.find<ThemeController>();
+    final theme = Theme.of(context);
 
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[
-          DrawerHeader(
-            child: const Text('外观设置'),
-            decoration: BoxDecoration(
-              color: Get.theme.primaryColor,
-            ),
-            margin: EdgeInsets.zero,
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: isXs ? 12 : 16),
+          Obx(() => DrawerHeader(
+                child: const Text('外观设置'),
+                decoration: BoxDecoration(
+                  color: themeController.tempColor.value,
+                ),
+                margin: EdgeInsets.zero,
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: isXs ? 12 : 16),
+              )),
+          Padding(
+            padding: tilePadding,
+            child: Text('主题模式', style: theme.textTheme.titleSmall),
           ),
-          ListTile(
-            title: const Text('暗黑模式'),
-            trailing: themeMode,
-            contentPadding: tilePadding,
-            visualDensity: density,
-          ),
+          Obx(() => Column(
+                children: [
+                  RadioListTile<ThemeMode>(
+                    value: ThemeMode.system,
+                    groupValue: themeController.themeMode.value,
+                    onChanged: (value) {
+                      if (value != null) {
+                        themeController.setThemeMode(value);
+                      }
+                    },
+                    title: const Text('跟随系统'),
+                    subtitle: const Text('根据系统自动切换'),
+                    dense: true,
+                    visualDensity: density,
+                  ),
+                  RadioListTile<ThemeMode>(
+                    value: ThemeMode.light,
+                    groupValue: themeController.themeMode.value,
+                    onChanged: (value) {
+                      if (value != null) {
+                        themeController.setThemeMode(value);
+                      }
+                    },
+                    title: const Text('浅色'),
+                    dense: true,
+                    visualDensity: density,
+                  ),
+                  RadioListTile<ThemeMode>(
+                    value: ThemeMode.dark,
+                    groupValue: themeController.themeMode.value,
+                    onChanged: (value) {
+                      if (value != null) {
+                        themeController.setThemeMode(value);
+                      }
+                    },
+                    title: const Text('深色'),
+                    dense: true,
+                    visualDensity: density,
+                  ),
+                ],
+              )),
           const Divider(thickness: 1),
           Padding(
-            padding: EdgeInsets.all(isXs ? 6.0 : 8.0),
-            child: picker,
+            padding: tilePadding,
+            child: Text('主题色', style: theme.textTheme.titleSmall),
           ),
+          Obx(() {
+            final seed = themeController.seedColor.value;
+            final temp = themeController.tempColor.value;
+            final dirty = seed.value != temp.value;
+            return Padding(
+              padding: EdgeInsets.symmetric(horizontal: isXs ? 8 : 12, vertical: 6),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(radius: 10, backgroundColor: temp),
+                      const SizedBox(width: 8),
+                      Text('当前颜色', style: theme.textTheme.bodySmall),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: () => themeController.resetColor(),
+                        child: const Text('恢复默认'),
+                      ),
+                      const SizedBox(width: 6),
+                      FilledButton(
+                        onPressed: dirty ? themeController.applyColor : null,
+                        child: const Text('应用'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  BlockPicker(
+                    pickerColor: temp,
+                    onColorChanged: themeController.setTempColor,
+                  ),
+                ],
+              ),
+            );
+          }),
           const Divider(thickness: 1),
         ],
       ),
