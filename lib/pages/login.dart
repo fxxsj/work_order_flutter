@@ -18,6 +18,7 @@ class _LoginState extends State<Login> {
   final TextEditingController userNameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final User user = User();
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -107,7 +108,11 @@ class _LoginState extends State<Login> {
                               labelText: '密码',
                               prefixIcon: Icon(Icons.lock_outline),
                             ),
-                            onFieldSubmitted: (_) => _login(),
+                            onFieldSubmitted: (_) {
+                              if (!_isLoading) {
+                                _login();
+                              }
+                            },
                             validator: (v) => (v == null || v.isEmpty) ? '请输入密码' : null,
                           ),
                         ],
@@ -115,12 +120,18 @@ class _LoginState extends State<Login> {
                     ),
                     const SizedBox(height: 20),
                     FilledButton(
-                      onPressed: _login,
+                      onPressed: _isLoading ? null : _login,
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
-                      child: const Text('登录'),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('登录'),
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -155,41 +166,54 @@ class _LoginState extends State<Login> {
     if (!form.validate()) {
       return;
     }
+    if (_isLoading) {
+      return;
+    }
+    setState(() {
+      _isLoading = true;
+    });
     user.userName = userNameController.text;
     user.password = passwordController.text;
-
-    final ApiResponse responseBodyApi = await AuthApi.login({
-      'username': user.userName,
-      'password': user.password,
-    });
-    if (!responseBodyApi.success) {
-      Get.snackbar('登录失败', responseBodyApi.message ?? '请检查账号密码', snackPosition: SnackPosition.BOTTOM);
-      focusNodePassword.requestFocus();
-      return;
-    }
-    final responseData = responseBodyApi.data;
-    final responseMap = responseData is Map ? Map<String, dynamic>.from(responseData) : <String, dynamic>{};
-    String? token;
-    final directToken = responseMap['token'] ??
-        responseMap['access'] ??
-        responseMap['access_token'] ??
-        responseMap['auth_token'];
-    if (directToken != null) {
-      token = directToken.toString();
-    } else if (responseMap['data'] is Map) {
-      final inner = Map<String, dynamic>.from(responseMap['data'] as Map);
-      final innerToken = inner['token'] ?? inner['access'] ?? inner['access_token'] ?? inner['auth_token'];
-      if (innerToken != null) {
-        token = innerToken.toString();
+    try {
+      final ApiResponse responseBodyApi = await AuthApi.login({
+        'username': user.userName,
+        'password': user.password,
+      });
+      if (!responseBodyApi.success) {
+        Get.snackbar('登录失败', responseBodyApi.message ?? '请检查账号密码', snackPosition: SnackPosition.BOTTOM);
+        focusNodePassword.requestFocus();
+        return;
+      }
+      final responseData = responseBodyApi.data;
+      final responseMap = responseData is Map ? Map<String, dynamic>.from(responseData) : <String, dynamic>{};
+      String? token;
+      final directToken = responseMap['token'] ??
+          responseMap['access'] ??
+          responseMap['access_token'] ??
+          responseMap['auth_token'];
+      if (directToken != null) {
+        token = directToken.toString();
+      } else if (responseMap['data'] is Map) {
+        final inner = Map<String, dynamic>.from(responseMap['data'] as Map);
+        final innerToken = inner['token'] ?? inner['access'] ?? inner['access_token'] ?? inner['auth_token'];
+        if (innerToken != null) {
+          token = innerToken.toString();
+        }
+      }
+      if (token == null || token.toString().isEmpty) {
+        Get.snackbar('登录失败', '请检查账号密码', snackPosition: SnackPosition.BOTTOM);
+        focusNodePassword.requestFocus();
+        return;
+      }
+      responseMap['token'] = token;
+      _loginSuccess(responseMap);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
-    if (token == null || token.toString().isEmpty) {
-      Get.snackbar('登录失败', '请检查账号密码', snackPosition: SnackPosition.BOTTOM);
-      focusNodePassword.requestFocus();
-      return;
-    }
-    responseMap['token'] = token;
-    _loginSuccess(responseMap);
   }
 
   void _loginSuccess(Map<String, dynamic> responseData) {
