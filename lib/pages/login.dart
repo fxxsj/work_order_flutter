@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/api/auth_api.dart';
 import 'package:work_order_app/common/api_exception.dart';
-import 'package:work_order_app/common/http_client.dart';
 import 'package:work_order_app/constants/constant.dart';
 import 'package:work_order_app/common/theme_ext.dart';
 import 'package:work_order_app/models/user.dart';
 import 'package:work_order_app/router/app_router.dart';
+import 'package:provider/provider.dart';
 import 'package:work_order_app/controllers/auth_controller.dart';
 import 'package:work_order_app/utils/store_util.dart';
 import 'package:work_order_app/utils/toast_util.dart';
-import 'package:get/get.dart';
 
 class Login extends StatefulWidget {
   @override
@@ -213,7 +212,7 @@ class _LoginState extends State<Login> {
       responseMap['token'] = accessToken;
       responseMap['access'] = accessToken;
       responseMap['refresh'] = refreshToken;
-      _loginSuccess(responseMap);
+      await _loginSuccess(responseMap);
     } on ApiException catch (err) {
       ToastUtil.showError(err.message.isNotEmpty ? err.message : '请检查账号密码');
       focusNodePassword.requestFocus();
@@ -227,23 +226,14 @@ class _LoginState extends State<Login> {
     }
   }
 
-  void _loginSuccess(Map<String, dynamic> responseData) {
+  Future<void> _loginSuccess(Map<String, dynamic> responseData) async {
     // 保存 JWT tokens
     final accessToken = responseData['access'] ?? responseData['token'];
-    if (Get.isRegistered<AuthController>()) {
-      Get.find<AuthController>().handleLogin(
-        access: accessToken,
-        refresh: responseData['refresh'],
-      );
-    } else {
-      StoreUtil.writeTokens(access: accessToken, refresh: responseData['refresh']);
-      // 更新 HTTP 客户端的 tokens
-      HttpClient.updateTokens(
-        responseData['access'] ?? responseData['token'],
-        responseData['refresh'],
-      );
-    }
-    StoreUtil.write(Constant.KEY_REMEMBER_USERNAME, userNameController.text);
+    await context.read<AuthController>().handleLogin(
+      access: accessToken,
+      refresh: responseData['refresh'],
+    );
+    await StoreUtil.write(Constant.KEY_REMEMBER_USERNAME, userNameController.text);
     var userInfo = Map<String, dynamic>.from(responseData);
     if (responseData.containsKey('username')) {
       userInfo['userName'] = responseData['username'];
@@ -251,8 +241,7 @@ class _LoginState extends State<Login> {
     if (responseData.containsKey('full_name')) {
       userInfo['name'] = responseData['full_name'];
     }
-    StoreUtil.write(Constant.KEY_CURRENT_USER_INFO, userInfo);
-    StoreUtil.init();
+    await StoreUtil.write(Constant.KEY_CURRENT_USER_INFO, userInfo);
 
     appRouter.go('/');
   }

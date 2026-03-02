@@ -1,22 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:work_order_app/constants/breakpoints.dart';
 import 'package:work_order_app/constants/constant.dart';
 import 'package:work_order_app/common/theme_ext.dart';
-import 'package:work_order_app/controllers/app_badge_controller.dart';
-import 'package:work_order_app/controllers/app_scaffold_controller.dart';
+import 'package:work_order_app/controllers/auth_controller.dart';
 import 'package:work_order_app/controllers/notification_controller.dart';
 import 'package:work_order_app/pages/layout/layout_setting.dart';
 import 'package:work_order_app/pages/layout/nav_config.dart';
 import 'package:work_order_app/pages/layout/widgets/app_header.dart';
 import 'package:work_order_app/pages/layout/widgets/app_sidebar.dart';
-import 'package:work_order_app/pages/layout/widgets/app_overlay.dart';
 import 'package:work_order_app/pages/layout/widgets/content_container.dart';
 import 'package:work_order_app/router/app_router.dart';
 import 'package:work_order_app/utils/breakpoints_util.dart';
 import 'package:work_order_app/utils/store_util.dart';
 import 'package:work_order_app/utils/utils.dart';
-import 'package:get/get.dart';
 
 enum ScreenSize {
   mobile,
@@ -37,8 +35,6 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   final ScrollController _railScrollController = ScrollController();
   bool _sidebarCollapsed = false;
-  late final NotificationController _notificationController;
-  late final AppScaffoldController _scaffoldController;
   final Set<String> _expandedIds = <String>{};
   late final Map<String, String> _pathToId;
   late final Map<String, int> _idToBranchIndex;
@@ -53,19 +49,6 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     final savedExpanded = StoreUtil.read(Constant.KEY_SIDEBAR_EXPANDED);
     if (savedExpanded is List) {
       _expandedIds.addAll(savedExpanded.map((e) => e.toString()));
-    }
-    if (Get.isRegistered<NotificationController>()) {
-      _notificationController = Get.find<NotificationController>();
-    } else {
-      _notificationController = Get.put(NotificationController());
-    }
-    if (!Get.isRegistered<AppBadgeController>()) {
-      Get.put(AppBadgeController());
-    }
-    if (Get.isRegistered<AppScaffoldController>()) {
-      _scaffoldController = Get.find<AppScaffoldController>();
-    } else {
-      _scaffoldController = Get.put(AppScaffoldController());
     }
   }
 
@@ -83,10 +66,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     final screenSize = _getScreenSize(size.width);
 
     final isMobile = screenSize == ScreenSize.mobile;
-    final isDesktop = screenSize == ScreenSize.desktop;
     final isXs = BreakpointsUtil.isXs(context);
-    final isSm = BreakpointsUtil.isSm(context);
-    final isMd = BreakpointsUtil.isMd(context);
     final isXl = BreakpointsUtil.isXl(context);
     final is2xl = BreakpointsUtil.is2xl(context);
 
@@ -177,13 +157,8 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
             ),
           Expanded(
             child: SafeArea(
-              child: Stack(
-                children: [
-                  ContentContainer(
-                    child: widget.navigationShell,
-                  ),
-                  AppOverlay(controller: _scaffoldController),
-                ],
+              child: ContentContainer(
+                child: widget.navigationShell,
               ),
             ),
           ),
@@ -205,7 +180,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
   }
 
   void _handleLogout() {
-    Utils.logout();
+    Utils.logout(context.read<AuthController>());
     appRouter.go('/login');
   }
 
@@ -231,10 +206,9 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     return matchNavIdWith(path, _pathToId) ?? _pathToId[path] ?? 'dashboard';
   }
 
-
   String? _badgeTextForItem(NavItem item) {
     if (item.id == 'notifications') {
-      final count = _notificationController.unreadCount.value;
+      final count = context.read<NotificationController>().unreadCount;
       if (count <= 0) {
         return null;
       }

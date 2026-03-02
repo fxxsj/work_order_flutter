@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 import 'package:work_order_app/controllers/app_badge_controller.dart';
 import 'package:work_order_app/controllers/notification_controller.dart';
 import 'package:work_order_app/models/notification_model.dart';
@@ -91,54 +91,56 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
             onPressed: onSidebarToggle,
           ),
         if (!isCompactActions) ...[
-          Obx(() {
-            final badgeCtrl = Get.find<AppBadgeController>();
-            if (badgeCtrl.isLoading.value) {
-              return const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
+          Consumer<AppBadgeController>(
+            builder: (context, badgeCtrl, _) {
+              if (badgeCtrl.isLoading) {
+                return const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                );
+              }
+              return _AppBarChip(
+                label: '今日待办 ${badgeCtrl.todoCount}',
+                color: primary,
               );
-            }
-            return _AppBarChip(
-              label: '今日待办 ${badgeCtrl.todoCount.value}',
-              color: primary,
-            );
-          }),
+            },
+          ),
           const SizedBox(width: 8),
         ],
-        Obx(() {
-          final notifyCtrl = Get.find<NotificationController>();
-          final unread = notifyCtrl.unreadCount.value;
-          final label = unread > 99 ? '99+' : '$unread';
-          return PopupMenuButton<String>(
-            tooltip: '通知',
-            offset: const Offset(0, 46),
-            constraints: const BoxConstraints(minWidth: 280, maxWidth: 320),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-            onSelected: (value) {
-              notifyCtrl.markRead(value);
-            },
-            itemBuilder: (context) => _buildNotificationMenuItems(
-              context,
-              notifyCtrl,
-              accent,
-              subtleText,
-              primary,
-              onNotificationViewAll,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Badge(
-                isLabelVisible: unread > 0,
-                label: Text(label),
-                backgroundColor: Colors.redAccent,
-                offset: const Offset(6, -6),
-                child: const Icon(Icons.notifications_none_outlined),
+        Consumer<NotificationController>(
+          builder: (context, notifyCtrl, _) {
+            final unread = notifyCtrl.unreadCount;
+            final label = unread > 99 ? '99+' : '$unread';
+            return PopupMenuButton<String>(
+              tooltip: '通知',
+              offset: const Offset(0, 46),
+              constraints: const BoxConstraints(minWidth: 280, maxWidth: 320),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              onSelected: (value) {
+                notifyCtrl.markRead(value);
+              },
+              itemBuilder: (context) => _buildNotificationMenuItems(
+                context,
+                notifyCtrl,
+                accent,
+                subtleText,
+                primary,
+                onNotificationViewAll,
               ),
-            ),
-          );
-        }),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: Badge(
+                  isLabelVisible: unread > 0,
+                  label: Text(label),
+                  backgroundColor: Colors.redAccent,
+                  offset: const Offset(6, -6),
+                  child: const Icon(Icons.notifications_none_outlined),
+                ),
+              ),
+            );
+          },
+        ),
         if (!isCompactActions)
           IconButton(
             tooltip: '外观设置',
@@ -160,13 +162,14 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
               const PopupMenuItem(value: 'settings', child: Text('外观设置')),
               PopupMenuItem(
                 value: 'todo',
-                child: Obx(() {
-                  final badgeCtrl = Get.find<AppBadgeController>();
-                  final label = badgeCtrl.isLoading.value
-                      ? '今日待办加载中'
-                      : '今日待办 ${badgeCtrl.todoCount.value}';
-                  return Text(label);
-                }),
+                child: Consumer<AppBadgeController>(
+                  builder: (context, badgeCtrl, _) {
+                    final label = badgeCtrl.isLoading
+                        ? '今日待办加载中'
+                        : '今日待办 ${badgeCtrl.todoCount}';
+                    return Text(label);
+                  },
+                ),
               ),
             ],
             child: const Padding(

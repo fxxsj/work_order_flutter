@@ -6,6 +6,8 @@ import 'package:work_order_app/router/app_router.dart';
 import 'package:work_order_app/utils/store_util.dart';
 import 'package:work_order_app/utils/toast_util.dart';
 import 'package:work_order_app/utils/utils.dart';
+import 'package:provider/provider.dart';
+import 'package:work_order_app/controllers/auth_controller.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -153,7 +155,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ToastUtil.showSuccess(message);
       _resetPasswordForm();
       await Future<void>.delayed(const Duration(seconds: 2));
-      Utils.logout();
+      Utils.logout(context.read<AuthController>());
       appRouter.go('/login');
     } on ApiException catch (err) {
       ToastUtil.showError(err.message.isNotEmpty ? err.message : '密码修改失败');

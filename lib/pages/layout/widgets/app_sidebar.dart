@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:work_order_app/pages/layout/nav_config.dart';
 
 class AppSidebarDrawer extends StatelessWidget {
@@ -196,9 +195,8 @@ class AppSidebarRail extends StatelessWidget {
               ),
             if (railExtended && !isParent)
               _RailBadge(
-                item: item,
+                badgeText: badgeTextForItem(item),
                 primary: primary,
-                badgeTextForItem: badgeTextForItem,
               ),
           ],
         ),
@@ -221,20 +219,6 @@ Widget _buildDrawerTile(
   required String? Function(NavItem) badgeTextForItem,
   bool dense = false,
 }) {
-  if (item.id == 'notifications') {
-    return Obx(() {
-      final badgeText = badgeTextForItem(item);
-      return _DrawerTile(
-        item: item,
-        badgeText: badgeText,
-        isSelected: isSelected,
-        primary: primary,
-        sidebarText: sidebarText,
-        onTap: onTap,
-        dense: dense,
-      );
-    });
-  }
   return _DrawerTile(
     item: item,
     badgeText: badgeTextForItem(item),
@@ -316,25 +300,16 @@ class _DrawerTile extends StatelessWidget {
 
 class _RailBadge extends StatelessWidget {
   const _RailBadge({
-    required this.item,
+    required this.badgeText,
     required this.primary,
-    required this.badgeTextForItem,
   });
 
-  final NavItem item;
+  final String? badgeText;
   final Color primary;
-  final String? Function(NavItem) badgeTextForItem;
 
   @override
   Widget build(BuildContext context) {
-    if (item.id == 'notifications') {
-      return Obx(() => _buildBadge(badgeTextForItem(item)));
-    }
-    return _buildBadge(badgeTextForItem(item));
-  }
-
-  Widget _buildBadge(String? text) {
-    if (text == null) {
+    if (badgeText == null) {
       return const SizedBox.shrink();
     }
     return Container(
@@ -344,7 +319,7 @@ class _RailBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        text,
+        badgeText!,
         style: const TextStyle(color: Colors.white, fontSize: 10.5),
       ),
     );

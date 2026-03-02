@@ -1,14 +1,19 @@
-import 'package:get/get.dart';
+import 'package:flutter/foundation.dart';
 
-class AppBadgeController extends GetxController {
-  final RxInt todoCount = 0.obs;
-  final RxBool isLoading = false.obs;
+class AppBadgeController extends ChangeNotifier {
+  int _todoCount = 0;
+  bool _isLoading = false;
+
+  int get todoCount => _todoCount;
+  bool get isLoading => _isLoading;
 
   void setTodoCount(int value) {
-    todoCount.value = value;
+    _todoCount = value;
+    notifyListeners();
   }
 
   void setLoading(bool value) {
-    isLoading.value = value;
+    _isLoading = value;
+    notifyListeners();
   }
 }

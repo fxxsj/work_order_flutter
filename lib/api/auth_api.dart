@@ -32,4 +32,19 @@ class AuthApi {
     final response = await HttpClient.post('/auth/change-password/', data: data);
     return ApiResult(message: response.message);
   }
+
+  static Future<ApiResult<List<Map<String, dynamic>>>> getSalespersons() async {
+    final response = await HttpClient.get('/auth/salespersons/');
+    final payload = response.data;
+    if (payload is List) {
+      return ApiResult(
+        data: payload
+            .whereType<Map>()
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList(),
+        message: response.message,
+      );
+    }
+    return ApiResult(data: const [], message: response.message);
+  }
 }

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 import 'package:work_order_app/common/theme_ext.dart';
 import 'package:work_order_app/controllers/notification_controller.dart';
 import 'package:work_order_app/models/notification_model.dart';
 import 'package:work_order_app/pages/layout/nav_config.dart';
 import 'package:work_order_app/pages/profile.dart';
+import 'package:work_order_app/src/features/customer/presentation/customer_list_page.dart';
 import 'package:work_order_app/utils/breakpoints_util.dart';
 
 class ContentPage extends StatelessWidget {
@@ -16,6 +17,9 @@ class ContentPage extends StatelessWidget {
   Widget build(BuildContext context) {
     if (selectedId == 'profile') {
       return const ProfilePage();
+    }
+    if (selectedId == 'customers') {
+      return const CustomerListPage();
     }
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
@@ -415,81 +419,82 @@ class _NotificationCenterView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<NotificationController>();
-    return Obx(() {
-      final showUnreadOnly = controller.showUnreadOnly.value;
-      final allItems = controller.notifications.toList();
-      final items = showUnreadOnly
-          ? allItems.where((item) => !item.isRead).toList()
-          : allItems;
+    return Consumer<NotificationController>(
+      builder: (context, controller, _) {
+        final showUnreadOnly = controller.showUnreadOnly;
+        final allItems = controller.notifications.toList();
+        final items = showUnreadOnly
+            ? allItems.where((item) => !item.isRead).toList()
+            : allItems;
 
-      return Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: borderColor),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _NotificationToolbar(
-              primary: primary,
-              accent: accent,
-              subtleText: subtleText,
-              unreadCount: controller.unreadCount.value,
-              totalCount: controller.totalCount.value,
-              showUnreadOnly: showUnreadOnly,
-              onFilterChange: controller.setShowUnreadOnly,
-              onMarkAllRead: controller.markAllRead,
-              onRefresh: controller.refreshAll,
-            ),
-            const SizedBox(height: 12),
-            if (controller.isLoading.value)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: CircularProgressIndicator(color: primary),
-                ),
-              )
-            else if (items.isEmpty)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                decoration: BoxDecoration(
-                  color: primary.withOpacity(0.04),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Center(
-                  child: Text('暂无通知', style: TextStyle(color: subtleText)),
-                ),
-              )
-            else ...[
-              ...items.map(
-                (item) => _NotificationListItem(
-                  item: item,
-                  primary: primary,
-                  surface: surface,
-                  subtleText: subtleText,
-                  accent: accent,
-                  onMarkRead: controller.markRead,
-                ),
+        return Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: borderColor),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _NotificationToolbar(
+                primary: primary,
+                accent: accent,
+                subtleText: subtleText,
+                unreadCount: controller.unreadCount,
+                totalCount: controller.totalCount,
+                showUnreadOnly: showUnreadOnly,
+                onFilterChange: controller.setShowUnreadOnly,
+                onMarkAllRead: controller.markAllRead,
+                onRefresh: controller.refreshAll,
               ),
-              if (controller.hasMore.value)
-                Align(
-                  alignment: Alignment.center,
-                  child: TextButton(
-                    onPressed: controller.isLoadingMore.value ? null : controller.loadMore,
-                    child: controller.isLoadingMore.value
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Text('加载更多'),
+              const SizedBox(height: 12),
+              if (controller.isLoading)
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: CircularProgressIndicator(color: primary),
+                  ),
+                )
+              else if (items.isEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  decoration: BoxDecoration(
+                    color: primary.withOpacity(0.04),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Center(
+                    child: Text('暂无通知', style: TextStyle(color: subtleText)),
+                  ),
+                )
+              else ...[
+                ...items.map(
+                  (item) => _NotificationListItem(
+                    item: item,
+                    primary: primary,
+                    surface: surface,
+                    subtleText: subtleText,
+                    accent: accent,
+                    onMarkRead: controller.markRead,
                   ),
                 ),
+                if (controller.hasMore)
+                  Align(
+                    alignment: Alignment.center,
+                    child: TextButton(
+                      onPressed: controller.isLoadingMore ? null : controller.loadMore,
+                      child: controller.isLoadingMore
+                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                          : const Text('加载更多'),
+                    ),
+                  ),
+              ],
             ],
-          ],
-        ),
-      );
-    });
+          ),
+        );
+      },
+    );
   }
 }
 

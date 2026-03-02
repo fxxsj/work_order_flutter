@@ -1,61 +1,64 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:work_order_app/constants/constant.dart';
+import 'package:work_order_app/utils/store_util.dart';
 
-class ThemeController extends GetxController {
+class ThemeController extends ChangeNotifier {
   static const Color defaultSeed = Color(0xFF14B8A6);
 
-  final Rx<ThemeMode> themeMode = ThemeMode.system.obs;
-  final Rx<Color> seedColor = defaultSeed.obs;
-  final Rx<Color> tempColor = defaultSeed.obs;
-  final RxDouble fontScale = 1.0.obs;
+  ThemeMode _themeMode = ThemeMode.system;
+  Color _seedColor = defaultSeed;
+  Color _tempColor = defaultSeed;
+  double _fontScale = 1.0;
 
-  final GetStorage _storage = GetStorage();
-
-  @override
-  void onInit() {
-    super.onInit();
-    load();
-  }
+  ThemeMode get themeMode => _themeMode;
+  Color get seedColor => _seedColor;
+  Color get tempColor => _tempColor;
+  double get fontScale => _fontScale;
 
   void load() {
-    final colorValue = _storage.read(Constant.KEY_THEME_COLOR);
+    final colorValue = StoreUtil.read(Constant.KEY_THEME_COLOR);
     if (colorValue is int) {
-      seedColor.value = Color(colorValue);
+      _seedColor = Color(colorValue);
     }
-    tempColor.value = seedColor.value;
+    _tempColor = _seedColor;
 
-    final modeValue = _storage.read(Constant.KEY_THEME_MODE);
-    themeMode.value = _parseMode(modeValue?.toString());
+    final modeValue = StoreUtil.read(Constant.KEY_THEME_MODE);
+    _themeMode = _parseMode(modeValue?.toString());
 
-    final scaleValue = _storage.read(Constant.KEY_FONT_SCALE);
+    final scaleValue = StoreUtil.read(Constant.KEY_FONT_SCALE);
     if (scaleValue is num) {
-      fontScale.value = scaleValue.toDouble();
+      _fontScale = scaleValue.toDouble();
     }
+
+    notifyListeners();
   }
 
   void setThemeMode(ThemeMode mode) {
-    themeMode.value = mode;
-    _storage.write(Constant.KEY_THEME_MODE, _serializeMode(mode));
+    _themeMode = mode;
+    StoreUtil.write(Constant.KEY_THEME_MODE, _serializeMode(mode));
+    notifyListeners();
   }
 
   void setTempColor(Color color) {
-    tempColor.value = color;
+    _tempColor = color;
+    notifyListeners();
   }
 
   void setFontScale(double value) {
-    fontScale.value = value;
-    _storage.write(Constant.KEY_FONT_SCALE, value);
+    _fontScale = value;
+    StoreUtil.write(Constant.KEY_FONT_SCALE, value);
+    notifyListeners();
   }
 
   void applyColor() {
-    seedColor.value = tempColor.value;
-    _storage.write(Constant.KEY_THEME_COLOR, seedColor.value.value);
+    _seedColor = _tempColor;
+    StoreUtil.write(Constant.KEY_THEME_COLOR, _seedColor.value);
+    notifyListeners();
   }
 
   void resetColor() {
-    tempColor.value = defaultSeed;
+    _tempColor = defaultSeed;
+    notifyListeners();
   }
 
   ThemeMode _parseMode(String? value) {

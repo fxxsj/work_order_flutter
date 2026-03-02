@@ -3,23 +3,9 @@ import 'package:work_order_app/constants/constant.dart';
 import 'package:work_order_app/common/theme_ext.dart';
 import 'package:work_order_app/controllers/auth_controller.dart';
 import 'package:work_order_app/utils/store_util.dart';
-import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class Utils {
-  static Future<T?> fullscreenDialog<T>(Widget widget) {
-    final context = Get.context;
-    if (context == null) {
-      return Future.value(null);
-    }
-    return Navigator.of(context).push<T>(
-      MaterialPageRoute(
-        builder: (_) => widget,
-        fullscreenDialog: true,
-      ),
-    );
-  }
-
   static getThemeData({Color? themeColor, Brightness? brightness}) {
     final resolvedThemeColor = themeColor ?? const Color(0xFF14B8A6);
     final resolvedBrightness = brightness ?? Brightness.light;
@@ -123,12 +109,8 @@ class Utils {
     return StoreUtil.isLoggedIn();
   }
 
-  static logout() {
-    if (Get.isRegistered<AuthController>()) {
-      Get.find<AuthController>().handleLogout();
-    } else {
-      StoreUtil.clearTokens();
-    }
+  static logout(AuthController authController) {
+    authController.handleLogout();
     StoreUtil.remove(Constant.KEY_CURRENT_USER_INFO);
   }
 

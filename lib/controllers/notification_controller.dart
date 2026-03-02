@@ -1,29 +1,37 @@
 import 'dart:async';
 
-import 'package:get/get.dart';
+import 'package:flutter/foundation.dart';
 import 'package:work_order_app/api/notification_api.dart';
 import 'package:work_order_app/common/app_events.dart';
 import 'package:work_order_app/models/notification_model.dart';
 import 'package:work_order_app/utils/utils.dart';
 
-class NotificationController extends GetxController {
-  final RxInt unreadCount = 0.obs;
-  final RxList<NotificationModel> recentList = <NotificationModel>[].obs;
-  final RxList<NotificationModel> notifications = <NotificationModel>[].obs;
-  final RxBool isLoading = false.obs;
-  final RxBool isLoadingMore = false.obs;
-  final RxBool hasMore = false.obs;
-  final RxInt totalCount = 0.obs;
-  final RxBool showUnreadOnly = false.obs;
+class NotificationController extends ChangeNotifier {
+  int _unreadCount = 0;
+  List<NotificationModel> _recentList = [];
+  List<NotificationModel> _notifications = [];
+  bool _isLoading = false;
+  bool _isLoadingMore = false;
+  bool _hasMore = false;
+  int _totalCount = 0;
+  bool _showUnreadOnly = false;
 
   Timer? _poller;
   StreamSubscription<AppEvent>? _authSubscription;
   int _page = 1;
   final int _pageSize = 20;
+  bool _disposed = false;
 
-  @override
-  void onInit() {
-    super.onInit();
+  int get unreadCount => _unreadCount;
+  List<NotificationModel> get recentList => _recentList;
+  List<NotificationModel> get notifications => _notifications;
+  bool get isLoading => _isLoading;
+  bool get isLoadingMore => _isLoadingMore;
+  bool get hasMore => _hasMore;
+  int get totalCount => _totalCount;
+  bool get showUnreadOnly => _showUnreadOnly;
+
+  void initialize() {
     if (Utils.isLogin()) {
       startPolling();
     }
@@ -31,10 +39,15 @@ class NotificationController extends GetxController {
   }
 
   @override
-  void onClose() {
+  void dispose() {
+    _disposed = true;
     _poller?.cancel();
     _authSubscription?.cancel();
-    super.onClose();
+    super.dispose();
+  }
+
+  void _safeNotify() {
+    if (!_disposed) notifyListeners();
   }
 
   void _handleEvent(AppEvent event) {
@@ -64,53 +77,58 @@ class NotificationController extends GetxController {
     if (!Utils.isLogin()) {
       return;
     }
-    isLoading.value = true;
+    _isLoading = true;
+    _safeNotify();
     _page = 1;
     try {
       final page = await NotificationApi.fetchNotifications(page: _page, pageSize: _pageSize);
-      notifications.assignAll(page.items);
-      totalCount.value = page.totalCount ?? page.items.length;
-      hasMore.value = page.hasMore;
+      _notifications = page.items.toList();
+      _totalCount = page.totalCount ?? page.items.length;
+      _hasMore = page.hasMore;
       await _refreshUnreadCount();
       await _refreshRecent();
     } catch (_) {
       // ignore polling errors
     } finally {
-      isLoading.value = false;
+      _isLoading = false;
+      _safeNotify();
     }
   }
 
   Future<void> loadMore() async {
-    if (isLoadingMore.value || !hasMore.value) {
+    if (_isLoadingMore || !_hasMore) {
       return;
     }
     if (!Utils.isLogin()) {
       return;
     }
-    isLoadingMore.value = true;
+    _isLoadingMore = true;
+    _safeNotify();
     try {
       final nextPage = _page + 1;
       final page = await NotificationApi.fetchNotifications(page: nextPage, pageSize: _pageSize);
-      notifications.addAll(page.items);
+      _notifications = [..._notifications, ...page.items];
       _page = nextPage;
-      hasMore.value = page.hasMore;
-      totalCount.value = page.totalCount ?? totalCount.value;
+      _hasMore = page.hasMore;
+      _totalCount = page.totalCount ?? _totalCount;
     } catch (_) {
       // ignore paging errors
     } finally {
-      isLoadingMore.value = false;
+      _isLoadingMore = false;
+      _safeNotify();
     }
   }
 
   Future<void> markAllRead() async {
     await NotificationApi.markAllRead();
-    notifications.value = notifications
+    _notifications = _notifications
         .map((item) => item.isRead ? item : item.copyWith(isRead: true))
         .toList();
-    recentList.value = recentList
+    _recentList = _recentList
         .map((item) => item.isRead ? item : item.copyWith(isRead: true))
         .toList();
-    unreadCount.value = 0;
+    _unreadCount = 0;
+    _safeNotify();
   }
 
   Future<void> markRead(String id) async {
@@ -119,7 +137,8 @@ class NotificationController extends GetxController {
       return;
     }
     _updateLists(updated);
-    unreadCount.value = unreadCount.value > 0 ? unreadCount.value - 1 : 0;
+    _unreadCount = _unreadCount > 0 ? _unreadCount - 1 : 0;
+    _safeNotify();
   }
 
   Future<void> _poll() async {
@@ -136,7 +155,8 @@ class NotificationController extends GetxController {
 
   Future<void> _refreshUnreadCount() async {
     try {
-      unreadCount.value = await NotificationApi.fetchUnreadCount();
+      _unreadCount = await NotificationApi.fetchUnreadCount();
+      _safeNotify();
     } catch (_) {
       // ignore
     }
@@ -145,24 +165,26 @@ class NotificationController extends GetxController {
   Future<void> _refreshRecent() async {
     try {
       final page = await NotificationApi.fetchNotifications(page: 1, pageSize: 5);
-      recentList.assignAll(page.items);
+      _recentList = page.items.toList();
+      _safeNotify();
     } catch (_) {
       // ignore
     }
   }
 
   void _updateLists(NotificationModel updated) {
-    final recentIndex = recentList.indexWhere((item) => item.id == updated.id);
+    final recentIndex = _recentList.indexWhere((item) => item.id == updated.id);
     if (recentIndex != -1) {
-      recentList[recentIndex] = updated;
+      _recentList = List.from(_recentList)..[recentIndex] = updated;
     }
-    final listIndex = notifications.indexWhere((item) => item.id == updated.id);
+    final listIndex = _notifications.indexWhere((item) => item.id == updated.id);
     if (listIndex != -1) {
-      notifications[listIndex] = updated;
+      _notifications = List.from(_notifications)..[listIndex] = updated;
     }
   }
 
   void setShowUnreadOnly(bool value) {
-    showUnreadOnly.value = value;
+    _showUnreadOnly = value;
+    _safeNotify();
   }
 }
