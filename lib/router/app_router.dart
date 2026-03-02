@@ -13,7 +13,7 @@ final List<NavItem> _leafItems = leafNavItemsByBranch();
 
 final GoRouter appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
-  initialLocation: '/',
+  initialLocation: '/dashboard',
   redirect: (context, state) {
     final loggedIn = Utils.isLogin();
     final goingToLogin = state.matchedLocation == '/login' || state.matchedLocation == '/register';
@@ -21,7 +21,10 @@ final GoRouter appRouter = GoRouter(
       return '/login';
     }
     if (loggedIn && state.matchedLocation == '/login') {
-      return '/';
+      return '/dashboard';
+    }
+    if (state.matchedLocation == '/') {
+      return '/dashboard';
     }
     return null;
   },

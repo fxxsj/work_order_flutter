@@ -9,6 +9,7 @@ class NavItem {
   final List<String>? breadcrumb;
   final List<NavItem> children;
   final String? badge;
+  final bool showInSidebar;
 
   const NavItem({
     required this.id,
@@ -19,23 +20,43 @@ class NavItem {
     this.breadcrumb,
     this.children = const [],
     this.badge,
+    this.showInSidebar = true,
   });
+
+  NavItem copyWith({
+    String? id,
+    String? label,
+    IconData? icon,
+    String? path,
+    String? pathPattern,
+    List<String>? breadcrumb,
+    List<NavItem>? children,
+    String? badge,
+    bool? showInSidebar,
+  }) {
+    return NavItem(
+      id: id ?? this.id,
+      label: label ?? this.label,
+      icon: icon ?? this.icon,
+      path: path ?? this.path,
+      pathPattern: pathPattern ?? this.pathPattern,
+      breadcrumb: breadcrumb ?? this.breadcrumb,
+      children: children ?? this.children,
+      badge: badge ?? this.badge,
+      showInSidebar: showInSidebar ?? this.showInSidebar,
+    );
+  }
 }
 
 // Keep this in sync with leaf routes. New menu items should be added here
 // to preserve branch order across sidebar reorderings.
 const List<String> branchOrder = [
   'dashboard',
-  'workorders_list',
-  'workorders_create',
+  'workorders',
   'tasks_list',
   'tasks_board',
   'tasks_stats',
   'tasks_history',
-  'tasks_rules',
-  'customers',
-  'departments',
-  'processes',
   'products',
   'materials',
   'product_groups',
@@ -52,6 +73,11 @@ const List<String> branchOrder = [
   'payments',
   'costs',
   'statements',
+  'customers',
+  'suppliers',
+  'departments',
+  'processes',
+  'tasks_rules',
   'notifications',
   'profile',
 ];
@@ -61,40 +87,33 @@ const List<NavItem> navItems = [
     id: 'dashboard',
     label: '工作台',
     icon: Icons.dashboard_outlined,
-    path: '/',
+    path: '/dashboard',
   ),
   NavItem(
     id: 'workorders',
     label: '施工单',
     icon: Icons.description_outlined,
-    children: [
-      NavItem(id: 'workorders_list', label: '施工单列表', icon: Icons.list_alt_outlined, path: '/workorders/list'),
-      NavItem(id: 'workorders_create', label: '新建施工单', icon: Icons.add_circle_outline, path: '/workorders/create'),
-    ],
+    path: '/workorders',
   ),
   NavItem(
     id: 'tasks',
     label: '任务管理',
     icon: Icons.task_alt_outlined,
     children: [
-      NavItem(id: 'tasks_list', label: '任务列表', icon: Icons.view_list_outlined, path: '/tasks/list'),
+      NavItem(id: 'tasks_list', label: '任务列表', icon: Icons.view_list_outlined, path: '/tasks'),
       NavItem(id: 'tasks_board', label: '部门任务看板', icon: Icons.view_kanban_outlined, path: '/tasks/board'),
       NavItem(id: 'tasks_stats', label: '协作统计', icon: Icons.insights_outlined, path: '/tasks/stats'),
-      NavItem(id: 'tasks_history', label: '分派历史', icon: Icons.history_outlined, path: '/tasks/history'),
-      NavItem(id: 'tasks_rules', label: '分派规则配置', icon: Icons.rule_outlined, path: '/tasks/rules'),
+      NavItem(id: 'tasks_history', label: '分派历史', icon: Icons.history_outlined, path: '/tasks/assignment-history'),
     ],
   ),
   NavItem(
-    id: 'basic_data',
-    label: '基础数据',
-    icon: Icons.storage_outlined,
+    id: 'product_material',
+    label: '产品物料',
+    icon: Icons.shopping_bag_outlined,
     children: [
-      NavItem(id: 'customers', label: '客户管理', icon: Icons.people_outline, path: '/basic/customers'),
-      NavItem(id: 'departments', label: '部门管理', icon: Icons.apartment_outlined, path: '/basic/departments'),
-      NavItem(id: 'processes', label: '工序管理', icon: Icons.account_tree_outlined, path: '/basic/processes'),
-      NavItem(id: 'products', label: '产品管理', icon: Icons.inventory_2_outlined, path: '/basic/products'),
-      NavItem(id: 'materials', label: '物料管理', icon: Icons.category_outlined, path: '/basic/materials'),
-      NavItem(id: 'product_groups', label: '产品组管理', icon: Icons.group_work_outlined, path: '/basic/product-groups'),
+      NavItem(id: 'products', label: '产品管理', icon: Icons.inventory_2_outlined, path: '/products'),
+      NavItem(id: 'materials', label: '物料管理', icon: Icons.category_outlined, path: '/materials'),
+      NavItem(id: 'product_groups', label: '产品组管理', icon: Icons.group_work_outlined, path: '/product-groups'),
     ],
   ),
   NavItem(
@@ -102,19 +121,19 @@ const List<NavItem> navItems = [
     label: '制版管理',
     icon: Icons.print_outlined,
     children: [
-      NavItem(id: 'artworks', label: '图稿管理', icon: Icons.image_outlined, path: '/plate/artworks'),
-      NavItem(id: 'dies', label: '刀模管理', icon: Icons.cut_outlined, path: '/plate/dies'),
-      NavItem(id: 'foiling', label: '烫金版管理', icon: Icons.auto_fix_high_outlined, path: '/plate/foiling'),
-      NavItem(id: 'embossing', label: '压凸版管理', icon: Icons.texture_outlined, path: '/plate/embossing'),
+      NavItem(id: 'artworks', label: '图稿管理', icon: Icons.image_outlined, path: '/artworks'),
+      NavItem(id: 'dies', label: '刀模管理', icon: Icons.cut_outlined, path: '/dies'),
+      NavItem(id: 'foiling', label: '烫金版管理', icon: Icons.auto_fix_high_outlined, path: '/foiling-plates'),
+      NavItem(id: 'embossing', label: '压凸版管理', icon: Icons.texture_outlined, path: '/embossing-plates'),
     ],
   ),
   NavItem(
     id: 'purchase_sales',
     label: '采购销售',
-    icon: Icons.shopping_bag_outlined,
+    icon: Icons.shopping_cart_outlined,
     children: [
-      NavItem(id: 'purchase_orders', label: '采购单管理', icon: Icons.receipt_long_outlined, path: '/purchase/orders'),
-      NavItem(id: 'sales_orders', label: '销售订单', icon: Icons.point_of_sale_outlined, path: '/purchase/sales'),
+      NavItem(id: 'purchase_orders', label: '采购单管理', icon: Icons.receipt_long_outlined, path: '/purchase-orders'),
+      NavItem(id: 'sales_orders', label: '销售订单', icon: Icons.point_of_sale_outlined, path: '/sales-orders'),
     ],
   ),
   NavItem(
@@ -139,19 +158,55 @@ const List<NavItem> navItems = [
     ],
   ),
   NavItem(
+    id: 'system',
+    label: '系统设置',
+    icon: Icons.settings_outlined,
+    children: [
+      NavItem(id: 'customers', label: '客户管理', icon: Icons.people_outline, path: '/customers'),
+      NavItem(id: 'suppliers', label: '供应商管理', icon: Icons.storefront_outlined, path: '/suppliers'),
+      NavItem(id: 'departments', label: '部门管理', icon: Icons.apartment_outlined, path: '/departments'),
+      NavItem(id: 'processes', label: '工序管理', icon: Icons.account_tree_outlined, path: '/processes'),
+      NavItem(id: 'tasks_rules', label: '分派规则配置', icon: Icons.rule_outlined, path: '/tasks/assignment-rules'),
+    ],
+  ),
+  NavItem(
     id: 'notifications',
     label: '通知中心',
     icon: Icons.notifications_outlined,
     path: '/notifications',
-    badge: '3',
+    showInSidebar: false,
   ),
   NavItem(
     id: 'profile',
     label: '个人信息',
     icon: Icons.person_outline,
     path: '/profile',
+    showInSidebar: false,
   ),
 ];
+
+List<NavItem> sidebarNavItems() {
+  return _filterNavItems(navItems);
+}
+
+List<NavItem> _filterNavItems(List<NavItem> items) {
+  final result = <NavItem>[];
+  for (final item in items) {
+    if (!item.showInSidebar) {
+      continue;
+    }
+    if (item.children.isEmpty) {
+      result.add(item);
+    } else {
+      final children = _filterNavItems(item.children);
+      if (children.isEmpty) {
+        continue;
+      }
+      result.add(item.copyWith(children: children));
+    }
+  }
+  return result;
+}
 
 List<NavItem> flattenNavItems(List<NavItem> items) {
   final result = <NavItem>[];

@@ -97,6 +97,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     final sidebar = colors.sidebar;
     final subtleText = colors.subtleText;
     final sidebarText = colors.sidebarText;
+    final sidebarItems = sidebarNavItems();
     final borderColor = colors.borderColor;
     final appBarHeight = isXs ? 52.0 : 56.0;
     final currentId = _currentId(context);
@@ -114,7 +115,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
               backgroundColor: sidebar,
               child: SafeArea(
                 child: AppSidebarDrawer(
-                  navItems: navItems,
+                  navItems: sidebarItems,
                   expandedIds: _expandedIds,
                   currentId: currentId,
                   onToggleExpand: _setExpanded,
@@ -162,7 +163,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
                 ),
               ),
               child: AppSidebarRail(
-                navItems: navItems,
+                navItems: sidebarItems,
                 expandedIds: _expandedIds,
                 currentId: currentId,
                 onToggleExpand: _setExpanded,
