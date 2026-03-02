@@ -21,9 +21,7 @@ class AppDioInterceptors extends InterceptorsWrapper {
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     final apiResponse = ApiResponse.fromJson(response.data);
     if (apiResponse.code == ResponseCodeConstant.SESSION_EXPIRE_CODE) {
-      AppEvents.emit(AuthExpiredEvent(
-        apiResponse.message ?? ResponseCodeConstant.SESSION_EXPIRE_MESSAGE,
-      ));
+      AppEvents.emit(AuthExpiredEvent(apiResponse.message));
       return;
     }
     super.onResponse(response, handler);
@@ -33,24 +31,9 @@ class AppDioInterceptors extends InterceptorsWrapper {
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     // 401 错误处理：尝试刷新 token
     if (err.response?.statusCode == 401) {
-      // 登录接口的 401 错误不刷新
+      // 登录接口的 401 错误不刷新，交给调用方处理
       if (err.requestOptions.path.contains('/auth/login')) {
-        final data = err.response?.data;
-        final apiResponse = ApiResponse.fromJson(data);
-        final errorMsg = apiResponse.message?.toString().trim().isNotEmpty == true
-            ? apiResponse.message!.trim()
-            : '用户名或密码错误';
-        final response = Response(
-          requestOptions: err.requestOptions,
-          statusCode: 401,
-          data: {
-            'success': false,
-            'code': '401',
-            'data': null,
-            'message': errorMsg,
-          },
-        );
-        handler.resolve(response);
+        handler.next(err);
         return;
       }
 
@@ -77,31 +60,12 @@ class AppDioInterceptors extends InterceptorsWrapper {
         return;
       } else {
         // 刷新失败，触发全局登录失效事件
-        AppEvents.emit(const AuthExpiredEvent('登录已过期，请重新登录'));
+        AppEvents.emit(const AuthExpiredEvent());
         handler.next(err);
         return;
       }
     }
 
-    // 其他错误处理
-    final response = err.response;
-    final data = response?.data;
-    final apiResponse = ApiResponse.fromJson(data);
-    String? message = apiResponse.message;
-    if (message == null || message.isEmpty) {
-      switch (err.type) {
-        case DioExceptionType.connectionTimeout:
-        case DioExceptionType.sendTimeout:
-        case DioExceptionType.receiveTimeout:
-        case DioExceptionType.connectionError:
-          message = '网络连接异常，请检查网络';
-          break;
-        default:
-          final code = response?.statusCode?.toString() ?? '未知错误';
-          final path = err.requestOptions.path;
-          message = '请求失败（$code）：$path';
-      }
-    }
     handler.next(err);
   }
 }

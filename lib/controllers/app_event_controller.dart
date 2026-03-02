@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:get/get.dart';
 import 'package:work_order_app/common/app_events.dart';
+import 'package:work_order_app/constants/response_code_constant.dart';
 import 'package:work_order_app/controllers/auth_controller.dart';
 import 'package:work_order_app/router/app_router.dart';
 import 'package:work_order_app/utils/toast_util.dart';
@@ -26,9 +27,10 @@ class AppEventController extends GetxController {
       if (Get.isRegistered<AuthController>()) {
         Get.find<AuthController>().handleLogout();
       }
-      if (event.message != null && event.message!.isNotEmpty) {
-        ToastUtil.showError(event.message!);
-      }
+      final message = (event.message != null && event.message!.isNotEmpty)
+          ? event.message!
+          : ResponseCodeConstant.SESSION_EXPIRE_MESSAGE;
+      ToastUtil.showError(message);
       appRouter.go('/login');
       return;
     }
