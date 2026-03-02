@@ -2,7 +2,7 @@ app:
   profiles:
     active: dev
   api:
-    baseUrl: http://127.0.0.1:8000/api/
+    baseUrl: http://127.0.0.1:8000/api/v1/
     connectTimeout: 10000
     receiveTimeout: 3000
   logger:
