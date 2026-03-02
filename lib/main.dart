@@ -21,6 +21,7 @@ Future<void> init() async {
   await GetStorage.init();
   HttpClient.init();
   StoreUtil.init();
+  Get.put(ThemeController());
 }
 
 class MyApp extends StatelessWidget {

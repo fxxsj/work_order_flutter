@@ -8,6 +8,5 @@ class AppBindings extends Bindings {
   void dependencies() {
     Get.put(AuthController());
     Get.put(AppEventController());
-    Get.put(ThemeController());
   }
 }
