@@ -15,6 +15,11 @@ class ApiErrorEvent extends AppEvent {
   const ApiErrorEvent(this.message, {this.code});
 }
 
+class AuthChangedEvent extends AppEvent {
+  final bool loggedIn;
+  const AuthChangedEvent(this.loggedIn);
+}
+
 class AppEvents {
   AppEvents._();
 

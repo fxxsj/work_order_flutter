@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
+import 'package:work_order_app/common/app_events.dart';
 import 'package:work_order_app/common/http_client.dart';
-import 'package:work_order_app/controllers/notification_controller.dart';
 import 'package:work_order_app/utils/store_util.dart';
 
 class AuthController extends GetxController {
@@ -16,25 +16,13 @@ class AuthController extends GetxController {
     StoreUtil.writeTokens(access: access, refresh: refresh);
     HttpClient.updateTokens(access, refresh);
     isLoggedIn.value = true;
-    _notifyNotifications(loggedIn: true);
+    AppEvents.emit(const AuthChangedEvent(true));
   }
 
   void handleLogout() {
     StoreUtil.clearTokens();
     HttpClient.clearTokens();
     isLoggedIn.value = false;
-    _notifyNotifications(loggedIn: false);
-  }
-
-  void _notifyNotifications({required bool loggedIn}) {
-    if (!Get.isRegistered<NotificationController>()) {
-      return;
-    }
-    final controller = Get.find<NotificationController>();
-    if (loggedIn) {
-      controller.startPolling();
-    } else {
-      controller.stopPolling();
-    }
+    AppEvents.emit(const AuthChangedEvent(false));
   }
 }

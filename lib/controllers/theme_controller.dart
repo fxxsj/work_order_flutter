@@ -13,6 +13,12 @@ class ThemeController extends GetxController {
 
   final GetStorage _storage = GetStorage();
 
+  @override
+  void onInit() {
+    super.onInit();
+    load();
+  }
+
   void load() {
     final colorValue = _storage.read(Constant.KEY_THEME_COLOR);
     if (colorValue is int) {

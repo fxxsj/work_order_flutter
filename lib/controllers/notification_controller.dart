@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:get/get.dart';
 import 'package:work_order_app/api/notification_api.dart';
+import 'package:work_order_app/common/app_events.dart';
 import 'package:work_order_app/models/notification_model.dart';
 import 'package:work_order_app/utils/utils.dart';
 
@@ -16,6 +17,7 @@ class NotificationController extends GetxController {
   final RxBool showUnreadOnly = false.obs;
 
   Timer? _poller;
+  StreamSubscription<AppEvent>? _authSubscription;
   int _page = 1;
   final int _pageSize = 20;
 
@@ -25,12 +27,24 @@ class NotificationController extends GetxController {
     if (Utils.isLogin()) {
       startPolling();
     }
+    _authSubscription = AppEvents.stream.listen(_handleEvent);
   }
 
   @override
   void onClose() {
     _poller?.cancel();
+    _authSubscription?.cancel();
     super.onClose();
+  }
+
+  void _handleEvent(AppEvent event) {
+    if (event is AuthChangedEvent) {
+      if (event.loggedIn) {
+        startPolling();
+      } else {
+        stopPolling();
+      }
+    }
   }
 
   void startPolling() {
