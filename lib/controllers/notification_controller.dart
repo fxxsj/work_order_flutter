@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:get/get.dart';
 import 'package:work_order_app/api/notification_api.dart';
 import 'package:work_order_app/models/notification_model.dart';
+import 'package:work_order_app/utils/utils.dart';
 
 class NotificationController extends GetxController {
   final RxInt unreadCount = 0.obs;
@@ -21,8 +22,9 @@ class NotificationController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    refreshAll();
-    _poller = Timer.periodic(const Duration(minutes: 1), (_) => _poll());
+    if (Utils.isLogin()) {
+      startPolling();
+    }
   }
 
   @override
@@ -31,7 +33,23 @@ class NotificationController extends GetxController {
     super.onClose();
   }
 
+  void startPolling() {
+    if (_poller != null) {
+      return;
+    }
+    refreshAll();
+    _poller = Timer.periodic(const Duration(minutes: 1), (_) => _poll());
+  }
+
+  void stopPolling() {
+    _poller?.cancel();
+    _poller = null;
+  }
+
   Future<void> refreshAll() async {
+    if (!Utils.isLogin()) {
+      return;
+    }
     isLoading.value = true;
     _page = 1;
     final page = await NotificationApi.fetchNotifications(page: _page, pageSize: _pageSize);
@@ -45,6 +63,9 @@ class NotificationController extends GetxController {
 
   Future<void> loadMore() async {
     if (isLoadingMore.value || !hasMore.value) {
+      return;
+    }
+    if (!Utils.isLogin()) {
       return;
     }
     isLoadingMore.value = true;
@@ -78,6 +99,9 @@ class NotificationController extends GetxController {
   }
 
   Future<void> _poll() async {
+    if (!Utils.isLogin()) {
+      return;
+    }
     await _refreshUnreadCount();
     await _refreshRecent();
   }

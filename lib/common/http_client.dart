@@ -1,13 +1,11 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:work_order_app/common/api_exception.dart';
 import 'package:work_order_app/common/app_config.dart';
+import 'package:work_order_app/common/app_dio_interceptors.dart';
 import 'package:work_order_app/constants/constant.dart';
-import 'package:work_order_app/constants/response_code_constant.dart';
 import 'package:work_order_app/models/api_response.dart';
 import 'package:work_order_app/utils/store_util.dart';
-import 'package:work_order_app/router/app_router.dart';
-import 'package:work_order_app/utils/utils.dart';
-import 'package:work_order_app/utils/toast_util.dart';
 
 class HttpClient {
   HttpClient._();
@@ -17,6 +15,39 @@ class HttpClient {
   static String? _refreshToken;
   static bool _isRefreshing = false;
   static final List<_RetryRequest> _requestQueue = [];
+
+  static Dio get dio => _dio;
+  static String? get accessToken => _accessToken;
+  static bool get isRefreshing => _isRefreshing;
+
+  static void setRefreshing(bool value) {
+    _isRefreshing = value;
+  }
+
+  static void enqueueRetry(RequestOptions requestOptions, ErrorInterceptorHandler handler) {
+    _requestQueue.add(_RetryRequest(requestOptions, handler));
+  }
+
+  static Future<void> retryQueuedRequests() async {
+    for (final retry in _requestQueue) {
+      try {
+        final token = _accessToken;
+        retry.requestOptions.headers[HttpHeaders.authorizationHeader] = 'Bearer $token';
+        final response = await _dio.fetch(retry.requestOptions);
+        retry.handler.resolve(response);
+      } catch (e) {
+        final dioError = e is DioException
+            ? e
+            : DioException(
+                requestOptions: retry.requestOptions,
+                error: e,
+                type: DioExceptionType.unknown,
+              );
+        retry.handler.next(dioError);
+      }
+    }
+    _requestQueue.clear();
+  }
 
   static void init() {
     final options = BaseOptions(
@@ -29,7 +60,7 @@ class HttpClient {
     _dio.interceptors.add(AppDioInterceptors());
 
     // 从存储恢复 tokens
-    _accessToken = StoreUtil.read(Constant.KEY_ACCESS_TOKEN);
+    _accessToken = StoreUtil.readAccessToken();
     _refreshToken = StoreUtil.read(Constant.KEY_REFRESH_TOKEN);
   }
 
@@ -38,21 +69,19 @@ class HttpClient {
     _accessToken = access;
     if (refresh != null) {
       _refreshToken = refresh;
-      StoreUtil.save(Constant.KEY_REFRESH_TOKEN, refresh);
     }
-    StoreUtil.save(Constant.KEY_ACCESS_TOKEN, access);
+    StoreUtil.writeTokens(access: access, refresh: refresh);
   }
 
   /// 清除 tokens
   static void clearTokens() {
     _accessToken = null;
     _refreshToken = null;
-    StoreUtil.remove(Constant.KEY_ACCESS_TOKEN);
-    StoreUtil.remove(Constant.KEY_REFRESH_TOKEN);
+    StoreUtil.clearTokens();
   }
 
   /// 刷新 access token
-  static Future<bool> _refreshAccessToken() async {
+  static Future<bool> refreshAccessToken() async {
     if (_refreshToken == null) {
       return false;
     }
@@ -82,23 +111,75 @@ class HttpClient {
   }
 
   static Future<ApiResponse> get(String path, {Map<String, dynamic>? queryParameters}) async {
-    final response = await _dio.get(path, queryParameters: queryParameters);
-    return ApiResponse.fromJson(response.data);
+    try {
+      final response = await _dio.get(path, queryParameters: queryParameters);
+      final apiResponse = ApiResponse.fromJson(response.data);
+      if (!apiResponse.success) {
+        throw ApiException(
+          message: apiResponse.message ?? '请求失败',
+          statusCode: response.statusCode,
+          data: response.data,
+          response: apiResponse,
+        );
+      }
+      return apiResponse;
+    } on DioException catch (err) {
+      throw ApiException.fromDio(err);
+    }
   }
 
   static Future<ApiResponse> post(String path, {dynamic data, Map<String, dynamic>? queryParameters}) async {
-    final response = await _dio.post(path, data: data, queryParameters: queryParameters);
-    return ApiResponse.fromJson(response.data);
+    try {
+      final response = await _dio.post(path, data: data, queryParameters: queryParameters);
+      final apiResponse = ApiResponse.fromJson(response.data);
+      if (!apiResponse.success) {
+        throw ApiException(
+          message: apiResponse.message ?? '请求失败',
+          statusCode: response.statusCode,
+          data: response.data,
+          response: apiResponse,
+        );
+      }
+      return apiResponse;
+    } on DioException catch (err) {
+      throw ApiException.fromDio(err);
+    }
   }
 
   static Future<ApiResponse> put(String path, {dynamic data, Map<String, dynamic>? queryParameters}) async {
-    final response = await _dio.put(path, data: data, queryParameters: queryParameters);
-    return ApiResponse.fromJson(response.data);
+    try {
+      final response = await _dio.put(path, data: data, queryParameters: queryParameters);
+      final apiResponse = ApiResponse.fromJson(response.data);
+      if (!apiResponse.success) {
+        throw ApiException(
+          message: apiResponse.message ?? '请求失败',
+          statusCode: response.statusCode,
+          data: response.data,
+          response: apiResponse,
+        );
+      }
+      return apiResponse;
+    } on DioException catch (err) {
+      throw ApiException.fromDio(err);
+    }
   }
 
   static Future<ApiResponse> delete(String path, {dynamic data, Map<String, dynamic>? queryParameters}) async {
-    final response = await _dio.delete(path, data: data, queryParameters: queryParameters);
-    return ApiResponse.fromJson(response.data);
+    try {
+      final response = await _dio.delete(path, data: data, queryParameters: queryParameters);
+      final apiResponse = ApiResponse.fromJson(response.data);
+      if (!apiResponse.success) {
+        throw ApiException(
+          message: apiResponse.message ?? '请求失败',
+          statusCode: response.statusCode,
+          data: response.data,
+          response: apiResponse,
+        );
+      }
+      return apiResponse;
+    } on DioException catch (err) {
+      throw ApiException.fromDio(err);
+    }
   }
 }
 
@@ -107,128 +188,4 @@ class _RetryRequest {
   final ErrorInterceptorHandler handler;
 
   _RetryRequest(this.requestOptions, this.handler);
-}
-
-class AppDioInterceptors extends InterceptorsWrapper {
-  @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    // 添加 JWT access token
-    final token = HttpClient._accessToken;
-    if (token != null && token.isNotEmpty) {
-      options.headers[HttpHeaders.authorizationHeader] = 'Bearer $token';  // JWT Bearer token
-    }
-    super.onRequest(options, handler);
-  }
-
-  @override
-  void onResponse(Response response, ResponseInterceptorHandler handler) {
-    final apiResponse = ApiResponse.fromJson(response.data);
-    if (apiResponse.code == ResponseCodeConstant.SESSION_EXPIRE_CODE) {
-      Utils.logout();
-      HttpClient.clearTokens();
-      appRouter.go('/login');
-      ToastUtil.showError(apiResponse.message ?? ResponseCodeConstant.SESSION_EXPIRE_MESSAGE);
-      return;
-    }
-
-    if (!apiResponse.success) {
-      ToastUtil.showError(apiResponse.message ?? '服务器返回错误');
-    }
-    super.onResponse(response, handler);
-  }
-
-  @override
-  void onError(DioException err, ErrorInterceptorHandler handler) async {
-    // 401 错误处理：尝试刷新 token
-    if (err.response?.statusCode == 401) {
-      // 登录接口的 401 错误不刷新
-      if (err.requestOptions.path.contains('/auth/login')) {
-        final data = err.response?.data;
-        final apiResponse = ApiResponse.fromJson(data);
-        final errorMsg = apiResponse.message?.toString().trim().isNotEmpty == true
-            ? apiResponse.message!.trim()
-            : '用户名或密码错误';
-        final response = Response(
-          requestOptions: err.requestOptions,
-          statusCode: 401,
-          data: {
-            'success': false,
-            'code': '401',
-            'data': null,
-            'message': errorMsg,
-          },
-        );
-        handler.resolve(response);
-        return;
-      }
-
-      // 如果正在刷新，加入队列
-      if (HttpClient._isRefreshing) {
-        HttpClient._requestQueue.add(_RetryRequest(err.requestOptions, handler));
-        return;
-      }
-
-      // 开始刷新
-      HttpClient._isRefreshing = true;
-      final success = await HttpClient._refreshAccessToken();
-      HttpClient._isRefreshing = false;
-
-      if (success) {
-        // 刷新成功，重试当前请求和队列中的请求
-        final retryRequest = () async {
-          // 重试队列中的请求
-          for (final retry in HttpClient._requestQueue) {
-            try {
-              final token = HttpClient._accessToken;
-              retry.requestOptions.headers[HttpHeaders.authorizationHeader] = 'Bearer $token';
-              final response = await HttpClient._dio.fetch(retry.requestOptions);
-              retry.handler.resolve(response);
-            } catch (e) {
-              retry.handler.next(e);
-            }
-          }
-          HttpClient._requestQueue.clear();
-
-          // 重试当前请求
-          final token = HttpClient._accessToken;
-          err.requestOptions.headers[HttpHeaders.authorizationHeader] = 'Bearer $token';
-          final response = await HttpClient._dio.fetch(err.requestOptions);
-          handler.resolve(response);
-        };
-
-        await retryRequest();
-        return;
-      } else {
-        // 刷新失败，清除 tokens 并跳转登录
-        HttpClient.clearTokens();
-        Utils.logout();
-        appRouter.go('/login');
-        ToastUtil.showError('登录已过期，请重新登录');
-        handler.next(err);
-        return;
-      }
-    }
-
-    // 其他错误处理
-    final response = err.response;
-    final data = response?.data;
-    final apiResponse = ApiResponse.fromJson(data);
-    String? message = apiResponse.message;
-    if (message == null || message.isEmpty) {
-      switch (err.type) {
-        case DioExceptionType.connectionTimeout:
-        case DioExceptionType.sendTimeout:
-        case DioExceptionType.receiveTimeout:
-        case DioExceptionType.connectionError:
-          message = '网络连接异常，请检查网络';
-          break;
-        default:
-          final code = response?.statusCode?.toString() ?? '未知错误';
-          final path = err.requestOptions.path;
-          message = '请求失败（$code）：$path';
-      }
-    }
-    ToastUtil.showError(message);
-    handler.next(err);
-  }
 }

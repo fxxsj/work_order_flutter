@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:work_order_app/api/user_api.dart';
+import 'package:work_order_app/common/api_exception.dart';
 import 'package:work_order_app/common/theme_ext.dart';
 import 'package:work_order_app/models/api_response.dart';
 import 'package:work_order_app/models/user.dart';
@@ -135,7 +136,7 @@ class _RegisterState extends State {
     appRouter.go('/login');
   }
 
-  void _register() {
+  Future<void> _register() async {
     final form = formKey.currentState!;
     if (!form.validate()) {
       return;
@@ -147,13 +148,12 @@ class _RegisterState extends State {
     map['file'] = null;
     FormData formData = FormData.fromMap(map);
 
-    UserApi.register(formData).then((ApiResponse v) {
-      if (!v.success) {
-        ToastUtil.showError(v.message ?? '注册失败，请检查输入信息');
-        return;
-      }
+    try {
+      final ApiResponse response = await UserApi.register(formData);
       _login();
       ToastUtil.showSuccess('账号已创建，请登录');
-    });
+    } on ApiException catch (err) {
+      ToastUtil.showError(err.message.isNotEmpty ? err.message : '注册失败，请检查输入信息');
+    }
   }
 }

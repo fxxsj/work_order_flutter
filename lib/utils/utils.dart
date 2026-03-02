@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/constants/constant.dart';
 import 'package:work_order_app/common/theme_ext.dart';
+import 'package:work_order_app/controllers/auth_controller.dart';
 import 'package:work_order_app/utils/store_util.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -119,14 +120,15 @@ class Utils {
   }
 
   static isLogin() {
-    return StoreUtil.hasData(Constant.KEY_TOKEN);
+    return StoreUtil.isLoggedIn();
   }
 
   static logout() {
-    StoreUtil.remove(Constant.KEY_ACCESS_TOKEN);
-    StoreUtil.remove(Constant.KEY_REFRESH_TOKEN);
-    // 保留兼容性
-    StoreUtil.remove(Constant.KEY_TOKEN);
+    if (Get.isRegistered<AuthController>()) {
+      Get.find<AuthController>().handleLogout();
+    } else {
+      StoreUtil.clearTokens();
+    }
     StoreUtil.remove(Constant.KEY_CURRENT_USER_INFO);
   }
 

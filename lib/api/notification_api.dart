@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import 'package:work_order_app/common/api_exception.dart';
 import 'package:work_order_app/common/http_client.dart';
 import 'package:work_order_app/models/api_response.dart';
 import 'package:work_order_app/models/notification_model.dart';
@@ -30,6 +30,9 @@ class NotificationApi {
           'page_size': pageSize,
         },
       );
+      if (!response.success) {
+        return const NotificationPage(items: []);
+      }
       final data = response.data;
       if (data is Map<String, dynamic>) {
         final results = data['results'];
@@ -45,11 +48,11 @@ class NotificationApi {
           );
         }
       }
-    } on DioException catch (err) {
-      if (err.response?.statusCode == 404) {
+    } on ApiException catch (err) {
+      if (err.statusCode == 404) {
         return const NotificationPage(items: []);
       }
-      rethrow;
+      return const NotificationPage(items: []);
     }
     return const NotificationPage(items: []);
   }
@@ -57,16 +60,19 @@ class NotificationApi {
   static Future<int> fetchUnreadCount() async {
     try {
       final ApiResponse response = await HttpClient.get('/notifications/unread_count/');
+      if (!response.success) {
+        return 0;
+      }
       final data = response.data;
       if (data is Map && data['unread_count'] != null) {
         return _toInt(data['unread_count']) ?? 0;
       }
       return 0;
-    } on DioException catch (err) {
-      if (err.response?.statusCode == 404) {
+    } on ApiException catch (err) {
+      if (err.statusCode == 404) {
         return 0;
       }
-      rethrow;
+      return 0;
     }
   }
 

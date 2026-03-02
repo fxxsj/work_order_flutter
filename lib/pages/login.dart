@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/api/auth_api.dart';
+import 'package:work_order_app/common/http_client.dart';
+import 'package:work_order_app/common/api_exception.dart';
 import 'package:work_order_app/constants/constant.dart';
 import 'package:work_order_app/common/theme_ext.dart';
 import 'package:work_order_app/models/api_response.dart';
 import 'package:work_order_app/models/user.dart';
 import 'package:work_order_app/router/app_router.dart';
+import 'package:work_order_app/controllers/auth_controller.dart';
 import 'package:work_order_app/utils/store_util.dart';
 import 'package:work_order_app/utils/toast_util.dart';
+import 'package:get/get.dart';
 
 class Login extends StatefulWidget {
   @override
@@ -181,11 +185,6 @@ class _LoginState extends State<Login> {
         'username': user.userName,
         'password': user.password,
       });
-      if (!responseBodyApi.success) {
-      ToastUtil.showError(responseBodyApi.message ?? '请检查账号密码');
-      focusNodePassword.requestFocus();
-      return;
-      }
       final responseData = responseBodyApi.data;
       final responseMap = responseData is Map ? Map<String, dynamic>.from(responseData) : <String, dynamic>{};
       String? accessToken;
@@ -216,6 +215,10 @@ class _LoginState extends State<Login> {
       responseMap['access'] = accessToken;
       responseMap['refresh'] = refreshToken;
       _loginSuccess(responseMap);
+    } on ApiException catch (err) {
+      ToastUtil.showError(err.message.isNotEmpty ? err.message : '请检查账号密码');
+      focusNodePassword.requestFocus();
+      return;
     } finally {
       if (mounted) {
         setState(() {
@@ -227,13 +230,20 @@ class _LoginState extends State<Login> {
 
   void _loginSuccess(Map<String, dynamic> responseData) {
     // 保存 JWT tokens
-    StoreUtil.write(Constant.KEY_ACCESS_TOKEN, responseData['access'] ?? responseData['token']);
-    StoreUtil.write(Constant.KEY_REFRESH_TOKEN, responseData['refresh']);
-    // 更新 HTTP 客户端的 tokens
-    HttpClient.updateTokens(
-      responseData['access'] ?? responseData['token'],
-      responseData['refresh'],
-    );
+    final accessToken = responseData['access'] ?? responseData['token'];
+    if (Get.isRegistered<AuthController>()) {
+      Get.find<AuthController>().handleLogin(
+        access: accessToken,
+        refresh: responseData['refresh'],
+      );
+    } else {
+      StoreUtil.writeTokens(access: accessToken, refresh: responseData['refresh']);
+      // 更新 HTTP 客户端的 tokens
+      HttpClient.updateTokens(
+        responseData['access'] ?? responseData['token'],
+        responseData['refresh'],
+      );
+    }
     StoreUtil.write(Constant.KEY_REMEMBER_USERNAME, userNameController.text);
     var userInfo = Map<String, dynamic>.from(responseData);
     if (responseData.containsKey('username')) {

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/common/app_config.dart';
 import 'package:work_order_app/common/app_scroll_behavior.dart';
 import 'package:work_order_app/common/http_client.dart';
+import 'package:work_order_app/controllers/app_event_controller.dart';
+import 'package:work_order_app/controllers/auth_controller.dart';
 import 'package:work_order_app/controllers/theme_controller.dart';
 import 'package:work_order_app/router/app_router.dart';
 import 'package:work_order_app/utils/store_util.dart';
@@ -20,6 +22,8 @@ Future<void> init() async {
   await GetStorage.init();
   HttpClient.init();
   StoreUtil.init();
+  Get.put(AuthController());
+  Get.put(AppEventController());
   final themeController = Get.put(ThemeController());
   themeController.load();
 }

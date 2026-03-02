@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
 import 'package:work_order_app/api/auth_api.dart';
+import 'package:work_order_app/common/api_exception.dart';
 import 'package:work_order_app/constants/constant.dart';
 import 'package:work_order_app/models/api_response.dart';
 import 'package:work_order_app/router/app_router.dart';
@@ -114,13 +114,6 @@ class _ProfilePageState extends State<ProfilePage> {
         'last_name': _lastNameController.text.trim(),
       };
       final ApiResponse response = await AuthApi.updateProfile(payload);
-      if (!response.success) {
-        final message = (response.message?.trim().isNotEmpty ?? false)
-            ? response.message!.trim()
-            : '个人信息更新失败';
-        ToastUtil.showError(message);
-        return;
-      }
       final data = response.data is Map ? Map<String, dynamic>.from(response.data as Map) : <String, dynamic>{};
       final merged = {..._currentUser, ...data};
       _setUser(merged);
@@ -129,6 +122,8 @@ class _ProfilePageState extends State<ProfilePage> {
           ? response.message!.trim()
           : '个人信息更新成功';
       ToastUtil.showSuccess(message);
+    } on ApiException catch (err) {
+      ToastUtil.showError(err.message.isNotEmpty ? err.message : '个人信息更新失败');
     } finally {
       if (mounted) {
         setState(() {
@@ -153,13 +148,6 @@ class _ProfilePageState extends State<ProfilePage> {
         'confirm_password': _confirmPasswordController.text,
       };
       final ApiResponse response = await AuthApi.changePassword(payload);
-      if (!response.success) {
-        final message = (response.message?.trim().isNotEmpty ?? false)
-            ? response.message!.trim()
-            : '密码修改失败';
-        ToastUtil.showError(message);
-        return;
-      }
       final message = (response.message?.trim().isNotEmpty ?? false)
           ? response.message!.trim()
           : '密码修改成功，请重新登录';
@@ -168,13 +156,8 @@ class _ProfilePageState extends State<ProfilePage> {
       await Future<void>.delayed(const Duration(seconds: 2));
       Utils.logout();
       appRouter.go('/login');
-    } on DioException catch (err) {
-      final data = err.response?.data;
-      final apiResponse = ApiResponse.fromJson(data);
-      final message = (apiResponse.message?.trim().isNotEmpty ?? false)
-          ? apiResponse.message!.trim()
-          : '密码修改失败';
-      ToastUtil.showError(message);
+    } on ApiException catch (err) {
+      ToastUtil.showError(err.message.isNotEmpty ? err.message : '密码修改失败');
     } finally {
       if (mounted) {
         setState(() {
