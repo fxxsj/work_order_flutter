@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/api/auth_api.dart';
-import 'package:work_order_app/common/http_client.dart';
 import 'package:work_order_app/common/api_exception.dart';
+import 'package:work_order_app/common/http_client.dart';
 import 'package:work_order_app/constants/constant.dart';
 import 'package:work_order_app/common/theme_ext.dart';
-import 'package:work_order_app/models/api_response.dart';
 import 'package:work_order_app/models/user.dart';
 import 'package:work_order_app/router/app_router.dart';
 import 'package:work_order_app/controllers/auth_controller.dart';
@@ -181,12 +180,12 @@ class _LoginState extends State<Login> {
     user.userName = userNameController.text;
     user.password = passwordController.text;
     try {
-      final ApiResponse responseBodyApi = await AuthApi.login({
+      final result = await AuthApi.login({
         'username': user.userName,
         'password': user.password,
       });
-      final responseData = responseBodyApi.data;
-      final responseMap = responseData is Map ? Map<String, dynamic>.from(responseData) : <String, dynamic>{};
+      final responseData = result.data ?? <String, dynamic>{};
+      final responseMap = Map<String, dynamic>.from(responseData);
       String? accessToken;
       String? refreshToken;
       

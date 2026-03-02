@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/api/auth_api.dart';
 import 'package:work_order_app/common/api_exception.dart';
 import 'package:work_order_app/constants/constant.dart';
-import 'package:work_order_app/models/api_response.dart';
 import 'package:work_order_app/router/app_router.dart';
 import 'package:work_order_app/utils/store_util.dart';
 import 'package:work_order_app/utils/toast_util.dart';
@@ -62,9 +61,9 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _fetchUserFromApi() async {
     try {
-      final ApiResponse response = await AuthApi.getCurrentUser();
-      if (response.success && response.data is Map) {
-        final map = Map<String, dynamic>.from(response.data as Map);
+      final result = await AuthApi.getCurrentUser();
+      if (result.data is Map) {
+        final map = Map<String, dynamic>.from(result.data as Map);
         _setUser(map);
         StoreUtil.write(Constant.KEY_CURRENT_USER_INFO, map);
       }
@@ -113,13 +112,13 @@ class _ProfilePageState extends State<ProfilePage> {
         'first_name': _firstNameController.text.trim(),
         'last_name': _lastNameController.text.trim(),
       };
-      final ApiResponse response = await AuthApi.updateProfile(payload);
-      final data = response.data is Map ? Map<String, dynamic>.from(response.data as Map) : <String, dynamic>{};
+      final result = await AuthApi.updateProfile(payload);
+      final data = result.data is Map ? Map<String, dynamic>.from(result.data as Map) : <String, dynamic>{};
       final merged = {..._currentUser, ...data};
       _setUser(merged);
       StoreUtil.write(Constant.KEY_CURRENT_USER_INFO, merged);
-      final message = (response.message?.trim().isNotEmpty ?? false)
-          ? response.message!.trim()
+      final message = (result.message?.trim().isNotEmpty ?? false)
+          ? result.message!.trim()
           : '个人信息更新成功';
       ToastUtil.showSuccess(message);
     } on ApiException catch (err) {
@@ -147,9 +146,9 @@ class _ProfilePageState extends State<ProfilePage> {
         'new_password': _newPasswordController.text,
         'confirm_password': _confirmPasswordController.text,
       };
-      final ApiResponse response = await AuthApi.changePassword(payload);
-      final message = (response.message?.trim().isNotEmpty ?? false)
-          ? response.message!.trim()
+      final result = await AuthApi.changePassword(payload);
+      final message = (result.message?.trim().isNotEmpty ?? false)
+          ? result.message!.trim()
           : '密码修改成功，请重新登录';
       ToastUtil.showSuccess(message);
       _resetPasswordForm();

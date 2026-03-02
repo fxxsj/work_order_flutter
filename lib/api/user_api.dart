@@ -1,16 +1,23 @@
+import 'package:work_order_app/common/api_result.dart';
 import 'package:work_order_app/common/http_client.dart';
-import 'package:work_order_app/models/api_response.dart';
 
 class UserApi {
-  static Future<ApiResponse> register(data) async {
-    return HttpClient.post('/user/register', data: data);
+  static Future<ApiResult<void>> register(data) async {
+    final response = await HttpClient.post('/user/register', data: data);
+    return ApiResult(message: response.message);
   }
 
-  static Future<ApiResponse> login(data) async {
-    return HttpClient.post('/user/login', data: data);
+  static Future<ApiResult<Map<String, dynamic>>> login(data) async {
+    final response = await HttpClient.post('/user/login', data: data);
+    final payload = response.data;
+    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    return ApiResult(data: map, message: response.message);
   }
 
-  static Future<ApiResponse> loginByFace(data) async {
-    return HttpClient.post('/user/loginByFace', data: data);
+  static Future<ApiResult<Map<String, dynamic>>> loginByFace(data) async {
+    final response = await HttpClient.post('/user/loginByFace', data: data);
+    final payload = response.data;
+    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    return ApiResult(data: map, message: response.message);
   }
 }

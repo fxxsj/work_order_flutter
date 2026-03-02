@@ -1,24 +1,35 @@
+import 'package:work_order_app/common/api_result.dart';
 import 'package:work_order_app/common/http_client.dart';
-import 'package:work_order_app/models/api_response.dart';
 
 class AuthApi {
-  static Future<ApiResponse> login(data) async {
-    return HttpClient.post('/auth/login/', data: data);
+  static Future<ApiResult<Map<String, dynamic>>> login(data) async {
+    final response = await HttpClient.post('/auth/login/', data: data);
+    final payload = response.data;
+    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    return ApiResult(data: map, message: response.message);
   }
 
-  static Future<ApiResponse> logout() async {
-    return HttpClient.post('/auth/logout/');
+  static Future<ApiResult<void>> logout() async {
+    final response = await HttpClient.post('/auth/logout/');
+    return ApiResult(message: response.message);
   }
 
-  static Future<ApiResponse> getCurrentUser() async {
-    return HttpClient.get('/auth/user/');
+  static Future<ApiResult<Map<String, dynamic>>> getCurrentUser() async {
+    final response = await HttpClient.get('/auth/user/');
+    final payload = response.data;
+    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    return ApiResult(data: map, message: response.message);
   }
 
-  static Future<ApiResponse> updateProfile(data) async {
-    return HttpClient.put('/auth/update-profile/', data: data);
+  static Future<ApiResult<Map<String, dynamic>>> updateProfile(data) async {
+    final response = await HttpClient.put('/auth/update-profile/', data: data);
+    final payload = response.data;
+    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    return ApiResult(data: map, message: response.message);
   }
 
-  static Future<ApiResponse> changePassword(data) async {
-    return HttpClient.post('/auth/change-password/', data: data);
+  static Future<ApiResult<void>> changePassword(data) async {
+    final response = await HttpClient.post('/auth/change-password/', data: data);
+    return ApiResult(message: response.message);
   }
 }
