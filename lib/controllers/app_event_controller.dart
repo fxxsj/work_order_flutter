@@ -34,8 +34,6 @@ class AppEventController extends GetxController {
       appRouter.go('/login');
       return;
     }
-    if (event is ApiErrorEvent) {
-      ToastUtil.showError(event.message);
-    }
+    // other events can be handled here
   }
 }
