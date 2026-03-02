@@ -11,10 +11,8 @@ import 'package:work_order_app/pages/layout/nav_config.dart';
 import 'package:work_order_app/pages/layout/widgets/app_header.dart';
 import 'package:work_order_app/pages/layout/widgets/app_sidebar.dart';
 import 'package:work_order_app/pages/layout/widgets/content_container.dart';
-import 'package:work_order_app/router/app_router.dart';
 import 'package:work_order_app/utils/breakpoints_util.dart';
-import 'package:work_order_app/utils/store_util.dart';
-import 'package:work_order_app/utils/utils.dart';
+import 'package:work_order_app/src/core/storage/app_storage.dart';
 
 enum ScreenSize {
   mobile,
@@ -44,9 +42,10 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     super.initState();
     _idToBranchIndex = buildIdToBranchIndex();
     _pathToId = buildPathToIdMap();
-    final collapsed = StoreUtil.read(Constant.KEY_SIDEBAR_COLLAPSED);
+    final storage = context.read<AppStorage>();
+    final collapsed = storage.read(Constant.KEY_SIDEBAR_COLLAPSED);
     _sidebarCollapsed = collapsed == true;
-    final savedExpanded = StoreUtil.read(Constant.KEY_SIDEBAR_EXPANDED);
+    final savedExpanded = storage.read(Constant.KEY_SIDEBAR_EXPANDED);
     if (savedExpanded is List) {
       _expandedIds.addAll(savedExpanded.map((e) => e.toString()));
     }
@@ -116,7 +115,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
           setState(() {
             _sidebarCollapsed = !_sidebarCollapsed;
           });
-          StoreUtil.write(Constant.KEY_SIDEBAR_COLLAPSED, _sidebarCollapsed);
+          context.read<AppStorage>().write(Constant.KEY_SIDEBAR_COLLAPSED, _sidebarCollapsed);
         },
         title: buildBreadcrumbForPathWith(GoRouterState.of(context).uri.path, _pathToId).join(' / '),
         onMenuTap: () => scaffoldKey.currentState?.openDrawer(),
@@ -180,8 +179,8 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
   }
 
   void _handleLogout() {
-    Utils.logout(context.read<AuthController>());
-    appRouter.go('/login');
+    context.read<AuthController>().handleLogout();
+    context.go('/login');
   }
 
   void _setExpanded(String id, bool expanded) {
@@ -192,7 +191,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
         _expandedIds.remove(id);
       }
     });
-    StoreUtil.write(Constant.KEY_SIDEBAR_EXPANDED, _expandedIds.toList());
+    context.read<AppStorage>().write(Constant.KEY_SIDEBAR_EXPANDED, _expandedIds.toList());
   }
 
   ScreenSize _getScreenSize(double width) {

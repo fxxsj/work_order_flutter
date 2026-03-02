@@ -4,7 +4,8 @@ import 'package:work_order_app/api/user_api.dart';
 import 'package:work_order_app/common/api_exception.dart';
 import 'package:work_order_app/common/theme_ext.dart';
 import 'package:work_order_app/models/user.dart';
-import 'package:work_order_app/router/app_router.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:work_order_app/utils/toast_util.dart';
 
 class Register extends StatefulWidget {
@@ -132,7 +133,7 @@ class _RegisterState extends State {
   }
 
   void _login() {
-    appRouter.go('/login');
+    context.go('/login');
   }
 
   Future<void> _register() async {
@@ -148,6 +149,8 @@ class _RegisterState extends State {
     FormData formData = FormData.fromMap(map);
 
     try {
+      final userApi = context.read<UserApi>();
+      await userApi.register(formData);
       _login();
       ToastUtil.showSuccess('账号已创建，请登录');
     } on ApiException catch (err) {

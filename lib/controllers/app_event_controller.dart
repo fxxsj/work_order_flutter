@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:work_order_app/common/app_events.dart';
 import 'package:work_order_app/constants/response_code_constant.dart';
 import 'package:work_order_app/controllers/auth_controller.dart';
-import 'package:work_order_app/router/app_router.dart';
+import 'package:go_router/go_router.dart';
 import 'package:work_order_app/utils/toast_util.dart';
 
 /// Global event handler for application-wide events.
@@ -11,9 +11,10 @@ import 'package:work_order_app/utils/toast_util.dart';
 /// Not a ChangeNotifier because it has no UI state to expose.
 /// Managed directly in the app's root State lifecycle.
 class AppEventController {
-  AppEventController(this._authController);
+  AppEventController(this._authController, this._router);
 
   final AuthController _authController;
+  final GoRouter _router;
   StreamSubscription<AppEvent>? _subscription;
 
   void initialize() {
@@ -31,7 +32,7 @@ class AppEventController {
           ? event.message!
           : ResponseCodeConstant.SESSION_EXPIRE_MESSAGE;
       ToastUtil.showError(message);
-      appRouter.go('/login');
+      _router.go('/login');
       return;
     }
     // other events can be handled here

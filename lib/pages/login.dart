@@ -4,10 +4,10 @@ import 'package:work_order_app/common/api_exception.dart';
 import 'package:work_order_app/constants/constant.dart';
 import 'package:work_order_app/common/theme_ext.dart';
 import 'package:work_order_app/models/user.dart';
-import 'package:work_order_app/router/app_router.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/controllers/auth_controller.dart';
-import 'package:work_order_app/utils/store_util.dart';
+import 'package:work_order_app/src/core/storage/app_storage.dart';
 import 'package:work_order_app/utils/toast_util.dart';
 
 class Login extends StatefulWidget {
@@ -27,7 +27,8 @@ class _LoginState extends State<Login> {
   @override
   void initState() {
     super.initState();
-    final savedUsername = StoreUtil.read(Constant.KEY_REMEMBER_USERNAME);
+    final storage = context.read<AppStorage>();
+    final savedUsername = storage.read(Constant.KEY_REMEMBER_USERNAME);
     userNameController.text = savedUsername ?? '';
     passwordController.text = '';
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -162,7 +163,7 @@ class _LoginState extends State<Login> {
   }
 
   void _register() {
-    appRouter.go('/register');
+    context.go('/register');
   }
 
   Future<void> _login() async {
@@ -179,7 +180,8 @@ class _LoginState extends State<Login> {
     user.userName = userNameController.text;
     user.password = passwordController.text;
     try {
-      final result = await AuthApi.login({
+      final authApi = context.read<AuthApi>();
+      final result = await authApi.login({
         'username': user.userName,
         'password': user.password,
       });
@@ -233,7 +235,8 @@ class _LoginState extends State<Login> {
       access: accessToken,
       refresh: responseData['refresh'],
     );
-    await StoreUtil.write(Constant.KEY_REMEMBER_USERNAME, userNameController.text);
+    final storage = context.read<AppStorage>();
+    await storage.write(Constant.KEY_REMEMBER_USERNAME, userNameController.text);
     var userInfo = Map<String, dynamic>.from(responseData);
     if (responseData.containsKey('username')) {
       userInfo['userName'] = responseData['username'];
@@ -241,9 +244,10 @@ class _LoginState extends State<Login> {
     if (responseData.containsKey('full_name')) {
       userInfo['name'] = responseData['full_name'];
     }
-    await StoreUtil.write(Constant.KEY_CURRENT_USER_INFO, userInfo);
+    await storage.write(Constant.KEY_CURRENT_USER_INFO, userInfo);
 
-    appRouter.go('/');
+    if (!mounted) return;
+    context.go('/');
   }
 
 }

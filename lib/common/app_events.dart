@@ -9,11 +9,6 @@ class AuthExpiredEvent extends AppEvent {
   const AuthExpiredEvent([this.message]);
 }
 
-class AuthChangedEvent extends AppEvent {
-  final bool loggedIn;
-  const AuthChangedEvent(this.loggedIn);
-}
-
 class AppEvents {
   AppEvents._();
 

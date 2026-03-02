@@ -1,4 +1,4 @@
-import 'package:work_order_app/common/http_client.dart';
+import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/models/api_response.dart';
 import 'package:work_order_app/models/notification_model.dart';
 
@@ -15,13 +15,15 @@ class NotificationPage {
 }
 
 class NotificationApi {
-  NotificationApi._();
+  NotificationApi(this._client);
 
-  static Future<NotificationPage> fetchNotifications({
+  final ApiClient _client;
+
+  Future<NotificationPage> fetchNotifications({
     int page = 1,
     int pageSize = 20,
   }) async {
-    final ApiResponse response = await HttpClient.get(
+    final ApiResponse response = await _client.get(
       '/notifications/',
       queryParameters: {
         'page': page,
@@ -46,8 +48,8 @@ class NotificationApi {
     return const NotificationPage(items: []);
   }
 
-  static Future<int> fetchUnreadCount() async {
-    final ApiResponse response = await HttpClient.get('/notifications/unread_count/');
+  Future<int> fetchUnreadCount() async {
+    final ApiResponse response = await _client.get('/notifications/unread_count/');
     final data = response.data;
     if (data is Map && data['unread_count'] != null) {
       return _toInt(data['unread_count']) ?? 0;
@@ -55,8 +57,8 @@ class NotificationApi {
     return 0;
   }
 
-  static Future<NotificationModel?> markRead(String id) async {
-    final ApiResponse response = await HttpClient.post('/notifications/$id/mark_read/');
+  Future<NotificationModel?> markRead(String id) async {
+    final ApiResponse response = await _client.post('/notifications/$id/mark_read/');
     final data = response.data;
     if (data is Map && data['notification'] is Map) {
       return NotificationModel.fromJson((data['notification'] as Map).cast<String, dynamic>());
@@ -64,8 +66,8 @@ class NotificationApi {
     return null;
   }
 
-  static Future<int> markAllRead() async {
-    final ApiResponse response = await HttpClient.post('/notifications/mark_all_read/');
+  Future<int> markAllRead() async {
+    final ApiResponse response = await _client.post('/notifications/mark_all_read/');
     final data = response.data;
     if (data is Map && data['count'] != null) {
       return _toInt(data['count']) ?? 0;

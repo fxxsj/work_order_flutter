@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/api/auth_api.dart';
 import 'package:work_order_app/common/api_exception.dart';
 import 'package:work_order_app/constants/constant.dart';
-import 'package:work_order_app/router/app_router.dart';
-import 'package:work_order_app/utils/store_util.dart';
+import 'package:go_router/go_router.dart';
+import 'package:work_order_app/src/core/storage/app_storage.dart';
 import 'package:work_order_app/utils/toast_util.dart';
-import 'package:work_order_app/utils/utils.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/controllers/auth_controller.dart';
 
@@ -52,7 +51,8 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _loadUser() async {
-    final cached = StoreUtil.read(Constant.KEY_CURRENT_USER_INFO);
+    final storage = context.read<AppStorage>();
+    final cached = storage.read(Constant.KEY_CURRENT_USER_INFO);
     if (cached is Map) {
       _setUser(Map<String, dynamic>.from(cached));
     }
@@ -63,11 +63,13 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _fetchUserFromApi() async {
     try {
-      final result = await AuthApi.getCurrentUser();
+      final storage = context.read<AppStorage>();
+      final authApi = context.read<AuthApi>();
+      final result = await authApi.getCurrentUser();
       if (result.data is Map) {
         final map = Map<String, dynamic>.from(result.data as Map);
         _setUser(map);
-        StoreUtil.write(Constant.KEY_CURRENT_USER_INFO, map);
+        await storage.write(Constant.KEY_CURRENT_USER_INFO, map);
       }
     } catch (_) {
       // ignore fetch errors for now
@@ -114,11 +116,12 @@ class _ProfilePageState extends State<ProfilePage> {
         'first_name': _firstNameController.text.trim(),
         'last_name': _lastNameController.text.trim(),
       };
-      final result = await AuthApi.updateProfile(payload);
+      final authApi = context.read<AuthApi>();
+      final result = await authApi.updateProfile(payload);
       final data = result.data is Map ? Map<String, dynamic>.from(result.data as Map) : <String, dynamic>{};
       final merged = {..._currentUser, ...data};
       _setUser(merged);
-      StoreUtil.write(Constant.KEY_CURRENT_USER_INFO, merged);
+      await context.read<AppStorage>().write(Constant.KEY_CURRENT_USER_INFO, merged);
       final message = (result.message?.trim().isNotEmpty ?? false)
           ? result.message!.trim()
           : '个人信息更新成功';
@@ -148,15 +151,17 @@ class _ProfilePageState extends State<ProfilePage> {
         'new_password': _newPasswordController.text,
         'confirm_password': _confirmPasswordController.text,
       };
-      final result = await AuthApi.changePassword(payload);
+      final authApi = context.read<AuthApi>();
+      final result = await authApi.changePassword(payload);
       final message = (result.message?.trim().isNotEmpty ?? false)
           ? result.message!.trim()
           : '密码修改成功，请重新登录';
       ToastUtil.showSuccess(message);
       _resetPasswordForm();
       await Future<void>.delayed(const Duration(seconds: 2));
-      Utils.logout(context.read<AuthController>());
-      appRouter.go('/login');
+      await context.read<AuthController>().handleLogout();
+      if (!mounted) return;
+      context.go('/login');
     } on ApiException catch (err) {
       ToastUtil.showError(err.message.isNotEmpty ? err.message : '密码修改失败');
     } finally {

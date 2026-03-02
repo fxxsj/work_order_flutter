@@ -2,10 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/di/customer_providers.dart';
 import 'package:work_order_app/src/features/customer/application/customer_view_model.dart';
-import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
-import 'package:work_order_app/src/features/customer/data/customer_repository_impl.dart';
-import 'package:work_order_app/src/features/customer/domain/customer_repository.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/customer/presentation/customer_edit_page.dart';
 import 'package:work_order_app/src/features/customer/presentation/widgets/customer_list_tile.dart';
@@ -17,16 +15,7 @@ class CustomerListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [
-        Provider<CustomerRepository>(
-          create: (_) => CustomerRepositoryImpl(CustomerApiService()),
-        ),
-        ChangeNotifierProvider<CustomerViewModel>(
-          create: (context) => CustomerViewModel(
-            context.read<CustomerRepository>(),
-          )..initialize(),
-        ),
-      ],
+      providers: buildCustomerProviders(),
       child: const _CustomerListView(),
     );
   }

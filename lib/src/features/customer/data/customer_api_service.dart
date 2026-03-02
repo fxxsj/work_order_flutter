@@ -1,10 +1,14 @@
-import 'package:work_order_app/common/http_client.dart';
+import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/customer/data/customer_dto.dart';
 import 'package:work_order_app/src/features/customer/data/salesperson_dto.dart';
 
 /// 客户相关 API 服务。
 class CustomerApiService {
+  CustomerApiService(this._client);
+
+  final ApiClient _client;
+
   /// 获取客户分页列表。
   Future<CustomerPageDto> fetchCustomers({
     int page = 1,
@@ -20,7 +24,7 @@ class CustomerApiService {
       params['search'] = trimmed;
     }
 
-    final response = await HttpClient.get('/customers/', queryParameters: params);
+    final response = await _client.get('/customers/', queryParameters: params);
     final payload = response.data;
     if (payload is Map<String, dynamic>) {
       final results = payload['results'];
@@ -45,7 +49,7 @@ class CustomerApiService {
 
   /// 创建客户。
   Future<CustomerDto> createCustomer(CustomerDto dto) async {
-    final response = await HttpClient.post('/customers/', data: dto.toPayload());
+    final response = await _client.post('/customers/', data: dto.toPayload());
     final payload = response.data;
     final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
     return CustomerDto.fromJson(map);
@@ -53,7 +57,7 @@ class CustomerApiService {
 
   /// 更新客户。
   Future<CustomerDto> updateCustomer(CustomerDto dto) async {
-    final response = await HttpClient.put('/customers/${dto.id}/', data: dto.toPayload());
+    final response = await _client.put('/customers/${dto.id}/', data: dto.toPayload());
     final payload = response.data;
     final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
     return CustomerDto.fromJson(map);
@@ -61,12 +65,12 @@ class CustomerApiService {
 
   /// 删除客户。
   Future<void> deleteCustomer(int id) async {
-    await HttpClient.delete('/customers/$id/');
+    await _client.delete('/customers/$id/');
   }
 
   /// 获取业务员列表。
   Future<List<SalespersonDto>> fetchSalespersons() async {
-    final response = await HttpClient.get('/auth/salespersons/');
+    final response = await _client.get('/auth/salespersons/');
     final payload = response.data;
     if (payload is List) {
       return payload

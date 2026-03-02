@@ -2,11 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:work_order_app/api/notification_api.dart';
-import 'package:work_order_app/common/app_events.dart';
+import 'package:work_order_app/controllers/auth_controller.dart';
 import 'package:work_order_app/models/notification_model.dart';
-import 'package:work_order_app/utils/utils.dart';
 
 class NotificationController extends ChangeNotifier {
+  NotificationController(this._authController, this._api);
+
+  final AuthController _authController;
+  final NotificationApi _api;
   int _unreadCount = 0;
   List<NotificationModel> _recentList = [];
   List<NotificationModel> _notifications = [];
@@ -17,7 +20,6 @@ class NotificationController extends ChangeNotifier {
   bool _showUnreadOnly = false;
 
   Timer? _poller;
-  StreamSubscription<AppEvent>? _authSubscription;
   int _page = 1;
   final int _pageSize = 20;
   bool _disposed = false;
@@ -32,17 +34,17 @@ class NotificationController extends ChangeNotifier {
   bool get showUnreadOnly => _showUnreadOnly;
 
   void initialize() {
-    if (Utils.isLogin()) {
+    _authController.addListener(_handleAuthChange);
+    if (_authController.isLoggedIn) {
       startPolling();
     }
-    _authSubscription = AppEvents.stream.listen(_handleEvent);
   }
 
   @override
   void dispose() {
     _disposed = true;
     _poller?.cancel();
-    _authSubscription?.cancel();
+    _authController.removeListener(_handleAuthChange);
     super.dispose();
   }
 
@@ -50,13 +52,11 @@ class NotificationController extends ChangeNotifier {
     if (!_disposed) notifyListeners();
   }
 
-  void _handleEvent(AppEvent event) {
-    if (event is AuthChangedEvent) {
-      if (event.loggedIn) {
-        startPolling();
-      } else {
-        stopPolling();
-      }
+  void _handleAuthChange() {
+    if (_authController.isLoggedIn) {
+      startPolling();
+    } else {
+      stopPolling();
     }
   }
 
@@ -74,14 +74,14 @@ class NotificationController extends ChangeNotifier {
   }
 
   Future<void> refreshAll() async {
-    if (!Utils.isLogin()) {
+    if (!_authController.isLoggedIn) {
       return;
     }
     _isLoading = true;
     _safeNotify();
     _page = 1;
     try {
-      final page = await NotificationApi.fetchNotifications(page: _page, pageSize: _pageSize);
+      final page = await _api.fetchNotifications(page: _page, pageSize: _pageSize);
       _notifications = page.items.toList();
       _totalCount = page.totalCount ?? page.items.length;
       _hasMore = page.hasMore;
@@ -99,14 +99,14 @@ class NotificationController extends ChangeNotifier {
     if (_isLoadingMore || !_hasMore) {
       return;
     }
-    if (!Utils.isLogin()) {
+    if (!_authController.isLoggedIn) {
       return;
     }
     _isLoadingMore = true;
     _safeNotify();
     try {
       final nextPage = _page + 1;
-      final page = await NotificationApi.fetchNotifications(page: nextPage, pageSize: _pageSize);
+      final page = await _api.fetchNotifications(page: nextPage, pageSize: _pageSize);
       _notifications = [..._notifications, ...page.items];
       _page = nextPage;
       _hasMore = page.hasMore;
@@ -120,7 +120,7 @@ class NotificationController extends ChangeNotifier {
   }
 
   Future<void> markAllRead() async {
-    await NotificationApi.markAllRead();
+    await _api.markAllRead();
     _notifications = _notifications
         .map((item) => item.isRead ? item : item.copyWith(isRead: true))
         .toList();
@@ -132,7 +132,7 @@ class NotificationController extends ChangeNotifier {
   }
 
   Future<void> markRead(String id) async {
-    final updated = await NotificationApi.markRead(id);
+    final updated = await _api.markRead(id);
     if (updated == null) {
       return;
     }
@@ -142,7 +142,7 @@ class NotificationController extends ChangeNotifier {
   }
 
   Future<void> _poll() async {
-    if (!Utils.isLogin()) {
+    if (!_authController.isLoggedIn) {
       return;
     }
     try {
@@ -155,7 +155,7 @@ class NotificationController extends ChangeNotifier {
 
   Future<void> _refreshUnreadCount() async {
     try {
-      _unreadCount = await NotificationApi.fetchUnreadCount();
+      _unreadCount = await _api.fetchUnreadCount();
       _safeNotify();
     } catch (_) {
       // ignore
@@ -164,7 +164,7 @@ class NotificationController extends ChangeNotifier {
 
   Future<void> _refreshRecent() async {
     try {
-      final page = await NotificationApi.fetchNotifications(page: 1, pageSize: 5);
+      final page = await _api.fetchNotifications(page: 1, pageSize: 5);
       _recentList = page.items.toList();
       _safeNotify();
     } catch (_) {

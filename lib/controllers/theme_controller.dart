@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/constants/constant.dart';
-import 'package:work_order_app/utils/store_util.dart';
+import 'package:work_order_app/src/core/storage/app_storage.dart';
 
 class ThemeController extends ChangeNotifier {
+  ThemeController(this._storage);
+
+  final AppStorage _storage;
   static const Color defaultSeed = Color(0xFF14B8A6);
 
   ThemeMode _themeMode = ThemeMode.system;
@@ -16,16 +19,16 @@ class ThemeController extends ChangeNotifier {
   double get fontScale => _fontScale;
 
   void load() {
-    final colorValue = StoreUtil.read(Constant.KEY_THEME_COLOR);
+    final colorValue = _storage.read(Constant.KEY_THEME_COLOR);
     if (colorValue is int) {
       _seedColor = Color(colorValue);
     }
     _tempColor = _seedColor;
 
-    final modeValue = StoreUtil.read(Constant.KEY_THEME_MODE);
+    final modeValue = _storage.read(Constant.KEY_THEME_MODE);
     _themeMode = _parseMode(modeValue?.toString());
 
-    final scaleValue = StoreUtil.read(Constant.KEY_FONT_SCALE);
+    final scaleValue = _storage.read(Constant.KEY_FONT_SCALE);
     if (scaleValue is num) {
       _fontScale = scaleValue.toDouble();
     }
@@ -35,7 +38,7 @@ class ThemeController extends ChangeNotifier {
 
   void setThemeMode(ThemeMode mode) {
     _themeMode = mode;
-    StoreUtil.write(Constant.KEY_THEME_MODE, _serializeMode(mode));
+    _storage.write(Constant.KEY_THEME_MODE, _serializeMode(mode));
     notifyListeners();
   }
 
@@ -46,13 +49,13 @@ class ThemeController extends ChangeNotifier {
 
   void setFontScale(double value) {
     _fontScale = value;
-    StoreUtil.write(Constant.KEY_FONT_SCALE, value);
+    _storage.write(Constant.KEY_FONT_SCALE, value);
     notifyListeners();
   }
 
   void applyColor() {
     _seedColor = _tempColor;
-    StoreUtil.write(Constant.KEY_THEME_COLOR, _seedColor.value);
+    _storage.write(Constant.KEY_THEME_COLOR, _seedColor.value);
     notifyListeners();
   }
 

@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:work_order_app/constants/constant.dart';
 import 'package:work_order_app/common/theme_ext.dart';
-import 'package:work_order_app/controllers/auth_controller.dart';
-import 'package:work_order_app/utils/store_util.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class Utils {
@@ -103,15 +100,6 @@ class Utils {
     );
 
     return base;
-  }
-
-  static isLogin() {
-    return StoreUtil.isLoggedIn();
-  }
-
-  static logout(AuthController authController) {
-    authController.handleLogout();
-    StoreUtil.remove(Constant.KEY_CURRENT_USER_INFO);
   }
 
   static launchURL(url) async {

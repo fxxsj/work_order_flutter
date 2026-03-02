@@ -2,50 +2,66 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/common/app_config.dart';
 import 'package:work_order_app/common/app_scroll_behavior.dart';
-import 'package:work_order_app/common/http_client.dart';
+import 'package:work_order_app/api/notification_api.dart';
 import 'package:work_order_app/controllers/auth_controller.dart';
 import 'package:work_order_app/controllers/app_event_controller.dart';
 import 'package:work_order_app/controllers/notification_controller.dart';
 import 'package:work_order_app/controllers/app_badge_controller.dart';
 import 'package:work_order_app/controllers/theme_controller.dart';
 import 'package:work_order_app/router/app_router.dart';
-import 'package:work_order_app/utils/store_util.dart';
+import 'package:work_order_app/src/core/di/app_providers.dart';
+import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/storage/app_storage.dart';
 import 'package:work_order_app/utils/utils.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await _initServices();
-  runApp(const MyApp());
-}
-
-Future<void> _initServices() async {
   await AppConfig.init();
-  await StoreUtil.init();
-  HttpClient.init();
+  final storage = AppStorage();
+  await storage.init();
+  final apiClient = ApiClient();
+  apiClient.init();
+  runApp(MyApp(storage: storage, apiClient: apiClient));
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  const MyApp({
+    super.key,
+    required this.storage,
+    required this.apiClient,
+  });
+
+  final AppStorage storage;
+  final ApiClient apiClient;
 
   @override
   State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
+  late final AppStorage _storage;
+  late final ApiClient _apiClient;
   late final ThemeController _themeController;
   late final AuthController _authController;
   late final NotificationController _notificationController;
   late final AppBadgeController _appBadgeController;
   late final AppEventController _appEventController;
+  late final GoRouter _router;
 
   @override
   void initState() {
     super.initState();
-    _themeController = ThemeController()..load();
-    _authController = AuthController()..initialize();
-    _notificationController = NotificationController()..initialize();
+    _storage = widget.storage;
+    _apiClient = widget.apiClient;
+    _themeController = ThemeController(_storage)..load();
+    _authController = AuthController(_storage, _apiClient)..initialize();
+    _notificationController = NotificationController(
+      _authController,
+      NotificationApi(_apiClient),
+    )..initialize();
     _appBadgeController = AppBadgeController();
-    _appEventController = AppEventController(_authController)..initialize();
+    _router = createAppRouter(_authController);
+    _appEventController = AppEventController(_authController, _router)..initialize();
   }
 
   @override
@@ -61,18 +77,20 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: _themeController),
-        ChangeNotifierProvider.value(value: _authController),
-        ChangeNotifierProvider.value(value: _notificationController),
-        ChangeNotifierProvider.value(value: _appBadgeController),
-      ],
+      providers: buildAppProviders(
+        storage: _storage,
+        apiClient: _apiClient,
+        theme: _themeController,
+        auth: _authController,
+        notification: _notificationController,
+        badge: _appBadgeController,
+      ),
       child: Consumer<ThemeController>(
         builder: (context, theme, _) {
           return MaterialApp.router(
-            routerDelegate: appRouter.routerDelegate,
-            routeInformationParser: appRouter.routeInformationParser,
-            routeInformationProvider: appRouter.routeInformationProvider,
+            routerDelegate: _router.routerDelegate,
+            routeInformationParser: _router.routeInformationParser,
+            routeInformationProvider: _router.routeInformationProvider,
             scrollBehavior: const AppScrollBehavior(),
             debugShowCheckedModeBanner: false,
             title: '新西彩订单管理',
