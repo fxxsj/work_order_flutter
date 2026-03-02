@@ -123,6 +123,9 @@ class Utils {
   }
 
   static logout() {
+    StoreUtil.remove(Constant.KEY_ACCESS_TOKEN);
+    StoreUtil.remove(Constant.KEY_REFRESH_TOKEN);
+    // 保留兼容性
     StoreUtil.remove(Constant.KEY_TOKEN);
     StoreUtil.remove(Constant.KEY_CURRENT_USER_INFO);
   }

@@ -188,26 +188,33 @@ class _LoginState extends State<Login> {
       }
       final responseData = responseBodyApi.data;
       final responseMap = responseData is Map ? Map<String, dynamic>.from(responseData) : <String, dynamic>{};
-      String? token;
-      final directToken = responseMap['token'] ??
-          responseMap['access'] ??
-          responseMap['access_token'] ??
-          responseMap['auth_token'];
-      if (directToken != null) {
-        token = directToken.toString();
+      String? accessToken;
+      String? refreshToken;
+      
+      // 提取 JWT access token
+      final directAccess = responseMap['access'] ?? responseMap['access_token'] ?? responseMap['auth_token'];
+      if (directAccess != null) {
+        accessToken = directAccess.toString();
+        refreshToken = responseMap['refresh']?.toString();
       } else if (responseMap['data'] is Map) {
         final inner = Map<String, dynamic>.from(responseMap['data'] as Map);
-        final innerToken = inner['token'] ?? inner['access'] ?? inner['access_token'] ?? inner['auth_token'];
-        if (innerToken != null) {
-          token = innerToken.toString();
+        final innerAccess = inner['access'] ?? inner['access_token'] ?? inner['auth_token'];
+        if (innerAccess != null) {
+          accessToken = innerAccess.toString();
+          refreshToken = inner['refresh']?.toString();
         }
       }
-      if (token == null || token.toString().isEmpty) {
-      ToastUtil.showError('请检查账号密码');
-      focusNodePassword.requestFocus();
-      return;
+      
+      if (accessToken == null || accessToken.isEmpty) {
+        ToastUtil.showError('请检查账号密码');
+        focusNodePassword.requestFocus();
+        return;
       }
-      responseMap['token'] = token;
+      
+      // 同时保存到 responseMap 以兼容旧逻辑
+      responseMap['token'] = accessToken;
+      responseMap['access'] = accessToken;
+      responseMap['refresh'] = refreshToken;
       _loginSuccess(responseMap);
     } finally {
       if (mounted) {
@@ -219,7 +226,14 @@ class _LoginState extends State<Login> {
   }
 
   void _loginSuccess(Map<String, dynamic> responseData) {
-    StoreUtil.write(Constant.KEY_TOKEN, responseData['token']);
+    // 保存 JWT tokens
+    StoreUtil.write(Constant.KEY_ACCESS_TOKEN, responseData['access'] ?? responseData['token']);
+    StoreUtil.write(Constant.KEY_REFRESH_TOKEN, responseData['refresh']);
+    // 更新 HTTP 客户端的 tokens
+    HttpClient.updateTokens(
+      responseData['access'] ?? responseData['token'],
+      responseData['refresh'],
+    );
     StoreUtil.write(Constant.KEY_REMEMBER_USERNAME, userNameController.text);
     var userInfo = Map<String, dynamic>.from(responseData);
     if (responseData.containsKey('username')) {
