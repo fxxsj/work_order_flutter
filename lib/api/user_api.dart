@@ -1,8 +1,9 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/common/api_result.dart';
 import 'package:work_order_app/common/http_client.dart';
 
 class UserApi {
-  static Future<ApiResult<void>> register(dynamic data) async {
+  static Future<ApiResult<void>> register(FormData data) async {
     final response = await HttpClient.post('/user/register', data: data);
     return ApiResult(message: response.message);
   }
