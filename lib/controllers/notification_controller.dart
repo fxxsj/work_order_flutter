@@ -66,13 +66,18 @@ class NotificationController extends GetxController {
     }
     isLoading.value = true;
     _page = 1;
-    final page = await NotificationApi.fetchNotifications(page: _page, pageSize: _pageSize);
-    notifications.assignAll(page.items);
-    totalCount.value = page.totalCount ?? page.items.length;
-    hasMore.value = page.hasMore;
-    await _refreshUnreadCount();
-    await _refreshRecent();
-    isLoading.value = false;
+    try {
+      final page = await NotificationApi.fetchNotifications(page: _page, pageSize: _pageSize);
+      notifications.assignAll(page.items);
+      totalCount.value = page.totalCount ?? page.items.length;
+      hasMore.value = page.hasMore;
+      await _refreshUnreadCount();
+      await _refreshRecent();
+    } catch (_) {
+      // ignore polling errors
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   Future<void> loadMore() async {
@@ -83,13 +88,18 @@ class NotificationController extends GetxController {
       return;
     }
     isLoadingMore.value = true;
-    final nextPage = _page + 1;
-    final page = await NotificationApi.fetchNotifications(page: nextPage, pageSize: _pageSize);
-    notifications.addAll(page.items);
-    _page = nextPage;
-    hasMore.value = page.hasMore;
-    totalCount.value = page.totalCount ?? totalCount.value;
-    isLoadingMore.value = false;
+    try {
+      final nextPage = _page + 1;
+      final page = await NotificationApi.fetchNotifications(page: nextPage, pageSize: _pageSize);
+      notifications.addAll(page.items);
+      _page = nextPage;
+      hasMore.value = page.hasMore;
+      totalCount.value = page.totalCount ?? totalCount.value;
+    } catch (_) {
+      // ignore paging errors
+    } finally {
+      isLoadingMore.value = false;
+    }
   }
 
   Future<void> markAllRead() async {
@@ -116,17 +126,29 @@ class NotificationController extends GetxController {
     if (!Utils.isLogin()) {
       return;
     }
-    await _refreshUnreadCount();
-    await _refreshRecent();
+    try {
+      await _refreshUnreadCount();
+      await _refreshRecent();
+    } catch (_) {
+      // ignore polling errors
+    }
   }
 
   Future<void> _refreshUnreadCount() async {
-    unreadCount.value = await NotificationApi.fetchUnreadCount();
+    try {
+      unreadCount.value = await NotificationApi.fetchUnreadCount();
+    } catch (_) {
+      // ignore
+    }
   }
 
   Future<void> _refreshRecent() async {
-    final page = await NotificationApi.fetchNotifications(page: 1, pageSize: 5);
-    recentList.assignAll(page.items);
+    try {
+      final page = await NotificationApi.fetchNotifications(page: 1, pageSize: 5);
+      recentList.assignAll(page.items);
+    } catch (_) {
+      // ignore
+    }
   }
 
   void _updateLists(NotificationModel updated) {

@@ -1,4 +1,3 @@
-import 'package:work_order_app/common/api_exception.dart';
 import 'package:work_order_app/common/http_client.dart';
 import 'package:work_order_app/models/api_response.dart';
 import 'package:work_order_app/models/notification_model.dart';
@@ -22,58 +21,38 @@ class NotificationApi {
     int page = 1,
     int pageSize = 20,
   }) async {
-    try {
-      final ApiResponse response = await HttpClient.get(
-        '/notifications/',
-        queryParameters: {
-          'page': page,
-          'page_size': pageSize,
-        },
-      );
-      if (!response.success) {
-        return const NotificationPage(items: []);
+    final ApiResponse response = await HttpClient.get(
+      '/notifications/',
+      queryParameters: {
+        'page': page,
+        'page_size': pageSize,
+      },
+    );
+    final data = response.data;
+    if (data is Map<String, dynamic>) {
+      final results = data['results'];
+      if (results is List) {
+        final items = results
+            .whereType<Map>()
+            .map((item) => NotificationModel.fromJson(item.cast<String, dynamic>()))
+            .toList();
+        return NotificationPage(
+          items: items,
+          totalCount: _toInt(data['count']),
+          hasMore: data['next'] != null,
+        );
       }
-      final data = response.data;
-      if (data is Map<String, dynamic>) {
-        final results = data['results'];
-        if (results is List) {
-          final items = results
-              .whereType<Map>()
-              .map((item) => NotificationModel.fromJson(item.cast<String, dynamic>()))
-              .toList();
-          return NotificationPage(
-            items: items,
-            totalCount: _toInt(data['count']),
-            hasMore: data['next'] != null,
-          );
-        }
-      }
-    } on ApiException catch (err) {
-      if (err.statusCode == 404) {
-        return const NotificationPage(items: []);
-      }
-      return const NotificationPage(items: []);
     }
     return const NotificationPage(items: []);
   }
 
   static Future<int> fetchUnreadCount() async {
-    try {
-      final ApiResponse response = await HttpClient.get('/notifications/unread_count/');
-      if (!response.success) {
-        return 0;
-      }
-      final data = response.data;
-      if (data is Map && data['unread_count'] != null) {
-        return _toInt(data['unread_count']) ?? 0;
-      }
-      return 0;
-    } on ApiException catch (err) {
-      if (err.statusCode == 404) {
-        return 0;
-      }
-      return 0;
+    final ApiResponse response = await HttpClient.get('/notifications/unread_count/');
+    final data = response.data;
+    if (data is Map && data['unread_count'] != null) {
+      return _toInt(data['unread_count']) ?? 0;
     }
+    return 0;
   }
 
   static Future<NotificationModel?> markRead(String id) async {
