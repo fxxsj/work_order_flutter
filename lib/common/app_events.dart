@@ -9,12 +9,6 @@ class AuthExpiredEvent extends AppEvent {
   const AuthExpiredEvent([this.message]);
 }
 
-class ApiErrorEvent extends AppEvent {
-  final String message;
-  final String? code;
-  const ApiErrorEvent(this.message, {this.code});
-}
-
 class AuthChangedEvent extends AppEvent {
   final bool loggedIn;
   const AuthChangedEvent(this.loggedIn);
