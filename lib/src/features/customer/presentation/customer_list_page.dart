@@ -89,7 +89,7 @@ class _CustomerListView extends StatefulWidget {
 
 class _CustomerListViewState extends State<_CustomerListView> {
   static const _searchDebounceDuration = Duration(milliseconds: 450);
-  static const double _searchWidth = 260;
+  static const double _searchWidth = 300;
   static const double _spacingSm = 8;
   static const double _controlHeight = PageActionStyle.height;
   static const double _controlRadius = PageActionStyle.radius;
@@ -346,13 +346,10 @@ class _CustomerListViewState extends State<_CustomerListView> {
       useSurface: false,
       showDivider: false,
       padding: EdgeInsets.zero,
-      actions: Wrap(
-        spacing: _spacingSm,
-        runSpacing: 6,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          SizedBox(
-            width: _searchWidth,
+      actions: LayoutBuilder(
+        builder: (context, constraints) {
+          final searchField = SizedBox(
+            width: isMobile ? constraints.maxWidth : _searchWidth,
             child: SizedBox(
               height: PageActionStyle.height,
               child: ValueListenableBuilder<TextEditingValue>(
@@ -385,46 +382,79 @@ class _CustomerListViewState extends State<_CustomerListView> {
                 },
               ),
             ),
-          ),
-          PageActionButton.outlined(
-            onPressed: () => viewModel.loadCustomers(resetPage: true),
-            icon: const Icon(Icons.refresh, size: 16),
-            label: _refreshButtonText,
-          ),
-          if (!isMobile)
-            PageActionButton.outlined(
-              key: _columnsMenuKey,
-              onPressed: () => _openColumnsMenu(context),
-              icon: const Icon(Icons.view_column_outlined, size: 18),
-              square: true,
-            ),
-          if (!isMobile)
-            ToggleButtons(
-              isSelected: [_denseTable == false, _denseTable == true],
-              onPressed: (index) {
-                setState(() {
-                  _denseTable = index == 1;
-                });
-              },
-              borderRadius: BorderRadius.circular(_controlRadius),
-              constraints: const BoxConstraints(minHeight: _controlHeight, minWidth: 52),
-              children: const [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(_densityComfortLabel),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(_densityCompactLabel),
+          );
+
+          if (isMobile) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                searchField,
+                const SizedBox(height: _spacingSm),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    PageActionButton.outlined(
+                      onPressed: () => viewModel.loadCustomers(resetPage: true),
+                      icon: const Icon(Icons.refresh, size: 16),
+                      label: _refreshButtonText,
+                    ),
+                    const SizedBox(width: _spacingSm),
+                    PageActionButton.filled(
+                      onPressed: () => _openEditPage(context, viewModel, null),
+                      icon: const Icon(Icons.add),
+                      label: _createButtonText,
+                    ),
+                  ],
                 ),
               ],
-            ),
-          PageActionButton.filled(
-            onPressed: () => _openEditPage(context, viewModel, null),
-            icon: const Icon(Icons.add),
-            label: _createButtonText,
-          ),
-        ],
+            );
+          }
+
+          return Wrap(
+            spacing: _spacingSm,
+            runSpacing: 6,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              searchField,
+              PageActionButton.outlined(
+                onPressed: () => viewModel.loadCustomers(resetPage: true),
+                icon: const Icon(Icons.refresh, size: 16),
+                label: _refreshButtonText,
+              ),
+              PageActionButton.outlined(
+                key: _columnsMenuKey,
+                onPressed: () => _openColumnsMenu(context),
+                icon: const Icon(Icons.view_column_outlined, size: 18),
+                square: true,
+              ),
+              ToggleButtons(
+                isSelected: [_denseTable == false, _denseTable == true],
+                onPressed: (index) {
+                  setState(() {
+                    _denseTable = index == 1;
+                  });
+                },
+                borderRadius: BorderRadius.circular(_controlRadius),
+                constraints: const BoxConstraints(minHeight: _controlHeight, minWidth: 52),
+                children: const [
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8),
+                    child: Text(_densityComfortLabel),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8),
+                    child: Text(_densityCompactLabel),
+                  ),
+                ],
+              ),
+              PageActionButton.filled(
+                onPressed: () => _openEditPage(context, viewModel, null),
+                icon: const Icon(Icons.add),
+                label: _createButtonText,
+              ),
+            ],
+          );
+        },
       ),
     );
   }
