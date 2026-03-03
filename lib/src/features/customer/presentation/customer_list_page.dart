@@ -9,6 +9,7 @@ import 'package:work_order_app/src/features/customer/presentation/customer_edit_
 import 'package:work_order_app/src/features/customer/presentation/widgets/customer_list_tile.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
@@ -90,10 +91,8 @@ class _CustomerListViewState extends State<_CustomerListView> {
   static const _searchDebounceDuration = Duration(milliseconds: 450);
   static const double _searchWidth = 260;
   static const double _spacingSm = 8;
-  static const double _controlHeight = 36;
-  static const double _controlRadius = 4;
-  static const double _controlMinWidth = 88;
-  static const double _iconButtonSize = 36;
+  static const double _controlHeight = PageActionStyle.height;
+  static const double _controlRadius = PageActionStyle.radius;
   static const String _emptyCellText = '-';
 
   static const String _titleText = '客户管理';
@@ -252,7 +251,6 @@ class _CustomerListViewState extends State<_CustomerListView> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final isMobile = BreakpointsUtil.isMobile(context);
     final breadcrumb = buildBreadcrumbForPathWith(
       GoRouterState.of(context).uri.path,
@@ -266,7 +264,6 @@ class _CustomerListViewState extends State<_CustomerListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(
             context,
-            theme,
             viewModel,
             breadcrumb,
             isMobile,
@@ -340,143 +337,95 @@ class _CustomerListViewState extends State<_CustomerListView> {
 
   Widget _buildPageHeader(
     BuildContext context,
-    ThemeData theme,
     CustomerViewModel viewModel,
     List<String> breadcrumb,
     bool isMobile,
   ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (breadcrumb.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Text(
-              breadcrumb.join(_breadcrumbSeparator),
-              style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
-            ),
-          ),
-        Row(
-          children: [
-            Expanded(
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: Wrap(
-                  spacing: _spacingSm,
-                  runSpacing: 6,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: _searchWidth,
-                      child: ValueListenableBuilder<TextEditingValue>(
-                        valueListenable: _searchController,
-                        builder: (context, value, _) {
-                          return TextField(
-                            controller: _searchController,
-                            onChanged: (_) => _scheduleSearch(viewModel),
-                            onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
-                            decoration: InputDecoration(
-                              hintText: _searchHintText,
-                              prefixIcon: const Icon(Icons.search, size: 18),
-                              suffixIcon: value.text.isEmpty
-                                  ? null
-                                  : IconButton(
-                                      tooltip: _clearText,
-                                      icon: const Icon(Icons.close, size: 18),
-                                      onPressed: () {
-                                        _searchController.clear();
-                                        _scheduleSearch(viewModel, immediate: true);
-                                      },
-                                    ),
-                              border: const OutlineInputBorder(),
-                              isDense: true,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+    return PageHeaderBar(
+      breadcrumb: breadcrumb.isEmpty ? null : breadcrumb.join(_breadcrumbSeparator),
+      useSurface: false,
+      showDivider: false,
+      padding: EdgeInsets.zero,
+      actions: Wrap(
+        spacing: _spacingSm,
+        runSpacing: 6,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          SizedBox(
+            width: _searchWidth,
+            child: SizedBox(
+              height: PageActionStyle.height,
+              child: ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _searchController,
+                builder: (context, value, _) {
+                  return TextField(
+                    controller: _searchController,
+                    textAlignVertical: TextAlignVertical.center,
+                    onChanged: (_) => _scheduleSearch(viewModel),
+                    onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
+                    decoration: InputDecoration(
+                      constraints: const BoxConstraints.tightFor(height: PageActionStyle.height),
+                      hintText: _searchHintText,
+                      prefixIcon: const Icon(Icons.search, size: 18),
+                      suffixIcon: value.text.isEmpty
+                          ? null
+                          : IconButton(
+                              tooltip: _clearText,
+                              icon: const Icon(Icons.close, size: 18),
+                              onPressed: () {
+                                _searchController.clear();
+                                _scheduleSearch(viewModel, immediate: true);
+                              },
                             ),
-                          );
-                        },
-                      ),
+                      border: const OutlineInputBorder(),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
                     ),
-                    SizedBox(
-                      height: _controlHeight,
-                      child: OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size(_controlMinWidth, _controlHeight),
-                          fixedSize: const Size(_controlMinWidth, _controlHeight),
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(_controlRadius),
-                          ),
-                        ),
-                        onPressed: () => viewModel.loadCustomers(resetPage: true),
-                        icon: const Icon(Icons.refresh, size: 16),
-                        label: const Text(_refreshButtonText),
-                      ),
-                    ),
-                    if (!isMobile)
-                      SizedBox(
-                        height: _controlHeight,
-                        width: _iconButtonSize,
-                        child: OutlinedButton(
-                          key: _columnsMenuKey,
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size(_iconButtonSize, _controlHeight),
-                            fixedSize: const Size(_iconButtonSize, _controlHeight),
-                            padding: EdgeInsets.zero,
-                            visualDensity: VisualDensity.compact,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(_controlRadius),
-                            ),
-                          ),
-                          onPressed: () => _openColumnsMenu(context),
-                          child: const Icon(Icons.view_column_outlined, size: 18),
-                        ),
-                      ),
-                    if (!isMobile)
-                      ToggleButtons(
-                        isSelected: [_denseTable == false, _denseTable == true],
-                        onPressed: (index) {
-                          setState(() {
-                            _denseTable = index == 1;
-                          });
-                        },
-                        borderRadius: BorderRadius.circular(_controlRadius),
-                        constraints: const BoxConstraints(minHeight: _controlHeight, minWidth: 52),
-                        children: const [
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 8),
-                            child: Text(_densityComfortLabel),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 8),
-                            child: Text(_densityCompactLabel),
-                          ),
-                        ],
-                      ),
-                    SizedBox(
-                      height: _controlHeight,
-                      child: FilledButton.icon(
-                        style: FilledButton.styleFrom(
-                          minimumSize: const Size(0, _controlHeight),
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          visualDensity: VisualDensity.compact,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(_controlRadius),
-                          ),
-                        ),
-                        onPressed: () => _openEditPage(context, viewModel, null),
-                        icon: const Icon(Icons.add),
-                        label: const Text(_createButtonText),
-                      ),
-                    ),
-                  ],
-                ),
+                  );
+                },
               ),
             ),
-          ],
-        ),
-      ],
+          ),
+          PageActionButton.outlined(
+            onPressed: () => viewModel.loadCustomers(resetPage: true),
+            icon: const Icon(Icons.refresh, size: 16),
+            label: _refreshButtonText,
+          ),
+          if (!isMobile)
+            PageActionButton.outlined(
+              key: _columnsMenuKey,
+              onPressed: () => _openColumnsMenu(context),
+              icon: const Icon(Icons.view_column_outlined, size: 18),
+              square: true,
+            ),
+          if (!isMobile)
+            ToggleButtons(
+              isSelected: [_denseTable == false, _denseTable == true],
+              onPressed: (index) {
+                setState(() {
+                  _denseTable = index == 1;
+                });
+              },
+              borderRadius: BorderRadius.circular(_controlRadius),
+              constraints: const BoxConstraints(minHeight: _controlHeight, minWidth: 52),
+              children: const [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8),
+                  child: Text(_densityComfortLabel),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8),
+                  child: Text(_densityCompactLabel),
+                ),
+              ],
+            ),
+          PageActionButton.filled(
+            onPressed: () => _openEditPage(context, viewModel, null),
+            icon: const Icon(Icons.add),
+            label: _createButtonText,
+          ),
+        ],
+      ),
     );
   }
 

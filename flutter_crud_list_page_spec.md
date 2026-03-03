@@ -361,7 +361,10 @@ UI 层规范要求:
     • 底部分页固定在页面内，单行显示
     • 搜索采用输入即搜（支持回车立即触发）
     • 移动端隐藏列管理与密度切换
+    • 桌面端优先表格（DataTable），移动端使用 Card + ListTile
     • 按钮统一高度 36px、圆角 4px，文字按钮宽度自适应
+    • 搜索框高度必须与按钮一致，InputDecoration 需要约束高度
+    • 顶部工具条统一使用 PageHeaderBar + PageActionButton
 3.4.2 列表项组件规范
 // presentation/widgets/customer_list_tile.dart
 class CustomerListTile extends StatelessWidget {
@@ -580,6 +583,10 @@ try {
     • 提交过程中禁用按钮，显示 loading 状态
     • 异步操作前后检查 mounted，防止页面销毁后调用 setState
     • 新增和编辑共用一个页面，通过传入参数区分[9][10]
+    • 顶部固定（面包屑 + 右侧操作区），中间滚动，底部固定提交
+    • 顶部与列表页一致：使用 PageHeaderBar，且不展示标题
+    • 操作按钮统一使用 PageActionButton，图标 + 文字一致化
+    • 桌面端双列表单、移动端单列分组布局（基本/联系/补充/系统）
 
 4. 交互与导航规范
 4.1 导航方式

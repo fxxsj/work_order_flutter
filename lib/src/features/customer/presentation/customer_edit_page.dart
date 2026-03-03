@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/features/customer/application/customer_view_model.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 
@@ -18,13 +21,13 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
   static const double _padding = 16;
   static const double _sectionSpacing = 16;
   static const double _actionSpacing = 24;
+  static const double _pageSpacing = 8;
   static const double _loadingIndicatorSize = 14;
   static const double _submitIndicatorSize = 20;
   static const double _indicatorStrokeWidth = 2;
   static const double _inlineSpacing = 8;
+  static const double _columnSpacing = 24;
 
-  static const String _createTitle = '新增客户';
-  static const String _editTitle = '编辑客户';
   static const String _nameLabel = '客户名称';
   static const String _contactLabel = '联系人';
   static const String _phoneLabel = '联系电话';
@@ -34,13 +37,23 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
   static const String _notesLabel = '备注';
   static const String _noSalespersonText = '不指定';
   static const String _loadingSalespersonsText = '正在加载业务员列表...';
-  static const String _submitCreateText = '创建客户';
-  static const String _submitUpdateText = '保存修改';
+  static const String _submitCreateText = '保存';
+  static const String _submitUpdateText = '保存';
   static const String _submitErrorText = '操作失败: ';
   static const String _nameRequiredText = '请输入客户名称';
   static const String _nameLengthText = '客户名称至少需要2个字符';
   static const String _phoneInvalidText = '电话号码格式不正确';
   static const String _emailInvalidText = '请输入正确的邮箱地址';
+  static const String _cancelText = '取消';
+  static const String _backText = '返回';
+  static const String _basicSectionTitle = '基本信息';
+  static const String _contactSectionTitle = '联系信息';
+  static const String _extraSectionTitle = '补充信息';
+  static const String _systemSectionTitle = '系统信息';
+  static const String _createdAtLabel = '创建时间';
+  static const String _updatedAtLabel = '更新时间';
+  static const String _emptyText = '-';
+  static const String _breadcrumbSeparator = ' / ';
 
   late final TextEditingController _nameController;
   late final TextEditingController _contactController;
@@ -127,193 +140,451 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
     }
   }
 
+  String _formatDateTime(DateTime? value) {
+    if (value == null) return _emptyText;
+    final local = value.toLocal();
+    final year = local.year.toString().padLeft(4, '0');
+    final month = local.month.toString().padLeft(2, '0');
+    final day = local.day.toString().padLeft(2, '0');
+    final hour = local.hour.toString().padLeft(2, '0');
+    final minute = local.minute.toString().padLeft(2, '0');
+    return '$year-$month-$day $hour:$minute';
+  }
+
+  Widget _sectionTitle(ThemeData theme, String text) {
+    return Text(
+      text,
+      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+    );
+  }
+
+  Widget _readonlyField(ThemeData theme, String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
+        const SizedBox(height: 6),
+        Text(value, style: theme.textTheme.bodyMedium),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<CustomerViewModel>();
     final salespersons = viewModel.salespersons;
     final salespersonsError = viewModel.salespersonsError;
     final theme = Theme.of(context);
+    final isMobile = BreakpointsUtil.isMobile(context);
+    final customer = widget.customer;
+    final breadcrumb = buildBreadcrumbForPath('/customers');
 
     return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(_padding),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            PageHeaderBar(
+              breadcrumb: breadcrumb.join(_breadcrumbSeparator),
+              useSurface: false,
+              showDivider: false,
+              padding: EdgeInsets.zero,
+              actions: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    icon: const Icon(Icons.arrow_back),
-                  ),
-                  const SizedBox(width: _inlineSpacing),
-                  Text(
-                    widget.customer == null ? _createTitle : _editTitle,
-                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                  PageActionButton.outlined(
+                    onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
+                    icon: const Icon(Icons.arrow_back, size: 16),
+                    label: _backText,
                   ),
                 ],
               ),
-              const SizedBox(height: _sectionSpacing),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: _nameLabel,
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  final text = value?.trim() ?? '';
-                  if (text.isEmpty) {
-                    return _nameRequiredText;
-                  }
-                  if (text.length < 2) {
-                    return _nameLengthText;
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: _sectionSpacing),
-              TextFormField(
-                controller: _contactController,
-                decoration: const InputDecoration(
-                  labelText: _contactLabel,
-                  border: OutlineInputBorder(),
-                ),
-                validator: (_) => null,
-              ),
-              const SizedBox(height: _sectionSpacing),
-              TextFormField(
-                controller: _phoneController,
-                decoration: const InputDecoration(
-                  labelText: _phoneLabel,
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.phone,
-                validator: (value) {
-                  final text = value?.trim() ?? '';
-                  if (text.isEmpty) {
-                    return null;
-                  }
-                  final phoneRegex = RegExp(r'^[\d\-+() ]+$');
-                  if (!phoneRegex.hasMatch(text)) {
-                    return _phoneInvalidText;
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: _sectionSpacing),
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: _emailLabel,
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  final text = value?.trim() ?? '';
-                  if (text.isEmpty) {
-                    return null;
-                  }
-                  final emailRegex = RegExp(r'^[\w\-.]+@([\w\-]+\.)+[\w\-]{2,4}$');
-                  if (!emailRegex.hasMatch(text)) {
-                    return _emailInvalidText;
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: _sectionSpacing),
-              DropdownButtonFormField<int?>(
-                value: _salespersonId,
-                decoration: const InputDecoration(
-                  labelText: _salespersonLabel,
-                  border: OutlineInputBorder(),
-                ),
-                items: [
-                  const DropdownMenuItem<int?>(
-                    value: null,
-                    child: Text(_noSalespersonText),
+            ),
+            const SizedBox(height: _pageSpacing),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(_padding),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (isMobile) ...[
+                _sectionTitle(theme, _basicSectionTitle),
+                const SizedBox(height: _sectionSpacing),
+                TextFormField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(
+                    labelText: _nameLabel,
+                    border: OutlineInputBorder(),
                   ),
-                  ...salespersons.map(
-                    (item) => DropdownMenuItem<int?>(
-                      value: item.id,
-                      child: Text(item.name),
+                  validator: (value) {
+                    final text = value?.trim() ?? '';
+                    if (text.isEmpty) {
+                      return _nameRequiredText;
+                    }
+                    if (text.length < 2) {
+                      return _nameLengthText;
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: _sectionSpacing),
+                DropdownButtonFormField<int?>(
+                  value: _salespersonId,
+                  decoration: const InputDecoration(
+                    labelText: _salespersonLabel,
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [
+                    const DropdownMenuItem<int?>(
+                      value: null,
+                      child: Text(_noSalespersonText),
+                    ),
+                    ...salespersons.map(
+                      (item) => DropdownMenuItem<int?>(
+                        value: item.id,
+                        child: Text(item.name),
+                      ),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      _salespersonId = value;
+                    });
+                  },
+                  validator: (_) => null,
+                ),
+                if (viewModel.loadingSalespersons)
+                  const Padding(
+                    padding: EdgeInsets.only(top: _sectionSpacing),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: _loadingIndicatorSize,
+                          height: _loadingIndicatorSize,
+                          child: CircularProgressIndicator(strokeWidth: _indicatorStrokeWidth),
+                        ),
+                        SizedBox(width: _inlineSpacing),
+                        Text(_loadingSalespersonsText),
+                      ],
+                    ),
+                  )
+                else if (salespersonsError != null && salespersonsError.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: _sectionSpacing),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            salespersonsError,
+                            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: viewModel.loadSalespersons,
+                          child: const Text('重试'),
+                        ),
+                      ],
                     ),
                   ),
+                const SizedBox(height: _sectionSpacing),
+                _sectionTitle(theme, _contactSectionTitle),
+                const SizedBox(height: _sectionSpacing),
+                TextFormField(
+                  controller: _contactController,
+                  decoration: const InputDecoration(
+                    labelText: _contactLabel,
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (_) => null,
+                ),
+                const SizedBox(height: _sectionSpacing),
+                TextFormField(
+                  controller: _phoneController,
+                  decoration: const InputDecoration(
+                    labelText: _phoneLabel,
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.phone,
+                  validator: (value) {
+                    final text = value?.trim() ?? '';
+                    if (text.isEmpty) {
+                      return null;
+                    }
+                    final phoneRegex = RegExp(r'^[\d\-+() ]+$');
+                    if (!phoneRegex.hasMatch(text)) {
+                      return _phoneInvalidText;
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: _sectionSpacing),
+                TextFormField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(
+                    labelText: _emailLabel,
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    final text = value?.trim() ?? '';
+                    if (text.isEmpty) {
+                      return null;
+                    }
+                    final emailRegex = RegExp(r'^[\w\-.]+@([\w\-]+\.)+[\w\-]{2,4}$');
+                    if (!emailRegex.hasMatch(text)) {
+                      return _emailInvalidText;
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: _sectionSpacing),
+                _sectionTitle(theme, _extraSectionTitle),
+                const SizedBox(height: _sectionSpacing),
+                TextFormField(
+                  controller: _addressController,
+                  decoration: const InputDecoration(
+                    labelText: _addressLabel,
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 2,
+                  validator: (_) => null,
+                ),
+                const SizedBox(height: _sectionSpacing),
+                TextFormField(
+                  controller: _notesController,
+                  decoration: const InputDecoration(
+                    labelText: _notesLabel,
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                  validator: (_) => null,
+                ),
+                if (customer != null) ...[
+                  const SizedBox(height: _sectionSpacing),
+                  _sectionTitle(theme, _systemSectionTitle),
+                  const SizedBox(height: _sectionSpacing),
+                  _readonlyField(theme, _createdAtLabel, _formatDateTime(customer.createdAt)),
+                  const SizedBox(height: _sectionSpacing),
+                  _readonlyField(theme, _updatedAtLabel, _formatDateTime(customer.updatedAt)),
                 ],
-                onChanged: (value) {
-                  setState(() {
-                    _salespersonId = value;
-                  });
-                },
-                validator: (_) => null,
-              ),
-              if (viewModel.loadingSalespersons)
-                const Padding(
-                  padding: EdgeInsets.only(top: _sectionSpacing),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: _loadingIndicatorSize,
-                        height: _loadingIndicatorSize,
-                        child: CircularProgressIndicator(strokeWidth: _indicatorStrokeWidth),
+                    ] else ...[
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _sectionTitle(theme, _basicSectionTitle),
+                          const SizedBox(height: _sectionSpacing),
+                          TextFormField(
+                            controller: _nameController,
+                            decoration: const InputDecoration(
+                              labelText: _nameLabel,
+                              border: OutlineInputBorder(),
+                            ),
+                            validator: (value) {
+                              final text = value?.trim() ?? '';
+                              if (text.isEmpty) {
+                                return _nameRequiredText;
+                              }
+                              if (text.length < 2) {
+                                return _nameLengthText;
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: _sectionSpacing),
+                          DropdownButtonFormField<int?>(
+                            value: _salespersonId,
+                            decoration: const InputDecoration(
+                              labelText: _salespersonLabel,
+                              border: OutlineInputBorder(),
+                            ),
+                            items: [
+                              const DropdownMenuItem<int?>(
+                                value: null,
+                                child: Text(_noSalespersonText),
+                              ),
+                              ...salespersons.map(
+                                (item) => DropdownMenuItem<int?>(
+                                  value: item.id,
+                                  child: Text(item.name),
+                                ),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              setState(() {
+                                _salespersonId = value;
+                              });
+                            },
+                            validator: (_) => null,
+                          ),
+                          if (viewModel.loadingSalespersons)
+                            const Padding(
+                              padding: EdgeInsets.only(top: _sectionSpacing),
+                              child: Row(
+                                children: [
+                                  SizedBox(
+                                    width: _loadingIndicatorSize,
+                                    height: _loadingIndicatorSize,
+                                    child: CircularProgressIndicator(strokeWidth: _indicatorStrokeWidth),
+                                  ),
+                                  SizedBox(width: _inlineSpacing),
+                                  Text(_loadingSalespersonsText),
+                                ],
+                              ),
+                            )
+                          else if (salespersonsError != null && salespersonsError.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: _sectionSpacing),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      salespersonsError,
+                                      style:
+                                          theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: viewModel.loadSalespersons,
+                                    child: const Text('重试'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          const SizedBox(height: _sectionSpacing),
+                          _sectionTitle(theme, _contactSectionTitle),
+                          const SizedBox(height: _sectionSpacing),
+                          TextFormField(
+                            controller: _contactController,
+                            decoration: const InputDecoration(
+                              labelText: _contactLabel,
+                              border: OutlineInputBorder(),
+                            ),
+                            validator: (_) => null,
+                          ),
+                          const SizedBox(height: _sectionSpacing),
+                          TextFormField(
+                            controller: _phoneController,
+                            decoration: const InputDecoration(
+                              labelText: _phoneLabel,
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.phone,
+                            validator: (value) {
+                              final text = value?.trim() ?? '';
+                              if (text.isEmpty) {
+                                return null;
+                              }
+                              final phoneRegex = RegExp(r'^[\d\-+() ]+$');
+                              if (!phoneRegex.hasMatch(text)) {
+                                return _phoneInvalidText;
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: _sectionSpacing),
+                          TextFormField(
+                            controller: _emailController,
+                            decoration: const InputDecoration(
+                              labelText: _emailLabel,
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (value) {
+                              final text = value?.trim() ?? '';
+                              if (text.isEmpty) {
+                                return null;
+                              }
+                              final emailRegex = RegExp(r'^[\w\-.]+@([\w\-]+\.)+[\w\-]{2,4}$');
+                              if (!emailRegex.hasMatch(text)) {
+                                return _emailInvalidText;
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
                       ),
-                      SizedBox(width: _inlineSpacing),
-                      Text(_loadingSalespersonsText),
+                    ),
+                    const SizedBox(width: _columnSpacing),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _sectionTitle(theme, _extraSectionTitle),
+                          const SizedBox(height: _sectionSpacing),
+                          TextFormField(
+                            controller: _addressController,
+                            decoration: const InputDecoration(
+                              labelText: _addressLabel,
+                              border: OutlineInputBorder(),
+                            ),
+                            maxLines: 2,
+                            validator: (_) => null,
+                          ),
+                          const SizedBox(height: _sectionSpacing),
+                          TextFormField(
+                            controller: _notesController,
+                            decoration: const InputDecoration(
+                              labelText: _notesLabel,
+                              border: OutlineInputBorder(),
+                            ),
+                            maxLines: 3,
+                            validator: (_) => null,
+                          ),
+                          if (customer != null) ...[
+                            const SizedBox(height: _sectionSpacing),
+                            _sectionTitle(theme, _systemSectionTitle),
+                            const SizedBox(height: _sectionSpacing),
+                            _readonlyField(theme, _createdAtLabel, _formatDateTime(customer.createdAt)),
+                            const SizedBox(height: _sectionSpacing),
+                            _readonlyField(theme, _updatedAtLabel, _formatDateTime(customer.updatedAt)),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
                     ],
+                    const SizedBox(height: _actionSpacing),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: _pageSpacing),
+            Container(
+              padding: const EdgeInsets.fromLTRB(_padding, 12, _padding, _padding),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                border: Border(
+                  top: BorderSide(color: theme.dividerColor.withOpacity(0.6)),
+                ),
+              ),
+              child: Row(
+                children: [
+                  PageActionButton.outlined(
+                    onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
+                    label: _cancelText,
                   ),
-                )
-              else if (salespersonsError != null && salespersonsError.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: _sectionSpacing),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          salespersonsError,
-                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: viewModel.loadSalespersons,
-                        child: const Text('重试'),
-                      ),
-                    ],
+                  const SizedBox(width: _inlineSpacing),
+                  PageActionButton.filled(
+                    onPressed: _submitting ? null : () => _handleSubmit(viewModel),
+                    label: customer == null ? _submitCreateText : _submitUpdateText,
+                    icon: _submitting
+                        ? const SizedBox(
+                            height: _submitIndicatorSize,
+                            width: _submitIndicatorSize,
+                            child: CircularProgressIndicator(strokeWidth: _indicatorStrokeWidth),
+                          )
+                        : null,
                   ),
-                ),
-              const SizedBox(height: _sectionSpacing),
-              TextFormField(
-                controller: _addressController,
-                decoration: const InputDecoration(
-                  labelText: _addressLabel,
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 2,
-                validator: (_) => null,
+                ],
               ),
-              const SizedBox(height: _sectionSpacing),
-              TextFormField(
-                controller: _notesController,
-                decoration: const InputDecoration(
-                  labelText: _notesLabel,
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 3,
-                validator: (_) => null,
-              ),
-              const SizedBox(height: _actionSpacing),
-              FilledButton(
-                onPressed: _submitting ? null : () => _handleSubmit(viewModel),
-                child: _submitting
-                    ? const SizedBox(
-                        height: _submitIndicatorSize,
-                        width: _submitIndicatorSize,
-                        child: CircularProgressIndicator(strokeWidth: _indicatorStrokeWidth),
-                      )
-                    : Text(widget.customer == null ? _submitCreateText : _submitUpdateText),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
