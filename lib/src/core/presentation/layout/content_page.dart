@@ -85,49 +85,54 @@ class _ContentArea extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _HeaderCard(
-              breadcrumb: breadcrumb,
-              title: labelFor(selectedId),
-              primary: primary,
-              accent: accent,
-              surface: surface,
-              subtleText: subtleText,
-              borderColor: borderColor,
-            ),
-            const SizedBox(height: 20),
-            if (bodyBuilder != null)
-              bodyBuilder!(context, style)
-            else ...[
-              Wrap(
-                spacing: 16,
-                runSpacing: 16,
-                children: List.generate(gridCount * 2, (index) {
-                  return _StatCard(
-                    width: (width - (gridCount - 1) * 16) / gridCount,
-                    title: '指标 ${index + 1}',
-                    value: '${(index + 1) * 12}',
-                    trend: index.isEven ? '+${index + 2}%' : '-${index + 1}%',
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _HeaderCard(
+                  breadcrumb: breadcrumb,
+                  title: labelFor(selectedId),
+                  primary: primary,
+                  accent: accent,
+                  surface: surface,
+                  subtleText: subtleText,
+                  borderColor: borderColor,
+                ),
+                const SizedBox(height: 20),
+                if (bodyBuilder != null)
+                  bodyBuilder!(context, style)
+                else ...[
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 16,
+                    children: List.generate(gridCount * 2, (index) {
+                      return _StatCard(
+                        width: (width - (gridCount - 1) * 16) / gridCount,
+                        title: '指标 ${index + 1}',
+                        value: '${(index + 1) * 12}',
+                        trend: index.isEven ? '+${index + 2}%' : '-${index + 1}%',
+                        primary: primary,
+                        surface: surface,
+                        subtleText: subtleText,
+                        borderColor: borderColor,
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 24),
+                  _ListPlaceholder(
+                    title: '核心列表区域',
+                    subtitle: '这里是 $selectedId 的列表或表格布局，占位用于后续业务接入。',
                     primary: primary,
                     surface: surface,
                     subtleText: subtleText,
                     borderColor: borderColor,
-                  );
-                }),
-              ),
-              const SizedBox(height: 24),
-              _ListPlaceholder(
-                title: '核心列表区域',
-                subtitle: '这里是 $selectedId 的列表或表格布局，占位用于后续业务接入。',
-                primary: primary,
-                surface: surface,
-                subtleText: subtleText,
-                borderColor: borderColor,
-              ),
-            ],
-          ],
+                  ),
+                ],
+              ],
+            ),
+          ),
         );
       },
     );

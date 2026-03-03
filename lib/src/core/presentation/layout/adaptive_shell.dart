@@ -30,6 +30,7 @@ class AdaptiveShell extends StatefulWidget {
 }
 
 class _AdaptiveShellState extends State<AdaptiveShell> {
+  static const String _appTitle = '新西彩订单管理';
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   final ScrollController _railScrollController = ScrollController();
   bool _sidebarCollapsed = false;
@@ -80,6 +81,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     final borderColor = colors.borderColor;
     final appBarHeight = isXs ? 52.0 : 56.0;
     final currentId = _currentId(context);
+    final path = GoRouterState.of(context).uri.path;
     final isActionCompact = size.width < Breakpoints.lg;
 
     final railExtended = (isXl || is2xl) && !_sidebarCollapsed;
@@ -117,7 +119,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
           });
           context.read<AppStorage>().write(Constant.KEY_SIDEBAR_COLLAPSED, _sidebarCollapsed);
         },
-        title: buildBreadcrumbForPathWith(GoRouterState.of(context).uri.path, _pathToId).join(' / '),
+        title: _appTitle,
         onMenuTap: () => scaffoldKey.currentState?.openDrawer(),
         onSettingTap: () => scaffoldKey.currentState?.openEndDrawer(),
         onNotificationViewAll: () => _handleSelectId('notifications'),
@@ -157,6 +159,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
           Expanded(
             child: SafeArea(
               child: ContentContainer(
+                scrollable: false,
                 child: widget.navigationShell,
               ),
             ),

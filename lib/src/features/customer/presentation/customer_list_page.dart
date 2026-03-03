@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/features/customer/application/customer_view_model.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
@@ -8,6 +9,7 @@ import 'package:work_order_app/src/features/customer/presentation/customer_edit_
 import 'package:work_order_app/src/features/customer/presentation/widgets/customer_list_tile.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
 import 'package:work_order_app/src/features/customer/data/customer_repository_impl.dart';
 import 'package:work_order_app/src/features/customer/domain/customer_repository.dart';
@@ -85,9 +87,12 @@ class _CustomerListView extends StatefulWidget {
 
 class _CustomerListViewState extends State<_CustomerListView> {
   static const _searchDebounceDuration = Duration(milliseconds: 450);
-  static const double _searchWidth = 320;
-  static const double _spacingSm = 12;
-  static const double _controlHeight = 40;
+  static const double _searchWidth = 260;
+  static const double _spacingSm = 8;
+  static const double _controlHeight = 36;
+  static const double _controlRadius = 4;
+  static const double _controlMinWidth = 88;
+  static const double _iconButtonSize = 36;
   static const String _emptyCellText = '-';
 
   static const String _titleText = '客户管理';
@@ -112,6 +117,7 @@ class _CustomerListViewState extends State<_CustomerListView> {
   static const String _columnsLabel = '列管理';
   static const String _totalLabel = '共 {count} 条';
   static const String _pageLabel = '第 {page} / {total} 页';
+  static const String _breadcrumbSeparator = ' / ';
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
@@ -157,9 +163,10 @@ class _CustomerListViewState extends State<_CustomerListView> {
   }
 
   void _openColumnsMenu(BuildContext context) {
-    final renderBox = _columnsMenuKey.currentContext?.findRenderObject() as RenderBox?;
+    final menuContext = _columnsMenuKey.currentContext;
+    final renderBox = menuContext?.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
-    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final overlay = Overlay.of(menuContext!, rootOverlay: true).context.findRenderObject() as RenderBox;
     final position = RelativeRect.fromRect(
       Rect.fromPoints(
         renderBox.localToGlobal(Offset.zero, ancestor: overlay),
@@ -169,7 +176,7 @@ class _CustomerListViewState extends State<_CustomerListView> {
     );
 
     showMenu<_CustomerColumn>(
-      context: context,
+      context: menuContext,
       position: position,
       items: _CustomerColumn.optionalValues.map((value) {
         final checked = _visibleColumns.contains(value);
@@ -246,169 +253,28 @@ class _CustomerListViewState extends State<_CustomerListView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isMobile = BreakpointsUtil.isMobile(context);
+    final breadcrumb = buildBreadcrumbForPathWith(
+      GoRouterState.of(context).uri.path,
+      buildPathToIdMap(),
+    );
 
     return Consumer<CustomerViewModel>(
       builder: (context, viewModel, _) {
         final customers = viewModel.customers;
-
-        final totalText = _totalLabel.replaceFirst('{count}', viewModel.total.toString());
-        final pageText = _pageLabel
-            .replaceFirst('{page}', viewModel.page.toString())
-            .replaceFirst('{total}', viewModel.totalPages.toString());
-
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    _titleText,
-                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-                  ),
-                ),
-                FilledButton.icon(
-                  onPressed: () => _openEditPage(context, viewModel, null),
-                  icon: const Icon(Icons.add),
-                  label: const Text(_createButtonText),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  key: _columnsMenuKey,
-                  tooltip: _columnsLabel,
-                  icon: const Icon(Icons.view_column_outlined),
-                  onPressed: isMobile ? null : () => _openColumnsMenu(context),
-                ),
-                const SizedBox(width: 4),
-                ToggleButtons(
-                  isSelected: [_denseTable == false, _denseTable == true],
-                  onPressed: isMobile
-                      ? null
-                      : (index) {
-                          setState(() {
-                            _denseTable = index == 1;
-                          });
-                        },
-                  children: const [
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(_densityComfortLabel),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(_densityCompactLabel),
-                    ),
-                  ],
-                ),
-              ],
+            _buildPageHeader(
+              context,
+              theme,
+              viewModel,
+              breadcrumb,
+              isMobile,
             ),
             const SizedBox(height: _spacingSm),
-            Wrap(
-              spacing: _spacingSm,
-              runSpacing: _spacingSm,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                SizedBox(
-                  width: _searchWidth,
-                  child: ValueListenableBuilder<TextEditingValue>(
-                    valueListenable: _searchController,
-                    builder: (context, value, _) {
-                      return TextField(
-                        controller: _searchController,
-                        onChanged: (_) => _scheduleSearch(viewModel),
-                        onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
-                        decoration: InputDecoration(
-                          hintText: _searchHintText,
-                          prefixIcon: const Icon(Icons.search),
-                          suffixIcon: value.text.isEmpty
-                              ? null
-                              : IconButton(
-                                  tooltip: _clearText,
-                                  icon: const Icon(Icons.close),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    _scheduleSearch(viewModel, immediate: true);
-                                  },
-                                ),
-                          border: const OutlineInputBorder(),
-                          isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                SizedBox(
-                  height: _controlHeight,
-                  child: OutlinedButton.icon(
-                    onPressed: () => _scheduleSearch(viewModel, immediate: true),
-                    icon: const Icon(Icons.search, size: 18),
-                    label: const Text(_searchButtonText),
-                  ),
-                ),
-                SizedBox(
-                  height: _controlHeight,
-                  child: OutlinedButton.icon(
-                    onPressed: () => viewModel.loadCustomers(resetPage: true),
-                    icon: const Icon(Icons.refresh, size: 18),
-                    label: const Text(_refreshButtonText),
-                  ),
-                ),
-                if (viewModel.total > 0)
-                  Text(
-                    '$totalText · $pageText',
-                    style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
-                  ),
-              ],
+            Expanded(
+              child: _buildListBody(context, viewModel, customers, isMobile),
             ),
-            const SizedBox(height: _spacingSm),
-            if (viewModel.loading && customers.isEmpty)
-              const Center(child: CircularProgressIndicator())
-            else if (viewModel.errorMessage != null && !viewModel.loading)
-              _ErrorState(
-                message: viewModel.errorMessage ?? _errorFallbackText,
-                onRetry: () => viewModel.loadCustomers(resetPage: true),
-              )
-            else if (!viewModel.loading && customers.isEmpty)
-              const _EmptyState()
-            else if (isMobile)
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: customers.length,
-                itemBuilder: (context, index) {
-                  final customer = customers[index];
-                  return CustomerListTile(
-                    customer: customer,
-                    onTap: () => _openEditPage(context, viewModel, customer),
-                    onDelete: () => _confirmDelete(context, viewModel, customer),
-                    useCard: isMobile,
-                  );
-                },
-              )
-            else
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final columns = _buildColumns();
-                  final rows = _buildRows(context, viewModel, customers);
-
-                  return SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(minWidth: constraints.maxWidth),
-                      child: DataTable(
-                        columnSpacing: _denseTable ? 16 : 24,
-                        horizontalMargin: _denseTable ? 12 : 16,
-                        headingRowHeight: _denseTable ? 38 : 44,
-                        dataRowMinHeight: _denseTable ? 34 : 40,
-                        dataRowMaxHeight: _denseTable ? 44 : 52,
-                        columns: columns,
-                        rows: rows,
-                      ),
-                    ),
-                  );
-                },
-              ),
             if (viewModel.total > 0) ...[
               const SizedBox(height: _spacingSm),
               _PaginationBar(viewModel: viewModel),
@@ -416,6 +282,208 @@ class _CustomerListViewState extends State<_CustomerListView> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildListBody(
+    BuildContext context,
+    CustomerViewModel viewModel,
+    List<Customer> customers,
+    bool isMobile,
+  ) {
+    if (viewModel.loading && customers.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (viewModel.errorMessage != null && !viewModel.loading) {
+      return _ErrorState(
+        message: viewModel.errorMessage ?? _errorFallbackText,
+        onRetry: () => viewModel.loadCustomers(resetPage: true),
+      );
+    }
+    if (!viewModel.loading && customers.isEmpty) {
+      return const _EmptyState();
+    }
+
+    if (isMobile) {
+      return ListView.builder(
+        itemCount: customers.length,
+        itemBuilder: (context, index) {
+          final customer = customers[index];
+          return CustomerListTile(
+            customer: customer,
+            onTap: () => _openEditPage(context, viewModel, customer),
+            onDelete: () => _confirmDelete(context, viewModel, customer),
+            useCard: isMobile,
+          );
+        },
+      );
+    }
+
+    return SingleChildScrollView(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final columns = _buildColumns();
+          final rows = _buildRows(context, viewModel, customers);
+
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minWidth: constraints.maxWidth),
+              child: DataTable(
+                columnSpacing: _denseTable ? 16 : 24,
+                horizontalMargin: _denseTable ? 12 : 16,
+                headingRowHeight: _denseTable ? 38 : 44,
+                dataRowMinHeight: _denseTable ? 34 : 40,
+                dataRowMaxHeight: _denseTable ? 44 : 52,
+                columns: columns,
+                rows: rows,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildPageHeader(
+    BuildContext context,
+    ThemeData theme,
+    CustomerViewModel viewModel,
+    List<String> breadcrumb,
+    bool isMobile,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (breadcrumb.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Text(
+              breadcrumb.join(_breadcrumbSeparator),
+              style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+            ),
+          ),
+        Row(
+          children: [
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Wrap(
+                  spacing: _spacingSm,
+                  runSpacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: _searchWidth,
+                      child: ValueListenableBuilder<TextEditingValue>(
+                        valueListenable: _searchController,
+                        builder: (context, value, _) {
+                          return TextField(
+                            controller: _searchController,
+                            onChanged: (_) => _scheduleSearch(viewModel),
+                            onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
+                            decoration: InputDecoration(
+                              hintText: _searchHintText,
+                              prefixIcon: const Icon(Icons.search, size: 18),
+                              suffixIcon: value.text.isEmpty
+                                  ? null
+                                  : IconButton(
+                                      tooltip: _clearText,
+                                      icon: const Icon(Icons.close, size: 18),
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        _scheduleSearch(viewModel, immediate: true);
+                                      },
+                                    ),
+                              border: const OutlineInputBorder(),
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    SizedBox(
+                      height: _controlHeight,
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(_controlMinWidth, _controlHeight),
+                          fixedSize: const Size(_controlMinWidth, _controlHeight),
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(_controlRadius),
+                          ),
+                        ),
+                        onPressed: () => viewModel.loadCustomers(resetPage: true),
+                        icon: const Icon(Icons.refresh, size: 16),
+                        label: const Text(_refreshButtonText),
+                      ),
+                    ),
+                    SizedBox(
+                      height: _controlHeight,
+                      width: _iconButtonSize,
+                      child: OutlinedButton(
+                        key: _columnsMenuKey,
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(_iconButtonSize, _controlHeight),
+                          fixedSize: const Size(_iconButtonSize, _controlHeight),
+                          padding: EdgeInsets.zero,
+                          visualDensity: VisualDensity.compact,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(_controlRadius),
+                          ),
+                        ),
+                        onPressed: isMobile ? null : () => _openColumnsMenu(context),
+                        child: const Icon(Icons.view_column_outlined, size: 18),
+                      ),
+                    ),
+                    ToggleButtons(
+                      isSelected: [_denseTable == false, _denseTable == true],
+                      onPressed: isMobile
+                          ? null
+                          : (index) {
+                              setState(() {
+                                _denseTable = index == 1;
+                              });
+                            },
+                      borderRadius: BorderRadius.circular(_controlRadius),
+                      constraints: const BoxConstraints(minHeight: _controlHeight, minWidth: 52),
+                      children: const [
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          child: Text(_densityComfortLabel),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          child: Text(_densityCompactLabel),
+                        ),
+                      ],
+                    ),
+                    SizedBox(
+                      height: _controlHeight,
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(0, _controlHeight),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: VisualDensity.compact,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(_controlRadius),
+                          ),
+                        ),
+                        onPressed: () => _openEditPage(context, viewModel, null),
+                        icon: const Icon(Icons.add),
+                        label: const Text(_createButtonText),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -550,40 +618,35 @@ class _PaginationBar extends StatelessWidget {
         .replaceFirst('{total}', viewModel.totalPages.toString())
         .replaceFirst('{count}', viewModel.total.toString());
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
       children: [
         Text(info, style: theme.textTheme.bodySmall),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            DropdownButton<int>(
-              value: viewModel.pageSize,
-              items: viewModel.pageSizeOptions
-                  .map(
-                    (size) => DropdownMenuItem<int>(
-                      value: size,
-                      child: Text(_pageSizeLabel.replaceFirst('{size}', size.toString())),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (value) {
-                if (value == null) return;
-                viewModel.setPageSize(value);
-              },
-            ),
-            const SizedBox(width: 8),
-            IconButton(
-              onPressed: viewModel.hasPrev ? () => viewModel.setPage(viewModel.page - 1) : null,
-              icon: const Icon(Icons.chevron_left),
-            ),
-            Text('${viewModel.page}', style: theme.textTheme.bodyMedium),
-            IconButton(
-              onPressed: viewModel.hasNext ? () => viewModel.setPage(viewModel.page + 1) : null,
-              icon: const Icon(Icons.chevron_right),
-            ),
-          ],
+        const SizedBox(width: 12),
+        DropdownButton<int>(
+          value: viewModel.pageSize,
+          items: viewModel.pageSizeOptions
+              .map(
+                (size) => DropdownMenuItem<int>(
+                  value: size,
+                  child: Text(_pageSizeLabel.replaceFirst('{size}', size.toString())),
+                ),
+              )
+              .toList(),
+          onChanged: (value) {
+            if (value == null) return;
+            viewModel.setPageSize(value);
+          },
+        ),
+        const SizedBox(width: 4),
+        IconButton(
+          onPressed: viewModel.hasPrev ? () => viewModel.setPage(viewModel.page - 1) : null,
+          icon: const Icon(Icons.chevron_left),
+        ),
+        Text('${viewModel.page}', style: theme.textTheme.bodyMedium),
+        IconButton(
+          onPressed: viewModel.hasNext ? () => viewModel.setPage(viewModel.page + 1) : null,
+          icon: const Icon(Icons.chevron_right),
         ),
       ],
     );
