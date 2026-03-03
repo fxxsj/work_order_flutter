@@ -8,6 +8,7 @@ import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/customer/presentation/customer_edit_page.dart';
 import 'package:work_order_app/src/features/customer/presentation/widgets/customer_list_tile.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
@@ -261,25 +262,17 @@ class _CustomerListViewState extends State<_CustomerListView> {
     return Consumer<CustomerViewModel>(
       builder: (context, viewModel, _) {
         final customers = viewModel.customers;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildPageHeader(
-              context,
-              theme,
-              viewModel,
-              breadcrumb,
-              isMobile,
-            ),
-            const SizedBox(height: _spacingSm),
-            Expanded(
-              child: _buildListBody(context, viewModel, customers, isMobile),
-            ),
-            if (viewModel.total > 0) ...[
-              const SizedBox(height: _spacingSm),
-              _PaginationBar(viewModel: viewModel),
-            ],
-          ],
+        return ListPageScaffold(
+          spacing: _spacingSm,
+          header: _buildPageHeader(
+            context,
+            theme,
+            viewModel,
+            breadcrumb,
+            isMobile,
+          ),
+          body: _buildListBody(context, viewModel, customers, isMobile),
+          footer: viewModel.total > 0 ? _PaginationBar(viewModel: viewModel) : null,
         );
       },
     );
