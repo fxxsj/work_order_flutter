@@ -1,5 +1,5 @@
-import 'package:work_order_app/common/http_client.dart';
-import 'package:work_order_app/models/api_response.dart';
+import 'package:work_order_app/src/core/common/http_client.dart';
+import 'package:work_order_app/src/core/models/api_response.dart';
 
 class ApiClient {
   void init() => HttpClient.init();

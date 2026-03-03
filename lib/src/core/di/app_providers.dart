@@ -1,12 +1,16 @@
 import 'package:provider/provider.dart';
-import 'package:work_order_app/api/auth_api.dart';
-import 'package:work_order_app/api/user_api.dart';
-import 'package:work_order_app/controllers/app_badge_controller.dart';
-import 'package:work_order_app/controllers/auth_controller.dart';
-import 'package:work_order_app/controllers/notification_controller.dart';
-import 'package:work_order_app/controllers/theme_controller.dart';
+import 'package:provider/single_child_widget.dart';
+import 'package:work_order_app/src/core/controllers/app_badge_controller.dart';
+import 'package:work_order_app/src/features/notification/application/notification_controller.dart';
+import 'package:work_order_app/src/core/controllers/theme_controller.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/storage/app_storage.dart';
+import 'package:work_order_app/src/features/auth/application/auth_controller.dart';
+import 'package:work_order_app/src/features/auth/application/auth_view_model.dart';
+import 'package:work_order_app/src/features/auth/data/auth_api.dart';
+import 'package:work_order_app/src/features/auth/data/auth_repository_impl.dart';
+import 'package:work_order_app/src/features/auth/data/user_api.dart';
+import 'package:work_order_app/src/features/auth/domain/auth_repository.dart';
 
 List<SingleChildWidget> buildAppProviders({
   required AppStorage storage,
@@ -21,8 +25,21 @@ List<SingleChildWidget> buildAppProviders({
     Provider.value(value: apiClient),
     Provider<AuthApi>(create: (context) => AuthApi(context.read<ApiClient>())),
     Provider<UserApi>(create: (context) => UserApi(context.read<ApiClient>())),
-    ChangeNotifierProvider.value(value: theme),
+    Provider<AuthRepository>(
+      create: (context) => AuthRepositoryImpl(
+        context.read<AuthApi>(),
+        context.read<UserApi>(),
+      ),
+    ),
     ChangeNotifierProvider.value(value: auth),
+    ChangeNotifierProvider<AuthViewModel>(
+      create: (context) => AuthViewModel(
+        context.read<AuthRepository>(),
+        context.read<AppStorage>(),
+        context.read<AuthController>(),
+      ),
+    ),
+    ChangeNotifierProvider.value(value: theme),
     ChangeNotifierProvider.value(value: notification),
     ChangeNotifierProvider.value(value: badge),
   ];

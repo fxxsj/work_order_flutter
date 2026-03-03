@@ -1,5 +1,5 @@
-import 'package:work_order_app/constants/constant.dart';
-import 'package:work_order_app/utils/store_util.dart';
+import 'package:work_order_app/src/core/constants/constant.dart';
+import 'package:work_order_app/src/core/utils/store_util.dart';
 
 class AppStorage {
   Future<void> init() async {

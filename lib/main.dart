@@ -1,18 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/common/app_config.dart';
-import 'package:work_order_app/common/app_scroll_behavior.dart';
-import 'package:work_order_app/api/notification_api.dart';
-import 'package:work_order_app/controllers/auth_controller.dart';
-import 'package:work_order_app/controllers/app_event_controller.dart';
-import 'package:work_order_app/controllers/notification_controller.dart';
-import 'package:work_order_app/controllers/app_badge_controller.dart';
-import 'package:work_order_app/controllers/theme_controller.dart';
-import 'package:work_order_app/router/app_router.dart';
+import 'package:go_router/go_router.dart';
+import 'package:work_order_app/app.dart';
+import 'package:work_order_app/src/features/notification/data/notification_api.dart';
+import 'package:work_order_app/src/features/auth/application/auth_controller.dart';
+import 'package:work_order_app/src/features/notification/application/notification_controller.dart';
 import 'package:work_order_app/src/core/di/app_providers.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
-import 'package:work_order_app/src/core/storage/app_storage.dart';
-import 'package:work_order_app/utils/utils.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
