@@ -419,47 +419,47 @@ class _CustomerListViewState extends State<_CustomerListView> {
                         label: const Text(_refreshButtonText),
                       ),
                     ),
-                    SizedBox(
-                      height: _controlHeight,
-                      width: _iconButtonSize,
-                      child: OutlinedButton(
-                        key: _columnsMenuKey,
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size(_iconButtonSize, _controlHeight),
-                          fixedSize: const Size(_iconButtonSize, _controlHeight),
-                          padding: EdgeInsets.zero,
-                          visualDensity: VisualDensity.compact,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(_controlRadius),
+                    if (!isMobile)
+                      SizedBox(
+                        height: _controlHeight,
+                        width: _iconButtonSize,
+                        child: OutlinedButton(
+                          key: _columnsMenuKey,
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size(_iconButtonSize, _controlHeight),
+                            fixedSize: const Size(_iconButtonSize, _controlHeight),
+                            padding: EdgeInsets.zero,
+                            visualDensity: VisualDensity.compact,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(_controlRadius),
+                            ),
                           ),
+                          onPressed: () => _openColumnsMenu(context),
+                          child: const Icon(Icons.view_column_outlined, size: 18),
                         ),
-                        onPressed: isMobile ? null : () => _openColumnsMenu(context),
-                        child: const Icon(Icons.view_column_outlined, size: 18),
                       ),
-                    ),
-                    ToggleButtons(
-                      isSelected: [_denseTable == false, _denseTable == true],
-                      onPressed: isMobile
-                          ? null
-                          : (index) {
-                              setState(() {
-                                _denseTable = index == 1;
-                              });
-                            },
-                      borderRadius: BorderRadius.circular(_controlRadius),
-                      constraints: const BoxConstraints(minHeight: _controlHeight, minWidth: 52),
-                      children: const [
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8),
-                          child: Text(_densityComfortLabel),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8),
-                          child: Text(_densityCompactLabel),
-                        ),
-                      ],
-                    ),
+                    if (!isMobile)
+                      ToggleButtons(
+                        isSelected: [_denseTable == false, _denseTable == true],
+                        onPressed: (index) {
+                          setState(() {
+                            _denseTable = index == 1;
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(_controlRadius),
+                        constraints: const BoxConstraints(minHeight: _controlHeight, minWidth: 52),
+                        children: const [
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8),
+                            child: Text(_densityComfortLabel),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8),
+                            child: Text(_densityCompactLabel),
+                          ),
+                        ],
+                      ),
                     SizedBox(
                       height: _controlHeight,
                       child: FilledButton.icon(
