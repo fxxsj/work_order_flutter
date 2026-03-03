@@ -9,7 +9,7 @@ Widget? buildFullPage(String id) {
     case 'profile':
       return const ProfilePage();
     case 'customers':
-      return const CustomerListPage();
+      return const CustomerListEntry();
     default:
       return null;
   }

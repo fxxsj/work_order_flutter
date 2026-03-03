@@ -8,6 +8,7 @@ class CustomerListTile extends StatelessWidget {
     required this.customer,
     required this.onTap,
     required this.onDelete,
+    this.useCard = true,
   });
 
   static const double _verticalMargin = 8;
@@ -21,10 +22,13 @@ class CustomerListTile extends StatelessWidget {
   final Customer customer;
   final VoidCallback onTap;
   final VoidCallback onDelete;
+  final bool useCard;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final subtleText = theme.textTheme.bodySmall?.copyWith(color: theme.hintColor);
     final subtitleLines = <String>[];
 
     if (customer.contactPerson != null && customer.contactPerson!.trim().isNotEmpty) {
@@ -40,32 +44,64 @@ class CustomerListTile extends StatelessWidget {
       subtitleLines.add('$_salespersonLabel：${customer.salespersonName}');
     }
 
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: _verticalMargin),
-      child: ListTile(
-        leading: CircleAvatar(
-          child: Text(customer.name.isNotEmpty ? customer.name[0].toUpperCase() : '?'),
-        ),
-        title: Text(customer.name),
-        subtitle: subtitleLines.isEmpty
-            ? const Text(_emptySubtitle)
-            : Text(subtitleLines.join(_subtitleSeparator)),
-        isThreeLine: subtitleLines.length > 2,
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: Icon(Icons.edit, color: theme.colorScheme.primary),
-              onPressed: onTap,
-            ),
-            IconButton(
-              icon: Icon(Icons.delete, color: theme.colorScheme.error),
-              onPressed: onDelete,
-            ),
-          ],
-        ),
-        onTap: onTap,
+    final tile = ListTile(
+      leading: CircleAvatar(
+        backgroundColor: primary.withOpacity(0.12),
+        foregroundColor: primary,
+        child: Text(customer.name.isNotEmpty ? customer.name[0].toUpperCase() : '?'),
       ),
+      title: Text(
+        customer.name,
+        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+      ),
+      subtitle: subtitleLines.isEmpty
+          ? Text(_emptySubtitle, style: subtleText)
+          : Text(subtitleLines.join(_subtitleSeparator), style: subtleText),
+      isThreeLine: subtitleLines.length > 2,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: '编辑',
+            icon: Icon(Icons.edit, color: primary),
+            onPressed: onTap,
+          ),
+          PopupMenuButton<String>(
+            tooltip: '更多',
+            onSelected: (value) {
+              if (value == 'delete') {
+                onDelete();
+              }
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: 'delete',
+                child: Text('删除'),
+              ),
+            ],
+            icon: const Icon(Icons.more_horiz),
+          )
+        ],
+      ),
+      onTap: onTap,
+    );
+
+    if (useCard) {
+      return Card(
+        margin: const EdgeInsets.symmetric(vertical: _verticalMargin),
+        child: tile,
+      );
+    }
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 2),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        border: Border(
+          bottom: BorderSide(color: theme.dividerColor.withOpacity(0.6)),
+        ),
+      ),
+      child: tile,
     );
   }
 }

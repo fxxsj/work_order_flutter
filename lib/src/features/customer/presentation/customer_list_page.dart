@@ -2,23 +2,77 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/features/customer/di/customer_providers.dart';
 import 'package:work_order_app/src/features/customer/application/customer_view_model.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/customer/presentation/customer_edit_page.dart';
 import 'package:work_order_app/src/features/customer/presentation/widgets/customer_list_tile.dart';
+import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
+import 'package:work_order_app/src/features/customer/data/customer_repository_impl.dart';
+import 'package:work_order_app/src/features/customer/domain/customer_repository.dart';
 
-/// 客户列表页入口，负责注入依赖并渲染列表视图。
+/// 客户列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
+class CustomerListEntry extends StatefulWidget {
+  const CustomerListEntry({super.key});
+
+  @override
+  State<CustomerListEntry> createState() => _CustomerListEntryState();
+}
+
+class _CustomerListEntryState extends State<CustomerListEntry> {
+  CustomerApiService? _apiService;
+  CustomerRepositoryImpl? _repository;
+  CustomerViewModel? _viewModel;
+  bool _initialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_viewModel != null) return;
+    final apiClient = context.read<ApiClient>();
+    _apiService = CustomerApiService(apiClient);
+    _repository = CustomerRepositoryImpl(_apiService!);
+    _viewModel = CustomerViewModel(_repository!);
+    if (!_initialized) {
+      _initialized = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _viewModel?.initialize();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _viewModel?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final apiService = _apiService;
+    final repository = _repository;
+    final viewModel = _viewModel;
+    if (apiService == null || repository == null || viewModel == null) {
+      return const SizedBox.shrink();
+    }
+    return MultiProvider(
+      providers: [
+        Provider<CustomerApiService>.value(value: apiService),
+        Provider<CustomerRepository>.value(value: repository),
+        ChangeNotifierProvider<CustomerViewModel>.value(value: viewModel),
+      ],
+      child: const CustomerListPage(),
+    );
+  }
+}
+
+/// 客户列表页视图，只负责渲染。
 class CustomerListPage extends StatelessWidget {
   const CustomerListPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: buildCustomerProviders(),
-      child: const _CustomerListView(),
-    );
-  }
+  Widget build(BuildContext context) => const _CustomerListView();
 }
 
 class _CustomerListView extends StatefulWidget {
@@ -32,6 +86,7 @@ class _CustomerListViewState extends State<_CustomerListView> {
   static const _searchDebounceDuration = Duration(milliseconds: 450);
   static const double _searchWidth = 320;
   static const double _spacingSm = 12;
+  static const double _controlHeight = 40;
 
   static const String _titleText = '客户管理';
   static const String _createButtonText = '新建客户';
@@ -128,6 +183,7 @@ class _CustomerListViewState extends State<_CustomerListView> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isMobile = MediaQuery.sizeOf(context).width < 720;
 
     return Consumer<CustomerViewModel>(
       builder: (context, viewModel, _) {
@@ -144,7 +200,7 @@ class _CustomerListViewState extends State<_CustomerListView> {
                     style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
                   ),
                 ),
-                ElevatedButton.icon(
+                FilledButton.icon(
                   onPressed: () => _openEditPage(context, viewModel, null),
                   icon: const Icon(Icons.add),
                   label: const Text(_createButtonText),
@@ -159,38 +215,49 @@ class _CustomerListViewState extends State<_CustomerListView> {
               children: [
                 SizedBox(
                   width: _searchWidth,
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (_) => _scheduleSearch(viewModel),
-                    onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
-                    decoration: InputDecoration(
-                      hintText: _searchHintText,
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon: _searchController.text.isEmpty
-                          ? null
-                          : IconButton(
-                              tooltip: _clearText,
-                              icon: const Icon(Icons.close),
-                              onPressed: () {
-                                _searchController.clear();
-                                _scheduleSearch(viewModel, immediate: true);
-                                setState(() {});
-                              },
-                            ),
-                      border: const OutlineInputBorder(),
-                      isDense: true,
-                    ),
+                  child: ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _searchController,
+                    builder: (context, value, _) {
+                      return TextField(
+                        controller: _searchController,
+                        onChanged: (_) => _scheduleSearch(viewModel),
+                        onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
+                        decoration: InputDecoration(
+                          hintText: _searchHintText,
+                          prefixIcon: const Icon(Icons.search),
+                          suffixIcon: value.text.isEmpty
+                              ? null
+                              : IconButton(
+                                  tooltip: _clearText,
+                                  icon: const Icon(Icons.close),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    _scheduleSearch(viewModel, immediate: true);
+                                  },
+                                ),
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        ),
+                      );
+                    },
                   ),
                 ),
-                OutlinedButton.icon(
-                  onPressed: () => _scheduleSearch(viewModel, immediate: true),
-                  icon: const Icon(Icons.search),
-                  label: const Text(_searchButtonText),
+                SizedBox(
+                  height: _controlHeight,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _scheduleSearch(viewModel, immediate: true),
+                    icon: const Icon(Icons.search, size: 18),
+                    label: const Text(_searchButtonText),
+                  ),
                 ),
-                TextButton.icon(
-                  onPressed: () => viewModel.loadCustomers(resetPage: true),
-                  icon: const Icon(Icons.refresh),
-                  label: const Text(_refreshButtonText),
+                SizedBox(
+                  height: _controlHeight,
+                  child: OutlinedButton.icon(
+                    onPressed: () => viewModel.loadCustomers(resetPage: true),
+                    icon: const Icon(Icons.refresh, size: 18),
+                    label: const Text(_refreshButtonText),
+                  ),
                 ),
               ],
             ),
@@ -208,16 +275,17 @@ class _CustomerListViewState extends State<_CustomerListView> {
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                  itemCount: customers.length,
-                  itemBuilder: (context, index) {
-                    final customer = customers[index];
-                    return CustomerListTile(
-                      customer: customer,
-                      onTap: () => _openEditPage(context, viewModel, customer),
-                      onDelete: () => _confirmDelete(context, viewModel, customer),
-                    );
-                  },
-                ),
+                itemCount: customers.length,
+                itemBuilder: (context, index) {
+                  final customer = customers[index];
+                  return CustomerListTile(
+                    customer: customer,
+                    onTap: () => _openEditPage(context, viewModel, customer),
+                    onDelete: () => _confirmDelete(context, viewModel, customer),
+                    useCard: isMobile,
+                  );
+                },
+              ),
             if (viewModel.total > 0) ...[
               const SizedBox(height: _spacingSm),
               _PaginationBar(viewModel: viewModel),
@@ -240,41 +308,45 @@ class _PaginationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final info = _pageInfoTemplate
+        .replaceFirst('{page}', viewModel.page.toString())
+        .replaceFirst('{total}', viewModel.totalPages.toString())
+        .replaceFirst('{count}', viewModel.total.toString());
 
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          _pageInfoTemplate
-              .replaceFirst('{page}', viewModel.page.toString())
-              .replaceFirst('{total}', viewModel.totalPages.toString())
-              .replaceFirst('{count}', viewModel.total.toString()),
-          style: theme.textTheme.bodySmall,
-        ),
-        const Spacer(),
-        DropdownButton<int>(
-          value: viewModel.pageSize,
-          items: viewModel.pageSizeOptions
-              .map(
-                (size) => DropdownMenuItem<int>(
-                  value: size,
-                  child: Text(_pageSizeLabel.replaceFirst('{size}', size.toString())),
-                ),
-              )
-              .toList(),
-          onChanged: (value) {
-            if (value == null) return;
-            viewModel.setPageSize(value);
-          },
-        ),
-        const SizedBox(width: 12),
-        IconButton(
-          onPressed: viewModel.hasPrev ? () => viewModel.setPage(viewModel.page - 1) : null,
-          icon: const Icon(Icons.chevron_left),
-        ),
-        Text('${viewModel.page}'),
-        IconButton(
-          onPressed: viewModel.hasNext ? () => viewModel.setPage(viewModel.page + 1) : null,
-          icon: const Icon(Icons.chevron_right),
+        Text(info, style: theme.textTheme.bodySmall),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DropdownButton<int>(
+              value: viewModel.pageSize,
+              items: viewModel.pageSizeOptions
+                  .map(
+                    (size) => DropdownMenuItem<int>(
+                      value: size,
+                      child: Text(_pageSizeLabel.replaceFirst('{size}', size.toString())),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (value) {
+                if (value == null) return;
+                viewModel.setPageSize(value);
+              },
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              onPressed: viewModel.hasPrev ? () => viewModel.setPage(viewModel.page - 1) : null,
+              icon: const Icon(Icons.chevron_left),
+            ),
+            Text('${viewModel.page}', style: theme.textTheme.bodyMedium),
+            IconButton(
+              onPressed: viewModel.hasNext ? () => viewModel.setPage(viewModel.page + 1) : null,
+              icon: const Icon(Icons.chevron_right),
+            ),
+          ],
         ),
       ],
     );

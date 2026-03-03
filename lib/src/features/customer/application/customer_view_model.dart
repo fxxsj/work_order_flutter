@@ -14,6 +14,7 @@ class CustomerViewModel extends PaginatedViewModel<Customer> {
 
   List<Salesperson> _salespersons = [];
   bool _loadingSalespersons = false;
+  String? _salespersonsError;
 
   /// 当前客户列表（[items] 的别名，兼容现有 UI）。
   List<Customer> get customers => items;
@@ -23,6 +24,9 @@ class CustomerViewModel extends PaginatedViewModel<Customer> {
 
   /// 是否正在加载业务员列表。
   bool get loadingSalespersons => _loadingSalespersons;
+
+  /// 业务员列表错误信息（不影响客户列表加载）。
+  String? get salespersonsError => _salespersonsError;
 
   /// 初始化加载数据。
   Future<void> initialize() async {
@@ -58,11 +62,12 @@ class CustomerViewModel extends PaginatedViewModel<Customer> {
   /// 加载业务员列表。
   Future<void> loadSalespersons() async {
     _loadingSalespersons = true;
+    _salespersonsError = null;
     safeNotify();
     try {
       _salespersons = await _repository.getSalespersons();
     } catch (err) {
-      setError(err.toString().replaceFirst('Exception: ', ''));
+      _salespersonsError = err.toString().replaceFirst('Exception: ', '');
     } finally {
       _loadingSalespersons = false;
       safeNotify();

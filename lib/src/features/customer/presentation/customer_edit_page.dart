@@ -83,6 +83,16 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
     }
     setState(() => _submitting = true);
 
+    String? salespersonName;
+    if (_salespersonId != null) {
+      for (final item in viewModel.salespersons) {
+        if (item.id == _salespersonId) {
+          salespersonName = item.name;
+          break;
+        }
+      }
+    }
+
     final payload = Customer(
       id: widget.customer?.id ?? 0,
       name: _nameController.text.trim(),
@@ -92,7 +102,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
       address: _addressController.text.trim(),
       notes: _notesController.text.trim(),
       salespersonId: _salespersonId,
-      salespersonName: widget.customer?.salespersonName,
+      salespersonName: salespersonName,
       createdAt: widget.customer?.createdAt,
       updatedAt: widget.customer?.updatedAt,
     );
@@ -121,30 +131,32 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
   Widget build(BuildContext context) {
     final viewModel = context.watch<CustomerViewModel>();
     final salespersons = viewModel.salespersons;
+    final salespersonsError = viewModel.salespersonsError;
     final theme = Theme.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.all(_padding),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  icon: const Icon(Icons.arrow_back),
-                ),
-                const SizedBox(width: _inlineSpacing),
-                Text(
-                  widget.customer == null ? _createTitle : _editTitle,
-                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-                ),
-              ],
-            ),
-            const SizedBox(height: _sectionSpacing),
-            TextFormField(
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(_padding),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    icon: const Icon(Icons.arrow_back),
+                  ),
+                  const SizedBox(width: _inlineSpacing),
+                  Text(
+                    widget.customer == null ? _createTitle : _editTitle,
+                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+              const SizedBox(height: _sectionSpacing),
+              TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(
                   labelText: _nameLabel,
@@ -250,6 +262,24 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                       Text(_loadingSalespersonsText),
                     ],
                   ),
+                )
+              else if (salespersonsError != null && salespersonsError.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: _sectionSpacing),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          salespersonsError,
+                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: viewModel.loadSalespersons,
+                        child: const Text('重试'),
+                      ),
+                    ],
+                  ),
                 ),
               const SizedBox(height: _sectionSpacing),
               TextFormField(
@@ -285,6 +315,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
             ],
           ),
         ),
+      ),
     );
   }
 }
