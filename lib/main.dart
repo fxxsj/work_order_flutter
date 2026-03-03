@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:work_order_app/app.dart';
 import 'package:work_order_app/src/features/notification/data/notification_api.dart';
 import 'package:work_order_app/src/features/auth/application/auth_controller.dart';
-import 'package:work_order_app/src/features/notification/application/notification_controller.dart';
-import 'package:work_order_app/src/core/di/app_providers.dart';
+import 'package:work_order_app/src/features/notification/application/notification_view_model.dart';
+import 'package:work_order_app/src/app/app_providers.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,7 +36,7 @@ class _MyAppState extends State<MyApp> {
   late final ApiClient _apiClient;
   late final ThemeController _themeController;
   late final AuthController _authController;
-  late final NotificationController _notificationController;
+  late final NotificationViewModel _notificationController;
   late final AppBadgeController _appBadgeController;
   late final AppEventController _appEventController;
   late final GoRouter _router;
@@ -48,7 +48,7 @@ class _MyAppState extends State<MyApp> {
     _apiClient = widget.apiClient;
     _themeController = ThemeController(_storage)..load();
     _authController = AuthController(_storage, _apiClient)..initialize();
-    _notificationController = NotificationController(
+    _notificationController = NotificationViewModel(
       _authController,
       NotificationApi(_apiClient),
     )..initialize();

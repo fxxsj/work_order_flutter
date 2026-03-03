@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/features/notification/application/notification_controller.dart';
-import 'package:work_order_app/src/features/notification/domain/notification_model.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
-import 'package:work_order_app/src/features/auth/presentation/profile_page.dart';
-import 'package:work_order_app/src/features/customer/presentation/customer_list_page.dart';
+import 'package:work_order_app/src/core/presentation/layout/content_page_types.dart';
+import 'package:work_order_app/src/core/presentation/layout/page_registry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 
 class ContentPage extends StatelessWidget {
@@ -15,11 +12,9 @@ class ContentPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (selectedId == 'profile') {
-      return const ProfilePage();
-    }
-    if (selectedId == 'customers') {
-      return const CustomerListPage();
+    final fullPage = buildFullPage(selectedId);
+    if (fullPage != null) {
+      return fullPage;
     }
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
@@ -31,15 +26,24 @@ class ContentPage extends StatelessWidget {
     final accent = colors.sidebarText;
     final subtleText = colors.subtleText;
     final borderColor = colors.borderColor;
+    final style = ContentAreaStyle(
+      primary: primary,
+      surface: colors.surface,
+      accent: accent,
+      subtleText: subtleText,
+      borderColor: borderColor,
+    );
 
     return _ContentArea(
       selectedId: selectedId,
       breadcrumb: buildBreadcrumb(selectedId),
       primary: primary,
       accent: accent,
-      surface: colors.surface,
+      surface: style.surface,
       subtleText: subtleText,
       borderColor: borderColor,
+      style: style,
+      bodyBuilder: buildContentBody(selectedId),
       gridCount: is2xl
           ? 4
           : isXl
@@ -61,6 +65,8 @@ class _ContentArea extends StatelessWidget {
     required this.subtleText,
     required this.borderColor,
     required this.gridCount,
+    required this.style,
+    required this.bodyBuilder,
   });
 
   final String selectedId;
@@ -71,6 +77,8 @@ class _ContentArea extends StatelessWidget {
   final Color subtleText;
   final Color borderColor;
   final int gridCount;
+  final ContentAreaStyle style;
+  final ContentBodyBuilder? bodyBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -90,14 +98,8 @@ class _ContentArea extends StatelessWidget {
               borderColor: borderColor,
             ),
             const SizedBox(height: 20),
-            if (selectedId == 'notifications')
-              _NotificationCenterView(
-                primary: primary,
-                surface: surface,
-                accent: accent,
-                subtleText: subtleText,
-                borderColor: borderColor,
-              )
+            if (bodyBuilder != null)
+              bodyBuilder!(context, style)
             else ...[
               Wrap(
                 spacing: 16,
@@ -366,298 +368,6 @@ class _ListPlaceholder extends StatelessWidget {
             }),
           ),
         ],
-      ),
-    );
-  }
-}
-
-Color _levelColorFor(NotificationLevel level, Color primary) {
-  switch (level) {
-    case NotificationLevel.warning:
-      return const Color(0xFFF59E0B);
-    case NotificationLevel.urgent:
-      return const Color(0xFFEF4444);
-    case NotificationLevel.info:
-    default:
-      return primary;
-  }
-}
-
-String _formatRelativeTime(DateTime createdAt) {
-  final diff = DateTime.now().difference(createdAt);
-  if (diff.inMinutes < 1) {
-    return '刚刚';
-  }
-  if (diff.inMinutes < 60) {
-    return '${diff.inMinutes}分钟前';
-  }
-  if (diff.inHours < 24) {
-    return '${diff.inHours}小时前';
-  }
-  if (diff.inDays < 7) {
-    return '${diff.inDays}天前';
-  }
-  final hour = createdAt.hour.toString().padLeft(2, '0');
-  final minute = createdAt.minute.toString().padLeft(2, '0');
-  return '${createdAt.month}月${createdAt.day}日 $hour:$minute';
-}
-
-class _NotificationCenterView extends StatelessWidget {
-  const _NotificationCenterView({
-    required this.primary,
-    required this.surface,
-    required this.accent,
-    required this.subtleText,
-    required this.borderColor,
-  });
-
-  final Color primary;
-  final Color surface;
-  final Color accent;
-  final Color subtleText;
-  final Color borderColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<NotificationController>(
-      builder: (context, controller, _) {
-        final showUnreadOnly = controller.showUnreadOnly;
-        final allItems = controller.notifications.toList();
-        final items = showUnreadOnly
-            ? allItems.where((item) => !item.isRead).toList()
-            : allItems;
-
-        return Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: borderColor),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _NotificationToolbar(
-                primary: primary,
-                accent: accent,
-                subtleText: subtleText,
-                unreadCount: controller.unreadCount,
-                totalCount: controller.totalCount,
-                showUnreadOnly: showUnreadOnly,
-                onFilterChange: controller.setShowUnreadOnly,
-                onMarkAllRead: controller.markAllRead,
-                onRefresh: controller.refreshAll,
-              ),
-              const SizedBox(height: 12),
-              if (controller.isLoading)
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
-                    child: CircularProgressIndicator(color: primary),
-                  ),
-                )
-              else if (items.isEmpty)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  decoration: BoxDecoration(
-                    color: primary.withOpacity(0.04),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Center(
-                    child: Text('暂无通知', style: TextStyle(color: subtleText)),
-                  ),
-                )
-              else ...[
-                ...items.map(
-                  (item) => _NotificationListItem(
-                    item: item,
-                    primary: primary,
-                    surface: surface,
-                    subtleText: subtleText,
-                    accent: accent,
-                    onMarkRead: controller.markRead,
-                  ),
-                ),
-                if (controller.hasMore)
-                  Align(
-                    alignment: Alignment.center,
-                    child: TextButton(
-                      onPressed: controller.isLoadingMore ? null : controller.loadMore,
-                      child: controller.isLoadingMore
-                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Text('加载更多'),
-                    ),
-                  ),
-              ],
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _NotificationToolbar extends StatelessWidget {
-  const _NotificationToolbar({
-    required this.primary,
-    required this.accent,
-    required this.subtleText,
-    required this.unreadCount,
-    required this.totalCount,
-    required this.showUnreadOnly,
-    required this.onFilterChange,
-    required this.onMarkAllRead,
-    required this.onRefresh,
-  });
-
-  final Color primary;
-  final Color accent;
-  final Color subtleText;
-  final int unreadCount;
-  final int totalCount;
-  final bool showUnreadOnly;
-  final ValueChanged<bool> onFilterChange;
-  final VoidCallback onMarkAllRead;
-  final VoidCallback onRefresh;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text('通知中心', style: TextStyle(color: accent, fontWeight: FontWeight.w600)),
-            const SizedBox(width: 12),
-            _Badge(label: '未读 $unreadCount', color: primary),
-            const SizedBox(width: 6),
-            _Badge(label: '总数 $totalCount', color: subtleText),
-            const Spacer(),
-            IconButton(
-              tooltip: '刷新',
-              icon: Icon(Icons.refresh, color: subtleText),
-              onPressed: onRefresh,
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          children: [
-            FilterChip(
-              label: const Text('仅看未读'),
-              selected: showUnreadOnly,
-              onSelected: onFilterChange,
-              selectedColor: primary.withOpacity(0.12),
-              checkmarkColor: primary,
-              labelStyle: TextStyle(color: showUnreadOnly ? primary : subtleText),
-              side: BorderSide(color: primary.withOpacity(0.2)),
-            ),
-            TextButton.icon(
-              onPressed: onMarkAllRead,
-              icon: Icon(Icons.done_all, size: 18, color: primary),
-              label: Text('全部标记已读', style: TextStyle(color: primary)),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _NotificationListItem extends StatelessWidget {
-  const _NotificationListItem({
-    required this.item,
-    required this.primary,
-    required this.surface,
-    required this.subtleText,
-    required this.accent,
-    required this.onMarkRead,
-  });
-
-  final NotificationModel item;
-  final Color primary;
-  final Color surface;
-  final Color subtleText;
-  final Color accent;
-  final ValueChanged<String> onMarkRead;
-
-  @override
-  Widget build(BuildContext context) {
-    final levelColor = _levelColorFor(item.level, primary);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: levelColor.withOpacity(0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: levelColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  item.title,
-                  style: TextStyle(
-                    color: accent,
-                    fontWeight: item.isRead ? FontWeight.w500 : FontWeight.w700,
-                  ),
-                ),
-              ),
-              Text(
-                _formatRelativeTime(item.createdAt),
-                style: TextStyle(color: subtleText, fontSize: 12),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(item.content, style: TextStyle(color: subtleText, height: 1.4)),
-          if (!item.isRead) ...[
-            const SizedBox(height: 10),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () => onMarkRead(item.id),
-                child: Text('标记已读', style: TextStyle(color: primary)),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _Badge extends StatelessWidget {
-  const _Badge({required this.label, required this.color});
-
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600),
       ),
     );
   }

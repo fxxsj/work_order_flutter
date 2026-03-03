@@ -1,7 +1,7 @@
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 import 'package:work_order_app/src/core/controllers/app_badge_controller.dart';
-import 'package:work_order_app/src/features/notification/application/notification_controller.dart';
+import 'package:work_order_app/src/features/notification/application/notification_view_model.dart';
 import 'package:work_order_app/src/core/controllers/theme_controller.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/storage/app_storage.dart';
@@ -17,7 +17,7 @@ List<SingleChildWidget> buildAppProviders({
   required ApiClient apiClient,
   required ThemeController theme,
   required AuthController auth,
-  required NotificationController notification,
+  required NotificationViewModel notification,
   required AppBadgeController badge,
 }) {
   return [

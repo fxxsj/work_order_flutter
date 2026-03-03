@@ -5,7 +5,7 @@ import 'package:work_order_app/src/core/constants/breakpoints.dart';
 import 'package:work_order_app/src/core/constants/constant.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/features/auth/application/auth_controller.dart';
-import 'package:work_order_app/src/features/notification/application/notification_controller.dart';
+import 'package:work_order_app/src/features/notification/application/notification_view_model.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_setting.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_header.dart';
@@ -207,7 +207,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
 
   String? _badgeTextForItem(NavItem item) {
     if (item.id == 'notifications') {
-      final count = context.read<NotificationController>().unreadCount;
+      final count = context.read<NotificationViewModel>().unreadCount;
       if (count <= 0) {
         return null;
       }

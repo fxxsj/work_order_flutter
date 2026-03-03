@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/controllers/app_badge_controller.dart';
-import 'package:work_order_app/src/features/notification/application/notification_controller.dart';
+import 'package:work_order_app/src/features/notification/application/notification_view_model.dart';
 import 'package:work_order_app/src/features/notification/domain/notification_model.dart';
 
 class AppHeader extends StatelessWidget implements PreferredSizeWidget {
@@ -108,7 +108,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
           ),
           const SizedBox(width: 8),
         ],
-        Consumer<NotificationController>(
+        Consumer<NotificationViewModel>(
           builder: (context, notifyCtrl, _) {
             final unread = notifyCtrl.unreadCount;
             final label = unread > 99 ? '99+' : '$unread';
@@ -192,7 +192,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
 
 List<PopupMenuEntry<String>> _buildNotificationMenuItems(
   BuildContext context,
-  NotificationController controller,
+  NotificationViewModel controller,
   Color accent,
   Color subtleText,
   Color primary,

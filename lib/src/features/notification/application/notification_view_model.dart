@@ -5,8 +5,8 @@ import 'package:work_order_app/src/features/notification/data/notification_api.d
 import 'package:work_order_app/src/features/auth/application/auth_controller.dart';
 import 'package:work_order_app/src/features/notification/domain/notification_model.dart';
 
-class NotificationController extends ChangeNotifier {
-  NotificationController(this._authController, this._api);
+class NotificationViewModel extends ChangeNotifier {
+  NotificationViewModel(this._authController, this._api);
 
   final AuthController _authController;
   final NotificationApi _api;
