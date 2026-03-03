@@ -27,32 +27,40 @@ class Utils {
             surfaceAlt: Color(0xFFF8FAFC),
             shadowStrong: Color(0x22000000),
           );
+    Color mix(Color a, Color b, double t) => Color.lerp(a, b, t) ?? a;
+
+    final seedBase = resolvedThemeColor;
+    final seedHsl = HSLColor.fromColor(seedBase);
+    final seedSoft = seedHsl.withLightness((seedHsl.lightness + 0.35).clamp(0.0, 1.0)).toColor();
+    final seedSoft2 = seedHsl.withLightness((seedHsl.lightness + 0.45).clamp(0.0, 1.0)).toColor();
+    final seedDark = seedHsl.withLightness((seedHsl.lightness - 0.25).clamp(0.0, 1.0)).toColor();
+
     final appColors = resolvedBrightness == Brightness.dark
-        ? const AppColors(
-            background: Color(0xFF0F172A),
-            surface: Color(0xFF111827),
-            sidebar: Color(0xFF0B1320),
-            subtleText: Color(0xFF94A3B8),
-            sidebarText: Color(0xFFCBD5E1),
-            borderColor: Color(0xFF334155),
+        ? AppColors(
+            background: mix(const Color(0xFF0F172A), seedDark, 0.18),
+            surface: mix(const Color(0xFF111827), seedDark, 0.14),
+            sidebar: mix(const Color(0xFF0B1320), seedDark, 0.14),
+            subtleText: const Color(0xFF94A3B8),
+            sidebarText: const Color(0xFFCBD5E1),
+            borderColor: mix(const Color(0xFF334155), seedDark, 0.12),
           )
-        : const AppColors(
-            background: Color(0xFFF8FAFC),
-            surface: Colors.white,
-            sidebar: Colors.white,
-            subtleText: Color(0xFF6B7280),
-            sidebarText: Color(0xFF334155),
-            borderColor: Color(0xFFE2E8F0),
+        : AppColors(
+            background: mix(const Color(0xFFF8FAFC), seedSoft2, 0.18),
+            surface: mix(Colors.white, seedSoft, 0.12),
+            sidebar: mix(Colors.white, seedSoft, 0.08),
+            subtleText: const Color(0xFF6B7280),
+            sidebarText: const Color(0xFF334155),
+            borderColor: mix(const Color(0xFFE2E8F0), seedSoft, 0.2),
           );
     final base = ThemeData(
       useMaterial3: true,
       brightness: resolvedBrightness,
       colorScheme: scheme,
       primaryColor: scheme.primary,
-      scaffoldBackgroundColor: resolvedBrightness == Brightness.dark ? const Color(0xFF0B1020) : const Color(0xFFF4F6FA),
+      scaffoldBackgroundColor: appColors.background,
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: resolvedBrightness == Brightness.dark ? const Color(0xFF111827) : const Color(0xFFF8FAFC),
+        fillColor: appColors.surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
         ),
@@ -62,7 +70,7 @@ class Utils {
         ),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: resolvedBrightness == Brightness.dark ? const Color(0xFF0F172A) : Colors.white,
+        backgroundColor: appColors.surface,
         foregroundColor: resolvedBrightness == Brightness.dark ? const Color(0xFFE5E7EB) : const Color(0xFF111827),
         elevation: 0,
       ),
