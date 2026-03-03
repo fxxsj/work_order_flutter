@@ -7,6 +7,7 @@ import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/customer/presentation/customer_edit_page.dart';
 import 'package:work_order_app/src/features/customer/presentation/widgets/customer_list_tile.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
 import 'package:work_order_app/src/features/customer/data/customer_repository_impl.dart';
 import 'package:work_order_app/src/features/customer/domain/customer_repository.dart';
@@ -87,6 +88,7 @@ class _CustomerListViewState extends State<_CustomerListView> {
   static const double _searchWidth = 320;
   static const double _spacingSm = 12;
   static const double _controlHeight = 40;
+  static const String _emptyCellText = '-';
 
   static const String _titleText = '客户管理';
   static const String _createButtonText = '新建客户';
@@ -105,9 +107,25 @@ class _CustomerListViewState extends State<_CustomerListView> {
   static const String _deleteFailedText = '删除失败: ';
   static const String _createSuccessText = '创建成功';
   static const String _updateSuccessText = '更新成功';
+  static const String _densityComfortLabel = '舒适';
+  static const String _densityCompactLabel = '紧凑';
+  static const String _columnsLabel = '列管理';
+  static const String _totalLabel = '共 {count} 条';
+  static const String _pageLabel = '第 {page} / {total} 页';
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
+  bool _denseTable = false;
+  final GlobalKey _columnsMenuKey = GlobalKey();
+  final Set<_CustomerColumn> _visibleColumns = {
+    _CustomerColumn.name,
+    _CustomerColumn.contact,
+    _CustomerColumn.phone,
+    _CustomerColumn.email,
+    _CustomerColumn.salesperson,
+    _CustomerColumn.updatedAt,
+    _CustomerColumn.actions,
+  };
 
   @override
   void dispose() {
@@ -127,6 +145,50 @@ class _CustomerListViewState extends State<_CustomerListView> {
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadCustomers(resetPage: true);
     });
+  }
+
+  String _formatDate(DateTime? value) {
+    if (value == null) return _emptyCellText;
+    final local = value.toLocal();
+    final year = local.year.toString().padLeft(4, '0');
+    final month = local.month.toString().padLeft(2, '0');
+    final day = local.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
+  }
+
+  void _openColumnsMenu(BuildContext context) {
+    final renderBox = _columnsMenuKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final position = RelativeRect.fromRect(
+      Rect.fromPoints(
+        renderBox.localToGlobal(Offset.zero, ancestor: overlay),
+        renderBox.localToGlobal(renderBox.size.bottomRight(Offset.zero), ancestor: overlay),
+      ),
+      Offset.zero & overlay.size,
+    );
+
+    showMenu<_CustomerColumn>(
+      context: context,
+      position: position,
+      items: _CustomerColumn.optionalValues.map((value) {
+        final checked = _visibleColumns.contains(value);
+        return CheckedPopupMenuItem<_CustomerColumn>(
+          value: value,
+          checked: checked,
+          child: Text(value.label),
+          onTap: () {
+            setState(() {
+              if (checked && _visibleColumns.length > 2) {
+                _visibleColumns.remove(value);
+              } else {
+                _visibleColumns.add(value);
+              }
+            });
+          },
+        );
+      }).toList(),
+    );
   }
 
   Future<void> _openEditPage(BuildContext context, CustomerViewModel viewModel, Customer? customer) async {
@@ -183,11 +245,16 @@ class _CustomerListViewState extends State<_CustomerListView> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isMobile = MediaQuery.sizeOf(context).width < 720;
+    final isMobile = BreakpointsUtil.isMobile(context);
 
     return Consumer<CustomerViewModel>(
       builder: (context, viewModel, _) {
         final customers = viewModel.customers;
+
+        final totalText = _totalLabel.replaceFirst('{count}', viewModel.total.toString());
+        final pageText = _pageLabel
+            .replaceFirst('{page}', viewModel.page.toString())
+            .replaceFirst('{total}', viewModel.totalPages.toString());
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -204,6 +271,34 @@ class _CustomerListViewState extends State<_CustomerListView> {
                   onPressed: () => _openEditPage(context, viewModel, null),
                   icon: const Icon(Icons.add),
                   label: const Text(_createButtonText),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  key: _columnsMenuKey,
+                  tooltip: _columnsLabel,
+                  icon: const Icon(Icons.view_column_outlined),
+                  onPressed: isMobile ? null : () => _openColumnsMenu(context),
+                ),
+                const SizedBox(width: 4),
+                ToggleButtons(
+                  isSelected: [_denseTable == false, _denseTable == true],
+                  onPressed: isMobile
+                      ? null
+                      : (index) {
+                          setState(() {
+                            _denseTable = index == 1;
+                          });
+                        },
+                  children: const [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: Text(_densityComfortLabel),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: Text(_densityCompactLabel),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -259,6 +354,11 @@ class _CustomerListViewState extends State<_CustomerListView> {
                     label: const Text(_refreshButtonText),
                   ),
                 ),
+                if (viewModel.total > 0)
+                  Text(
+                    '$totalText · $pageText',
+                    style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+                  ),
               ],
             ),
             const SizedBox(height: _spacingSm),
@@ -271,7 +371,7 @@ class _CustomerListViewState extends State<_CustomerListView> {
               )
             else if (!viewModel.loading && customers.isEmpty)
               const _EmptyState()
-            else
+            else if (isMobile)
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -285,6 +385,29 @@ class _CustomerListViewState extends State<_CustomerListView> {
                     useCard: isMobile,
                   );
                 },
+              )
+            else
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final columns = _buildColumns();
+                  final rows = _buildRows(context, viewModel, customers);
+
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                      child: DataTable(
+                        columnSpacing: _denseTable ? 16 : 24,
+                        horizontalMargin: _denseTable ? 12 : 16,
+                        headingRowHeight: _denseTable ? 38 : 44,
+                        dataRowMinHeight: _denseTable ? 34 : 40,
+                        dataRowMaxHeight: _denseTable ? 44 : 52,
+                        columns: columns,
+                        rows: rows,
+                      ),
+                    ),
+                  );
+                },
               ),
             if (viewModel.total > 0) ...[
               const SizedBox(height: _spacingSm),
@@ -294,6 +417,120 @@ class _CustomerListViewState extends State<_CustomerListView> {
         );
       },
     );
+  }
+
+  List<DataColumn> _buildColumns() {
+    final columns = <DataColumn>[];
+    if (_visibleColumns.contains(_CustomerColumn.name)) {
+      columns.add(const DataColumn(label: Text('客户名称')));
+    }
+    if (_visibleColumns.contains(_CustomerColumn.contact)) {
+      columns.add(const DataColumn(label: Text('联系人')));
+    }
+    if (_visibleColumns.contains(_CustomerColumn.phone)) {
+      columns.add(const DataColumn(label: Text('电话')));
+    }
+    if (_visibleColumns.contains(_CustomerColumn.email)) {
+      columns.add(const DataColumn(label: Text('邮箱')));
+    }
+    if (_visibleColumns.contains(_CustomerColumn.salesperson)) {
+      columns.add(const DataColumn(label: Text('业务员')));
+    }
+    if (_visibleColumns.contains(_CustomerColumn.updatedAt)) {
+      columns.add(const DataColumn(label: Text('最近更新')));
+    }
+    if (_visibleColumns.contains(_CustomerColumn.actions)) {
+      columns.add(const DataColumn(label: Text('操作')));
+    }
+    return columns;
+  }
+
+  List<DataRow> _buildRows(BuildContext context, CustomerViewModel viewModel, List<Customer> customers) {
+    final theme = Theme.of(context);
+    return customers.map((customer) {
+      final cells = <DataCell>[];
+      if (_visibleColumns.contains(_CustomerColumn.name)) {
+        cells.add(DataCell(Text(customer.name.isNotEmpty ? customer.name : _emptyCellText)));
+      }
+      if (_visibleColumns.contains(_CustomerColumn.contact)) {
+        cells.add(DataCell(Text(customer.contactPerson?.trim().isNotEmpty == true
+            ? customer.contactPerson!
+            : _emptyCellText)));
+      }
+      if (_visibleColumns.contains(_CustomerColumn.phone)) {
+        cells.add(DataCell(Text(customer.phone?.trim().isNotEmpty == true ? customer.phone! : _emptyCellText)));
+      }
+      if (_visibleColumns.contains(_CustomerColumn.email)) {
+        cells.add(DataCell(Text(customer.email?.trim().isNotEmpty == true ? customer.email! : _emptyCellText)));
+      }
+      if (_visibleColumns.contains(_CustomerColumn.salesperson)) {
+        cells.add(DataCell(Text(customer.salespersonName?.trim().isNotEmpty == true
+            ? customer.salespersonName!
+            : _emptyCellText)));
+      }
+      if (_visibleColumns.contains(_CustomerColumn.updatedAt)) {
+        cells.add(DataCell(Text(_formatDate(customer.updatedAt))));
+      }
+      if (_visibleColumns.contains(_CustomerColumn.actions)) {
+        cells.add(
+          DataCell(
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: '编辑',
+                  icon: Icon(Icons.edit, color: theme.colorScheme.primary),
+                  onPressed: () => _openEditPage(context, viewModel, customer),
+                ),
+                IconButton(
+                  tooltip: '删除',
+                  icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+                  onPressed: () => _confirmDelete(context, viewModel, customer),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+      return DataRow(cells: cells);
+    }).toList();
+  }
+}
+
+enum _CustomerColumn {
+  name,
+  contact,
+  phone,
+  email,
+  salesperson,
+  updatedAt,
+  actions;
+
+  static const List<_CustomerColumn> optionalValues = [
+    _CustomerColumn.contact,
+    _CustomerColumn.phone,
+    _CustomerColumn.email,
+    _CustomerColumn.salesperson,
+    _CustomerColumn.updatedAt,
+  ];
+
+  String get label {
+    switch (this) {
+      case _CustomerColumn.name:
+        return '客户名称';
+      case _CustomerColumn.contact:
+        return '联系人';
+      case _CustomerColumn.phone:
+        return '电话';
+      case _CustomerColumn.email:
+        return '邮箱';
+      case _CustomerColumn.salesperson:
+        return '业务员';
+      case _CustomerColumn.updatedAt:
+        return '最近更新';
+      case _CustomerColumn.actions:
+        return '操作';
+    }
   }
 }
 
