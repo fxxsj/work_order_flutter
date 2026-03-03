@@ -120,6 +120,59 @@ class LayoutSetting extends StatelessWidget {
                 BlockPicker(
                   pickerColor: temp,
                   onColorChanged: themeController.setTempColor,
+                  layoutBuilder: (context, colors, child) {
+                    final compact = isXs || isSm;
+                    final crossAxisCount = compact ? 6 : 4;
+                    return GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: EdgeInsets.zero,
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: compact ? 6 : 8,
+                      mainAxisSpacing: compact ? 6 : 8,
+                      children: [for (final color in colors) child(color)],
+                    );
+                  },
+                  itemBuilder: (color, isCurrent, changeColor) {
+                    final compact = isXs || isSm;
+                    final size = compact ? 28.0 : 36.0;
+                    final iconSize = compact ? 14.0 : 18.0;
+                    return SizedBox(
+                      width: size,
+                      height: size,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: changeColor,
+                          borderRadius: BorderRadius.circular(size),
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: color.withOpacity(0.5),
+                                  offset: const Offset(0, 2),
+                                  blurRadius: compact ? 3 : 4,
+                                ),
+                              ],
+                            ),
+                            child: AnimatedOpacity(
+                              duration: const Duration(milliseconds: 160),
+                              opacity: isCurrent ? 1 : 0,
+                              child: Icon(
+                                Icons.done,
+                                size: iconSize,
+                                color: ThemeData.estimateBrightnessForColor(color) == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
