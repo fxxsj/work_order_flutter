@@ -11,6 +11,7 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
 import 'package:work_order_app/src/features/customer/data/customer_repository_impl.dart';
@@ -209,9 +210,7 @@ class _CustomerListViewState extends State<_CustomerListView> {
     );
     if (!mounted) return;
     if (result == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(customer == null ? _createSuccessText : _updateSuccessText)),
-      );
+      ToastUtil.showSuccess(customer == null ? _createSuccessText : _updateSuccessText);
     }
   }
 

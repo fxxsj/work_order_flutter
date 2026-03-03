@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/application/customer_view_model.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 
@@ -130,9 +131,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
       Navigator.of(context).pop(true);
     } catch (err) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$_submitErrorText$err')),
-      );
+      ToastUtil.showError('$_submitErrorText$err');
     } finally {
       if (mounted) {
         setState(() => _submitting = false);
