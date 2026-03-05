@@ -64,6 +64,15 @@ class NotificationViewModel extends ChangeNotifier {
     if (_poller != null) {
       return;
     }
+    _ensureSessionAndStart();
+  }
+
+  Future<void> _ensureSessionAndStart() async {
+    final ready = await _authController.ensureValidSession();
+    if (!ready) {
+      stopPolling();
+      return;
+    }
     refreshAll();
     _poller = Timer.periodic(const Duration(minutes: 1), (_) => _poll());
   }

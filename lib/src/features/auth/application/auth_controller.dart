@@ -16,6 +16,22 @@ class AuthController extends ChangeNotifier {
     _isLoggedIn = _storage.isLoggedIn();
   }
 
+  Future<bool> ensureValidSession() async {
+    if (!_isLoggedIn) {
+      return false;
+    }
+    final refresh = _storage.readRefreshToken();
+    if (refresh == null || refresh.isEmpty) {
+      return true;
+    }
+    final refreshed = await _apiClient.refreshAccessToken();
+    if (refreshed) {
+      return true;
+    }
+    await handleLogout();
+    return false;
+  }
+
   Future<void> handleLogin({required String access, String? refresh}) async {
     await _storage.writeTokens(access: access, refresh: refresh);
     _apiClient.updateTokens(access, refresh);
