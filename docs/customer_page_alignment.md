@@ -70,6 +70,10 @@
 - 样式: 底部容器带 `surface` 背景 + 顶部分割线
 - 参考: `lib/src/features/customer/presentation/customer_edit_page.dart`
 
+## 交互反馈规范
+
+- 所有操作反馈（如删除成功/失败）统一使用封装的 `ToastUtil`，禁止使用 `ScaffoldMessenger/SnackBar`。
+
 ## 关键实现文件
 
 - 客户列表页: `lib/src/features/customer/presentation/customer_list_page.dart`
@@ -92,4 +96,3 @@
   - [ ] 所有控件为 `OutlineInputBorder`
   - [ ] 状态/多选控件有 `InputDecorator`
   - [ ] 底部操作栏样式一致
-

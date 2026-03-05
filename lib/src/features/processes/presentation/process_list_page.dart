@@ -222,14 +222,10 @@ class _ProcessListViewState extends State<_ProcessListView> {
     try {
       await viewModel.deleteProcess(process.id);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(_deleteSuccessText)),
-      );
+      ToastUtil.showSuccess(_deleteSuccessText);
     } catch (err) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$_deleteFailedText$err')),
-      );
+      ToastUtil.showError('$_deleteFailedText$err');
     }
   }
 
