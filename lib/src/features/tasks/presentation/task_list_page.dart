@@ -154,7 +154,7 @@ class _TaskListViewState extends State<_TaskListView> {
     showMenu<_TaskColumn>(
       context: menuContext,
       position: position,
-      items: _TaskColumn.optionalValues.map((value) {
+      items: _taskOptionalColumns.map((value) {
         final checked = _visibleColumns.contains(value);
         return CheckedPopupMenuItem<_TaskColumn>(
           value: value,
@@ -564,20 +564,20 @@ enum _TaskColumn {
   status,
 }
 
-extension _TaskColumnLabel on _TaskColumn {
-  static const List<_TaskColumn> optionalValues = [
-    _TaskColumn.id,
-    _TaskColumn.workOrder,
-    _TaskColumn.process,
-    _TaskColumn.content,
-    _TaskColumn.assignedDepartment,
-    _TaskColumn.assignedOperator,
-    _TaskColumn.productionQuantity,
-    _TaskColumn.quantityCompleted,
-    _TaskColumn.progress,
-    _TaskColumn.status,
-  ];
+const List<_TaskColumn> _taskOptionalColumns = [
+  _TaskColumn.id,
+  _TaskColumn.workOrder,
+  _TaskColumn.process,
+  _TaskColumn.content,
+  _TaskColumn.assignedDepartment,
+  _TaskColumn.assignedOperator,
+  _TaskColumn.productionQuantity,
+  _TaskColumn.quantityCompleted,
+  _TaskColumn.progress,
+  _TaskColumn.status,
+];
 
+extension _TaskColumnLabel on _TaskColumn {
   String get label {
     switch (this) {
       case _TaskColumn.id:

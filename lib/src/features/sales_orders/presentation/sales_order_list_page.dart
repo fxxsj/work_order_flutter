@@ -151,7 +151,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     showMenu<_SalesOrderColumn>(
       context: menuContext,
       position: position,
-      items: _SalesOrderColumn.optionalValues.map((value) {
+      items: _salesOrderOptionalColumns.map((value) {
         final checked = _visibleColumns.contains(value);
         return CheckedPopupMenuItem<_SalesOrderColumn>(
           value: value,
@@ -558,17 +558,17 @@ enum _SalesOrderColumn {
   itemsCount,
 }
 
-extension _SalesOrderColumnLabel on _SalesOrderColumn {
-  static const List<_SalesOrderColumn> optionalValues = [
-    _SalesOrderColumn.orderNumber,
-    _SalesOrderColumn.customer,
-    _SalesOrderColumn.status,
-    _SalesOrderColumn.paymentStatus,
-    _SalesOrderColumn.totalAmount,
-    _SalesOrderColumn.deliveryDate,
-    _SalesOrderColumn.itemsCount,
-  ];
+const List<_SalesOrderColumn> _salesOrderOptionalColumns = [
+  _SalesOrderColumn.orderNumber,
+  _SalesOrderColumn.customer,
+  _SalesOrderColumn.status,
+  _SalesOrderColumn.paymentStatus,
+  _SalesOrderColumn.totalAmount,
+  _SalesOrderColumn.deliveryDate,
+  _SalesOrderColumn.itemsCount,
+];
 
+extension _SalesOrderColumnLabel on _SalesOrderColumn {
   String get label {
     switch (this) {
       case _SalesOrderColumn.orderNumber:

@@ -151,7 +151,7 @@ class _MaterialListViewState extends State<_MaterialListView> {
     showMenu<_MaterialColumn>(
       context: menuContext,
       position: position,
-      items: _MaterialColumn.optionalValues.map((value) {
+      items: _materialOptionalColumns.map((value) {
         final checked = _visibleColumns.contains(value);
         return CheckedPopupMenuItem<_MaterialColumn>(
           value: value,
@@ -550,17 +550,17 @@ enum _MaterialColumn {
   status,
 }
 
-extension _MaterialColumnLabel on _MaterialColumn {
-  static const List<_MaterialColumn> optionalValues = [
-    _MaterialColumn.code,
-    _MaterialColumn.name,
-    _MaterialColumn.unit,
-    _MaterialColumn.unitPrice,
-    _MaterialColumn.stockQuantity,
-    _MaterialColumn.minStockQuantity,
-    _MaterialColumn.status,
-  ];
+const List<_MaterialColumn> _materialOptionalColumns = [
+  _MaterialColumn.code,
+  _MaterialColumn.name,
+  _MaterialColumn.unit,
+  _MaterialColumn.unitPrice,
+  _MaterialColumn.stockQuantity,
+  _MaterialColumn.minStockQuantity,
+  _MaterialColumn.status,
+];
 
+extension _MaterialColumnLabel on _MaterialColumn {
   String get label {
     switch (this) {
       case _MaterialColumn.code:

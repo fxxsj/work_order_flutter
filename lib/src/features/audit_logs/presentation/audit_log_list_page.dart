@@ -151,7 +151,7 @@ class _AuditLogListViewState extends State<_AuditLogListView> {
     showMenu<_AuditColumn>(
       context: menuContext,
       position: position,
-      items: _AuditColumn.optionalValues.map((value) {
+      items: _auditOptionalColumns.map((value) {
         final checked = _visibleColumns.contains(value);
         return CheckedPopupMenuItem<_AuditColumn>(
           value: value,
@@ -543,18 +543,18 @@ enum _AuditColumn {
   createdAt,
 }
 
-extension _AuditColumnLabel on _AuditColumn {
-  static const List<_AuditColumn> optionalValues = [
-    _AuditColumn.id,
-    _AuditColumn.actionType,
-    _AuditColumn.username,
-    _AuditColumn.contentType,
-    _AuditColumn.objectRepr,
-    _AuditColumn.changedFields,
-    _AuditColumn.ipAddress,
-    _AuditColumn.createdAt,
-  ];
+const List<_AuditColumn> _auditOptionalColumns = [
+  _AuditColumn.id,
+  _AuditColumn.actionType,
+  _AuditColumn.username,
+  _AuditColumn.contentType,
+  _AuditColumn.objectRepr,
+  _AuditColumn.changedFields,
+  _AuditColumn.ipAddress,
+  _AuditColumn.createdAt,
+];
 
+extension _AuditColumnLabel on _AuditColumn {
   String get label {
     switch (this) {
       case _AuditColumn.id:

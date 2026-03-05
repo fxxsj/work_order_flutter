@@ -154,7 +154,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
     showMenu<_WorkOrderColumn>(
       context: menuContext,
       position: position,
-      items: _WorkOrderColumn.optionalValues.map((value) {
+      items: _workOrderOptionalColumns.map((value) {
         final checked = _visibleColumns.contains(value);
         return CheckedPopupMenuItem<_WorkOrderColumn>(
           value: value,
@@ -578,20 +578,20 @@ enum _WorkOrderColumn {
   actions,
 }
 
-extension _WorkOrderColumnLabel on _WorkOrderColumn {
-  static const List<_WorkOrderColumn> optionalValues = [
-    _WorkOrderColumn.orderNumber,
-    _WorkOrderColumn.customer,
-    _WorkOrderColumn.product,
-    _WorkOrderColumn.status,
-    _WorkOrderColumn.approval,
-    _WorkOrderColumn.priority,
-    _WorkOrderColumn.deliveryDate,
-    _WorkOrderColumn.progress,
-    _WorkOrderColumn.totalAmount,
-    _WorkOrderColumn.actions,
-  ];
+const List<_WorkOrderColumn> _workOrderOptionalColumns = [
+  _WorkOrderColumn.orderNumber,
+  _WorkOrderColumn.customer,
+  _WorkOrderColumn.product,
+  _WorkOrderColumn.status,
+  _WorkOrderColumn.approval,
+  _WorkOrderColumn.priority,
+  _WorkOrderColumn.deliveryDate,
+  _WorkOrderColumn.progress,
+  _WorkOrderColumn.totalAmount,
+  _WorkOrderColumn.actions,
+];
 
+extension _WorkOrderColumnLabel on _WorkOrderColumn {
   String get label {
     switch (this) {
       case _WorkOrderColumn.orderNumber:

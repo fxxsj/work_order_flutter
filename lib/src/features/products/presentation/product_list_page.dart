@@ -153,7 +153,7 @@ class _ProductListViewState extends State<_ProductListView> {
     showMenu<_ProductColumn>(
       context: menuContext,
       position: position,
-      items: _ProductColumn.optionalValues.map((value) {
+      items: _productOptionalColumns.map((value) {
         final checked = _visibleColumns.contains(value);
         return CheckedPopupMenuItem<_ProductColumn>(
           value: value,
@@ -558,19 +558,19 @@ enum _ProductColumn {
   status,
 }
 
-extension _ProductColumnLabel on _ProductColumn {
-  static const List<_ProductColumn> optionalValues = [
-    _ProductColumn.code,
-    _ProductColumn.name,
-    _ProductColumn.productType,
-    _ProductColumn.productGroup,
-    _ProductColumn.specification,
-    _ProductColumn.unit,
-    _ProductColumn.unitPrice,
-    _ProductColumn.stockQuantity,
-    _ProductColumn.status,
-  ];
+const List<_ProductColumn> _productOptionalColumns = [
+  _ProductColumn.code,
+  _ProductColumn.name,
+  _ProductColumn.productType,
+  _ProductColumn.productGroup,
+  _ProductColumn.specification,
+  _ProductColumn.unit,
+  _ProductColumn.unitPrice,
+  _ProductColumn.stockQuantity,
+  _ProductColumn.status,
+];
 
+extension _ProductColumnLabel on _ProductColumn {
   String get label {
     switch (this) {
       case _ProductColumn.code:
