@@ -9,6 +9,8 @@ import 'package:work_order_app/src/features/tasks/presentation/task_placeholder_
 import 'package:work_order_app/src/features/sales_orders/presentation/sales_order_list_page.dart';
 import 'package:work_order_app/src/features/audit_logs/presentation/audit_log_list_page.dart';
 import 'package:work_order_app/src/features/products/presentation/product_list_page.dart';
+import 'package:work_order_app/src/features/materials/presentation/material_list_page.dart';
+import 'package:work_order_app/src/features/product_groups/presentation/product_group_list_page.dart';
 import 'package:work_order_app/src/features/suppliers/presentation/supplier_list_page.dart';
 import 'package:work_order_app/src/features/departments/presentation/department_list_page.dart';
 import 'package:work_order_app/src/features/processes/presentation/process_list_page.dart';
@@ -63,6 +65,10 @@ Widget? buildFullPage(String id) {
       return const AuditLogListEntry();
     case 'products':
       return const ProductListEntry();
+    case 'materials':
+      return const MaterialListEntry();
+    case 'product_groups':
+      return const ProductGroupListEntry();
     case 'suppliers':
       return const SupplierListEntry();
     case 'departments':
