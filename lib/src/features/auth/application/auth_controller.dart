@@ -22,7 +22,13 @@ class AuthController extends ChangeNotifier {
     }
     final refresh = _storage.readRefreshToken();
     if (refresh == null || refresh.isEmpty) {
-      return true;
+      try {
+        await _apiClient.get('/auth/user/');
+        return true;
+      } catch (_) {
+        await handleLogout();
+        return false;
+      }
     }
     final refreshed = await _apiClient.refreshAccessToken();
     if (refreshed) {

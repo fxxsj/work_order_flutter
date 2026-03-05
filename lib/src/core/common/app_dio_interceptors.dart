@@ -32,7 +32,9 @@ class AppDioInterceptors extends InterceptorsWrapper {
     // 401 错误处理：尝试刷新 token
     if (err.response?.statusCode == 401) {
       // 登录接口的 401 错误不刷新，交给调用方处理
-      if (err.requestOptions.path.contains('/auth/login')) {
+      if (err.requestOptions.path.contains('/auth/login') ||
+          err.requestOptions.path.contains('/auth/refresh') ||
+          err.requestOptions.extra['skipAuthRefresh'] == true) {
         handler.next(err);
         return;
       }

@@ -90,16 +90,32 @@ class HttpClient {
       final response = await _dio.post(
         '/auth/refresh/',
         data: {'refresh': _refreshToken},
-        options: Options(contentType: Headers.jsonContentType),
+        options: Options(
+          contentType: Headers.jsonContentType,
+          extra: const {'skipAuthRefresh': true},
+        ),
       );
 
-      final apiResponse = ApiResponse.fromJson(response.data);
+      final payload = response.data;
+      if (payload is Map<String, dynamic>) {
+        // simplejwt refresh endpoint returns tokens at top-level
+        if (payload['access'] != null) {
+          final access = payload['access']?.toString();
+          final refresh = payload['refresh']?.toString();
+          if (access != null && access.isNotEmpty) {
+            updateTokens(access, refresh);
+            return true;
+          }
+        }
+      }
+
+      final apiResponse = ApiResponse.fromJson(payload);
       if (apiResponse.success && apiResponse.data != null) {
         final data = apiResponse.data as Map<String, dynamic>;
-        final access = data['access'] as String?;
-        final refresh = data['refresh'] as String?;
+        final access = data['access']?.toString();
+        final refresh = data['refresh']?.toString();
 
-        if (access != null) {
+        if (access != null && access.isNotEmpty) {
           updateTokens(access, refresh);
           return true;
         }
