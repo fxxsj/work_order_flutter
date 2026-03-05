@@ -15,6 +15,10 @@ import 'package:work_order_app/src/features/purchase_orders/presentation/purchas
 import 'package:work_order_app/src/features/inventory_stocks/presentation/product_stock_list_page.dart';
 import 'package:work_order_app/src/features/inventory_delivery/presentation/delivery_order_list_page.dart';
 import 'package:work_order_app/src/features/inventory_quality/presentation/quality_inspection_list_page.dart';
+import 'package:work_order_app/src/features/finance_invoices/presentation/invoice_list_page.dart';
+import 'package:work_order_app/src/features/finance_payments/presentation/payment_list_page.dart';
+import 'package:work_order_app/src/features/finance_costs/presentation/production_cost_list_page.dart';
+import 'package:work_order_app/src/features/finance_statements/presentation/statement_list_page.dart';
 import 'package:work_order_app/src/features/suppliers/presentation/supplier_list_page.dart';
 import 'package:work_order_app/src/features/departments/presentation/department_list_page.dart';
 import 'package:work_order_app/src/features/processes/presentation/process_list_page.dart';
@@ -81,6 +85,14 @@ Widget? buildFullPage(String id) {
       return const DeliveryOrderListEntry();
     case 'quality':
       return const QualityInspectionListEntry();
+    case 'invoices':
+      return const InvoiceListEntry();
+    case 'payments':
+      return const PaymentListEntry();
+    case 'costs':
+      return const ProductionCostListEntry();
+    case 'statements':
+      return const StatementListEntry();
     case 'suppliers':
       return const SupplierListEntry();
     case 'departments':
