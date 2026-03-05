@@ -766,7 +766,9 @@ class _FoilingPlateListTile extends StatelessWidget {
     if ((plate.code ?? '').trim().isNotEmpty) {
       subtitleLines.add('$_codeLabel：${plate.code}');
     }
-    subtitleLines.add('$_typeLabelText：${_typeLabel(plate.foilingType)}');
+    subtitleLines.add(
+      '$_typeLabelText：${_FoilingPlateListViewState._typeLabel(plate.foilingType)}',
+    );
     subtitleLines.add('$_statusLabel：${plate.confirmed ? "已确认" : "待确认"}');
 
     final tile = ListTile(
