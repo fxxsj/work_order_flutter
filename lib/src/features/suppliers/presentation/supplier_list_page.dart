@@ -8,11 +8,13 @@ import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/suppliers/application/supplier_view_model.dart';
 import 'package:work_order_app/src/features/suppliers/data/supplier_api_service.dart';
 import 'package:work_order_app/src/features/suppliers/data/supplier_repository_impl.dart';
 import 'package:work_order_app/src/features/suppliers/domain/supplier.dart';
 import 'package:work_order_app/src/features/suppliers/domain/supplier_repository.dart';
+import 'package:work_order_app/src/features/suppliers/presentation/supplier_edit_page.dart';
 
 /// 供应商列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
 class SupplierListEntry extends StatefulWidget {
@@ -95,10 +97,19 @@ class _SupplierListViewState extends State<_SupplierListView> {
 
   static const String _searchHintText = '搜索供应商名称/编码';
   static const String _refreshButtonText = '刷新';
+  static const String _createButtonText = '新建供应商';
   static const String _emptyText = '暂无供应商数据';
   static const String _errorFallbackText = '加载失败';
   static const String _retryText = '重新加载';
+  static const String _deleteDialogTitle = '确认删除';
+  static const String _deleteDialogContent = '确定要删除供应商 \"{name}\" 吗？此操作不可恢复。';
+  static const String _cancelText = '取消';
+  static const String _deleteText = '删除';
   static const String _clearText = '清空';
+  static const String _deleteSuccessText = '删除成功';
+  static const String _deleteFailedText = '删除失败: ';
+  static const String _createSuccessText = '创建成功';
+  static const String _updateSuccessText = '更新成功';
   static const String _densityComfortLabel = '舒适';
   static const String _densityCompactLabel = '紧凑';
   static const String _breadcrumbSeparator = ' / ';
@@ -115,6 +126,7 @@ class _SupplierListViewState extends State<_SupplierListView> {
     _SupplierColumn.status,
     _SupplierColumn.materialCount,
     _SupplierColumn.notes,
+    _SupplierColumn.actions,
   };
 
   @override
@@ -173,6 +185,55 @@ class _SupplierListViewState extends State<_SupplierListView> {
     );
   }
 
+  Future<void> _openEditPage(BuildContext context, SupplierViewModel viewModel, Supplier? supplier) async {
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => ChangeNotifierProvider.value(
+          value: viewModel,
+          child: SupplierEditPage(supplier: supplier),
+        ),
+      ),
+    );
+    if (!mounted) return;
+    if (result == true) {
+      ToastUtil.showSuccess(supplier == null ? _createSuccessText : _updateSuccessText);
+    }
+  }
+
+  Future<void> _confirmDelete(BuildContext context, SupplierViewModel viewModel, Supplier supplier) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(_deleteDialogTitle),
+        content: Text(_deleteDialogContent.replaceFirst('{name}', supplier.name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text(_cancelText),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text(_deleteText),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await viewModel.deleteSupplier(supplier.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(_deleteSuccessText)),
+      );
+    } catch (err) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$_deleteFailedText$err')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isMobile = BreakpointsUtil.isMobile(context);
@@ -217,7 +278,12 @@ class _SupplierListViewState extends State<_SupplierListView> {
       return ListView.builder(
         itemCount: suppliers.length,
         itemBuilder: (context, index) {
-          return _SupplierListTile(supplier: suppliers[index]);
+          final supplier = suppliers[index];
+          return _SupplierListTile(
+            supplier: supplier,
+            onEdit: () => _openEditPage(context, viewModel, supplier),
+            onDelete: () => _confirmDelete(context, viewModel, supplier),
+          );
         },
       );
     }
@@ -226,7 +292,7 @@ class _SupplierListViewState extends State<_SupplierListView> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final columns = _buildColumns();
-          final rows = _buildRows(context, suppliers);
+          final rows = _buildRows(context, viewModel, suppliers);
 
           return SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -311,6 +377,12 @@ class _SupplierListViewState extends State<_SupplierListView> {
                       icon: const Icon(Icons.refresh, size: 16),
                       label: _refreshButtonText,
                     ),
+                    const SizedBox(width: _spacingSm),
+                    PageActionButton.filled(
+                      onPressed: () => _openEditPage(context, viewModel, null),
+                      icon: const Icon(Icons.add),
+                      label: _createButtonText,
+                    ),
                   ],
                 ),
               ],
@@ -354,6 +426,11 @@ class _SupplierListViewState extends State<_SupplierListView> {
                   ),
                 ],
               ),
+              PageActionButton.filled(
+                onPressed: () => _openEditPage(context, viewModel, null),
+                icon: const Icon(Icons.add),
+                label: _createButtonText,
+              ),
             ],
           );
         },
@@ -387,10 +464,13 @@ class _SupplierListViewState extends State<_SupplierListView> {
     if (_visibleColumns.contains(_SupplierColumn.notes)) {
       columns.add(const DataColumn(label: Text('备注')));
     }
+    if (_visibleColumns.contains(_SupplierColumn.actions)) {
+      columns.add(const DataColumn(label: Text('操作')));
+    }
     return columns;
   }
 
-  List<DataRow> _buildRows(BuildContext context, List<Supplier> suppliers) {
+  List<DataRow> _buildRows(BuildContext context, SupplierViewModel viewModel, List<Supplier> suppliers) {
     final theme = Theme.of(context);
     return suppliers.map((supplier) {
       final cells = <DataCell>[];
@@ -425,6 +505,27 @@ class _SupplierListViewState extends State<_SupplierListView> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
+            ),
+          ),
+        );
+      }
+      if (_visibleColumns.contains(_SupplierColumn.actions)) {
+        cells.add(
+          DataCell(
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: '编辑',
+                  icon: Icon(Icons.edit, color: theme.colorScheme.primary),
+                  onPressed: () => _openEditPage(context, viewModel, supplier),
+                ),
+                IconButton(
+                  tooltip: '删除',
+                  icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+                  onPressed: () => _confirmDelete(context, viewModel, supplier),
+                ),
+              ],
             ),
           ),
         );
@@ -483,7 +584,8 @@ enum _SupplierColumn {
   email,
   status,
   materialCount,
-  notes;
+  notes,
+  actions;
 
   static const List<_SupplierColumn> optionalValues = [
     _SupplierColumn.code,
@@ -513,6 +615,8 @@ enum _SupplierColumn {
         return '供应物料数';
       case _SupplierColumn.notes:
         return '备注';
+      case _SupplierColumn.actions:
+        return '操作';
     }
   }
 }
@@ -569,12 +673,18 @@ class _PaginationBar extends StatelessWidget {
 }
 
 class _SupplierListTile extends StatelessWidget {
-  const _SupplierListTile({required this.supplier});
+  const _SupplierListTile({
+    required this.supplier,
+    this.onEdit,
+    this.onDelete,
+  });
 
   static const double _padding = 12;
   static const double _spacing = 6;
 
   final Supplier supplier;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -612,6 +722,28 @@ class _SupplierListTile extends StatelessWidget {
                   style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
                 ),
               ),
+            if (onEdit != null || onDelete != null) ...[
+              const SizedBox(height: _spacing),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (onEdit != null)
+                    TextButton.icon(
+                      onPressed: onEdit,
+                      icon: const Icon(Icons.edit, size: 16),
+                      label: const Text('编辑'),
+                    ),
+                  if (onDelete != null) ...[
+                    const SizedBox(width: 4),
+                    TextButton.icon(
+                      onPressed: onDelete,
+                      icon: Icon(Icons.delete_outline, size: 16, color: theme.colorScheme.error),
+                      label: Text('删除', style: TextStyle(color: theme.colorScheme.error)),
+                    ),
+                  ],
+                ],
+              ),
+            ],
           ],
         ),
       ),

@@ -15,6 +15,20 @@ class SupplierViewModel extends PaginatedViewModel<Supplier> {
 
   Future<void> loadSuppliers({bool resetPage = false}) => loadItems(resetPage: resetPage);
 
+  Future<void> createSupplier(Supplier supplier) async {
+    await _repository.createSupplier(supplier);
+    await loadItems(resetPage: true);
+  }
+
+  Future<void> updateSupplier(Supplier supplier) async {
+    await _repository.updateSupplier(supplier);
+    await loadItems();
+  }
+
+  Future<void> deleteSupplier(int id) async {
+    await deleteAndReload(() => _repository.deleteSupplier(id));
+  }
+
   @override
   Future<PageData<Supplier>> fetchPage({
     required int page,

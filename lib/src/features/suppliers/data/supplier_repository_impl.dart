@@ -1,6 +1,6 @@
 import 'package:work_order_app/src/core/core.dart';
-import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/suppliers/data/supplier_api_service.dart';
+import 'package:work_order_app/src/features/suppliers/data/supplier_dto.dart';
 import 'package:work_order_app/src/features/suppliers/domain/supplier.dart';
 import 'package:work_order_app/src/features/suppliers/domain/supplier_repository.dart';
 
@@ -20,37 +20,26 @@ class SupplierRepositoryImpl implements SupplierRepository {
       pageSize: pageSize,
       search: search,
     );
-    final data = response?.data;
-    if (data is Map<String, dynamic>) {
-      final results = data['results'];
-      if (results is List) {
-        final items = results
-            .whereType<Map>()
-            .map((item) {
-              final map = Map<String, dynamic>.from(item);
-              return Supplier(
-                id: toInt(map['id']) ?? 0,
-                name: map['name']?.toString() ?? '',
-                code: toStringOrNull(map['code']),
-                contactPerson: toStringOrNull(map['contact_person']),
-                phone: toStringOrNull(map['phone']),
-                email: toStringOrNull(map['email']),
-                address: toStringOrNull(map['address']),
-                status: toStringOrNull(map['status']),
-                statusDisplay: toStringOrNull(map['status_display']),
-                materialCount: toInt(map['material_count']),
-                notes: toStringOrNull(map['notes']),
-              );
-            })
-            .toList();
-        return PageData(
-          items: items,
-          total: toInt(data['count']) ?? items.length,
-          page: page,
-          pageSize: pageSize,
-        );
-      }
-    }
-    return PageData(items: const [], total: 0, page: page, pageSize: pageSize);
+    return PageData(
+      items: response.items.map((item) => item.toEntity()).toList(),
+      total: response.total,
+      page: response.page,
+      pageSize: response.pageSize,
+    );
+  }
+
+  @override
+  Future<void> createSupplier(Supplier supplier) async {
+    await _api.createSupplier(SupplierDto.fromEntity(supplier));
+  }
+
+  @override
+  Future<void> updateSupplier(Supplier supplier) async {
+    await _api.updateSupplier(SupplierDto.fromEntity(supplier));
+  }
+
+  @override
+  Future<void> deleteSupplier(int id) async {
+    await _api.deleteSupplier(id);
   }
 }

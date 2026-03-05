@@ -7,4 +7,10 @@ abstract class SupplierRepository {
     required int pageSize,
     String? search,
   });
+
+  Future<void> createSupplier(Supplier supplier);
+
+  Future<void> updateSupplier(Supplier supplier);
+
+  Future<void> deleteSupplier(int id);
 }
