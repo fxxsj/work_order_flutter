@@ -768,7 +768,9 @@ class _DieListTile extends StatelessWidget {
     if ((die.code ?? '').trim().isNotEmpty) {
       subtitleLines.add('$_codeLabel：${die.code}');
     }
-    subtitleLines.add('$_typeLabel：${die.dieTypeDisplay ?? _dieTypeLabel(die.dieType)}');
+    subtitleLines.add(
+      '$_typeLabel：${die.dieTypeDisplay ?? _DieListViewState._dieTypeLabel(die.dieType)}',
+    );
     subtitleLines.add('$_statusLabel：${die.confirmed ? "已确认" : "待确认"}');
 
     final tile = ListTile(

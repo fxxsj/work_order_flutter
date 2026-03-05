@@ -747,7 +747,7 @@ class _FoilingPlateListTile extends StatelessWidget {
 
   static const double _verticalMargin = 8;
   static const String _codeLabel = '编码';
-  static const String _typeLabel = '类型';
+  static const String _typeLabelText = '类型';
   static const String _statusLabel = '状态';
   static const String _subtitleSeparator = ' · ';
   static const String _emptySubtitle = '暂无更多信息';
@@ -766,7 +766,7 @@ class _FoilingPlateListTile extends StatelessWidget {
     if ((plate.code ?? '').trim().isNotEmpty) {
       subtitleLines.add('$_codeLabel：${plate.code}');
     }
-    subtitleLines.add('$_typeLabel：${_typeLabel(plate.foilingType)}');
+    subtitleLines.add('$_typeLabelText：${_typeLabel(plate.foilingType)}');
     subtitleLines.add('$_statusLabel：${plate.confirmed ? "已确认" : "待确认"}');
 
     final tile = ListTile(
