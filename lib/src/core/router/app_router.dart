@@ -127,7 +127,7 @@ List<GoRoute> _buildBranchRoutes(NavItem item) {
             pageBuilder: (context, state) {
               final id = int.tryParse(state.pathParameters['id'] ?? '');
               return NoTransitionPage(
-                child: SalesOrderDetailPage(orderId: id ?? 0),
+                child: SalesOrderDetailEntry(orderId: id ?? 0),
               );
             },
             routes: [
