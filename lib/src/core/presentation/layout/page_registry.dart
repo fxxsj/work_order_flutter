@@ -12,6 +12,9 @@ import 'package:work_order_app/src/features/products/presentation/product_list_p
 import 'package:work_order_app/src/features/materials/presentation/material_list_page.dart';
 import 'package:work_order_app/src/features/product_groups/presentation/product_group_list_page.dart';
 import 'package:work_order_app/src/features/purchase_orders/presentation/purchase_order_list_page.dart';
+import 'package:work_order_app/src/features/inventory_stocks/presentation/product_stock_list_page.dart';
+import 'package:work_order_app/src/features/inventory_delivery/presentation/delivery_order_list_page.dart';
+import 'package:work_order_app/src/features/inventory_quality/presentation/quality_inspection_list_page.dart';
 import 'package:work_order_app/src/features/suppliers/presentation/supplier_list_page.dart';
 import 'package:work_order_app/src/features/departments/presentation/department_list_page.dart';
 import 'package:work_order_app/src/features/processes/presentation/process_list_page.dart';
@@ -72,6 +75,12 @@ Widget? buildFullPage(String id) {
       return const ProductGroupListEntry();
     case 'purchase_orders':
       return const PurchaseOrderListEntry();
+    case 'stocks':
+      return const ProductStockListEntry();
+    case 'delivery':
+      return const DeliveryOrderListEntry();
+    case 'quality':
+      return const QualityInspectionListEntry();
     case 'suppliers':
       return const SupplierListEntry();
     case 'departments':
