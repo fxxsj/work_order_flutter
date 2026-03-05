@@ -1,5 +1,6 @@
 import 'package:work_order_app/src/core/core.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order.dart';
+import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
 
 class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
@@ -12,6 +13,21 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
   Future<void> initialize() => loadItems(resetPage: true);
 
   Future<void> loadWorkOrders({bool resetPage = false}) => loadItems(resetPage: resetPage);
+
+  Future<WorkOrderDetail> fetchDetail(int id) async {
+    final detail = await _repository.getWorkOrderDetail(id);
+    return detail.toEntity();
+  }
+
+  Future<WorkOrderDetail> createWorkOrder(Map<String, dynamic> payload) async {
+    final detail = await _repository.createWorkOrder(payload);
+    return detail.toEntity();
+  }
+
+  Future<WorkOrderDetail> updateWorkOrder(int id, Map<String, dynamic> payload) async {
+    final detail = await _repository.updateWorkOrder(id, payload);
+    return detail.toEntity();
+  }
 
   @override
   Future<PageData<WorkOrder>> fetchPage({

@@ -34,6 +34,14 @@ class WorkOrderDetail {
     this.materials = const [],
     this.processes = const [],
     this.approvalLogs = const [],
+    this.artworkNames = const [],
+    this.artworkCodes = const [],
+    this.dieNames = const [],
+    this.dieCodes = const [],
+    this.foilingPlateNames = const [],
+    this.foilingPlateCodes = const [],
+    this.embossingPlateNames = const [],
+    this.embossingPlateCodes = const [],
     this.artworkIds = const [],
     this.dieIds = const [],
     this.foilingPlateIds = const [],
@@ -72,6 +80,14 @@ class WorkOrderDetail {
   final List<WorkOrderMaterialItem> materials;
   final List<WorkOrderProcessItem> processes;
   final List<WorkOrderApprovalLog> approvalLogs;
+  final List<String> artworkNames;
+  final List<String> artworkCodes;
+  final List<String> dieNames;
+  final List<String> dieCodes;
+  final List<String> foilingPlateNames;
+  final List<String> foilingPlateCodes;
+  final List<String> embossingPlateNames;
+  final List<String> embossingPlateCodes;
   final List<int> artworkIds;
   final List<int> dieIds;
   final List<int> foilingPlateIds;
@@ -111,6 +127,14 @@ class WorkOrderDetail {
       materials: _parseMaterials(json['materials']),
       processes: _parseProcesses(json['order_processes']),
       approvalLogs: _parseApprovalLogs(json['approval_logs']),
+      artworkNames: _parseStringList(json['artwork_names']),
+      artworkCodes: _parseStringList(json['artwork_codes']),
+      dieNames: _parseStringList(json['die_names']),
+      dieCodes: _parseStringList(json['die_codes']),
+      foilingPlateNames: _parseStringList(json['foiling_plate_names']),
+      foilingPlateCodes: _parseStringList(json['foiling_plate_codes']),
+      embossingPlateNames: _parseStringList(json['embossing_plate_names']),
+      embossingPlateCodes: _parseStringList(json['embossing_plate_codes']),
       artworkIds: _parseIdList(json['artworks']),
       dieIds: _parseIdList(json['dies']),
       foilingPlateIds: _parseIdList(json['foiling_plates']),
@@ -137,6 +161,11 @@ class WorkOrderDetail {
       if (id != null && id > 0) ids.add(id);
     }
     return ids;
+  }
+
+  static List<String> _parseStringList(dynamic value) {
+    if (value is! List) return const [];
+    return value.map((item) => item.toString()).toList();
   }
 
   static List<WorkOrderProductItem> _parseProducts(dynamic value) {
