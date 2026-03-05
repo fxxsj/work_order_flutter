@@ -63,7 +63,7 @@
       document.body.append(scriptTag);
     }
 
-    if ('serviceWorker' in navigator) {
+    if ('serviceWorker' in navigator && serviceWorkerVersion != null) {
       // Service workers are supported. Use them.
       window.addEventListener('load', function () {
         // Wait for registration to finish before dropping the <script> tag.
@@ -109,7 +109,7 @@
         }, 4000);
       });
     } else {
-      // Service workers not supported. Just drop the <script> tag.
+      // Service workers not supported or disabled. Just drop the <script> tag.
       loadMainDartJs();
     }
   </script>
