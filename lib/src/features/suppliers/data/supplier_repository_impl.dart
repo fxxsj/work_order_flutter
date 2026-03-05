@@ -1,4 +1,5 @@
 import 'package:work_order_app/src/core/core.dart';
+import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/suppliers/data/supplier_api_service.dart';
 import 'package:work_order_app/src/features/suppliers/domain/supplier.dart';
 import 'package:work_order_app/src/features/suppliers/domain/supplier_repository.dart';
@@ -25,14 +26,26 @@ class SupplierRepositoryImpl implements SupplierRepository {
       if (results is List) {
         final items = results
             .whereType<Map>()
-            .map((item) => Supplier(
-                  id: int.tryParse(item['id']?.toString() ?? '') ?? 0,
-                  name: item['name']?.toString() ?? '',
-                ))
+            .map((item) {
+              final map = Map<String, dynamic>.from(item);
+              return Supplier(
+                id: toInt(map['id']) ?? 0,
+                name: map['name']?.toString() ?? '',
+                code: toStringOrNull(map['code']),
+                contactPerson: toStringOrNull(map['contact_person']),
+                phone: toStringOrNull(map['phone']),
+                email: toStringOrNull(map['email']),
+                address: toStringOrNull(map['address']),
+                status: toStringOrNull(map['status']),
+                statusDisplay: toStringOrNull(map['status_display']),
+                materialCount: toInt(map['material_count']),
+                notes: toStringOrNull(map['notes']),
+              );
+            })
             .toList();
         return PageData(
           items: items,
-          total: int.tryParse(data['count']?.toString() ?? '') ?? items.length,
+          total: toInt(data['count']) ?? items.length,
           page: page,
           pageSize: pageSize,
         );

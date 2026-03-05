@@ -9,6 +9,10 @@ class SupplierViewModel extends PaginatedViewModel<Supplier> {
 
   List<Supplier> get suppliers => items;
 
+  Future<void> initialize() async {
+    await loadSuppliers(resetPage: true);
+  }
+
   Future<void> loadSuppliers({bool resetPage = false}) => loadItems(resetPage: resetPage);
 
   @override

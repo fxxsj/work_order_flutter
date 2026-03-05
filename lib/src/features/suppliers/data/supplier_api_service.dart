@@ -10,12 +10,13 @@ class SupplierApiService {
     required int pageSize,
     String? search,
   }) async {
+    final trimmed = search?.trim();
     return _client.get(
       '/suppliers/',
       queryParameters: {
         'page': page,
         'page_size': pageSize,
-        if (search != null && search.isNotEmpty) 'search': search,
+        if (trimmed != null && trimmed.isNotEmpty) 'search': trimmed,
       },
     );
   }
