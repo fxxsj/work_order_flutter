@@ -102,14 +102,10 @@ class _DieListViewState extends State<_DieListView> {
   static const String _retryText = '重新加载';
   static const String _deleteDialogTitle = '确认删除';
   static const String _deleteDialogContent = '确定要删除刀模 "{name}" 吗？此操作不可恢复。';
-  static const String _confirmDialogTitle = '确认刀模';
-  static const String _confirmDialogContent = '确定要确认刀模 "{name}" 吗？确认后将不可修改。';
   static const String _cancelText = '取消';
   static const String _okText = '确定';
   static const String _deleteSuccessText = '删除成功';
   static const String _deleteFailedText = '删除失败: ';
-  static const String _confirmSuccessText = '确认成功';
-  static const String _confirmFailedText = '确认失败: ';
   static const String _createSuccessText = '创建成功';
   static const String _updateSuccessText = '更新成功';
   static const String _densityComfortLabel = '舒适';
@@ -191,11 +187,23 @@ class _DieListViewState extends State<_DieListView> {
   }
 
   Future<void> _openEditPage(BuildContext context, DieViewModel viewModel, Die? die) async {
+    Die? target = die;
+    if (die != null) {
+      try {
+        final apiService = context.read<DieApiService>();
+        final detail = await apiService.fetchDie(die.id);
+        target = detail.toEntity();
+      } catch (err) {
+        if (!mounted) return;
+        ToastUtil.showError('加载刀模详情失败: $err');
+        return;
+      }
+    }
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => ChangeNotifierProvider.value(
           value: viewModel,
-          child: DieEditPage(die: die),
+          child: DieEditPage(die: target),
         ),
       ),
     );
@@ -235,35 +243,6 @@ class _DieListViewState extends State<_DieListView> {
     }
   }
 
-  Future<void> _confirmDie(BuildContext context, DieViewModel viewModel, Die die) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(_confirmDialogTitle),
-        content: Text(_confirmDialogContent.replaceFirst('{name}', die.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(_cancelText),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(_okText),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-
-    try {
-      await viewModel.confirmDie(die.id);
-      if (!mounted) return;
-      ToastUtil.showSuccess(_confirmSuccessText);
-    } catch (err) {
-      if (!mounted) return;
-      ToastUtil.showError('$_confirmFailedText$err');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -314,7 +293,6 @@ class _DieListViewState extends State<_DieListView> {
             die: die,
             onEdit: () => _openEditPage(context, viewModel, die),
             onDelete: () => _confirmDelete(context, viewModel, die),
-            onConfirm: die.confirmed ? null : () => _confirmDie(context, viewModel, die),
           );
         },
       );
@@ -553,12 +531,6 @@ class _DieListViewState extends State<_DieListView> {
                   icon: Icon(Icons.edit, color: theme.colorScheme.primary),
                   onPressed: () => _openEditPage(context, viewModel, die),
                 ),
-                if (!die.confirmed)
-                  IconButton(
-                    tooltip: '确认',
-                    icon: Icon(Icons.verified_outlined, color: theme.colorScheme.tertiary),
-                    onPressed: () => _confirmDie(context, viewModel, die),
-                  ),
                 IconButton(
                   tooltip: '删除',
                   icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
@@ -744,7 +716,6 @@ class _DieListTile extends StatelessWidget {
     required this.die,
     this.onEdit,
     this.onDelete,
-    this.onConfirm,
   });
 
   static const double _verticalMargin = 8;
@@ -757,7 +728,6 @@ class _DieListTile extends StatelessWidget {
   final Die die;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
-  final VoidCallback? onConfirm;
 
   @override
   Widget build(BuildContext context) {
@@ -799,20 +769,12 @@ class _DieListTile extends StatelessWidget {
             tooltip: '更多',
             onSelected: (value) {
               switch (value) {
-                case 'confirm':
-                  onConfirm?.call();
-                  break;
                 case 'delete':
                   onDelete?.call();
                   break;
               }
             },
             itemBuilder: (context) => [
-              if (!die.confirmed)
-                const PopupMenuItem(
-                  value: 'confirm',
-                  child: Text('确认'),
-                ),
               const PopupMenuItem(
                 value: 'delete',
                 child: Text('删除'),

@@ -57,6 +57,13 @@ class DieApiService {
     return DieDto.fromJson(map);
   }
 
+  Future<DieDto> fetchDie(int id) async {
+    final response = await _client.get('/dies/$id/');
+    final payload = response.data;
+    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    return DieDto.fromJson(map);
+  }
+
   Future<void> deleteDie(int id) async {
     await _client.delete('/dies/$id/');
   }

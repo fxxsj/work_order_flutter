@@ -57,6 +57,13 @@ class EmbossingPlateApiService {
     return EmbossingPlateDto.fromJson(map);
   }
 
+  Future<EmbossingPlateDto> fetchEmbossingPlate(int id) async {
+    final response = await _client.get('/embossing-plates/$id/');
+    final payload = response.data;
+    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    return EmbossingPlateDto.fromJson(map);
+  }
+
   Future<void> deleteEmbossingPlate(int id) async {
     await _client.delete('/embossing-plates/$id/');
   }

@@ -186,8 +186,7 @@ class ArtworkDto {
   }
 
   Map<String, dynamic> toPayload() {
-    return {
-      'base_code': baseCode?.trim(),
+    final payload = <String, dynamic>{
       'name': name.trim(),
       'cmyk_colors': cmykColors,
       'other_colors': otherColors,
@@ -197,6 +196,20 @@ class ArtworkDto {
       'foiling_plates': foilingPlateIds,
       'embossing_plates': embossingPlateIds,
     };
+    final trimmedBaseCode = baseCode?.trim() ?? '';
+    if (trimmedBaseCode.isNotEmpty) {
+      payload['base_code'] = trimmedBaseCode;
+    }
+    payload['products_data'] = products
+        .where((item) => item.productId > 0)
+        .map(
+          (item) => {
+            'product': item.productId,
+            'imposition_quantity': item.impositionQuantity ?? 1,
+          },
+        )
+        .toList();
+    return payload;
   }
 }
 

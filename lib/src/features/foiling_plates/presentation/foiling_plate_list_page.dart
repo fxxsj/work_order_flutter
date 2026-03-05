@@ -191,11 +191,23 @@ class _FoilingPlateListViewState extends State<_FoilingPlateListView> {
   }
 
   Future<void> _openEditPage(BuildContext context, FoilingPlateViewModel viewModel, FoilingPlate? plate) async {
+    FoilingPlate? target = plate;
+    if (plate != null) {
+      try {
+        final apiService = context.read<FoilingPlateApiService>();
+        final detail = await apiService.fetchFoilingPlate(plate.id);
+        target = detail.toEntity();
+      } catch (err) {
+        if (!mounted) return;
+        ToastUtil.showError('加载烫金版详情失败: $err');
+        return;
+      }
+    }
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => ChangeNotifierProvider.value(
           value: viewModel,
-          child: FoilingPlateEditPage(plate: plate),
+          child: FoilingPlateEditPage(plate: target),
         ),
       ),
     );

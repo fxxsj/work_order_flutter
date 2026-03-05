@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/embossing_plates/application/embossing_plate_view_model.dart';
 import 'package:work_order_app/src/features/embossing_plates/domain/embossing_plate.dart';
+import 'package:work_order_app/src/features/products/data/product_api_service.dart';
+import 'package:work_order_app/src/features/products/domain/product.dart';
 
 class EmbossingPlateEditPage extends StatefulWidget {
   const EmbossingPlateEditPage({super.key, this.plate});
@@ -34,6 +37,10 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
   static const String _materialLabel = '材质';
   static const String _thicknessLabel = '厚度';
   static const String _notesLabel = '备注';
+  static const String _productSectionTitle = '包含产品及数量';
+  static const String _addProductText = '添加产品';
+  static const String _productLabel = '产品名称';
+  static const String _quantityLabel = '数量';
 
   static const String _submitText = '保存';
   static const String _submitErrorText = '操作失败: ';
@@ -52,6 +59,10 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
   late final TextEditingController _notesController;
 
   bool _submitting = false;
+  ProductApiService? _productApi;
+  bool _loadingProducts = false;
+  final List<ProductOption> _productOptions = [];
+  final List<_PlateProductItem> _productItems = [];
 
   @override
   void initState() {
@@ -63,6 +74,14 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
     _materialController = TextEditingController(text: plate?.material ?? '');
     _thicknessController = TextEditingController(text: plate?.thickness ?? '');
     _notesController = TextEditingController(text: plate?.notes ?? '');
+    for (final product in plate?.products ?? const <EmbossingPlateProduct>[]) {
+      _productItems.add(
+        _PlateProductItem(
+          productId: product.productId,
+          quantity: product.quantity ?? 1,
+        ),
+      );
+    }
   }
 
   @override
@@ -73,7 +92,59 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
     _materialController.dispose();
     _thicknessController.dispose();
     _notesController.dispose();
+    for (final item in _productItems) {
+      item.dispose();
+    }
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_productApi != null) return;
+    _productApi = ProductApiService(context.read<ApiClient>());
+    _loadProducts();
+  }
+
+  Future<void> _loadProducts() async {
+    setState(() => _loadingProducts = true);
+    try {
+      final products = await _productApi!.fetchProducts(isActive: true);
+      if (!mounted) return;
+      setState(() {
+        _productOptions
+          ..clear()
+          ..addAll(products);
+      });
+    } catch (err) {
+      if (!mounted) return;
+      ToastUtil.showError('加载产品列表失败: $err');
+    } finally {
+      if (mounted) {
+        setState(() => _loadingProducts = false);
+      }
+    }
+  }
+
+  void _addProductItem() {
+    setState(() {
+      _productItems.add(_PlateProductItem(quantity: 1));
+    });
+  }
+
+  void _removeProductItem(int index) {
+    setState(() {
+      _productItems[index].dispose();
+      _productItems.removeAt(index);
+    });
+  }
+
+  String _productNameFor(int? productId) {
+    if (productId == null) return '';
+    for (final product in _productOptions) {
+      if (product.id == productId) return product.name;
+    }
+    return '';
   }
 
   Future<void> _handleSubmit(EmbossingPlateViewModel viewModel) async {
@@ -82,6 +153,17 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
       return;
     }
     setState(() => _submitting = true);
+
+    final products = _productItems
+        .where((item) => item.productId != null)
+        .map(
+          (item) => EmbossingPlateProduct(
+            productId: item.productId!,
+            productName: _productNameFor(item.productId),
+            quantity: item.quantity,
+          ),
+        )
+        .toList();
 
     final payload = EmbossingPlate(
       id: widget.plate?.id ?? 0,
@@ -92,7 +174,7 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
       thickness: _thicknessController.text.trim(),
       notes: _notesController.text.trim(),
       confirmed: widget.plate?.confirmed ?? false,
-      products: widget.plate?.products ?? const [],
+      products: products,
       createdAt: widget.plate?.createdAt,
     );
 
@@ -121,11 +203,91 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
     );
   }
 
+  Widget _buildProductSection(ThemeData theme) {
+    final content = _productItems.isEmpty
+        ? Text('暂无产品项', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor))
+        : Column(
+            children: List.generate(_productItems.length, (index) {
+              final item = _productItems[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: _sectionSpacing),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: DropdownButtonFormField<int>(
+                        value: item.productId,
+                        isExpanded: true,
+                        decoration: const InputDecoration(
+                          labelText: _productLabel,
+                          border: OutlineInputBorder(),
+                        ),
+                        items: _productOptions
+                            .map(
+                              (product) => DropdownMenuItem<int>(
+                                value: product.id,
+                                child: Text(product.displayLabel),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            item.productId = value;
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextFormField(
+                        controller: item.quantityController,
+                        decoration: const InputDecoration(
+                          labelText: _quantityLabel,
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      tooltip: '移除',
+                      icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+                      onPressed: () => _removeProductItem(index),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _sectionTitle(theme, _productSectionTitle),
+        const SizedBox(height: _sectionSpacing),
+        if (_loadingProducts)
+          const LinearProgressIndicator(minHeight: 2)
+        else
+          content,
+        const SizedBox(height: _sectionSpacing),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: PageActionButton.outlined(
+            onPressed: _addProductItem,
+            icon: const Icon(Icons.add, size: 16),
+            label: _addProductText,
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<EmbossingPlateViewModel>();
     final theme = Theme.of(context);
     final isMobile = BreakpointsUtil.isMobile(context);
+    final isConfirmed = widget.plate?.confirmed == true;
     final breadcrumb = buildBreadcrumbForPath('/embossing-plates');
 
     final codeField = TextFormField(
@@ -135,6 +297,7 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
         border: OutlineInputBorder(),
         hintText: '留空则系统自动生成',
       ),
+      enabled: !isConfirmed,
     );
 
     final nameField = TextFormField(
@@ -143,6 +306,7 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
         labelText: _nameLabel,
         border: OutlineInputBorder(),
       ),
+      enabled: !isConfirmed,
       validator: (value) {
         final text = value?.trim() ?? '';
         if (text.isEmpty) {
@@ -158,6 +322,7 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
         labelText: _sizeLabel,
         border: OutlineInputBorder(),
       ),
+      enabled: !isConfirmed,
     );
 
     final materialField = TextFormField(
@@ -166,6 +331,7 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
         labelText: _materialLabel,
         border: OutlineInputBorder(),
       ),
+      enabled: !isConfirmed,
     );
 
     final thicknessField = TextFormField(
@@ -174,6 +340,7 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
         labelText: _thicknessLabel,
         border: OutlineInputBorder(),
       ),
+      enabled: !isConfirmed,
     );
 
     final notesField = TextFormField(
@@ -184,6 +351,8 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
       ),
       maxLines: 3,
     );
+
+    final productSection = _buildProductSection(theme);
 
     final mainContent = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -200,6 +369,8 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
           materialField,
           const SizedBox(height: _sectionSpacing),
           thicknessField,
+          const SizedBox(height: _sectionSpacing),
+          productSection,
           const SizedBox(height: _sectionSpacing),
           _sectionTitle(theme, _extraSectionTitle),
           const SizedBox(height: _sectionSpacing),
@@ -221,6 +392,8 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
                     sizeField,
                     const SizedBox(height: _sectionSpacing),
                     materialField,
+                    const SizedBox(height: _sectionSpacing),
+                    productSection,
                   ],
                 ),
               ),
@@ -307,5 +480,19 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
         ),
       ),
     );
+  }
+}
+
+class _PlateProductItem {
+  _PlateProductItem({this.productId, int quantity = 1})
+      : quantityController = TextEditingController(text: quantity.toString());
+
+  int? productId;
+  final TextEditingController quantityController;
+
+  int get quantity => int.tryParse(quantityController.text.trim()) ?? 1;
+
+  void dispose() {
+    quantityController.dispose();
   }
 }

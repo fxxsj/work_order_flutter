@@ -95,8 +95,7 @@ class FoilingPlateDto {
   }
 
   Map<String, dynamic> toPayload() {
-    return {
-      'code': code?.trim(),
+    final payload = <String, dynamic>{
       'name': name.trim(),
       'foiling_type': foilingType,
       'size': size?.trim(),
@@ -104,6 +103,20 @@ class FoilingPlateDto {
       'thickness': thickness?.trim(),
       'notes': notes?.trim(),
     };
+    final trimmedCode = code?.trim() ?? '';
+    if (trimmedCode.isNotEmpty) {
+      payload['code'] = trimmedCode;
+    }
+    payload['products_data'] = products
+        .where((item) => item.productId > 0)
+        .map(
+          (item) => {
+            'product': item.productId,
+            'quantity': item.quantity ?? 1,
+          },
+        )
+        .toList();
+    return payload;
   }
 }
 

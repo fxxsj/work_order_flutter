@@ -57,6 +57,13 @@ class ArtworkApiService {
     return ArtworkDto.fromJson(map);
   }
 
+  Future<ArtworkDto> fetchArtwork(int id) async {
+    final response = await _client.get('/artworks/$id/');
+    final payload = response.data;
+    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    return ArtworkDto.fromJson(map);
+  }
+
   Future<void> deleteArtwork(int id) async {
     await _client.delete('/artworks/$id/');
   }

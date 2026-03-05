@@ -194,11 +194,23 @@ class _EmbossingPlateListViewState extends State<_EmbossingPlateListView> {
     EmbossingPlateViewModel viewModel,
     EmbossingPlate? plate,
   ) async {
+    EmbossingPlate? target = plate;
+    if (plate != null) {
+      try {
+        final apiService = context.read<EmbossingPlateApiService>();
+        final detail = await apiService.fetchEmbossingPlate(plate.id);
+        target = detail.toEntity();
+      } catch (err) {
+        if (!mounted) return;
+        ToastUtil.showError('加载压凸版详情失败: $err');
+        return;
+      }
+    }
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => ChangeNotifierProvider.value(
           value: viewModel,
-          child: EmbossingPlateEditPage(plate: plate),
+          child: EmbossingPlateEditPage(plate: target),
         ),
       ),
     );

@@ -101,8 +101,7 @@ class DieDto {
   }
 
   Map<String, dynamic> toPayload() {
-    return {
-      'code': code?.trim(),
+    final payload = <String, dynamic>{
       'name': name.trim(),
       'die_type': dieType,
       'size': size?.trim(),
@@ -110,6 +109,21 @@ class DieDto {
       'thickness': thickness?.trim(),
       'notes': notes?.trim(),
     };
+    final trimmedCode = code?.trim() ?? '';
+    if (trimmedCode.isNotEmpty) {
+      payload['code'] = trimmedCode;
+    }
+    payload['products_data'] = products
+        .where((item) => item.productId > 0)
+        .map(
+          (item) => {
+            'product': item.productId,
+            'quantity': item.quantity ?? 1,
+            'relation_type': item.relationType ?? 'exclusive',
+          },
+        )
+        .toList();
+    return payload;
   }
 }
 

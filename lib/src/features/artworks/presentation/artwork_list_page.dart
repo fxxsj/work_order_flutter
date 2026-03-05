@@ -196,11 +196,23 @@ class _ArtworkListViewState extends State<_ArtworkListView> {
   }
 
   Future<void> _openEditPage(BuildContext context, ArtworkViewModel viewModel, Artwork? artwork) async {
+    Artwork? target = artwork;
+    if (artwork != null) {
+      try {
+        final apiService = context.read<ArtworkApiService>();
+        final detail = await apiService.fetchArtwork(artwork.id);
+        target = detail.toEntity();
+      } catch (err) {
+        if (!mounted) return;
+        ToastUtil.showError('加载图稿详情失败: $err');
+        return;
+      }
+    }
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => ChangeNotifierProvider.value(
           value: viewModel,
-          child: ArtworkEditPage(artwork: artwork),
+          child: ArtworkEditPage(artwork: target),
         ),
       ),
     );

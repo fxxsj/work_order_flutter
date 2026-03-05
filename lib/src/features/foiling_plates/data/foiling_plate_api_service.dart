@@ -57,6 +57,13 @@ class FoilingPlateApiService {
     return FoilingPlateDto.fromJson(map);
   }
 
+  Future<FoilingPlateDto> fetchFoilingPlate(int id) async {
+    final response = await _client.get('/foiling-plates/$id/');
+    final payload = response.data;
+    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    return FoilingPlateDto.fromJson(map);
+  }
+
   Future<void> deleteFoilingPlate(int id) async {
     await _client.delete('/foiling-plates/$id/');
   }

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/dies/application/die_view_model.dart';
 import 'package:work_order_app/src/features/dies/domain/die.dart';
+import 'package:work_order_app/src/features/products/data/product_api_service.dart';
+import 'package:work_order_app/src/features/products/domain/product.dart';
 
 class DieEditPage extends StatefulWidget {
   const DieEditPage({super.key, this.die});
@@ -35,6 +38,10 @@ class _DieEditPageState extends State<DieEditPage> {
   static const String _materialLabel = '材质';
   static const String _thicknessLabel = '厚度';
   static const String _notesLabel = '备注';
+  static const String _productSectionTitle = '包含产品及数量';
+  static const String _addProductText = '添加产品';
+  static const String _productLabel = '产品名称';
+  static const String _quantityLabel = '拼版个数';
 
   static const String _submitText = '保存';
   static const String _submitErrorText = '操作失败: ';
@@ -60,6 +67,10 @@ class _DieEditPageState extends State<DieEditPage> {
 
   String _dieType = 'dedicated';
   bool _submitting = false;
+  ProductApiService? _productApi;
+  bool _loadingProducts = false;
+  final List<ProductOption> _productOptions = [];
+  final List<_DieProductItem> _productItems = [];
 
   @override
   void initState() {
@@ -72,6 +83,14 @@ class _DieEditPageState extends State<DieEditPage> {
     _thicknessController = TextEditingController(text: die?.thickness ?? '');
     _notesController = TextEditingController(text: die?.notes ?? '');
     _dieType = die?.dieType ?? 'dedicated';
+    for (final product in die?.products ?? const <DieProduct>[]) {
+      _productItems.add(
+        _DieProductItem(
+          productId: product.productId,
+          quantity: product.quantity ?? 1,
+        ),
+      );
+    }
   }
 
   @override
@@ -82,7 +101,108 @@ class _DieEditPageState extends State<DieEditPage> {
     _materialController.dispose();
     _thicknessController.dispose();
     _notesController.dispose();
+    for (final item in _productItems) {
+      item.dispose();
+    }
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_productApi != null) return;
+    _productApi = ProductApiService(context.read<ApiClient>());
+    _loadProducts();
+  }
+
+  Future<void> _loadProducts() async {
+    setState(() => _loadingProducts = true);
+    try {
+      final products = await _productApi!.fetchProducts(isActive: true);
+      if (!mounted) return;
+      setState(() {
+        _productOptions
+          ..clear()
+          ..addAll(products);
+      });
+    } catch (err) {
+      if (!mounted) return;
+      ToastUtil.showError('加载产品列表失败: $err');
+    } finally {
+      if (mounted) {
+        setState(() => _loadingProducts = false);
+      }
+    }
+  }
+
+  bool get _canAddMoreProducts {
+    if (_dieType == 'dedicated') {
+      return _productItems.length < 1;
+    }
+    return true;
+  }
+
+  void _addProductItem() {
+    if (!_canAddMoreProducts) {
+      ToastUtil.showError('专用刀模只能添加1个产品');
+      return;
+    }
+    setState(() {
+      _productItems.add(_DieProductItem(quantity: 1));
+    });
+  }
+
+  void _removeProductItem(int index) {
+    setState(() {
+      _productItems[index].dispose();
+      _productItems.removeAt(index);
+    });
+  }
+
+  String _productNameFor(int? productId) {
+    if (productId == null) return '';
+    for (final product in _productOptions) {
+      if (product.id == productId) return product.name;
+    }
+    return '';
+  }
+
+  Future<void> _handleDieTypeChange(String? value) async {
+    if (value == null) return;
+    if (value == 'dedicated' && _productItems.length > 1) {
+      final keepFirst = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('提示'),
+          content: const Text('专用刀模只能关联1个产品，是否只保留第一个产品？'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('取消'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('确定'),
+            ),
+          ],
+        ),
+      );
+      if (keepFirst == true) {
+        setState(() {
+          _dieType = value;
+          if (_productItems.length > 1) {
+            for (var i = _productItems.length - 1; i >= 1; i--) {
+              _productItems[i].dispose();
+              _productItems.removeAt(i);
+            }
+          }
+        });
+      }
+      return;
+    }
+    setState(() {
+      _dieType = value;
+    });
   }
 
   Future<void> _handleSubmit(DieViewModel viewModel) async {
@@ -91,6 +211,19 @@ class _DieEditPageState extends State<DieEditPage> {
       return;
     }
     setState(() => _submitting = true);
+
+    final relationType = _dieType == 'combined' ? 'imposition' : 'exclusive';
+    final products = _productItems
+        .where((item) => item.productId != null)
+        .map(
+          (item) => DieProduct(
+            productId: item.productId!,
+            productName: _productNameFor(item.productId),
+            quantity: item.quantity,
+            relationType: relationType,
+          ),
+        )
+        .toList();
 
     final payload = Die(
       id: widget.die?.id ?? 0,
@@ -103,7 +236,7 @@ class _DieEditPageState extends State<DieEditPage> {
       notes: _notesController.text.trim(),
       confirmed: widget.die?.confirmed ?? false,
       dieTypeDisplay: widget.die?.dieTypeDisplay,
-      products: widget.die?.products ?? const [],
+      products: products,
       createdAt: widget.die?.createdAt,
     );
 
@@ -132,11 +265,109 @@ class _DieEditPageState extends State<DieEditPage> {
     );
   }
 
+  String _productHint() {
+    switch (_dieType) {
+      case 'combined':
+        return '拼版刀模：可添加多个产品，一次模切同时产出所有产品';
+      case 'dedicated':
+        return '专用刀模：只能添加1个产品，此刀模专属该产品使用';
+      case 'universal':
+        return '通用刀模：可添加多个产品，每次模切只产出其中一种';
+      default:
+        return '';
+    }
+  }
+
+  Widget _buildProductSection(ThemeData theme) {
+    final content = _productItems.isEmpty
+        ? Text('暂无产品项', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor))
+        : Column(
+            children: List.generate(_productItems.length, (index) {
+              final item = _productItems[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: _sectionSpacing),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: DropdownButtonFormField<int>(
+                        value: item.productId,
+                        isExpanded: true,
+                        decoration: const InputDecoration(
+                          labelText: _productLabel,
+                          border: OutlineInputBorder(),
+                        ),
+                        items: _productOptions
+                            .map(
+                              (product) => DropdownMenuItem<int>(
+                                value: product.id,
+                                child: Text(product.displayLabel),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            item.productId = value;
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextFormField(
+                        controller: item.quantityController,
+                        decoration: const InputDecoration(
+                          labelText: _quantityLabel,
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      tooltip: '移除',
+                      icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+                      onPressed: () => _removeProductItem(index),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _sectionTitle(theme, _productSectionTitle),
+        const SizedBox(height: _sectionSpacing),
+        Text(
+          _productHint(),
+          style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+        ),
+        const SizedBox(height: _sectionSpacing),
+        if (_loadingProducts)
+          const LinearProgressIndicator(minHeight: 2)
+        else
+          content,
+        const SizedBox(height: _sectionSpacing),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: PageActionButton.outlined(
+            onPressed: _addProductItem,
+            icon: const Icon(Icons.add, size: 16),
+            label: _addProductText,
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<DieViewModel>();
     final theme = Theme.of(context);
     final isMobile = BreakpointsUtil.isMobile(context);
+    final isConfirmed = widget.die?.confirmed == true;
     final breadcrumb = buildBreadcrumbForPath('/dies');
 
     final codeField = TextFormField(
@@ -146,6 +377,7 @@ class _DieEditPageState extends State<DieEditPage> {
         border: OutlineInputBorder(),
         hintText: '留空则系统自动生成',
       ),
+      enabled: !isConfirmed,
     );
 
     final nameField = TextFormField(
@@ -154,6 +386,7 @@ class _DieEditPageState extends State<DieEditPage> {
         labelText: _nameLabel,
         border: OutlineInputBorder(),
       ),
+      enabled: !isConfirmed,
       validator: (value) {
         final text = value?.trim() ?? '';
         if (text.isEmpty) {
@@ -177,12 +410,7 @@ class _DieEditPageState extends State<DieEditPage> {
             ),
           )
           .toList(),
-      onChanged: (value) {
-        if (value == null) return;
-        setState(() {
-          _dieType = value;
-        });
-      },
+      onChanged: isConfirmed ? null : _handleDieTypeChange,
     );
 
     final sizeField = TextFormField(
@@ -191,6 +419,7 @@ class _DieEditPageState extends State<DieEditPage> {
         labelText: _sizeLabel,
         border: OutlineInputBorder(),
       ),
+      enabled: !isConfirmed,
     );
 
     final materialField = TextFormField(
@@ -199,6 +428,7 @@ class _DieEditPageState extends State<DieEditPage> {
         labelText: _materialLabel,
         border: OutlineInputBorder(),
       ),
+      enabled: !isConfirmed,
     );
 
     final thicknessField = TextFormField(
@@ -207,6 +437,7 @@ class _DieEditPageState extends State<DieEditPage> {
         labelText: _thicknessLabel,
         border: OutlineInputBorder(),
       ),
+      enabled: !isConfirmed,
     );
 
     final notesField = TextFormField(
@@ -217,6 +448,8 @@ class _DieEditPageState extends State<DieEditPage> {
       ),
       maxLines: 3,
     );
+
+    final productSection = _buildProductSection(theme);
 
     final mainContent = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -235,6 +468,8 @@ class _DieEditPageState extends State<DieEditPage> {
           materialField,
           const SizedBox(height: _sectionSpacing),
           thicknessField,
+          const SizedBox(height: _sectionSpacing),
+          productSection,
           const SizedBox(height: _sectionSpacing),
           _sectionTitle(theme, _extraSectionTitle),
           const SizedBox(height: _sectionSpacing),
@@ -256,6 +491,8 @@ class _DieEditPageState extends State<DieEditPage> {
                     typeField,
                     const SizedBox(height: _sectionSpacing),
                     sizeField,
+                    const SizedBox(height: _sectionSpacing),
+                    productSection,
                   ],
                 ),
               ),
@@ -344,5 +581,19 @@ class _DieEditPageState extends State<DieEditPage> {
         ),
       ),
     );
+  }
+}
+
+class _DieProductItem {
+  _DieProductItem({this.productId, int quantity = 1})
+      : quantityController = TextEditingController(text: quantity.toString());
+
+  int? productId;
+  final TextEditingController quantityController;
+
+  int get quantity => int.tryParse(quantityController.text.trim()) ?? 1;
+
+  void dispose() {
+    quantityController.dispose();
   }
 }
