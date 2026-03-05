@@ -104,13 +104,13 @@ class ArtworkDto {
       notes: toStringOrNull(json['notes']),
       createdAt: toDateTime(json['created_at']),
       dieIds: (json['dies'] is List)
-          ? json['dies'].map((e) => toInt(e) ?? 0).where((e) => e > 0).toList()
+          ? json['dies'].map<int>((e) => toInt(e) ?? 0).where((e) => e > 0).toList()
           : const [],
       foilingPlateIds: (json['foiling_plates'] is List)
-          ? json['foiling_plates'].map((e) => toInt(e) ?? 0).where((e) => e > 0).toList()
+          ? json['foiling_plates'].map<int>((e) => toInt(e) ?? 0).where((e) => e > 0).toList()
           : const [],
       embossingPlateIds: (json['embossing_plates'] is List)
-          ? json['embossing_plates'].map((e) => toInt(e) ?? 0).where((e) => e > 0).toList()
+          ? json['embossing_plates'].map<int>((e) => toInt(e) ?? 0).where((e) => e > 0).toList()
           : const [],
     );
   }
