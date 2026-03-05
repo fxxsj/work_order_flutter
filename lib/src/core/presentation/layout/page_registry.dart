@@ -6,6 +6,7 @@ import 'package:work_order_app/src/features/customer/presentation/customer_list_
 import 'package:work_order_app/src/features/workorders/presentation/work_order_list_page.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_list_page.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_placeholder_page.dart';
+import 'package:work_order_app/src/features/sales_orders/presentation/sales_order_list_page.dart';
 import 'package:work_order_app/src/features/suppliers/presentation/supplier_list_page.dart';
 import 'package:work_order_app/src/features/departments/presentation/department_list_page.dart';
 import 'package:work_order_app/src/features/processes/presentation/process_list_page.dart';
@@ -54,6 +55,8 @@ Widget? buildFullPage(String id) {
         title: '主管看板',
         description: '对应 Web 端主管看板，包含部门负载与异常提醒。',
       );
+    case 'sales_orders':
+      return const SalesOrderListEntry();
     case 'suppliers':
       return const SupplierListEntry();
     case 'departments':

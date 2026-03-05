@@ -8,6 +8,8 @@ import 'package:work_order_app/src/features/auth/presentation/login_page.dart';
 import 'package:work_order_app/src/features/auth/presentation/register_page.dart';
 import 'package:work_order_app/src/features/workorders/presentation/work_order_detail_page.dart';
 import 'package:work_order_app/src/features/workorders/presentation/work_order_form_page.dart';
+import 'package:work_order_app/src/features/sales_orders/presentation/sales_order_detail_page.dart';
+import 'package:work_order_app/src/features/sales_orders/presentation/sales_order_form_page.dart';
 
 GoRouter createAppRouter(AuthController authController) {
   return GoRouter(
@@ -92,6 +94,52 @@ List<GoRoute> _buildBranchRoutes(NavItem item) {
                     child: WorkOrderFormPage(
                       mode: WorkOrderFormMode.edit,
                       workOrderId: id,
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    ];
+  }
+
+  if (item.id == 'sales_orders') {
+    return [
+      GoRoute(
+        path: item.path ?? '/sales-orders',
+        name: item.id,
+        pageBuilder: (context, state) => NoTransitionPage(
+          child: ContentPage(selectedId: item.id),
+        ),
+        routes: [
+          GoRoute(
+            path: 'create',
+            name: 'sales_order_create',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: SalesOrderFormPage(mode: SalesOrderFormMode.create),
+            ),
+          ),
+          GoRoute(
+            path: ':id',
+            name: 'sales_order_detail',
+            pageBuilder: (context, state) {
+              final id = int.tryParse(state.pathParameters['id'] ?? '');
+              return NoTransitionPage(
+                child: SalesOrderDetailPage(orderId: id ?? 0),
+              );
+            },
+            routes: [
+              GoRoute(
+                path: 'edit',
+                name: 'sales_order_edit',
+                pageBuilder: (context, state) {
+                  final id = int.tryParse(state.pathParameters['id'] ?? '');
+                  return NoTransitionPage(
+                    child: SalesOrderFormPage(
+                      mode: SalesOrderFormMode.edit,
+                      orderId: id,
                     ),
                   );
                 },
