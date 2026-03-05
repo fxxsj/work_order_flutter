@@ -8,7 +8,6 @@ import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
-import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/workorders/application/work_order_view_model.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_repository_impl.dart';
@@ -102,7 +101,6 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
   static const String _errorFallbackText = '加载失败';
   static const String _retryText = '重新加载';
   static const String _breadcrumbSeparator = ' / ';
-  static const String _unsupportedText = '该功能正在建设中';
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
@@ -224,7 +222,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
           final workOrder = workOrders[index];
           return WorkOrderListTile(
             workOrder: workOrder,
-            onTap: () => ToastUtil.show(message: _unsupportedText),
+            onTap: () => context.go('/workorders/${workOrder.id}'),
           );
         },
       );
@@ -320,16 +318,16 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
                       label: _refreshButtonText,
                     ),
                     const SizedBox(width: _spacingSm),
-                    PageActionButton.filled(
-                      onPressed: () => ToastUtil.show(message: _unsupportedText),
-                      icon: const Icon(Icons.add),
-                      label: _createButtonText,
-                    ),
-                  ],
-                ),
-              ],
-            );
-          }
+            PageActionButton.filled(
+              onPressed: () => context.go('/workorders/create'),
+              icon: const Icon(Icons.add),
+              label: _createButtonText,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
 
           return Wrap(
             spacing: _spacingSm,
@@ -362,7 +360,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
                 ),
               ),
               PageActionButton.filled(
-                onPressed: () => ToastUtil.show(message: _unsupportedText),
+                onPressed: () => context.go('/workorders/create'),
                 icon: const Icon(Icons.add),
                 label: _createButtonText,
               ),
@@ -392,7 +390,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
           .toList();
       return DataRow(
         cells: cells,
-        onSelectChanged: (_) => ToastUtil.show(message: _unsupportedText),
+        onSelectChanged: (_) => context.go('/workorders/${workOrder.id}'),
       );
     }).toList();
   }
@@ -425,7 +423,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
             IconButton(
               tooltip: '查看',
               icon: const Icon(Icons.visibility_outlined, size: 18),
-              onPressed: () => ToastUtil.show(message: _unsupportedText),
+              onPressed: () => context.go('/workorders/${workOrder.id}'),
             ),
           ],
         );

@@ -275,6 +275,12 @@ String? matchNavId(String path) {
       return item.id;
     }
   }
+  for (final item in _flatNavItems) {
+    final base = item.path;
+    if (base != null && path.startsWith('$base/')) {
+      return item.id;
+    }
+  }
   return null;
 }
 
@@ -290,6 +296,12 @@ String? matchNavIdWith(String path, Map<String, String> pathToId) {
     }
     final regex = _pathPatternToRegex(pattern);
     if (regex.hasMatch(path)) {
+      return item.id;
+    }
+  }
+  for (final item in _flatNavItems) {
+    final base = item.path;
+    if (base != null && path.startsWith('$base/')) {
       return item.id;
     }
   }
