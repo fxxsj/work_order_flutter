@@ -81,6 +81,24 @@ class ArtworkDto {
       return [value.toString()];
     }
 
+    List<int> parseIdList(dynamic value) {
+      if (value is! List) return const [];
+      final ids = <int>[];
+      for (final item in value) {
+        int? id;
+        if (item is Map) {
+          final map = Map<String, dynamic>.from(item);
+          id = toInt(map['id']) ?? toInt(map['pk']) ?? toInt(map['value']);
+        } else {
+          id = toInt(item);
+        }
+        if (id != null && id > 0) {
+          ids.add(id);
+        }
+      }
+      return ids;
+    }
+
     return ArtworkDto(
       id: toInt(json['id']) ?? 0,
       code: toStringOrNull(json['code']),
@@ -103,15 +121,9 @@ class ArtworkDto {
       products: products,
       notes: toStringOrNull(json['notes']),
       createdAt: toDateTime(json['created_at']),
-      dieIds: (json['dies'] is List)
-          ? json['dies'].map<int>((e) => toInt(e) ?? 0).where((e) => e > 0).toList()
-          : const [],
-      foilingPlateIds: (json['foiling_plates'] is List)
-          ? json['foiling_plates'].map<int>((e) => toInt(e) ?? 0).where((e) => e > 0).toList()
-          : const [],
-      embossingPlateIds: (json['embossing_plates'] is List)
-          ? json['embossing_plates'].map<int>((e) => toInt(e) ?? 0).where((e) => e > 0).toList()
-          : const [],
+      dieIds: parseIdList(json['dies']),
+      foilingPlateIds: parseIdList(json['foiling_plates']),
+      embossingPlateIds: parseIdList(json['embossing_plates']),
     );
   }
 
