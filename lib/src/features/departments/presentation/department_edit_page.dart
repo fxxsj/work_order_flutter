@@ -23,6 +23,9 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
   static const double _padding = 16;
   static const double _sectionSpacing = 16;
   static const double _pageSpacing = 8;
+  static const double _actionSpacing = 24;
+  static const double _submitIndicatorSize = 20;
+  static const double _indicatorStrokeWidth = 2;
   static const double _inlineSpacing = 8;
   static const double _columnSpacing = 24;
 
@@ -39,6 +42,7 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
   static const String _codeInvalidText = '部门编码只能包含小写字母、数字和下划线';
   static const String _nameRequiredText = '请输入部门名称';
   static const String _backText = '返回';
+  static const String _cancelText = '取消';
   static const String _basicSectionTitle = '基本信息';
   static const String _extraSectionTitle = '补充信息';
   static const String _breadcrumbSeparator = ' / ';
@@ -203,83 +207,111 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
       keyboardType: TextInputType.number,
     );
 
-    final processChips = viewModel.processOptions.isEmpty
-        ? Text('暂无工序数据', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor))
-        : Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: viewModel.processOptions.map((process) {
-              final selected = _processIds.contains(process.id);
-              return FilterChip(
-                label: Text(process.name),
-                selected: selected,
-                onSelected: process.isActive
-                    ? (value) {
-                        setState(() {
-                          if (value) {
-                            _processIds = [..._processIds, process.id];
-                          } else {
-                            _processIds = _processIds.where((id) => id != process.id).toList();
-                          }
-                        });
-                      }
-                    : null,
-              );
-            }).toList(),
-          );
+    final processField = InputDecorator(
+      decoration: const InputDecoration(
+        labelText: _processLabel,
+        border: OutlineInputBorder(),
+      ),
+      child: viewModel.processOptions.isEmpty
+          ? Text('暂无工序数据', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor))
+          : Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: viewModel.processOptions.map((process) {
+                final selected = _processIds.contains(process.id);
+                return FilterChip(
+                  label: Text(process.name),
+                  selected: selected,
+                  onSelected: process.isActive
+                      ? (value) {
+                          setState(() {
+                            if (value) {
+                              _processIds = [..._processIds, process.id];
+                            } else {
+                              _processIds = _processIds.where((id) => id != process.id).toList();
+                            }
+                          });
+                        }
+                      : null,
+                );
+              }).toList(),
+            ),
+    );
 
-    final statusField = SwitchListTile(
-      contentPadding: EdgeInsets.zero,
-      title: const Text(_statusLabel),
-      value: _isActive,
-      onChanged: (value) {
-        setState(() {
-          _isActive = value;
-        });
-      },
+    final statusField = InputDecorator(
+      decoration: const InputDecoration(
+        labelText: _statusLabel,
+        border: OutlineInputBorder(),
+      ),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Switch(
+          value: _isActive,
+          onChanged: (value) {
+            setState(() {
+              _isActive = value;
+            });
+          },
+        ),
+      ),
     );
 
     final mainContent = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _sectionTitle(theme, _basicSectionTitle),
-        const SizedBox(height: _sectionSpacing),
         if (isMobile) ...[
+          _sectionTitle(theme, _basicSectionTitle),
+          const SizedBox(height: _sectionSpacing),
           codeField,
           const SizedBox(height: _sectionSpacing),
           nameField,
           const SizedBox(height: _sectionSpacing),
           parentField,
-        ] else
-          Row(
-            children: [
-              Expanded(child: codeField),
-              const SizedBox(width: _columnSpacing),
-              Expanded(child: nameField),
-              const SizedBox(width: _columnSpacing),
-              Expanded(child: parentField),
-            ],
-          ),
-        const SizedBox(height: _sectionSpacing),
-        _sectionTitle(theme, _extraSectionTitle),
-        const SizedBox(height: _sectionSpacing),
-        if (isMobile) ...[
+          const SizedBox(height: _sectionSpacing),
+          _sectionTitle(theme, _extraSectionTitle),
+          const SizedBox(height: _sectionSpacing),
           sortField,
           const SizedBox(height: _sectionSpacing),
-          processChips,
+          processField,
           const SizedBox(height: _sectionSpacing),
           statusField,
-        ] else
+        ] else ...[
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: sortField),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _sectionTitle(theme, _basicSectionTitle),
+                    const SizedBox(height: _sectionSpacing),
+                    codeField,
+                    const SizedBox(height: _sectionSpacing),
+                    nameField,
+                    const SizedBox(height: _sectionSpacing),
+                    parentField,
+                  ],
+                ),
+              ),
               const SizedBox(width: _columnSpacing),
-              Expanded(child: processChips),
-              const SizedBox(width: _columnSpacing),
-              Expanded(child: statusField),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _sectionTitle(theme, _extraSectionTitle),
+                    const SizedBox(height: _sectionSpacing),
+                    sortField,
+                    const SizedBox(height: _sectionSpacing),
+                    processField,
+                    const SizedBox(height: _sectionSpacing),
+                    statusField,
+                  ],
+                ),
+              ),
             ],
           ),
+        ],
+        const SizedBox(height: _actionSpacing),
       ],
     );
 
@@ -312,26 +344,32 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
                 child: mainContent,
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(left: _padding, right: _padding, bottom: _padding),
+            const SizedBox(height: _pageSpacing),
+            Container(
+              padding: const EdgeInsets.fromLTRB(_padding, 12, _padding, _padding),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                border: Border(
+                  top: BorderSide(color: theme.dividerColor.withOpacity(0.6)),
+                ),
+              ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  if (!isMobile)
-                    OutlinedButton(
-                      onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
-                      child: const Text('取消'),
-                    ),
-                  if (!isMobile) const SizedBox(width: _inlineSpacing),
-                  FilledButton(
+                  PageActionButton.outlined(
+                    onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
+                    label: _cancelText,
+                  ),
+                  const SizedBox(width: _inlineSpacing),
+                  PageActionButton.filled(
                     onPressed: _submitting ? null : () => _handleSubmit(viewModel),
-                    child: _submitting
+                    label: _submitText,
+                    icon: _submitting
                         ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            height: _submitIndicatorSize,
+                            width: _submitIndicatorSize,
+                            child: CircularProgressIndicator(strokeWidth: _indicatorStrokeWidth),
                           )
-                        : const Text(_submitText),
+                        : null,
                   ),
                 ],
               ),

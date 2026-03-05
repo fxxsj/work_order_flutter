@@ -556,20 +556,13 @@ class _DepartmentListViewState extends State<_DepartmentListView> {
     if (names.isEmpty) {
       return const Text(_emptyCellText);
     }
-    final display = names.length > 3 ? names.take(3).toList() : names;
-    final remaining = names.length - display.length;
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
-      children: [
-        ...display.map((name) => Chip(label: Text(name), padding: EdgeInsets.zero, visualDensity: VisualDensity.compact)),
-        if (remaining > 0)
-          Chip(
-            label: Text('+$remaining'),
-            padding: EdgeInsets.zero,
-            visualDensity: VisualDensity.compact,
-          ),
-      ],
+    return SizedBox(
+      width: 220,
+      child: Text(
+        names.join('、'),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
     );
   }
 
@@ -688,8 +681,14 @@ class _DepartmentListTile extends StatelessWidget {
     this.onDelete,
   });
 
-  static const double _padding = 12;
-  static const double _spacing = 6;
+  static const double _verticalMargin = 8;
+  static const String _codeLabel = '编码';
+  static const String _parentLabel = '上级';
+  static const String _childrenLabel = '子部门';
+  static const String _processLabel = '工序';
+  static const String _statusLabel = '状态';
+  static const String _subtitleSeparator = ' · ';
+  static const String _emptySubtitle = '暂无更多信息';
 
   final Department department;
   final VoidCallback? onEdit;
@@ -698,84 +697,68 @@ class _DepartmentListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
-      child: Padding(
-        padding: const EdgeInsets.all(_padding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    department.name.isNotEmpty ? department.name : _DepartmentListViewState._emptyCellText,
-                    style: theme.textTheme.titleMedium,
-                  ),
-                ),
-                _DepartmentListViewState._statusPill(theme, department.isActive),
-              ],
-            ),
-            const SizedBox(height: _spacing),
-            _InfoRow(label: '编码', value: department.code),
-            _InfoRow(label: '上级', value: department.parentName),
-            _InfoRow(label: '子部门', value: department.childrenCount?.toString()),
-            _InfoRow(label: '工序', value: department.processNames.isEmpty ? null : department.processNames.join('、')),
-            _InfoRow(label: '排序', value: department.sortOrder?.toString()),
-            _InfoRow(label: '创建', value: _DepartmentListViewState._formatDateTime(department.createdAt)),
-            if (onEdit != null || onDelete != null) ...[
-              const SizedBox(height: _spacing),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  if (onEdit != null)
-                    TextButton.icon(
-                      onPressed: onEdit,
-                      icon: const Icon(Icons.edit, size: 16),
-                      label: const Text('编辑'),
-                    ),
-                  if (onDelete != null) ...[
-                    const SizedBox(width: 4),
-                    TextButton.icon(
-                      onPressed: onDelete,
-                      icon: Icon(Icons.delete_outline, size: 16, color: theme.colorScheme.error),
-                      label: Text('删除', style: TextStyle(color: theme.colorScheme.error)),
-                    ),
-                  ],
-                ],
+    final primary = theme.colorScheme.primary;
+    final subtleText = theme.textTheme.bodySmall?.copyWith(color: theme.hintColor);
+    final subtitleLines = <String>[];
+    if (department.code.trim().isNotEmpty) {
+      subtitleLines.add('$_codeLabel：${department.code}');
+    }
+    if ((department.parentName ?? '').trim().isNotEmpty) {
+      subtitleLines.add('$_parentLabel：${department.parentName}');
+    }
+    if (department.childrenCount != null) {
+      subtitleLines.add('$_childrenLabel：${department.childrenCount}');
+    }
+    if (department.processNames.isNotEmpty) {
+      subtitleLines.add('$_processLabel：${department.processNames.join("、")}');
+    }
+    subtitleLines.add('$_statusLabel：${department.isActive ? "启用" : "禁用"}');
+
+    final tile = ListTile(
+      leading: CircleAvatar(
+        backgroundColor: primary.withOpacity(0.12),
+        foregroundColor: primary,
+        child: Text(department.name.isNotEmpty ? department.name[0].toUpperCase() : '?'),
+      ),
+      title: Text(
+        department.name.isNotEmpty ? department.name : _DepartmentListViewState._emptyCellText,
+        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+      ),
+      subtitle: subtitleLines.isEmpty
+          ? Text(_emptySubtitle, style: subtleText)
+          : Text(subtitleLines.join(_subtitleSeparator), style: subtleText),
+      isThreeLine: subtitleLines.length > 2,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: '编辑',
+            icon: Icon(Icons.edit, color: primary),
+            onPressed: onEdit,
+          ),
+          PopupMenuButton<String>(
+            tooltip: '更多',
+            onSelected: (value) {
+              if (value == 'delete') {
+                onDelete?.call();
+              }
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: 'delete',
+                child: Text('删除'),
               ),
             ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value});
-
-  static const double _spacing = 6;
-
-  final String label;
-  final String? value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final text = (value ?? '').trim().isEmpty ? _DepartmentListViewState._emptyCellText : value!;
-    return Padding(
-      padding: const EdgeInsets.only(top: _spacing),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 72,
-            child: Text(label, style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
+            icon: const Icon(Icons.more_horiz),
           ),
-          Expanded(child: Text(text)),
         ],
       ),
+      onTap: onEdit,
+    );
+
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: _verticalMargin),
+      child: tile,
     );
   }
 }

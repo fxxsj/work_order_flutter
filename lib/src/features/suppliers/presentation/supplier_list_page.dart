@@ -679,8 +679,14 @@ class _SupplierListTile extends StatelessWidget {
     this.onDelete,
   });
 
-  static const double _padding = 12;
-  static const double _spacing = 6;
+  static const double _verticalMargin = 8;
+  static const String _codeLabel = '编码';
+  static const String _contactLabel = '联系人';
+  static const String _phoneLabel = '电话';
+  static const String _emailLabel = '邮箱';
+  static const String _statusLabel = '状态';
+  static const String _subtitleSeparator = ' · ';
+  static const String _emptySubtitle = '暂无更多信息';
 
   final Supplier supplier;
   final VoidCallback? onEdit;
@@ -689,91 +695,70 @@ class _SupplierListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
-      child: Padding(
-        padding: const EdgeInsets.all(_padding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    supplier.name.isNotEmpty ? supplier.name : _SupplierListViewState._emptyCellText,
-                    style: theme.textTheme.titleMedium,
-                  ),
-                ),
-                _SupplierListViewState._statusPill(theme, supplier),
-              ],
-            ),
-            const SizedBox(height: _spacing),
-            _InfoRow(label: '编码', value: supplier.code),
-            _InfoRow(label: '联系人', value: supplier.contactPerson),
-            _InfoRow(label: '电话', value: supplier.phone),
-            _InfoRow(label: '邮箱', value: supplier.email),
-            _InfoRow(label: '物料数', value: supplier.materialCount?.toString()),
-            if ((supplier.notes ?? '').trim().isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: _spacing),
-                child: Text(
-                  supplier.notes!,
-                  style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
-                ),
-              ),
-            if (onEdit != null || onDelete != null) ...[
-              const SizedBox(height: _spacing),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  if (onEdit != null)
-                    TextButton.icon(
-                      onPressed: onEdit,
-                      icon: const Icon(Icons.edit, size: 16),
-                      label: const Text('编辑'),
-                    ),
-                  if (onDelete != null) ...[
-                    const SizedBox(width: 4),
-                    TextButton.icon(
-                      onPressed: onDelete,
-                      icon: Icon(Icons.delete_outline, size: 16, color: theme.colorScheme.error),
-                      label: Text('删除', style: TextStyle(color: theme.colorScheme.error)),
-                    ),
-                  ],
-                ],
+    final primary = theme.colorScheme.primary;
+    final subtleText = theme.textTheme.bodySmall?.copyWith(color: theme.hintColor);
+    final subtitleLines = <String>[];
+    if ((supplier.code ?? '').trim().isNotEmpty) {
+      subtitleLines.add('$_codeLabel：${supplier.code}');
+    }
+    if ((supplier.contactPerson ?? '').trim().isNotEmpty) {
+      subtitleLines.add('$_contactLabel：${supplier.contactPerson}');
+    }
+    if ((supplier.phone ?? '').trim().isNotEmpty) {
+      subtitleLines.add('$_phoneLabel：${supplier.phone}');
+    }
+    if ((supplier.email ?? '').trim().isNotEmpty) {
+      subtitleLines.add('$_emailLabel：${supplier.email}');
+    }
+    if ((supplier.statusDisplay ?? supplier.status ?? '').trim().isNotEmpty) {
+      subtitleLines.add('$_statusLabel：${supplier.statusDisplay ?? supplier.status}');
+    }
+
+    final tile = ListTile(
+      leading: CircleAvatar(
+        backgroundColor: primary.withOpacity(0.12),
+        foregroundColor: primary,
+        child: Text(supplier.name.isNotEmpty ? supplier.name[0].toUpperCase() : '?'),
+      ),
+      title: Text(
+        supplier.name.isNotEmpty ? supplier.name : _SupplierListViewState._emptyCellText,
+        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+      ),
+      subtitle: subtitleLines.isEmpty
+          ? Text(_emptySubtitle, style: subtleText)
+          : Text(subtitleLines.join(_subtitleSeparator), style: subtleText),
+      isThreeLine: subtitleLines.length > 2,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: '编辑',
+            icon: Icon(Icons.edit, color: primary),
+            onPressed: onEdit,
+          ),
+          PopupMenuButton<String>(
+            tooltip: '更多',
+            onSelected: (value) {
+              if (value == 'delete') {
+                onDelete?.call();
+              }
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: 'delete',
+                child: Text('删除'),
               ),
             ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value});
-
-  static const double _spacing = 6;
-
-  final String label;
-  final String? value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final text = (value ?? '').trim().isEmpty ? _SupplierListViewState._emptyCellText : value!;
-    return Padding(
-      padding: const EdgeInsets.only(top: _spacing),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 72,
-            child: Text(label, style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
+            icon: const Icon(Icons.more_horiz),
           ),
-          Expanded(child: Text(text)),
         ],
       ),
+      onTap: onEdit,
+    );
+
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: _verticalMargin),
+      child: tile,
     );
   }
 }
