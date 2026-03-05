@@ -1,5 +1,6 @@
 import 'package:work_order_app/src/core/core.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order.dart';
+import 'package:work_order_app/src/features/sales_orders/domain/sales_order_detail.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order_repository.dart';
 
 class SalesOrderViewModel extends PaginatedViewModel<SalesOrder> {
@@ -12,6 +13,21 @@ class SalesOrderViewModel extends PaginatedViewModel<SalesOrder> {
   Future<void> initialize() => loadItems(resetPage: true);
 
   Future<void> loadSalesOrders({bool resetPage = false}) => loadItems(resetPage: resetPage);
+
+  Future<SalesOrderDetail> fetchDetail(int id) async {
+    final detail = await _repository.getSalesOrderDetail(id);
+    return detail.toEntity();
+  }
+
+  Future<SalesOrderDetail> createSalesOrder(Map<String, dynamic> payload) async {
+    final detail = await _repository.createSalesOrder(payload);
+    return detail.toEntity();
+  }
+
+  Future<SalesOrderDetail> updateSalesOrder(int id, Map<String, dynamic> payload) async {
+    final detail = await _repository.updateSalesOrder(id, payload);
+    return detail.toEntity();
+  }
 
   @override
   Future<PageData<SalesOrder>> fetchPage({
