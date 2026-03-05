@@ -82,6 +82,7 @@ const List<String> branchOrder = [
   'tasks_rules',
   'notifications',
   'profile',
+  'audit_logs',
 ];
 
 const List<NavItem> navItems = [
@@ -181,6 +182,7 @@ const List<NavItem> navItems = [
       NavItem(id: 'departments', label: '部门管理', icon: Icons.apartment_outlined, path: '/departments'),
       NavItem(id: 'processes', label: '工序管理', icon: Icons.account_tree_outlined, path: '/processes'),
       NavItem(id: 'tasks_rules', label: '分派规则配置', icon: Icons.rule_outlined, path: '/tasks/assignment-rules'),
+      NavItem(id: 'audit_logs', label: '审计日志', icon: Icons.fact_check_outlined, path: '/audit-logs'),
     ],
   ),
   NavItem(

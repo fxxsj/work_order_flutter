@@ -7,6 +7,7 @@ import 'package:work_order_app/src/features/workorders/presentation/work_order_l
 import 'package:work_order_app/src/features/tasks/presentation/task_list_page.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_placeholder_page.dart';
 import 'package:work_order_app/src/features/sales_orders/presentation/sales_order_list_page.dart';
+import 'package:work_order_app/src/features/audit_logs/presentation/audit_log_list_page.dart';
 import 'package:work_order_app/src/features/suppliers/presentation/supplier_list_page.dart';
 import 'package:work_order_app/src/features/departments/presentation/department_list_page.dart';
 import 'package:work_order_app/src/features/processes/presentation/process_list_page.dart';
@@ -57,6 +58,8 @@ Widget? buildFullPage(String id) {
       );
     case 'sales_orders':
       return const SalesOrderListEntry();
+    case 'audit_logs':
+      return const AuditLogListEntry();
     case 'suppliers':
       return const SupplierListEntry();
     case 'departments':
