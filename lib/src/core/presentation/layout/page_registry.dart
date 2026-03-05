@@ -5,6 +5,7 @@ import 'package:work_order_app/src/features/auth/presentation/profile_page.dart'
 import 'package:work_order_app/src/features/customer/presentation/customer_list_page.dart';
 import 'package:work_order_app/src/features/workorders/presentation/work_order_list_page.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_list_page.dart';
+import 'package:work_order_app/src/features/tasks/presentation/task_placeholder_page.dart';
 import 'package:work_order_app/src/features/suppliers/presentation/supplier_list_page.dart';
 import 'package:work_order_app/src/features/departments/presentation/department_list_page.dart';
 import 'package:work_order_app/src/features/processes/presentation/process_list_page.dart';
@@ -23,6 +24,36 @@ Widget? buildFullPage(String id) {
       return const WorkOrderListEntry();
     case 'tasks_list':
       return const TaskListEntry();
+    case 'tasks_board':
+      return const TaskPlaceholderPage(
+        title: '部门任务看板',
+        description: '对应 Web 端任务看板视图，包含拖拽列与任务卡片操作。',
+      );
+    case 'tasks_stats':
+      return const TaskPlaceholderPage(
+        title: '协作统计',
+        description: '对应 Web 端协作统计，包含部门负载与任务趋势分析。',
+      );
+    case 'tasks_history':
+      return const TaskPlaceholderPage(
+        title: '分派历史',
+        description: '对应 Web 端分派历史记录，支持筛选与导出。',
+      );
+    case 'tasks_rules':
+      return const TaskPlaceholderPage(
+        title: '分派规则配置',
+        description: '对应 Web 端分派规则配置，支持规则列表与编辑。',
+      );
+    case 'tasks_operator':
+      return const TaskPlaceholderPage(
+        title: '操作员任务中心',
+        description: '对应 Web 端操作员任务中心，包含我的任务与可认领任务。',
+      );
+    case 'tasks_supervisor':
+      return const TaskPlaceholderPage(
+        title: '主管看板',
+        description: '对应 Web 端主管看板，包含部门负载与异常提醒。',
+      );
     case 'suppliers':
       return const SupplierListEntry();
     case 'departments':

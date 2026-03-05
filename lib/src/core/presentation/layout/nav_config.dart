@@ -54,6 +54,8 @@ const List<String> branchOrder = [
   'dashboard',
   'workorders',
   'tasks_list',
+  'tasks_operator',
+  'tasks_supervisor',
   'tasks_board',
   'tasks_stats',
   'tasks_history',
@@ -101,6 +103,18 @@ const List<NavItem> navItems = [
     icon: Icons.task_alt_outlined,
     children: [
       NavItem(id: 'tasks_list', label: '任务列表', icon: Icons.view_list_outlined, path: '/tasks'),
+      NavItem(
+        id: 'tasks_operator',
+        label: '操作员任务中心',
+        icon: Icons.person_outline,
+        path: '/tasks/operator',
+      ),
+      NavItem(
+        id: 'tasks_supervisor',
+        label: '主管看板',
+        icon: Icons.dashboard_customize_outlined,
+        path: '/tasks/supervisor',
+      ),
       NavItem(id: 'tasks_board', label: '部门任务看板', icon: Icons.view_kanban_outlined, path: '/tasks/board'),
       NavItem(id: 'tasks_stats', label: '协作统计', icon: Icons.insights_outlined, path: '/tasks/stats'),
       NavItem(id: 'tasks_history', label: '分派历史', icon: Icons.history_outlined, path: '/tasks/assignment-history'),
