@@ -72,7 +72,7 @@ List<GoRoute> _buildBranchRoutes(NavItem item) {
             path: 'create',
             name: 'workorder_create',
             pageBuilder: (context, state) => const NoTransitionPage(
-              child: WorkOrderFormPage(mode: WorkOrderFormMode.create),
+              child: WorkOrderFormEntry(mode: WorkOrderFormMode.create),
             ),
           ),
           GoRoute(
@@ -91,7 +91,7 @@ List<GoRoute> _buildBranchRoutes(NavItem item) {
                 pageBuilder: (context, state) {
                   final id = int.tryParse(state.pathParameters['id'] ?? '');
                   return NoTransitionPage(
-                    child: WorkOrderFormPage(
+                    child: WorkOrderFormEntry(
                       mode: WorkOrderFormMode.edit,
                       workOrderId: id,
                     ),

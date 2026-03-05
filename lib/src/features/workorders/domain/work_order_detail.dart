@@ -26,6 +26,8 @@ class WorkOrderDetail {
     this.printingType,
     this.printingTypeDisplay,
     this.printingColorsDisplay,
+    this.printingCmykColors = const [],
+    this.printingOtherColors = const [],
     this.notes,
     this.progressPercentage,
     this.draftTaskCount,
@@ -72,6 +74,8 @@ class WorkOrderDetail {
   final String? printingType;
   final String? printingTypeDisplay;
   final String? printingColorsDisplay;
+  final List<String> printingCmykColors;
+  final List<String> printingOtherColors;
   final String? notes;
   final int? progressPercentage;
   final int? draftTaskCount;
@@ -119,6 +123,8 @@ class WorkOrderDetail {
       printingType: toStringOrNull(json['printing_type']),
       printingTypeDisplay: toStringOrNull(json['printing_type_display']),
       printingColorsDisplay: toStringOrNull(json['printing_colors_display']),
+      printingCmykColors: _parseStringList(json['printing_cmyk_colors']),
+      printingOtherColors: _parseStringList(json['printing_other_colors']),
       notes: toStringOrNull(json['notes']),
       progressPercentage: toInt(json['progress_percentage']),
       draftTaskCount: toInt(json['draft_task_count']),
