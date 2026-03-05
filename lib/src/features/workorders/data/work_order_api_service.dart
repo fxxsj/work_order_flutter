@@ -1,5 +1,6 @@
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
+import 'package:work_order_app/src/features/workorders/data/work_order_detail_dto.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
 
 class WorkOrderApiService {
@@ -42,5 +43,26 @@ class WorkOrderApiService {
       return WorkOrderPageDto(items: list, total: list.length, page: 1, pageSize: list.length);
     }
     return const WorkOrderPageDto(items: [], total: 0, page: 1, pageSize: 20);
+  }
+
+  Future<WorkOrderDetailDto> fetchWorkOrder(int id) async {
+    final response = await _client.get('/workorders/$id/');
+    final payload = response.data;
+    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    return WorkOrderDetailDto.fromJson(map);
+  }
+
+  Future<WorkOrderDetailDto> createWorkOrder(Map<String, dynamic> payload) async {
+    final response = await _client.post('/workorders/', data: payload);
+    final body = response.data;
+    final map = body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
+    return WorkOrderDetailDto.fromJson(map);
+  }
+
+  Future<WorkOrderDetailDto> updateWorkOrder(int id, Map<String, dynamic> payload) async {
+    final response = await _client.put('/workorders/$id/', data: payload);
+    final body = response.data;
+    final map = body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
+    return WorkOrderDetailDto.fromJson(map);
   }
 }
