@@ -8,6 +8,15 @@ import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/utils/toast_util.dart';
+import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
+import 'package:work_order_app/src/features/customer/data/customer_dto.dart';
+import 'package:work_order_app/src/features/customer/domain/customer.dart';
+import 'package:work_order_app/src/features/processes/data/process_api_service.dart';
+import 'package:work_order_app/src/features/processes/data/process_dto.dart';
+import 'package:work_order_app/src/features/processes/domain/process.dart';
+import 'package:work_order_app/src/features/products/data/product_api_service.dart';
+import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/workorders/application/work_order_view_model.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_repository_impl.dart';
@@ -101,6 +110,9 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
   static const String _errorFallbackText = '加载失败';
   static const String _retryText = '重新加载';
   static const String _breadcrumbSeparator = ' / ';
+  static const String _resetButtonText = '重置筛选';
+  static const String _deleteDialogTitle = '确认删除';
+  static const String _deleteDialogContent = '确定要删除施工单 "{name}" 吗？此操作不可恢复。';
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
@@ -117,6 +129,23 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
     _WorkOrderColumn.totalAmount,
     _WorkOrderColumn.actions,
   };
+  String? _statusFilter;
+  String? _priorityFilter;
+  String? _approvalStatusFilter;
+  int? _customerFilterId;
+  int? _productFilterId;
+  int? _processFilterId;
+
+  bool _loadingOptions = false;
+  List<Customer> _customers = [];
+  List<ProductOption> _products = [];
+  List<Process> _processes = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFilterOptions();
+  }
 
   @override
   void dispose() {
@@ -136,6 +165,57 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadWorkOrders(resetPage: true);
     });
+  }
+
+  void _applyFilters(WorkOrderViewModel viewModel) {
+    viewModel
+      ..setStatusFilter(_statusFilter)
+      ..setPriorityFilter(_priorityFilter)
+      ..setApprovalStatusFilter(_approvalStatusFilter)
+      ..setCustomerFilterId(_customerFilterId)
+      ..setProductFilterId(_productFilterId)
+      ..setProcessFilterId(_processFilterId);
+    viewModel.loadWorkOrders(resetPage: true);
+  }
+
+  void _resetFilters(WorkOrderViewModel viewModel) {
+    _searchController.clear();
+    _statusFilter = null;
+    _priorityFilter = null;
+    _approvalStatusFilter = null;
+    _customerFilterId = null;
+    _productFilterId = null;
+    _processFilterId = null;
+    viewModel.setSearchText('');
+    _applyFilters(viewModel);
+  }
+
+  Future<void> _loadFilterOptions() async {
+    setState(() => _loadingOptions = true);
+    try {
+      final apiClient = context.read<ApiClient>();
+      final customerApi = CustomerApiService(apiClient);
+      final productApi = ProductApiService(apiClient);
+      final processApi = ProcessApiService(apiClient);
+      final results = await Future.wait([
+        customerApi.fetchCustomers(page: 1, pageSize: 200),
+        productApi.fetchProducts(pageSize: 200, isActive: true),
+        processApi.fetchProcesses(page: 1, pageSize: 200),
+      ]);
+      final customerPage = results[0] as CustomerPageDto;
+      final productOptions = results[1] as List<ProductOption>;
+      final processPage = results[2] as ProcessPageDto;
+      if (!mounted) return;
+      setState(() {
+        _customers = customerPage.items.map<Customer>((item) => item.toEntity()).toList();
+        _products = productOptions;
+        _processes = processPage.items.map<Process>((item) => item.toEntity()).toList();
+      });
+    } catch (err) {
+      ToastUtil.showError('加载筛选项失败: $err');
+    } finally {
+      if (mounted) setState(() => _loadingOptions = false);
+    }
   }
 
   void _openColumnsMenu(BuildContext context) {
@@ -185,6 +265,12 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
     return Consumer<WorkOrderViewModel>(
       builder: (context, viewModel, _) {
         final workOrders = viewModel.workOrders;
+        _statusFilter = viewModel.statusFilter;
+        _priorityFilter = viewModel.priorityFilter;
+        _approvalStatusFilter = viewModel.approvalStatusFilter;
+        _customerFilterId = viewModel.customerFilterId;
+        _productFilterId = viewModel.productFilterId;
+        _processFilterId = viewModel.processFilterId;
         return ListPageScaffold(
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, breadcrumb, isMobile),
@@ -232,7 +318,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final columns = _buildColumns();
-          final rows = _buildRows(context, workOrders);
+          final rows = _buildRows(context, viewModel, workOrders);
 
           return SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -260,6 +346,53 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
     List<String> breadcrumb,
     bool isMobile,
   ) {
+    final statusItems = const [
+      DropdownMenuItem(value: 'pending', child: Text('待开始')),
+      DropdownMenuItem(value: 'in_progress', child: Text('进行中')),
+      DropdownMenuItem(value: 'paused', child: Text('已暂停')),
+      DropdownMenuItem(value: 'completed', child: Text('已完成')),
+      DropdownMenuItem(value: 'cancelled', child: Text('已取消')),
+    ];
+    final priorityItems = const [
+      DropdownMenuItem(value: 'low', child: Text('低')),
+      DropdownMenuItem(value: 'normal', child: Text('普通')),
+      DropdownMenuItem(value: 'high', child: Text('高')),
+      DropdownMenuItem(value: 'urgent', child: Text('紧急')),
+    ];
+    final approvalItems = const [
+      DropdownMenuItem(value: 'pending', child: Text('待审核')),
+      DropdownMenuItem(value: 'approved', child: Text('已通过')),
+      DropdownMenuItem(value: 'rejected', child: Text('已拒绝')),
+    ];
+
+    final customerItems = [
+      const DropdownMenuItem<int?>(value: null, child: Text('全部客户')),
+      ..._customers.map(
+        (item) => DropdownMenuItem<int?>(
+          value: item.id,
+          child: Text(item.name),
+        ),
+      ),
+    ];
+    final productItems = [
+      const DropdownMenuItem<int?>(value: null, child: Text('全部产品')),
+      ..._products.map(
+        (item) => DropdownMenuItem<int?>(
+          value: item.id,
+          child: Text(item.displayLabel),
+        ),
+      ),
+    ];
+    final processItems = [
+      const DropdownMenuItem<int?>(value: null, child: Text('全部工序')),
+      ..._processes.map(
+        (item) => DropdownMenuItem<int?>(
+          value: item.id,
+          child: Text(item.name),
+        ),
+      ),
+    ];
+
     return PageHeaderBar(
       breadcrumb: breadcrumb.isEmpty ? null : breadcrumb.join(_breadcrumbSeparator),
       useSurface: false,
@@ -309,6 +442,68 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
               children: [
                 searchField,
                 const SizedBox(height: _spacingSm),
+                if (_loadingOptions)
+                  const LinearProgressIndicator(minHeight: 2),
+                DropdownButtonFormField<String>(
+                  value: _statusFilter,
+                  decoration: const InputDecoration(labelText: '状态', border: OutlineInputBorder()),
+                  items: statusItems,
+                  onChanged: (value) {
+                    setState(() => _statusFilter = value);
+                    _applyFilters(viewModel);
+                  },
+                ),
+                const SizedBox(height: _spacingSm),
+                DropdownButtonFormField<String>(
+                  value: _priorityFilter,
+                  decoration: const InputDecoration(labelText: '优先级', border: OutlineInputBorder()),
+                  items: priorityItems,
+                  onChanged: (value) {
+                    setState(() => _priorityFilter = value);
+                    _applyFilters(viewModel);
+                  },
+                ),
+                const SizedBox(height: _spacingSm),
+                DropdownButtonFormField<String>(
+                  value: _approvalStatusFilter,
+                  decoration: const InputDecoration(labelText: '审核状态', border: OutlineInputBorder()),
+                  items: approvalItems,
+                  onChanged: (value) {
+                    setState(() => _approvalStatusFilter = value);
+                    _applyFilters(viewModel);
+                  },
+                ),
+                const SizedBox(height: _spacingSm),
+                DropdownButtonFormField<int?>(
+                  value: _customerFilterId,
+                  decoration: const InputDecoration(labelText: '客户', border: OutlineInputBorder()),
+                  items: customerItems,
+                  onChanged: (value) {
+                    setState(() => _customerFilterId = value);
+                    _applyFilters(viewModel);
+                  },
+                ),
+                const SizedBox(height: _spacingSm),
+                DropdownButtonFormField<int?>(
+                  value: _productFilterId,
+                  decoration: const InputDecoration(labelText: '产品', border: OutlineInputBorder()),
+                  items: productItems,
+                  onChanged: (value) {
+                    setState(() => _productFilterId = value);
+                    _applyFilters(viewModel);
+                  },
+                ),
+                const SizedBox(height: _spacingSm),
+                DropdownButtonFormField<int?>(
+                  value: _processFilterId,
+                  decoration: const InputDecoration(labelText: '工序', border: OutlineInputBorder()),
+                  items: processItems,
+                  onChanged: (value) {
+                    setState(() => _processFilterId = value);
+                    _applyFilters(viewModel);
+                  },
+                ),
+                const SizedBox(height: _spacingSm),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -318,16 +513,22 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
                       label: _refreshButtonText,
                     ),
                     const SizedBox(width: _spacingSm),
-            PageActionButton.filled(
-              onPressed: () => context.go('/workorders/create'),
-              icon: const Icon(Icons.add),
-              label: _createButtonText,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
+                    PageActionButton.outlined(
+                      onPressed: () => _resetFilters(viewModel),
+                      icon: const Icon(Icons.refresh, size: 16),
+                      label: _resetButtonText,
+                    ),
+                    const SizedBox(width: _spacingSm),
+                    PageActionButton.filled(
+                      onPressed: () => context.go('/workorders/create'),
+                      icon: const Icon(Icons.add),
+                      label: _createButtonText,
+                    ),
+                  ],
+                ),
+              ],
+            );
+          }
 
           return Wrap(
             spacing: _spacingSm,
@@ -335,10 +536,92 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               searchField,
+              if (_loadingOptions)
+                const SizedBox(
+                  width: 120,
+                  child: LinearProgressIndicator(minHeight: 2),
+                ),
+              SizedBox(
+                width: 180,
+                child: DropdownButtonFormField<String>(
+                  value: _statusFilter,
+                  decoration: const InputDecoration(labelText: '状态', border: OutlineInputBorder()),
+                  items: statusItems,
+                  onChanged: (value) {
+                    setState(() => _statusFilter = value);
+                    _applyFilters(viewModel);
+                  },
+                ),
+              ),
+              SizedBox(
+                width: 180,
+                child: DropdownButtonFormField<String>(
+                  value: _priorityFilter,
+                  decoration: const InputDecoration(labelText: '优先级', border: OutlineInputBorder()),
+                  items: priorityItems,
+                  onChanged: (value) {
+                    setState(() => _priorityFilter = value);
+                    _applyFilters(viewModel);
+                  },
+                ),
+              ),
+              SizedBox(
+                width: 180,
+                child: DropdownButtonFormField<String>(
+                  value: _approvalStatusFilter,
+                  decoration: const InputDecoration(labelText: '审核状态', border: OutlineInputBorder()),
+                  items: approvalItems,
+                  onChanged: (value) {
+                    setState(() => _approvalStatusFilter = value);
+                    _applyFilters(viewModel);
+                  },
+                ),
+              ),
+              SizedBox(
+                width: 220,
+                child: DropdownButtonFormField<int?>(
+                  value: _customerFilterId,
+                  decoration: const InputDecoration(labelText: '客户', border: OutlineInputBorder()),
+                  items: customerItems,
+                  onChanged: (value) {
+                    setState(() => _customerFilterId = value);
+                    _applyFilters(viewModel);
+                  },
+                ),
+              ),
+              SizedBox(
+                width: 220,
+                child: DropdownButtonFormField<int?>(
+                  value: _productFilterId,
+                  decoration: const InputDecoration(labelText: '产品', border: OutlineInputBorder()),
+                  items: productItems,
+                  onChanged: (value) {
+                    setState(() => _productFilterId = value);
+                    _applyFilters(viewModel);
+                  },
+                ),
+              ),
+              SizedBox(
+                width: 220,
+                child: DropdownButtonFormField<int?>(
+                  value: _processFilterId,
+                  decoration: const InputDecoration(labelText: '工序', border: OutlineInputBorder()),
+                  items: processItems,
+                  onChanged: (value) {
+                    setState(() => _processFilterId = value);
+                    _applyFilters(viewModel);
+                  },
+                ),
+              ),
               PageActionButton.outlined(
                 onPressed: () => viewModel.loadWorkOrders(resetPage: true),
                 icon: const Icon(Icons.refresh, size: 16),
                 label: _refreshButtonText,
+              ),
+              PageActionButton.outlined(
+                onPressed: () => _resetFilters(viewModel),
+                icon: const Icon(Icons.refresh, size: 16),
+                label: _resetButtonText,
               ),
               PageActionButton.outlined(
                 onPressed: () => setState(() => _denseTable = !_denseTable),
@@ -382,11 +665,15 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
         .toList();
   }
 
-  List<DataRow> _buildRows(BuildContext context, List<WorkOrder> workOrders) {
+  List<DataRow> _buildRows(
+    BuildContext context,
+    WorkOrderViewModel viewModel,
+    List<WorkOrder> workOrders,
+  ) {
     return workOrders.map((workOrder) {
       final cells = _WorkOrderColumn.values
           .where(_visibleColumns.contains)
-          .map((column) => DataCell(_buildCell(workOrder, column)))
+          .map((column) => DataCell(_buildCell(context, viewModel, workOrder, column)))
           .toList();
       return DataRow(
         cells: cells,
@@ -395,7 +682,12 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
     }).toList();
   }
 
-  Widget _buildCell(WorkOrder workOrder, _WorkOrderColumn column) {
+  Widget _buildCell(
+    BuildContext context,
+    WorkOrderViewModel viewModel,
+    WorkOrder workOrder,
+    _WorkOrderColumn column,
+  ) {
     switch (column) {
       case _WorkOrderColumn.orderNumber:
         return Text(workOrder.orderNumber.isEmpty ? '施工单 #${workOrder.id}' : workOrder.orderNumber);
@@ -425,9 +717,39 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
               icon: const Icon(Icons.visibility_outlined, size: 18),
               onPressed: () => context.go('/workorders/${workOrder.id}'),
             ),
+            IconButton(
+              tooltip: '编辑',
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              onPressed: () => context.go('/workorders/${workOrder.id}/edit'),
+            ),
+            IconButton(
+              tooltip: '删除',
+              icon: const Icon(Icons.delete_outline, size: 18),
+              onPressed: () => _confirmDelete(context, viewModel, workOrder),
+            ),
           ],
         );
     }
+  }
+
+  Future<void> _confirmDelete(
+    BuildContext context,
+    WorkOrderViewModel viewModel,
+    WorkOrder workOrder,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(_deleteDialogTitle),
+        content: Text(_deleteDialogContent.replaceFirst('{name}', workOrder.orderNumber)),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('取消')),
+          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('删除')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await viewModel.deleteAndReload(() => viewModel.deleteWorkOrder(workOrder.id));
   }
 
   String _formatDate(DateTime? value) {

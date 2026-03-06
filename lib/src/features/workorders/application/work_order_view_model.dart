@@ -7,12 +7,49 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
   WorkOrderViewModel(this._repository);
 
   final WorkOrderRepository _repository;
+  String? _statusFilter;
+  String? _priorityFilter;
+  String? _approvalStatusFilter;
+  int? _customerFilterId;
+  int? _productFilterId;
+  int? _processFilterId;
 
   List<WorkOrder> get workOrders => items;
 
   Future<void> initialize() => loadItems(resetPage: true);
 
   Future<void> loadWorkOrders({bool resetPage = false}) => loadItems(resetPage: resetPage);
+
+  String? get statusFilter => _statusFilter;
+  String? get priorityFilter => _priorityFilter;
+  String? get approvalStatusFilter => _approvalStatusFilter;
+  int? get customerFilterId => _customerFilterId;
+  int? get productFilterId => _productFilterId;
+  int? get processFilterId => _processFilterId;
+
+  void setStatusFilter(String? value) {
+    _statusFilter = value?.trim().isEmpty == true ? null : value;
+  }
+
+  void setPriorityFilter(String? value) {
+    _priorityFilter = value?.trim().isEmpty == true ? null : value;
+  }
+
+  void setApprovalStatusFilter(String? value) {
+    _approvalStatusFilter = value?.trim().isEmpty == true ? null : value;
+  }
+
+  void setCustomerFilterId(int? value) {
+    _customerFilterId = value;
+  }
+
+  void setProductFilterId(int? value) {
+    _productFilterId = value;
+  }
+
+  void setProcessFilterId(int? value) {
+    _processFilterId = value;
+  }
 
   Future<WorkOrderDetail> fetchDetail(int id) async {
     final detail = await _repository.getWorkOrderDetail(id);
@@ -29,6 +66,40 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
     return detail.toEntity();
   }
 
+  Future<void> deleteWorkOrder(int id) async {
+    await _repository.deleteWorkOrder(id);
+  }
+
+  Future<WorkOrderDetail> updateStatus(int id, String status) async {
+    final detail = await _repository.updateStatus(id, status);
+    return detail.toEntity();
+  }
+
+  Future<WorkOrderDetail> approve({
+    required int id,
+    required String approvalStatus,
+    String? approvalComment,
+    String? rejectionReason,
+  }) async {
+    final detail = await _repository.approve(
+      id: id,
+      approvalStatus: approvalStatus,
+      approvalComment: approvalComment,
+      rejectionReason: rejectionReason,
+    );
+    return detail.toEntity();
+  }
+
+  Future<WorkOrderDetail> resubmitForApproval(int id) async {
+    final detail = await _repository.resubmitForApproval(id);
+    return detail.toEntity();
+  }
+
+  Future<WorkOrderDetail> requestReapproval(int id, String reason) async {
+    final detail = await _repository.requestReapproval(id, reason);
+    return detail.toEntity();
+  }
+
   @override
   Future<PageData<WorkOrder>> fetchPage({
     required int page,
@@ -39,6 +110,12 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
       page: page,
       pageSize: pageSize,
       search: search,
+      status: _statusFilter,
+      priority: _priorityFilter,
+      approvalStatus: _approvalStatusFilter,
+      customerId: _customerFilterId,
+      productId: _productFilterId,
+      processId: _processFilterId,
     );
     return PageData(
       items: result.items.map((dto) => dto.toEntity()).toList(),

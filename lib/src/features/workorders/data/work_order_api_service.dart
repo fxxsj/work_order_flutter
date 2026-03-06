@@ -12,6 +12,12 @@ class WorkOrderApiService {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? status,
+    String? priority,
+    String? approvalStatus,
+    int? customerId,
+    int? productId,
+    int? processId,
   }) async {
     final params = <String, dynamic>{
       'page': page,
@@ -20,6 +26,24 @@ class WorkOrderApiService {
     final trimmed = search?.trim();
     if (trimmed != null && trimmed.isNotEmpty) {
       params['search'] = trimmed;
+    }
+    if (status != null && status.isNotEmpty) {
+      params['status'] = status;
+    }
+    if (priority != null && priority.isNotEmpty) {
+      params['priority'] = priority;
+    }
+    if (approvalStatus != null && approvalStatus.isNotEmpty) {
+      params['approval_status'] = approvalStatus;
+    }
+    if (customerId != null && customerId > 0) {
+      params['customer'] = customerId;
+    }
+    if (productId != null && productId > 0) {
+      params['product'] = productId;
+    }
+    if (processId != null && processId > 0) {
+      params['process'] = processId;
     }
 
     final response = await _client.get('/workorders/', queryParameters: params);
@@ -61,6 +85,50 @@ class WorkOrderApiService {
 
   Future<WorkOrderDetailDto> updateWorkOrder(int id, Map<String, dynamic> payload) async {
     final response = await _client.put('/workorders/$id/', data: payload);
+    final body = response.data;
+    final map = body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
+    return WorkOrderDetailDto.fromJson(map);
+  }
+
+  Future<void> deleteWorkOrder(int id) async {
+    await _client.delete('/workorders/$id/');
+  }
+
+  Future<WorkOrderDetailDto> updateStatus(int id, String status) async {
+    final response = await _client.post('/workorders/$id/update_status/', data: {'status': status});
+    final body = response.data;
+    final map = body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
+    return WorkOrderDetailDto.fromJson(map);
+  }
+
+  Future<WorkOrderDetailDto> approve({
+    required int id,
+    required String approvalStatus,
+    String? approvalComment,
+    String? rejectionReason,
+  }) async {
+    final payload = <String, dynamic>{
+      'approval_status': approvalStatus,
+      'approval_comment': approvalComment ?? '',
+    };
+    if (rejectionReason != null && rejectionReason.trim().isNotEmpty) {
+      payload['rejection_reason'] = rejectionReason.trim();
+    }
+    final response = await _client.post('/workorders/$id/approve/', data: payload);
+    final body = response.data;
+    final map = body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
+    return WorkOrderDetailDto.fromJson(map);
+  }
+
+  Future<WorkOrderDetailDto> resubmitForApproval(int id) async {
+    final response = await _client.post('/workorders/$id/resubmit_for_approval/');
+    final body = response.data;
+    final map = body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
+    return WorkOrderDetailDto.fromJson(map);
+  }
+
+  Future<WorkOrderDetailDto> requestReapproval(int id, String reason) async {
+    final response = await _client.post('/workorders/$id/request_reapproval/', data: {'reason': reason});
     final body = response.data;
     final map = body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
     return WorkOrderDetailDto.fromJson(map);

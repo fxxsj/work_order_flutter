@@ -5,6 +5,7 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/workorders/application/work_order_view_model.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_repository_impl.dart';
@@ -74,11 +75,20 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   static const double _sectionSpacing = 16;
   static const String _breadcrumbSeparator = ' / ';
   static const String _emptyText = '-';
+  static const String _deleteDialogTitle = '确认删除';
+  static const String _deleteDialogContent = '确定要删除施工单 "{name}" 吗？此操作不可恢复。';
 
   WorkOrderDetail? _detail;
   bool _loading = false;
   String? _errorMessage;
   bool _initialized = false;
+  bool _actionLoading = false;
+
+  String? _statusSelection;
+
+  final TextEditingController _approvalCommentController = TextEditingController();
+  final TextEditingController _rejectionReasonController = TextEditingController();
+  final TextEditingController _reapprovalReasonController = TextEditingController();
 
   @override
   void didChangeDependencies() {
@@ -97,12 +107,206 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
       final viewModel = context.read<WorkOrderViewModel>();
       final detail = await viewModel.fetchDetail(widget.workOrderId);
       if (!mounted) return;
-      setState(() => _detail = detail);
+      setState(() {
+        _detail = detail;
+        _statusSelection = detail.status;
+      });
     } catch (err) {
       if (!mounted) return;
       setState(() => _errorMessage = err.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _approvalCommentController.dispose();
+    _rejectionReasonController.dispose();
+    _reapprovalReasonController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _confirmDelete() async {
+    final detail = _detail;
+    if (detail == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(_deleteDialogTitle),
+        content: Text(_deleteDialogContent.replaceFirst('{name}', detail.orderNumber)),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('取消')),
+          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('删除')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    setState(() => _actionLoading = true);
+    try {
+      final viewModel = context.read<WorkOrderViewModel>();
+      await viewModel.deleteWorkOrder(widget.workOrderId);
+      if (!mounted) return;
+      ToastUtil.showSuccess('施工单已删除');
+      context.pop();
+    } catch (err) {
+      ToastUtil.showError('删除失败: $err');
+    } finally {
+      if (mounted) setState(() => _actionLoading = false);
+    }
+  }
+
+  Future<void> _handleUpdateStatus() async {
+    final status = _statusSelection;
+    if (status == null || status.isEmpty) {
+      ToastUtil.showError('请选择状态');
+      return;
+    }
+    setState(() => _actionLoading = true);
+    try {
+      final viewModel = context.read<WorkOrderViewModel>();
+      final detail = await viewModel.updateStatus(widget.workOrderId, status);
+      if (!mounted) return;
+      setState(() {
+        _detail = detail;
+        _statusSelection = detail.status;
+      });
+      ToastUtil.showSuccess('状态已更新');
+    } catch (err) {
+      ToastUtil.showError('更新状态失败: $err');
+    } finally {
+      if (mounted) setState(() => _actionLoading = false);
+    }
+  }
+
+  Future<void> _handleApprove({required bool approved}) async {
+    final rejectionReason = approved ? null : _rejectionReasonController.text.trim();
+    if (!approved && (rejectionReason == null || rejectionReason.isEmpty)) {
+      ToastUtil.showError('请填写拒绝原因');
+      return;
+    }
+    setState(() => _actionLoading = true);
+    try {
+      final viewModel = context.read<WorkOrderViewModel>();
+      final detail = await viewModel.approve(
+        id: widget.workOrderId,
+        approvalStatus: approved ? 'approved' : 'rejected',
+        approvalComment: _approvalCommentController.text.trim(),
+        rejectionReason: rejectionReason,
+      );
+      if (!mounted) return;
+      setState(() {
+        _detail = detail;
+        _statusSelection = detail.status;
+      });
+      _approvalCommentController.clear();
+      _rejectionReasonController.clear();
+      ToastUtil.showSuccess(approved ? '审核已通过' : '审核已拒绝');
+    } catch (err) {
+      ToastUtil.showError('审核失败: $err');
+    } finally {
+      if (mounted) setState(() => _actionLoading = false);
+    }
+  }
+
+  Future<void> _handleResubmit() async {
+    setState(() => _actionLoading = true);
+    try {
+      final viewModel = context.read<WorkOrderViewModel>();
+      final detail = await viewModel.resubmitForApproval(widget.workOrderId);
+      if (!mounted) return;
+      setState(() {
+        _detail = detail;
+        _statusSelection = detail.status;
+      });
+      ToastUtil.showSuccess('已重新提交审核');
+    } catch (err) {
+      ToastUtil.showError('提交失败: $err');
+    } finally {
+      if (mounted) setState(() => _actionLoading = false);
+    }
+  }
+
+  Future<void> _handleRequestReapproval() async {
+    final reason = _reapprovalReasonController.text.trim();
+    if (reason.isEmpty) {
+      ToastUtil.showError('请填写重新审核原因');
+      return;
+    }
+    setState(() => _actionLoading = true);
+    try {
+      final viewModel = context.read<WorkOrderViewModel>();
+      final detail = await viewModel.requestReapproval(widget.workOrderId, reason);
+      if (!mounted) return;
+      setState(() {
+        _detail = detail;
+        _statusSelection = detail.status;
+      });
+      _reapprovalReasonController.clear();
+      ToastUtil.showSuccess('已请求重新审核');
+    } catch (err) {
+      ToastUtil.showError('请求失败: $err');
+    } finally {
+      if (mounted) setState(() => _actionLoading = false);
+    }
+  }
+
+  Future<void> _showApproveDialog({required bool approved}) async {
+    _approvalCommentController.clear();
+    _rejectionReasonController.clear();
+    final title = approved ? '审核通过' : '审核拒绝';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _approvalCommentController,
+              decoration: const InputDecoration(labelText: '备注说明'),
+              maxLines: 3,
+            ),
+            if (!approved) ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: _rejectionReasonController,
+                decoration: const InputDecoration(labelText: '拒绝原因'),
+                maxLines: 3,
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('取消')),
+          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('确定')),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await _handleApprove(approved: approved);
+    }
+  }
+
+  Future<void> _showReapprovalDialog() async {
+    _reapprovalReasonController.clear();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('请求重新审核'),
+        content: TextField(
+          controller: _reapprovalReasonController,
+          decoration: const InputDecoration(labelText: '原因说明'),
+          maxLines: 3,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('取消')),
+          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('提交')),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await _handleRequestReapproval();
     }
   }
 
@@ -306,6 +510,14 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
         ? '施工单 ${detail!.orderNumber}'
         : '施工单 #${widget.workOrderId}';
 
+    final statusOptions = const [
+      DropdownMenuItem(value: 'pending', child: Text('待开始')),
+      DropdownMenuItem(value: 'in_progress', child: Text('进行中')),
+      DropdownMenuItem(value: 'paused', child: Text('已暂停')),
+      DropdownMenuItem(value: 'completed', child: Text('已完成')),
+      DropdownMenuItem(value: 'cancelled', child: Text('已取消')),
+    ];
+
     return ListPageScaffold(
       spacing: _spacing,
       header: PageHeaderBar(
@@ -326,6 +538,12 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
               onPressed: () => context.go('/workorders/${widget.workOrderId}/edit'),
               icon: const Icon(Icons.edit, size: 16),
               label: '编辑',
+            ),
+            const SizedBox(width: _spacing),
+            PageActionButton.outlined(
+              onPressed: _actionLoading ? null : _confirmDelete,
+              icon: const Icon(Icons.delete_outline, size: 16),
+              label: '删除',
             ),
           ],
         ),
@@ -350,6 +568,58 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                   ? const Center(child: Text('未找到施工单信息'))
                   : ListView(
                       children: [
+                        _buildSection(
+                          '操作',
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Wrap(
+                                spacing: 12,
+                                runSpacing: 8,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 200,
+                                    child: DropdownButtonFormField<String>(
+                                      value: _statusSelection,
+                                      decoration: const InputDecoration(
+                                        labelText: '状态',
+                                        border: OutlineInputBorder(),
+                                      ),
+                                      items: statusOptions,
+                                      onChanged: _actionLoading ? null : (value) => setState(() => _statusSelection = value),
+                                    ),
+                                  ),
+                                  FilledButton(
+                                    onPressed: _actionLoading ? null : _handleUpdateStatus,
+                                    child: const Text('更新状态'),
+                                  ),
+                                  if (detail.approvalStatus == 'pending') ...[
+                                    FilledButton(
+                                      onPressed: _actionLoading ? null : () => _showApproveDialog(approved: true),
+                                      child: const Text('审核通过'),
+                                    ),
+                                    OutlinedButton(
+                                      onPressed: _actionLoading ? null : () => _showApproveDialog(approved: false),
+                                      child: const Text('审核拒绝'),
+                                    ),
+                                  ],
+                                  if (detail.approvalStatus == 'rejected')
+                                    FilledButton(
+                                      onPressed: _actionLoading ? null : _handleResubmit,
+                                      child: const Text('重新提交审核'),
+                                    ),
+                                  if (detail.approvalStatus == 'approved')
+                                    OutlinedButton(
+                                      onPressed: _actionLoading ? null : _showReapprovalDialog,
+                                      child: const Text('请求重新审核'),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: _sectionSpacing),
                         _buildSection(
                           title,
                           Column(

@@ -7,18 +7,25 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/artworks/data/artwork_api_service.dart';
+import 'package:work_order_app/src/features/artworks/data/artwork_dto.dart';
 import 'package:work_order_app/src/features/artworks/domain/artwork.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
+import 'package:work_order_app/src/features/customer/data/customer_dto.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/dies/data/die_api_service.dart';
+import 'package:work_order_app/src/features/dies/data/die_dto.dart';
 import 'package:work_order_app/src/features/dies/domain/die.dart';
 import 'package:work_order_app/src/features/embossing_plates/data/embossing_plate_api_service.dart';
+import 'package:work_order_app/src/features/embossing_plates/data/embossing_plate_dto.dart';
 import 'package:work_order_app/src/features/embossing_plates/domain/embossing_plate.dart';
 import 'package:work_order_app/src/features/foiling_plates/data/foiling_plate_api_service.dart';
+import 'package:work_order_app/src/features/foiling_plates/data/foiling_plate_dto.dart';
 import 'package:work_order_app/src/features/foiling_plates/domain/foiling_plate.dart';
 import 'package:work_order_app/src/features/materials/data/material_api_service.dart';
+import 'package:work_order_app/src/features/materials/data/material_dto.dart';
 import 'package:work_order_app/src/features/materials/domain/material.dart';
 import 'package:work_order_app/src/features/processes/data/process_api_service.dart';
+import 'package:work_order_app/src/features/processes/data/process_dto.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/products/data/product_api_service.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
@@ -184,14 +191,14 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
         foilingApi.fetchFoilingPlates(page: 1, pageSize: 200),
         embossingApi.fetchEmbossingPlates(page: 1, pageSize: 200),
       ]);
-      final customerPage = results[0] as dynamic;
+      final customerPage = results[0] as CustomerPageDto;
       final productOptions = results[1] as List<ProductOption>;
-      final materialPage = results[2] as dynamic;
-      final processPage = results[3] as dynamic;
-      final artworkPage = results[4] as dynamic;
-      final diePage = results[5] as dynamic;
-      final foilingPage = results[6] as dynamic;
-      final embossingPage = results[7] as dynamic;
+      final materialPage = results[2] as MaterialPageDto;
+      final processPage = results[3] as ProcessPageDto;
+      final artworkPage = results[4] as ArtworkPageDto;
+      final diePage = results[5] as DiePageDto;
+      final foilingPage = results[6] as FoilingPlatePageDto;
+      final embossingPage = results[7] as EmbossingPlatePageDto;
 
       setState(() {
         _customers = customerPage.items.map<Customer>((item) => item.toEntity()).toList();
