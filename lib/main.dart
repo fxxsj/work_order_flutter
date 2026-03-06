@@ -48,6 +48,7 @@ class _MyAppState extends State<MyApp> {
     _apiClient = widget.apiClient;
     _themeController = ThemeController(_storage)..load();
     _authController = AuthController(_storage, _apiClient)..initialize();
+    Future.microtask(() => _authController.ensureValidSession());
     _notificationController = NotificationViewModel(
       _authController,
       NotificationApi(_apiClient),

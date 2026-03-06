@@ -35,9 +35,7 @@ class NotificationViewModel extends ChangeNotifier {
 
   void initialize() {
     _authController.addListener(_handleAuthChange);
-    if (_authController.isLoggedIn) {
-      startPolling();
-    }
+    startPolling();
   }
 
   @override

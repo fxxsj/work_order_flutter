@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:work_order_app/src/core/common/app_events.dart';
 import 'package:work_order_app/src/core/common/http_client.dart';
 import 'package:work_order_app/src/core/constants/response_code_constant.dart';
@@ -8,13 +9,22 @@ import 'package:work_order_app/src/core/models/api_response.dart';
 
 class AppDioInterceptors extends InterceptorsWrapper {
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+    await HttpClient.ensureFreshAccessToken();
     // 添加 JWT access token
     final token = HttpClient.accessToken;
     if (token != null && token.isNotEmpty) {
       options.headers[HttpHeaders.authorizationHeader] = 'Bearer $token';
     }
-    super.onRequest(options, handler);
+    if (kDebugMode && options.path.contains('/notifications/unread_count/')) {
+      final hasAuth = options.headers.containsKey(HttpHeaders.authorizationHeader);
+      final access = token ?? '';
+      final head = access.length >= 12 ? access.substring(0, 12) : access;
+      final tail = access.length >= 6 ? access.substring(access.length - 6) : access;
+      debugPrint('[auth] unread_count request authHeader=$hasAuth '
+          'tokenLen=${access.length} token=${head}...${tail}');
+    }
+    handler.next(options);
   }
 
   @override
@@ -31,6 +41,13 @@ class AppDioInterceptors extends InterceptorsWrapper {
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     // 401 错误处理：尝试刷新 token
     if (err.response?.statusCode == 401) {
+      if (kDebugMode) {
+        debugPrint('[auth] 401 response data: ${err.response?.data}');
+        debugPrint('[auth] 401 on ${err.requestOptions.path} '
+            'hasAccess=${(HttpClient.accessToken ?? '').isNotEmpty} '
+            'hasRefresh=${(HttpClient.refreshToken ?? '').isNotEmpty} '
+            'isRefreshing=${HttpClient.isRefreshing}');
+      }
       // 登录接口的 401 错误不刷新，交给调用方处理
       if (err.requestOptions.path.contains('/auth/login') ||
           err.requestOptions.path.contains('/auth/refresh') ||
@@ -46,9 +63,7 @@ class AppDioInterceptors extends InterceptorsWrapper {
       }
 
       // 开始刷新
-      HttpClient.setRefreshing(true);
-      final success = await HttpClient.refreshAccessToken();
-      HttpClient.setRefreshing(false);
+      final success = await HttpClient.refreshAccessTokenLocked();
 
       if (success) {
         // 刷新成功，重试当前请求和队列中的请求
