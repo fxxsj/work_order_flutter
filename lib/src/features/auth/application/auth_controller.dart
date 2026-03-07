@@ -17,25 +17,30 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<bool> ensureValidSession() async {
-    if (!_isLoggedIn) {
-      return false;
-    }
-    // First try access token validation via current user endpoint.
-    try {
-      await _apiClient.get('/auth/user/');
-      return true;
-    } catch (_) {
-      // Access token failed; try refresh if available.
+    if (_isLoggedIn) {
+      // First try access token validation via current user endpoint.
+      try {
+        await _apiClient.get('/auth/user/');
+        return true;
+      } catch (_) {
+        // Access token failed; try refresh if available.
+      }
     }
 
     final refresh = _storage.readRefreshToken();
     if (refresh == null || refresh.isEmpty) {
-      await handleLogout();
+      if (_isLoggedIn) {
+        await handleLogout();
+      }
       return false;
     }
 
     final refreshed = await _apiClient.refreshAccessToken();
     if (refreshed) {
+      if (!_isLoggedIn) {
+        _isLoggedIn = true;
+        notifyListeners();
+      }
       return true;
     }
 

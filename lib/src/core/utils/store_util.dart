@@ -72,6 +72,8 @@ class StoreUtil {
     await write(Constant.KEY_TOKEN, access); // legacy compatibility
     if (refresh != null) {
       await write(Constant.KEY_REFRESH_TOKEN, refresh);
+    } else {
+      await remove(Constant.KEY_REFRESH_TOKEN);
     }
   }
 
