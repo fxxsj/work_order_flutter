@@ -60,6 +60,11 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
   static const String _basicSectionTitle = '基本信息';
   static const String _extraSectionTitle = '补充信息';
   static const String _breadcrumbSeparator = ' / ';
+  static const String _diePlaceholder = '请选择刀模（可多选）';
+  static const String _foilingPlaceholder = '请选择烫金版（可多选）';
+  static const String _embossingPlaceholder = '请选择压凸版（可多选）';
+  static const String _searchHint = '搜索名称或编码';
+  static const String _emptyMatchText = '无匹配项';
 
   late final TextEditingController _baseCodeController;
   late final TextEditingController _nameController;
@@ -272,28 +277,44 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
     required String title,
     required List<_OptionItem> options,
     required Set<int> selectedIds,
+    required String placeholder,
   }) {
+    final selectedItems = options.where((item) => selectedIds.contains(item.id)).toList();
+
     final content = options.isEmpty
         ? Text('暂无可选项', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor))
-        : Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: options.map((item) {
-              final selected = selectedIds.contains(item.id);
-              return FilterChip(
-                label: Text(item.label),
-                selected: selected,
-                onSelected: (value) {
-                  setState(() {
-                    if (value) {
-                      selectedIds.add(item.id);
-                    } else {
-                      selectedIds.remove(item.id);
-                    }
-                  });
-                },
-              );
-            }).toList(),
+        : InkWell(
+            onTap: () => _openMultiSelectDialog(
+              title: title,
+              options: options,
+              selectedIds: selectedIds,
+            ),
+            borderRadius: BorderRadius.circular(8),
+            child: InputDecorator(
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
+                contentPadding: const EdgeInsets.all(12),
+                suffixIcon: const Icon(Icons.arrow_drop_down),
+              ),
+              child: selectedItems.isEmpty
+                  ? Text(placeholder, style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor))
+                  : Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: selectedItems
+                          .map(
+                            (item) => InputChip(
+                              label: Text(item.label),
+                              onDeleted: () {
+                                setState(() {
+                                  selectedIds.remove(item.id);
+                                });
+                              },
+                            ),
+                          )
+                          .toList(),
+                    ),
+            ),
           );
 
     return Column(
@@ -306,6 +327,103 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
         else
           content,
       ],
+    );
+  }
+
+  Future<void> _openMultiSelectDialog({
+    required String title,
+    required List<_OptionItem> options,
+    required Set<int> selectedIds,
+  }) async {
+    if (options.isEmpty) return;
+    final original = Set<int>.from(selectedIds);
+    String query = '';
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final filtered = options
+                .where((item) => item.label.toLowerCase().contains(query.toLowerCase()))
+                .toList();
+            return AlertDialog(
+              title: Text(title),
+              content: SizedBox(
+                width: 520,
+                height: 420,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextField(
+                      decoration: const InputDecoration(
+                        hintText: _searchHint,
+                        prefixIcon: Icon(Icons.search),
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (value) => setDialogState(() => query = value.trim()),
+                    ),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: filtered.isEmpty
+                          ? Center(child: Text(_emptyMatchText, style: Theme.of(context).textTheme.bodySmall))
+                          : Scrollbar(
+                              child: ListView.builder(
+                                itemCount: filtered.length,
+                                itemBuilder: (context, index) {
+                                  final item = filtered[index];
+                                  final selected = selectedIds.contains(item.id);
+                                  return CheckboxListTile(
+                                    value: selected,
+                                    dense: true,
+                                    controlAffinity: ListTileControlAffinity.leading,
+                                    title: Text(item.label),
+                                    onChanged: (value) {
+                                      setDialogState(() {
+                                        if (value == true) {
+                                          selectedIds.add(item.id);
+                                        } else {
+                                          selectedIds.remove(item.id);
+                                        }
+                                      });
+                                      setState(() {});
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      selectedIds
+                        ..clear()
+                        ..addAll(original);
+                    });
+                    Navigator.of(dialogContext).pop();
+                  },
+                  child: const Text('取消'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    setDialogState(() => selectedIds.clear());
+                    setState(() {});
+                  },
+                  child: const Text('清空'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('确定'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -491,6 +609,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
           .map((die) => _OptionItem(die.id, _optionLabel(die.name, die.code)))
           .toList(),
       selectedIds: _selectedDieIds,
+      placeholder: _diePlaceholder,
     );
     final foilingSection = _buildChipSection(
       theme,
@@ -499,6 +618,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
           .map((plate) => _OptionItem(plate.id, _optionLabel(plate.name, plate.code)))
           .toList(),
       selectedIds: _selectedFoilingIds,
+      placeholder: _foilingPlaceholder,
     );
     final embossingSection = _buildChipSection(
       theme,
@@ -507,6 +627,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
           .map((plate) => _OptionItem(plate.id, _optionLabel(plate.name, plate.code)))
           .toList(),
       selectedIds: _selectedEmbossingIds,
+      placeholder: _embossingPlaceholder,
     );
     final productSection = _buildProductSection(theme);
 

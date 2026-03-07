@@ -572,6 +572,8 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                       items: _processes.map((item) => _OptionItem(item.id, item.name)).toList(),
                       selected: _processIds,
                       emptyText: '暂无工序数据',
+                      title: '工序选择',
+                      placeholder: '请选择工序（可多选）',
                       onChanged: () => setState(() {}),
                     ),
                   ),
@@ -658,6 +660,8 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                               .toList(),
                           selected: _artworkIds,
                           emptyText: '暂无图稿数据',
+                          title: '图稿',
+                          placeholder: '请选择图稿（可多选）',
                           onChanged: () => setState(() {}),
                         ),
                         const SizedBox(height: 12),
@@ -671,6 +675,8 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                               .toList(),
                           selected: _dieIds,
                           emptyText: '暂无刀模数据',
+                          title: '刀模',
+                          placeholder: '请选择刀模（可多选）',
                           onChanged: () => setState(() {}),
                         ),
                         const SizedBox(height: 12),
@@ -684,6 +690,8 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                               .toList(),
                           selected: _foilingPlateIds,
                           emptyText: '暂无烫金版数据',
+                          title: '烫金版',
+                          placeholder: '请选择烫金版（可多选）',
                           onChanged: () => setState(() {}),
                         ),
                         const SizedBox(height: 12),
@@ -697,6 +705,8 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                               .toList(),
                           selected: _embossingPlateIds,
                           emptyText: '暂无压凸版数据',
+                          title: '压凸版',
+                          placeholder: '请选择压凸版（可多选）',
                           onChanged: () => setState(() {}),
                         ),
                       ],
@@ -721,12 +731,16 @@ class _MultiSelectChips extends StatelessWidget {
     required this.items,
     required this.selected,
     required this.emptyText,
+    required this.title,
+    required this.placeholder,
     required this.onChanged,
   });
 
   final List<_OptionItem> items;
   final Set<int> selected;
   final String emptyText;
+  final String title;
+  final String placeholder;
   final VoidCallback onChanged;
 
   @override
@@ -734,24 +748,126 @@ class _MultiSelectChips extends StatelessWidget {
     if (items.isEmpty) {
       return Text(emptyText, style: Theme.of(context).textTheme.bodyMedium);
     }
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: items.map((item) {
-        final isSelected = selected.contains(item.id);
-        return FilterChip(
-          label: Text(item.label),
-          selected: isSelected,
-          onSelected: (value) {
-            if (value) {
-              selected.add(item.id);
-            } else {
-              selected.remove(item.id);
-            }
-            onChanged();
+    final theme = Theme.of(context);
+    final selectedItems = items.where((item) => selected.contains(item.id)).toList();
+    return InkWell(
+      onTap: () => _openDialog(context),
+      borderRadius: BorderRadius.circular(8),
+      child: InputDecorator(
+        decoration: const InputDecoration(
+          border: OutlineInputBorder(),
+          contentPadding: EdgeInsets.all(12),
+          suffixIcon: Icon(Icons.arrow_drop_down),
+        ),
+        child: selectedItems.isEmpty
+            ? Text(placeholder, style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor))
+            : Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: selectedItems
+                    .map(
+                      (item) => InputChip(
+                        label: Text(item.label),
+                        onDeleted: () {
+                          selected.remove(item.id);
+                          onChanged();
+                        },
+                      ),
+                    )
+                    .toList(),
+              ),
+      ),
+    );
+  }
+
+  Future<void> _openDialog(BuildContext context) async {
+    final original = Set<int>.from(selected);
+    String query = '';
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final filtered = items
+                .where((item) => item.label.toLowerCase().contains(query.toLowerCase()))
+                .toList();
+            return AlertDialog(
+              title: Text(title),
+              content: SizedBox(
+                width: 520,
+                height: 420,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextField(
+                      decoration: const InputDecoration(
+                        hintText: '搜索名称或编码',
+                        prefixIcon: Icon(Icons.search),
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (value) => setDialogState(() => query = value.trim()),
+                    ),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: filtered.isEmpty
+                          ? Center(child: Text('无匹配项', style: Theme.of(context).textTheme.bodySmall))
+                          : Scrollbar(
+                              child: ListView.builder(
+                                itemCount: filtered.length,
+                                itemBuilder: (context, index) {
+                                  final item = filtered[index];
+                                  final isSelected = selected.contains(item.id);
+                                  return CheckboxListTile(
+                                    value: isSelected,
+                                    dense: true,
+                                    controlAffinity: ListTileControlAffinity.leading,
+                                    title: Text(item.label),
+                                    onChanged: (value) {
+                                      setDialogState(() {
+                                        if (value == true) {
+                                          selected.add(item.id);
+                                        } else {
+                                          selected.remove(item.id);
+                                        }
+                                      });
+                                      onChanged();
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    selected
+                      ..clear()
+                      ..addAll(original);
+                    onChanged();
+                    Navigator.of(dialogContext).pop();
+                  },
+                  child: const Text('取消'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    selected.clear();
+                    onChanged();
+                    setDialogState(() {});
+                  },
+                  child: const Text('清空'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('确定'),
+                ),
+              ],
+            );
           },
         );
-      }).toList(),
+      },
     );
   }
 }
