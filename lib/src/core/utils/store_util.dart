@@ -102,8 +102,6 @@ class StoreUtil {
     await write(Constant.KEY_TOKEN, access); // legacy compatibility
     if (refresh != null) {
       await write(Constant.KEY_REFRESH_TOKEN, refresh);
-    } else {
-      await remove(Constant.KEY_REFRESH_TOKEN);
     }
   }
 
@@ -115,13 +113,14 @@ class StoreUtil {
 
   static bool isLoggedIn() {
     final access = readAccessToken();
-    if (access == null || access.isEmpty) {
-      return false;
+    if (access != null && access.isNotEmpty && !_isTokenExpired(access)) {
+      return true;
     }
-    if (_isTokenExpired(access)) {
-      return false;
+    final refresh = read(Constant.KEY_REFRESH_TOKEN);
+    if (refresh != null && refresh.toString().isNotEmpty) {
+      return !_isTokenExpired(refresh.toString());
     }
-    return true;
+    return false;
   }
 
   static UserInfo getCurrentUserInfo() {

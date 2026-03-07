@@ -90,7 +90,8 @@ class HttpClient {
     if (refresh != null) {
       _refreshToken = refresh;
     }
-    StoreUtil.writeTokens(access: access, refresh: refresh);
+    final persistRefresh = refresh ?? _refreshToken;
+    StoreUtil.writeTokens(access: access, refresh: persistRefresh);
   }
 
   /// 清除 tokens
