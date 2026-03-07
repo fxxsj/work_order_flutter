@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:work_order_app/src/core/common/api_exception.dart';
 import 'package:work_order_app/src/core/constants/constant.dart';
 import 'package:work_order_app/src/core/storage/app_storage.dart';
@@ -16,6 +18,16 @@ class AuthViewModel extends ChangeNotifier {
   Map<String, dynamic> _currentUser = {};
 
   Map<String, dynamic> get currentUser => _currentUser;
+
+  void _notifySafe() {
+    if (WidgetsBinding.instance.schedulerPhase == SchedulerPhase.persistentCallbacks) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+    } else {
+      notifyListeners();
+    }
+  }
 
   String? readRememberedUsername() {
     final value = _storage.read(Constant.KEY_REMEMBER_USERNAME);
@@ -66,7 +78,7 @@ class AuthViewModel extends ChangeNotifier {
     }
     await _storage.write(Constant.KEY_CURRENT_USER_INFO, userInfo);
     _currentUser = userInfo;
-    notifyListeners();
+    _notifySafe();
   }
 
   Future<void> register(User user) async {
@@ -77,14 +89,14 @@ class AuthViewModel extends ChangeNotifier {
     final cached = _storage.read(Constant.KEY_CURRENT_USER_INFO);
     if (cached is Map) {
       _currentUser = Map<String, dynamic>.from(cached);
-      notifyListeners();
+      _notifySafe();
     }
     if (_currentUser.isEmpty) {
       final fetched = await _repository.fetchCurrentUser();
       if (fetched.isNotEmpty) {
         _currentUser = fetched;
         await _storage.write(Constant.KEY_CURRENT_USER_INFO, fetched);
-        notifyListeners();
+        _notifySafe();
       }
     }
     return _currentUser;
@@ -103,7 +115,7 @@ class AuthViewModel extends ChangeNotifier {
     final merged = {..._currentUser, ...data};
     _currentUser = merged;
     await _storage.write(Constant.KEY_CURRENT_USER_INFO, merged);
-    notifyListeners();
+    _notifySafe();
     return merged;
   }
 

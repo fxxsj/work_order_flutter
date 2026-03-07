@@ -16,15 +16,13 @@ GoRouter createAppRouter(AuthController authController) {
     navigatorKey: rootNavigatorKey,
     initialLocation: '/dashboard',
     refreshListenable: authController,
-    redirect: (context, state) async {
+    redirect: (context, state) {
       final goingToLogin = state.matchedLocation == '/login' || state.matchedLocation == '/register';
       final loggedIn = authController.isLoggedIn;
 
       if (loggedIn) {
-        final valid = await authController.ensureValidSession();
-        if (!valid) {
-          return goingToLogin ? null : '/login';
-        }
+        // Validate in background so we don't block initial render.
+        authController.ensureValidSession();
       }
 
       if (!loggedIn && !goingToLogin) {

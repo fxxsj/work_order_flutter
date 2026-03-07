@@ -67,6 +67,36 @@ class StoreUtil {
     return null;
   }
 
+  static Map<String, dynamic>? _decodeJwtPayload(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) {
+        return null;
+      }
+      final payloadBase64 = base64Url.normalize(parts[1]);
+      final payloadString = utf8.decode(base64Url.decode(payloadBase64));
+      final decoded = jsonDecode(payloadString);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  static bool _isTokenExpired(String token) {
+    final payload = _decodeJwtPayload(token);
+    if (payload == null) {
+      return true;
+    }
+    final exp = payload['exp'];
+    if (exp is! int) {
+      return true;
+    }
+    final expTime = DateTime.fromMillisecondsSinceEpoch(exp * 1000, isUtc: true);
+    final now = DateTime.now().toUtc();
+    return now.isAfter(expTime.add(const Duration(seconds: 30)));
+  }
+
   static Future<void> writeTokens({required String access, String? refresh}) async {
     await write(Constant.KEY_ACCESS_TOKEN, access);
     await write(Constant.KEY_TOKEN, access); // legacy compatibility
@@ -85,7 +115,13 @@ class StoreUtil {
 
   static bool isLoggedIn() {
     final access = readAccessToken();
-    return access != null && access.isNotEmpty;
+    if (access == null || access.isEmpty) {
+      return false;
+    }
+    if (_isTokenExpired(access)) {
+      return false;
+    }
+    return true;
   }
 
   static UserInfo getCurrentUserInfo() {

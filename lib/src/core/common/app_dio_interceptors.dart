@@ -10,7 +10,15 @@ import 'package:work_order_app/src/core/models/api_response.dart';
 class AppDioInterceptors extends InterceptorsWrapper {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
-    await HttpClient.ensureFreshAccessToken();
+    final path = options.path;
+    final skipRefresh = options.extra['skipAuthRefresh'] == true ||
+        path.contains('/auth/login') ||
+        path.contains('/auth/refresh') ||
+        path.contains('/user/login') ||
+        path.contains('/user/loginByFace');
+    if (!skipRefresh) {
+      await HttpClient.ensureFreshAccessToken();
+    }
     // 添加 JWT access token
     final token = HttpClient.accessToken;
     if (token != null && token.isNotEmpty) {
@@ -77,6 +85,7 @@ class AppDioInterceptors extends InterceptorsWrapper {
         return;
       } else {
         // 刷新失败，触发全局登录失效事件
+        await HttpClient.rejectQueuedRequests(err);
         AppEvents.emit(const AuthExpiredEvent());
         handler.next(err);
         return;

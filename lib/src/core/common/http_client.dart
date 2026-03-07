@@ -13,7 +13,7 @@ import 'package:work_order_app/src/core/utils/store_util.dart';
 class HttpClient {
   HttpClient._();
 
-  static late final Dio _dio;
+  static late Dio _dio;
   static String? _accessToken;
   static String? _refreshToken;
   static bool _isRefreshing = false;
@@ -54,6 +54,21 @@ class HttpClient {
     _requestQueue.clear();
   }
 
+  /// 拒绝队列中的所有请求
+  static Future<void> rejectQueuedRequests(DioException error) async {
+    for (final retry in _requestQueue) {
+      final dioError = error is DioException
+          ? error
+          : DioException(
+              requestOptions: retry.requestOptions,
+              error: error,
+              type: DioExceptionType.unknown,
+            );
+      retry.handler.next(dioError);
+    }
+    _requestQueue.clear();
+  }
+
   static void init() {
     final options = BaseOptions(
       baseUrl: AppConfig.apiBaseUrl,
@@ -83,6 +98,11 @@ class HttpClient {
     _accessToken = null;
     _refreshToken = null;
     StoreUtil.clearTokens();
+    // 取消所有进行中的请求并重置 Dio 实例
+    try {
+      _dio.close(force: true);
+    } catch (_) {}
+    init();
   }
 
   /// 刷新 access token

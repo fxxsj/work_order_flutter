@@ -181,8 +181,9 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     }
   }
 
-  void _handleLogout() {
-    context.read<AuthController>().handleLogout();
+  Future<void> _handleLogout() async {
+    await context.read<AuthController>().handleLogout();
+    if (!mounted) return;
     context.go('/login');
   }
 
