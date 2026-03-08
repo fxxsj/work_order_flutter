@@ -95,7 +95,8 @@ class _WorkOrderListView extends StatefulWidget {
   State<_WorkOrderListView> createState() => _WorkOrderListViewState();
 }
 
-class _WorkOrderListViewState extends State<_WorkOrderListView> {
+class _WorkOrderListViewState extends State<_WorkOrderListView>
+    with SingleTickerProviderStateMixin {
   static const _searchDebounceDuration = Duration(milliseconds: 450);
   static const double _searchWidth = 320;
   static const double _spacingSm = 8;
@@ -135,6 +136,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
   int? _customerFilterId;
   int? _productFilterId;
   int? _processFilterId;
+  bool _filtersExpanded = false;
 
   bool _loadingOptions = false;
   List<Customer> _customers = [];
@@ -291,13 +293,23 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
       return const Center(child: CircularProgressIndicator());
     }
     if (viewModel.errorMessage != null && !viewModel.loading) {
-      return _ErrorState(
-        message: viewModel.errorMessage ?? _errorFallbackText,
-        onRetry: () => viewModel.loadWorkOrders(resetPage: true),
+      return Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: _ErrorState(
+            message: viewModel.errorMessage ?? _errorFallbackText,
+            onRetry: () => viewModel.loadWorkOrders(resetPage: true),
+          ),
+        ),
       );
     }
     if (!viewModel.loading && workOrders.isEmpty) {
-      return const _EmptyState();
+      return const Center(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(vertical: 16),
+          child: _EmptyState(),
+        ),
+      );
     }
 
     if (isMobile) {
@@ -366,29 +378,29 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
     ];
 
     final customerItems = [
-      const DropdownMenuItem<int?>(value: null, child: Text('全部客户')),
+      const DropdownMenuItem<int?>(value: null, child: Text('全部客户', overflow: TextOverflow.ellipsis)),
       ..._customers.map(
         (item) => DropdownMenuItem<int?>(
           value: item.id,
-          child: Text(item.name),
+          child: Text(item.name, overflow: TextOverflow.ellipsis),
         ),
       ),
     ];
     final productItems = [
-      const DropdownMenuItem<int?>(value: null, child: Text('全部产品')),
+      const DropdownMenuItem<int?>(value: null, child: Text('全部产品', overflow: TextOverflow.ellipsis)),
       ..._products.map(
         (item) => DropdownMenuItem<int?>(
           value: item.id,
-          child: Text(item.displayLabel),
+          child: Text(item.displayLabel, overflow: TextOverflow.ellipsis),
         ),
       ),
     ];
     final processItems = [
-      const DropdownMenuItem<int?>(value: null, child: Text('全部工序')),
+      const DropdownMenuItem<int?>(value: null, child: Text('全部工序', overflow: TextOverflow.ellipsis)),
       ..._processes.map(
         (item) => DropdownMenuItem<int?>(
           value: item.id,
-          child: Text(item.name),
+          child: Text(item.name, overflow: TextOverflow.ellipsis),
         ),
       ),
     ];
@@ -400,6 +412,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
       padding: EdgeInsets.zero,
       actions: LayoutBuilder(
         builder: (context, constraints) {
+          final filtersExpanded = _filtersExpanded;
           final searchField = SizedBox(
             width: isMobile ? constraints.maxWidth : _searchWidth,
             child: SizedBox(
@@ -436,16 +449,102 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
             ),
           );
 
-          if (isMobile) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                searchField,
-                const SizedBox(height: _spacingSm),
-                if (_loadingOptions)
-                  const LinearProgressIndicator(minHeight: 2),
-                DropdownButtonFormField<String>(
+          final filterToggle = SizedBox(
+            height: _controlHeight,
+            child: OutlinedButton.icon(
+              onPressed: () => setState(() => _filtersExpanded = !filtersExpanded),
+              icon: Icon(filtersExpanded ? Icons.filter_alt_off : Icons.filter_alt_outlined),
+              label: Text(filtersExpanded ? '收起筛选' : '展开筛选'),
+            ),
+          );
+
+          final mobileFilters = Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (_loadingOptions) const LinearProgressIndicator(minHeight: 2),
+              DropdownButtonFormField<String>(
+                value: _statusFilter,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: '状态', border: OutlineInputBorder()),
+                items: statusItems,
+                onChanged: (value) {
+                  setState(() => _statusFilter = value);
+                  _applyFilters(viewModel);
+                },
+              ),
+              const SizedBox(height: _spacingSm),
+              DropdownButtonFormField<String>(
+                value: _priorityFilter,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: '优先级', border: OutlineInputBorder()),
+                items: priorityItems,
+                onChanged: (value) {
+                  setState(() => _priorityFilter = value);
+                  _applyFilters(viewModel);
+                },
+              ),
+              const SizedBox(height: _spacingSm),
+              DropdownButtonFormField<String>(
+                value: _approvalStatusFilter,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: '审核状态', border: OutlineInputBorder()),
+                items: approvalItems,
+                onChanged: (value) {
+                  setState(() => _approvalStatusFilter = value);
+                  _applyFilters(viewModel);
+                },
+              ),
+              const SizedBox(height: _spacingSm),
+              DropdownButtonFormField<int?>(
+                value: _customerFilterId,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: '客户', border: OutlineInputBorder()),
+                items: customerItems,
+                onChanged: (value) {
+                  setState(() => _customerFilterId = value);
+                  _applyFilters(viewModel);
+                },
+              ),
+              const SizedBox(height: _spacingSm),
+              DropdownButtonFormField<int?>(
+                value: _productFilterId,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: '产品', border: OutlineInputBorder()),
+                items: productItems,
+                onChanged: (value) {
+                  setState(() => _productFilterId = value);
+                  _applyFilters(viewModel);
+                },
+              ),
+              const SizedBox(height: _spacingSm),
+              DropdownButtonFormField<int?>(
+                value: _processFilterId,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: '工序', border: OutlineInputBorder()),
+                items: processItems,
+                onChanged: (value) {
+                  setState(() => _processFilterId = value);
+                  _applyFilters(viewModel);
+                },
+              ),
+            ],
+          );
+
+          final desktopFilters = Wrap(
+            spacing: _spacingSm,
+            runSpacing: 6,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              if (_loadingOptions)
+                const SizedBox(
+                  width: 120,
+                  child: LinearProgressIndicator(minHeight: 2),
+                ),
+              SizedBox(
+                width: 180,
+                child: DropdownButtonFormField<String>(
                   value: _statusFilter,
+                  isExpanded: true,
                   decoration: const InputDecoration(labelText: '状态', border: OutlineInputBorder()),
                   items: statusItems,
                   onChanged: (value) {
@@ -453,9 +552,12 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
                     _applyFilters(viewModel);
                   },
                 ),
-                const SizedBox(height: _spacingSm),
-                DropdownButtonFormField<String>(
+              ),
+              SizedBox(
+                width: 180,
+                child: DropdownButtonFormField<String>(
                   value: _priorityFilter,
+                  isExpanded: true,
                   decoration: const InputDecoration(labelText: '优先级', border: OutlineInputBorder()),
                   items: priorityItems,
                   onChanged: (value) {
@@ -463,9 +565,12 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
                     _applyFilters(viewModel);
                   },
                 ),
-                const SizedBox(height: _spacingSm),
-                DropdownButtonFormField<String>(
+              ),
+              SizedBox(
+                width: 180,
+                child: DropdownButtonFormField<String>(
                   value: _approvalStatusFilter,
+                  isExpanded: true,
                   decoration: const InputDecoration(labelText: '审核状态', border: OutlineInputBorder()),
                   items: approvalItems,
                   onChanged: (value) {
@@ -473,9 +578,12 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
                     _applyFilters(viewModel);
                   },
                 ),
-                const SizedBox(height: _spacingSm),
-                DropdownButtonFormField<int?>(
+              ),
+              SizedBox(
+                width: 220,
+                child: DropdownButtonFormField<int?>(
                   value: _customerFilterId,
+                  isExpanded: true,
                   decoration: const InputDecoration(labelText: '客户', border: OutlineInputBorder()),
                   items: customerItems,
                   onChanged: (value) {
@@ -483,9 +591,12 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
                     _applyFilters(viewModel);
                   },
                 ),
-                const SizedBox(height: _spacingSm),
-                DropdownButtonFormField<int?>(
+              ),
+              SizedBox(
+                width: 220,
+                child: DropdownButtonFormField<int?>(
                   value: _productFilterId,
+                  isExpanded: true,
                   decoration: const InputDecoration(labelText: '产品', border: OutlineInputBorder()),
                   items: productItems,
                   onChanged: (value) {
@@ -493,9 +604,12 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
                     _applyFilters(viewModel);
                   },
                 ),
-                const SizedBox(height: _spacingSm),
-                DropdownButtonFormField<int?>(
+              ),
+              SizedBox(
+                width: 220,
+                child: DropdownButtonFormField<int?>(
                   value: _processFilterId,
+                  isExpanded: true,
                   decoration: const InputDecoration(labelText: '工序', border: OutlineInputBorder()),
                   items: processItems,
                   onChanged: (value) {
@@ -503,22 +617,48 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
                     _applyFilters(viewModel);
                   },
                 ),
+              ),
+            ],
+          );
+
+          if (isMobile) {
+            final maxFilterHeight = MediaQuery.of(context).size.height * 0.45;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                searchField,
                 const SizedBox(height: _spacingSm),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                filterToggle,
+                const SizedBox(height: _spacingSm),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOut,
+                  child: filtersExpanded
+                      ? ConstrainedBox(
+                          constraints: BoxConstraints(maxHeight: maxFilterHeight),
+                          child: SingleChildScrollView(
+                            physics: const ClampingScrollPhysics(),
+                            child: mobileFilters,
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+                const SizedBox(height: _spacingSm),
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: _spacingSm,
+                  runSpacing: _spacingSm,
                   children: [
                     PageActionButton.outlined(
                       onPressed: () => viewModel.loadWorkOrders(resetPage: true),
                       icon: const Icon(Icons.refresh, size: 16),
                       label: _refreshButtonText,
                     ),
-                    const SizedBox(width: _spacingSm),
                     PageActionButton.outlined(
                       onPressed: () => _resetFilters(viewModel),
                       icon: const Icon(Icons.refresh, size: 16),
                       label: _resetButtonText,
                     ),
-                    const SizedBox(width: _spacingSm),
                     PageActionButton.filled(
                       onPressed: () => context.go('/workorders/create'),
                       icon: const Icon(Icons.add),
@@ -530,122 +670,68 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
             );
           }
 
-          return Wrap(
-            spacing: _spacingSm,
-            runSpacing: 6,
-            crossAxisAlignment: WrapCrossAlignment.center,
+          final maxFilterHeight = MediaQuery.of(context).size.height * 0.35;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              searchField,
-              if (_loadingOptions)
-                const SizedBox(
-                  width: 120,
-                  child: LinearProgressIndicator(minHeight: 2),
-                ),
-              SizedBox(
-                width: 180,
-                child: DropdownButtonFormField<String>(
-                  value: _statusFilter,
-                  decoration: const InputDecoration(labelText: '状态', border: OutlineInputBorder()),
-                  items: statusItems,
-                  onChanged: (value) {
-                    setState(() => _statusFilter = value);
-                    _applyFilters(viewModel);
-                  },
-                ),
-              ),
-              SizedBox(
-                width: 180,
-                child: DropdownButtonFormField<String>(
-                  value: _priorityFilter,
-                  decoration: const InputDecoration(labelText: '优先级', border: OutlineInputBorder()),
-                  items: priorityItems,
-                  onChanged: (value) {
-                    setState(() => _priorityFilter = value);
-                    _applyFilters(viewModel);
-                  },
-                ),
-              ),
-              SizedBox(
-                width: 180,
-                child: DropdownButtonFormField<String>(
-                  value: _approvalStatusFilter,
-                  decoration: const InputDecoration(labelText: '审核状态', border: OutlineInputBorder()),
-                  items: approvalItems,
-                  onChanged: (value) {
-                    setState(() => _approvalStatusFilter = value);
-                    _applyFilters(viewModel);
-                  },
-                ),
-              ),
-              SizedBox(
-                width: 220,
-                child: DropdownButtonFormField<int?>(
-                  value: _customerFilterId,
-                  decoration: const InputDecoration(labelText: '客户', border: OutlineInputBorder()),
-                  items: customerItems,
-                  onChanged: (value) {
-                    setState(() => _customerFilterId = value);
-                    _applyFilters(viewModel);
-                  },
-                ),
-              ),
-              SizedBox(
-                width: 220,
-                child: DropdownButtonFormField<int?>(
-                  value: _productFilterId,
-                  decoration: const InputDecoration(labelText: '产品', border: OutlineInputBorder()),
-                  items: productItems,
-                  onChanged: (value) {
-                    setState(() => _productFilterId = value);
-                    _applyFilters(viewModel);
-                  },
-                ),
-              ),
-              SizedBox(
-                width: 220,
-                child: DropdownButtonFormField<int?>(
-                  value: _processFilterId,
-                  decoration: const InputDecoration(labelText: '工序', border: OutlineInputBorder()),
-                  items: processItems,
-                  onChanged: (value) {
-                    setState(() => _processFilterId = value);
-                    _applyFilters(viewModel);
-                  },
-                ),
-              ),
-              PageActionButton.outlined(
-                onPressed: () => viewModel.loadWorkOrders(resetPage: true),
-                icon: const Icon(Icons.refresh, size: 16),
-                label: _refreshButtonText,
-              ),
-              PageActionButton.outlined(
-                onPressed: () => _resetFilters(viewModel),
-                icon: const Icon(Icons.refresh, size: 16),
-                label: _resetButtonText,
-              ),
-              PageActionButton.outlined(
-                onPressed: () => setState(() => _denseTable = !_denseTable),
-                icon: Icon(_denseTable ? Icons.table_rows : Icons.table_chart),
-                label: _denseTable ? '舒适' : '紧凑',
-              ),
-              SizedBox(
-                key: _columnsMenuKey,
-                height: _controlHeight,
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(_controlRadius),
+              Wrap(
+                spacing: _spacingSm,
+                runSpacing: 6,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  searchField,
+                  filterToggle,
+                  PageActionButton.outlined(
+                    onPressed: () => viewModel.loadWorkOrders(resetPage: true),
+                    icon: const Icon(Icons.refresh, size: 16),
+                    label: _refreshButtonText,
+                  ),
+                  PageActionButton.outlined(
+                    onPressed: () => _resetFilters(viewModel),
+                    icon: const Icon(Icons.refresh, size: 16),
+                    label: _resetButtonText,
+                  ),
+                  PageActionButton.outlined(
+                    onPressed: () => setState(() => _denseTable = !_denseTable),
+                    icon: Icon(_denseTable ? Icons.table_rows : Icons.table_chart),
+                    label: _denseTable ? '舒适' : '紧凑',
+                  ),
+                  SizedBox(
+                    key: _columnsMenuKey,
+                    height: _controlHeight,
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(_controlRadius),
+                        ),
+                      ),
+                      onPressed: () => _openColumnsMenu(context),
+                      icon: const Icon(Icons.view_column, size: 18),
+                      label: const Text('列管理'),
                     ),
                   ),
-                  onPressed: () => _openColumnsMenu(context),
-                  icon: const Icon(Icons.view_column, size: 18),
-                  label: const Text('列管理'),
-                ),
+                  PageActionButton.filled(
+                    onPressed: () => context.go('/workorders/create'),
+                    icon: const Icon(Icons.add),
+                    label: _createButtonText,
+                  ),
+                ],
               ),
-              PageActionButton.filled(
-                onPressed: () => context.go('/workorders/create'),
-                icon: const Icon(Icons.add),
-                label: _createButtonText,
+              AnimatedSize(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOut,
+                child: filtersExpanded
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: _spacingSm),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(maxHeight: maxFilterHeight),
+                          child: SingleChildScrollView(
+                            physics: const ClampingScrollPhysics(),
+                            child: desktopFilters,
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
               ),
             ],
           );
