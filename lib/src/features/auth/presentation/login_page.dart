@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/api_exception.dart';
-import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/features/auth/application/auth_view_model.dart';
 import 'package:work_order_app/src/features/auth/domain/user.dart';
+import 'package:work_order_app/src/features/auth/presentation/widgets/auth_scaffold.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 
 class Login extends StatefulWidget {
@@ -20,6 +21,7 @@ class _LoginState extends State<Login> {
   final TextEditingController passwordController = TextEditingController();
   final User user = User();
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   @override
   void initState() {
@@ -27,7 +29,8 @@ class _LoginState extends State<Login> {
     passwordController.text = '';
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final savedUsername = context.read<AuthViewModel>().readRememberedUsername();
+      final savedUsername =
+          context.read<AuthViewModel>().readRememberedUsername();
       userNameController.text = savedUsername ?? '';
       if (userNameController.text.isNotEmpty) {
         focusNodePassword.requestFocus();
@@ -50,109 +53,105 @@ class _LoginState extends State<Login> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
-    final background = colors.background;
-    final surface = colors.surface;
-    final primary = theme.colorScheme.primary;
 
-    return Scaffold(
-      backgroundColor: background,
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Card(
-              color: surface,
-              elevation: 10,
-              shadowColor: Colors.black.withOpacity(0.15),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(28, 32, 28, 28),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      '新西彩订单管理',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '请输入账号与密码登录',
-                      style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    Form(
-                      key: formKey,
-                      child: Column(
-                        children: [
-                          TextFormField(
-                            focusNode: focusNodeUserName,
-                            controller: userNameController,
-                            decoration: const InputDecoration(
-                              labelText: '账号',
-                              prefixIcon: Icon(Icons.person_outline),
-                            ),
-                            onFieldSubmitted: (_) => focusNodePassword.requestFocus(),
-                            validator: (v) => (v == null || v.isEmpty) ? '请输入账号' : null,
-                          ),
-                          const SizedBox(height: 16),
-                          TextFormField(
-                            focusNode: focusNodePassword,
-                            controller: passwordController,
-                            obscureText: true,
-                            decoration: const InputDecoration(
-                              labelText: '密码',
-                              prefixIcon: Icon(Icons.lock_outline),
-                            ),
-                            onFieldSubmitted: (_) {
-                              if (!_isLoading) {
-                                _login();
-                              }
-                            },
-                            validator: (v) => (v == null || v.isEmpty) ? '请输入密码' : null,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    FilledButton(
-                      onPressed: _isLoading ? null : _login,
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('登录'),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        TextButton(
-                          onPressed: _register,
-                          child: Text('注册账号', style: TextStyle(color: primary)),
-                        ),
-                        TextButton(
-                          onPressed: () {},
-                          child: const Text('忘记密码'),
-                        ),
-                      ],
-                    ),
-                  ],
+    return AuthScaffold(
+      title: '登录',
+      heroTitle: '订单工作台',
+      form: Form(
+        key: formKey,
+        child: Column(
+          children: [
+            TextFormField(
+              focusNode: focusNodeUserName,
+              controller: userNameController,
+              textInputAction: TextInputAction.next,
+              decoration: const InputDecoration(
+                labelText: '账号',
+                hintText: '请输入用户名或工号',
+                prefixIcon: Icon(Icons.person_outline),
+              ),
+              onFieldSubmitted: (_) => focusNodePassword.requestFocus(),
+              validator: (v) => (v == null || v.isEmpty) ? '请输入账号' : null,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              focusNode: focusNodePassword,
+              controller: passwordController,
+              obscureText: _obscurePassword,
+              decoration: InputDecoration(
+                labelText: '密码',
+                hintText: '请输入登录密码',
+                prefixIcon: const Icon(Icons.lock_outline),
+                suffixIcon: IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword;
+                    });
+                  },
+                  icon: Icon(
+                    _obscurePassword
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                  ),
                 ),
               ),
+              onFieldSubmitted: (_) {
+                if (!_isLoading) {
+                  _login();
+                }
+              },
+              validator: (v) => (v == null || v.isEmpty) ? '请输入密码' : null,
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: _isLoading ? null : _login,
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF0F766E),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18)),
+                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text('登录'),
+              ),
+            ),
+          ],
+        ),
+      ),
+      footer: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text('还没有账号？',
+                  style: theme.textTheme.bodyMedium
+                      ?.copyWith(color: colors.subtleText)),
+              TextButton(
+                onPressed: _register,
+                child: const Text('注册'),
+              ),
+            ],
+          ),
+          TextButton.icon(
+            onPressed: () {},
+            style: TextButton.styleFrom(padding: EdgeInsets.zero),
+            icon: Icon(Icons.help_outline, size: 18, color: colors.subtleText),
+            label: Text(
+              '忘记密码请联系管理员',
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(color: colors.subtleText),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -194,5 +193,4 @@ class _LoginState extends State<Login> {
       }
     }
   }
-
 }

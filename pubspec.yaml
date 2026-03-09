@@ -27,3 +27,7 @@ flutter:
     - config/
     - assets/images/
     - PRIVACY
+  fonts:
+    - family: BowlbyDisplay
+      fonts:
+        - asset: assets/fonts/BowlbyOneSC-Regular.ttf
