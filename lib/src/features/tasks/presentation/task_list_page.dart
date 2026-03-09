@@ -8,6 +8,12 @@ import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
+import 'package:work_order_app/src/features/departments/data/department_dto.dart';
+import 'package:work_order_app/src/features/departments/domain/department.dart';
+import 'package:work_order_app/src/features/processes/data/process_api_service.dart';
+import 'package:work_order_app/src/features/processes/data/process_dto.dart';
+import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/tasks/application/task_view_model.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
 import 'package:work_order_app/src/features/tasks/data/task_repository_impl.dart';
@@ -96,6 +102,7 @@ class _TaskListViewState extends State<_TaskListView> {
 
   static const String _searchHintText = '搜索任务内容/施工单号';
   static const String _refreshButtonText = '刷新';
+  static const String _resetButtonText = '重置筛选';
   static const String _emptyText = '暂无任务数据';
   static const String _errorFallbackText = '加载失败';
   static const String _retryText = '重新加载';
@@ -104,6 +111,7 @@ class _TaskListViewState extends State<_TaskListView> {
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
   bool _denseTable = false;
+  bool _filtersExpanded = false;
   final GlobalKey _columnsMenuKey = GlobalKey();
   final Set<_TaskColumn> _visibleColumns = {
     _TaskColumn.id,
@@ -117,6 +125,20 @@ class _TaskListViewState extends State<_TaskListView> {
     _TaskColumn.progress,
     _TaskColumn.status,
   };
+  String? _statusFilter;
+  String? _priorityFilter;
+  int? _departmentFilterId;
+  int? _processFilterId;
+
+  bool _loadingOptions = false;
+  List<Department> _departments = [];
+  List<Process> _processes = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFilterOptions();
+  }
 
   @override
   void dispose() {
@@ -136,6 +158,49 @@ class _TaskListViewState extends State<_TaskListView> {
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadTasks(resetPage: true);
     });
+  }
+
+  void _applyFilters(TaskViewModel viewModel) {
+    viewModel
+      ..setStatusFilter(_statusFilter)
+      ..setPriorityFilter(_priorityFilter)
+      ..setDepartmentFilterId(_departmentFilterId)
+      ..setProcessFilterId(_processFilterId);
+    viewModel.loadTasks(resetPage: true);
+  }
+
+  void _resetFilters(TaskViewModel viewModel) {
+    _searchController.clear();
+    _statusFilter = null;
+    _priorityFilter = null;
+    _departmentFilterId = null;
+    _processFilterId = null;
+    viewModel.setSearchText('');
+    _applyFilters(viewModel);
+  }
+
+  Future<void> _loadFilterOptions() async {
+    setState(() => _loadingOptions = true);
+    try {
+      final apiClient = context.read<ApiClient>();
+      final departmentApi = DepartmentApiService(apiClient);
+      final processApi = ProcessApiService(apiClient);
+      final results = await Future.wait([
+        departmentApi.fetchDepartments(page: 1, pageSize: 200),
+        processApi.fetchProcesses(page: 1, pageSize: 200),
+      ]);
+      final departmentPage = results[0] as DepartmentPageDto;
+      final processPage = results[1] as ProcessPageDto;
+      if (!mounted) return;
+      setState(() {
+        _departments = departmentPage.items.map<Department>((item) => item.toEntity()).toList();
+        _processes = processPage.items.map<Process>((item) => item.toEntity()).toList();
+      });
+    } catch (err) {
+      // 忽略筛选加载失败，避免影响列表主体
+    } finally {
+      if (mounted) setState(() => _loadingOptions = false);
+    }
   }
 
   void _openColumnsMenu(BuildContext context) {
@@ -185,6 +250,10 @@ class _TaskListViewState extends State<_TaskListView> {
     return Consumer<TaskViewModel>(
       builder: (context, viewModel, _) {
         final tasks = viewModel.tasks;
+        _statusFilter = viewModel.statusFilter;
+        _priorityFilter = viewModel.priorityFilter;
+        _departmentFilterId = viewModel.departmentFilterId;
+        _processFilterId = viewModel.processFilterId;
         return ListPageScaffold(
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, breadcrumb, isMobile),
@@ -205,13 +274,23 @@ class _TaskListViewState extends State<_TaskListView> {
       return const Center(child: CircularProgressIndicator());
     }
     if (viewModel.errorMessage != null && !viewModel.loading) {
-      return _ErrorState(
-        message: viewModel.errorMessage ?? _errorFallbackText,
-        onRetry: () => viewModel.loadTasks(resetPage: true),
+      return Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: _ErrorState(
+            message: viewModel.errorMessage ?? _errorFallbackText,
+            onRetry: () => viewModel.loadTasks(resetPage: true),
+          ),
+        ),
       );
     }
     if (!viewModel.loading && tasks.isEmpty) {
-      return const _EmptyState();
+      return const Center(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(vertical: 16),
+          child: _EmptyState(),
+        ),
+      );
     }
 
     if (isMobile) {
@@ -260,6 +339,38 @@ class _TaskListViewState extends State<_TaskListView> {
     List<String> breadcrumb,
     bool isMobile,
   ) {
+    final statusItems = const [
+      DropdownMenuItem(value: 'draft', child: Text('草稿')),
+      DropdownMenuItem(value: 'pending', child: Text('待开始')),
+      DropdownMenuItem(value: 'in_progress', child: Text('进行中')),
+      DropdownMenuItem(value: 'completed', child: Text('已完成')),
+      DropdownMenuItem(value: 'cancelled', child: Text('已取消')),
+    ];
+    final priorityItems = const [
+      DropdownMenuItem(value: 'low', child: Text('低')),
+      DropdownMenuItem(value: 'normal', child: Text('普通')),
+      DropdownMenuItem(value: 'high', child: Text('高')),
+      DropdownMenuItem(value: 'urgent', child: Text('紧急')),
+    ];
+    final departmentItems = [
+      const DropdownMenuItem<int?>(value: null, child: Text('全部部门', overflow: TextOverflow.ellipsis)),
+      ..._departments.map(
+        (item) => DropdownMenuItem<int?>(
+          value: item.id,
+          child: Text(item.name, overflow: TextOverflow.ellipsis),
+        ),
+      ),
+    ];
+    final processItems = [
+      const DropdownMenuItem<int?>(value: null, child: Text('全部工序', overflow: TextOverflow.ellipsis)),
+      ..._processes.map(
+        (item) => DropdownMenuItem<int?>(
+          value: item.id,
+          child: Text(item.name, overflow: TextOverflow.ellipsis),
+        ),
+      ),
+    ];
+
     return PageHeaderBar(
       breadcrumb: breadcrumb.isEmpty ? null : breadcrumb.join(_breadcrumbSeparator),
       useSurface: false,
@@ -267,6 +378,7 @@ class _TaskListViewState extends State<_TaskListView> {
       padding: EdgeInsets.zero,
       actions: LayoutBuilder(
         builder: (context, constraints) {
+          final filtersExpanded = _filtersExpanded;
           final searchField = SizedBox(
             width: isMobile ? constraints.maxWidth : _searchWidth,
             child: SizedBox(
@@ -303,19 +415,167 @@ class _TaskListViewState extends State<_TaskListView> {
             ),
           );
 
+          final filterToggle = SizedBox(
+            height: _controlHeight,
+            child: OutlinedButton.icon(
+              onPressed: () => setState(() => _filtersExpanded = !filtersExpanded),
+              icon: Icon(filtersExpanded ? Icons.filter_alt_off : Icons.filter_alt_outlined),
+              label: Text(filtersExpanded ? '收起筛选' : '展开筛选'),
+            ),
+          );
+
+          final mobileFilters = Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (_loadingOptions) const LinearProgressIndicator(minHeight: 2),
+              DropdownButtonFormField<String>(
+                value: _statusFilter,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: '状态', border: OutlineInputBorder()),
+                items: statusItems,
+                onChanged: (value) {
+                  setState(() => _statusFilter = value);
+                  _applyFilters(viewModel);
+                },
+              ),
+              const SizedBox(height: _spacingSm),
+              DropdownButtonFormField<String>(
+                value: _priorityFilter,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: '优先级', border: OutlineInputBorder()),
+                items: priorityItems,
+                onChanged: (value) {
+                  setState(() => _priorityFilter = value);
+                  _applyFilters(viewModel);
+                },
+              ),
+              const SizedBox(height: _spacingSm),
+              DropdownButtonFormField<int?>(
+                value: _departmentFilterId,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: '部门', border: OutlineInputBorder()),
+                items: departmentItems,
+                onChanged: (value) {
+                  setState(() => _departmentFilterId = value);
+                  _applyFilters(viewModel);
+                },
+              ),
+              const SizedBox(height: _spacingSm),
+              DropdownButtonFormField<int?>(
+                value: _processFilterId,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: '工序', border: OutlineInputBorder()),
+                items: processItems,
+                onChanged: (value) {
+                  setState(() => _processFilterId = value);
+                  _applyFilters(viewModel);
+                },
+              ),
+            ],
+          );
+
+          final desktopFilters = Wrap(
+            spacing: _spacingSm,
+            runSpacing: 6,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              if (_loadingOptions)
+                const SizedBox(
+                  width: 120,
+                  child: LinearProgressIndicator(minHeight: 2),
+                ),
+              SizedBox(
+                width: 180,
+                child: DropdownButtonFormField<String>(
+                  value: _statusFilter,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: '状态', border: OutlineInputBorder()),
+                  items: statusItems,
+                  onChanged: (value) {
+                    setState(() => _statusFilter = value);
+                    _applyFilters(viewModel);
+                  },
+                ),
+              ),
+              SizedBox(
+                width: 180,
+                child: DropdownButtonFormField<String>(
+                  value: _priorityFilter,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: '优先级', border: OutlineInputBorder()),
+                  items: priorityItems,
+                  onChanged: (value) {
+                    setState(() => _priorityFilter = value);
+                    _applyFilters(viewModel);
+                  },
+                ),
+              ),
+              SizedBox(
+                width: 220,
+                child: DropdownButtonFormField<int?>(
+                  value: _departmentFilterId,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: '部门', border: OutlineInputBorder()),
+                  items: departmentItems,
+                  onChanged: (value) {
+                    setState(() => _departmentFilterId = value);
+                    _applyFilters(viewModel);
+                  },
+                ),
+              ),
+              SizedBox(
+                width: 220,
+                child: DropdownButtonFormField<int?>(
+                  value: _processFilterId,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: '工序', border: OutlineInputBorder()),
+                  items: processItems,
+                  onChanged: (value) {
+                    setState(() => _processFilterId = value);
+                    _applyFilters(viewModel);
+                  },
+                ),
+              ),
+            ],
+          );
+
           if (isMobile) {
+            final maxFilterHeight = MediaQuery.of(context).size.height * 0.45;
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 searchField,
                 const SizedBox(height: _spacingSm),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                filterToggle,
+                const SizedBox(height: _spacingSm),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOut,
+                  child: filtersExpanded
+                      ? ConstrainedBox(
+                          constraints: BoxConstraints(maxHeight: maxFilterHeight),
+                          child: SingleChildScrollView(
+                            physics: const ClampingScrollPhysics(),
+                            child: mobileFilters,
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+                const SizedBox(height: _spacingSm),
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: _spacingSm,
+                  runSpacing: _spacingSm,
                   children: [
                     PageActionButton.outlined(
                       onPressed: () => viewModel.loadTasks(resetPage: true),
                       icon: const Icon(Icons.refresh, size: 16),
                       label: _refreshButtonText,
+                    ),
+                    PageActionButton.outlined(
+                      onPressed: () => _resetFilters(viewModel),
+                      icon: const Icon(Icons.refresh, size: 16),
+                      label: _resetButtonText,
                     ),
                   ],
                 ),
@@ -323,35 +583,63 @@ class _TaskListViewState extends State<_TaskListView> {
             );
           }
 
-          return Wrap(
-            spacing: _spacingSm,
-            runSpacing: 6,
-            crossAxisAlignment: WrapCrossAlignment.center,
+          final maxFilterHeight = MediaQuery.of(context).size.height * 0.35;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              searchField,
-              PageActionButton.outlined(
-                onPressed: () => viewModel.loadTasks(resetPage: true),
-                icon: const Icon(Icons.refresh, size: 16),
-                label: _refreshButtonText,
-              ),
-              PageActionButton.outlined(
-                onPressed: () => setState(() => _denseTable = !_denseTable),
-                icon: Icon(_denseTable ? Icons.table_rows : Icons.table_chart),
-                label: _denseTable ? '舒适' : '紧凑',
-              ),
-              SizedBox(
-                key: _columnsMenuKey,
-                height: _controlHeight,
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(_controlRadius),
+              Wrap(
+                spacing: _spacingSm,
+                runSpacing: 6,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  searchField,
+                  filterToggle,
+                  PageActionButton.outlined(
+                    onPressed: () => viewModel.loadTasks(resetPage: true),
+                    icon: const Icon(Icons.refresh, size: 16),
+                    label: _refreshButtonText,
+                  ),
+                  PageActionButton.outlined(
+                    onPressed: () => _resetFilters(viewModel),
+                    icon: const Icon(Icons.refresh, size: 16),
+                    label: _resetButtonText,
+                  ),
+                  PageActionButton.outlined(
+                    onPressed: () => setState(() => _denseTable = !_denseTable),
+                    icon: Icon(_denseTable ? Icons.table_rows : Icons.table_chart),
+                    label: _denseTable ? '舒适' : '紧凑',
+                  ),
+                  SizedBox(
+                    key: _columnsMenuKey,
+                    height: _controlHeight,
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(_controlRadius),
+                        ),
+                      ),
+                      onPressed: () => _openColumnsMenu(context),
+                      icon: const Icon(Icons.view_column, size: 18),
+                      label: const Text('列管理'),
                     ),
                   ),
-                  onPressed: () => _openColumnsMenu(context),
-                  icon: const Icon(Icons.view_column, size: 18),
-                  label: const Text('列管理'),
-                ),
+                ],
+              ),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOut,
+                child: filtersExpanded
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: _spacingSm),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(maxHeight: maxFilterHeight),
+                          child: SingleChildScrollView(
+                            physics: const ClampingScrollPhysics(),
+                            child: desktopFilters,
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
               ),
             ],
           );

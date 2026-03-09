@@ -108,9 +108,13 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
   final TextEditingController _printingOtherColorsController = TextEditingController();
   final TextEditingController _orderDateController = TextEditingController();
   final TextEditingController _deliveryDateController = TextEditingController();
+  final TextEditingController _productionQuantityController = TextEditingController();
+  final TextEditingController _defectiveQuantityController = TextEditingController();
+  final TextEditingController _actualDeliveryDateController = TextEditingController();
 
   DateTime? _orderDate;
   DateTime? _deliveryDate;
+  DateTime? _actualDeliveryDate;
 
   int? _customerId;
   String _status = 'pending';
@@ -159,6 +163,9 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     _printingOtherColorsController.dispose();
     _orderDateController.dispose();
     _deliveryDateController.dispose();
+    _productionQuantityController.dispose();
+    _defectiveQuantityController.dispose();
+    _actualDeliveryDateController.dispose();
     for (final draft in _productDrafts) {
       draft.dispose();
     }
@@ -236,8 +243,12 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     _priority = detail.priority ?? _priority;
     _orderDate = detail.orderDate;
     _deliveryDate = detail.deliveryDate;
+    _actualDeliveryDate = detail.actualDeliveryDate;
     _orderDateController.text = _formatDate(_orderDate);
     _deliveryDateController.text = _formatDate(_deliveryDate);
+    _actualDeliveryDateController.text = _formatDate(_actualDeliveryDate);
+    _productionQuantityController.text = detail.productionQuantity?.toString() ?? '';
+    _defectiveQuantityController.text = detail.defectiveQuantity?.toString() ?? '';
     _printingType = detail.printingType ?? _printingType;
     _printingCmyk
       ..clear()
@@ -306,6 +317,21 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     });
   }
 
+  Future<void> _pickActualDeliveryDate() async {
+    final initial = _actualDeliveryDate ?? DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+    );
+    if (picked == null) return;
+    setState(() {
+      _actualDeliveryDate = picked;
+      _actualDeliveryDateController.text = _formatDate(picked);
+    });
+  }
+
   Map<String, dynamic> _buildPayload() {
     final products = _productDrafts
         .where((draft) => draft.productId != null)
@@ -341,12 +367,18 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
 
     final orderDate = _formatDate(_orderDate);
     final deliveryDate = _formatDate(_deliveryDate);
+    final actualDeliveryDate = _formatDate(_actualDeliveryDate);
+    final productionQuantity = int.tryParse(_productionQuantityController.text.trim());
+    final defectiveQuantity = int.tryParse(_defectiveQuantityController.text.trim());
     return {
       'customer': _customerId,
       'status': _status,
       'priority': _priority,
       'order_date': orderDate.isEmpty ? null : orderDate,
       'delivery_date': deliveryDate.isEmpty ? null : deliveryDate,
+      'actual_delivery_date': actualDeliveryDate.isEmpty ? null : actualDeliveryDate,
+      'production_quantity': productionQuantity,
+      'defective_quantity': defectiveQuantity,
       'notes': _notesController.text.trim(),
       'printing_type': _printingType,
       'printing_cmyk_colors': _printingCmyk.toList(),
@@ -530,6 +562,50 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                                 validator: (value) => (value == null || value.isEmpty) ? '请选择交货日期' : null,
                               ),
                             ),
+                            SizedBox(
+                              width: 240,
+                              child: TextFormField(
+                                controller: _productionQuantityController,
+                                decoration: const InputDecoration(labelText: '生产数量', border: OutlineInputBorder()),
+                                keyboardType: TextInputType.number,
+                                validator: (value) {
+                                  final text = value?.trim() ?? '';
+                                  if (text.isEmpty) return null;
+                                  final parsed = int.tryParse(text);
+                                  if (parsed == null || parsed <= 0) {
+                                    return '请输入有效数量';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                            SizedBox(
+                              width: 240,
+                              child: TextFormField(
+                                controller: _defectiveQuantityController,
+                                decoration: const InputDecoration(labelText: '预损数量', border: OutlineInputBorder()),
+                                keyboardType: TextInputType.number,
+                                validator: (value) {
+                                  final text = value?.trim() ?? '';
+                                  if (text.isEmpty) return null;
+                                  final parsed = int.tryParse(text);
+                                  if (parsed == null || parsed < 0) {
+                                    return '请输入有效数量';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                            if (widget.mode == WorkOrderFormMode.edit)
+                              SizedBox(
+                                width: 240,
+                                child: TextFormField(
+                                  readOnly: true,
+                                  decoration: const InputDecoration(labelText: '实际交货日期', border: OutlineInputBorder()),
+                                  controller: _actualDeliveryDateController,
+                                  onTap: _pickActualDeliveryDate,
+                                ),
+                              ),
                           ],
                         ),
                         const SizedBox(height: 12),
@@ -953,68 +1029,79 @@ class _ProductRow extends StatefulWidget {
 class _ProductRowState extends State<_ProductRow> {
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Wrap(
-        spacing: 12,
-        runSpacing: 12,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          SizedBox(
-            width: 220,
-            child: DropdownButtonFormField<int>(
-              value: widget.draft.productId,
-              decoration: const InputDecoration(labelText: '产品', border: OutlineInputBorder()),
-              items: widget.products
-                  .map(
-                    (item) => DropdownMenuItem(
-                      value: item.id,
-                      child: Text(item.displayLabel),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (value) => setState(() => widget.draft.productId = value),
-              validator: (value) => value == null ? '请选择产品' : null,
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth;
+        final useFullWidth = maxWidth < 520;
+        final productWidth = useFullWidth ? maxWidth : 220.0;
+        final smallWidth = useFullWidth ? maxWidth : 120.0;
+        final specWidth = useFullWidth ? maxWidth : 200.0;
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              SizedBox(
+                width: productWidth,
+                child: DropdownButtonFormField<int>(
+                  value: widget.draft.productId,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: '产品', border: OutlineInputBorder()),
+                  items: widget.products
+                      .map(
+                        (item) => DropdownMenuItem(
+                          value: item.id,
+                          child: Text(item.displayLabel, overflow: TextOverflow.ellipsis),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) => setState(() => widget.draft.productId = value),
+                  validator: (value) => value == null ? '请选择产品' : null,
+                ),
+              ),
+              SizedBox(
+                width: smallWidth,
+                child: TextFormField(
+                  controller: widget.draft.quantityController,
+                  decoration: const InputDecoration(labelText: '数量', border: OutlineInputBorder()),
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+              SizedBox(
+                width: smallWidth,
+                child: TextFormField(
+                  controller: widget.draft.unitController,
+                  decoration: const InputDecoration(labelText: '单位', border: OutlineInputBorder()),
+                ),
+              ),
+              SizedBox(
+                width: specWidth,
+                child: TextFormField(
+                  controller: widget.draft.specController,
+                  decoration: const InputDecoration(labelText: '规格', border: OutlineInputBorder()),
+                ),
+              ),
+              SizedBox(
+                width: smallWidth,
+                child: TextFormField(
+                  controller: widget.draft.sortOrderController,
+                  decoration: const InputDecoration(labelText: '排序', border: OutlineInputBorder()),
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+              if (widget.onRemove != null)
+                IconButton(
+                  onPressed: widget.onRemove,
+                  icon: const Icon(Icons.remove_circle_outline),
+                  tooltip: '移除',
+                ),
+            ],
           ),
-          SizedBox(
-            width: 120,
-            child: TextFormField(
-              controller: widget.draft.quantityController,
-              decoration: const InputDecoration(labelText: '数量', border: OutlineInputBorder()),
-              keyboardType: TextInputType.number,
-            ),
-          ),
-          SizedBox(
-            width: 120,
-            child: TextFormField(
-              controller: widget.draft.unitController,
-              decoration: const InputDecoration(labelText: '单位', border: OutlineInputBorder()),
-            ),
-          ),
-          SizedBox(
-            width: 200,
-            child: TextFormField(
-              controller: widget.draft.specController,
-              decoration: const InputDecoration(labelText: '规格', border: OutlineInputBorder()),
-            ),
-          ),
-          SizedBox(
-            width: 120,
-            child: TextFormField(
-              controller: widget.draft.sortOrderController,
-              decoration: const InputDecoration(labelText: '排序', border: OutlineInputBorder()),
-              keyboardType: TextInputType.number,
-            ),
-          ),
-          if (widget.onRemove != null)
-            IconButton(
-              onPressed: widget.onRemove,
-              icon: const Icon(Icons.remove_circle_outline),
-              tooltip: '移除',
-            ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -1037,67 +1124,78 @@ class _MaterialRow extends StatefulWidget {
 class _MaterialRowState extends State<_MaterialRow> {
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Wrap(
-        spacing: 12,
-        runSpacing: 12,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          SizedBox(
-            width: 220,
-            child: DropdownButtonFormField<int>(
-              value: widget.draft.materialId,
-              decoration: const InputDecoration(labelText: '物料', border: OutlineInputBorder()),
-              items: widget.materials
-                  .map(
-                    (item) => DropdownMenuItem(
-                      value: item.id,
-                      child: Text('${item.name} (${item.code})'),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (value) => setState(() => widget.draft.materialId = value),
-            ),
-          ),
-          SizedBox(
-            width: 160,
-            child: TextFormField(
-              controller: widget.draft.sizeController,
-              decoration: const InputDecoration(labelText: '规格', border: OutlineInputBorder()),
-            ),
-          ),
-          SizedBox(
-            width: 160,
-            child: TextFormField(
-              controller: widget.draft.usageController,
-              decoration: const InputDecoration(labelText: '用量', border: OutlineInputBorder()),
-            ),
-          ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth;
+        final useFullWidth = maxWidth < 520;
+        final productWidth = useFullWidth ? maxWidth : 220.0;
+        final mediumWidth = useFullWidth ? maxWidth : 160.0;
+        final notesWidth = useFullWidth ? maxWidth : 200.0;
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Checkbox(
-                value: widget.draft.needCutting,
-                onChanged: (value) => setState(() => widget.draft.needCutting = value ?? false),
+              SizedBox(
+                width: productWidth,
+                child: DropdownButtonFormField<int>(
+                  value: widget.draft.materialId,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: '物料', border: OutlineInputBorder()),
+                  items: widget.materials
+                      .map(
+                        (item) => DropdownMenuItem(
+                          value: item.id,
+                          child: Text('${item.name} (${item.code})', overflow: TextOverflow.ellipsis),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) => setState(() => widget.draft.materialId = value),
+                ),
               ),
-              const Text('需要开料'),
+              SizedBox(
+                width: mediumWidth,
+                child: TextFormField(
+                  controller: widget.draft.sizeController,
+                  decoration: const InputDecoration(labelText: '规格', border: OutlineInputBorder()),
+                ),
+              ),
+              SizedBox(
+                width: mediumWidth,
+                child: TextFormField(
+                  controller: widget.draft.usageController,
+                  decoration: const InputDecoration(labelText: '用量', border: OutlineInputBorder()),
+                ),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Checkbox(
+                    value: widget.draft.needCutting,
+                    onChanged: (value) => setState(() => widget.draft.needCutting = value ?? false),
+                  ),
+                  const Text('需要开料'),
+                ],
+              ),
+              SizedBox(
+                width: notesWidth,
+                child: TextFormField(
+                  controller: widget.draft.notesController,
+                  decoration: const InputDecoration(labelText: '备注', border: OutlineInputBorder()),
+                ),
+              ),
+              IconButton(
+                onPressed: widget.onRemove,
+                icon: const Icon(Icons.remove_circle_outline),
+                tooltip: '移除',
+              ),
             ],
           ),
-          SizedBox(
-            width: 200,
-            child: TextFormField(
-              controller: widget.draft.notesController,
-              decoration: const InputDecoration(labelText: '备注', border: OutlineInputBorder()),
-            ),
-          ),
-          IconButton(
-            onPressed: widget.onRemove,
-            icon: const Icon(Icons.remove_circle_outline),
-            tooltip: '移除',
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

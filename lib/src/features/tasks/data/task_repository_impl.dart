@@ -12,7 +12,19 @@ class TaskRepositoryImpl implements TaskRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? status,
+    String? priority,
+    int? departmentId,
+    int? processId,
   }) {
-    return _apiService.fetchTasks(page: page, pageSize: pageSize, search: search);
+    return _apiService.fetchTasks(
+      page: page,
+      pageSize: pageSize,
+      search: search,
+      status: status,
+      priority: priority,
+      departmentId: departmentId,
+      processId: processId,
+    );
   }
 }

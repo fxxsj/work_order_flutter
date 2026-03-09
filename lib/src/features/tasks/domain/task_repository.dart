@@ -5,5 +5,9 @@ abstract class TaskRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? status,
+    String? priority,
+    int? departmentId,
+    int? processId,
   });
 }

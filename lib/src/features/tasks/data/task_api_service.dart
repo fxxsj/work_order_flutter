@@ -11,6 +11,10 @@ class TaskApiService {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? status,
+    String? priority,
+    int? departmentId,
+    int? processId,
   }) async {
     final params = <String, dynamic>{
       'page': page,
@@ -19,6 +23,18 @@ class TaskApiService {
     final trimmed = search?.trim();
     if (trimmed != null && trimmed.isNotEmpty) {
       params['search'] = trimmed;
+    }
+    if (status != null && status.isNotEmpty) {
+      params['status'] = status;
+    }
+    if (priority != null && priority.isNotEmpty) {
+      params['priority'] = priority;
+    }
+    if (departmentId != null && departmentId > 0) {
+      params['assigned_department'] = departmentId;
+    }
+    if (processId != null && processId > 0) {
+      params['work_order_process'] = processId;
     }
 
     final response = await _client.get('/workorder-tasks/', queryParameters: params);
