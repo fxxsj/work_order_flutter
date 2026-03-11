@@ -15,4 +15,29 @@ class ProductStockRepositoryImpl implements ProductStockRepository {
   }) {
     return _apiService.fetchProductStocks(page: page, pageSize: pageSize, search: search);
   }
+
+  @override
+  Future<Map<String, dynamic>> getLowStock({Map<String, dynamic>? params}) {
+    return _apiService.fetchLowStock(params: params);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getExpired({Map<String, dynamic>? params}) {
+    return _apiService.fetchExpired(params: params);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getExpiringSoon({Map<String, dynamic>? params}) {
+    return _apiService.fetchExpiringSoon(params: params);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getSummary() {
+    return _apiService.fetchSummary();
+  }
+
+  @override
+  Future<Map<String, dynamic>> adjustStock(int id, Map<String, dynamic> payload) {
+    return _apiService.adjustStock(id, payload);
+  }
 }

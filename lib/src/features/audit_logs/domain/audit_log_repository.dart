@@ -6,4 +6,14 @@ abstract class AuditLogRepository {
     int pageSize = 20,
     String? search,
   });
+
+  Future<Map<String, dynamic>> getStatistics({Map<String, dynamic>? params});
+
+  Future<Map<String, dynamic>> getDiff(int id);
+
+  Future<Map<String, dynamic>> exportLogs(Map<String, dynamic> payload);
+
+  Future<Map<String, dynamic>> getExportList({Map<String, dynamic>? params});
+
+  Future<dynamic> downloadExport(int id);
 }

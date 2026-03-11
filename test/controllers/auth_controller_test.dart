@@ -1,43 +1,60 @@
-import 'dart:async';
-
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get_storage/get_storage.dart';
-import 'package:work_order_app/common/app_events.dart';
-import 'package:work_order_app/controllers/auth_controller.dart';
-import 'package:work_order_app/utils/store_util.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/storage/app_storage.dart';
+import 'package:work_order_app/src/core/utils/store_util.dart';
+import 'package:work_order_app/src/features/auth/application/auth_controller.dart';
+
+class _FakeApiClient extends ApiClient {
+  String? updatedAccess;
+  String? updatedRefresh;
+  bool clearedTokens = false;
+
+  @override
+  void updateTokens(String access, [String? refresh]) {
+    updatedAccess = access;
+    updatedRefresh = refresh;
+  }
+
+  @override
+  void clearTokens() {
+    clearedTokens = true;
+  }
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() async {
-    await GetStorage.init();
+    SharedPreferences.setMockInitialValues({});
+    await StoreUtil.init();
   });
 
-  setUp(() {
-    StoreUtil.clearTokens();
+  setUp(() async {
+    await StoreUtil.cleanAll();
   });
 
-  test('AuthController emits auth change events and stores tokens', () async {
-    final controller = AuthController();
-    final events = <AuthChangedEvent>[];
-    final sub = AppEvents.stream.listen((event) {
-      if (event is AuthChangedEvent) {
-        events.add(event);
-      }
-    });
+  test('AuthController stores tokens and updates login state', () async {
+    final storage = AppStorage();
+    await storage.init();
+    final apiClient = _FakeApiClient();
+    final controller = AuthController(storage, apiClient)..initialize();
 
-    controller.handleLogin(access: 'access-token', refresh: 'refresh-token');
+    addTearDown(controller.dispose);
 
-    expect(StoreUtil.readAccessToken(), 'access-token');
-    expect(controller.isLoggedIn.value, isTrue);
-    expect(events.last.loggedIn, isTrue);
+    await controller.handleLogin(access: 'access-token', refresh: 'refresh-token');
 
-    controller.handleLogout();
+    expect(storage.readAccessToken(), 'access-token');
+    expect(storage.readRefreshToken(), 'refresh-token');
+    expect(controller.isLoggedIn, isTrue);
+    expect(apiClient.updatedAccess, 'access-token');
+    expect(apiClient.updatedRefresh, 'refresh-token');
 
-    expect(StoreUtil.readAccessToken(), isNull);
-    expect(controller.isLoggedIn.value, isFalse);
-    expect(events.last.loggedIn, isFalse);
+    await controller.handleLogout();
 
-    await sub.cancel();
+    expect(storage.readAccessToken(), isNull);
+    expect(storage.readRefreshToken(), isNull);
+    expect(controller.isLoggedIn, isFalse);
+    expect(apiClient.clearedTokens, isTrue);
   });
 }

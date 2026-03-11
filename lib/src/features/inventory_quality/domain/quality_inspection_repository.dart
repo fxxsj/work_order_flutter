@@ -6,4 +6,8 @@ abstract class QualityInspectionRepository {
     int pageSize = 20,
     String? search,
   });
+
+  Future<Map<String, dynamic>> complete(int id, Map<String, dynamic> payload);
+
+  Future<Map<String, dynamic>> getSummary();
 }

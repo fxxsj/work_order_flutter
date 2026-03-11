@@ -19,6 +19,7 @@ class WorkOrderRepositoryImpl implements WorkOrderRepository {
     int? customerId,
     int? productId,
     int? processId,
+    String? ordering,
   }) {
     return _apiService.fetchWorkOrders(
       page: page,
@@ -30,6 +31,7 @@ class WorkOrderRepositoryImpl implements WorkOrderRepository {
       customerId: customerId,
       productId: productId,
       processId: processId,
+      ordering: ordering,
     );
   }
 
@@ -81,5 +83,40 @@ class WorkOrderRepositoryImpl implements WorkOrderRepository {
   @override
   Future<WorkOrderDetailDto> requestReapproval(int id, String reason) {
     return _apiService.requestReapproval(id, reason);
+  }
+
+  @override
+  Future<WorkOrderDetailDto> addProcess(int id, Map<String, dynamic> payload) {
+    return _apiService.addProcess(id, payload);
+  }
+
+  @override
+  Future<WorkOrderDetailDto> addMaterial(int id, Map<String, dynamic> payload) {
+    return _apiService.addMaterial(id, payload);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getStatistics({Map<String, dynamic>? params}) {
+    return _apiService.getStatistics(params: params);
+  }
+
+  @override
+  Future<dynamic> export({Map<String, dynamic>? params}) {
+    return _apiService.export(params: params);
+  }
+
+  @override
+  Future<Map<String, dynamic>> checkSyncNeeded(int id, {List<int>? processIds}) {
+    return _apiService.checkSyncNeeded(id, processIds: processIds);
+  }
+
+  @override
+  Future<Map<String, dynamic>> syncTasksPreview(int id, {List<int>? processIds}) {
+    return _apiService.syncTasksPreview(id, processIds: processIds);
+  }
+
+  @override
+  Future<Map<String, dynamic>> syncTasksExecute(int id, {List<int>? processIds}) {
+    return _apiService.syncTasksExecute(id, processIds: processIds);
   }
 }

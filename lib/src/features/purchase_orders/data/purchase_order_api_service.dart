@@ -11,6 +11,7 @@ class PurchaseOrderApiService {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? status,
   }) async {
     final params = <String, dynamic>{
       'page': page,
@@ -19,6 +20,9 @@ class PurchaseOrderApiService {
     final trimmed = search?.trim();
     if (trimmed != null && trimmed.isNotEmpty) {
       params['search'] = trimmed;
+    }
+    if (status != null && status.isNotEmpty) {
+      params['status'] = status;
     }
 
     final response = await _client.get('/purchase-orders/', queryParameters: params);
@@ -42,5 +46,57 @@ class PurchaseOrderApiService {
       return PurchaseOrderPageDto(items: list, total: list.length, page: 1, pageSize: list.length);
     }
     return const PurchaseOrderPageDto(items: [], total: 0, page: 1, pageSize: 20);
+  }
+
+  Future<Map<String, dynamic>> submit(int id) async {
+    final response = await _client.post('/purchase-orders/$id/submit/');
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> approve(int id) async {
+    final response = await _client.post('/purchase-orders/$id/approve/');
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> reject(int id, Map<String, dynamic> payload) async {
+    final response = await _client.post('/purchase-orders/$id/reject/', data: payload);
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> placeOrder(int id, Map<String, dynamic> payload) async {
+    final response = await _client.post('/purchase-orders/$id/place_order/', data: payload);
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> receive(int id, Map<String, dynamic> payload) async {
+    final response = await _client.post('/purchase-orders/$id/receive/', data: payload);
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> getReceiveRecords(int id) async {
+    final response = await _client.get('/purchase-orders/$id/receive_records/');
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> getPendingInspections(int id) async {
+    final response = await _client.get('/purchase-orders/$id/pending_inspections/');
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> cancel(int id) async {
+    final response = await _client.post('/purchase-orders/$id/cancel/');
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> getLowStockMaterials() async {
+    final response = await _client.get('/purchase-orders/low_stock_materials/');
+    return _mapFromResponse(response.data);
+  }
+
+  Map<String, dynamic> _mapFromResponse(dynamic data) {
+    if (data is Map<String, dynamic>) {
+      return Map<String, dynamic>.from(data);
+    }
+    return {};
   }
 }

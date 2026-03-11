@@ -74,6 +74,28 @@ class NotificationApi {
     }
     return 0;
   }
+
+  Future<Map<String, dynamic>> fetchStatistics() async {
+    final ApiResponse response = await _client.get('/notifications/statistics/');
+    final data = response.data;
+    if (data is Map<String, dynamic>) {
+      return Map<String, dynamic>.from(data);
+    }
+    return {};
+  }
+
+  Future<void> deleteNotification(String id) async {
+    await _client.delete('/notifications/$id/delete/');
+  }
+
+  Future<int> deleteAllRead() async {
+    final ApiResponse response = await _client.delete('/notifications/delete_all_read/');
+    final data = response.data;
+    if (data is Map && data['count'] != null) {
+      return _toInt(data['count']) ?? 0;
+    }
+    return 0;
+  }
 }
 
 int? _toInt(dynamic value) {

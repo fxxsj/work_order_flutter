@@ -11,7 +11,8 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
     required this.showSidebarToggle,
     required this.isSidebarCollapsed,
     required this.onSidebarToggle,
-    required this.title,
+    required this.appTitle,
+    required this.sectionTitle,
     required this.onMenuTap,
     required this.onSettingTap,
     required this.onNotificationViewAll,
@@ -29,7 +30,8 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   final bool showSidebarToggle;
   final bool isSidebarCollapsed;
   final VoidCallback onSidebarToggle;
-  final String title;
+  final String appTitle;
+  final String sectionTitle;
   final VoidCallback onMenuTap;
   final VoidCallback onSettingTap;
   final VoidCallback onNotificationViewAll;
@@ -50,8 +52,9 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       backgroundColor: surface,
       elevation: 0,
+      scrolledUnderElevation: 0,
       iconTheme: IconThemeData(color: subtleText),
-      titleSpacing: isMobile ? 0 : 16,
+      titleSpacing: isMobile ? 0 : 8,
       leading: isMobile
           ? IconButton(
               icon: const Icon(Icons.menu),
@@ -60,25 +63,31 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
           : null,
       title: Row(
         children: [
-          if (!isMobile)
-            Container(
-              width: 8,
-              height: 28,
-              decoration: BoxDecoration(
-                color: primary,
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-          if (!isMobile) const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              title,
-              style: TextStyle(
-                color: accent,
-                fontWeight: FontWeight.w600,
-                fontSize: isMobile ? 15 : 17,
-              ),
-              overflow: TextOverflow.ellipsis,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (!isMobile)
+                  Text(
+                    appTitle,
+                    style: TextStyle(
+                      color: subtleText,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 11,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                Text(
+                  sectionTitle,
+                  style: TextStyle(
+                    color: accent,
+                    fontWeight: FontWeight.w700,
+                    fontSize: isMobile ? 16 : 17,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ),
         ],
@@ -87,7 +96,10 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
         if (showSidebarToggle)
           IconButton(
             tooltip: isSidebarCollapsed ? '展开侧边栏' : '收起侧边栏',
-            icon: Icon(isSidebarCollapsed ? Icons.chevron_right : Icons.chevron_left),
+            visualDensity: VisualDensity.compact,
+            icon: Icon(
+              isSidebarCollapsed ? Icons.chevron_right : Icons.chevron_left,
+            ),
             onPressed: onSidebarToggle,
           ),
         if (!isCompactActions) ...[
@@ -106,7 +118,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
               );
             },
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 4),
         ],
         Consumer<NotificationViewModel>(
           builder: (context, notifyCtrl, _) {
@@ -116,7 +128,8 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
               tooltip: '通知',
               offset: const Offset(0, 46),
               constraints: const BoxConstraints(minWidth: 280, maxWidth: 320),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
               onSelected: (value) {
                 notifyCtrl.markRead(value);
               },
@@ -129,7 +142,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                 onNotificationViewAll,
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Badge(
                   isLabelVisible: unread > 0,
                   label: Text(label),
@@ -144,6 +157,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
         if (!isCompactActions)
           IconButton(
             tooltip: '外观设置',
+            visualDensity: VisualDensity.compact,
             icon: const Icon(Icons.tune_outlined),
             onPressed: onSettingTap,
           ),
@@ -153,12 +167,9 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
             onSelected: (value) {
               if (value == 'settings') {
                 onSettingTap();
-              } else if (value == 'search') {
-                // TODO: wire up search entry point.
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(value: 'search', child: Text('搜索')),
               const PopupMenuItem(value: 'settings', child: Text('外观设置')),
               PopupMenuItem(
                 value: 'todo',
@@ -173,12 +184,12 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
               ),
             ],
             child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8),
+              padding: EdgeInsets.symmetric(horizontal: 6),
               child: Icon(Icons.more_vert),
             ),
           ),
         Padding(
-          padding: const EdgeInsets.only(right: 12),
+          padding: const EdgeInsets.only(right: 10, left: 2),
           child: _AvatarMenu(
             primary: primary,
             onProfileTap: onProfileTap,
@@ -328,7 +339,8 @@ class _NotificationListItem extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       decoration: BoxDecoration(
-        color: item.isRead ? Colors.transparent : primary.withOpacity(0.14),
+        color:
+            item.isRead ? Colors.transparent : primary.withValues(alpha: 0.14),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -380,7 +392,8 @@ class _NotificationListItem extends StatelessWidget {
           if (showDivider)
             Padding(
               padding: const EdgeInsets.only(top: 8),
-              child: Divider(height: 1, color: subtleText.withOpacity(0.2)),
+              child:
+                  Divider(height: 1, color: subtleText.withValues(alpha: 0.2)),
             ),
         ],
       ),
@@ -397,19 +410,19 @@ class _AppBarChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      margin: const EdgeInsets.only(left: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      margin: const EdgeInsets.only(left: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.2)),
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.14)),
       ),
       child: Text(
         label,
         style: TextStyle(
           color: color,
           fontWeight: FontWeight.w600,
-          fontSize: 11.5,
+          fontSize: 11,
         ),
       ),
     );
@@ -445,9 +458,9 @@ class _AvatarMenu extends StatelessWidget {
         PopupMenuItem(value: 'logout', child: Text('退出登录')),
       ],
       child: CircleAvatar(
-        radius: 16,
-        backgroundColor: primary.withOpacity(0.15),
-        child: const Icon(Icons.person, size: 18, color: Colors.white),
+        radius: 15,
+        backgroundColor: primary.withValues(alpha: 0.12),
+        child: Icon(Icons.person, size: 17, color: primary),
       ),
     );
   }
@@ -479,7 +492,6 @@ Color _levelColorFor(NotificationLevel level, Color primary) {
     case NotificationLevel.urgent:
       return const Color(0xFFEF4444);
     case NotificationLevel.info:
-    default:
       return primary;
   }
 }

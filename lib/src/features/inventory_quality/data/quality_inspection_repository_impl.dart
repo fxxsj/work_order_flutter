@@ -15,4 +15,14 @@ class QualityInspectionRepositoryImpl implements QualityInspectionRepository {
   }) {
     return _apiService.fetchQualityInspections(page: page, pageSize: pageSize, search: search);
   }
+
+  @override
+  Future<Map<String, dynamic>> complete(int id, Map<String, dynamic> payload) {
+    return _apiService.complete(id, payload);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getSummary() {
+    return _apiService.fetchSummary();
+  }
 }

@@ -3,10 +3,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
 import 'package:work_order_app/src/features/departments/data/department_dto.dart';
@@ -19,7 +25,6 @@ import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
 import 'package:work_order_app/src/features/tasks/data/task_repository_impl.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_repository.dart';
-import 'package:work_order_app/src/features/tasks/presentation/widgets/task_list_tile.dart';
 
 /// 任务列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
 class TaskListEntry extends StatefulWidget {
@@ -97,7 +102,6 @@ class _TaskListViewState extends State<_TaskListView> {
   static const double _searchWidth = 320;
   static const double _spacingSm = 8;
   static const double _controlHeight = PageActionStyle.height;
-  static const double _controlRadius = PageActionStyle.radius;
   static const String _emptyCellText = '-';
 
   static const String _searchHintText = '搜索任务内容/施工单号';
@@ -106,25 +110,12 @@ class _TaskListViewState extends State<_TaskListView> {
   static const String _emptyText = '暂无任务数据';
   static const String _errorFallbackText = '加载失败';
   static const String _retryText = '重新加载';
-  static const String _breadcrumbSeparator = ' / ';
+  static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
+  static const String _pageSizeLabel = '每页 {size}';
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
-  bool _denseTable = false;
   bool _filtersExpanded = false;
-  final GlobalKey _columnsMenuKey = GlobalKey();
-  final Set<_TaskColumn> _visibleColumns = {
-    _TaskColumn.id,
-    _TaskColumn.workOrder,
-    _TaskColumn.process,
-    _TaskColumn.content,
-    _TaskColumn.assignedDepartment,
-    _TaskColumn.assignedOperator,
-    _TaskColumn.productionQuantity,
-    _TaskColumn.quantityCompleted,
-    _TaskColumn.progress,
-    _TaskColumn.status,
-  };
   String? _statusFilter;
   String? _priorityFilter;
   int? _departmentFilterId;
@@ -193,8 +184,11 @@ class _TaskListViewState extends State<_TaskListView> {
       final processPage = results[1] as ProcessPageDto;
       if (!mounted) return;
       setState(() {
-        _departments = departmentPage.items.map<Department>((item) => item.toEntity()).toList();
-        _processes = processPage.items.map<Process>((item) => item.toEntity()).toList();
+        _departments = departmentPage.items
+            .map<Department>((item) => item.toEntity())
+            .toList();
+        _processes =
+            processPage.items.map<Process>((item) => item.toEntity()).toList();
       });
     } catch (err) {
       // 忽略筛选加载失败，避免影响列表主体
@@ -203,40 +197,11 @@ class _TaskListViewState extends State<_TaskListView> {
     }
   }
 
-  void _openColumnsMenu(BuildContext context) {
-    final menuContext = _columnsMenuKey.currentContext;
-    final renderBox = menuContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
-    final overlay = Overlay.of(menuContext!, rootOverlay: true).context.findRenderObject() as RenderBox;
-    final position = RelativeRect.fromRect(
-      Rect.fromPoints(
-        renderBox.localToGlobal(Offset.zero, ancestor: overlay),
-        renderBox.localToGlobal(renderBox.size.bottomRight(Offset.zero), ancestor: overlay),
-      ),
-      Offset.zero & overlay.size,
-    );
-
-    showMenu<_TaskColumn>(
-      context: menuContext,
-      position: position,
-      items: _taskOptionalColumns.map((value) {
-        final checked = _visibleColumns.contains(value);
-        return CheckedPopupMenuItem<_TaskColumn>(
-          value: value,
-          checked: checked,
-          child: Text(value.label),
-          onTap: () {
-            setState(() {
-              if (checked && _visibleColumns.length > 3) {
-                _visibleColumns.remove(value);
-              } else {
-                _visibleColumns.add(value);
-              }
-            });
-          },
-        );
-      }).toList(),
-    );
+  static String _pageInfoText(TaskViewModel viewModel) {
+    return _pageInfoTemplate
+        .replaceFirst('{page}', viewModel.page.toString())
+        .replaceFirst('{total}', viewModel.totalPages.toString())
+        .replaceFirst('{count}', viewModel.total.toString());
   }
 
   @override
@@ -258,7 +223,21 @@ class _TaskListViewState extends State<_TaskListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, breadcrumb, isMobile),
           body: _buildListBody(context, viewModel, tasks, isMobile),
-          footer: viewModel.total > 0 ? _PaginationBar(viewModel: viewModel) : null,
+          footer: viewModel.total > 0
+              ? ResponsivePaginationBar(
+                  infoText: _pageInfoText(viewModel),
+                  page: viewModel.page,
+                  pageSize: viewModel.pageSize,
+                  pageSizeOptions: viewModel.pageSizeOptions,
+                  onPageSizeChanged: viewModel.setPageSize,
+                  onPrev: () => viewModel.setPage(viewModel.page - 1),
+                  onNext: () => viewModel.setPage(viewModel.page + 1),
+                  hasPrev: viewModel.hasPrev,
+                  hasNext: viewModel.hasNext,
+                  pageSizeLabelBuilder: (size) =>
+                      _pageSizeLabel.replaceFirst('{size}', size.toString()),
+                )
+              : null,
         );
       },
     );
@@ -270,66 +249,31 @@ class _TaskListViewState extends State<_TaskListView> {
     List<Task> tasks,
     bool isMobile,
   ) {
+    final sectionSpacing = LayoutTokens.sectionSpacing(context);
     if (viewModel.loading && tasks.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
     if (viewModel.errorMessage != null && !viewModel.loading) {
-      return Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: _ErrorState(
-            message: viewModel.errorMessage ?? _errorFallbackText,
-            onRetry: () => viewModel.loadTasks(resetPage: true),
-          ),
-        ),
+      return ErrorStateCard(
+        message: viewModel.errorMessage ?? _errorFallbackText,
+        retryLabel: _retryText,
+        onRetry: () => viewModel.loadTasks(resetPage: true),
       );
     }
     if (!viewModel.loading && tasks.isEmpty) {
-      return const Center(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(vertical: 16),
-          child: _EmptyState(),
-        ),
+      return const EmptyStateCard(
+        icon: Icons.task_alt_outlined,
+        text: _emptyText,
       );
     }
 
-    if (isMobile) {
-      return ListView.separated(
-        itemCount: tasks.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
-        itemBuilder: (context, index) {
-          final task = tasks[index];
-          return TaskListTile(
-            task: task,
-            onTap: task.workOrderId == null ? null : () => context.go('/workorders/${task.workOrderId}'),
-          );
-        },
-      );
-    }
-
-    return SingleChildScrollView(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final columns = _buildColumns();
-          final rows = _buildRows(context, tasks);
-
-          return SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minWidth: constraints.maxWidth),
-              child: DataTable(
-                columnSpacing: _denseTable ? 16 : 24,
-                horizontalMargin: _denseTable ? 12 : 16,
-                headingRowHeight: _denseTable ? 38 : 44,
-                dataRowMinHeight: _denseTable ? 34 : 40,
-                dataRowMaxHeight: _denseTable ? 44 : 52,
-                columns: columns,
-                rows: rows,
-              ),
-            ),
-          );
-        },
-      ),
+    return ListView.separated(
+      itemCount: tasks.length,
+      separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
+      itemBuilder: (context, index) {
+        final task = tasks[index];
+        return _buildSummaryCard(context, task, isMobile);
+      },
     );
   }
 
@@ -339,6 +283,9 @@ class _TaskListViewState extends State<_TaskListView> {
     List<String> breadcrumb,
     bool isMobile,
   ) {
+    final summaryItems = [
+      WorkbenchStatItem(label: '总任务', value: '${viewModel.total}'),
+    ];
     final statusItems = const [
       DropdownMenuItem(value: 'draft', child: Text('草稿')),
       DropdownMenuItem(value: 'pending', child: Text('待开始')),
@@ -353,7 +300,8 @@ class _TaskListViewState extends State<_TaskListView> {
       DropdownMenuItem(value: 'urgent', child: Text('紧急')),
     ];
     final departmentItems = [
-      const DropdownMenuItem<int?>(value: null, child: Text('全部部门', overflow: TextOverflow.ellipsis)),
+      const DropdownMenuItem<int?>(
+          value: null, child: Text('全部部门', overflow: TextOverflow.ellipsis)),
       ..._departments.map(
         (item) => DropdownMenuItem<int?>(
           value: item.id,
@@ -362,7 +310,8 @@ class _TaskListViewState extends State<_TaskListView> {
       ),
     ];
     final processItems = [
-      const DropdownMenuItem<int?>(value: null, child: Text('全部工序', overflow: TextOverflow.ellipsis)),
+      const DropdownMenuItem<int?>(
+          value: null, child: Text('全部工序', overflow: TextOverflow.ellipsis)),
       ..._processes.map(
         (item) => DropdownMenuItem<int?>(
           value: item.id,
@@ -371,57 +320,46 @@ class _TaskListViewState extends State<_TaskListView> {
       ),
     ];
 
-    return PageHeaderBar(
-      breadcrumb: breadcrumb.isEmpty ? null : breadcrumb.join(_breadcrumbSeparator),
-      useSurface: false,
-      showDivider: false,
-      padding: EdgeInsets.zero,
+    return WorkbenchHeaderBar(
+      breadcrumb: null,
+      title: '任务列表',
+      subtitle: '',
+      stats: summaryItems,
+      titleMaxWidth: isMobile ? double.infinity : 420,
+      hideSubtitleOnMobile: true,
+      mobileStatCount: 1,
+      hideTitleOnMobile: true,
+      hideBreadcrumbOnMobile: true,
       actions: LayoutBuilder(
         builder: (context, constraints) {
           final filtersExpanded = _filtersExpanded;
-          final searchField = SizedBox(
+          final activeFilters = _activeFilterCount();
+          final searchField = ListSearchField(
+            controller: _searchController,
+            hintText: _searchHintText,
+            height: _controlHeight,
             width: isMobile ? constraints.maxWidth : _searchWidth,
-            child: SizedBox(
-              height: _controlHeight,
-              child: ValueListenableBuilder<TextEditingValue>(
-                valueListenable: _searchController,
-                builder: (context, value, _) {
-                  return TextField(
-                    controller: _searchController,
-                    textAlignVertical: TextAlignVertical.center,
-                    onChanged: (_) => _scheduleSearch(viewModel),
-                    onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
-                    decoration: InputDecoration(
-                      constraints: const BoxConstraints.tightFor(height: _controlHeight),
-                      hintText: _searchHintText,
-                      prefixIcon: const Icon(Icons.search, size: 18),
-                      suffixIcon: value.text.isEmpty
-                          ? null
-                          : IconButton(
-                              tooltip: '清空',
-                              icon: const Icon(Icons.close, size: 18),
-                              onPressed: () {
-                                _searchController.clear();
-                                _scheduleSearch(viewModel, immediate: true);
-                              },
-                            ),
-                      border: const OutlineInputBorder(),
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                    ),
-                  );
-                },
-              ),
-            ),
+            onChanged: (_) => _scheduleSearch(viewModel),
+            onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
+            onClear: () {
+              _searchController.clear();
+              _scheduleSearch(viewModel, immediate: true);
+            },
           );
 
-          final filterToggle = SizedBox(
+          final filterToggle = ListToolbarButton(
+            onPressed: () =>
+                setState(() => _filtersExpanded = !filtersExpanded),
+            icon: filtersExpanded
+                ? Icons.filter_alt_off
+                : Icons.filter_alt_outlined,
+            label: filtersExpanded
+                ? '收起筛选'
+                : activeFilters > 0
+                    ? '筛选 $activeFilters'
+                    : '筛选',
             height: _controlHeight,
-            child: OutlinedButton.icon(
-              onPressed: () => setState(() => _filtersExpanded = !filtersExpanded),
-              icon: Icon(filtersExpanded ? Icons.filter_alt_off : Icons.filter_alt_outlined),
-              label: Text(filtersExpanded ? '收起筛选' : '展开筛选'),
-            ),
+            compact: isMobile,
           );
 
           final mobileFilters = Column(
@@ -429,9 +367,10 @@ class _TaskListViewState extends State<_TaskListView> {
             children: [
               if (_loadingOptions) const LinearProgressIndicator(minHeight: 2),
               DropdownButtonFormField<String>(
-                value: _statusFilter,
+                initialValue: _statusFilter,
                 isExpanded: true,
-                decoration: const InputDecoration(labelText: '状态', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                    labelText: '状态', border: OutlineInputBorder()),
                 items: statusItems,
                 onChanged: (value) {
                   setState(() => _statusFilter = value);
@@ -440,9 +379,10 @@ class _TaskListViewState extends State<_TaskListView> {
               ),
               const SizedBox(height: _spacingSm),
               DropdownButtonFormField<String>(
-                value: _priorityFilter,
+                initialValue: _priorityFilter,
                 isExpanded: true,
-                decoration: const InputDecoration(labelText: '优先级', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                    labelText: '优先级', border: OutlineInputBorder()),
                 items: priorityItems,
                 onChanged: (value) {
                   setState(() => _priorityFilter = value);
@@ -451,9 +391,10 @@ class _TaskListViewState extends State<_TaskListView> {
               ),
               const SizedBox(height: _spacingSm),
               DropdownButtonFormField<int?>(
-                value: _departmentFilterId,
+                initialValue: _departmentFilterId,
                 isExpanded: true,
-                decoration: const InputDecoration(labelText: '部门', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                    labelText: '部门', border: OutlineInputBorder()),
                 items: departmentItems,
                 onChanged: (value) {
                   setState(() => _departmentFilterId = value);
@@ -462,9 +403,10 @@ class _TaskListViewState extends State<_TaskListView> {
               ),
               const SizedBox(height: _spacingSm),
               DropdownButtonFormField<int?>(
-                value: _processFilterId,
+                initialValue: _processFilterId,
                 isExpanded: true,
-                decoration: const InputDecoration(labelText: '工序', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                    labelText: '工序', border: OutlineInputBorder()),
                 items: processItems,
                 onChanged: (value) {
                   setState(() => _processFilterId = value);
@@ -487,9 +429,10 @@ class _TaskListViewState extends State<_TaskListView> {
               SizedBox(
                 width: 180,
                 child: DropdownButtonFormField<String>(
-                  value: _statusFilter,
+                  initialValue: _statusFilter,
                   isExpanded: true,
-                  decoration: const InputDecoration(labelText: '状态', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                      labelText: '状态', border: OutlineInputBorder()),
                   items: statusItems,
                   onChanged: (value) {
                     setState(() => _statusFilter = value);
@@ -500,9 +443,10 @@ class _TaskListViewState extends State<_TaskListView> {
               SizedBox(
                 width: 180,
                 child: DropdownButtonFormField<String>(
-                  value: _priorityFilter,
+                  initialValue: _priorityFilter,
                   isExpanded: true,
-                  decoration: const InputDecoration(labelText: '优先级', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                      labelText: '优先级', border: OutlineInputBorder()),
                   items: priorityItems,
                   onChanged: (value) {
                     setState(() => _priorityFilter = value);
@@ -513,9 +457,10 @@ class _TaskListViewState extends State<_TaskListView> {
               SizedBox(
                 width: 220,
                 child: DropdownButtonFormField<int?>(
-                  value: _departmentFilterId,
+                  initialValue: _departmentFilterId,
                   isExpanded: true,
-                  decoration: const InputDecoration(labelText: '部门', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                      labelText: '部门', border: OutlineInputBorder()),
                   items: departmentItems,
                   onChanged: (value) {
                     setState(() => _departmentFilterId = value);
@@ -526,9 +471,10 @@ class _TaskListViewState extends State<_TaskListView> {
               SizedBox(
                 width: 220,
                 child: DropdownButtonFormField<int?>(
-                  value: _processFilterId,
+                  initialValue: _processFilterId,
                   isExpanded: true,
-                  decoration: const InputDecoration(labelText: '工序', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                      labelText: '工序', border: OutlineInputBorder()),
                   items: processItems,
                   onChanged: (value) {
                     setState(() => _processFilterId = value);
@@ -539,45 +485,42 @@ class _TaskListViewState extends State<_TaskListView> {
             ],
           );
 
+          final actions = <Widget>[
+            filterToggle,
+            if (activeFilters > 0)
+              ListToolbarButton(
+                onPressed: () => _resetFilters(viewModel),
+                icon: Icons.restart_alt,
+                label: _resetButtonText,
+                height: _controlHeight,
+                compact: isMobile,
+              ),
+            ListToolbarButton(
+              onPressed: () => viewModel.loadTasks(resetPage: true),
+              icon: Icons.refresh,
+              label: _refreshButtonText,
+              height: _controlHeight,
+              compact: isMobile,
+            ),
+          ];
+
           if (isMobile) {
             final maxFilterHeight = MediaQuery.of(context).size.height * 0.45;
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                searchField,
-                const SizedBox(height: _spacingSm),
-                filterToggle,
-                const SizedBox(height: _spacingSm),
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeOut,
-                  child: filtersExpanded
-                      ? ConstrainedBox(
-                          constraints: BoxConstraints(maxHeight: maxFilterHeight),
-                          child: SingleChildScrollView(
-                            physics: const ClampingScrollPhysics(),
-                            child: mobileFilters,
-                          ),
-                        )
-                      : const SizedBox.shrink(),
+                ListToolbar(
+                  isMobile: true,
+                  searchField: searchField,
+                  actions: actions,
+                  spacing: _spacingSm,
+                  mobileActionAlignment: WrapAlignment.start,
                 ),
                 const SizedBox(height: _spacingSm),
-                Wrap(
-                  alignment: WrapAlignment.end,
-                  spacing: _spacingSm,
-                  runSpacing: _spacingSm,
-                  children: [
-                    PageActionButton.outlined(
-                      onPressed: () => viewModel.loadTasks(resetPage: true),
-                      icon: const Icon(Icons.refresh, size: 16),
-                      label: _refreshButtonText,
-                    ),
-                    PageActionButton.outlined(
-                      onPressed: () => _resetFilters(viewModel),
-                      icon: const Icon(Icons.refresh, size: 16),
-                      label: _resetButtonText,
-                    ),
-                  ],
+                ExpandableFilters(
+                  expanded: filtersExpanded,
+                  maxHeight: maxFilterHeight,
+                  child: mobileFilters,
                 ),
               ],
             );
@@ -587,59 +530,17 @@ class _TaskListViewState extends State<_TaskListView> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Wrap(
+              ListToolbar(
+                isMobile: false,
+                searchField: searchField,
+                actions: actions,
                 spacing: _spacingSm,
-                runSpacing: 6,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  searchField,
-                  filterToggle,
-                  PageActionButton.outlined(
-                    onPressed: () => viewModel.loadTasks(resetPage: true),
-                    icon: const Icon(Icons.refresh, size: 16),
-                    label: _refreshButtonText,
-                  ),
-                  PageActionButton.outlined(
-                    onPressed: () => _resetFilters(viewModel),
-                    icon: const Icon(Icons.refresh, size: 16),
-                    label: _resetButtonText,
-                  ),
-                  PageActionButton.outlined(
-                    onPressed: () => setState(() => _denseTable = !_denseTable),
-                    icon: Icon(_denseTable ? Icons.table_rows : Icons.table_chart),
-                    label: _denseTable ? '舒适' : '紧凑',
-                  ),
-                  SizedBox(
-                    key: _columnsMenuKey,
-                    height: _controlHeight,
-                    child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(_controlRadius),
-                        ),
-                      ),
-                      onPressed: () => _openColumnsMenu(context),
-                      icon: const Icon(Icons.view_column, size: 18),
-                      label: const Text('列管理'),
-                    ),
-                  ),
-                ],
               ),
-              AnimatedSize(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeOut,
-                child: filtersExpanded
-                    ? Padding(
-                        padding: const EdgeInsets.only(top: _spacingSm),
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(maxHeight: maxFilterHeight),
-                          child: SingleChildScrollView(
-                            physics: const ClampingScrollPhysics(),
-                            child: desktopFilters,
-                          ),
-                        ),
-                      )
-                    : const SizedBox.shrink(),
+              ExpandableFilters(
+                expanded: filtersExpanded,
+                maxHeight: maxFilterHeight,
+                topPadding: _spacingSm,
+                child: desktopFilters,
               ),
             ],
           );
@@ -648,61 +549,19 @@ class _TaskListViewState extends State<_TaskListView> {
     );
   }
 
-  List<DataColumn> _buildColumns() {
-    return _TaskColumn.values
-        .where(_visibleColumns.contains)
-        .map(
-          (column) => DataColumn(
-            label: Text(column.label),
-          ),
-        )
-        .toList();
+  int _activeFilterCount() {
+    var count = 0;
+    if (_searchController.text.trim().isNotEmpty) count += 1;
+    if (_statusFilter != null && _statusFilter!.isNotEmpty) count += 1;
+    if (_priorityFilter != null && _priorityFilter!.isNotEmpty) count += 1;
+    if (_departmentFilterId != null) count += 1;
+    if (_processFilterId != null) count += 1;
+    return count;
   }
 
-  List<DataRow> _buildRows(BuildContext context, List<Task> tasks) {
-    return tasks.map((task) {
-      final cells = _TaskColumn.values
-          .where(_visibleColumns.contains)
-          .map((column) => DataCell(_buildCell(context, task, column)))
-          .toList();
-      return DataRow(cells: cells);
-    }).toList();
-  }
-
-  Widget _buildCell(BuildContext context, Task task, _TaskColumn column) {
-    switch (column) {
-      case _TaskColumn.id:
-        return Text(task.id.toString());
-      case _TaskColumn.workOrder:
-        if (task.workOrderNumber == null) return const Text(_emptyCellText);
-        return InkWell(
-          onTap: task.workOrderId == null ? null : () => context.go('/workorders/${task.workOrderId}'),
-          child: Text(
-            task.workOrderNumber!,
-            style: TextStyle(
-              color: task.workOrderId == null
-                  ? Theme.of(context).textTheme.bodyMedium?.color
-                  : Theme.of(context).colorScheme.primary,
-            ),
-          ),
-        );
-      case _TaskColumn.process:
-        return Text(task.processName ?? _emptyCellText);
-      case _TaskColumn.content:
-        return Text(task.workContent ?? _emptyCellText);
-      case _TaskColumn.assignedDepartment:
-        return Text(task.assignedDepartmentName ?? _emptyCellText);
-      case _TaskColumn.assignedOperator:
-        return Text(task.assignedOperatorName ?? _emptyCellText);
-      case _TaskColumn.productionQuantity:
-        return Text(_formatNumber(task.productionQuantity));
-      case _TaskColumn.quantityCompleted:
-        return Text(_formatNumber(task.quantityCompleted));
-      case _TaskColumn.progress:
-        return Text(_formatProgress(task));
-      case _TaskColumn.status:
-        return Text(task.statusDisplay ?? task.status ?? _emptyCellText);
-    }
+  static String _displayText(String? value) {
+    final text = value?.trim() ?? '';
+    return text.isEmpty ? _emptyCellText : text;
   }
 
   String _formatNumber(double? value) {
@@ -714,180 +573,107 @@ class _TaskListViewState extends State<_TaskListView> {
     final total = task.productionQuantity ?? 0;
     final completed = task.quantityCompleted ?? 0;
     if (total <= 0) return _emptyCellText;
-    final percentage = (completed / total * 100).clamp(0, 100).toStringAsFixed(0);
+    final percentage =
+        (completed / total * 100).clamp(0, 100).toStringAsFixed(0);
     return '$percentage%';
   }
-}
 
-class _PaginationBar extends StatelessWidget {
-  const _PaginationBar({required this.viewModel});
-
-  static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
-  static const String _pageSizeLabel = '每页 {size}';
-
-  final TaskViewModel viewModel;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildSummaryCard(BuildContext context, Task task, bool isMobile) {
     final theme = Theme.of(context);
-    final info = _pageInfoTemplate
-        .replaceFirst('{page}', viewModel.page.toString())
-        .replaceFirst('{total}', viewModel.totalPages.toString())
-        .replaceFirst('{count}', viewModel.total.toString());
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Text(info, style: theme.textTheme.bodySmall),
-        const SizedBox(width: 12),
-        DropdownButton<int>(
-          value: viewModel.pageSize,
-          items: viewModel.pageSizeOptions
-              .map(
-                (size) => DropdownMenuItem<int>(
-                  value: size,
-                  child: Text(_pageSizeLabel.replaceFirst('{size}', size.toString())),
-                ),
-              )
-              .toList(),
-          onChanged: (value) {
-            if (value == null) return;
-            viewModel.setPageSize(value);
-          },
-        ),
-        const SizedBox(width: 4),
-        IconButton(
-          onPressed: viewModel.hasPrev ? () => viewModel.setPage(viewModel.page - 1) : null,
-          icon: const Icon(Icons.chevron_left),
-        ),
-        Text('${viewModel.page}', style: theme.textTheme.bodyMedium),
-        IconButton(
-          onPressed: viewModel.hasNext ? () => viewModel.setPage(viewModel.page + 1) : null,
-          icon: const Icon(Icons.chevron_right),
-        ),
-      ],
+    final colors = theme.extension<AppColors>();
+    final sectionSpacing = LayoutTokens.sectionSpacing(context);
+    final title = _displayText(
+      task.workContent?.trim().isNotEmpty == true
+          ? task.workContent
+          : (task.processName ?? '任务 #${task.id}'),
     );
-  }
-}
+    final workOrder = _displayText(task.workOrderNumber);
+    final process = _displayText(task.processName);
+    final department = _displayText(task.assignedDepartmentName);
+    final operator = _displayText(task.assignedOperatorName);
+    final production = _formatNumber(task.productionQuantity);
+    final completed = _formatNumber(task.quantityCompleted);
+    final progress = _formatProgress(task);
+    final status = task.statusDisplay ?? task.status ?? _emptyCellText;
 
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
-  static const double _verticalPadding = 32;
-  static const double _borderRadius = 12;
-  static const double _iconSize = 36;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: _verticalPadding),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(_borderRadius),
-        color: theme.colorScheme.primary.withOpacity(0.05),
-        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.15)),
-      ),
-      child: Column(
+    return ExpandableSummaryCard(
+      headerBuilder: (context, expanded) {
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: colors?.sidebarText,
+                    ),
+                  ),
+                  SizedBox(height: sectionSpacing),
+                  Text(
+                    '$workOrder · $process',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colors?.subtleText ?? theme.hintColor,
+                    ),
+                  ),
+                  SizedBox(height: sectionSpacing),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _SummaryChip(label: '状态', value: status),
+                      _SummaryChip(label: '进度', value: progress),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(width: sectionSpacing),
+            AnimatedRotation(
+              turns: expanded ? 0.5 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              child: Icon(
+                Icons.expand_more,
+                size: 20,
+                color: colors?.subtleText ?? theme.hintColor,
+              ),
+            ),
+          ],
+        );
+      },
+      expandedChild: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.task_alt_outlined, color: theme.colorScheme.primary, size: _iconSize),
-          const SizedBox(height: _TaskListViewState._spacingSm),
-          Text(_TaskListViewState._emptyText, style: theme.textTheme.bodyMedium),
-        ],
-      ),
-    );
-  }
-}
-
-class _ErrorState extends StatelessWidget {
-  const _ErrorState({required this.message, required this.onRetry});
-
-  static const double _verticalPadding = 32;
-  static const double _borderRadius = 12;
-  static const double _iconSize = 32;
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: _verticalPadding),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(_borderRadius),
-        color: theme.colorScheme.error.withOpacity(0.06),
-        border: Border.all(color: theme.colorScheme.error.withOpacity(0.2)),
-      ),
-      child: Column(
-        children: [
-          Icon(Icons.error_outline, color: theme.colorScheme.error, size: _iconSize),
-          const SizedBox(height: _TaskListViewState._spacingSm),
-          Text(message, style: theme.textTheme.bodyMedium),
-          const SizedBox(height: _TaskListViewState._spacingSm),
-          OutlinedButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh),
-            label: const Text(_TaskListViewState._retryText),
+          SummaryFieldWrap(
+            isMobile: isMobile,
+            children: [
+              _SummaryField(label: '施工单号', value: workOrder),
+              _SummaryField(label: '工序', value: process),
+              _SummaryField(label: '任务内容', value: title),
+              _SummaryField(label: '分派部门', value: department),
+              _SummaryField(label: '分派操作员', value: operator),
+              _SummaryField(label: '生产数量', value: production),
+              _SummaryField(label: '完成数量', value: completed),
+              _SummaryField(label: '进度', value: progress),
+              _SummaryField(label: '状态', value: status),
+            ],
           ),
+          if (task.workOrderId != null) ...[
+            SizedBox(height: sectionSpacing),
+            OutlinedButton.icon(
+              onPressed: () => context.go('/workorders/${task.workOrderId}'),
+              icon: const Icon(Icons.open_in_new, size: 16),
+              label: const Text('查看施工单'),
+            ),
+          ],
         ],
       ),
     );
   }
 }
 
-enum _TaskColumn {
-  id,
-  workOrder,
-  process,
-  content,
-  assignedDepartment,
-  assignedOperator,
-  productionQuantity,
-  quantityCompleted,
-  progress,
-  status,
-}
-
-const List<_TaskColumn> _taskOptionalColumns = [
-  _TaskColumn.id,
-  _TaskColumn.workOrder,
-  _TaskColumn.process,
-  _TaskColumn.content,
-  _TaskColumn.assignedDepartment,
-  _TaskColumn.assignedOperator,
-  _TaskColumn.productionQuantity,
-  _TaskColumn.quantityCompleted,
-  _TaskColumn.progress,
-  _TaskColumn.status,
-];
-
-extension _TaskColumnLabel on _TaskColumn {
-  String get label {
-    switch (this) {
-      case _TaskColumn.id:
-        return 'ID';
-      case _TaskColumn.workOrder:
-        return '施工单号';
-      case _TaskColumn.process:
-        return '工序';
-      case _TaskColumn.content:
-        return '任务内容';
-      case _TaskColumn.assignedDepartment:
-        return '分派部门';
-      case _TaskColumn.assignedOperator:
-        return '分派操作员';
-      case _TaskColumn.productionQuantity:
-        return '生产数量';
-      case _TaskColumn.quantityCompleted:
-        return '完成数量';
-      case _TaskColumn.progress:
-        return '进度';
-      case _TaskColumn.status:
-        return '状态';
-    }
-  }
-}
+typedef _SummaryField = SummaryField;
+typedef _SummaryChip = SummaryChip;

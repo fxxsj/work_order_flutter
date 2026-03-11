@@ -43,4 +43,13 @@ class PaymentApiService {
     }
     return const PaymentPageDto(items: [], total: 0, page: 1, pageSize: 20);
   }
+
+  Future<Map<String, dynamic>> fetchSummary() async {
+    final response = await _client.get('/payments/summary/');
+    final data = response.data;
+    if (data is Map<String, dynamic>) {
+      return Map<String, dynamic>.from(data);
+    }
+    return {};
+  }
 }

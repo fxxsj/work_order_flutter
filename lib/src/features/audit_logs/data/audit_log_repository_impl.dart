@@ -15,4 +15,29 @@ class AuditLogRepositoryImpl implements AuditLogRepository {
   }) {
     return _apiService.fetchAuditLogs(page: page, pageSize: pageSize, search: search);
   }
+
+  @override
+  Future<Map<String, dynamic>> getStatistics({Map<String, dynamic>? params}) {
+    return _apiService.fetchStatistics(params: params);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getDiff(int id) {
+    return _apiService.fetchDiff(id);
+  }
+
+  @override
+  Future<Map<String, dynamic>> exportLogs(Map<String, dynamic> payload) {
+    return _apiService.exportLogs(payload);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getExportList({Map<String, dynamic>? params}) {
+    return _apiService.fetchExportList(params: params);
+  }
+
+  @override
+  Future<dynamic> downloadExport(int id) {
+    return _apiService.downloadExport(id);
+  }
 }

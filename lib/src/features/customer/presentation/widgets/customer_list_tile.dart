@@ -46,7 +46,7 @@ class CustomerListTile extends StatelessWidget {
 
     final tile = ListTile(
       leading: CircleAvatar(
-        backgroundColor: primary.withOpacity(0.12),
+        backgroundColor: primary.withAlpha(31),
         foregroundColor: primary,
         child: Text(customer.name.isNotEmpty ? customer.name[0].toUpperCase() : '?'),
       ),
@@ -98,7 +98,7 @@ class CustomerListTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         border: Border(
-          bottom: BorderSide(color: theme.dividerColor.withOpacity(0.6)),
+          bottom: BorderSide(color: theme.dividerColor.withAlpha(153)),
         ),
       ),
       child: tile,

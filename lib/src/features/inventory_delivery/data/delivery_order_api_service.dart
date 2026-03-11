@@ -43,4 +43,31 @@ class DeliveryOrderApiService {
     }
     return const DeliveryOrderPageDto(items: [], total: 0, page: 1, pageSize: 20);
   }
+
+  Future<Map<String, dynamic>> ship(int id, Map<String, dynamic> payload) async {
+    final response = await _client.post('/delivery-orders/$id/ship/', data: payload);
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> receive(int id, Map<String, dynamic> payload) async {
+    final response = await _client.post('/delivery-orders/$id/receive/', data: payload);
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> reject(int id, Map<String, dynamic> payload) async {
+    final response = await _client.post('/delivery-orders/$id/reject/', data: payload);
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> fetchSummary() async {
+    final response = await _client.get('/delivery-orders/summary/');
+    return _mapFromResponse(response.data);
+  }
+
+  Map<String, dynamic> _mapFromResponse(dynamic data) {
+    if (data is Map<String, dynamic>) {
+      return Map<String, dynamic>.from(data);
+    }
+    return {};
+  }
 }

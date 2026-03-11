@@ -13,8 +13,16 @@ class SalesOrderRepositoryImpl implements SalesOrderRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? status,
+    String? paymentStatus,
   }) {
-    return _apiService.fetchSalesOrders(page: page, pageSize: pageSize, search: search);
+    return _apiService.fetchSalesOrders(
+      page: page,
+      pageSize: pageSize,
+      search: search,
+      status: status,
+      paymentStatus: paymentStatus,
+    );
   }
 
   @override
@@ -30,5 +38,45 @@ class SalesOrderRepositoryImpl implements SalesOrderRepository {
   @override
   Future<SalesOrderDetailDto> updateSalesOrder(int id, Map<String, dynamic> payload) {
     return _apiService.updateSalesOrder(id, payload);
+  }
+
+  @override
+  Future<SalesOrderDetailDto> submit(int id) {
+    return _apiService.submit(id);
+  }
+
+  @override
+  Future<SalesOrderDetailDto> approve(int id, Map<String, dynamic> payload) {
+    return _apiService.approve(id, payload);
+  }
+
+  @override
+  Future<SalesOrderDetailDto> reject(int id, Map<String, dynamic> payload) {
+    return _apiService.reject(id, payload);
+  }
+
+  @override
+  Future<SalesOrderDetailDto> startProduction(int id) {
+    return _apiService.startProduction(id);
+  }
+
+  @override
+  Future<SalesOrderDetailDto> complete(int id) {
+    return _apiService.complete(id);
+  }
+
+  @override
+  Future<SalesOrderDetailDto> cancel(int id, Map<String, dynamic> payload) {
+    return _apiService.cancel(id, payload);
+  }
+
+  @override
+  Future<SalesOrderDetailDto> updatePayment(int id, Map<String, dynamic> payload) {
+    return _apiService.updatePayment(id, payload);
+  }
+
+  @override
+  Future<void> deleteSalesOrder(int id) {
+    return _apiService.deleteSalesOrder(id);
   }
 }

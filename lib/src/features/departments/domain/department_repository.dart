@@ -8,7 +8,9 @@ abstract class DepartmentRepository {
     String? search,
   });
 
-  Future<List<Department>> getAllDepartments();
+  Future<List<Department>> getAllDepartments({bool? isActive});
+
+  Future<List<Department>> getDepartmentTree();
 
   Future<List<ProcessOption>> getProcessOptions();
 

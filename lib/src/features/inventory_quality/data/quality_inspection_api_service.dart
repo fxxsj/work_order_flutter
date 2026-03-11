@@ -43,4 +43,21 @@ class QualityInspectionApiService {
     }
     return const QualityInspectionPageDto(items: [], total: 0, page: 1, pageSize: 20);
   }
+
+  Future<Map<String, dynamic>> complete(int id, Map<String, dynamic> payload) async {
+    final response = await _client.post('/quality-inspections/$id/complete/', data: payload);
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> fetchSummary() async {
+    final response = await _client.get('/quality-inspections/summary/');
+    return _mapFromResponse(response.data);
+  }
+
+  Map<String, dynamic> _mapFromResponse(dynamic data) {
+    if (data is Map<String, dynamic>) {
+      return Map<String, dynamic>.from(data);
+    }
+    return {};
+  }
 }

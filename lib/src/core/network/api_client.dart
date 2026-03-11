@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/common/http_client.dart';
 import 'package:work_order_app/src/core/models/api_response.dart';
 
@@ -16,8 +17,28 @@ class ApiClient {
     return HttpClient.put(path, data: data, queryParameters: queryParameters);
   }
 
+  Future<ApiResponse> patch(String path, {dynamic data, Map<String, dynamic>? queryParameters}) {
+    return HttpClient.patch(path, data: data, queryParameters: queryParameters);
+  }
+
   Future<ApiResponse> delete(String path, {dynamic data, Map<String, dynamic>? queryParameters}) {
     return HttpClient.delete(path, data: data, queryParameters: queryParameters);
+  }
+
+  Future<Response<dynamic>> requestRaw(
+    String path, {
+    String method = 'get',
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    ResponseType responseType = ResponseType.json,
+  }) {
+    return HttpClient.requestRaw(
+      path,
+      method: method,
+      data: data,
+      queryParameters: queryParameters,
+      responseType: responseType,
+    );
   }
 
   void updateTokens(String access, [String? refresh]) {

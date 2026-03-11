@@ -44,6 +44,20 @@ class DepartmentApiService {
     return const DepartmentPageDto(items: [], total: 0, page: 1, pageSize: 20);
   }
 
+  Future<List<DepartmentDto>> fetchDepartmentTree() async {
+    final response = await _client.get('/departments/tree/');
+    return _listFromResponse(response.data);
+  }
+
+  Future<List<DepartmentDto>> fetchAllDepartments({bool? isActive}) async {
+    final params = <String, dynamic>{};
+    if (isActive != null) {
+      params['is_active'] = isActive.toString();
+    }
+    final response = await _client.get('/departments/all/', queryParameters: params.isEmpty ? null : params);
+    return _listFromResponse(response.data);
+  }
+
   Future<DepartmentDto> createDepartment(DepartmentDto dto) async {
     final response = await _client.post('/departments/', data: dto.toPayload());
     final payload = response.data;
@@ -82,6 +96,25 @@ class DepartmentApiService {
           .whereType<Map>()
           .map((item) => ProcessOptionDto.fromJson(Map<String, dynamic>.from(item)))
           .toList();
+    }
+    return [];
+  }
+
+  List<DepartmentDto> _listFromResponse(dynamic payload) {
+    if (payload is List) {
+      return payload
+          .whereType<Map>()
+          .map((item) => DepartmentDto.fromJson(Map<String, dynamic>.from(item)))
+          .toList();
+    }
+    if (payload is Map<String, dynamic>) {
+      final results = payload['results'];
+      if (results is List) {
+        return results
+            .whereType<Map>()
+            .map((item) => DepartmentDto.fromJson(Map<String, dynamic>.from(item)))
+            .toList();
+      }
     }
     return [];
   }

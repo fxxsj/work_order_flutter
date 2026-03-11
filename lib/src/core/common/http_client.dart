@@ -57,14 +57,7 @@ class HttpClient {
   /// 拒绝队列中的所有请求
   static Future<void> rejectQueuedRequests(DioException error) async {
     for (final retry in _requestQueue) {
-      final dioError = error is DioException
-          ? error
-          : DioException(
-              requestOptions: retry.requestOptions,
-              error: error,
-              type: DioExceptionType.unknown,
-            );
-      retry.handler.next(dioError);
+      retry.handler.next(error);
     }
     _requestQueue.clear();
   }
@@ -232,6 +225,29 @@ class HttpClient {
     await refreshAccessTokenLocked();
   }
 
+  static Future<Response<dynamic>> requestRaw(
+    String path, {
+    String method = 'get',
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    ResponseType responseType = ResponseType.json,
+  }) async {
+    try {
+      final response = await _dio.request(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: Options(
+          method: method.toUpperCase(),
+          responseType: responseType,
+        ),
+      );
+      return response;
+    } on DioException catch (err) {
+      throw ApiException.fromDio(err);
+    }
+  }
+
   static Future<ApiResponse> get(String path, {Map<String, dynamic>? queryParameters}) async {
     try {
       final response = await _dio.get(path, queryParameters: queryParameters);
@@ -271,6 +287,24 @@ class HttpClient {
   static Future<ApiResponse> put(String path, {dynamic data, Map<String, dynamic>? queryParameters}) async {
     try {
       final response = await _dio.put(path, data: data, queryParameters: queryParameters);
+      final apiResponse = ApiResponse.fromJson(response.data);
+      if (!apiResponse.success) {
+        throw ApiException(
+          message: apiResponse.message ?? '请求失败',
+          statusCode: response.statusCode,
+          data: response.data,
+          response: apiResponse,
+        );
+      }
+      return apiResponse;
+    } on DioException catch (err) {
+      throw ApiException.fromDio(err);
+    }
+  }
+
+  static Future<ApiResponse> patch(String path, {dynamic data, Map<String, dynamic>? queryParameters}) async {
+    try {
+      final response = await _dio.patch(path, data: data, queryParameters: queryParameters);
       final apiResponse = ApiResponse.fromJson(response.data);
       if (!apiResponse.success) {
         throw ApiException(

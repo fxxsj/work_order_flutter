@@ -43,4 +43,36 @@ class ProductStockApiService {
     }
     return const ProductStockPageDto(items: [], total: 0, page: 1, pageSize: 20);
   }
+
+  Future<Map<String, dynamic>> fetchLowStock({Map<String, dynamic>? params}) async {
+    final response = await _client.get('/product-stocks/low_stock/', queryParameters: params);
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> fetchExpired({Map<String, dynamic>? params}) async {
+    final response = await _client.get('/product-stocks/expired/', queryParameters: params);
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> fetchExpiringSoon({Map<String, dynamic>? params}) async {
+    final response = await _client.get('/product-stocks/expiring_soon/', queryParameters: params);
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> fetchSummary() async {
+    final response = await _client.get('/product-stocks/summary/');
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> adjustStock(int id, Map<String, dynamic> payload) async {
+    final response = await _client.post('/product-stocks/$id/adjust/', data: payload);
+    return _mapFromResponse(response.data);
+  }
+
+  Map<String, dynamic> _mapFromResponse(dynamic data) {
+    if (data is Map<String, dynamic>) {
+      return Map<String, dynamic>.from(data);
+    }
+    return {};
+  }
 }

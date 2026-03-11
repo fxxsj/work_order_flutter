@@ -11,18 +11,22 @@ class LayoutSetting extends StatelessWidget {
   Widget build(BuildContext context) {
     final isXs = BreakpointsUtil.isXs(context);
     final isSm = BreakpointsUtil.isSm(context);
-    final tilePadding = EdgeInsets.symmetric(horizontal: isXs ? 12 : 16, vertical: isXs ? 4 : 6);
-    final density = isXs || isSm ? VisualDensity.compact : VisualDensity.standard;
+    final tilePadding = EdgeInsets.symmetric(
+        horizontal: isXs ? 12 : 16, vertical: isXs ? 4 : 6);
+    final density =
+        isXs || isSm ? VisualDensity.compact : VisualDensity.standard;
     final themeController = context.watch<ThemeController>();
     final theme = Theme.of(context);
 
     final headerColor = themeController.tempColor;
-    final isDarkText = ThemeData.estimateBrightnessForColor(headerColor) == Brightness.dark;
+    final isDarkText =
+        ThemeData.estimateBrightnessForColor(headerColor) == Brightness.dark;
 
     final seed = themeController.seedColor;
     final temp = themeController.tempColor;
-    final dirty = seed.value != temp.value;
-    final buttonIsDark = ThemeData.estimateBrightnessForColor(temp) == Brightness.dark;
+    final dirty = seed.toARGB32() != temp.toARGB32();
+    final buttonIsDark =
+        ThemeData.estimateBrightnessForColor(temp) == Brightness.dark;
 
     final scale = themeController.fontScale;
 
@@ -33,7 +37,8 @@ class LayoutSetting extends StatelessWidget {
           DrawerHeader(
             decoration: BoxDecoration(color: headerColor),
             margin: EdgeInsets.zero,
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: isXs ? 12 : 16),
+            padding:
+                EdgeInsets.symmetric(horizontal: 16, vertical: isXs ? 12 : 16),
             child: Text(
               '外观设置',
               style: TextStyle(color: isDarkText ? Colors.white : Colors.black),
@@ -43,46 +48,36 @@ class LayoutSetting extends StatelessWidget {
             padding: tilePadding,
             child: Text('主题模式', style: theme.textTheme.titleSmall),
           ),
-          Column(
-            children: [
-              RadioListTile<ThemeMode>(
-                value: ThemeMode.system,
-                groupValue: themeController.themeMode,
-                onChanged: (value) {
-                  if (value != null) {
-                    themeController.setThemeMode(value);
-                  }
-                },
-                title: const Text('跟随系统'),
-                subtitle: const Text('根据系统自动切换'),
-                dense: true,
-                visualDensity: density,
-              ),
-              RadioListTile<ThemeMode>(
-                value: ThemeMode.light,
-                groupValue: themeController.themeMode,
-                onChanged: (value) {
-                  if (value != null) {
-                    themeController.setThemeMode(value);
-                  }
-                },
-                title: const Text('浅色'),
-                dense: true,
-                visualDensity: density,
-              ),
-              RadioListTile<ThemeMode>(
-                value: ThemeMode.dark,
-                groupValue: themeController.themeMode,
-                onChanged: (value) {
-                  if (value != null) {
-                    themeController.setThemeMode(value);
-                  }
-                },
-                title: const Text('深色'),
-                dense: true,
-                visualDensity: density,
-              ),
-            ],
+          RadioGroup<ThemeMode>(
+            groupValue: themeController.themeMode,
+            onChanged: (value) {
+              if (value != null) {
+                themeController.setThemeMode(value);
+              }
+            },
+            child: Column(
+              children: [
+                RadioListTile<ThemeMode>(
+                  value: ThemeMode.system,
+                  title: const Text('跟随系统'),
+                  subtitle: const Text('根据系统自动切换'),
+                  dense: true,
+                  visualDensity: density,
+                ),
+                RadioListTile<ThemeMode>(
+                  value: ThemeMode.light,
+                  title: const Text('浅色'),
+                  dense: true,
+                  visualDensity: density,
+                ),
+                RadioListTile<ThemeMode>(
+                  value: ThemeMode.dark,
+                  title: const Text('深色'),
+                  dense: true,
+                  visualDensity: density,
+                ),
+              ],
+            ),
           ),
           const Divider(thickness: 1),
           Padding(
@@ -90,7 +85,8 @@ class LayoutSetting extends StatelessWidget {
             child: Text('主题色', style: theme.textTheme.titleSmall),
           ),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: isXs ? 8 : 12, vertical: 6),
+            padding:
+                EdgeInsets.symmetric(horizontal: isXs ? 8 : 12, vertical: 6),
             child: Column(
               children: [
                 Row(
@@ -110,7 +106,8 @@ class LayoutSetting extends StatelessWidget {
                           : null,
                       style: FilledButton.styleFrom(
                         backgroundColor: temp,
-                        foregroundColor: buttonIsDark ? Colors.white : Colors.black,
+                        foregroundColor:
+                            buttonIsDark ? Colors.white : Colors.black,
                       ),
                       child: const Text('应用'),
                     ),
@@ -151,7 +148,7 @@ class LayoutSetting extends StatelessWidget {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: color.withOpacity(0.5),
+                                  color: color.withValues(alpha: 0.5),
                                   offset: const Offset(0, 2),
                                   blurRadius: compact ? 3 : 4,
                                 ),
@@ -163,7 +160,9 @@ class LayoutSetting extends StatelessWidget {
                               child: Icon(
                                 Icons.done,
                                 size: iconSize,
-                                color: ThemeData.estimateBrightnessForColor(color) == Brightness.dark
+                                color: ThemeData.estimateBrightnessForColor(
+                                            color) ==
+                                        Brightness.dark
                                     ? Colors.white
                                     : Colors.black,
                               ),
@@ -183,7 +182,8 @@ class LayoutSetting extends StatelessWidget {
             child: Text('字号大小', style: theme.textTheme.titleSmall),
           ),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: isXs ? 8 : 12, vertical: 6),
+            padding:
+                EdgeInsets.symmetric(horizontal: isXs ? 8 : 12, vertical: 6),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

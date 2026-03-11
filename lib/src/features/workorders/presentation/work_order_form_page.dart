@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/common/theme_ext.dart';
+import 'package:work_order_app/src/core/constants/breakpoints.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -82,7 +84,8 @@ class _WorkOrderFormEntryState extends State<WorkOrderFormEntry> {
         Provider<WorkOrderRepository>.value(value: repository),
         ChangeNotifierProvider<WorkOrderViewModel>.value(value: viewModel),
       ],
-      child: WorkOrderFormPage(mode: widget.mode, workOrderId: widget.workOrderId),
+      child:
+          WorkOrderFormPage(mode: widget.mode, workOrderId: widget.workOrderId),
     );
   }
 }
@@ -103,14 +106,19 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
   static const double _sectionSpacing = 16;
   static const String _breadcrumbSeparator = ' / ';
   static const String _emptyText = '-';
+  static const String _summaryHintText = '用统一表单完成施工单创建、补充和编辑。';
 
   final TextEditingController _notesController = TextEditingController();
-  final TextEditingController _printingOtherColorsController = TextEditingController();
+  final TextEditingController _printingOtherColorsController =
+      TextEditingController();
   final TextEditingController _orderDateController = TextEditingController();
   final TextEditingController _deliveryDateController = TextEditingController();
-  final TextEditingController _productionQuantityController = TextEditingController();
-  final TextEditingController _defectiveQuantityController = TextEditingController();
-  final TextEditingController _actualDeliveryDateController = TextEditingController();
+  final TextEditingController _productionQuantityController =
+      TextEditingController();
+  final TextEditingController _defectiveQuantityController =
+      TextEditingController();
+  final TextEditingController _actualDeliveryDateController =
+      TextEditingController();
 
   DateTime? _orderDate;
   DateTime? _deliveryDate;
@@ -208,14 +216,24 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
       final embossingPage = results[7] as EmbossingPlatePageDto;
 
       setState(() {
-        _customers = customerPage.items.map<Customer>((item) => item.toEntity()).toList();
+        _customers = customerPage.items
+            .map<Customer>((item) => item.toEntity())
+            .toList();
         _products = productOptions;
-        _materials = materialPage.items.map<MaterialItem>((item) => item.toEntity()).toList();
-        _processes = processPage.items.map<Process>((item) => item.toEntity()).toList();
-        _artworks = artworkPage.items.map<Artwork>((item) => item.toEntity()).toList();
+        _materials = materialPage.items
+            .map<MaterialItem>((item) => item.toEntity())
+            .toList();
+        _processes =
+            processPage.items.map<Process>((item) => item.toEntity()).toList();
+        _artworks =
+            artworkPage.items.map<Artwork>((item) => item.toEntity()).toList();
         _dies = diePage.items.map<Die>((item) => item.toEntity()).toList();
-        _foilingPlates = foilingPage.items.map<FoilingPlate>((item) => item.toEntity()).toList();
-        _embossingPlates = embossingPage.items.map<EmbossingPlate>((item) => item.toEntity()).toList();
+        _foilingPlates = foilingPage.items
+            .map<FoilingPlate>((item) => item.toEntity())
+            .toList();
+        _embossingPlates = embossingPage.items
+            .map<EmbossingPlate>((item) => item.toEntity())
+            .toList();
       });
     } catch (err) {
       ToastUtil.showError('加载基础数据失败: $err');
@@ -247,8 +265,10 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     _orderDateController.text = _formatDate(_orderDate);
     _deliveryDateController.text = _formatDate(_deliveryDate);
     _actualDeliveryDateController.text = _formatDate(_actualDeliveryDate);
-    _productionQuantityController.text = detail.productionQuantity?.toString() ?? '';
-    _defectiveQuantityController.text = detail.defectiveQuantity?.toString() ?? '';
+    _productionQuantityController.text =
+        detail.productionQuantity?.toString() ?? '';
+    _defectiveQuantityController.text =
+        detail.defectiveQuantity?.toString() ?? '';
     _printingType = detail.printingType ?? _printingType;
     _printingCmyk
       ..clear()
@@ -298,7 +318,9 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
   }
 
   Future<void> _pickDate({required bool isOrderDate}) async {
-    final initial = isOrderDate ? (_orderDate ?? DateTime.now()) : (_deliveryDate ?? DateTime.now());
+    final initial = isOrderDate
+        ? (_orderDate ?? DateTime.now())
+        : (_deliveryDate ?? DateTime.now());
     final picked = await showDatePicker(
       context: context,
       initialDate: initial,
@@ -368,15 +390,18 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     final orderDate = _formatDate(_orderDate);
     final deliveryDate = _formatDate(_deliveryDate);
     final actualDeliveryDate = _formatDate(_actualDeliveryDate);
-    final productionQuantity = int.tryParse(_productionQuantityController.text.trim());
-    final defectiveQuantity = int.tryParse(_defectiveQuantityController.text.trim());
+    final productionQuantity =
+        int.tryParse(_productionQuantityController.text.trim());
+    final defectiveQuantity =
+        int.tryParse(_defectiveQuantityController.text.trim());
     return {
       'customer': _customerId,
       'status': _status,
       'priority': _priority,
       'order_date': orderDate.isEmpty ? null : orderDate,
       'delivery_date': deliveryDate.isEmpty ? null : deliveryDate,
-      'actual_delivery_date': actualDeliveryDate.isEmpty ? null : actualDeliveryDate,
+      'actual_delivery_date':
+          actualDeliveryDate.isEmpty ? null : actualDeliveryDate,
       'production_quantity': productionQuantity,
       'defective_quantity': defectiveQuantity,
       'notes': _notesController.text.trim(),
@@ -431,22 +456,36 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
 
   Widget _buildSection(String title, Widget child) {
     final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>()!;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.6)),
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: colors.borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: theme.textTheme.titleMedium),
+          Text(
+            title,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: colors.sidebarText,
+            ),
+          ),
           const SizedBox(height: 12),
           child,
         ],
       ),
     );
+  }
+
+  String _selectedCustomerName() {
+    for (final item in _customers) {
+      if (item.id == _customerId) return item.name;
+    }
+    return _emptyText;
   }
 
   @override
@@ -462,20 +501,39 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
 
     return ListPageScaffold(
       spacing: _spacing,
-      header: PageHeaderBar(
+      header: WorkbenchHeaderBar(
         breadcrumb: breadcrumb.join(_breadcrumbSeparator),
-        useSurface: false,
-        showDivider: false,
-        padding: EdgeInsets.zero,
-        actions: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+        title: title,
+        subtitle: _summaryHintText,
+        titleMaxWidth: 420,
+        stats: [
+          WorkbenchStatItem(
+            label: '模式',
+            value: widget.mode == WorkOrderFormMode.create ? '新建' : '编辑',
+          ),
+          WorkbenchStatItem(
+            label: '产品',
+            value:
+                '${_productDrafts.where((item) => item.productId != null).length} 项',
+          ),
+          WorkbenchStatItem(
+            label: '工序',
+            value: _processIds.isEmpty ? _emptyText : '${_processIds.length} 项',
+          ),
+          WorkbenchStatItem(
+            label: '客户',
+            value: _selectedCustomerName(),
+          ),
+        ],
+        actions: Wrap(
+          spacing: _spacing,
+          runSpacing: 8,
           children: [
             PageActionButton.outlined(
               onPressed: _submitting ? null : () => context.pop(),
               icon: const Icon(Icons.arrow_back, size: 16),
               label: '返回',
             ),
-            const SizedBox(width: _spacing),
             PageActionButton.filled(
               onPressed: _submitting ? null : _handleSubmit,
               icon: const Icon(Icons.save, size: 16),
@@ -485,7 +543,12 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
         ),
       ),
       body: _loadingOptions || _loadingDetail
-          ? const Center(child: CircularProgressIndicator())
+          ? const _FormCard(
+              child: SizedBox(
+                height: 220,
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            )
           : Form(
               key: _formKey,
               child: ListView(
@@ -496,8 +559,9 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         DropdownButtonFormField<int>(
-                          value: _customerId,
-                          decoration: const InputDecoration(labelText: '客户', border: OutlineInputBorder()),
+                          initialValue: _customerId,
+                          decoration: const InputDecoration(
+                              labelText: '客户', border: OutlineInputBorder()),
                           items: _customers
                               .map(
                                 (item) => DropdownMenuItem(
@@ -506,112 +570,157 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                                 ),
                               )
                               .toList(),
-                          onChanged: (value) => setState(() => _customerId = value),
+                          onChanged: (value) =>
+                              setState(() => _customerId = value),
                           validator: (value) => value == null ? '请选择客户' : null,
                         ),
                         const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 16,
-                          runSpacing: 12,
-                          children: [
-                            SizedBox(
-                              width: 240,
-                              child: DropdownButtonFormField<String>(
-                                value: _status,
-                                decoration: const InputDecoration(labelText: '状态', border: OutlineInputBorder()),
-                                items: const [
-                                  DropdownMenuItem(value: 'pending', child: Text('待开始')),
-                                  DropdownMenuItem(value: 'in_progress', child: Text('进行中')),
-                                  DropdownMenuItem(value: 'paused', child: Text('已暂停')),
-                                  DropdownMenuItem(value: 'completed', child: Text('已完成')),
-                                  DropdownMenuItem(value: 'cancelled', child: Text('已取消')),
-                                ],
-                                onChanged: (value) => setState(() => _status = value ?? 'pending'),
-                              ),
-                            ),
-                            SizedBox(
-                              width: 240,
-                              child: DropdownButtonFormField<String>(
-                                value: _priority,
-                                decoration: const InputDecoration(labelText: '优先级', border: OutlineInputBorder()),
-                                items: const [
-                                  DropdownMenuItem(value: 'low', child: Text('低')),
-                                  DropdownMenuItem(value: 'normal', child: Text('普通')),
-                                  DropdownMenuItem(value: 'high', child: Text('高')),
-                                  DropdownMenuItem(value: 'urgent', child: Text('紧急')),
-                                ],
-                                onChanged: (value) => setState(() => _priority = value ?? 'normal'),
-                              ),
-                            ),
-                            SizedBox(
-                              width: 240,
-                              child: TextFormField(
-                                readOnly: true,
-                                decoration: const InputDecoration(labelText: '下单日期', border: OutlineInputBorder()),
-                                controller: _orderDateController,
-                                onTap: () => _pickDate(isOrderDate: true),
-                              ),
-                            ),
-                            SizedBox(
-                              width: 240,
-                              child: TextFormField(
-                                readOnly: true,
-                                decoration: const InputDecoration(labelText: '交货日期', border: OutlineInputBorder()),
-                                controller: _deliveryDateController,
-                                onTap: () => _pickDate(isOrderDate: false),
-                                validator: (value) => (value == null || value.isEmpty) ? '请选择交货日期' : null,
-                              ),
-                            ),
-                            SizedBox(
-                              width: 240,
-                              child: TextFormField(
-                                controller: _productionQuantityController,
-                                decoration: const InputDecoration(labelText: '生产数量', border: OutlineInputBorder()),
-                                keyboardType: TextInputType.number,
-                                validator: (value) {
-                                  final text = value?.trim() ?? '';
-                                  if (text.isEmpty) return null;
-                                  final parsed = int.tryParse(text);
-                                  if (parsed == null || parsed <= 0) {
-                                    return '请输入有效数量';
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ),
-                            SizedBox(
-                              width: 240,
-                              child: TextFormField(
-                                controller: _defectiveQuantityController,
-                                decoration: const InputDecoration(labelText: '预损数量', border: OutlineInputBorder()),
-                                keyboardType: TextInputType.number,
-                                validator: (value) {
-                                  final text = value?.trim() ?? '';
-                                  if (text.isEmpty) return null;
-                                  final parsed = int.tryParse(text);
-                                  if (parsed == null || parsed < 0) {
-                                    return '请输入有效数量';
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ),
-                            if (widget.mode == WorkOrderFormMode.edit)
-                              SizedBox(
-                                width: 240,
-                                child: TextFormField(
-                                  readOnly: true,
-                                  decoration: const InputDecoration(labelText: '实际交货日期', border: OutlineInputBorder()),
-                                  controller: _actualDeliveryDateController,
-                                  onTap: _pickActualDeliveryDate,
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final maxWidth = constraints.maxWidth;
+                            final fieldWidth = maxWidth < Breakpoints.sm
+                                ? maxWidth
+                                : maxWidth < Breakpoints.md
+                                    ? (maxWidth - 16) / 2
+                                    : maxWidth < Breakpoints.lg
+                                        ? (maxWidth - 32) / 3
+                                        : 240.0;
+                            return Wrap(
+                              spacing: 16,
+                              runSpacing: 12,
+                              children: [
+                                SizedBox(
+                                  width: fieldWidth,
+                                  child: DropdownButtonFormField<String>(
+                                    initialValue: _status,
+                                    decoration: const InputDecoration(
+                                        labelText: '状态',
+                                        border: OutlineInputBorder()),
+                                    items: const [
+                                      DropdownMenuItem(
+                                          value: 'pending', child: Text('待开始')),
+                                      DropdownMenuItem(
+                                          value: 'in_progress',
+                                          child: Text('进行中')),
+                                      DropdownMenuItem(
+                                          value: 'paused', child: Text('已暂停')),
+                                      DropdownMenuItem(
+                                          value: 'completed',
+                                          child: Text('已完成')),
+                                      DropdownMenuItem(
+                                          value: 'cancelled',
+                                          child: Text('已取消')),
+                                    ],
+                                    onChanged: (value) => setState(
+                                        () => _status = value ?? 'pending'),
+                                  ),
                                 ),
-                              ),
-                          ],
+                                SizedBox(
+                                  width: fieldWidth,
+                                  child: DropdownButtonFormField<String>(
+                                    initialValue: _priority,
+                                    decoration: const InputDecoration(
+                                        labelText: '优先级',
+                                        border: OutlineInputBorder()),
+                                    items: const [
+                                      DropdownMenuItem(
+                                          value: 'low', child: Text('低')),
+                                      DropdownMenuItem(
+                                          value: 'normal', child: Text('普通')),
+                                      DropdownMenuItem(
+                                          value: 'high', child: Text('高')),
+                                      DropdownMenuItem(
+                                          value: 'urgent', child: Text('紧急')),
+                                    ],
+                                    onChanged: (value) => setState(
+                                        () => _priority = value ?? 'normal'),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: fieldWidth,
+                                  child: TextFormField(
+                                    readOnly: true,
+                                    decoration: const InputDecoration(
+                                        labelText: '下单日期',
+                                        border: OutlineInputBorder()),
+                                    controller: _orderDateController,
+                                    onTap: () => _pickDate(isOrderDate: true),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: fieldWidth,
+                                  child: TextFormField(
+                                    readOnly: true,
+                                    decoration: const InputDecoration(
+                                        labelText: '交货日期',
+                                        border: OutlineInputBorder()),
+                                    controller: _deliveryDateController,
+                                    onTap: () => _pickDate(isOrderDate: false),
+                                    validator: (value) =>
+                                        (value == null || value.isEmpty)
+                                            ? '请选择交货日期'
+                                            : null,
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: fieldWidth,
+                                  child: TextFormField(
+                                    controller: _productionQuantityController,
+                                    decoration: const InputDecoration(
+                                        labelText: '生产数量',
+                                        border: OutlineInputBorder()),
+                                    keyboardType: TextInputType.number,
+                                    validator: (value) {
+                                      final text = value?.trim() ?? '';
+                                      if (text.isEmpty) return null;
+                                      final parsed = int.tryParse(text);
+                                      if (parsed == null || parsed <= 0) {
+                                        return '请输入有效数量';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: fieldWidth,
+                                  child: TextFormField(
+                                    controller: _defectiveQuantityController,
+                                    decoration: const InputDecoration(
+                                        labelText: '预损数量',
+                                        border: OutlineInputBorder()),
+                                    keyboardType: TextInputType.number,
+                                    validator: (value) {
+                                      final text = value?.trim() ?? '';
+                                      if (text.isEmpty) return null;
+                                      final parsed = int.tryParse(text);
+                                      if (parsed == null || parsed < 0) {
+                                        return '请输入有效数量';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                                if (widget.mode == WorkOrderFormMode.edit)
+                                  SizedBox(
+                                    width: fieldWidth,
+                                    child: TextFormField(
+                                      readOnly: true,
+                                      decoration: const InputDecoration(
+                                          labelText: '实际交货日期',
+                                          border: OutlineInputBorder()),
+                                      controller: _actualDeliveryDateController,
+                                      onTap: _pickActualDeliveryDate,
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
                         ),
                         const SizedBox(height: 12),
                         TextFormField(
                           controller: _notesController,
-                          decoration: const InputDecoration(labelText: '备注', border: OutlineInputBorder()),
+                          decoration: const InputDecoration(
+                              labelText: '备注', border: OutlineInputBorder()),
                           maxLines: 3,
                         ),
                       ],
@@ -622,18 +731,22 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                     '产品清单',
                     Column(
                       children: [
-                        for (int index = 0; index < _productDrafts.length; index++)
+                        for (int index = 0;
+                            index < _productDrafts.length;
+                            index++)
                           _ProductRow(
                             draft: _productDrafts[index],
                             products: _products,
                             onRemove: _productDrafts.length > 1
-                                ? () => setState(() => _productDrafts.removeAt(index))
+                                ? () => setState(
+                                    () => _productDrafts.removeAt(index))
                                 : null,
                           ),
                         Align(
                           alignment: Alignment.centerLeft,
                           child: TextButton.icon(
-                            onPressed: () => setState(() => _productDrafts.add(_ProductDraft())),
+                            onPressed: () => setState(
+                                () => _productDrafts.add(_ProductDraft())),
                             icon: const Icon(Icons.add),
                             label: const Text('新增产品'),
                           ),
@@ -645,7 +758,9 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                   _buildSection(
                     '工序选择',
                     _MultiSelectChips(
-                      items: _processes.map((item) => _OptionItem(item.id, item.name)).toList(),
+                      items: _processes
+                          .map((item) => _OptionItem(item.id, item.name))
+                          .toList(),
                       selected: _processIds,
                       emptyText: '暂无工序数据',
                       title: '工序选择',
@@ -658,16 +773,20 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                     '物料清单',
                     Column(
                       children: [
-                        for (int index = 0; index < _materialDrafts.length; index++)
+                        for (int index = 0;
+                            index < _materialDrafts.length;
+                            index++)
                           _MaterialRow(
                             draft: _materialDrafts[index],
                             materials: _materials,
-                            onRemove: () => setState(() => _materialDrafts.removeAt(index)),
+                            onRemove: () =>
+                                setState(() => _materialDrafts.removeAt(index)),
                           ),
                         Align(
                           alignment: Alignment.centerLeft,
                           child: TextButton.icon(
-                            onPressed: () => setState(() => _materialDrafts.add(_MaterialDraft())),
+                            onPressed: () => setState(
+                                () => _materialDrafts.add(_MaterialDraft())),
                             icon: const Icon(Icons.add),
                             label: const Text('新增物料'),
                           ),
@@ -682,20 +801,29 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         DropdownButtonFormField<String>(
-                          value: _printingType,
-                          decoration: const InputDecoration(labelText: '印刷形式', border: OutlineInputBorder()),
+                          initialValue: _printingType,
+                          decoration: const InputDecoration(
+                              labelText: '印刷形式', border: OutlineInputBorder()),
                           items: const [
-                            DropdownMenuItem(value: 'none', child: Text('不需要印刷')),
-                            DropdownMenuItem(value: 'front', child: Text('正面印刷')),
-                            DropdownMenuItem(value: 'back', child: Text('背面印刷')),
-                            DropdownMenuItem(value: 'self_reverse', child: Text('自反印刷')),
-                            DropdownMenuItem(value: 'reverse_gripper', child: Text('反咬口印刷')),
-                            DropdownMenuItem(value: 'register', child: Text('套版印刷')),
+                            DropdownMenuItem(
+                                value: 'none', child: Text('不需要印刷')),
+                            DropdownMenuItem(
+                                value: 'front', child: Text('正面印刷')),
+                            DropdownMenuItem(
+                                value: 'back', child: Text('背面印刷')),
+                            DropdownMenuItem(
+                                value: 'self_reverse', child: Text('自反印刷')),
+                            DropdownMenuItem(
+                                value: 'reverse_gripper', child: Text('反咬口印刷')),
+                            DropdownMenuItem(
+                                value: 'register', child: Text('套版印刷')),
                           ],
-                          onChanged: (value) => setState(() => _printingType = value ?? 'none'),
+                          onChanged: (value) =>
+                              setState(() => _printingType = value ?? 'none'),
                         ),
                         const SizedBox(height: 12),
-                        Text('CMYK 颜色', style: Theme.of(context).textTheme.titleSmall),
+                        Text('CMYK 颜色',
+                            style: Theme.of(context).textTheme.titleSmall),
                         const SizedBox(height: 8),
                         Wrap(
                           spacing: 8,
@@ -726,12 +854,17 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        Text('图稿', style: Theme.of(context).textTheme.titleSmall),
+                        Text('图稿',
+                            style: Theme.of(context).textTheme.titleSmall),
                         const SizedBox(height: 8),
                         _MultiSelectChips(
                           items: _artworks
                               .map(
-                                (item) => _OptionItem(item.id, item.fullCode.isNotEmpty ? item.fullCode : item.name),
+                                (item) => _OptionItem(
+                                    item.id,
+                                    item.fullCode.isNotEmpty
+                                        ? item.fullCode
+                                        : item.name),
                               )
                               .toList(),
                           selected: _artworkIds,
@@ -741,12 +874,17 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                           onChanged: () => setState(() {}),
                         ),
                         const SizedBox(height: 12),
-                        Text('刀模', style: Theme.of(context).textTheme.titleSmall),
+                        Text('刀模',
+                            style: Theme.of(context).textTheme.titleSmall),
                         const SizedBox(height: 8),
                         _MultiSelectChips(
                           items: _dies
                               .map(
-                                (item) => _OptionItem(item.id, item.code?.isNotEmpty == true ? '${item.name} (${item.code})' : item.name),
+                                (item) => _OptionItem(
+                                    item.id,
+                                    item.code?.isNotEmpty == true
+                                        ? '${item.name} (${item.code})'
+                                        : item.name),
                               )
                               .toList(),
                           selected: _dieIds,
@@ -756,12 +894,17 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                           onChanged: () => setState(() {}),
                         ),
                         const SizedBox(height: 12),
-                        Text('烫金版', style: Theme.of(context).textTheme.titleSmall),
+                        Text('烫金版',
+                            style: Theme.of(context).textTheme.titleSmall),
                         const SizedBox(height: 8),
                         _MultiSelectChips(
                           items: _foilingPlates
                               .map(
-                                (item) => _OptionItem(item.id, item.code?.isNotEmpty == true ? '${item.name} (${item.code})' : item.name),
+                                (item) => _OptionItem(
+                                    item.id,
+                                    item.code?.isNotEmpty == true
+                                        ? '${item.name} (${item.code})'
+                                        : item.name),
                               )
                               .toList(),
                           selected: _foilingPlateIds,
@@ -771,12 +914,17 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                           onChanged: () => setState(() {}),
                         ),
                         const SizedBox(height: 12),
-                        Text('压凸版', style: Theme.of(context).textTheme.titleSmall),
+                        Text('压凸版',
+                            style: Theme.of(context).textTheme.titleSmall),
                         const SizedBox(height: 8),
                         _MultiSelectChips(
                           items: _embossingPlates
                               .map(
-                                (item) => _OptionItem(item.id, item.code?.isNotEmpty == true ? '${item.name} (${item.code})' : item.name),
+                                (item) => _OptionItem(
+                                    item.id,
+                                    item.code?.isNotEmpty == true
+                                        ? '${item.name} (${item.code})'
+                                        : item.name),
                               )
                               .toList(),
                           selected: _embossingPlateIds,
@@ -825,18 +973,34 @@ class _MultiSelectChips extends StatelessWidget {
       return Text(emptyText, style: Theme.of(context).textTheme.bodyMedium);
     }
     final theme = Theme.of(context);
-    final selectedItems = items.where((item) => selected.contains(item.id)).toList();
+    final colors = theme.extension<AppColors>()!;
+    final selectedItems =
+        items.where((item) => selected.contains(item.id)).toList();
     return InkWell(
       onTap: () => _openDialog(context),
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(18),
       child: InputDecorator(
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          contentPadding: EdgeInsets.all(12),
-          suffixIcon: Icon(Icons.arrow_drop_down),
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: theme.colorScheme.primary.withValues(alpha: 0.03),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide(color: colors.borderColor),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide(color: colors.borderColor),
+          ),
+          contentPadding: const EdgeInsets.all(12),
+          suffixIcon: const Icon(Icons.arrow_drop_down),
         ),
         child: selectedItems.isEmpty
-            ? Text(placeholder, style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor))
+            ? Text(
+                placeholder,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colors.subtleText,
+                ),
+              )
             : Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -844,6 +1008,7 @@ class _MultiSelectChips extends StatelessWidget {
                     .map(
                       (item) => InputChip(
                         label: Text(item.label),
+                        visualDensity: VisualDensity.compact,
                         onDeleted: () {
                           selected.remove(item.id);
                           onChanged();
@@ -864,14 +1029,20 @@ class _MultiSelectChips extends StatelessWidget {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
+            final media = MediaQuery.of(context).size;
             final filtered = items
-                .where((item) => item.label.toLowerCase().contains(query.toLowerCase()))
+                .where((item) =>
+                    item.label.toLowerCase().contains(query.toLowerCase()))
                 .toList();
             return AlertDialog(
+              insetPadding: EdgeInsets.symmetric(
+                horizontal: media.width < Breakpoints.md ? 16 : 40,
+                vertical: 24,
+              ),
               title: Text(title),
               content: SizedBox(
-                width: 520,
-                height: 420,
+                width: media.width < Breakpoints.md ? media.width - 64 : 520,
+                height: media.height < 720 ? media.height * 0.62 : 420,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -881,12 +1052,15 @@ class _MultiSelectChips extends StatelessWidget {
                         prefixIcon: Icon(Icons.search),
                         border: OutlineInputBorder(),
                       ),
-                      onChanged: (value) => setDialogState(() => query = value.trim()),
+                      onChanged: (value) =>
+                          setDialogState(() => query = value.trim()),
                     ),
                     const SizedBox(height: 12),
                     Expanded(
                       child: filtered.isEmpty
-                          ? Center(child: Text('无匹配项', style: Theme.of(context).textTheme.bodySmall))
+                          ? Center(
+                              child: Text('无匹配项',
+                                  style: Theme.of(context).textTheme.bodySmall))
                           : Scrollbar(
                               child: ListView.builder(
                                 itemCount: filtered.length,
@@ -896,7 +1070,8 @@ class _MultiSelectChips extends StatelessWidget {
                                   return CheckboxListTile(
                                     value: isSelected,
                                     dense: true,
-                                    controlAffinity: ListTileControlAffinity.leading,
+                                    controlAffinity:
+                                        ListTileControlAffinity.leading,
                                     title: Text(item.label),
                                     onChanged: (value) {
                                       setDialogState(() {
@@ -957,10 +1132,12 @@ class _ProductDraft {
 
   _ProductDraft.fromDetail(WorkOrderProductItem item)
       : productId = item.productId,
-        quantityController = TextEditingController(text: item.quantity?.toString() ?? '1'),
+        quantityController =
+            TextEditingController(text: item.quantity?.toString() ?? '1'),
         unitController = TextEditingController(text: item.unit ?? '件'),
         specController = TextEditingController(text: item.specification ?? ''),
-        sortOrderController = TextEditingController(text: item.sortOrder?.toString() ?? '0');
+        sortOrderController =
+            TextEditingController(text: item.sortOrder?.toString() ?? '0');
 
   int? productId;
   final TextEditingController quantityController;
@@ -969,7 +1146,8 @@ class _ProductDraft {
   final TextEditingController sortOrderController;
 
   int get quantityValue => int.tryParse(quantityController.text.trim()) ?? 1;
-  String get unitValue => unitController.text.trim().isEmpty ? '件' : unitController.text.trim();
+  String get unitValue =>
+      unitController.text.trim().isEmpty ? '件' : unitController.text.trim();
   String get specificationValue => specController.text.trim();
   int get sortOrderValue => int.tryParse(sortOrderController.text.trim()) ?? 0;
 
@@ -1032,73 +1210,82 @@ class _ProductRowState extends State<_ProductRow> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxWidth = constraints.maxWidth;
-        final useFullWidth = maxWidth < 520;
+        final useFullWidth = maxWidth < Breakpoints.sm;
         final productWidth = useFullWidth ? maxWidth : 220.0;
         final smallWidth = useFullWidth ? maxWidth : 120.0;
         final specWidth = useFullWidth ? maxWidth : 200.0;
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
-          child: Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              SizedBox(
-                width: productWidth,
-                child: DropdownButtonFormField<int>(
-                  value: widget.draft.productId,
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: '产品', border: OutlineInputBorder()),
-                  items: widget.products
-                      .map(
-                        (item) => DropdownMenuItem(
-                          value: item.id,
-                          child: Text(item.displayLabel, overflow: TextOverflow.ellipsis),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) => setState(() => widget.draft.productId = value),
-                  validator: (value) => value == null ? '请选择产品' : null,
+          child: _FormRowCard(
+            child: Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                SizedBox(
+                  width: productWidth,
+                  child: DropdownButtonFormField<int>(
+                    initialValue: widget.draft.productId,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                        labelText: '产品', border: OutlineInputBorder()),
+                    items: widget.products
+                        .map(
+                          (item) => DropdownMenuItem(
+                            value: item.id,
+                            child: Text(item.displayLabel,
+                                overflow: TextOverflow.ellipsis),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) =>
+                        setState(() => widget.draft.productId = value),
+                    validator: (value) => value == null ? '请选择产品' : null,
+                  ),
                 ),
-              ),
-              SizedBox(
-                width: smallWidth,
-                child: TextFormField(
-                  controller: widget.draft.quantityController,
-                  decoration: const InputDecoration(labelText: '数量', border: OutlineInputBorder()),
-                  keyboardType: TextInputType.number,
+                SizedBox(
+                  width: smallWidth,
+                  child: TextFormField(
+                    controller: widget.draft.quantityController,
+                    decoration: const InputDecoration(
+                        labelText: '数量', border: OutlineInputBorder()),
+                    keyboardType: TextInputType.number,
+                  ),
                 ),
-              ),
-              SizedBox(
-                width: smallWidth,
-                child: TextFormField(
-                  controller: widget.draft.unitController,
-                  decoration: const InputDecoration(labelText: '单位', border: OutlineInputBorder()),
+                SizedBox(
+                  width: smallWidth,
+                  child: TextFormField(
+                    controller: widget.draft.unitController,
+                    decoration: const InputDecoration(
+                        labelText: '单位', border: OutlineInputBorder()),
+                  ),
                 ),
-              ),
-              SizedBox(
-                width: specWidth,
-                child: TextFormField(
-                  controller: widget.draft.specController,
-                  decoration: const InputDecoration(labelText: '规格', border: OutlineInputBorder()),
+                SizedBox(
+                  width: specWidth,
+                  child: TextFormField(
+                    controller: widget.draft.specController,
+                    decoration: const InputDecoration(
+                        labelText: '规格', border: OutlineInputBorder()),
+                  ),
                 ),
-              ),
-              SizedBox(
-                width: smallWidth,
-                child: TextFormField(
-                  controller: widget.draft.sortOrderController,
-                  decoration: const InputDecoration(labelText: '排序', border: OutlineInputBorder()),
-                  keyboardType: TextInputType.number,
+                SizedBox(
+                  width: smallWidth,
+                  child: TextFormField(
+                    controller: widget.draft.sortOrderController,
+                    decoration: const InputDecoration(
+                        labelText: '排序', border: OutlineInputBorder()),
+                    keyboardType: TextInputType.number,
+                  ),
                 ),
-              ),
-              if (widget.onRemove != null)
-                IconButton(
-                  onPressed: widget.onRemove,
-                  icon: const Icon(Icons.remove_circle_outline),
-                  tooltip: '移除',
-                ),
-            ],
+                if (widget.onRemove != null)
+                  IconButton(
+                    onPressed: widget.onRemove,
+                    icon: const Icon(Icons.remove_circle_outline),
+                    tooltip: '移除',
+                  ),
+              ],
+            ),
           ),
         );
       },
@@ -1127,75 +1314,124 @@ class _MaterialRowState extends State<_MaterialRow> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxWidth = constraints.maxWidth;
-        final useFullWidth = maxWidth < 520;
+        final useFullWidth = maxWidth < Breakpoints.sm;
         final productWidth = useFullWidth ? maxWidth : 220.0;
         final mediumWidth = useFullWidth ? maxWidth : 160.0;
         final notesWidth = useFullWidth ? maxWidth : 200.0;
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
-          child: Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              SizedBox(
-                width: productWidth,
-                child: DropdownButtonFormField<int>(
-                  value: widget.draft.materialId,
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: '物料', border: OutlineInputBorder()),
-                  items: widget.materials
-                      .map(
-                        (item) => DropdownMenuItem(
-                          value: item.id,
-                          child: Text('${item.name} (${item.code})', overflow: TextOverflow.ellipsis),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) => setState(() => widget.draft.materialId = value),
-                ),
-              ),
-              SizedBox(
-                width: mediumWidth,
-                child: TextFormField(
-                  controller: widget.draft.sizeController,
-                  decoration: const InputDecoration(labelText: '规格', border: OutlineInputBorder()),
-                ),
-              ),
-              SizedBox(
-                width: mediumWidth,
-                child: TextFormField(
-                  controller: widget.draft.usageController,
-                  decoration: const InputDecoration(labelText: '用量', border: OutlineInputBorder()),
-                ),
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Checkbox(
-                    value: widget.draft.needCutting,
-                    onChanged: (value) => setState(() => widget.draft.needCutting = value ?? false),
+          child: _FormRowCard(
+            child: Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                SizedBox(
+                  width: productWidth,
+                  child: DropdownButtonFormField<int>(
+                    initialValue: widget.draft.materialId,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                        labelText: '物料', border: OutlineInputBorder()),
+                    items: widget.materials
+                        .map(
+                          (item) => DropdownMenuItem(
+                            value: item.id,
+                            child: Text('${item.name} (${item.code})',
+                                overflow: TextOverflow.ellipsis),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) =>
+                        setState(() => widget.draft.materialId = value),
                   ),
-                  const Text('需要开料'),
-                ],
-              ),
-              SizedBox(
-                width: notesWidth,
-                child: TextFormField(
-                  controller: widget.draft.notesController,
-                  decoration: const InputDecoration(labelText: '备注', border: OutlineInputBorder()),
                 ),
-              ),
-              IconButton(
-                onPressed: widget.onRemove,
-                icon: const Icon(Icons.remove_circle_outline),
-                tooltip: '移除',
-              ),
-            ],
+                SizedBox(
+                  width: mediumWidth,
+                  child: TextFormField(
+                    controller: widget.draft.sizeController,
+                    decoration: const InputDecoration(
+                        labelText: '规格', border: OutlineInputBorder()),
+                  ),
+                ),
+                SizedBox(
+                  width: mediumWidth,
+                  child: TextFormField(
+                    controller: widget.draft.usageController,
+                    decoration: const InputDecoration(
+                        labelText: '用量', border: OutlineInputBorder()),
+                  ),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Checkbox(
+                      value: widget.draft.needCutting,
+                      onChanged: (value) => setState(
+                          () => widget.draft.needCutting = value ?? false),
+                    ),
+                    const Text('需要开料'),
+                  ],
+                ),
+                SizedBox(
+                  width: notesWidth,
+                  child: TextFormField(
+                    controller: widget.draft.notesController,
+                    decoration: const InputDecoration(
+                        labelText: '备注', border: OutlineInputBorder()),
+                  ),
+                ),
+                IconButton(
+                  onPressed: widget.onRemove,
+                  icon: const Icon(Icons.remove_circle_outline),
+                  tooltip: '移除',
+                ),
+              ],
+            ),
           ),
         );
       },
+    );
+  }
+}
+
+class _FormCard extends StatelessWidget {
+  const _FormCard({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: colors.borderColor),
+      ),
+      child: child,
+    );
+  }
+}
+
+class _FormRowCard extends StatelessWidget {
+  const _FormRowCard({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>()!;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colors.borderColor),
+      ),
+      child: child,
     );
   }
 }

@@ -13,6 +13,7 @@ class AppDioInterceptors extends InterceptorsWrapper {
     final path = options.path;
     final skipRefresh = options.extra['skipAuthRefresh'] == true ||
         path.contains('/auth/login') ||
+        path.contains('/auth/register') ||
         path.contains('/auth/refresh') ||
         path.contains('/user/login') ||
         path.contains('/user/loginByFace');

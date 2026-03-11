@@ -6,4 +6,10 @@ abstract class InvoiceRepository {
     int pageSize = 20,
     String? search,
   });
+
+  Future<Map<String, dynamic>> submit(int id);
+
+  Future<Map<String, dynamic>> approve(int id, Map<String, dynamic> payload);
+
+  Future<Map<String, dynamic>> getSummary();
 }

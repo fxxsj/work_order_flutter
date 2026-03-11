@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/common/theme_ext.dart';
+import 'package:work_order_app/src/core/constants/breakpoints.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/workorders/application/work_order_view_model.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
@@ -71,12 +76,11 @@ class WorkOrderDetailPage extends StatefulWidget {
 }
 
 class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
-  static const double _spacing = 12;
-  static const double _sectionSpacing = 16;
   static const String _breadcrumbSeparator = ' / ';
   static const String _emptyText = '-';
   static const String _deleteDialogTitle = '确认删除';
   static const String _deleteDialogContent = '确定要删除施工单 "{name}" 吗？此操作不可恢复。';
+  static const String _summaryHintText = '统一查看施工单状态、明细、物料和审核记录。';
 
   WorkOrderDetail? _detail;
   bool _loading = false;
@@ -86,9 +90,12 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
 
   String? _statusSelection;
 
-  final TextEditingController _approvalCommentController = TextEditingController();
-  final TextEditingController _rejectionReasonController = TextEditingController();
-  final TextEditingController _reapprovalReasonController = TextEditingController();
+  final TextEditingController _approvalCommentController =
+      TextEditingController();
+  final TextEditingController _rejectionReasonController =
+      TextEditingController();
+  final TextEditingController _reapprovalReasonController =
+      TextEditingController();
 
   @override
   void didChangeDependencies() {
@@ -113,7 +120,8 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
       });
     } catch (err) {
       if (!mounted) return;
-      setState(() => _errorMessage = err.toString().replaceFirst('Exception: ', ''));
+      setState(
+          () => _errorMessage = err.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -134,10 +142,15 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text(_deleteDialogTitle),
-        content: Text(_deleteDialogContent.replaceFirst('{name}', detail.orderNumber)),
+        content: Text(
+            _deleteDialogContent.replaceFirst('{name}', detail.orderNumber)),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('取消')),
-          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('删除')),
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('取消')),
+          FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('删除')),
         ],
       ),
     );
@@ -180,7 +193,8 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   }
 
   Future<void> _handleApprove({required bool approved}) async {
-    final rejectionReason = approved ? null : _rejectionReasonController.text.trim();
+    final rejectionReason =
+        approved ? null : _rejectionReasonController.text.trim();
     if (!approved && (rejectionReason == null || rejectionReason.isEmpty)) {
       ToastUtil.showError('请填写拒绝原因');
       return;
@@ -236,7 +250,8 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     setState(() => _actionLoading = true);
     try {
       final viewModel = context.read<WorkOrderViewModel>();
-      final detail = await viewModel.requestReapproval(widget.workOrderId, reason);
+      final detail =
+          await viewModel.requestReapproval(widget.workOrderId, reason);
       if (!mounted) return;
       setState(() {
         _detail = detail;
@@ -278,8 +293,12 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('取消')),
-          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('确定')),
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('取消')),
+          FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('确定')),
         ],
       ),
     );
@@ -300,8 +319,12 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
           maxLines: 3,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('取消')),
-          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('提交')),
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('取消')),
+          FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('提交')),
         ],
       ),
     );
@@ -323,9 +346,9 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxWidth = constraints.maxWidth;
-        final itemWidth = maxWidth < 520
+        final itemWidth = maxWidth < Breakpoints.sm
             ? maxWidth
-            : maxWidth < 900
+            : maxWidth < Breakpoints.lg
                 ? (maxWidth - 24) / 2
                 : 240.0;
         return Wrap(
@@ -345,23 +368,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   }
 
   Widget _buildSection(String title, Widget child) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.6)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: theme.textTheme.titleMedium),
-          const SizedBox(height: 12),
-          child,
-        ],
-      ),
-    );
+    return DetailSectionCard(title: title, child: child);
   }
 
   Widget _buildChipGroup(List<String> items) {
@@ -371,7 +378,14 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: items.map((text) => Chip(label: Text(text))).toList(),
+      children: items
+          .map(
+            (text) => Chip(
+              label: Text(text),
+              visualDensity: VisualDensity.compact,
+            ),
+          )
+          .toList(),
     );
   }
 
@@ -379,29 +393,26 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     if (items.isEmpty) {
       return Text('暂无产品信息', style: Theme.of(context).textTheme.bodyMedium);
     }
-    final rows = items.map((item) {
-      return DataRow(cells: [
-        DataCell(Text(item.productName ?? _emptyText)),
-        DataCell(Text(item.productCode ?? _emptyText)),
-        DataCell(Text(item.quantity?.toString() ?? _emptyText)),
-        DataCell(Text(item.unit ?? _emptyText)),
-        DataCell(Text(item.specification ?? _emptyText)),
-        DataCell(Text(item.impositionQuantity?.toString() ?? _emptyText)),
-      ]);
-    }).toList();
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable(
-        columns: const [
-          DataColumn(label: Text('产品')),
-          DataColumn(label: Text('编码')),
-          DataColumn(label: Text('数量')),
-          DataColumn(label: Text('单位')),
-          DataColumn(label: Text('规格')),
-          DataColumn(label: Text('拼版数')),
-        ],
-        rows: rows,
-      ),
+    return Column(
+      children: [
+        for (final item in items)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _DetailListCard(
+              title: item.productName ?? _emptyText,
+              subtitle: item.productCode ?? _emptyText,
+              fields: [
+                _DetailField('数量', item.quantity?.toString() ?? _emptyText),
+                _DetailField('单位', item.unit ?? _emptyText),
+                _DetailField('规格', item.specification ?? _emptyText),
+                _DetailField(
+                  '拼版数',
+                  item.impositionQuantity?.toString() ?? _emptyText,
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 
@@ -409,32 +420,41 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     if (items.isEmpty) {
       return Text('暂无工序信息', style: Theme.of(context).textTheme.bodyMedium);
     }
-    final rows = items.map((item) {
-      final canStart = item.canStart == null ? _emptyText : (item.canStart! ? '可开始' : '不可开始');
-      return DataRow(cells: [
-        DataCell(Text(item.processName ?? _emptyText)),
-        DataCell(Text(item.processCode ?? _emptyText)),
-        DataCell(Text(item.statusDisplay ?? item.status ?? _emptyText)),
-        DataCell(Text(item.operatorName ?? _emptyText)),
-        DataCell(Text(item.departmentName ?? _emptyText)),
-        DataCell(Text(item.tasksCount?.toString() ?? _emptyText)),
-        DataCell(Text(canStart)),
-      ]);
-    }).toList();
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable(
-        columns: const [
-          DataColumn(label: Text('工序')),
-          DataColumn(label: Text('编码')),
-          DataColumn(label: Text('状态')),
-          DataColumn(label: Text('操作员')),
-          DataColumn(label: Text('部门')),
-          DataColumn(label: Text('任务数')),
-          DataColumn(label: Text('可开始')),
-        ],
-        rows: rows,
-      ),
+    return Column(
+      children: [
+        for (final item in items)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _DetailListCard(
+              title: item.processName ?? _emptyText,
+              subtitle: item.processCode ?? _emptyText,
+              fields: [
+                _DetailField(
+                  '状态',
+                  item.statusDisplay ?? item.status ?? _emptyText,
+                ),
+                _DetailField(
+                  '操作员',
+                  item.operatorName ?? _emptyText,
+                ),
+                _DetailField(
+                  '部门',
+                  item.departmentName ?? _emptyText,
+                ),
+                _DetailField(
+                  '任务数',
+                  item.tasksCount?.toString() ?? _emptyText,
+                ),
+                _DetailField(
+                  '可开始',
+                  item.canStart == null
+                      ? _emptyText
+                      : (item.canStart! ? '可开始' : '不可开始'),
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 
@@ -442,32 +462,32 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     if (items.isEmpty) {
       return Text('暂无物料信息', style: Theme.of(context).textTheme.bodyMedium);
     }
-    final rows = items.map((item) {
-      final needCutting = item.needCutting == null ? _emptyText : (item.needCutting! ? '是' : '否');
-      return DataRow(cells: [
-        DataCell(Text(item.materialName ?? _emptyText)),
-        DataCell(Text(item.materialCode ?? _emptyText)),
-        DataCell(Text(item.materialUnit ?? _emptyText)),
-        DataCell(Text(item.materialSize ?? _emptyText)),
-        DataCell(Text(item.materialUsage ?? _emptyText)),
-        DataCell(Text(needCutting)),
-        DataCell(Text(item.purchaseStatusDisplay ?? item.purchaseStatus ?? _emptyText)),
-      ]);
-    }).toList();
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable(
-        columns: const [
-          DataColumn(label: Text('物料')),
-          DataColumn(label: Text('编码')),
-          DataColumn(label: Text('单位')),
-          DataColumn(label: Text('规格')),
-          DataColumn(label: Text('用量')),
-          DataColumn(label: Text('需裁切')),
-          DataColumn(label: Text('采购状态')),
-        ],
-        rows: rows,
-      ),
+    return Column(
+      children: [
+        for (final item in items)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _DetailListCard(
+              title: item.materialName ?? _emptyText,
+              subtitle: item.materialCode ?? _emptyText,
+              fields: [
+                _DetailField('单位', item.materialUnit ?? _emptyText),
+                _DetailField('规格', item.materialSize ?? _emptyText),
+                _DetailField('用量', item.materialUsage ?? _emptyText),
+                _DetailField(
+                  '需裁切',
+                  item.needCutting == null
+                      ? _emptyText
+                      : (item.needCutting! ? '是' : '否'),
+                ),
+                _DetailField(
+                  '采购状态',
+                  item.purchaseStatusDisplay ?? item.purchaseStatus ?? _emptyText,
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 
@@ -482,21 +502,25 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceVariant,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: theme.dividerColor.withOpacity(0.4)),
+            color: theme.colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(14),
+            border:
+                Border.all(color: theme.dividerColor.withValues(alpha: 0.4)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(log.approvalStatusDisplay ?? log.approvalStatus ?? _emptyText,
+              Text(
+                  log.approvalStatusDisplay ?? log.approvalStatus ?? _emptyText,
                   style: theme.textTheme.titleSmall),
               const SizedBox(height: 6),
               Text('审核人: ${log.approvedByName ?? _emptyText}'),
               Text('时间: ${_formatDate(log.approvedAt)}'),
-              if (log.approvalComment != null && log.approvalComment!.trim().isNotEmpty)
+              if (log.approvalComment != null &&
+                  log.approvalComment!.trim().isNotEmpty)
                 Text('说明: ${log.approvalComment}'),
-              if (log.rejectionReason != null && log.rejectionReason!.trim().isNotEmpty)
+              if (log.rejectionReason != null &&
+                  log.rejectionReason!.trim().isNotEmpty)
                 Text('拒绝原因: ${log.rejectionReason}'),
             ],
           ),
@@ -519,6 +543,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     final title = detail?.orderNumber.isNotEmpty == true
         ? '施工单 ${detail!.orderNumber}'
         : '施工单 #${widget.workOrderId}';
+    final sectionSpacing = LayoutTokens.sectionSpacing(context);
 
     final statusOptions = const [
       DropdownMenuItem(value: 'pending', child: Text('待开始')),
@@ -529,77 +554,102 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     ];
 
     return ListPageScaffold(
-      spacing: _spacing,
-      header: PageHeaderBar(
+      spacing: sectionSpacing,
+      header: WorkbenchHeaderBar(
         breadcrumb: breadcrumb.join(_breadcrumbSeparator),
-        useSurface: false,
-        showDivider: false,
-        padding: EdgeInsets.zero,
-        actions: Align(
-          alignment: Alignment.centerRight,
-          child: Wrap(
-            spacing: _spacing,
-            runSpacing: 8,
-            children: [
-              PageActionButton.outlined(
-                onPressed: () => context.pop(),
-                icon: const Icon(Icons.arrow_back, size: 16),
-                label: '返回',
-              ),
-              PageActionButton.filled(
-                onPressed: () => context.go('/workorders/${widget.workOrderId}/edit'),
-                icon: const Icon(Icons.edit, size: 16),
-                label: '编辑',
-              ),
-              PageActionButton.outlined(
-                onPressed: _actionLoading ? null : _confirmDelete,
-                icon: const Icon(Icons.delete_outline, size: 16),
-                label: '删除',
-              ),
-            ],
+        title: title,
+        subtitle: _summaryHintText,
+        stats: [
+          WorkbenchStatItem(
+            label: '状态',
+            value: detail?.statusDisplay ?? detail?.status ?? _emptyText,
           ),
+          WorkbenchStatItem(
+            label: '审批',
+            value: detail?.approvalStatusDisplay ??
+                detail?.approvalStatus ??
+                _emptyText,
+          ),
+          WorkbenchStatItem(
+            label: '进度',
+            value: detail?.progressPercentage == null
+                ? _emptyText
+                : '${detail!.progressPercentage}%',
+          ),
+        ],
+        actions: Wrap(
+          spacing: sectionSpacing,
+          runSpacing: 8,
+          children: [
+            PageActionButton.outlined(
+              onPressed: () => context.pop(),
+              icon: const Icon(Icons.arrow_back, size: 16),
+              label: '返回',
+            ),
+            PageActionButton.filled(
+              onPressed: () =>
+                  context.go('/workorders/${widget.workOrderId}/edit'),
+              icon: const Icon(Icons.edit, size: 16),
+              label: '编辑',
+            ),
+            PageActionButton.outlined(
+              onPressed: _actionLoading ? null : _confirmDelete,
+              icon: const Icon(Icons.delete_outline, size: 16),
+              label: '删除',
+            ),
+          ],
         ),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const DetailSurfaceCard(
+              child: Center(child: CircularProgressIndicator()),
+            )
           : _errorMessage != null
-              ? Center(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(_errorMessage!),
-                        const SizedBox(height: 12),
-                        FilledButton(
-                          onPressed: _loadDetail,
-                          child: const Text('重试'),
-                        ),
-                      ],
+              ? DetailSurfaceCard(
+                  child: Center(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(_errorMessage!),
+                          const SizedBox(height: 12),
+                          FilledButton(
+                            onPressed: _loadDetail,
+                            child: const Text('重试'),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 )
               : detail == null
-                  ? const Center(child: Text('未找到施工单信息'))
+                  ? const DetailSurfaceCard(
+                      child: Center(child: Text('未找到施工单信息')),
+                    )
                   : ListView(
                       children: [
                         _buildSection(
                           '操作',
                           LayoutBuilder(
                             builder: (context, constraints) {
-                              final statusWidth = constraints.maxWidth < 360 ? constraints.maxWidth : 200.0;
+                              final statusWidth =
+                                  constraints.maxWidth < Breakpoints.sm
+                                      ? constraints.maxWidth
+                                      : 200.0;
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Wrap(
                                     spacing: 12,
                                     runSpacing: 8,
-                                    crossAxisAlignment: WrapCrossAlignment.center,
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
                                     children: [
                                       SizedBox(
                                         width: statusWidth,
                                         child: DropdownButtonFormField<String>(
-                                          value: _statusSelection,
+                                          initialValue: _statusSelection,
                                           isExpanded: true,
                                           decoration: const InputDecoration(
                                             labelText: '状态',
@@ -608,31 +658,45 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                                           items: statusOptions,
                                           onChanged: _actionLoading
                                               ? null
-                                              : (value) => setState(() => _statusSelection = value),
+                                              : (value) => setState(() =>
+                                                  _statusSelection = value),
                                         ),
                                       ),
                                       FilledButton(
-                                        onPressed: _actionLoading ? null : _handleUpdateStatus,
+                                        onPressed: _actionLoading
+                                            ? null
+                                            : _handleUpdateStatus,
                                         child: const Text('更新状态'),
                                       ),
-                                      if (detail.approvalStatus == 'pending') ...[
+                                      if (detail.approvalStatus ==
+                                          'pending') ...[
                                         FilledButton(
-                                          onPressed: _actionLoading ? null : () => _showApproveDialog(approved: true),
+                                          onPressed: _actionLoading
+                                              ? null
+                                              : () => _showApproveDialog(
+                                                  approved: true),
                                           child: const Text('审核通过'),
                                         ),
                                         OutlinedButton(
-                                          onPressed: _actionLoading ? null : () => _showApproveDialog(approved: false),
+                                          onPressed: _actionLoading
+                                              ? null
+                                              : () => _showApproveDialog(
+                                                  approved: false),
                                           child: const Text('审核拒绝'),
                                         ),
                                       ],
                                       if (detail.approvalStatus == 'rejected')
                                         FilledButton(
-                                          onPressed: _actionLoading ? null : _handleResubmit,
+                                          onPressed: _actionLoading
+                                              ? null
+                                              : _handleResubmit,
                                           child: const Text('重新提交审核'),
                                         ),
                                       if (detail.approvalStatus == 'approved')
                                         OutlinedButton(
-                                          onPressed: _actionLoading ? null : _showReapprovalDialog,
+                                          onPressed: _actionLoading
+                                              ? null
+                                              : _showReapprovalDialog,
                                           child: const Text('请求重新审核'),
                                         ),
                                     ],
@@ -642,48 +706,90 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                             },
                           ),
                         ),
-                        const SizedBox(height: _sectionSpacing),
+                        SizedBox(height: sectionSpacing),
                         _buildSection(
                           title,
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               _buildInfoGrid([
-                                _InfoItem('客户', detail.customerName ?? _emptyText),
-                                _InfoItem('业务员', detail.salespersonName ?? _emptyText),
-                                _InfoItem('负责人', detail.managerName ?? _emptyText),
-                                _InfoItem('创建人', detail.createdByName ?? _emptyText),
-                                _InfoItem('审核人', detail.approvedByName ?? _emptyText),
-                                _InfoItem('状态', detail.statusDisplay ?? detail.status ?? _emptyText),
-                                _InfoItem('优先级', detail.priorityDisplay ?? detail.priority ?? _emptyText),
-                                _InfoItem('审批状态', detail.approvalStatusDisplay ?? detail.approvalStatus ?? _emptyText),
-                                _InfoItem('审批说明', detail.approvalComment ?? _emptyText),
-                                _InfoItem('下单日期', _formatDate(detail.orderDate)),
-                                _InfoItem('交货日期', _formatDate(detail.deliveryDate)),
-                                _InfoItem('实际交货', _formatDate(detail.actualDeliveryDate)),
-                                _InfoItem('生产数量', detail.productionQuantity?.toString() ?? _emptyText),
-                                _InfoItem('不良数量', detail.defectiveQuantity?.toString() ?? _emptyText),
+                                _InfoItem(
+                                    '客户', detail.customerName ?? _emptyText),
+                                _InfoItem('业务员',
+                                    detail.salespersonName ?? _emptyText),
+                                _InfoItem(
+                                    '负责人', detail.managerName ?? _emptyText),
+                                _InfoItem(
+                                    '创建人', detail.createdByName ?? _emptyText),
+                                _InfoItem(
+                                    '审核人', detail.approvedByName ?? _emptyText),
+                                _InfoItem(
+                                    '状态',
+                                    detail.statusDisplay ??
+                                        detail.status ??
+                                        _emptyText),
+                                _InfoItem(
+                                    '优先级',
+                                    detail.priorityDisplay ??
+                                        detail.priority ??
+                                        _emptyText),
+                                _InfoItem(
+                                    '审批状态',
+                                    detail.approvalStatusDisplay ??
+                                        detail.approvalStatus ??
+                                        _emptyText),
+                                _InfoItem('审批说明',
+                                    detail.approvalComment ?? _emptyText),
+                                _InfoItem(
+                                    '下单日期', _formatDate(detail.orderDate)),
+                                _InfoItem(
+                                    '交货日期', _formatDate(detail.deliveryDate)),
+                                _InfoItem('实际交货',
+                                    _formatDate(detail.actualDeliveryDate)),
+                                _InfoItem(
+                                    '生产数量',
+                                    detail.productionQuantity?.toString() ??
+                                        _emptyText),
+                                _InfoItem(
+                                    '不良数量',
+                                    detail.defectiveQuantity?.toString() ??
+                                        _emptyText),
                                 _InfoItem(
                                   '任务数',
-                                  detail.totalTaskCount == null ? _emptyText : detail.totalTaskCount!.toString(),
+                                  detail.totalTaskCount == null
+                                      ? _emptyText
+                                      : detail.totalTaskCount!.toString(),
                                 ),
                                 _InfoItem(
                                   '草稿任务',
-                                  detail.draftTaskCount == null ? _emptyText : detail.draftTaskCount!.toString(),
+                                  detail.draftTaskCount == null
+                                      ? _emptyText
+                                      : detail.draftTaskCount!.toString(),
                                 ),
                                 _InfoItem(
                                   '总金额',
-                                  detail.totalAmount == null ? _emptyText : detail.totalAmount!.toStringAsFixed(2),
+                                  detail.totalAmount == null
+                                      ? _emptyText
+                                      : detail.totalAmount!.toStringAsFixed(2),
                                 ),
                                 _InfoItem(
                                   '进度',
-                                  detail.progressPercentage == null ? _emptyText : '${detail.progressPercentage}%',
+                                  detail.progressPercentage == null
+                                      ? _emptyText
+                                      : '${detail.progressPercentage}%',
                                 ),
-                                _InfoItem('印刷形式', detail.printingTypeDisplay ?? detail.printingType ?? _emptyText),
-                                _InfoItem('印刷色数', detail.printingColorsDisplay ?? _emptyText),
+                                _InfoItem(
+                                    '印刷形式',
+                                    detail.printingTypeDisplay ??
+                                        detail.printingType ??
+                                        _emptyText),
+                                _InfoItem('印刷色数',
+                                    detail.printingColorsDisplay ?? _emptyText),
                               ]),
                               const SizedBox(height: 12),
-                              _InfoRow(label: '备注', value: detail.notes ?? _emptyText),
+                              _InfoRow(
+                                  label: '备注',
+                                  value: detail.notes ?? _emptyText),
                               const SizedBox(height: 12),
                               _InfoRow(
                                 label: 'CMYK 颜色',
@@ -699,21 +805,35 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                                     : detail.printingOtherColors.join(', '),
                               ),
                               const SizedBox(height: 12),
-                              Text('图稿', style: Theme.of(context).textTheme.titleSmall),
+                              Text('图稿',
+                                  style:
+                                      Theme.of(context).textTheme.titleSmall),
                               const SizedBox(height: 6),
-                              _buildChipGroup(detail.artworkNames.isNotEmpty ? detail.artworkNames : detail.artworkCodes),
+                              _buildChipGroup(detail.artworkNames.isNotEmpty
+                                  ? detail.artworkNames
+                                  : detail.artworkCodes),
                               const SizedBox(height: 12),
-                              Text('刀模', style: Theme.of(context).textTheme.titleSmall),
+                              Text('刀模',
+                                  style:
+                                      Theme.of(context).textTheme.titleSmall),
                               const SizedBox(height: 6),
-                              _buildChipGroup(detail.dieNames.isNotEmpty ? detail.dieNames : detail.dieCodes),
+                              _buildChipGroup(detail.dieNames.isNotEmpty
+                                  ? detail.dieNames
+                                  : detail.dieCodes),
                               const SizedBox(height: 12),
-                              Text('烫金版', style: Theme.of(context).textTheme.titleSmall),
+                              Text('烫金版',
+                                  style:
+                                      Theme.of(context).textTheme.titleSmall),
                               const SizedBox(height: 6),
                               _buildChipGroup(
-                                detail.foilingPlateNames.isNotEmpty ? detail.foilingPlateNames : detail.foilingPlateCodes,
+                                detail.foilingPlateNames.isNotEmpty
+                                    ? detail.foilingPlateNames
+                                    : detail.foilingPlateCodes,
                               ),
                               const SizedBox(height: 12),
-                              Text('压凸版', style: Theme.of(context).textTheme.titleSmall),
+                              Text('压凸版',
+                                  style:
+                                      Theme.of(context).textTheme.titleSmall),
                               const SizedBox(height: 6),
                               _buildChipGroup(
                                 detail.embossingPlateNames.isNotEmpty
@@ -723,14 +843,18 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: _sectionSpacing),
-                        _buildSection('产品清单', _buildProductsTable(detail.products)),
-                        const SizedBox(height: _sectionSpacing),
-                        _buildSection('工序进度', _buildProcessTable(detail.processes)),
-                        const SizedBox(height: _sectionSpacing),
-                        _buildSection('物料需求', _buildMaterialTable(detail.materials)),
-                        const SizedBox(height: _sectionSpacing),
-                        _buildSection('审批记录', _buildApprovalLogs(detail.approvalLogs)),
+                        SizedBox(height: sectionSpacing),
+                        _buildSection(
+                            '产品清单', _buildProductsTable(detail.products)),
+                        SizedBox(height: sectionSpacing),
+                        _buildSection(
+                            '工序进度', _buildProcessTable(detail.processes)),
+                        SizedBox(height: sectionSpacing),
+                        _buildSection(
+                            '物料需求', _buildMaterialTable(detail.materials)),
+                        SizedBox(height: sectionSpacing),
+                        _buildSection(
+                            '审批记录', _buildApprovalLogs(detail.approvalLogs)),
                       ],
                     ),
     );
@@ -756,10 +880,86 @@ class _InfoRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
+        Text(label,
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
         const SizedBox(height: 4),
-        Text(value, style: theme.textTheme.bodyMedium),
+        Text(
+          value,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ],
+    );
+  }
+}
+
+class _DetailField {
+  const _DetailField(this.label, this.value);
+
+  final String label;
+  final String value;
+}
+
+class _DetailListCard extends StatelessWidget {
+  const _DetailListCard({
+    required this.title,
+    required this.subtitle,
+    required this.fields,
+  });
+
+  final String title;
+  final String subtitle;
+  final List<_DetailField> fields;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>()!;
+    final isXs = BreakpointsUtil.isXs(context);
+    final itemWidth = isXs ? double.infinity : 132.0;
+    final basePadding = LayoutTokens.cardPadding(context);
+    final radius = isXs ? LayoutTokens.radiusMd : LayoutTokens.radiusLg;
+
+    return Container(
+      width: double.infinity,
+      padding: basePadding,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: colors.borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: colors.sidebarText,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style:
+                theme.textTheme.bodySmall?.copyWith(color: colors.subtleText),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: isXs ? 12 : 20,
+            runSpacing: 10,
+            children: fields
+                .map(
+                  (field) => SizedBox(
+                    width: itemWidth,
+                    child: _InfoRow(label: field.label, value: field.value),
+                  ),
+                )
+                .toList(),
+          ),
+        ],
+      ),
     );
   }
 }

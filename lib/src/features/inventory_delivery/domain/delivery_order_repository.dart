@@ -6,4 +6,12 @@ abstract class DeliveryOrderRepository {
     int pageSize = 20,
     String? search,
   });
+
+  Future<Map<String, dynamic>> ship(int id, Map<String, dynamic> payload);
+
+  Future<Map<String, dynamic>> receive(int id, Map<String, dynamic> payload);
+
+  Future<Map<String, dynamic>> reject(int id, Map<String, dynamic> payload);
+
+  Future<Map<String, dynamic>> getSummary();
 }

@@ -9,6 +9,7 @@ class Department {
     this.parentId,
     this.parentName,
     this.childrenCount,
+    this.children = const [],
     this.processNames = const [],
     this.sortOrder,
     this.isActive = true,
@@ -23,6 +24,7 @@ class Department {
   final int? parentId;
   final String? parentName;
   final int? childrenCount;
+  final List<Department> children;
   final List<String> processNames;
   final int? sortOrder;
   final bool isActive;
@@ -37,6 +39,7 @@ class Department {
     int? parentId,
     String? parentName,
     int? childrenCount,
+    List<Department>? children,
     List<String>? processNames,
     int? sortOrder,
     bool? isActive,
@@ -51,6 +54,7 @@ class Department {
       parentId: parentId ?? this.parentId,
       parentName: parentName ?? this.parentName,
       childrenCount: childrenCount ?? this.childrenCount,
+      children: children ?? this.children,
       processNames: processNames ?? this.processNames,
       sortOrder: sortOrder ?? this.sortOrder,
       isActive: isActive ?? this.isActive,
@@ -68,6 +72,7 @@ class Department {
       'parentId': parentId,
       'parentName': parentName,
       'childrenCount': childrenCount,
+      'children': children.map((child) => child.toJson()).toList(),
       'processNames': processNames,
       'sortOrder': sortOrder,
       'isActive': isActive,
@@ -78,6 +83,15 @@ class Department {
   }
 
   factory Department.fromJson(Map<String, dynamic> json) {
+    final children = <Department>[];
+    final childrenRaw = json['children'];
+    if (childrenRaw is List) {
+      for (final item in childrenRaw) {
+        if (item is Map) {
+          children.add(Department.fromJson(Map<String, dynamic>.from(item)));
+        }
+      }
+    }
     return Department(
       id: toInt(json['id']) ?? 0,
       code: json['code']?.toString() ?? '',
@@ -85,6 +99,7 @@ class Department {
       parentId: toInt(json['parentId']),
       parentName: toStringOrNull(json['parentName']),
       childrenCount: toInt(json['childrenCount']),
+      children: children,
       processNames: (json['processNames'] is List)
           ? List<String>.from(json['processNames'].whereType<String>())
           : const [],

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/edit_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -20,14 +22,9 @@ class DepartmentEditPage extends StatefulWidget {
 class _DepartmentEditPageState extends State<DepartmentEditPage> {
   final _formKey = GlobalKey<FormState>();
 
-  static const double _padding = 16;
-  static const double _sectionSpacing = 16;
-  static const double _pageSpacing = 8;
-  static const double _actionSpacing = 24;
   static const double _submitIndicatorSize = 20;
   static const double _indicatorStrokeWidth = 2;
   static const double _inlineSpacing = 8;
-  static const double _columnSpacing = 24;
 
   static const String _codeLabel = '部门编码';
   static const String _nameLabel = '部门名称';
@@ -145,6 +142,11 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
     final breadcrumb = buildBreadcrumbForPath('/departments');
     final availableParents = _availableParents(viewModel.departmentOptions);
     final disableParent = widget.department != null && (widget.department?.childrenCount ?? 0) > 0;
+    final contentPadding = LayoutTokens.pagePadding(context);
+    final sectionSpacing = LayoutTokens.formSectionSpacing(context);
+    final actionSpacing = LayoutTokens.formActionSpacing(context);
+    final pageSpacing = LayoutTokens.formPageSpacing(context);
+    final columnSpacing = LayoutTokens.formColumnSpacing(context);
 
     final codeField = TextFormField(
       controller: _codeController,
@@ -181,7 +183,7 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
     );
 
     final parentField = DropdownButtonFormField<int?>(
-      value: _parentId,
+      initialValue: _parentId,
       decoration: const InputDecoration(
         labelText: _parentLabel,
         border: OutlineInputBorder(),
@@ -267,19 +269,19 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
       children: [
         if (isMobile) ...[
           _sectionTitle(theme, _basicSectionTitle),
-          const SizedBox(height: _sectionSpacing),
+          SizedBox(height: sectionSpacing),
           codeField,
-          const SizedBox(height: _sectionSpacing),
+          SizedBox(height: sectionSpacing),
           nameField,
-          const SizedBox(height: _sectionSpacing),
+          SizedBox(height: sectionSpacing),
           parentField,
-          const SizedBox(height: _sectionSpacing),
+          SizedBox(height: sectionSpacing),
           _sectionTitle(theme, _extraSectionTitle),
-          const SizedBox(height: _sectionSpacing),
+          SizedBox(height: sectionSpacing),
           sortField,
-          const SizedBox(height: _sectionSpacing),
+          SizedBox(height: sectionSpacing),
           processField,
-          const SizedBox(height: _sectionSpacing),
+          SizedBox(height: sectionSpacing),
           statusField,
         ] else ...[
           Row(
@@ -290,26 +292,26 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _sectionTitle(theme, _basicSectionTitle),
-                    const SizedBox(height: _sectionSpacing),
+                    SizedBox(height: sectionSpacing),
                     codeField,
-                    const SizedBox(height: _sectionSpacing),
+                    SizedBox(height: sectionSpacing),
                     nameField,
-                    const SizedBox(height: _sectionSpacing),
+                    SizedBox(height: sectionSpacing),
                     parentField,
                   ],
                 ),
               ),
-              const SizedBox(width: _columnSpacing),
+              SizedBox(width: columnSpacing),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _sectionTitle(theme, _extraSectionTitle),
-                    const SizedBox(height: _sectionSpacing),
+                    SizedBox(height: sectionSpacing),
                     sortField,
-                    const SizedBox(height: _sectionSpacing),
+                    SizedBox(height: sectionSpacing),
                     processField,
-                    const SizedBox(height: _sectionSpacing),
+                    SizedBox(height: sectionSpacing),
                     statusField,
                   ],
                 ),
@@ -317,70 +319,55 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
             ],
           ),
         ],
-        const SizedBox(height: _actionSpacing),
+        SizedBox(height: actionSpacing),
       ],
     );
 
     return SafeArea(
       child: Form(
         key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            PageHeaderBar(
-              breadcrumb: breadcrumb.join(_breadcrumbSeparator),
-              useSurface: false,
-              showDivider: false,
-              padding: EdgeInsets.zero,
-              actions: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  PageActionButton.outlined(
-                    onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
-                    icon: const Icon(Icons.arrow_back, size: 16),
-                    label: _backText,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: _pageSpacing),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(_padding),
-                child: mainContent,
-              ),
-            ),
-            const SizedBox(height: _pageSpacing),
-            Container(
-              padding: const EdgeInsets.fromLTRB(_padding, 12, _padding, _padding),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                border: Border(
-                  top: BorderSide(color: theme.dividerColor.withOpacity(0.6)),
+        child: EditPageScaffold(
+          spacing: pageSpacing,
+          contentPadding: contentPadding,
+          header: PageHeaderBar(
+            breadcrumb: breadcrumb.join(_breadcrumbSeparator),
+            useSurface: false,
+            showDivider: false,
+            padding: EdgeInsets.zero,
+            actions: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                PageActionButton.outlined(
+                  onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
+                  icon: const Icon(Icons.arrow_back, size: 16),
+                  label: _backText,
                 ),
-              ),
-              child: Row(
-                children: [
-                  PageActionButton.outlined(
-                    onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
-                    label: _cancelText,
-                  ),
-                  const SizedBox(width: _inlineSpacing),
-                  PageActionButton.filled(
-                    onPressed: _submitting ? null : () => _handleSubmit(viewModel),
-                    label: _submitText,
-                    icon: _submitting
-                        ? const SizedBox(
-                            height: _submitIndicatorSize,
-                            width: _submitIndicatorSize,
-                            child: CircularProgressIndicator(strokeWidth: _indicatorStrokeWidth),
-                          )
-                        : null,
-                  ),
-                ],
-              ),
+              ],
             ),
-          ],
+          ),
+          body: mainContent,
+          footer: EditPageFooterBar(
+            child: Row(
+              children: [
+                PageActionButton.outlined(
+                  onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
+                  label: _cancelText,
+                ),
+                const SizedBox(width: _inlineSpacing),
+                PageActionButton.filled(
+                  onPressed: _submitting ? null : () => _handleSubmit(viewModel),
+                  label: _submitText,
+                  icon: _submitting
+                      ? const SizedBox(
+                          height: _submitIndicatorSize,
+                          width: _submitIndicatorSize,
+                          child: CircularProgressIndicator(strokeWidth: _indicatorStrokeWidth),
+                        )
+                      : null,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

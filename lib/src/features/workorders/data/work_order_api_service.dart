@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_detail_dto.dart';
@@ -18,6 +19,7 @@ class WorkOrderApiService {
     int? customerId,
     int? productId,
     int? processId,
+    String? ordering,
   }) async {
     final params = <String, dynamic>{
       'page': page,
@@ -44,6 +46,9 @@ class WorkOrderApiService {
     }
     if (processId != null && processId > 0) {
       params['process'] = processId;
+    }
+    if (ordering != null && ordering.trim().isNotEmpty) {
+      params['ordering'] = ordering.trim();
     }
 
     final response = await _client.get('/workorders/', queryParameters: params);
@@ -132,5 +137,67 @@ class WorkOrderApiService {
     final body = response.data;
     final map = body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
     return WorkOrderDetailDto.fromJson(map);
+  }
+
+  Future<WorkOrderDetailDto> addProcess(int id, Map<String, dynamic> payload) async {
+    final response = await _client.post('/workorders/$id/add_process/', data: payload);
+    return _detailFromResponse(response.data);
+  }
+
+  Future<WorkOrderDetailDto> addMaterial(int id, Map<String, dynamic> payload) async {
+    final response = await _client.post('/workorders/$id/add_material/', data: payload);
+    return _detailFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> getStatistics({Map<String, dynamic>? params}) async {
+    final response = await _client.get('/workorders/statistics/', queryParameters: params);
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Response<dynamic>> export({Map<String, dynamic>? params}) {
+    return _client.requestRaw(
+      '/workorders/export/',
+      method: 'get',
+      queryParameters: params,
+      responseType: ResponseType.bytes,
+    );
+  }
+
+  Future<Map<String, dynamic>> checkSyncNeeded(int id, {List<int>? processIds}) async {
+    final params = <String, dynamic>{};
+    if (processIds != null && processIds.isNotEmpty) {
+      params['process_ids'] = processIds.join(',');
+    }
+    final response = await _client.get('/workorders/$id/check_sync_needed/', queryParameters: params);
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> syncTasksPreview(int id, {List<int>? processIds}) async {
+    final payload = <String, dynamic>{
+      if (processIds != null && processIds.isNotEmpty) 'process_ids': processIds,
+    };
+    final response = await _client.post('/workorders/$id/sync_tasks_preview/', data: payload);
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> syncTasksExecute(int id, {List<int>? processIds}) async {
+    final payload = <String, dynamic>{
+      if (processIds != null && processIds.isNotEmpty) 'process_ids': processIds,
+      'confirmed': true,
+    };
+    final response = await _client.post('/workorders/$id/sync_tasks_execute/', data: payload);
+    return _mapFromResponse(response.data);
+  }
+
+  WorkOrderDetailDto _detailFromResponse(dynamic data) {
+    final map = data is Map ? Map<String, dynamic>.from(data) : <String, dynamic>{};
+    return WorkOrderDetailDto.fromJson(map);
+  }
+
+  Map<String, dynamic> _mapFromResponse(dynamic data) {
+    if (data is Map<String, dynamic>) {
+      return Map<String, dynamic>.from(data);
+    }
+    return {};
   }
 }

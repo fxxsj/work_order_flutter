@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/content_page_types.dart';
+import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/page_registry.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 
 class ContentPage extends StatelessWidget {
   const ContentPage({super.key, required this.selectedId});
@@ -16,41 +16,395 @@ class ContentPage extends StatelessWidget {
     if (fullPage != null) {
       return fullPage;
     }
+    if (selectedId == 'dashboard') {
+      return const _DashboardPage();
+    }
+
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
-    final isMd = BreakpointsUtil.isMd(context);
-    final isXl = BreakpointsUtil.isXl(context);
-    final is2xl = BreakpointsUtil.is2xl(context);
-
-    final primary = theme.primaryColor;
-    final accent = colors.sidebarText;
-    final subtleText = colors.subtleText;
-    final borderColor = colors.borderColor;
     final style = ContentAreaStyle(
-      primary: primary,
+      primary: theme.colorScheme.primary,
       surface: colors.surface,
-      accent: accent,
-      subtleText: subtleText,
-      borderColor: borderColor,
+      accent: colors.sidebarText,
+      subtleText: colors.subtleText,
+      borderColor: colors.borderColor,
     );
 
     return _ContentArea(
       selectedId: selectedId,
       breadcrumb: buildBreadcrumb(selectedId),
-      primary: primary,
-      accent: accent,
-      surface: style.surface,
-      subtleText: subtleText,
-      borderColor: borderColor,
       style: style,
       bodyBuilder: buildContentBody(selectedId),
-      gridCount: is2xl
-          ? 4
-          : isXl
-              ? 3
-              : isMd
-                  ? 2
-                  : 1,
+    );
+  }
+}
+
+class _DashboardPage extends StatelessWidget {
+  const _DashboardPage();
+
+  static const List<String> _quickIds = [
+    'workorders',
+    'tasks_list',
+    'sales_orders',
+    'delivery',
+    'quality',
+    'notifications',
+  ];
+
+  static const List<String> _spotlightIds = [
+    'products',
+    'customers',
+    'purchase_orders',
+    'statements',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final colors = theme.extension<AppColors>()!;
+    final leaves = leafNavItemsByBranch();
+    final quickEntries = _quickIds
+        .map((id) => leaves.where((item) => item.id == id).firstOrNull)
+        .whereType<NavItem>()
+        .toList();
+    final spotlightEntries = _spotlightIds
+        .map((id) => leaves.where((item) => item.id == id).firstOrNull)
+        .whereType<NavItem>()
+        .toList();
+    final groups = navItems
+        .where((item) => item.showInSidebar)
+        .where((item) => item.children.isNotEmpty)
+        .take(4)
+        .toList();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 900;
+        final narrow = constraints.maxWidth < 640;
+
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            narrow ? 16 : 24,
+            narrow ? 16 : 20,
+            narrow ? 16 : 24,
+            32,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _DashboardHero(
+                title: '工作台',
+                subtitle: _todayLabel(),
+                primary: scheme.primary,
+                accent: colors.sidebarText,
+                borderColor: colors.borderColor,
+                surface: colors.surface,
+              ),
+              const SizedBox(height: 16),
+              if (compact) ...[
+                _QuickEntrySection(
+                  entries: quickEntries,
+                  surface: colors.surface,
+                  borderColor: colors.borderColor,
+                  accent: colors.sidebarText,
+                  subtleText: colors.subtleText,
+                  primary: scheme.primary,
+                ),
+                const SizedBox(height: 16),
+                _SimpleModuleSection(
+                  entries: spotlightEntries,
+                  surface: colors.surface,
+                  borderColor: colors.borderColor,
+                  accent: colors.sidebarText,
+                  subtleText: colors.subtleText,
+                  primary: scheme.primary,
+                ),
+              ] else
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 13,
+                      child: _QuickEntrySection(
+                        entries: quickEntries,
+                        surface: colors.surface,
+                        borderColor: colors.borderColor,
+                        accent: colors.sidebarText,
+                        subtleText: colors.subtleText,
+                        primary: scheme.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      flex: 7,
+                      child: _SimpleModuleSection(
+                        entries: spotlightEntries,
+                        surface: colors.surface,
+                        borderColor: colors.borderColor,
+                        accent: colors.sidebarText,
+                        subtleText: colors.subtleText,
+                        primary: scheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              const SizedBox(height: 16),
+              _GroupPanel(
+                groups: groups,
+                surface: colors.surface,
+                borderColor: colors.borderColor,
+                accent: colors.sidebarText,
+                subtleText: colors.subtleText,
+                primary: scheme.primary,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  String _todayLabel() {
+    final now = DateTime.now();
+    const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+    return '${now.month} 月 ${now.day} 日 ${weekdays[now.weekday - 1]}';
+  }
+}
+
+class _DashboardHero extends StatelessWidget {
+  const _DashboardHero({
+    required this.title,
+    required this.subtitle,
+    required this.primary,
+    required this.accent,
+    required this.borderColor,
+    required this.surface,
+  });
+
+  final String title;
+  final String subtitle;
+  final Color primary;
+  final Color accent;
+  final Color borderColor;
+  final Color surface;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: borderColor),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 720;
+          final badgeWrap = Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              _TinyBadge(
+                label: subtitle,
+                color: accent,
+                background: primary.withValues(alpha: 0.08),
+              ),
+            ],
+          );
+
+          final titleBlock = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: accent,
+                ),
+              ),
+            ],
+          );
+
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child:
+                      Icon(Icons.dashboard_outlined, color: primary, size: 18),
+                ),
+                const SizedBox(height: 12),
+                titleBlock,
+                const SizedBox(height: 12),
+                badgeWrap,
+              ],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.dashboard_outlined, color: primary, size: 18),
+              ),
+              const SizedBox(width: 12),
+              Expanded(child: titleBlock),
+              const SizedBox(width: 10),
+              badgeWrap,
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _QuickEntrySection extends StatelessWidget {
+  const _QuickEntrySection({
+    required this.entries,
+    required this.surface,
+    required this.borderColor,
+    required this.accent,
+    required this.subtleText,
+    required this.primary,
+  });
+
+  final List<NavItem> entries;
+  final Color surface;
+  final Color borderColor;
+  final Color accent;
+  final Color subtleText;
+  final Color primary;
+
+  @override
+  Widget build(BuildContext context) {
+    return _PanelShell(
+      title: '常用入口',
+      subtitle: '优先处理高频操作。',
+      surface: surface,
+      borderColor: borderColor,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 560;
+          return Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              for (final item in entries)
+                _QuickEntryCard(
+                  item: item,
+                  width: compact
+                      ? constraints.maxWidth
+                      : (constraints.maxWidth - 12) / 2,
+                  accent: accent,
+                  subtleText: subtleText,
+                  primary: primary,
+                  borderColor: borderColor,
+                  surface: surface,
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _SimpleModuleSection extends StatelessWidget {
+  const _SimpleModuleSection({
+    required this.entries,
+    required this.surface,
+    required this.borderColor,
+    required this.accent,
+    required this.subtleText,
+    required this.primary,
+  });
+
+  final List<NavItem> entries;
+  final Color surface;
+  final Color borderColor;
+  final Color accent;
+  final Color subtleText;
+  final Color primary;
+
+  @override
+  Widget build(BuildContext context) {
+    return _PanelShell(
+      title: '常用模块',
+      subtitle: '少量保留，避免首页过载。',
+      surface: surface,
+      borderColor: borderColor,
+      child: Column(
+        children: [
+          for (var i = 0; i < entries.length; i++) ...[
+            _SimpleNavRow(
+              item: entries[i],
+              accent: accent,
+              subtleText: subtleText,
+              primary: primary,
+            ),
+            if (i != entries.length - 1)
+              Divider(height: 20, color: borderColor),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _GroupPanel extends StatelessWidget {
+  const _GroupPanel({
+    required this.groups,
+    required this.surface,
+    required this.borderColor,
+    required this.accent,
+    required this.subtleText,
+    required this.primary,
+  });
+
+  final List<NavItem> groups;
+  final Color surface;
+  final Color borderColor;
+  final Color accent;
+  final Color subtleText;
+  final Color primary;
+
+  @override
+  Widget build(BuildContext context) {
+    return _PanelShell(
+      title: '全部模块',
+      subtitle: '按模块进入处理。',
+      surface: surface,
+      borderColor: borderColor,
+      child: Column(
+        children: [
+          for (var i = 0; i < groups.length; i++) ...[
+            _GroupRow(
+              group: groups[i],
+              accent: accent,
+              subtleText: subtleText,
+              primary: primary,
+            ),
+            if (i != groups.length - 1) Divider(height: 22, color: borderColor),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -59,260 +413,104 @@ class _ContentArea extends StatelessWidget {
   const _ContentArea({
     required this.selectedId,
     required this.breadcrumb,
-    required this.primary,
-    required this.accent,
-    required this.surface,
-    required this.subtleText,
-    required this.borderColor,
-    required this.gridCount,
     required this.style,
     required this.bodyBuilder,
   });
 
   final String selectedId;
   final List<String> breadcrumb;
-  final Color primary;
-  final Color accent;
-  final Color surface;
-  final Color subtleText;
-  final Color borderColor;
-  final int gridCount;
   final ContentAreaStyle style;
   final ContentBodyBuilder? bodyBuilder;
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        return SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: constraints.maxHeight),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _HeaderCard(
-                  breadcrumb: breadcrumb,
-                  title: labelFor(selectedId),
-                  primary: primary,
-                  accent: accent,
-                  surface: surface,
-                  subtleText: subtleText,
-                  borderColor: borderColor,
-                ),
-                const SizedBox(height: 20),
-                if (bodyBuilder != null)
-                  bodyBuilder!(context, style)
-                else ...[
-                  Wrap(
-                    spacing: 16,
-                    runSpacing: 16,
-                    children: List.generate(gridCount * 2, (index) {
-                      return _StatCard(
-                        width: (width - (gridCount - 1) * 16) / gridCount,
-                        title: '指标 ${index + 1}',
-                        value: '${(index + 1) * 12}',
-                        trend: index.isEven ? '+${index + 2}%' : '-${index + 1}%',
-                        primary: primary,
-                        surface: surface,
-                        subtleText: subtleText,
-                        borderColor: borderColor,
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 24),
-                  _ListPlaceholder(
-                    title: '核心列表区域',
-                    subtitle: '这里是 $selectedId 的列表或表格布局，占位用于后续业务接入。',
-                    primary: primary,
-                    surface: surface,
-                    subtleText: subtleText,
-                    borderColor: borderColor,
-                  ),
-                ],
-              ],
-            ),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(24, 18, 24, 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _DefaultHeader(
+            breadcrumb: breadcrumb,
+            title: labelFor(selectedId),
+            accent: style.accent,
+            subtleText: style.subtleText,
+            borderColor: style.borderColor,
+            surface: style.surface,
           ),
-        );
-      },
+          const SizedBox(height: 18),
+          if (bodyBuilder != null)
+            bodyBuilder!(context, style)
+          else
+            _ModulePlaceholder(
+              title: labelFor(selectedId),
+              style: style,
+            ),
+        ],
+      ),
     );
   }
 }
 
-class _HeaderCard extends StatelessWidget {
-  const _HeaderCard({
+class _DefaultHeader extends StatelessWidget {
+  const _DefaultHeader({
     required this.breadcrumb,
     required this.title,
-    required this.primary,
     required this.accent,
-    required this.surface,
     required this.subtleText,
     required this.borderColor,
+    required this.surface,
   });
 
   final List<String> breadcrumb;
   final String title;
-  final Color primary;
   final Color accent;
-  final Color surface;
   final Color subtleText;
   final Color borderColor;
+  final Color surface;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
       decoration: BoxDecoration(
         color: surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 14,
-            offset: const Offset(0, 8),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: breadcrumb.map((item) {
-              final isLast = item == breadcrumb.last;
-              return Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    item,
-                    style: TextStyle(
-                      color: isLast ? accent : subtleText,
-                      fontWeight: isLast ? FontWeight.w600 : FontWeight.w400,
-                      fontSize: 13,
-                    ),
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (var i = 0; i < breadcrumb.length; i++) ...[
+                Text(
+                  breadcrumb[i],
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: i == breadcrumb.length - 1 ? accent : subtleText,
+                    fontWeight: i == breadcrumb.length - 1
+                        ? FontWeight.w700
+                        : FontWeight.w500,
                   ),
-                  if (!isLast)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                      child: Icon(Icons.chevron_right, size: 16, color: subtleText),
-                    ),
-                ],
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Container(
-                width: 6,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: primary,
-                  borderRadius: BorderRadius.circular(6),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                title,
-                style: TextStyle(
-                  color: accent,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const Spacer(),
-              _HeaderChip(label: '本月', color: primary),
-              const SizedBox(width: 8),
-              _HeaderChip(label: '实时', color: accent),
+                if (i != breadcrumb.length - 1)
+                  Text(' / ',
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(color: subtleText)),
+              ],
             ],
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HeaderChip extends StatelessWidget {
-  const _HeaderChip({required this.label, required this.color});
-
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.2)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.w600,
-          fontSize: 11.5,
-        ),
-      ),
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  const _StatCard({
-    required this.width,
-    required this.title,
-    required this.value,
-    required this.trend,
-    required this.primary,
-    required this.surface,
-    required this.subtleText,
-    required this.borderColor,
-  });
-
-  final double width;
-  final String title;
-  final String value;
-  final String trend;
-  final Color primary;
-  final Color surface;
-  final Color subtleText;
-  final Color borderColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final positive = trend.contains('+');
-    final trendColor = positive ? const Color(0xFF22C55E) : const Color(0xFFEF4444);
-    return Container(
-      width: width,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: borderColor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: TextStyle(color: subtleText, fontSize: 12)),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Text(
-            value,
-            style: TextStyle(color: primary, fontSize: 22, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Icon(positive ? Icons.trending_up : Icons.trending_down, color: trendColor, size: 16),
-              const SizedBox(width: 4),
-              Text(
-                trend,
-                style: TextStyle(color: trendColor, fontSize: 12, fontWeight: FontWeight.w600),
-              ),
-            ],
+            title,
+            style: theme.textTheme.titleLarge?.copyWith(
+              color: accent,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),
@@ -320,22 +518,14 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _ListPlaceholder extends StatelessWidget {
-  const _ListPlaceholder({
+class _ModulePlaceholder extends StatelessWidget {
+  const _ModulePlaceholder({
     required this.title,
-    required this.subtitle,
-    required this.primary,
-    required this.surface,
-    required this.subtleText,
-    required this.borderColor,
+    required this.style,
   });
 
   final String title;
-  final String subtitle;
-  final Color primary;
-  final Color surface;
-  final Color subtleText;
-  final Color borderColor;
+  final ContentAreaStyle style;
 
   @override
   Widget build(BuildContext context) {
@@ -343,8 +533,58 @@ class _ListPlaceholder extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
+        color: style.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: style.borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              color: style.accent,
+              fontWeight: FontWeight.w700,
+              fontSize: 17,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '当前模块入口已接入统一布局。',
+            style: TextStyle(color: style.subtleText, height: 1.4),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PanelShell extends StatelessWidget {
+  const _PanelShell({
+    required this.title,
+    required this.subtitle,
+    required this.surface,
+    required this.borderColor,
+    required this.child,
+  });
+
+  final String title;
+  final String subtitle;
+  final Color surface;
+  final Color borderColor;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>()!;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
         color: surface,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: borderColor),
       ),
       child: Column(
@@ -352,28 +592,259 @@ class _ListPlaceholder extends StatelessWidget {
         children: [
           Text(
             title,
-            style: TextStyle(color: primary, fontWeight: FontWeight.w700),
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: colors.sidebarText,
+              fontWeight: FontWeight.w700,
+            ),
           ),
-          const SizedBox(height: 8),
-          Text(subtitle, style: TextStyle(color: subtleText, height: 1.4)),
-          const SizedBox(height: 16),
-          Row(
-            children: List.generate(3, (index) {
-              return Expanded(
-                child: Container(
-                  margin: EdgeInsets.only(right: index == 2 ? 0 : 12),
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: primary.withOpacity(0.04),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: primary.withOpacity(0.08)),
-                  ),
-                ),
-              );
-            }),
-          ),
+          if (subtitle.trim().isNotEmpty) ...[
+            const SizedBox(height: 3),
+            Text(
+              subtitle,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colors.subtleText,
+                height: 1.35,
+              ),
+            ),
+            const SizedBox(height: 14),
+          ] else
+            const SizedBox(height: 12),
+          child,
         ],
       ),
     );
   }
+}
+
+class _QuickEntryCard extends StatelessWidget {
+  const _QuickEntryCard({
+    required this.item,
+    required this.width,
+    required this.accent,
+    required this.subtleText,
+    required this.primary,
+    required this.borderColor,
+    required this.surface,
+  });
+
+  final NavItem item;
+  final double width;
+  final Color accent;
+  final Color subtleText;
+  final Color primary;
+  final Color borderColor;
+  final Color surface;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: item.path == null ? null : () => context.go(item.path!),
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        width: width,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: borderColor),
+          color: surface,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(item.icon, color: primary, size: 18),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.label,
+                    style: TextStyle(
+                      color: accent,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '进入处理',
+                    style: TextStyle(color: subtleText, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: subtleText, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SimpleNavRow extends StatelessWidget {
+  const _SimpleNavRow({
+    required this.item,
+    required this.accent,
+    required this.subtleText,
+    required this.primary,
+  });
+
+  final NavItem item;
+  final Color accent;
+  final Color subtleText;
+  final Color primary;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: item.path == null ? null : () => context.go(item.path!),
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Icon(item.icon, size: 18, color: primary),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                item.label,
+                style: TextStyle(
+                  color: accent,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Text(
+              '进入',
+              style: TextStyle(color: subtleText, fontSize: 12.5),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GroupRow extends StatelessWidget {
+  const _GroupRow({
+    required this.group,
+    required this.accent,
+    required this.subtleText,
+    required this.primary,
+  });
+
+  final NavItem group;
+  final Color accent;
+  final Color subtleText;
+  final Color primary;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(group.icon, size: 18, color: primary),
+            const SizedBox(width: 10),
+            Text(
+              group.label,
+              style: TextStyle(
+                color: accent,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            for (final child in group.children)
+              _RoutePill(
+                item: child,
+                primary: primary,
+                subtleText: subtleText,
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _RoutePill extends StatelessWidget {
+  const _RoutePill({
+    required this.item,
+    required this.primary,
+    required this.subtleText,
+  });
+
+  final NavItem item;
+  final Color primary;
+  final Color subtleText;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: item.path == null ? null : () => context.go(item.path!),
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: primary.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          item.label,
+          style: TextStyle(
+            color: subtleText,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TinyBadge extends StatelessWidget {
+  const _TinyBadge({
+    required this.label,
+    required this.color,
+    required this.background,
+  });
+
+  final String label;
+  final Color color;
+  final Color background;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w700,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+}
+
+extension<T> on Iterable<T> {
+  T? get firstOrNull => isEmpty ? null : first;
 }

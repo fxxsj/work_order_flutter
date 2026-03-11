@@ -3,10 +3,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/finance_costs/application/production_cost_view_model.dart';
 import 'package:work_order_app/src/features/finance_costs/data/production_cost_api_service.dart';
@@ -90,7 +96,6 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
   static const double _searchWidth = 320;
   static const double _spacingSm = 8;
   static const double _controlHeight = PageActionStyle.height;
-  static const double _controlRadius = PageActionStyle.radius;
   static const String _emptyCellText = '-';
 
   static const String _searchHintText = '搜索施工单号';
@@ -99,17 +104,11 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
   static const String _errorFallbackText = '加载失败';
   static const String _retryText = '重新加载';
   static const String _breadcrumbSeparator = ' / ';
+  static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
+  static const String _pageSizeLabel = '每页 {size}';
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
-  bool _denseTable = false;
-  final GlobalKey _columnsMenuKey = GlobalKey();
-  final Set<_CostColumn> _visibleColumns = {
-    _CostColumn.workOrder,
-    _CostColumn.totalCost,
-    _CostColumn.status,
-    _CostColumn.calculatedAt,
-  };
 
   @override
   void dispose() {
@@ -131,40 +130,11 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
     });
   }
 
-  void _openColumnsMenu(BuildContext context) {
-    final menuContext = _columnsMenuKey.currentContext;
-    final renderBox = menuContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
-    final overlay = Overlay.of(menuContext!, rootOverlay: true).context.findRenderObject() as RenderBox;
-    final position = RelativeRect.fromRect(
-      Rect.fromPoints(
-        renderBox.localToGlobal(Offset.zero, ancestor: overlay),
-        renderBox.localToGlobal(renderBox.size.bottomRight(Offset.zero), ancestor: overlay),
-      ),
-      Offset.zero & overlay.size,
-    );
-
-    showMenu<_CostColumn>(
-      context: menuContext,
-      position: position,
-      items: _costOptionalColumns.map((value) {
-        final checked = _visibleColumns.contains(value);
-        return CheckedPopupMenuItem<_CostColumn>(
-          value: value,
-          checked: checked,
-          child: Text(value.label),
-          onTap: () {
-            setState(() {
-              if (checked && _visibleColumns.length > 2) {
-                _visibleColumns.remove(value);
-              } else {
-                _visibleColumns.add(value);
-              }
-            });
-          },
-        );
-      }).toList(),
-    );
+  static String _pageInfoText(ProductionCostViewModel viewModel) {
+    return _pageInfoTemplate
+        .replaceFirst('{page}', viewModel.page.toString())
+        .replaceFirst('{total}', viewModel.totalPages.toString())
+        .replaceFirst('{count}', viewModel.total.toString());
   }
 
   @override
@@ -182,7 +152,21 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, breadcrumb, isMobile),
           body: _buildListBody(context, viewModel, costs, isMobile),
-          footer: viewModel.total > 0 ? _PaginationBar(viewModel: viewModel) : null,
+          footer: viewModel.total > 0
+              ? ResponsivePaginationBar(
+                  infoText: _pageInfoText(viewModel),
+                  page: viewModel.page,
+                  pageSize: viewModel.pageSize,
+                  pageSizeOptions: viewModel.pageSizeOptions,
+                  onPageSizeChanged: viewModel.setPageSize,
+                  onPrev: () => viewModel.setPage(viewModel.page - 1),
+                  onNext: () => viewModel.setPage(viewModel.page + 1),
+                  hasPrev: viewModel.hasPrev,
+                  hasNext: viewModel.hasNext,
+                  pageSizeLabelBuilder: (size) =>
+                      _pageSizeLabel.replaceFirst('{size}', size.toString()),
+                )
+              : null,
         );
       },
     );
@@ -194,57 +178,31 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
     List<ProductionCost> costs,
     bool isMobile,
   ) {
+    final sectionSpacing = LayoutTokens.sectionSpacing(context);
     if (viewModel.loading && costs.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
     if (viewModel.errorMessage != null && !viewModel.loading) {
-      return _ErrorState(
+      return ErrorStateCard(
         message: viewModel.errorMessage ?? _errorFallbackText,
+        retryLabel: _retryText,
         onRetry: () => viewModel.loadCosts(resetPage: true),
       );
     }
     if (!viewModel.loading && costs.isEmpty) {
-      return const _EmptyState();
-    }
-
-    if (isMobile) {
-      return ListView.separated(
-        itemCount: costs.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
-        itemBuilder: (context, index) {
-          final cost = costs[index];
-          return ListTile(
-            title: Text(cost.workOrderNumber ?? '成本 #${cost.id}'),
-            subtitle: Text(cost.statusDisplay ?? cost.status ?? _emptyCellText),
-            trailing: Text(_formatAmount(cost.totalCost)),
-          );
-        },
+      return const EmptyStateCard(
+        icon: Icons.pie_chart_outline,
+        text: _emptyText,
       );
     }
 
-    return SingleChildScrollView(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final columns = _buildColumns();
-          final rows = _buildRows(costs);
-
-          return SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minWidth: constraints.maxWidth),
-              child: DataTable(
-                columnSpacing: _denseTable ? 16 : 24,
-                horizontalMargin: _denseTable ? 12 : 16,
-                headingRowHeight: _denseTable ? 38 : 44,
-                dataRowMinHeight: _denseTable ? 34 : 40,
-                dataRowMaxHeight: _denseTable ? 44 : 52,
-                columns: columns,
-                rows: rows,
-              ),
-            ),
-          );
-        },
-      ),
+    return ListView.separated(
+      itemCount: costs.length,
+      separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
+      itemBuilder: (context, index) {
+        final cost = costs[index];
+        return _buildSummaryCard(context, cost, isMobile);
+      },
     );
   }
 
@@ -261,131 +219,41 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
       padding: EdgeInsets.zero,
       actions: LayoutBuilder(
         builder: (context, constraints) {
-          final searchField = SizedBox(
+          final searchField = ListSearchField(
+            controller: _searchController,
+            hintText: _searchHintText,
+            height: _controlHeight,
             width: isMobile ? constraints.maxWidth : _searchWidth,
-            child: SizedBox(
-              height: _controlHeight,
-              child: ValueListenableBuilder<TextEditingValue>(
-                valueListenable: _searchController,
-                builder: (context, value, _) {
-                  return TextField(
-                    controller: _searchController,
-                    textAlignVertical: TextAlignVertical.center,
-                    onChanged: (_) => _scheduleSearch(viewModel),
-                    onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
-                    decoration: InputDecoration(
-                      constraints: const BoxConstraints.tightFor(height: _controlHeight),
-                      hintText: _searchHintText,
-                      prefixIcon: const Icon(Icons.search, size: 18),
-                      suffixIcon: value.text.isEmpty
-                          ? null
-                          : IconButton(
-                              tooltip: '清空',
-                              icon: const Icon(Icons.close, size: 18),
-                              onPressed: () {
-                                _searchController.clear();
-                                _scheduleSearch(viewModel, immediate: true);
-                              },
-                            ),
-                      border: const OutlineInputBorder(),
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                    ),
-                  );
-                },
-              ),
-            ),
+            onChanged: (_) => _scheduleSearch(viewModel),
+            onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
+            onClear: () {
+              _searchController.clear();
+              _scheduleSearch(viewModel, immediate: true);
+            },
           );
 
-          if (isMobile) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                searchField,
-                const SizedBox(height: _spacingSm),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    PageActionButton.outlined(
-                      onPressed: () => viewModel.loadCosts(resetPage: true),
-                      icon: const Icon(Icons.refresh, size: 16),
-                      label: _refreshButtonText,
-                    ),
-                  ],
-                ),
-              ],
-            );
-          }
+          final actions = <Widget>[
+            PageActionButton.outlined(
+              onPressed: () => viewModel.loadCosts(resetPage: true),
+              icon: const Icon(Icons.refresh, size: 16),
+              label: _refreshButtonText,
+            ),
+          ];
 
-          return Wrap(
+          return ListToolbar(
+            isMobile: isMobile,
+            searchField: searchField,
+            actions: actions,
             spacing: _spacingSm,
-            runSpacing: 6,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              searchField,
-              PageActionButton.outlined(
-                onPressed: () => viewModel.loadCosts(resetPage: true),
-                icon: const Icon(Icons.refresh, size: 16),
-                label: _refreshButtonText,
-              ),
-              PageActionButton.outlined(
-                onPressed: () => setState(() => _denseTable = !_denseTable),
-                icon: Icon(_denseTable ? Icons.table_rows : Icons.table_chart),
-                label: _denseTable ? '舒适' : '紧凑',
-              ),
-              SizedBox(
-                key: _columnsMenuKey,
-                height: _controlHeight,
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(_controlRadius),
-                    ),
-                  ),
-                  onPressed: () => _openColumnsMenu(context),
-                  icon: const Icon(Icons.view_column, size: 18),
-                  label: const Text('列管理'),
-                ),
-              ),
-            ],
           );
         },
       ),
     );
   }
 
-  List<DataColumn> _buildColumns() {
-    return _CostColumn.values
-        .where(_visibleColumns.contains)
-        .map(
-          (column) => DataColumn(
-            label: Text(column.label),
-          ),
-        )
-        .toList();
-  }
-
-  List<DataRow> _buildRows(List<ProductionCost> costs) {
-    return costs.map((cost) {
-      final cells = _CostColumn.values
-          .where(_visibleColumns.contains)
-          .map((column) => DataCell(_buildCell(cost, column)))
-          .toList();
-      return DataRow(cells: cells);
-    }).toList();
-  }
-
-  Widget _buildCell(ProductionCost cost, _CostColumn column) {
-    switch (column) {
-      case _CostColumn.workOrder:
-        return Text(cost.workOrderNumber ?? _emptyCellText);
-      case _CostColumn.totalCost:
-        return Text(_formatAmount(cost.totalCost));
-      case _CostColumn.status:
-        return Text(cost.statusDisplay ?? cost.status ?? _emptyCellText);
-      case _CostColumn.calculatedAt:
-        return Text(_formatDate(cost.calculatedAt));
-    }
+  static String _displayText(String? value) {
+    final text = value?.trim() ?? '';
+    return text.isEmpty ? _emptyCellText : text;
   }
 
   String _formatAmount(double? value) {
@@ -401,153 +269,88 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
     final day = local.day.toString().padLeft(2, '0');
     return '$year-$month-$day';
   }
-}
 
-class _PaginationBar extends StatelessWidget {
-  const _PaginationBar({required this.viewModel});
-
-  static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
-  static const String _pageSizeLabel = '每页 {size}';
-
-  final ProductionCostViewModel viewModel;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildSummaryCard(BuildContext context, ProductionCost cost, bool isMobile) {
     final theme = Theme.of(context);
-    final info = _pageInfoTemplate
-        .replaceFirst('{page}', viewModel.page.toString())
-        .replaceFirst('{total}', viewModel.totalPages.toString())
-        .replaceFirst('{count}', viewModel.total.toString());
+    final colors = theme.extension<AppColors>();
+    final sectionSpacing = LayoutTokens.sectionSpacing(context);
+    final workOrder = _displayText(cost.workOrderNumber ?? '成本 #${cost.id}');
+    final totalCost = _formatAmount(cost.totalCost);
+    final status = cost.statusDisplay ?? cost.status ?? _emptyCellText;
+    final calculatedAt = _formatDate(cost.calculatedAt);
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Text(info, style: theme.textTheme.bodySmall),
-        const SizedBox(width: 12),
-        DropdownButton<int>(
-          value: viewModel.pageSize,
-          items: viewModel.pageSizeOptions
-              .map(
-                (size) => DropdownMenuItem<int>(
-                  value: size,
-                  child: Text(_pageSizeLabel.replaceFirst('{size}', size.toString())),
+    return ExpandableSummaryCard(
+      headerBuilder: (context, expanded) {
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    workOrder,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: colors?.sidebarText,
+                    ),
+                  ),
+                  SizedBox(height: sectionSpacing),
+                  Text(
+                    status,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colors?.subtleText ?? theme.hintColor,
+                    ),
+                  ),
+                  SizedBox(height: sectionSpacing),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _SummaryChip(label: '总成本', value: totalCost),
+                      _SummaryChip(label: '状态', value: status),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(width: sectionSpacing),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  calculatedAt,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colors?.subtleText ?? theme.hintColor,
+                  ),
                 ),
-              )
-              .toList(),
-          onChanged: (value) {
-            if (value == null) return;
-            viewModel.setPageSize(value);
-          },
-        ),
-        const SizedBox(width: 4),
-        IconButton(
-          onPressed: viewModel.hasPrev ? () => viewModel.setPage(viewModel.page - 1) : null,
-          icon: const Icon(Icons.chevron_left),
-        ),
-        Text('${viewModel.page}', style: theme.textTheme.bodyMedium),
-        IconButton(
-          onPressed: viewModel.hasNext ? () => viewModel.setPage(viewModel.page + 1) : null,
-          icon: const Icon(Icons.chevron_right),
-        ),
-      ],
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
-  static const double _verticalPadding = 32;
-  static const double _borderRadius = 12;
-  static const double _iconSize = 36;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: _verticalPadding),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(_borderRadius),
-        color: theme.colorScheme.primary.withOpacity(0.05),
-        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.15)),
-      ),
-      child: Column(
+                SizedBox(height: sectionSpacing),
+                AnimatedRotation(
+                  turns: expanded ? 0.5 : 0.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    Icons.expand_more,
+                    size: 20,
+                    color: colors?.subtleText ?? theme.hintColor,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+      expandedChild: SummaryFieldWrap(
+        isMobile: isMobile,
         children: [
-          Icon(Icons.pie_chart_outline, color: theme.colorScheme.primary, size: _iconSize),
-          const SizedBox(height: _ProductionCostListViewState._spacingSm),
-          Text(_ProductionCostListViewState._emptyText, style: theme.textTheme.bodyMedium),
+          _SummaryField(label: '施工单号', value: workOrder),
+          _SummaryField(label: '总成本', value: totalCost),
+          _SummaryField(label: '状态', value: status),
+          _SummaryField(label: '计算时间', value: calculatedAt),
         ],
       ),
     );
   }
 }
 
-class _ErrorState extends StatelessWidget {
-  const _ErrorState({required this.message, required this.onRetry});
-
-  static const double _verticalPadding = 32;
-  static const double _borderRadius = 12;
-  static const double _iconSize = 32;
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: _verticalPadding),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(_borderRadius),
-        color: theme.colorScheme.error.withOpacity(0.06),
-        border: Border.all(color: theme.colorScheme.error.withOpacity(0.2)),
-      ),
-      child: Column(
-        children: [
-          Icon(Icons.error_outline, color: theme.colorScheme.error, size: _iconSize),
-          const SizedBox(height: _ProductionCostListViewState._spacingSm),
-          Text(message, style: theme.textTheme.bodyMedium),
-          const SizedBox(height: _ProductionCostListViewState._spacingSm),
-          OutlinedButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh),
-            label: const Text(_ProductionCostListViewState._retryText),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-enum _CostColumn {
-  workOrder,
-  totalCost,
-  status,
-  calculatedAt,
-}
-
-const List<_CostColumn> _costOptionalColumns = [
-  _CostColumn.workOrder,
-  _CostColumn.totalCost,
-  _CostColumn.status,
-  _CostColumn.calculatedAt,
-];
-
-extension _CostColumnLabel on _CostColumn {
-  String get label {
-    switch (this) {
-      case _CostColumn.workOrder:
-        return '施工单号';
-      case _CostColumn.totalCost:
-        return '总成本';
-      case _CostColumn.status:
-        return '状态';
-      case _CostColumn.calculatedAt:
-        return '计算时间';
-    }
-  }
-}
+typedef _SummaryField = SummaryField;
+typedef _SummaryChip = SummaryChip;

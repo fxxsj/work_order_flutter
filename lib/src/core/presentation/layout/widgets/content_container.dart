@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 
 class ContentContainer extends StatelessWidget {
   const ContentContainer({
     super.key,
     required this.child,
-    this.maxWidth = 1200,
+    this.maxWidth = LayoutTokens.maxContentWidth,
     this.scrollable = true,
   });
 
@@ -18,19 +18,7 @@ class ContentContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
-    final isXs = BreakpointsUtil.isXs(context);
-    final isSm = BreakpointsUtil.isSm(context);
-    final isMd = BreakpointsUtil.isMd(context);
-    final isXl = BreakpointsUtil.isXl(context);
-    final padding = isXs
-        ? const EdgeInsets.fromLTRB(16, 16, 16, 24)
-        : isSm
-            ? const EdgeInsets.fromLTRB(20, 20, 20, 28)
-            : isMd
-                ? const EdgeInsets.fromLTRB(24, 24, 24, 32)
-                : isXl
-                    ? const EdgeInsets.fromLTRB(28, 28, 28, 36)
-                    : const EdgeInsets.fromLTRB(32, 32, 32, 40);
+    final padding = LayoutTokens.pagePadding(context);
 
     final container = Container(
       color: colors?.background ?? theme.scaffoldBackgroundColor,

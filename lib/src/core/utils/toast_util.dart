@@ -206,7 +206,7 @@ class _ToastCardState extends State<_ToastCard> with SingleTickerProviderStateMi
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withAlpha(51),
                 blurRadius: 14,
                 offset: const Offset(0, 6),
               ),
@@ -241,7 +241,7 @@ class _ToastCardState extends State<_ToastCard> with SingleTickerProviderStateMi
                           return LinearProgressIndicator(
                             value: 1 - _progressController.value,
                             minHeight: 3,
-                            backgroundColor: foreground.withOpacity(0.2),
+                            backgroundColor: foreground.withAlpha(51),
                             valueColor: AlwaysStoppedAnimation<Color>(foreground),
                           );
                         },

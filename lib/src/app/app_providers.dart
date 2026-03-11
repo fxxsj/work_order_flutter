@@ -9,7 +9,6 @@ import 'package:work_order_app/src/features/auth/application/auth_controller.dar
 import 'package:work_order_app/src/features/auth/application/auth_view_model.dart';
 import 'package:work_order_app/src/features/auth/data/auth_api.dart';
 import 'package:work_order_app/src/features/auth/data/auth_repository_impl.dart';
-import 'package:work_order_app/src/features/auth/data/user_api.dart';
 import 'package:work_order_app/src/features/auth/domain/auth_repository.dart';
 
 List<SingleChildWidget> buildAppProviders({
@@ -24,12 +23,8 @@ List<SingleChildWidget> buildAppProviders({
     Provider.value(value: storage),
     Provider.value(value: apiClient),
     Provider<AuthApi>(create: (context) => AuthApi(context.read<ApiClient>())),
-    Provider<UserApi>(create: (context) => UserApi(context.read<ApiClient>())),
     Provider<AuthRepository>(
-      create: (context) => AuthRepositoryImpl(
-        context.read<AuthApi>(),
-        context.read<UserApi>(),
-      ),
+      create: (context) => AuthRepositoryImpl(context.read<AuthApi>()),
     ),
     ChangeNotifierProvider.value(value: auth),
     ChangeNotifierProvider<AuthViewModel>(

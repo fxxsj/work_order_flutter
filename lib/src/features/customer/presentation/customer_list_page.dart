@@ -3,13 +3,18 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/features/customer/application/customer_view_model.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/customer/presentation/customer_edit_page.dart';
-import 'package:work_order_app/src/features/customer/presentation/widgets/customer_list_tile.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
@@ -92,14 +97,10 @@ class _CustomerListViewState extends State<_CustomerListView> {
   static const _searchDebounceDuration = Duration(milliseconds: 450);
   static const double _searchWidth = 300;
   static const double _spacingSm = 8;
-  static const double _controlHeight = PageActionStyle.height;
-  static const double _controlRadius = PageActionStyle.radius;
   static const String _emptyCellText = '-';
 
-  static const String _titleText = '客户管理';
   static const String _createButtonText = '新建客户';
   static const String _searchHintText = '搜索客户名称、联系人、电话';
-  static const String _searchButtonText = '搜索';
   static const String _refreshButtonText = '刷新';
   static const String _emptyText = '暂无客户数据';
   static const String _errorFallbackText = '加载失败';
@@ -108,31 +109,16 @@ class _CustomerListViewState extends State<_CustomerListView> {
   static const String _deleteDialogContent = '确定要删除客户 \"{name}\" 吗？此操作不可恢复。';
   static const String _cancelText = '取消';
   static const String _deleteText = '删除';
-  static const String _clearText = '清空';
   static const String _deleteSuccessText = '删除成功';
   static const String _deleteFailedText = '删除失败: ';
   static const String _createSuccessText = '创建成功';
   static const String _updateSuccessText = '更新成功';
-  static const String _densityComfortLabel = '舒适';
-  static const String _densityCompactLabel = '紧凑';
-  static const String _columnsLabel = '列管理';
-  static const String _totalLabel = '共 {count} 条';
-  static const String _pageLabel = '第 {page} / {total} 页';
   static const String _breadcrumbSeparator = ' / ';
+  static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
+  static const String _pageSizeLabel = '每页 {size}';
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
-  bool _denseTable = false;
-  final GlobalKey _columnsMenuKey = GlobalKey();
-  final Set<_CustomerColumn> _visibleColumns = {
-    _CustomerColumn.name,
-    _CustomerColumn.contact,
-    _CustomerColumn.phone,
-    _CustomerColumn.email,
-    _CustomerColumn.salesperson,
-    _CustomerColumn.updatedAt,
-    _CustomerColumn.actions,
-  };
 
   @override
   void dispose() {
@@ -163,40 +149,11 @@ class _CustomerListViewState extends State<_CustomerListView> {
     return '$year-$month-$day';
   }
 
-  void _openColumnsMenu(BuildContext context) {
-    final menuContext = _columnsMenuKey.currentContext;
-    final renderBox = menuContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
-    final overlay = Overlay.of(menuContext!, rootOverlay: true).context.findRenderObject() as RenderBox;
-    final position = RelativeRect.fromRect(
-      Rect.fromPoints(
-        renderBox.localToGlobal(Offset.zero, ancestor: overlay),
-        renderBox.localToGlobal(renderBox.size.bottomRight(Offset.zero), ancestor: overlay),
-      ),
-      Offset.zero & overlay.size,
-    );
-
-    showMenu<_CustomerColumn>(
-      context: menuContext,
-      position: position,
-      items: _CustomerColumn.optionalValues.map((value) {
-        final checked = _visibleColumns.contains(value);
-        return CheckedPopupMenuItem<_CustomerColumn>(
-          value: value,
-          checked: checked,
-          child: Text(value.label),
-          onTap: () {
-            setState(() {
-              if (checked && _visibleColumns.length > 2) {
-                _visibleColumns.remove(value);
-              } else {
-                _visibleColumns.add(value);
-              }
-            });
-          },
-        );
-      }).toList(),
-    );
+  static String _pageInfoText(CustomerViewModel viewModel) {
+    return _pageInfoTemplate
+        .replaceFirst('{page}', viewModel.page.toString())
+        .replaceFirst('{total}', viewModel.totalPages.toString())
+        .replaceFirst('{count}', viewModel.total.toString());
   }
 
   Future<void> _openEditPage(BuildContext context, CustomerViewModel viewModel, Customer? customer) async {
@@ -268,7 +225,21 @@ class _CustomerListViewState extends State<_CustomerListView> {
             isMobile,
           ),
           body: _buildListBody(context, viewModel, customers, isMobile),
-          footer: viewModel.total > 0 ? _PaginationBar(viewModel: viewModel) : null,
+          footer: viewModel.total > 0
+              ? ResponsivePaginationBar(
+                  infoText: _pageInfoText(viewModel),
+                  page: viewModel.page,
+                  pageSize: viewModel.pageSize,
+                  pageSizeOptions: viewModel.pageSizeOptions,
+                  onPageSizeChanged: viewModel.setPageSize,
+                  onPrev: () => viewModel.setPage(viewModel.page - 1),
+                  onNext: () => viewModel.setPage(viewModel.page + 1),
+                  hasPrev: viewModel.hasPrev,
+                  hasNext: viewModel.hasNext,
+                  pageSizeLabelBuilder: (size) =>
+                      _pageSizeLabel.replaceFirst('{size}', size.toString()),
+                )
+              : null,
         );
       },
     );
@@ -280,56 +251,142 @@ class _CustomerListViewState extends State<_CustomerListView> {
     List<Customer> customers,
     bool isMobile,
   ) {
+    final sectionSpacing = LayoutTokens.sectionSpacing(context);
     if (viewModel.loading && customers.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
     if (viewModel.errorMessage != null && !viewModel.loading) {
-      return _ErrorState(
+      return ErrorStateCard(
         message: viewModel.errorMessage ?? _errorFallbackText,
+        retryLabel: _retryText,
         onRetry: () => viewModel.loadCustomers(resetPage: true),
       );
     }
     if (!viewModel.loading && customers.isEmpty) {
-      return const _EmptyState();
-    }
-
-    if (isMobile) {
-      return ListView.builder(
-        itemCount: customers.length,
-        itemBuilder: (context, index) {
-          final customer = customers[index];
-          return CustomerListTile(
-            customer: customer,
-            onTap: () => _openEditPage(context, viewModel, customer),
-            onDelete: () => _confirmDelete(context, viewModel, customer),
-            useCard: isMobile,
-          );
-        },
+      return const EmptyStateCard(
+        icon: Icons.people_outline,
+        text: _emptyText,
       );
     }
 
-    return SingleChildScrollView(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final columns = _buildColumns();
-          final rows = _buildRows(context, viewModel, customers);
+    return ListView.separated(
+      itemCount: customers.length,
+      separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
+      itemBuilder: (context, index) {
+        final customer = customers[index];
+        return _buildSummaryCard(context, viewModel, customer, isMobile);
+      },
+    );
+  }
 
-          return SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minWidth: constraints.maxWidth),
-              child: DataTable(
-                columnSpacing: _denseTable ? 16 : 24,
-                horizontalMargin: _denseTable ? 12 : 16,
-                headingRowHeight: _denseTable ? 38 : 44,
-                dataRowMinHeight: _denseTable ? 34 : 40,
-                dataRowMaxHeight: _denseTable ? 44 : 52,
-                columns: columns,
-                rows: rows,
+  Widget _buildSummaryCard(
+    BuildContext context,
+    CustomerViewModel viewModel,
+    Customer customer,
+    bool isMobile,
+  ) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>();
+    final sectionSpacing = LayoutTokens.sectionSpacing(context);
+    final title = customer.name.isNotEmpty ? customer.name : _emptyCellText;
+    final contact = customer.contactPerson?.trim();
+    final phone = customer.phone?.trim();
+    final contactText = [
+      if (contact != null && contact.isNotEmpty) contact,
+      if (phone != null && phone.isNotEmpty) phone,
+    ].join(' · ');
+    final subtitle = contactText.isEmpty ? _emptyCellText : contactText;
+    final salesperson = customer.salespersonName?.trim();
+    final updatedAt = _formatDate(customer.updatedAt);
+    final email = customer.email?.trim();
+    final address = customer.address?.trim();
+    final notes = customer.notes?.trim();
+
+    return ExpandableSummaryCard(
+      headerBuilder: (context, expanded) {
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: colors?.sidebarText,
+                    ),
+                  ),
+                  SizedBox(height: sectionSpacing),
+                  Text(
+                    subtitle,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colors?.subtleText ?? theme.hintColor,
+                    ),
+                  ),
+                  SizedBox(height: sectionSpacing),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      if (salesperson != null && salesperson.isNotEmpty)
+                        _SummaryChip(label: '业务员', value: salesperson),
+                      _SummaryChip(label: '更新', value: updatedAt),
+                    ],
+                  ),
+                ],
               ),
             ),
-          );
-        },
+            SizedBox(width: sectionSpacing),
+            AnimatedRotation(
+              turns: expanded ? 0.5 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              child: Icon(
+                Icons.expand_more,
+                size: 20,
+                color: colors?.subtleText ?? theme.hintColor,
+              ),
+            ),
+          ],
+        );
+      },
+      expandedChild: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SummaryFieldWrap(
+            isMobile: isMobile,
+            children: [
+              _SummaryField(label: '联系人', value: contact ?? _emptyCellText),
+              _SummaryField(label: '电话', value: phone ?? _emptyCellText),
+              _SummaryField(label: '邮箱', value: email ?? _emptyCellText),
+              _SummaryField(label: '业务员', value: salesperson ?? _emptyCellText),
+              _SummaryField(label: '更新日期', value: updatedAt),
+              _SummaryField(label: '地址', value: address ?? _emptyCellText),
+              _SummaryField(label: '备注', value: notes ?? _emptyCellText),
+            ],
+          ),
+          SizedBox(height: sectionSpacing),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () => _openEditPage(context, viewModel, customer),
+                icon: const Icon(Icons.edit, size: 16),
+                label: const Text('编辑'),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => _confirmDelete(context, viewModel, customer),
+                icon: const Icon(Icons.delete_outline, size: 16),
+                label: const Text('删除'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: theme.colorScheme.error,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -347,348 +404,43 @@ class _CustomerListViewState extends State<_CustomerListView> {
       padding: EdgeInsets.zero,
       actions: LayoutBuilder(
         builder: (context, constraints) {
-          final searchField = SizedBox(
+          final searchField = ListSearchField(
+            controller: _searchController,
+            hintText: _searchHintText,
+            height: PageActionStyle.height,
             width: isMobile ? constraints.maxWidth : _searchWidth,
-            child: SizedBox(
-              height: PageActionStyle.height,
-              child: ValueListenableBuilder<TextEditingValue>(
-                valueListenable: _searchController,
-                builder: (context, value, _) {
-                  return TextField(
-                    controller: _searchController,
-                    textAlignVertical: TextAlignVertical.center,
-                    onChanged: (_) => _scheduleSearch(viewModel),
-                    onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
-                    decoration: InputDecoration(
-                      constraints: const BoxConstraints.tightFor(height: PageActionStyle.height),
-                      hintText: _searchHintText,
-                      prefixIcon: const Icon(Icons.search, size: 18),
-                      suffixIcon: value.text.isEmpty
-                          ? null
-                          : IconButton(
-                              tooltip: _clearText,
-                              icon: const Icon(Icons.close, size: 18),
-                              onPressed: () {
-                                _searchController.clear();
-                                _scheduleSearch(viewModel, immediate: true);
-                              },
-                            ),
-                      border: const OutlineInputBorder(),
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                    ),
-                  );
-                },
-              ),
-            ),
+            onChanged: (_) => _scheduleSearch(viewModel),
+            onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
+            onClear: () {
+              _searchController.clear();
+              _scheduleSearch(viewModel, immediate: true);
+            },
           );
 
-          if (isMobile) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                searchField,
-                const SizedBox(height: _spacingSm),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    PageActionButton.outlined(
-                      onPressed: () => viewModel.loadCustomers(resetPage: true),
-                      icon: const Icon(Icons.refresh, size: 16),
-                      label: _refreshButtonText,
-                    ),
-                    const SizedBox(width: _spacingSm),
-                    PageActionButton.filled(
-                      onPressed: () => _openEditPage(context, viewModel, null),
-                      icon: const Icon(Icons.add),
-                      label: _createButtonText,
-                    ),
-                  ],
-                ),
-              ],
-            );
-          }
+          final actions = <Widget>[
+            PageActionButton.outlined(
+              onPressed: () => viewModel.loadCustomers(resetPage: true),
+              icon: const Icon(Icons.refresh, size: 16),
+              label: _refreshButtonText,
+            ),
+            PageActionButton.filled(
+              onPressed: () => _openEditPage(context, viewModel, null),
+              icon: const Icon(Icons.add),
+              label: _createButtonText,
+            ),
+          ];
 
-          return Wrap(
+          return ListToolbar(
+            isMobile: isMobile,
+            searchField: searchField,
+            actions: actions,
             spacing: _spacingSm,
-            runSpacing: 6,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              searchField,
-              PageActionButton.outlined(
-                onPressed: () => viewModel.loadCustomers(resetPage: true),
-                icon: const Icon(Icons.refresh, size: 16),
-                label: _refreshButtonText,
-              ),
-              PageActionButton.outlined(
-                key: _columnsMenuKey,
-                onPressed: () => _openColumnsMenu(context),
-                icon: const Icon(Icons.view_column_outlined, size: 18),
-                square: true,
-              ),
-              ToggleButtons(
-                isSelected: [_denseTable == false, _denseTable == true],
-                onPressed: (index) {
-                  setState(() {
-                    _denseTable = index == 1;
-                  });
-                },
-                borderRadius: BorderRadius.circular(_controlRadius),
-                constraints: const BoxConstraints(minHeight: _controlHeight, minWidth: 52),
-                children: const [
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(_densityComfortLabel),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(_densityCompactLabel),
-                  ),
-                ],
-              ),
-              PageActionButton.filled(
-                onPressed: () => _openEditPage(context, viewModel, null),
-                icon: const Icon(Icons.add),
-                label: _createButtonText,
-              ),
-            ],
           );
         },
       ),
     );
   }
-
-  List<DataColumn> _buildColumns() {
-    final columns = <DataColumn>[];
-    if (_visibleColumns.contains(_CustomerColumn.name)) {
-      columns.add(const DataColumn(label: Text('客户名称')));
-    }
-    if (_visibleColumns.contains(_CustomerColumn.contact)) {
-      columns.add(const DataColumn(label: Text('联系人')));
-    }
-    if (_visibleColumns.contains(_CustomerColumn.phone)) {
-      columns.add(const DataColumn(label: Text('电话')));
-    }
-    if (_visibleColumns.contains(_CustomerColumn.email)) {
-      columns.add(const DataColumn(label: Text('邮箱')));
-    }
-    if (_visibleColumns.contains(_CustomerColumn.salesperson)) {
-      columns.add(const DataColumn(label: Text('业务员')));
-    }
-    if (_visibleColumns.contains(_CustomerColumn.updatedAt)) {
-      columns.add(const DataColumn(label: Text('最近更新')));
-    }
-    if (_visibleColumns.contains(_CustomerColumn.actions)) {
-      columns.add(const DataColumn(label: Text('操作')));
-    }
-    return columns;
-  }
-
-  List<DataRow> _buildRows(BuildContext context, CustomerViewModel viewModel, List<Customer> customers) {
-    final theme = Theme.of(context);
-    return customers.map((customer) {
-      final cells = <DataCell>[];
-      if (_visibleColumns.contains(_CustomerColumn.name)) {
-        cells.add(DataCell(Text(customer.name.isNotEmpty ? customer.name : _emptyCellText)));
-      }
-      if (_visibleColumns.contains(_CustomerColumn.contact)) {
-        cells.add(DataCell(Text(customer.contactPerson?.trim().isNotEmpty == true
-            ? customer.contactPerson!
-            : _emptyCellText)));
-      }
-      if (_visibleColumns.contains(_CustomerColumn.phone)) {
-        cells.add(DataCell(Text(customer.phone?.trim().isNotEmpty == true ? customer.phone! : _emptyCellText)));
-      }
-      if (_visibleColumns.contains(_CustomerColumn.email)) {
-        cells.add(DataCell(Text(customer.email?.trim().isNotEmpty == true ? customer.email! : _emptyCellText)));
-      }
-      if (_visibleColumns.contains(_CustomerColumn.salesperson)) {
-        cells.add(DataCell(Text(customer.salespersonName?.trim().isNotEmpty == true
-            ? customer.salespersonName!
-            : _emptyCellText)));
-      }
-      if (_visibleColumns.contains(_CustomerColumn.updatedAt)) {
-        cells.add(DataCell(Text(_formatDate(customer.updatedAt))));
-      }
-      if (_visibleColumns.contains(_CustomerColumn.actions)) {
-        cells.add(
-          DataCell(
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  tooltip: '编辑',
-                  icon: Icon(Icons.edit, color: theme.colorScheme.primary),
-                  onPressed: () => _openEditPage(context, viewModel, customer),
-                ),
-                IconButton(
-                  tooltip: '删除',
-                  icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
-                  onPressed: () => _confirmDelete(context, viewModel, customer),
-                ),
-              ],
-            ),
-          ),
-        );
-      }
-      return DataRow(cells: cells);
-    }).toList();
-  }
 }
 
-enum _CustomerColumn {
-  name,
-  contact,
-  phone,
-  email,
-  salesperson,
-  updatedAt,
-  actions;
-
-  static const List<_CustomerColumn> optionalValues = [
-    _CustomerColumn.contact,
-    _CustomerColumn.phone,
-    _CustomerColumn.email,
-    _CustomerColumn.salesperson,
-    _CustomerColumn.updatedAt,
-  ];
-
-  String get label {
-    switch (this) {
-      case _CustomerColumn.name:
-        return '客户名称';
-      case _CustomerColumn.contact:
-        return '联系人';
-      case _CustomerColumn.phone:
-        return '电话';
-      case _CustomerColumn.email:
-        return '邮箱';
-      case _CustomerColumn.salesperson:
-        return '业务员';
-      case _CustomerColumn.updatedAt:
-        return '最近更新';
-      case _CustomerColumn.actions:
-        return '操作';
-    }
-  }
-}
-
-class _PaginationBar extends StatelessWidget {
-  const _PaginationBar({required this.viewModel});
-
-  static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
-  static const String _pageSizeLabel = '每页 {size}';
-
-  final CustomerViewModel viewModel;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final info = _pageInfoTemplate
-        .replaceFirst('{page}', viewModel.page.toString())
-        .replaceFirst('{total}', viewModel.totalPages.toString())
-        .replaceFirst('{count}', viewModel.total.toString());
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Text(info, style: theme.textTheme.bodySmall),
-        const SizedBox(width: 12),
-        DropdownButton<int>(
-          value: viewModel.pageSize,
-          items: viewModel.pageSizeOptions
-              .map(
-                (size) => DropdownMenuItem<int>(
-                  value: size,
-                  child: Text(_pageSizeLabel.replaceFirst('{size}', size.toString())),
-                ),
-              )
-              .toList(),
-          onChanged: (value) {
-            if (value == null) return;
-            viewModel.setPageSize(value);
-          },
-        ),
-        const SizedBox(width: 4),
-        IconButton(
-          onPressed: viewModel.hasPrev ? () => viewModel.setPage(viewModel.page - 1) : null,
-          icon: const Icon(Icons.chevron_left),
-        ),
-        Text('${viewModel.page}', style: theme.textTheme.bodyMedium),
-        IconButton(
-          onPressed: viewModel.hasNext ? () => viewModel.setPage(viewModel.page + 1) : null,
-          icon: const Icon(Icons.chevron_right),
-        ),
-      ],
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
-  static const double _verticalPadding = 32;
-  static const double _borderRadius = 12;
-  static const double _iconSize = 36;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: _verticalPadding),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(_borderRadius),
-        color: theme.colorScheme.primary.withOpacity(0.05),
-        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.15)),
-      ),
-      child: Column(
-        children: [
-          Icon(Icons.people_outline, color: theme.colorScheme.primary, size: _iconSize),
-          const SizedBox(height: _CustomerListViewState._spacingSm),
-          Text(_CustomerListViewState._emptyText, style: theme.textTheme.bodyMedium),
-        ],
-      ),
-    );
-  }
-}
-
-class _ErrorState extends StatelessWidget {
-  const _ErrorState({required this.message, required this.onRetry});
-
-  static const double _verticalPadding = 32;
-  static const double _borderRadius = 12;
-  static const double _iconSize = 32;
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: _verticalPadding),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(_borderRadius),
-        color: theme.colorScheme.error.withOpacity(0.06),
-        border: Border.all(color: theme.colorScheme.error.withOpacity(0.2)),
-      ),
-      child: Column(
-        children: [
-          Icon(Icons.error_outline, color: theme.colorScheme.error, size: _iconSize),
-          const SizedBox(height: _CustomerListViewState._spacingSm),
-          Text(message, style: theme.textTheme.bodyMedium),
-          const SizedBox(height: _CustomerListViewState._spacingSm),
-          OutlinedButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh),
-            label: const Text(_CustomerListViewState._retryText),
-          ),
-        ],
-      ),
-    );
-  }
-}
+typedef _SummaryField = SummaryField;
+typedef _SummaryChip = SummaryChip;

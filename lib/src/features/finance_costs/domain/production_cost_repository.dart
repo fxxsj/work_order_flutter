@@ -6,4 +6,10 @@ abstract class ProductionCostRepository {
     int pageSize = 20,
     String? search,
   });
+
+  Future<Map<String, dynamic>> calculateMaterial(int id);
+
+  Future<Map<String, dynamic>> calculateTotal(int id);
+
+  Future<Map<String, dynamic>> getStats({Map<String, dynamic>? params});
 }

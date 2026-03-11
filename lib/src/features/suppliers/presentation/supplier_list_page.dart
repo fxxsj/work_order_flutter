@@ -3,10 +3,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/suppliers/application/supplier_view_model.dart';
@@ -91,8 +97,6 @@ class _SupplierListViewState extends State<_SupplierListView> {
   static const _searchDebounceDuration = Duration(milliseconds: 450);
   static const double _searchWidth = 300;
   static const double _spacingSm = 8;
-  static const double _controlHeight = PageActionStyle.height;
-  static const double _controlRadius = PageActionStyle.radius;
   static const String _emptyCellText = '-';
 
   static const String _searchHintText = '搜索供应商名称/编码';
@@ -105,29 +109,16 @@ class _SupplierListViewState extends State<_SupplierListView> {
   static const String _deleteDialogContent = '确定要删除供应商 \"{name}\" 吗？此操作不可恢复。';
   static const String _cancelText = '取消';
   static const String _deleteText = '删除';
-  static const String _clearText = '清空';
   static const String _deleteSuccessText = '删除成功';
   static const String _deleteFailedText = '删除失败: ';
   static const String _createSuccessText = '创建成功';
   static const String _updateSuccessText = '更新成功';
-  static const String _densityComfortLabel = '舒适';
-  static const String _densityCompactLabel = '紧凑';
   static const String _breadcrumbSeparator = ' / ';
+  static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
+  static const String _pageSizeLabel = '每页 {size}';
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
-  bool _denseTable = false;
-  final GlobalKey _columnsMenuKey = GlobalKey();
-  final Set<_SupplierColumn> _visibleColumns = {
-    _SupplierColumn.code,
-    _SupplierColumn.name,
-    _SupplierColumn.contact,
-    _SupplierColumn.phone,
-    _SupplierColumn.status,
-    _SupplierColumn.materialCount,
-    _SupplierColumn.notes,
-    _SupplierColumn.actions,
-  };
 
   @override
   void dispose() {
@@ -147,42 +138,6 @@ class _SupplierListViewState extends State<_SupplierListView> {
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadSuppliers(resetPage: true);
     });
-  }
-
-  void _openColumnsMenu(BuildContext context) {
-    final menuContext = _columnsMenuKey.currentContext;
-    final renderBox = menuContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
-    final overlay = Overlay.of(menuContext!, rootOverlay: true).context.findRenderObject() as RenderBox;
-    final position = RelativeRect.fromRect(
-      Rect.fromPoints(
-        renderBox.localToGlobal(Offset.zero, ancestor: overlay),
-        renderBox.localToGlobal(renderBox.size.bottomRight(Offset.zero), ancestor: overlay),
-      ),
-      Offset.zero & overlay.size,
-    );
-
-    showMenu<_SupplierColumn>(
-      context: menuContext,
-      position: position,
-      items: _SupplierColumn.optionalValues.map((value) {
-        final checked = _visibleColumns.contains(value);
-        return CheckedPopupMenuItem<_SupplierColumn>(
-          value: value,
-          checked: checked,
-          child: Text(value.label),
-          onTap: () {
-            setState(() {
-              if (checked && _visibleColumns.length > 2) {
-                _visibleColumns.remove(value);
-              } else {
-                _visibleColumns.add(value);
-              }
-            });
-          },
-        );
-      }).toList(),
-    );
   }
 
   Future<void> _openEditPage(BuildContext context, SupplierViewModel viewModel, Supplier? supplier) async {
@@ -230,6 +185,13 @@ class _SupplierListViewState extends State<_SupplierListView> {
     }
   }
 
+  static String _pageInfoText(SupplierViewModel viewModel) {
+    return _pageInfoTemplate
+        .replaceFirst('{page}', viewModel.page.toString())
+        .replaceFirst('{total}', viewModel.totalPages.toString())
+        .replaceFirst('{count}', viewModel.total.toString());
+  }
+
   @override
   Widget build(BuildContext context) {
     final isMobile = BreakpointsUtil.isMobile(context);
@@ -245,7 +207,21 @@ class _SupplierListViewState extends State<_SupplierListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, breadcrumb, isMobile),
           body: _buildListBody(context, viewModel, suppliers, isMobile),
-          footer: viewModel.total > 0 ? _PaginationBar(viewModel: viewModel) : null,
+          footer: viewModel.total > 0
+              ? ResponsivePaginationBar(
+                  infoText: _pageInfoText(viewModel),
+                  page: viewModel.page,
+                  pageSize: viewModel.pageSize,
+                  pageSizeOptions: viewModel.pageSizeOptions,
+                  onPageSizeChanged: viewModel.setPageSize,
+                  onPrev: () => viewModel.setPage(viewModel.page - 1),
+                  onNext: () => viewModel.setPage(viewModel.page + 1),
+                  hasPrev: viewModel.hasPrev,
+                  hasNext: viewModel.hasNext,
+                  pageSizeLabelBuilder: (size) =>
+                      _pageSizeLabel.replaceFirst('{size}', size.toString()),
+                )
+              : null,
         );
       },
     );
@@ -257,56 +233,31 @@ class _SupplierListViewState extends State<_SupplierListView> {
     List<Supplier> suppliers,
     bool isMobile,
   ) {
+    final sectionSpacing = LayoutTokens.sectionSpacing(context);
     if (viewModel.loading && suppliers.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
     if (viewModel.errorMessage != null && !viewModel.loading) {
-      return _ErrorState(
+      return ErrorStateCard(
         message: viewModel.errorMessage ?? _errorFallbackText,
+        retryLabel: _retryText,
         onRetry: () => viewModel.loadSuppliers(resetPage: true),
       );
     }
     if (!viewModel.loading && suppliers.isEmpty) {
-      return const _EmptyState();
-    }
-
-    if (isMobile) {
-      return ListView.builder(
-        itemCount: suppliers.length,
-        itemBuilder: (context, index) {
-          final supplier = suppliers[index];
-          return _SupplierListTile(
-            supplier: supplier,
-            onEdit: () => _openEditPage(context, viewModel, supplier),
-            onDelete: () => _confirmDelete(context, viewModel, supplier),
-          );
-        },
+      return const EmptyStateCard(
+        icon: Icons.storefront_outlined,
+        text: _emptyText,
       );
     }
 
-    return SingleChildScrollView(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final columns = _buildColumns();
-          final rows = _buildRows(context, viewModel, suppliers);
-
-          return SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minWidth: constraints.maxWidth),
-              child: DataTable(
-                columnSpacing: _denseTable ? 16 : 24,
-                horizontalMargin: _denseTable ? 12 : 16,
-                headingRowHeight: _denseTable ? 38 : 44,
-                dataRowMinHeight: _denseTable ? 34 : 40,
-                dataRowMaxHeight: _denseTable ? 44 : 52,
-                columns: columns,
-                rows: rows,
-              ),
-            ),
-          );
-        },
-      ),
+    return ListView.separated(
+      itemCount: suppliers.length,
+      separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
+      itemBuilder: (context, index) {
+        final supplier = suppliers[index];
+        return _buildSummaryCard(context, viewModel, supplier, isMobile);
+      },
     );
   }
 
@@ -323,211 +274,41 @@ class _SupplierListViewState extends State<_SupplierListView> {
       padding: EdgeInsets.zero,
       actions: LayoutBuilder(
         builder: (context, constraints) {
-          final searchField = SizedBox(
+          final searchField = ListSearchField(
+            controller: _searchController,
+            hintText: _searchHintText,
+            height: PageActionStyle.height,
             width: isMobile ? constraints.maxWidth : _searchWidth,
-            child: SizedBox(
-              height: PageActionStyle.height,
-              child: ValueListenableBuilder<TextEditingValue>(
-                valueListenable: _searchController,
-                builder: (context, value, _) {
-                  return TextField(
-                    controller: _searchController,
-                    textAlignVertical: TextAlignVertical.center,
-                    onChanged: (_) => _scheduleSearch(viewModel),
-                    onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
-                    decoration: InputDecoration(
-                      constraints: const BoxConstraints.tightFor(height: PageActionStyle.height),
-                      hintText: _searchHintText,
-                      prefixIcon: const Icon(Icons.search, size: 18),
-                      suffixIcon: value.text.isEmpty
-                          ? null
-                          : IconButton(
-                              tooltip: _clearText,
-                              icon: const Icon(Icons.close, size: 18),
-                              onPressed: () {
-                                _searchController.clear();
-                                _scheduleSearch(viewModel, immediate: true);
-                              },
-                            ),
-                      border: const OutlineInputBorder(),
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                    ),
-                  );
-                },
-              ),
-            ),
+            onChanged: (_) => _scheduleSearch(viewModel),
+            onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
+            onClear: () {
+              _searchController.clear();
+              _scheduleSearch(viewModel, immediate: true);
+            },
           );
 
-          if (isMobile) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                searchField,
-                const SizedBox(height: _spacingSm),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    PageActionButton.outlined(
-                      onPressed: () => viewModel.loadSuppliers(resetPage: true),
-                      icon: const Icon(Icons.refresh, size: 16),
-                      label: _refreshButtonText,
-                    ),
-                    const SizedBox(width: _spacingSm),
-                    PageActionButton.filled(
-                      onPressed: () => _openEditPage(context, viewModel, null),
-                      icon: const Icon(Icons.add),
-                      label: _createButtonText,
-                    ),
-                  ],
-                ),
-              ],
-            );
-          }
+          final actions = <Widget>[
+            PageActionButton.outlined(
+              onPressed: () => viewModel.loadSuppliers(resetPage: true),
+              icon: const Icon(Icons.refresh, size: 16),
+              label: _refreshButtonText,
+            ),
+            PageActionButton.filled(
+              onPressed: () => _openEditPage(context, viewModel, null),
+              icon: const Icon(Icons.add),
+              label: _createButtonText,
+            ),
+          ];
 
-          return Wrap(
+          return ListToolbar(
+            isMobile: isMobile,
+            searchField: searchField,
+            actions: actions,
             spacing: _spacingSm,
-            runSpacing: 6,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              searchField,
-              PageActionButton.outlined(
-                onPressed: () => viewModel.loadSuppliers(resetPage: true),
-                icon: const Icon(Icons.refresh, size: 16),
-                label: _refreshButtonText,
-              ),
-              PageActionButton.outlined(
-                key: _columnsMenuKey,
-                onPressed: () => _openColumnsMenu(context),
-                icon: const Icon(Icons.view_column_outlined, size: 18),
-                square: true,
-              ),
-              ToggleButtons(
-                isSelected: [_denseTable == false, _denseTable == true],
-                onPressed: (index) {
-                  setState(() {
-                    _denseTable = index == 1;
-                  });
-                },
-                borderRadius: BorderRadius.circular(_controlRadius),
-                constraints: const BoxConstraints(minHeight: _controlHeight, minWidth: 52),
-                children: const [
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(_densityComfortLabel),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(_densityCompactLabel),
-                  ),
-                ],
-              ),
-              PageActionButton.filled(
-                onPressed: () => _openEditPage(context, viewModel, null),
-                icon: const Icon(Icons.add),
-                label: _createButtonText,
-              ),
-            ],
           );
         },
       ),
     );
-  }
-
-  List<DataColumn> _buildColumns() {
-    final columns = <DataColumn>[];
-    if (_visibleColumns.contains(_SupplierColumn.code)) {
-      columns.add(const DataColumn(label: Text('供应商编码')));
-    }
-    if (_visibleColumns.contains(_SupplierColumn.name)) {
-      columns.add(const DataColumn(label: Text('供应商名称')));
-    }
-    if (_visibleColumns.contains(_SupplierColumn.contact)) {
-      columns.add(const DataColumn(label: Text('联系人')));
-    }
-    if (_visibleColumns.contains(_SupplierColumn.phone)) {
-      columns.add(const DataColumn(label: Text('联系电话')));
-    }
-    if (_visibleColumns.contains(_SupplierColumn.email)) {
-      columns.add(const DataColumn(label: Text('邮箱')));
-    }
-    if (_visibleColumns.contains(_SupplierColumn.status)) {
-      columns.add(const DataColumn(label: Text('状态')));
-    }
-    if (_visibleColumns.contains(_SupplierColumn.materialCount)) {
-      columns.add(const DataColumn(label: Text('供应物料数')));
-    }
-    if (_visibleColumns.contains(_SupplierColumn.notes)) {
-      columns.add(const DataColumn(label: Text('备注')));
-    }
-    if (_visibleColumns.contains(_SupplierColumn.actions)) {
-      columns.add(const DataColumn(label: Text('操作')));
-    }
-    return columns;
-  }
-
-  List<DataRow> _buildRows(BuildContext context, SupplierViewModel viewModel, List<Supplier> suppliers) {
-    final theme = Theme.of(context);
-    return suppliers.map((supplier) {
-      final cells = <DataCell>[];
-      if (_visibleColumns.contains(_SupplierColumn.code)) {
-        cells.add(DataCell(Text(_displayText(supplier.code))));
-      }
-      if (_visibleColumns.contains(_SupplierColumn.name)) {
-        cells.add(DataCell(Text(_displayText(supplier.name))));
-      }
-      if (_visibleColumns.contains(_SupplierColumn.contact)) {
-        cells.add(DataCell(Text(_displayText(supplier.contactPerson))));
-      }
-      if (_visibleColumns.contains(_SupplierColumn.phone)) {
-        cells.add(DataCell(Text(_displayText(supplier.phone))));
-      }
-      if (_visibleColumns.contains(_SupplierColumn.email)) {
-        cells.add(DataCell(Text(_displayText(supplier.email))));
-      }
-      if (_visibleColumns.contains(_SupplierColumn.status)) {
-        cells.add(DataCell(_statusPill(theme, supplier)));
-      }
-      if (_visibleColumns.contains(_SupplierColumn.materialCount)) {
-        cells.add(DataCell(Text(_displayNumber(supplier.materialCount))));
-      }
-      if (_visibleColumns.contains(_SupplierColumn.notes)) {
-        cells.add(
-          DataCell(
-            SizedBox(
-              width: 200,
-              child: Text(
-                _displayText(supplier.notes),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ),
-        );
-      }
-      if (_visibleColumns.contains(_SupplierColumn.actions)) {
-        cells.add(
-          DataCell(
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  tooltip: '编辑',
-                  icon: Icon(Icons.edit, color: theme.colorScheme.primary),
-                  onPressed: () => _openEditPage(context, viewModel, supplier),
-                ),
-                IconButton(
-                  tooltip: '删除',
-                  icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
-                  onPressed: () => _confirmDelete(context, viewModel, supplier),
-                ),
-              ],
-            ),
-          ),
-        );
-      }
-      return DataRow(cells: cells);
-    }).toList();
   }
 
   static String _displayText(String? value) {
@@ -540,290 +321,117 @@ class _SupplierListViewState extends State<_SupplierListView> {
     return value.toString();
   }
 
-  static Widget _statusPill(ThemeData theme, Supplier supplier) {
-    final rawStatus = supplier.status?.toLowerCase();
-    final label = supplier.statusDisplay ?? supplier.status ?? _emptyCellText;
-    if (rawStatus == null || rawStatus.isEmpty) {
-      return Text(_displayText(label));
-    }
-    Color background;
-    Color foreground;
-    if (rawStatus == 'active' || rawStatus == 'enabled') {
-      background = theme.colorScheme.primary.withOpacity(0.12);
-      foreground = theme.colorScheme.primary;
-    } else if (rawStatus == 'inactive' || rawStatus == 'disabled') {
-      background = theme.colorScheme.outline.withOpacity(0.2);
-      foreground = theme.colorScheme.outline;
-    } else {
-      background = theme.colorScheme.secondary.withOpacity(0.12);
-      foreground = theme.colorScheme.secondary;
-    }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: theme.textTheme.bodySmall?.copyWith(color: foreground),
-      ),
-    );
-  }
-}
-
-enum _SupplierColumn {
-  code,
-  name,
-  contact,
-  phone,
-  email,
-  status,
-  materialCount,
-  notes,
-  actions;
-
-  static const List<_SupplierColumn> optionalValues = [
-    _SupplierColumn.code,
-    _SupplierColumn.contact,
-    _SupplierColumn.phone,
-    _SupplierColumn.email,
-    _SupplierColumn.status,
-    _SupplierColumn.materialCount,
-    _SupplierColumn.notes,
-  ];
-
-  String get label {
-    switch (this) {
-      case _SupplierColumn.code:
-        return '供应商编码';
-      case _SupplierColumn.name:
-        return '供应商名称';
-      case _SupplierColumn.contact:
-        return '联系人';
-      case _SupplierColumn.phone:
-        return '联系电话';
-      case _SupplierColumn.email:
-        return '邮箱';
-      case _SupplierColumn.status:
-        return '状态';
-      case _SupplierColumn.materialCount:
-        return '供应物料数';
-      case _SupplierColumn.notes:
-        return '备注';
-      case _SupplierColumn.actions:
-        return '操作';
-    }
-  }
-}
-
-class _PaginationBar extends StatelessWidget {
-  const _PaginationBar({required this.viewModel});
-
-  static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
-  static const String _pageSizeLabel = '每页 {size}';
-
-  final SupplierViewModel viewModel;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildSummaryCard(
+    BuildContext context,
+    SupplierViewModel viewModel,
+    Supplier supplier,
+    bool isMobile,
+  ) {
     final theme = Theme.of(context);
-    final info = _pageInfoTemplate
-        .replaceFirst('{page}', viewModel.page.toString())
-        .replaceFirst('{total}', viewModel.totalPages.toString())
-        .replaceFirst('{count}', viewModel.total.toString());
+    final colors = theme.extension<AppColors>();
+    final sectionSpacing = LayoutTokens.sectionSpacing(context);
+    final code = _displayText(supplier.code);
+    final name = _displayText(supplier.name);
+    final contact = _displayText(supplier.contactPerson);
+    final phone = _displayText(supplier.phone);
+    final email = _displayText(supplier.email);
+    final statusText = _displayStatus(supplier);
+    final materialCount = _displayNumber(supplier.materialCount);
+    final notes = _displayText(supplier.notes);
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Text(info, style: theme.textTheme.bodySmall),
-        const SizedBox(width: 12),
-        DropdownButton<int>(
-          value: viewModel.pageSize,
-          items: viewModel.pageSizeOptions
-              .map(
-                (size) => DropdownMenuItem<int>(
-                  value: size,
-                  child: Text(_pageSizeLabel.replaceFirst('{size}', size.toString())),
-                ),
-              )
-              .toList(),
-          onChanged: (value) {
-            if (value == null) return;
-            viewModel.setPageSize(value);
-          },
-        ),
-        const SizedBox(width: 4),
-        IconButton(
-          onPressed: viewModel.hasPrev ? () => viewModel.setPage(viewModel.page - 1) : null,
-          icon: const Icon(Icons.chevron_left),
-        ),
-        Text('${viewModel.page}', style: theme.textTheme.bodyMedium),
-        IconButton(
-          onPressed: viewModel.hasNext ? () => viewModel.setPage(viewModel.page + 1) : null,
-          icon: const Icon(Icons.chevron_right),
-        ),
-      ],
-    );
-  }
-}
-
-class _SupplierListTile extends StatelessWidget {
-  const _SupplierListTile({
-    required this.supplier,
-    this.onEdit,
-    this.onDelete,
-  });
-
-  static const double _verticalMargin = 8;
-  static const String _codeLabel = '编码';
-  static const String _contactLabel = '联系人';
-  static const String _phoneLabel = '电话';
-  static const String _emailLabel = '邮箱';
-  static const String _statusLabel = '状态';
-  static const String _subtitleSeparator = ' · ';
-  static const String _emptySubtitle = '暂无更多信息';
-
-  final Supplier supplier;
-  final VoidCallback? onEdit;
-  final VoidCallback? onDelete;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final primary = theme.colorScheme.primary;
-    final subtleText = theme.textTheme.bodySmall?.copyWith(color: theme.hintColor);
-    final subtitleLines = <String>[];
-    if ((supplier.code ?? '').trim().isNotEmpty) {
-      subtitleLines.add('$_codeLabel：${supplier.code}');
-    }
-    if ((supplier.contactPerson ?? '').trim().isNotEmpty) {
-      subtitleLines.add('$_contactLabel：${supplier.contactPerson}');
-    }
-    if ((supplier.phone ?? '').trim().isNotEmpty) {
-      subtitleLines.add('$_phoneLabel：${supplier.phone}');
-    }
-    if ((supplier.email ?? '').trim().isNotEmpty) {
-      subtitleLines.add('$_emailLabel：${supplier.email}');
-    }
-    if ((supplier.statusDisplay ?? supplier.status ?? '').trim().isNotEmpty) {
-      subtitleLines.add('$_statusLabel：${supplier.statusDisplay ?? supplier.status}');
-    }
-
-    final tile = ListTile(
-      leading: CircleAvatar(
-        backgroundColor: primary.withOpacity(0.12),
-        foregroundColor: primary,
-        child: Text(supplier.name.isNotEmpty ? supplier.name[0].toUpperCase() : '?'),
-      ),
-      title: Text(
-        supplier.name.isNotEmpty ? supplier.name : _SupplierListViewState._emptyCellText,
-        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-      ),
-      subtitle: subtitleLines.isEmpty
-          ? Text(_emptySubtitle, style: subtleText)
-          : Text(subtitleLines.join(_subtitleSeparator), style: subtleText),
-      isThreeLine: subtitleLines.length > 2,
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
+    return ExpandableSummaryCard(
+      headerBuilder: (context, expanded) {
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: colors?.sidebarText,
+                    ),
+                  ),
+                  SizedBox(height: sectionSpacing),
+                  Text(
+                    '$code · $contact',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colors?.subtleText ?? theme.hintColor,
+                    ),
+                  ),
+                  SizedBox(height: sectionSpacing),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _SummaryChip(label: '状态', value: statusText),
+                      _SummaryChip(label: '物料数', value: materialCount),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(width: sectionSpacing),
+            AnimatedRotation(
+              turns: expanded ? 0.5 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              child: Icon(
+                Icons.expand_more,
+                size: 20,
+                color: colors?.subtleText ?? theme.hintColor,
+              ),
+            ),
+          ],
+        );
+      },
+      expandedChild: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          IconButton(
-            tooltip: '编辑',
-            icon: Icon(Icons.edit, color: primary),
-            onPressed: onEdit,
+          SummaryFieldWrap(
+            isMobile: isMobile,
+            children: [
+              _SummaryField(label: '编码', value: code),
+              _SummaryField(label: '联系人', value: contact),
+              _SummaryField(label: '电话', value: phone),
+              _SummaryField(label: '邮箱', value: email),
+              _SummaryField(label: '状态', value: statusText),
+              _SummaryField(label: '供应物料数', value: materialCount),
+              _SummaryField(label: '备注', value: notes),
+            ],
           ),
-          PopupMenuButton<String>(
-            tooltip: '更多',
-            onSelected: (value) {
-              if (value == 'delete') {
-                onDelete?.call();
-              }
-            },
-            itemBuilder: (context) => const [
-              PopupMenuItem(
-                value: 'delete',
-                child: Text('删除'),
+          SizedBox(height: sectionSpacing),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () => _openEditPage(context, viewModel, supplier),
+                icon: const Icon(Icons.edit, size: 16),
+                label: const Text('编辑'),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => _confirmDelete(context, viewModel, supplier),
+                icon: const Icon(Icons.delete_outline, size: 16),
+                label: const Text('删除'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: theme.colorScheme.error,
+                ),
               ),
             ],
-            icon: const Icon(Icons.more_horiz),
-          ),
-        ],
-      ),
-      onTap: onEdit,
-    );
-
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: _verticalMargin),
-      child: tile,
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
-  static const double _verticalPadding = 32;
-  static const double _borderRadius = 12;
-  static const double _iconSize = 36;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: _verticalPadding),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(_borderRadius),
-        color: theme.colorScheme.primary.withOpacity(0.05),
-        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.15)),
-      ),
-      child: Column(
-        children: [
-          Icon(Icons.storefront_outlined, color: theme.colorScheme.primary, size: _iconSize),
-          const SizedBox(height: _SupplierListViewState._spacingSm),
-          Text(_SupplierListViewState._emptyText, style: theme.textTheme.bodyMedium),
-        ],
-      ),
-    );
-  }
-}
-
-class _ErrorState extends StatelessWidget {
-  const _ErrorState({required this.message, required this.onRetry});
-
-  static const double _verticalPadding = 32;
-  static const double _borderRadius = 12;
-  static const double _iconSize = 32;
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: _verticalPadding),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(_borderRadius),
-        color: theme.colorScheme.error.withOpacity(0.06),
-        border: Border.all(color: theme.colorScheme.error.withOpacity(0.2)),
-      ),
-      child: Column(
-        children: [
-          Icon(Icons.error_outline, color: theme.colorScheme.error, size: _iconSize),
-          const SizedBox(height: _SupplierListViewState._spacingSm),
-          Text(message, style: theme.textTheme.bodyMedium),
-          const SizedBox(height: _SupplierListViewState._spacingSm),
-          OutlinedButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh),
-            label: const Text(_SupplierListViewState._retryText),
           ),
         ],
       ),
     );
   }
+
+  static String _displayStatus(Supplier supplier) {
+    final label = supplier.statusDisplay ?? supplier.status ?? _emptyCellText;
+    return _displayText(label);
+  }
 }
+
+typedef _SummaryField = SummaryField;
+typedef _SummaryChip = SummaryChip;

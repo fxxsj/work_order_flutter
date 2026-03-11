@@ -15,4 +15,9 @@ class PaymentRepositoryImpl implements PaymentRepository {
   }) {
     return _apiService.fetchPayments(page: page, pageSize: pageSize, search: search);
   }
+
+  @override
+  Future<Map<String, dynamic>> getSummary() {
+    return _apiService.fetchSummary();
+  }
 }

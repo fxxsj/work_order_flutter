@@ -15,4 +15,24 @@ class DeliveryOrderRepositoryImpl implements DeliveryOrderRepository {
   }) {
     return _apiService.fetchDeliveryOrders(page: page, pageSize: pageSize, search: search);
   }
+
+  @override
+  Future<Map<String, dynamic>> ship(int id, Map<String, dynamic> payload) {
+    return _apiService.ship(id, payload);
+  }
+
+  @override
+  Future<Map<String, dynamic>> receive(int id, Map<String, dynamic> payload) {
+    return _apiService.receive(id, payload);
+  }
+
+  @override
+  Future<Map<String, dynamic>> reject(int id, Map<String, dynamic> payload) {
+    return _apiService.reject(id, payload);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getSummary() {
+    return _apiService.fetchSummary();
+  }
 }

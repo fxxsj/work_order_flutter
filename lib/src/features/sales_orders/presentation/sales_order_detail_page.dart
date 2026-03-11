@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/features/sales_orders/application/sales_order_view_model.dart';
@@ -70,8 +72,6 @@ class SalesOrderDetailPage extends StatefulWidget {
 }
 
 class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
-  static const double _spacing = 12;
-  static const double _sectionSpacing = 16;
   static const String _breadcrumbSeparator = ' / ';
   static const String _emptyText = '-';
 
@@ -116,23 +116,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
   }
 
   Widget _buildSection(String title, Widget child) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.6)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: theme.textTheme.titleMedium),
-          const SizedBox(height: 12),
-          child,
-        ],
-      ),
-    );
+    return DetailSectionCard(title: title, child: child);
   }
 
   Widget _buildInfoGrid(List<_InfoItem> items) {
@@ -154,33 +138,40 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     if (items.isEmpty) {
       return Text('暂无订单明细', style: Theme.of(context).textTheme.bodyMedium);
     }
-    final rows = items.map((item) {
-      return DataRow(cells: [
-        DataCell(Text(item.productName ?? _emptyText)),
-        DataCell(Text(item.productCode ?? _emptyText)),
-        DataCell(Text(item.quantity?.toString() ?? _emptyText)),
-        DataCell(Text(item.unit ?? _emptyText)),
-        DataCell(Text(item.unitPrice == null ? _emptyText : item.unitPrice!.toStringAsFixed(2))),
-        DataCell(Text(item.taxRate == null ? _emptyText : item.taxRate!.toStringAsFixed(2))),
-        DataCell(Text(item.discountAmount == null ? _emptyText : item.discountAmount!.toStringAsFixed(2))),
-        DataCell(Text(item.subtotal == null ? _emptyText : item.subtotal!.toStringAsFixed(2))),
-      ]);
-    }).toList();
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable(
-        columns: const [
-          DataColumn(label: Text('产品')),
-          DataColumn(label: Text('编码')),
-          DataColumn(label: Text('数量')),
-          DataColumn(label: Text('单位')),
-          DataColumn(label: Text('单价')),
-          DataColumn(label: Text('税率')),
-          DataColumn(label: Text('折扣')),
-          DataColumn(label: Text('小计')),
-        ],
-        rows: rows,
-      ),
+    return Column(
+      children: items.map((item) {
+        final name = item.productName ?? _emptyText;
+        final code = item.productCode ?? _emptyText;
+        final quantity = item.quantity?.toString() ?? _emptyText;
+        final unit = item.unit ?? _emptyText;
+        final price = item.unitPrice == null ? _emptyText : item.unitPrice!.toStringAsFixed(2);
+        final tax = item.taxRate == null ? _emptyText : item.taxRate!.toStringAsFixed(2);
+        final discount =
+            item.discountAmount == null ? _emptyText : item.discountAmount!.toStringAsFixed(2);
+        final subtotal = item.subtotal == null ? _emptyText : item.subtotal!.toStringAsFixed(2);
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: DetailSectionCard(
+            title: name,
+            child: Wrap(
+              spacing: 24,
+              runSpacing: 12,
+              children: [
+                _InfoRow(label: '编码', value: code),
+                _InfoRow(label: '数量', value: quantity),
+                _InfoRow(label: '单位', value: unit),
+                _InfoRow(label: '单价', value: price),
+                _InfoRow(label: '税率', value: tax),
+                _InfoRow(label: '折扣', value: discount),
+                _InfoRow(label: '小计', value: subtotal),
+              ]
+                  .map((row) => SizedBox(width: 220, child: row))
+                  .toList(),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -209,9 +200,10 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     final title = detail?.orderNumber.isNotEmpty == true
         ? '销售订单 ${detail!.orderNumber}'
         : '销售订单 #${widget.orderId}';
+    final sectionSpacing = LayoutTokens.sectionSpacing(context);
 
     return ListPageScaffold(
-      spacing: _spacing,
+      spacing: sectionSpacing,
       header: PageHeaderBar(
         breadcrumb: breadcrumb.join(_breadcrumbSeparator),
         useSurface: false,
@@ -225,7 +217,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
               icon: const Icon(Icons.arrow_back, size: 16),
               label: '返回',
             ),
-            const SizedBox(width: _spacing),
+            SizedBox(width: sectionSpacing),
             PageActionButton.filled(
               onPressed: () => context.go('/sales-orders/${widget.orderId}/edit'),
               icon: const Icon(Icons.edit, size: 16),
@@ -235,23 +227,29 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
         ),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const DetailSurfaceCard(
+              child: Center(child: CircularProgressIndicator()),
+            )
           : _errorMessage != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(_errorMessage!),
-                      const SizedBox(height: 12),
-                      FilledButton(
-                        onPressed: _loadDetail,
-                        child: const Text('重试'),
-                      ),
-                    ],
+              ? DetailSurfaceCard(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(_errorMessage!),
+                        const SizedBox(height: 12),
+                        FilledButton(
+                          onPressed: _loadDetail,
+                          child: const Text('重试'),
+                        ),
+                      ],
+                    ),
                   ),
                 )
               : detail == null
-                  ? const Center(child: Text('未找到销售订单信息'))
+                  ? const DetailSurfaceCard(
+                      child: Center(child: Text('未找到销售订单信息')),
+                    )
                   : ListView(
                       children: [
                         _buildSection(
@@ -273,7 +271,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
                             ),
                           ]),
                         ),
-                        const SizedBox(height: _sectionSpacing),
+                        SizedBox(height: sectionSpacing),
                         _buildSection(
                           '客户信息',
                           _buildInfoGrid([
@@ -282,9 +280,9 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
                             _InfoItem('地址', detail.customerAddress ?? detail.shippingAddress ?? _emptyText),
                           ]),
                         ),
-                        const SizedBox(height: _sectionSpacing),
+                        SizedBox(height: sectionSpacing),
                         _buildSection('订单明细', _buildItemsTable(detail.items)),
-                        const SizedBox(height: _sectionSpacing),
+                        SizedBox(height: sectionSpacing),
                         _buildSection(
                           '付款信息',
                           _buildInfoGrid([
@@ -311,7 +309,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
                             _InfoItem('付款日期', _formatDate(detail.paymentDate)),
                           ]),
                         ),
-                        const SizedBox(height: _sectionSpacing),
+                        SizedBox(height: sectionSpacing),
                         _buildSection('关联施工单', _buildChipGroup(detail.workOrderNumbers)),
                       ],
                     ),

@@ -3,10 +3,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
@@ -22,7 +28,6 @@ import 'package:work_order_app/src/features/workorders/data/work_order_api_servi
 import 'package:work_order_app/src/features/workorders/data/work_order_repository_impl.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
-import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_list_tile.dart';
 
 /// 施工单列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
 class WorkOrderListEntry extends StatefulWidget {
@@ -101,7 +106,6 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
   static const double _searchWidth = 320;
   static const double _spacingSm = 8;
   static const double _controlHeight = PageActionStyle.height;
-  static const double _controlRadius = PageActionStyle.radius;
   static const String _emptyCellText = '-';
 
   static const String _searchHintText = '搜索订单号/客户/产品';
@@ -110,26 +114,14 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
   static const String _emptyText = '暂无施工单数据';
   static const String _errorFallbackText = '加载失败';
   static const String _retryText = '重新加载';
-  static const String _breadcrumbSeparator = ' / ';
   static const String _resetButtonText = '重置筛选';
   static const String _deleteDialogTitle = '确认删除';
   static const String _deleteDialogContent = '确定要删除施工单 "{name}" 吗？此操作不可恢复。';
+  static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
+  static const String _pageSizeLabel = '每页 {size}';
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
-  bool _denseTable = false;
-  final GlobalKey _columnsMenuKey = GlobalKey();
-  final Set<_WorkOrderColumn> _visibleColumns = {
-    _WorkOrderColumn.orderNumber,
-    _WorkOrderColumn.customer,
-    _WorkOrderColumn.product,
-    _WorkOrderColumn.status,
-    _WorkOrderColumn.approval,
-    _WorkOrderColumn.deliveryDate,
-    _WorkOrderColumn.progress,
-    _WorkOrderColumn.totalAmount,
-    _WorkOrderColumn.actions,
-  };
   String? _statusFilter;
   String? _priorityFilter;
   String? _approvalStatusFilter;
@@ -209,9 +201,12 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
       final processPage = results[2] as ProcessPageDto;
       if (!mounted) return;
       setState(() {
-        _customers = customerPage.items.map<Customer>((item) => item.toEntity()).toList();
+        _customers = customerPage.items
+            .map<Customer>((item) => item.toEntity())
+            .toList();
         _products = productOptions;
-        _processes = processPage.items.map<Process>((item) => item.toEntity()).toList();
+        _processes =
+            processPage.items.map<Process>((item) => item.toEntity()).toList();
       });
     } catch (err) {
       ToastUtil.showError('加载筛选项失败: $err');
@@ -220,40 +215,11 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     }
   }
 
-  void _openColumnsMenu(BuildContext context) {
-    final menuContext = _columnsMenuKey.currentContext;
-    final renderBox = menuContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
-    final overlay = Overlay.of(menuContext!, rootOverlay: true).context.findRenderObject() as RenderBox;
-    final position = RelativeRect.fromRect(
-      Rect.fromPoints(
-        renderBox.localToGlobal(Offset.zero, ancestor: overlay),
-        renderBox.localToGlobal(renderBox.size.bottomRight(Offset.zero), ancestor: overlay),
-      ),
-      Offset.zero & overlay.size,
-    );
-
-    showMenu<_WorkOrderColumn>(
-      context: menuContext,
-      position: position,
-      items: _workOrderOptionalColumns.map((value) {
-        final checked = _visibleColumns.contains(value);
-        return CheckedPopupMenuItem<_WorkOrderColumn>(
-          value: value,
-          checked: checked,
-          child: Text(value.label),
-          onTap: () {
-            setState(() {
-              if (checked && _visibleColumns.length > 2) {
-                _visibleColumns.remove(value);
-              } else {
-                _visibleColumns.add(value);
-              }
-            });
-          },
-        );
-      }).toList(),
-    );
+  static String _pageInfoText(WorkOrderViewModel viewModel) {
+    return _pageInfoTemplate
+        .replaceFirst('{page}', viewModel.page.toString())
+        .replaceFirst('{total}', viewModel.totalPages.toString())
+        .replaceFirst('{count}', viewModel.total.toString());
   }
 
   @override
@@ -276,8 +242,22 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
         return ListPageScaffold(
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, breadcrumb, isMobile),
-          body: _buildListBody(context, viewModel, workOrders, isMobile),
-          footer: viewModel.total > 0 ? _PaginationBar(viewModel: viewModel) : null,
+          body: _buildListBody(context, viewModel, workOrders),
+          footer: viewModel.total > 0
+              ? ResponsivePaginationBar(
+                  infoText: _pageInfoText(viewModel),
+                  page: viewModel.page,
+                  pageSize: viewModel.pageSize,
+                  pageSizeOptions: viewModel.pageSizeOptions,
+                  onPageSizeChanged: viewModel.setPageSize,
+                  onPrev: () => viewModel.setPage(viewModel.page - 1),
+                  onNext: () => viewModel.setPage(viewModel.page + 1),
+                  hasPrev: viewModel.hasPrev,
+                  hasNext: viewModel.hasNext,
+                  pageSizeLabelBuilder: (size) =>
+                      _pageSizeLabel.replaceFirst('{size}', size.toString()),
+                )
+              : null,
         );
       },
     );
@@ -287,67 +267,177 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     BuildContext context,
     WorkOrderViewModel viewModel,
     List<WorkOrder> workOrders,
-    bool isMobile,
   ) {
+    final sectionSpacing = LayoutTokens.sectionSpacing(context);
+
     if (viewModel.loading && workOrders.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const _SectionCard(
+        child: Center(child: CircularProgressIndicator()),
+      );
     }
     if (viewModel.errorMessage != null && !viewModel.loading) {
-      return Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: _ErrorState(
-            message: viewModel.errorMessage ?? _errorFallbackText,
-            onRetry: () => viewModel.loadWorkOrders(resetPage: true),
+      return _SectionCard(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: ErrorStateCard(
+              message: viewModel.errorMessage ?? _errorFallbackText,
+              retryLabel: _retryText,
+              onRetry: () => viewModel.loadWorkOrders(resetPage: true),
+            ),
           ),
         ),
       );
     }
     if (!viewModel.loading && workOrders.isEmpty) {
-      return const Center(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(vertical: 16),
-          child: _EmptyState(),
+      return const _SectionCard(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: EmptyStateCard(
+              icon: Icons.description_outlined,
+              text: _emptyText,
+            ),
+          ),
         ),
       );
     }
 
-    if (isMobile) {
-      return ListView.separated(
-        itemCount: workOrders.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
-        itemBuilder: (context, index) {
-          final workOrder = workOrders[index];
-          return WorkOrderListTile(
-            workOrder: workOrder,
-            onTap: () => context.go('/workorders/${workOrder.id}'),
-          );
-        },
-      );
-    }
+    return ListView.separated(
+      itemCount: workOrders.length,
+      separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
+      itemBuilder: (context, index) {
+        final workOrder = workOrders[index];
+        return _buildSummaryCard(context, workOrder);
+      },
+    );
+  }
 
-    return SingleChildScrollView(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final columns = _buildColumns();
-          final rows = _buildRows(context, viewModel, workOrders);
+  Widget _buildSummaryCard(BuildContext context, WorkOrder workOrder) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>();
+    final viewModel = context.read<WorkOrderViewModel>();
+    final title = workOrder.orderNumber.isEmpty
+        ? '施工单 #${workOrder.id}'
+        : workOrder.orderNumber;
+    final customer = workOrder.customerName ?? _emptyCellText;
+    final product = workOrder.productName ?? _emptyCellText;
+    final status = workOrder.statusDisplay ?? workOrder.status ?? _emptyCellText;
+    final approval = workOrder.approvalStatusDisplay ??
+        workOrder.approvalStatus ??
+        _emptyCellText;
+    final priority =
+        workOrder.priorityDisplay ?? workOrder.priority ?? _emptyCellText;
+    final deliveryDate = _formatDate(workOrder.deliveryDate);
+    final amount = _formatAmount(workOrder.totalAmount);
+    final progress = workOrder.progressPercentage == null
+        ? _emptyCellText
+        : '${workOrder.progressPercentage}%';
+    final sectionSpacing = LayoutTokens.sectionSpacing(context);
+    final isCompact = BreakpointsUtil.isMobile(context);
 
-          return SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minWidth: constraints.maxWidth),
-              child: DataTable(
-                columnSpacing: _denseTable ? 16 : 24,
-                horizontalMargin: _denseTable ? 12 : 16,
-                headingRowHeight: _denseTable ? 38 : 44,
-                dataRowMinHeight: _denseTable ? 34 : 40,
-                dataRowMaxHeight: _denseTable ? 44 : 52,
-                columns: columns,
-                rows: rows,
+    return ExpandableSummaryCard(
+      headerBuilder: (context, expanded) {
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: colors?.sidebarText,
+                    ),
+                  ),
+                  SizedBox(height: sectionSpacing),
+                  Text(
+                    '$customer · $product',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colors?.subtleText ?? theme.hintColor,
+                    ),
+                  ),
+                  SizedBox(height: sectionSpacing),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _SummaryChip(label: '状态', value: status),
+                      _SummaryChip(label: '审核', value: approval),
+                      _SummaryChip(label: '优先级', value: priority),
+                    ],
+                  ),
+                ],
               ),
             ),
-          );
-        },
+            SizedBox(width: sectionSpacing),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  amount,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: colors?.sidebarText,
+                  ),
+                ),
+                SizedBox(height: sectionSpacing),
+                AnimatedRotation(
+                  turns: expanded ? 0.5 : 0.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    Icons.expand_more,
+                    size: 20,
+                    color: colors?.subtleText ?? theme.hintColor,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+      expandedChild: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SummaryFieldWrap(
+            isMobile: isCompact,
+            desktopWidth: 180,
+            children: [
+              _SummaryField(label: '交货日期', value: deliveryDate),
+              _SummaryField(label: '进度', value: progress),
+              _SummaryField(label: '负责人', value: workOrder.managerName ?? _emptyCellText),
+              _SummaryField(label: '业务员', value: workOrder.salespersonName ?? _emptyCellText),
+              _SummaryField(label: '数量', value: _formatQuantity(workOrder.quantity, workOrder.unit)),
+            ],
+          ),
+          SizedBox(height: sectionSpacing),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () => context.go('/workorders/${workOrder.id}'),
+                icon: const Icon(Icons.open_in_new, size: 16),
+                label: const Text('查看'),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => context.go('/workorders/${workOrder.id}/edit'),
+                icon: const Icon(Icons.edit, size: 16),
+                label: const Text('编辑'),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => _confirmDelete(context, viewModel, workOrder),
+                icon: const Icon(Icons.delete_outline, size: 16),
+                label: const Text('删除'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: theme.colorScheme.error,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -358,6 +448,9 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     List<String> breadcrumb,
     bool isMobile,
   ) {
+    final summaryItems = [
+      WorkbenchStatItem(label: '总施工单', value: '${viewModel.total}'),
+    ];
     final statusItems = const [
       DropdownMenuItem(value: 'pending', child: Text('待开始')),
       DropdownMenuItem(value: 'in_progress', child: Text('进行中')),
@@ -376,9 +469,9 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
       DropdownMenuItem(value: 'approved', child: Text('已通过')),
       DropdownMenuItem(value: 'rejected', child: Text('已拒绝')),
     ];
-
     final customerItems = [
-      const DropdownMenuItem<int?>(value: null, child: Text('全部客户', overflow: TextOverflow.ellipsis)),
+      const DropdownMenuItem<int?>(
+          value: null, child: Text('全部客户', overflow: TextOverflow.ellipsis)),
       ..._customers.map(
         (item) => DropdownMenuItem<int?>(
           value: item.id,
@@ -387,7 +480,8 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
       ),
     ];
     final productItems = [
-      const DropdownMenuItem<int?>(value: null, child: Text('全部产品', overflow: TextOverflow.ellipsis)),
+      const DropdownMenuItem<int?>(
+          value: null, child: Text('全部产品', overflow: TextOverflow.ellipsis)),
       ..._products.map(
         (item) => DropdownMenuItem<int?>(
           value: item.id,
@@ -396,7 +490,8 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
       ),
     ];
     final processItems = [
-      const DropdownMenuItem<int?>(value: null, child: Text('全部工序', overflow: TextOverflow.ellipsis)),
+      const DropdownMenuItem<int?>(
+          value: null, child: Text('全部工序', overflow: TextOverflow.ellipsis)),
       ..._processes.map(
         (item) => DropdownMenuItem<int?>(
           value: item.id,
@@ -405,57 +500,46 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
       ),
     ];
 
-    return PageHeaderBar(
-      breadcrumb: breadcrumb.isEmpty ? null : breadcrumb.join(_breadcrumbSeparator),
-      useSurface: false,
-      showDivider: false,
-      padding: EdgeInsets.zero,
+    return WorkbenchHeaderBar(
+      breadcrumb: null,
+      title: '施工单列表',
+      subtitle: '',
+      stats: summaryItems,
+      titleMaxWidth: isMobile ? double.infinity : 420,
+      hideSubtitleOnMobile: true,
+      mobileStatCount: 1,
+      hideTitleOnMobile: true,
+      hideBreadcrumbOnMobile: true,
       actions: LayoutBuilder(
         builder: (context, constraints) {
           final filtersExpanded = _filtersExpanded;
-          final searchField = SizedBox(
+          final activeFilters = _activeFilterCount();
+          final searchField = ListSearchField(
+            controller: _searchController,
+            hintText: _searchHintText,
+            height: _controlHeight,
             width: isMobile ? constraints.maxWidth : _searchWidth,
-            child: SizedBox(
-              height: _controlHeight,
-              child: ValueListenableBuilder<TextEditingValue>(
-                valueListenable: _searchController,
-                builder: (context, value, _) {
-                  return TextField(
-                    controller: _searchController,
-                    textAlignVertical: TextAlignVertical.center,
-                    onChanged: (_) => _scheduleSearch(viewModel),
-                    onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
-                    decoration: InputDecoration(
-                      constraints: const BoxConstraints.tightFor(height: _controlHeight),
-                      hintText: _searchHintText,
-                      prefixIcon: const Icon(Icons.search, size: 18),
-                      suffixIcon: value.text.isEmpty
-                          ? null
-                          : IconButton(
-                              tooltip: '清空',
-                              icon: const Icon(Icons.close, size: 18),
-                              onPressed: () {
-                                _searchController.clear();
-                                _scheduleSearch(viewModel, immediate: true);
-                              },
-                            ),
-                      border: const OutlineInputBorder(),
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                    ),
-                  );
-                },
-              ),
-            ),
+            onChanged: (_) => _scheduleSearch(viewModel),
+            onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
+            onClear: () {
+              _searchController.clear();
+              _scheduleSearch(viewModel, immediate: true);
+            },
           );
 
-          final filterToggle = SizedBox(
+          final filterToggle = ListToolbarButton(
+            onPressed: () =>
+                setState(() => _filtersExpanded = !filtersExpanded),
+            icon: filtersExpanded
+                ? Icons.filter_alt_off
+                : Icons.filter_alt_outlined,
+            label: filtersExpanded
+                ? '收起筛选'
+                : activeFilters > 0
+                    ? '筛选 $activeFilters'
+                    : '筛选',
             height: _controlHeight,
-            child: OutlinedButton.icon(
-              onPressed: () => setState(() => _filtersExpanded = !filtersExpanded),
-              icon: Icon(filtersExpanded ? Icons.filter_alt_off : Icons.filter_alt_outlined),
-              label: Text(filtersExpanded ? '收起筛选' : '展开筛选'),
-            ),
+            compact: isMobile,
           );
 
           final mobileFilters = Column(
@@ -463,9 +547,10 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
             children: [
               if (_loadingOptions) const LinearProgressIndicator(minHeight: 2),
               DropdownButtonFormField<String>(
-                value: _statusFilter,
+                initialValue: _statusFilter,
                 isExpanded: true,
-                decoration: const InputDecoration(labelText: '状态', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                    labelText: '状态', border: OutlineInputBorder()),
                 items: statusItems,
                 onChanged: (value) {
                   setState(() => _statusFilter = value);
@@ -474,9 +559,10 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
               ),
               const SizedBox(height: _spacingSm),
               DropdownButtonFormField<String>(
-                value: _priorityFilter,
+                initialValue: _priorityFilter,
                 isExpanded: true,
-                decoration: const InputDecoration(labelText: '优先级', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                    labelText: '优先级', border: OutlineInputBorder()),
                 items: priorityItems,
                 onChanged: (value) {
                   setState(() => _priorityFilter = value);
@@ -485,9 +571,10 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
               ),
               const SizedBox(height: _spacingSm),
               DropdownButtonFormField<String>(
-                value: _approvalStatusFilter,
+                initialValue: _approvalStatusFilter,
                 isExpanded: true,
-                decoration: const InputDecoration(labelText: '审核状态', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                    labelText: '审核状态', border: OutlineInputBorder()),
                 items: approvalItems,
                 onChanged: (value) {
                   setState(() => _approvalStatusFilter = value);
@@ -496,9 +583,10 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
               ),
               const SizedBox(height: _spacingSm),
               DropdownButtonFormField<int?>(
-                value: _customerFilterId,
+                initialValue: _customerFilterId,
                 isExpanded: true,
-                decoration: const InputDecoration(labelText: '客户', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                    labelText: '客户', border: OutlineInputBorder()),
                 items: customerItems,
                 onChanged: (value) {
                   setState(() => _customerFilterId = value);
@@ -507,9 +595,10 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
               ),
               const SizedBox(height: _spacingSm),
               DropdownButtonFormField<int?>(
-                value: _productFilterId,
+                initialValue: _productFilterId,
                 isExpanded: true,
-                decoration: const InputDecoration(labelText: '产品', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                    labelText: '产品', border: OutlineInputBorder()),
                 items: productItems,
                 onChanged: (value) {
                   setState(() => _productFilterId = value);
@@ -518,9 +607,10 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
               ),
               const SizedBox(height: _spacingSm),
               DropdownButtonFormField<int?>(
-                value: _processFilterId,
+                initialValue: _processFilterId,
                 isExpanded: true,
-                decoration: const InputDecoration(labelText: '工序', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                    labelText: '工序', border: OutlineInputBorder()),
                 items: processItems,
                 onChanged: (value) {
                   setState(() => _processFilterId = value);
@@ -543,9 +633,10 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
               SizedBox(
                 width: 180,
                 child: DropdownButtonFormField<String>(
-                  value: _statusFilter,
+                  initialValue: _statusFilter,
                   isExpanded: true,
-                  decoration: const InputDecoration(labelText: '状态', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                      labelText: '状态', border: OutlineInputBorder()),
                   items: statusItems,
                   onChanged: (value) {
                     setState(() => _statusFilter = value);
@@ -556,9 +647,10 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
               SizedBox(
                 width: 180,
                 child: DropdownButtonFormField<String>(
-                  value: _priorityFilter,
+                  initialValue: _priorityFilter,
                   isExpanded: true,
-                  decoration: const InputDecoration(labelText: '优先级', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                      labelText: '优先级', border: OutlineInputBorder()),
                   items: priorityItems,
                   onChanged: (value) {
                     setState(() => _priorityFilter = value);
@@ -569,9 +661,10 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
               SizedBox(
                 width: 180,
                 child: DropdownButtonFormField<String>(
-                  value: _approvalStatusFilter,
+                  initialValue: _approvalStatusFilter,
                   isExpanded: true,
-                  decoration: const InputDecoration(labelText: '审核状态', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                      labelText: '审核状态', border: OutlineInputBorder()),
                   items: approvalItems,
                   onChanged: (value) {
                     setState(() => _approvalStatusFilter = value);
@@ -582,9 +675,10 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
               SizedBox(
                 width: 220,
                 child: DropdownButtonFormField<int?>(
-                  value: _customerFilterId,
+                  initialValue: _customerFilterId,
                   isExpanded: true,
-                  decoration: const InputDecoration(labelText: '客户', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                      labelText: '客户', border: OutlineInputBorder()),
                   items: customerItems,
                   onChanged: (value) {
                     setState(() => _customerFilterId = value);
@@ -595,9 +689,10 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
               SizedBox(
                 width: 220,
                 child: DropdownButtonFormField<int?>(
-                  value: _productFilterId,
+                  initialValue: _productFilterId,
                   isExpanded: true,
-                  decoration: const InputDecoration(labelText: '产品', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                      labelText: '产品', border: OutlineInputBorder()),
                   items: productItems,
                   onChanged: (value) {
                     setState(() => _productFilterId = value);
@@ -608,9 +703,10 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
               SizedBox(
                 width: 220,
                 child: DropdownButtonFormField<int?>(
-                  value: _processFilterId,
+                  initialValue: _processFilterId,
                   isExpanded: true,
-                  decoration: const InputDecoration(labelText: '工序', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                      labelText: '工序', border: OutlineInputBorder()),
                   items: processItems,
                   onChanged: (value) {
                     setState(() => _processFilterId = value);
@@ -621,50 +717,47 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
             ],
           );
 
+          final actions = <Widget>[
+            filterToggle,
+            if (activeFilters > 0)
+              ListToolbarButton(
+                onPressed: () => _resetFilters(viewModel),
+                icon: Icons.restart_alt,
+                label: _resetButtonText,
+                height: _controlHeight,
+                compact: isMobile,
+              ),
+            PageActionButton.filled(
+              onPressed: () => context.go('/workorders/create'),
+              icon: const Icon(Icons.add),
+              label: _createButtonText,
+            ),
+            ListToolbarButton(
+              onPressed: () => viewModel.loadWorkOrders(resetPage: true),
+              icon: Icons.refresh,
+              label: _refreshButtonText,
+              height: _controlHeight,
+              compact: isMobile,
+            ),
+          ];
+
           if (isMobile) {
             final maxFilterHeight = MediaQuery.of(context).size.height * 0.45;
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                searchField,
-                const SizedBox(height: _spacingSm),
-                filterToggle,
-                const SizedBox(height: _spacingSm),
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeOut,
-                  child: filtersExpanded
-                      ? ConstrainedBox(
-                          constraints: BoxConstraints(maxHeight: maxFilterHeight),
-                          child: SingleChildScrollView(
-                            physics: const ClampingScrollPhysics(),
-                            child: mobileFilters,
-                          ),
-                        )
-                      : const SizedBox.shrink(),
+                ListToolbar(
+                  isMobile: true,
+                  searchField: searchField,
+                  actions: actions,
+                  spacing: _spacingSm,
+                  mobileActionAlignment: WrapAlignment.start,
                 ),
                 const SizedBox(height: _spacingSm),
-                Wrap(
-                  alignment: WrapAlignment.end,
-                  spacing: _spacingSm,
-                  runSpacing: _spacingSm,
-                  children: [
-                    PageActionButton.outlined(
-                      onPressed: () => viewModel.loadWorkOrders(resetPage: true),
-                      icon: const Icon(Icons.refresh, size: 16),
-                      label: _refreshButtonText,
-                    ),
-                    PageActionButton.outlined(
-                      onPressed: () => _resetFilters(viewModel),
-                      icon: const Icon(Icons.refresh, size: 16),
-                      label: _resetButtonText,
-                    ),
-                    PageActionButton.filled(
-                      onPressed: () => context.go('/workorders/create'),
-                      icon: const Icon(Icons.add),
-                      label: _createButtonText,
-                    ),
-                  ],
+                ExpandableFilters(
+                  expanded: filtersExpanded,
+                  maxHeight: maxFilterHeight,
+                  child: mobileFilters,
                 ),
               ],
             );
@@ -674,64 +767,17 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Wrap(
+              ListToolbar(
+                isMobile: false,
+                searchField: searchField,
+                actions: actions,
                 spacing: _spacingSm,
-                runSpacing: 6,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  searchField,
-                  filterToggle,
-                  PageActionButton.outlined(
-                    onPressed: () => viewModel.loadWorkOrders(resetPage: true),
-                    icon: const Icon(Icons.refresh, size: 16),
-                    label: _refreshButtonText,
-                  ),
-                  PageActionButton.outlined(
-                    onPressed: () => _resetFilters(viewModel),
-                    icon: const Icon(Icons.refresh, size: 16),
-                    label: _resetButtonText,
-                  ),
-                  PageActionButton.outlined(
-                    onPressed: () => setState(() => _denseTable = !_denseTable),
-                    icon: Icon(_denseTable ? Icons.table_rows : Icons.table_chart),
-                    label: _denseTable ? '舒适' : '紧凑',
-                  ),
-                  SizedBox(
-                    key: _columnsMenuKey,
-                    height: _controlHeight,
-                    child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(_controlRadius),
-                        ),
-                      ),
-                      onPressed: () => _openColumnsMenu(context),
-                      icon: const Icon(Icons.view_column, size: 18),
-                      label: const Text('列管理'),
-                    ),
-                  ),
-                  PageActionButton.filled(
-                    onPressed: () => context.go('/workorders/create'),
-                    icon: const Icon(Icons.add),
-                    label: _createButtonText,
-                  ),
-                ],
               ),
-              AnimatedSize(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeOut,
-                child: filtersExpanded
-                    ? Padding(
-                        padding: const EdgeInsets.only(top: _spacingSm),
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(maxHeight: maxFilterHeight),
-                          child: SingleChildScrollView(
-                            physics: const ClampingScrollPhysics(),
-                            child: desktopFilters,
-                          ),
-                        ),
-                      )
-                    : const SizedBox.shrink(),
+              ExpandableFilters(
+                expanded: filtersExpanded,
+                maxHeight: maxFilterHeight,
+                topPadding: _spacingSm,
+                child: desktopFilters,
               ),
             ],
           );
@@ -740,82 +786,17 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     );
   }
 
-  List<DataColumn> _buildColumns() {
-    return _WorkOrderColumn.values
-        .where(_visibleColumns.contains)
-        .map(
-          (column) => DataColumn(
-            label: Text(column.label),
-          ),
-        )
-        .toList();
-  }
-
-  List<DataRow> _buildRows(
-    BuildContext context,
-    WorkOrderViewModel viewModel,
-    List<WorkOrder> workOrders,
-  ) {
-    return workOrders.map((workOrder) {
-      final cells = _WorkOrderColumn.values
-          .where(_visibleColumns.contains)
-          .map((column) => DataCell(_buildCell(context, viewModel, workOrder, column)))
-          .toList();
-      return DataRow(
-        cells: cells,
-        onSelectChanged: (_) => context.go('/workorders/${workOrder.id}'),
-      );
-    }).toList();
-  }
-
-  Widget _buildCell(
-    BuildContext context,
-    WorkOrderViewModel viewModel,
-    WorkOrder workOrder,
-    _WorkOrderColumn column,
-  ) {
-    switch (column) {
-      case _WorkOrderColumn.orderNumber:
-        return Text(workOrder.orderNumber.isEmpty ? '施工单 #${workOrder.id}' : workOrder.orderNumber);
-      case _WorkOrderColumn.customer:
-        return Text(workOrder.customerName ?? _emptyCellText);
-      case _WorkOrderColumn.product:
-        return Text(workOrder.productName ?? _emptyCellText);
-      case _WorkOrderColumn.status:
-        return Text(workOrder.statusDisplay ?? workOrder.status ?? _emptyCellText);
-      case _WorkOrderColumn.approval:
-        return Text(workOrder.approvalStatusDisplay ?? workOrder.approvalStatus ?? _emptyCellText);
-      case _WorkOrderColumn.priority:
-        return Text(workOrder.priorityDisplay ?? workOrder.priority ?? _emptyCellText);
-      case _WorkOrderColumn.deliveryDate:
-        return Text(_formatDate(workOrder.deliveryDate));
-      case _WorkOrderColumn.progress:
-        final progress = workOrder.progressPercentage;
-        return Text(progress == null ? _emptyCellText : '$progress%');
-      case _WorkOrderColumn.totalAmount:
-        return Text(_formatAmount(workOrder.totalAmount));
-      case _WorkOrderColumn.actions:
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              tooltip: '查看',
-              icon: const Icon(Icons.visibility_outlined, size: 18),
-              onPressed: () => context.go('/workorders/${workOrder.id}'),
-            ),
-            IconButton(
-              tooltip: '编辑',
-              icon: const Icon(Icons.edit_outlined, size: 18),
-              onPressed: () => context.go('/workorders/${workOrder.id}/edit'),
-            ),
-            IconButton(
-              tooltip: '删除',
-              icon: const Icon(Icons.delete_outline, size: 18),
-              onPressed: () => _confirmDelete(context, viewModel, workOrder),
-            ),
-          ],
-        );
-    }
+  int _activeFilterCount() {
+    var count = 0;
+    if (_searchController.text.trim().isNotEmpty) count += 1;
+    if (_statusFilter != null && _statusFilter!.isNotEmpty) count += 1;
+    if (_priorityFilter != null && _priorityFilter!.isNotEmpty) count += 1;
+    if (_approvalStatusFilter != null && _approvalStatusFilter!.isNotEmpty)
+      count += 1;
+    if (_customerFilterId != null) count += 1;
+    if (_productFilterId != null) count += 1;
+    if (_processFilterId != null) count += 1;
+    return count;
   }
 
   Future<void> _confirmDelete(
@@ -827,15 +808,21 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text(_deleteDialogTitle),
-        content: Text(_deleteDialogContent.replaceFirst('{name}', workOrder.orderNumber)),
+        content: Text(
+            _deleteDialogContent.replaceFirst('{name}', workOrder.orderNumber)),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('取消')),
-          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('删除')),
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('取消')),
+          FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('删除')),
         ],
       ),
     );
     if (confirmed != true) return;
-    await viewModel.deleteAndReload(() => viewModel.deleteWorkOrder(workOrder.id));
+    await viewModel
+        .deleteAndReload(() => viewModel.deleteWorkOrder(workOrder.id));
   }
 
   String _formatDate(DateTime? value) {
@@ -851,177 +838,35 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     if (value == null) return _emptyCellText;
     return value.toStringAsFixed(2);
   }
-}
 
-class _PaginationBar extends StatelessWidget {
-  const _PaginationBar({required this.viewModel});
-
-  static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
-  static const String _pageSizeLabel = '每页 {size}';
-
-  final WorkOrderViewModel viewModel;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final info = _pageInfoTemplate
-        .replaceFirst('{page}', viewModel.page.toString())
-        .replaceFirst('{total}', viewModel.totalPages.toString())
-        .replaceFirst('{count}', viewModel.total.toString());
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Text(info, style: theme.textTheme.bodySmall),
-        const SizedBox(width: 12),
-        DropdownButton<int>(
-          value: viewModel.pageSize,
-          items: viewModel.pageSizeOptions
-              .map(
-                (size) => DropdownMenuItem<int>(
-                  value: size,
-                  child: Text(_pageSizeLabel.replaceFirst('{size}', size.toString())),
-                ),
-              )
-              .toList(),
-          onChanged: (value) {
-            if (value == null) return;
-            viewModel.setPageSize(value);
-          },
-        ),
-        const SizedBox(width: 4),
-        IconButton(
-          onPressed: viewModel.hasPrev ? () => viewModel.setPage(viewModel.page - 1) : null,
-          icon: const Icon(Icons.chevron_left),
-        ),
-        Text('${viewModel.page}', style: theme.textTheme.bodyMedium),
-        IconButton(
-          onPressed: viewModel.hasNext ? () => viewModel.setPage(viewModel.page + 1) : null,
-          icon: const Icon(Icons.chevron_right),
-        ),
-      ],
-    );
+  String _formatQuantity(double? value, String? unit) {
+    if (value == null) return _emptyCellText;
+    final formatted = value.toStringAsFixed(value % 1 == 0 ? 0 : 2);
+    final unitText = unit?.trim().isNotEmpty == true ? unit! : '';
+    return unitText.isEmpty ? formatted : '$formatted $unitText';
   }
 }
 
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+typedef _SummaryField = SummaryField;
+typedef _SummaryChip = SummaryChip;
 
-  static const double _verticalPadding = 32;
-  static const double _borderRadius = 12;
-  static const double _iconSize = 36;
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({required this.child});
+
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>()!;
 
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: _verticalPadding),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(_borderRadius),
-        color: theme.colorScheme.primary.withOpacity(0.05),
-        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.15)),
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: colors.borderColor),
       ),
-      child: Column(
-        children: [
-          Icon(Icons.description_outlined, color: theme.colorScheme.primary, size: _iconSize),
-          const SizedBox(height: _WorkOrderListViewState._spacingSm),
-          Text(_WorkOrderListViewState._emptyText, style: theme.textTheme.bodyMedium),
-        ],
-      ),
+      child: child,
     );
-  }
-}
-
-class _ErrorState extends StatelessWidget {
-  const _ErrorState({required this.message, required this.onRetry});
-
-  static const double _verticalPadding = 32;
-  static const double _borderRadius = 12;
-  static const double _iconSize = 32;
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: _verticalPadding),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(_borderRadius),
-        color: theme.colorScheme.error.withOpacity(0.06),
-        border: Border.all(color: theme.colorScheme.error.withOpacity(0.2)),
-      ),
-      child: Column(
-        children: [
-          Icon(Icons.error_outline, color: theme.colorScheme.error, size: _iconSize),
-          const SizedBox(height: _WorkOrderListViewState._spacingSm),
-          Text(message, style: theme.textTheme.bodyMedium),
-          const SizedBox(height: _WorkOrderListViewState._spacingSm),
-          OutlinedButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh),
-            label: const Text(_WorkOrderListViewState._retryText),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-enum _WorkOrderColumn {
-  orderNumber,
-  customer,
-  product,
-  status,
-  approval,
-  priority,
-  deliveryDate,
-  progress,
-  totalAmount,
-  actions,
-}
-
-const List<_WorkOrderColumn> _workOrderOptionalColumns = [
-  _WorkOrderColumn.orderNumber,
-  _WorkOrderColumn.customer,
-  _WorkOrderColumn.product,
-  _WorkOrderColumn.status,
-  _WorkOrderColumn.approval,
-  _WorkOrderColumn.priority,
-  _WorkOrderColumn.deliveryDate,
-  _WorkOrderColumn.progress,
-  _WorkOrderColumn.totalAmount,
-  _WorkOrderColumn.actions,
-];
-
-extension _WorkOrderColumnLabel on _WorkOrderColumn {
-  String get label {
-    switch (this) {
-      case _WorkOrderColumn.orderNumber:
-        return '订单号';
-      case _WorkOrderColumn.customer:
-        return '客户';
-      case _WorkOrderColumn.product:
-        return '产品';
-      case _WorkOrderColumn.status:
-        return '状态';
-      case _WorkOrderColumn.approval:
-        return '审核';
-      case _WorkOrderColumn.priority:
-        return '优先级';
-      case _WorkOrderColumn.deliveryDate:
-        return '交货日期';
-      case _WorkOrderColumn.progress:
-        return '进度';
-      case _WorkOrderColumn.totalAmount:
-        return '金额';
-      case _WorkOrderColumn.actions:
-        return '操作';
-    }
   }
 }

@@ -318,7 +318,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.6)),
+        border: Border.all(color: theme.dividerColor.withAlpha(153)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -378,7 +378,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         DropdownButtonFormField<int>(
-                          value: _customerId,
+                          initialValue: _customerId,
                           decoration: const InputDecoration(labelText: '客户', border: OutlineInputBorder()),
                           items: _customers
                               .map(
@@ -399,7 +399,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                             SizedBox(
                               width: 220,
                               child: DropdownButtonFormField<String>(
-                                value: _status,
+                                initialValue: _status,
                                 decoration: const InputDecoration(labelText: '状态', border: OutlineInputBorder()),
                                 items: const [
                                   DropdownMenuItem(value: 'draft', child: Text('草稿')),
@@ -416,7 +416,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                             SizedBox(
                               width: 220,
                               child: DropdownButtonFormField<String>(
-                                value: _paymentStatus,
+                                initialValue: _paymentStatus,
                                 decoration: const InputDecoration(labelText: '付款状态', border: OutlineInputBorder()),
                                 items: const [
                                   DropdownMenuItem(value: 'unpaid', child: Text('未付款')),
@@ -619,7 +619,7 @@ class _ItemRowState extends State<_ItemRow> {
           SizedBox(
             width: 220,
             child: DropdownButtonFormField<int>(
-              value: widget.draft.productId,
+              initialValue: widget.draft.productId,
               decoration: const InputDecoration(labelText: '产品', border: OutlineInputBorder()),
               items: widget.products
                   .map(

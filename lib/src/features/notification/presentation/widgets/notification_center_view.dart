@@ -63,7 +63,7 @@ class NotificationCenterView extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 24),
                   decoration: BoxDecoration(
-                    color: primary.withOpacity(0.04),
+                    color: primary.withAlpha(10),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Center(
@@ -181,10 +181,10 @@ class _NotificationListItem extends StatelessWidget {
       decoration: BoxDecoration(
         color: surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: item.isRead ? Colors.transparent : levelColor.withOpacity(0.3)),
+        border: Border.all(color: item.isRead ? Colors.transparent : levelColor.withAlpha(77)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withAlpha(10),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -236,7 +236,6 @@ Color _levelColorFor(NotificationLevel level, Color primary) {
     case NotificationLevel.urgent:
       return const Color(0xFFEF4444);
     case NotificationLevel.info:
-    default:
       return primary;
   }
 }

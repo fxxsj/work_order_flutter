@@ -32,19 +32,32 @@ class NotificationModel {
   final int? taskId;
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
-    final priority = json['priority']?.toString() ?? 'normal';
+    final data = json['data'];
+    final dataMap = data is Map ? Map<String, dynamic>.from(data) : const <String, dynamic>{};
+    final priority = (json['priority'] ?? dataMap['priority'])?.toString() ?? 'normal';
+    final title = _stringOrNull(dataMap['title']) ?? _stringOrNull(json['title']) ?? '';
+    final content = _stringOrNull(dataMap['message']) ??
+        _stringOrNull(json['message']) ??
+        _stringOrNull(json['content']) ??
+        '';
+    final createdAt = _toDateTime(json['created_at']) ??
+        _toDateTime(json['timestamp']) ??
+        _toDateTime(dataMap['created_at']) ??
+        DateTime.now();
     return NotificationModel(
       id: json['id'].toString(),
-      title: json['title']?.toString() ?? '',
-      content: json['content']?.toString() ?? '',
-      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
-          DateTime.now(),
-      notificationType: json['notification_type']?.toString() ?? 'system',
+      title: title,
+      content: content,
+      createdAt: createdAt,
+      notificationType: json['notification_type']?.toString() ??
+          dataMap['notification_type']?.toString() ??
+          'system',
       priority: priority,
       isRead: json['is_read'] == true,
       readAt: DateTime.tryParse(json['read_at']?.toString() ?? ''),
-      workOrderId: _toInt(json['work_order_id']),
-      taskId: _toInt(json['task_id']),
+      workOrderId:
+          _toInt(json['work_order_id']) ?? _toInt(dataMap['work_order_id']) ?? _toInt(dataMap['workorder_id']),
+      taskId: _toInt(json['task_id']) ?? _toInt(dataMap['task_id']),
       level: _levelForPriority(priority),
     );
   }
@@ -99,4 +112,17 @@ int? _toInt(dynamic value) {
     return value;
   }
   return int.tryParse(value.toString());
+}
+
+String? _stringOrNull(dynamic value) {
+  if (value == null) return null;
+  final text = value.toString();
+  return text.isEmpty ? null : text;
+}
+
+DateTime? _toDateTime(dynamic value) {
+  if (value == null) {
+    return null;
+  }
+  return DateTime.tryParse(value.toString());
 }

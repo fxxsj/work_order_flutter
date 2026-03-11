@@ -1,14 +1,11 @@
-import 'package:dio/dio.dart';
 import 'package:work_order_app/src/features/auth/data/auth_api.dart';
-import 'package:work_order_app/src/features/auth/data/user_api.dart';
 import 'package:work_order_app/src/features/auth/domain/auth_repository.dart';
 import 'package:work_order_app/src/features/auth/domain/user.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  AuthRepositoryImpl(this._authApi, this._userApi);
+  AuthRepositoryImpl(this._authApi);
 
   final AuthApi _authApi;
-  final UserApi _userApi;
 
   @override
   Future<Map<String, dynamic>> login({
@@ -25,10 +22,11 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> register(User user) async {
-    final map = user.toMap();
-    map['file'] = null;
-    final formData = FormData.fromMap(map);
-    await _userApi.register(formData);
+    final payload = <String, dynamic>{
+      'username': user.userName,
+      'password': user.password,
+    };
+    await _authApi.register(payload);
   }
 
   @override

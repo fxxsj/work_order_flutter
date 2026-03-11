@@ -29,21 +29,32 @@ class DepartmentRepositoryImpl implements DepartmentRepository {
   }
 
   @override
-  Future<List<Department>> getAllDepartments() async {
+  Future<List<Department>> getAllDepartments({bool? isActive}) async {
+    final response = await _api.fetchAllDepartments(isActive: isActive);
+    if (response.isNotEmpty) {
+      return response.map((item) => item.toEntity()).toList();
+    }
+
     const pageSize = 200;
     var page = 1;
     final items = <Department>[];
 
     while (true) {
-      final response = await _api.fetchDepartments(page: page, pageSize: pageSize);
-      items.addAll(response.items.map((item) => item.toEntity()));
-      if (items.length >= response.total || response.items.isEmpty) {
+      final pageResponse = await _api.fetchDepartments(page: page, pageSize: pageSize);
+      items.addAll(pageResponse.items.map((item) => item.toEntity()));
+      if (items.length >= pageResponse.total || pageResponse.items.isEmpty) {
         break;
       }
       page += 1;
     }
 
     return items;
+  }
+
+  @override
+  Future<List<Department>> getDepartmentTree() async {
+    final response = await _api.fetchDepartmentTree();
+    return response.map((item) => item.toEntity()).toList();
   }
 
   @override

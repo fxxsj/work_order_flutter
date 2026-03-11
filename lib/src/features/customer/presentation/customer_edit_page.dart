@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/edit_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/application/customer_view_model.dart';
@@ -19,15 +21,10 @@ class CustomerEditPage extends StatefulWidget {
 
 class _CustomerEditPageState extends State<CustomerEditPage> {
   final _formKey = GlobalKey<FormState>();
-  static const double _padding = 16;
-  static const double _sectionSpacing = 16;
-  static const double _actionSpacing = 24;
-  static const double _pageSpacing = 8;
   static const double _loadingIndicatorSize = 14;
   static const double _submitIndicatorSize = 20;
   static const double _indicatorStrokeWidth = 2;
   static const double _inlineSpacing = 8;
-  static const double _columnSpacing = 24;
 
   static const String _nameLabel = '客户名称';
   static const String _contactLabel = '联系人';
@@ -177,39 +174,40 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
     final isMobile = BreakpointsUtil.isMobile(context);
     final customer = widget.customer;
     final breadcrumb = buildBreadcrumbForPath('/customers');
+    final contentPadding = LayoutTokens.pagePadding(context);
+    final sectionSpacing = LayoutTokens.formSectionSpacing(context);
+    final actionSpacing = LayoutTokens.formActionSpacing(context);
+    final pageSpacing = LayoutTokens.formPageSpacing(context);
+    final columnSpacing = LayoutTokens.formColumnSpacing(context);
 
     return SafeArea(
       child: Form(
         key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            PageHeaderBar(
-              breadcrumb: breadcrumb.join(_breadcrumbSeparator),
-              useSurface: false,
-              showDivider: false,
-              padding: EdgeInsets.zero,
-              actions: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  PageActionButton.outlined(
-                    onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
-                    icon: const Icon(Icons.arrow_back, size: 16),
-                    label: _backText,
-                  ),
-                ],
-              ),
+        child: EditPageScaffold(
+          spacing: pageSpacing,
+          contentPadding: contentPadding,
+          header: PageHeaderBar(
+            breadcrumb: breadcrumb.join(_breadcrumbSeparator),
+            useSurface: false,
+            showDivider: false,
+            padding: EdgeInsets.zero,
+            actions: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                PageActionButton.outlined(
+                  onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
+                  icon: const Icon(Icons.arrow_back, size: 16),
+                  label: _backText,
+                ),
+              ],
             ),
-            const SizedBox(height: _pageSpacing),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(_padding),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (isMobile) ...[
+          ),
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (isMobile) ...[
                 _sectionTitle(theme, _basicSectionTitle),
-                const SizedBox(height: _sectionSpacing),
+                SizedBox(height: sectionSpacing),
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(
@@ -227,9 +225,9 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                     return null;
                   },
                 ),
-                const SizedBox(height: _sectionSpacing),
+                SizedBox(height: sectionSpacing),
                 DropdownButtonFormField<int?>(
-                  value: _salespersonId,
+                  initialValue: _salespersonId,
                   decoration: const InputDecoration(
                     labelText: _salespersonLabel,
                     border: OutlineInputBorder(),
@@ -254,23 +252,23 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                   validator: (_) => null,
                 ),
                 if (viewModel.loadingSalespersons)
-                  const Padding(
-                    padding: EdgeInsets.only(top: _sectionSpacing),
+                  Padding(
+                    padding: EdgeInsets.only(top: sectionSpacing),
                     child: Row(
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           width: _loadingIndicatorSize,
                           height: _loadingIndicatorSize,
                           child: CircularProgressIndicator(strokeWidth: _indicatorStrokeWidth),
                         ),
-                        SizedBox(width: _inlineSpacing),
-                        Text(_loadingSalespersonsText),
+                        const SizedBox(width: _inlineSpacing),
+                        const Text(_loadingSalespersonsText),
                       ],
                     ),
                   )
                 else if (salespersonsError != null && salespersonsError.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.only(top: _sectionSpacing),
+                    padding: EdgeInsets.only(top: sectionSpacing),
                     child: Row(
                       children: [
                         Expanded(
@@ -286,9 +284,9 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                       ],
                     ),
                   ),
-                const SizedBox(height: _sectionSpacing),
+                SizedBox(height: sectionSpacing),
                 _sectionTitle(theme, _contactSectionTitle),
-                const SizedBox(height: _sectionSpacing),
+                SizedBox(height: sectionSpacing),
                 TextFormField(
                   controller: _contactController,
                   decoration: const InputDecoration(
@@ -297,7 +295,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                   ),
                   validator: (_) => null,
                 ),
-                const SizedBox(height: _sectionSpacing),
+                SizedBox(height: sectionSpacing),
                 TextFormField(
                   controller: _phoneController,
                   decoration: const InputDecoration(
@@ -317,7 +315,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                     return null;
                   },
                 ),
-                const SizedBox(height: _sectionSpacing),
+                SizedBox(height: sectionSpacing),
                 TextFormField(
                   controller: _emailController,
                   decoration: const InputDecoration(
@@ -337,9 +335,9 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                     return null;
                   },
                 ),
-                const SizedBox(height: _sectionSpacing),
+                SizedBox(height: sectionSpacing),
                 _sectionTitle(theme, _extraSectionTitle),
-                const SizedBox(height: _sectionSpacing),
+                SizedBox(height: sectionSpacing),
                 TextFormField(
                   controller: _addressController,
                   decoration: const InputDecoration(
@@ -349,7 +347,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                   maxLines: 2,
                   validator: (_) => null,
                 ),
-                const SizedBox(height: _sectionSpacing),
+                SizedBox(height: sectionSpacing),
                 TextFormField(
                   controller: _notesController,
                   decoration: const InputDecoration(
@@ -360,14 +358,14 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                   validator: (_) => null,
                 ),
                 if (customer != null) ...[
-                  const SizedBox(height: _sectionSpacing),
+                  SizedBox(height: sectionSpacing),
                   _sectionTitle(theme, _systemSectionTitle),
-                  const SizedBox(height: _sectionSpacing),
+                  SizedBox(height: sectionSpacing),
                   _readonlyField(theme, _createdAtLabel, _formatDateTime(customer.createdAt)),
-                  const SizedBox(height: _sectionSpacing),
+                  SizedBox(height: sectionSpacing),
                   _readonlyField(theme, _updatedAtLabel, _formatDateTime(customer.updatedAt)),
                 ],
-                    ] else ...[
+              ] else ...[
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -376,7 +374,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           _sectionTitle(theme, _basicSectionTitle),
-                          const SizedBox(height: _sectionSpacing),
+                          SizedBox(height: sectionSpacing),
                           TextFormField(
                             controller: _nameController,
                             decoration: const InputDecoration(
@@ -394,9 +392,9 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                               return null;
                             },
                           ),
-                          const SizedBox(height: _sectionSpacing),
+                          SizedBox(height: sectionSpacing),
                           DropdownButtonFormField<int?>(
-                            value: _salespersonId,
+                            initialValue: _salespersonId,
                             decoration: const InputDecoration(
                               labelText: _salespersonLabel,
                               border: OutlineInputBorder(),
@@ -421,30 +419,30 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                             validator: (_) => null,
                           ),
                           if (viewModel.loadingSalespersons)
-                            const Padding(
-                              padding: EdgeInsets.only(top: _sectionSpacing),
+                            Padding(
+                              padding: EdgeInsets.only(top: sectionSpacing),
                               child: Row(
                                 children: [
-                                  SizedBox(
+                                  const SizedBox(
                                     width: _loadingIndicatorSize,
                                     height: _loadingIndicatorSize,
                                     child: CircularProgressIndicator(strokeWidth: _indicatorStrokeWidth),
                                   ),
-                                  SizedBox(width: _inlineSpacing),
-                                  Text(_loadingSalespersonsText),
+                                  const SizedBox(width: _inlineSpacing),
+                                  const Text(_loadingSalespersonsText),
                                 ],
                               ),
                             )
                           else if (salespersonsError != null && salespersonsError.isNotEmpty)
                             Padding(
-                              padding: const EdgeInsets.only(top: _sectionSpacing),
+                              padding: EdgeInsets.only(top: sectionSpacing),
                               child: Row(
                                 children: [
                                   Expanded(
                                     child: Text(
                                       salespersonsError,
-                                      style:
-                                          theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(color: theme.colorScheme.error),
                                     ),
                                   ),
                                   TextButton(
@@ -454,9 +452,9 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                                 ],
                               ),
                             ),
-                          const SizedBox(height: _sectionSpacing),
+                          SizedBox(height: sectionSpacing),
                           _sectionTitle(theme, _contactSectionTitle),
-                          const SizedBox(height: _sectionSpacing),
+                          SizedBox(height: sectionSpacing),
                           TextFormField(
                             controller: _contactController,
                             decoration: const InputDecoration(
@@ -465,7 +463,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                             ),
                             validator: (_) => null,
                           ),
-                          const SizedBox(height: _sectionSpacing),
+                          SizedBox(height: sectionSpacing),
                           TextFormField(
                             controller: _phoneController,
                             decoration: const InputDecoration(
@@ -485,7 +483,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                               return null;
                             },
                           ),
-                          const SizedBox(height: _sectionSpacing),
+                          SizedBox(height: sectionSpacing),
                           TextFormField(
                             controller: _emailController,
                             decoration: const InputDecoration(
@@ -498,7 +496,8 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                               if (text.isEmpty) {
                                 return null;
                               }
-                              final emailRegex = RegExp(r'^[\w\-.]+@([\w\-]+\.)+[\w\-]{2,4}$');
+                              final emailRegex =
+                                  RegExp(r'^[\w\-.]+@([\w\-]+\.)+[\w\-]{2,4}$');
                               if (!emailRegex.hasMatch(text)) {
                                 return _emailInvalidText;
                               }
@@ -508,13 +507,13 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                         ],
                       ),
                     ),
-                    const SizedBox(width: _columnSpacing),
+                    SizedBox(width: columnSpacing),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           _sectionTitle(theme, _extraSectionTitle),
-                          const SizedBox(height: _sectionSpacing),
+                          SizedBox(height: sectionSpacing),
                           TextFormField(
                             controller: _addressController,
                             decoration: const InputDecoration(
@@ -524,7 +523,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                             maxLines: 2,
                             validator: (_) => null,
                           ),
-                          const SizedBox(height: _sectionSpacing),
+                          SizedBox(height: sectionSpacing),
                           TextFormField(
                             controller: _notesController,
                             decoration: const InputDecoration(
@@ -535,55 +534,52 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                             validator: (_) => null,
                           ),
                           if (customer != null) ...[
-                            const SizedBox(height: _sectionSpacing),
+                            SizedBox(height: sectionSpacing),
                             _sectionTitle(theme, _systemSectionTitle),
-                            const SizedBox(height: _sectionSpacing),
-                            _readonlyField(theme, _createdAtLabel, _formatDateTime(customer.createdAt)),
-                            const SizedBox(height: _sectionSpacing),
-                            _readonlyField(theme, _updatedAtLabel, _formatDateTime(customer.updatedAt)),
+                            SizedBox(height: sectionSpacing),
+                            _readonlyField(
+                              theme,
+                              _createdAtLabel,
+                              _formatDateTime(customer.createdAt),
+                            ),
+                            SizedBox(height: sectionSpacing),
+                            _readonlyField(
+                              theme,
+                              _updatedAtLabel,
+                              _formatDateTime(customer.updatedAt),
+                            ),
                           ],
                         ],
                       ),
                     ),
                   ],
                 ),
-                    ],
-                    const SizedBox(height: _actionSpacing),
-                  ],
+              ],
+              SizedBox(height: actionSpacing),
+            ],
+          ),
+          footer: EditPageFooterBar(
+            child: Row(
+              children: [
+                PageActionButton.outlined(
+                  onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
+                  label: _cancelText,
                 ),
-              ),
-            ),
-            const SizedBox(height: _pageSpacing),
-            Container(
-              padding: const EdgeInsets.fromLTRB(_padding, 12, _padding, _padding),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                border: Border(
-                  top: BorderSide(color: theme.dividerColor.withOpacity(0.6)),
+                const SizedBox(width: _inlineSpacing),
+                PageActionButton.filled(
+                  onPressed: _submitting ? null : () => _handleSubmit(viewModel),
+                  label: customer == null ? _submitCreateText : _submitUpdateText,
+                  icon: _submitting
+                      ? const SizedBox(
+                          height: _submitIndicatorSize,
+                          width: _submitIndicatorSize,
+                          child: CircularProgressIndicator(strokeWidth: _indicatorStrokeWidth),
+                        )
+                      : null,
                 ),
-              ),
-              child: Row(
-                children: [
-                  PageActionButton.outlined(
-                    onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
-                    label: _cancelText,
-                  ),
-                  const SizedBox(width: _inlineSpacing),
-                  PageActionButton.filled(
-                    onPressed: _submitting ? null : () => _handleSubmit(viewModel),
-                    label: customer == null ? _submitCreateText : _submitUpdateText,
-                    icon: _submitting
-                        ? const SizedBox(
-                            height: _submitIndicatorSize,
-                            width: _submitIndicatorSize,
-                            child: CircularProgressIndicator(strokeWidth: _indicatorStrokeWidth),
-                          )
-                        : null,
-                  ),
-                ],
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

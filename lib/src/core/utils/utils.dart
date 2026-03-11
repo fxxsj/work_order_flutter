@@ -76,7 +76,7 @@ class Utils {
       ),
       iconTheme: IconThemeData(color: scheme.primary),
       scrollbarTheme: ScrollbarThemeData(
-        thumbColor: MaterialStateProperty.all(scheme.primary.withOpacity(0.6)),
+        thumbColor: WidgetStateProperty.all(scheme.primary.withAlpha(153)),
         radius: const Radius.circular(8),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
@@ -85,19 +85,19 @@ class Utils {
       ),
       textButtonTheme: TextButtonThemeData(
         style: ButtonStyle(
-          foregroundColor: MaterialStateProperty.all(scheme.primary),
-          mouseCursor: MaterialStateProperty.all(SystemMouseCursors.click),
+          foregroundColor: WidgetStateProperty.all(scheme.primary),
+          mouseCursor: WidgetStateProperty.all(SystemMouseCursors.click),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: ButtonStyle(
-          side: MaterialStateProperty.all(BorderSide(color: scheme.primary.withOpacity(0.5))),
-          foregroundColor: MaterialStateProperty.all(scheme.primary),
-          mouseCursor: MaterialStateProperty.all(SystemMouseCursors.click),
+          side: WidgetStateProperty.all(BorderSide(color: scheme.primary.withAlpha(128))),
+          foregroundColor: WidgetStateProperty.all(scheme.primary),
+          mouseCursor: WidgetStateProperty.all(SystemMouseCursors.click),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ButtonStyle(backgroundColor: MaterialStateProperty.all(scheme.primary)),
+        style: ButtonStyle(backgroundColor: WidgetStateProperty.all(scheme.primary)),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,

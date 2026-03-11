@@ -12,6 +12,7 @@ abstract class WorkOrderRepository {
     int? customerId,
     int? productId,
     int? processId,
+    String? ordering,
   });
 
   Future<WorkOrderDetailDto> getWorkOrderDetail(int id);
@@ -34,4 +35,18 @@ abstract class WorkOrderRepository {
   Future<WorkOrderDetailDto> resubmitForApproval(int id);
 
   Future<WorkOrderDetailDto> requestReapproval(int id, String reason);
+
+  Future<WorkOrderDetailDto> addProcess(int id, Map<String, dynamic> payload);
+
+  Future<WorkOrderDetailDto> addMaterial(int id, Map<String, dynamic> payload);
+
+  Future<Map<String, dynamic>> getStatistics({Map<String, dynamic>? params});
+
+  Future<dynamic> export({Map<String, dynamic>? params});
+
+  Future<Map<String, dynamic>> checkSyncNeeded(int id, {List<int>? processIds});
+
+  Future<Map<String, dynamic>> syncTasksPreview(int id, {List<int>? processIds});
+
+  Future<Map<String, dynamic>> syncTasksExecute(int id, {List<int>? processIds});
 }

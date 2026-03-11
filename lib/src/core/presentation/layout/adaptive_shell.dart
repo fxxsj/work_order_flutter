@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/features/auth/application/auth_controller.dart';
 import 'package:work_order_app/src/features/notification/application/notification_view_model.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_setting.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_header.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_sidebar.dart';
@@ -79,13 +80,12 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     final sidebarText = colors.sidebarText;
     final sidebarItems = sidebarNavItems();
     final borderColor = colors.borderColor;
-    final appBarHeight = isXs ? 52.0 : 56.0;
+    final appBarHeight = isXs ? 52.0 : 54.0;
     final currentId = _currentId(context);
-    final path = GoRouterState.of(context).uri.path;
     final isActionCompact = size.width < Breakpoints.lg;
 
     final railExtended = (isXl || is2xl) && !_sidebarCollapsed;
-    final railWidth = railExtended ? 214.0 : 59.0;
+    final railWidth = railExtended ? 198.0 : 56.0;
     final showDesktopSidebar = !isMobile;
 
     return Scaffold(
@@ -96,6 +96,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
               backgroundColor: sidebar,
               child: SafeArea(
                 child: AppSidebarDrawer(
+                  appTitle: _appTitle,
                   navItems: sidebarItems,
                   expandedIds: _expandedIds,
                   currentId: currentId,
@@ -117,9 +118,12 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
           setState(() {
             _sidebarCollapsed = !_sidebarCollapsed;
           });
-          context.read<AppStorage>().write(Constant.KEY_SIDEBAR_COLLAPSED, _sidebarCollapsed);
+          context
+              .read<AppStorage>()
+              .write(Constant.KEY_SIDEBAR_COLLAPSED, _sidebarCollapsed);
         },
-        title: _appTitle,
+        appTitle: _appTitle,
+        sectionTitle: labelFor(currentId),
         onMenuTap: () => scaffoldKey.currentState?.openDrawer(),
         onSettingTap: () => scaffoldKey.currentState?.openEndDrawer(),
         onNotificationViewAll: () => _handleSelectId('notifications'),
@@ -140,10 +144,13 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
               decoration: BoxDecoration(
                 color: sidebar,
                 border: Border(
-                  right: BorderSide(color: borderColor),
+                  right: BorderSide(
+                    color: borderColor.withValues(alpha: 0.72),
+                  ),
                 ),
               ),
               child: AppSidebarRail(
+                appTitle: _appTitle,
                 navItems: sidebarItems,
                 expandedIds: _expandedIds,
                 currentId: currentId,
@@ -160,6 +167,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
             child: SafeArea(
               child: ContentContainer(
                 scrollable: false,
+                maxWidth: LayoutTokens.maxContentWidth,
                 child: widget.navigationShell,
               ),
             ),
@@ -174,7 +182,8 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     if (index == null) {
       return;
     }
-    final isMobile = _getScreenSize(MediaQuery.sizeOf(context).width) == ScreenSize.mobile;
+    final isMobile =
+        _getScreenSize(MediaQuery.sizeOf(context).width) == ScreenSize.mobile;
     widget.navigationShell.goBranch(index, initialLocation: false);
     if (isMobile) {
       scaffoldKey.currentState?.closeDrawer();
@@ -195,7 +204,9 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
         _expandedIds.remove(id);
       }
     });
-    context.read<AppStorage>().write(Constant.KEY_SIDEBAR_EXPANDED, _expandedIds.toList());
+    context
+        .read<AppStorage>()
+        .write(Constant.KEY_SIDEBAR_EXPANDED, _expandedIds.toList());
   }
 
   ScreenSize _getScreenSize(double width) {

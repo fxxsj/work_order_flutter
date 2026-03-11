@@ -9,6 +9,7 @@ class DepartmentDto {
     this.parentId,
     this.parentName,
     this.childrenCount,
+    this.children = const [],
     this.processNames = const [],
     this.sortOrder,
     this.isActive = true,
@@ -23,6 +24,7 @@ class DepartmentDto {
   final int? parentId;
   final String? parentName;
   final int? childrenCount;
+  final List<DepartmentDto> children;
   final List<String> processNames;
   final int? sortOrder;
   final bool isActive;
@@ -60,6 +62,14 @@ class DepartmentDto {
       }
     }
 
+    final childrenRaw = json['children'];
+    final children = childrenRaw is List
+        ? childrenRaw
+            .whereType<Map>()
+            .map((item) => DepartmentDto.fromJson(Map<String, dynamic>.from(item)))
+            .toList()
+        : <DepartmentDto>[];
+
     return DepartmentDto(
       id: toInt(json['id']) ?? 0,
       code: json['code']?.toString() ?? '',
@@ -67,6 +77,7 @@ class DepartmentDto {
       parentId: parentId,
       parentName: parentName,
       childrenCount: toInt(json['children_count']),
+      children: children,
       processNames: processNames,
       sortOrder: toInt(json['sort_order']),
       isActive: json['is_active'] == null ? true : json['is_active'] == true,
@@ -84,6 +95,7 @@ class DepartmentDto {
       parentId: entity.parentId,
       parentName: entity.parentName,
       childrenCount: entity.childrenCount,
+      children: entity.children.map((child) => DepartmentDto.fromEntity(child)).toList(),
       processNames: entity.processNames,
       sortOrder: entity.sortOrder,
       isActive: entity.isActive,
@@ -101,6 +113,7 @@ class DepartmentDto {
       parentId: parentId,
       parentName: parentName,
       childrenCount: childrenCount,
+      children: children.map((child) => child.toEntity()).toList(),
       processNames: processNames,
       sortOrder: sortOrder,
       isActive: isActive,

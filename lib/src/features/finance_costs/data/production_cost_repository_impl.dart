@@ -15,4 +15,19 @@ class ProductionCostRepositoryImpl implements ProductionCostRepository {
   }) {
     return _apiService.fetchCosts(page: page, pageSize: pageSize, search: search);
   }
+
+  @override
+  Future<Map<String, dynamic>> calculateMaterial(int id) {
+    return _apiService.calculateMaterial(id);
+  }
+
+  @override
+  Future<Map<String, dynamic>> calculateTotal(int id) {
+    return _apiService.calculateTotal(id);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getStats({Map<String, dynamic>? params}) {
+    return _apiService.fetchStats(params: params);
+  }
 }

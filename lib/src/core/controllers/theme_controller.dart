@@ -55,7 +55,7 @@ class ThemeController extends ChangeNotifier {
 
   void applyColor() {
     _seedColor = _tempColor;
-    _storage.write(Constant.KEY_THEME_COLOR, _seedColor.value);
+    _storage.write(Constant.KEY_THEME_COLOR, _seedColor.toARGB32());
     notifyListeners();
   }
 
@@ -83,7 +83,6 @@ class ThemeController extends ChangeNotifier {
       case ThemeMode.dark:
         return 'dark';
       case ThemeMode.system:
-      default:
         return 'system';
     }
   }

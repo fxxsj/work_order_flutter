@@ -7,7 +7,15 @@ abstract class TaskRepository {
     String? search,
     String? status,
     String? priority,
+    String? taskType,
     int? departmentId,
+    int? assignedOperatorId,
     int? processId,
+    String? workOrderNumber,
+    String? workContent,
+    String? departmentName,
+    String? operatorName,
+    bool? isDraft,
+    String? ordering,
   });
 }

@@ -6,4 +6,6 @@ abstract class PaymentRepository {
     int pageSize = 20,
     String? search,
   });
+
+  Future<Map<String, dynamic>> getSummary();
 }

@@ -15,4 +15,14 @@ class StatementRepositoryImpl implements StatementRepository {
   }) {
     return _apiService.fetchStatements(page: page, pageSize: pageSize, search: search);
   }
+
+  @override
+  Future<Map<String, dynamic>> confirm(int id, Map<String, dynamic> payload) {
+    return _apiService.confirm(id, payload);
+  }
+
+  @override
+  Future<Map<String, dynamic>> generate({Map<String, dynamic>? params}) {
+    return _apiService.generate(params: params);
+  }
 }

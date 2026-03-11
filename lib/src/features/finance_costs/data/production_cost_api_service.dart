@@ -43,4 +43,26 @@ class ProductionCostApiService {
     }
     return const ProductionCostPageDto(items: [], total: 0, page: 1, pageSize: 20);
   }
+
+  Future<Map<String, dynamic>> calculateMaterial(int id) async {
+    final response = await _client.post('/production-costs/$id/calculate_material/');
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> calculateTotal(int id) async {
+    final response = await _client.post('/production-costs/$id/calculate_total/');
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> fetchStats({Map<String, dynamic>? params}) async {
+    final response = await _client.get('/production-costs/stats/', queryParameters: params);
+    return _mapFromResponse(response.data);
+  }
+
+  Map<String, dynamic> _mapFromResponse(dynamic data) {
+    if (data is Map<String, dynamic>) {
+      return Map<String, dynamic>.from(data);
+    }
+    return {};
+  }
 }

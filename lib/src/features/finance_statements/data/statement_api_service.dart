@@ -43,4 +43,21 @@ class StatementApiService {
     }
     return const StatementPageDto(items: [], total: 0, page: 1, pageSize: 20);
   }
+
+  Future<Map<String, dynamic>> confirm(int id, Map<String, dynamic> payload) async {
+    final response = await _client.post('/statements/$id/confirm/', data: payload);
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> generate({Map<String, dynamic>? params}) async {
+    final response = await _client.get('/statements/generate/', queryParameters: params);
+    return _mapFromResponse(response.data);
+  }
+
+  Map<String, dynamic> _mapFromResponse(dynamic data) {
+    if (data is Map<String, dynamic>) {
+      return Map<String, dynamic>.from(data);
+    }
+    return {};
+  }
 }

@@ -14,8 +14,16 @@ class TaskRepositoryImpl implements TaskRepository {
     String? search,
     String? status,
     String? priority,
+    String? taskType,
     int? departmentId,
+    int? assignedOperatorId,
     int? processId,
+    String? workOrderNumber,
+    String? workContent,
+    String? departmentName,
+    String? operatorName,
+    bool? isDraft,
+    String? ordering,
   }) {
     return _apiService.fetchTasks(
       page: page,
@@ -23,8 +31,16 @@ class TaskRepositoryImpl implements TaskRepository {
       search: search,
       status: status,
       priority: priority,
+      taskType: taskType,
       departmentId: departmentId,
+      assignedOperatorId: assignedOperatorId,
       processId: processId,
+      workOrderNumber: workOrderNumber,
+      workContent: workContent,
+      departmentName: departmentName,
+      operatorName: operatorName,
+      isDraft: isDraft,
+      ordering: ordering,
     );
   }
 }

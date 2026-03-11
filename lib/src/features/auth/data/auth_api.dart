@@ -13,6 +13,13 @@ class AuthApi {
     return ApiResult(data: map, message: response.message);
   }
 
+  Future<ApiResult<Map<String, dynamic>>> register(Map<String, dynamic> data) async {
+    final response = await _client.post('/auth/register/', data: data);
+    final payload = response.data;
+    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    return ApiResult(data: map, message: response.message);
+  }
+
   Future<ApiResult<void>> logout() async {
     final response = await _client.post('/auth/logout/');
     return ApiResult(message: response.message);
@@ -50,5 +57,31 @@ class AuthApi {
       );
     }
     return ApiResult(data: const [], message: response.message);
+  }
+
+  Future<ApiResult<List<Map<String, dynamic>>>> getUsersByDepartment({int? departmentId}) async {
+    final params = <String, dynamic>{};
+    if (departmentId != null) {
+      params['department_id'] = departmentId;
+    }
+    final response = await _client.get(
+      '/auth/users/',
+      queryParameters: params.isEmpty ? null : params,
+    );
+    final payload = response.data;
+    if (payload is List) {
+      return ApiResult(
+        data: payload
+            .whereType<Map>()
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList(),
+        message: response.message,
+      );
+    }
+    return ApiResult(data: const [], message: response.message);
+  }
+
+  Future<ApiResult<List<Map<String, dynamic>>>> getUserList({int? departmentId}) {
+    return getUsersByDepartment(departmentId: departmentId);
   }
 }

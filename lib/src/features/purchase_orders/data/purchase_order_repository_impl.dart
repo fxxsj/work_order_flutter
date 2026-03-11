@@ -12,7 +12,59 @@ class PurchaseOrderRepositoryImpl implements PurchaseOrderRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? status,
   }) {
-    return _apiService.fetchPurchaseOrders(page: page, pageSize: pageSize, search: search);
+    return _apiService.fetchPurchaseOrders(
+      page: page,
+      pageSize: pageSize,
+      search: search,
+      status: status,
+    );
   }
+
+  @override
+  Future<Map<String, dynamic>> submit(int id) {
+    return _apiService.submit(id);
+  }
+
+  @override
+  Future<Map<String, dynamic>> approve(int id) {
+    return _apiService.approve(id);
+  }
+
+  @override
+  Future<Map<String, dynamic>> reject(int id, Map<String, dynamic> payload) {
+    return _apiService.reject(id, payload);
+  }
+
+  @override
+  Future<Map<String, dynamic>> placeOrder(int id, Map<String, dynamic> payload) {
+    return _apiService.placeOrder(id, payload);
+  }
+
+  @override
+  Future<Map<String, dynamic>> receive(int id, Map<String, dynamic> payload) {
+    return _apiService.receive(id, payload);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getReceiveRecords(int id) {
+    return _apiService.getReceiveRecords(id);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getPendingInspections(int id) {
+    return _apiService.getPendingInspections(id);
+  }
+
+  @override
+  Future<Map<String, dynamic>> cancel(int id) {
+    return _apiService.cancel(id);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getLowStockMaterials() {
+    return _apiService.getLowStockMaterials();
+  }
+
 }

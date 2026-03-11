@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
+import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 
@@ -16,31 +15,25 @@ class TaskPlaceholderPage extends StatelessWidget {
 
   static const double _spacing = 12;
   static const double _sectionSpacing = 16;
-  static const String _breadcrumbSeparator = ' / ';
+  static const String _summaryHintText = '当前页面正在完善。';
 
   @override
   Widget build(BuildContext context) {
-    final breadcrumb = [...buildBreadcrumbForPathWith(
-      GoRouterState.of(context).uri.path,
-      buildPathToIdMap(),
-    ), title];
-
     return ListPageScaffold(
       spacing: _spacing,
-      header: PageHeaderBar(
-        breadcrumb: breadcrumb.join(_breadcrumbSeparator),
-        useSurface: false,
-        showDivider: false,
-        padding: EdgeInsets.zero,
-        actions: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            PageActionButton.outlined(
-              onPressed: () => context.pop(),
-              icon: const Icon(Icons.arrow_back, size: 16),
-              label: '返回',
-            ),
-          ],
+      header: WorkbenchHeaderBar(
+        breadcrumb: null,
+        title: title,
+        subtitle: _summaryHintText,
+        titleMaxWidth: 420,
+        stats: const [
+          WorkbenchStatItem(label: '状态', value: '建设中'),
+        ],
+        hideBreadcrumbOnMobile: true,
+        actions: PageActionButton.outlined(
+          onPressed: () => Navigator.of(context).maybePop(),
+          icon: const Icon(Icons.arrow_back, size: 16),
+          label: '返回',
         ),
       ),
       body: ListView(
@@ -48,8 +41,8 @@ class TaskPlaceholderPage extends StatelessWidget {
           _SectionCard(title: title, subtitle: description),
           const SizedBox(height: _sectionSpacing),
           const _SectionCard(
-            title: '建设计划',
-            subtitle: '该模块将按照 Web 端页面结构逐步补齐筛选、表格、操作与统计组件。',
+            title: '说明',
+            subtitle: '入口已接入统一布局，业务能力会继续补齐。',
           ),
         ],
       ),
@@ -66,19 +59,32 @@ class _SectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>()!;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.6)),
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: colors.borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: theme.textTheme.titleMedium),
+          Text(
+            title,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: colors.sidebarText,
+            ),
+          ),
           const SizedBox(height: 8),
-          Text(subtitle, style: theme.textTheme.bodyMedium),
+          Text(
+            subtitle,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colors.subtleText,
+              height: 1.5,
+            ),
+          ),
         ],
       ),
     );

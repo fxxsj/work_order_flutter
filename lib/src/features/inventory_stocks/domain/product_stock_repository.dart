@@ -6,4 +6,14 @@ abstract class ProductStockRepository {
     int pageSize = 20,
     String? search,
   });
+
+  Future<Map<String, dynamic>> getLowStock({Map<String, dynamic>? params});
+
+  Future<Map<String, dynamic>> getExpired({Map<String, dynamic>? params});
+
+  Future<Map<String, dynamic>> getExpiringSoon({Map<String, dynamic>? params});
+
+  Future<Map<String, dynamic>> getSummary();
+
+  Future<Map<String, dynamic>> adjustStock(int id, Map<String, dynamic> payload);
 }

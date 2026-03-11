@@ -3,10 +3,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/dies/application/die_view_model.dart';
@@ -89,12 +95,9 @@ class _DieListViewState extends State<_DieListView> {
   static const _searchDebounceDuration = Duration(milliseconds: 450);
   static const double _searchWidth = 300;
   static const double _spacingSm = 8;
-  static const double _controlHeight = PageActionStyle.height;
-  static const double _controlRadius = PageActionStyle.radius;
   static const String _emptyCellText = '-';
 
   static const String _searchHintText = '搜索刀模编码、名称、尺寸、材质';
-  static const String _clearText = '清空';
   static const String _refreshButtonText = '刷新';
   static const String _createButtonText = '新建刀模';
   static const String _emptyText = '暂无刀模数据';
@@ -108,27 +111,12 @@ class _DieListViewState extends State<_DieListView> {
   static const String _deleteFailedText = '删除失败: ';
   static const String _createSuccessText = '创建成功';
   static const String _updateSuccessText = '更新成功';
-  static const String _densityComfortLabel = '舒适';
-  static const String _densityCompactLabel = '紧凑';
   static const String _breadcrumbSeparator = ' / ';
+  static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
+  static const String _pageSizeLabel = '每页 {size}';
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
-  bool _denseTable = false;
-  final GlobalKey _columnsMenuKey = GlobalKey();
-  final Set<_DieColumn> _visibleColumns = {
-    _DieColumn.code,
-    _DieColumn.name,
-    _DieColumn.type,
-    _DieColumn.size,
-    _DieColumn.material,
-    _DieColumn.thickness,
-    _DieColumn.confirmed,
-    _DieColumn.products,
-    _DieColumn.notes,
-    _DieColumn.createdAt,
-    _DieColumn.actions,
-  };
 
   @override
   void dispose() {
@@ -150,40 +138,11 @@ class _DieListViewState extends State<_DieListView> {
     });
   }
 
-  void _openColumnsMenu(BuildContext context) {
-    final menuContext = _columnsMenuKey.currentContext;
-    final renderBox = menuContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
-    final overlay = Overlay.of(menuContext!, rootOverlay: true).context.findRenderObject() as RenderBox;
-    final position = RelativeRect.fromRect(
-      Rect.fromPoints(
-        renderBox.localToGlobal(Offset.zero, ancestor: overlay),
-        renderBox.localToGlobal(renderBox.size.bottomRight(Offset.zero), ancestor: overlay),
-      ),
-      Offset.zero & overlay.size,
-    );
-
-    showMenu<_DieColumn>(
-      context: menuContext,
-      position: position,
-      items: _DieColumn.optionalValues.map((value) {
-        final checked = _visibleColumns.contains(value);
-        return CheckedPopupMenuItem<_DieColumn>(
-          value: value,
-          checked: checked,
-          child: Text(value.label),
-          onTap: () {
-            setState(() {
-              if (checked && _visibleColumns.length > 2) {
-                _visibleColumns.remove(value);
-              } else {
-                _visibleColumns.add(value);
-              }
-            });
-          },
-        );
-      }).toList(),
-    );
+  static String _pageInfoText(DieViewModel viewModel) {
+    return _pageInfoTemplate
+        .replaceFirst('{page}', viewModel.page.toString())
+        .replaceFirst('{total}', viewModel.totalPages.toString())
+        .replaceFirst('{count}', viewModel.total.toString());
   }
 
   Future<void> _openEditPage(BuildContext context, DieViewModel viewModel, Die? die) async {
@@ -259,7 +218,21 @@ class _DieListViewState extends State<_DieListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, breadcrumb, isMobile),
           body: _buildListBody(context, viewModel, dies, isMobile),
-          footer: viewModel.total > 0 ? _PaginationBar(viewModel: viewModel) : null,
+          footer: viewModel.total > 0
+              ? ResponsivePaginationBar(
+                  infoText: _pageInfoText(viewModel),
+                  page: viewModel.page,
+                  pageSize: viewModel.pageSize,
+                  pageSizeOptions: viewModel.pageSizeOptions,
+                  onPageSizeChanged: viewModel.setPageSize,
+                  onPrev: () => viewModel.setPage(viewModel.page - 1),
+                  onNext: () => viewModel.setPage(viewModel.page + 1),
+                  hasPrev: viewModel.hasPrev,
+                  hasNext: viewModel.hasNext,
+                  pageSizeLabelBuilder: (size) =>
+                      _pageSizeLabel.replaceFirst('{size}', size.toString()),
+                )
+              : null,
         );
       },
     );
@@ -271,56 +244,31 @@ class _DieListViewState extends State<_DieListView> {
     List<Die> dies,
     bool isMobile,
   ) {
+    final sectionSpacing = LayoutTokens.sectionSpacing(context);
     if (viewModel.loading && dies.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
     if (viewModel.errorMessage != null && !viewModel.loading) {
-      return _ErrorState(
+      return ErrorStateCard(
         message: viewModel.errorMessage ?? _errorFallbackText,
+        retryLabel: _retryText,
         onRetry: () => viewModel.loadDies(resetPage: true),
       );
     }
     if (!viewModel.loading && dies.isEmpty) {
-      return const _EmptyState();
-    }
-
-    if (isMobile) {
-      return ListView.builder(
-        itemCount: dies.length,
-        itemBuilder: (context, index) {
-          final die = dies[index];
-          return _DieListTile(
-            die: die,
-            onEdit: () => _openEditPage(context, viewModel, die),
-            onDelete: () => _confirmDelete(context, viewModel, die),
-          );
-        },
+      return const EmptyStateCard(
+        icon: Icons.cut_outlined,
+        text: _emptyText,
       );
     }
 
-    return SingleChildScrollView(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final columns = _buildColumns();
-          final rows = _buildRows(context, viewModel, dies);
-
-          return SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minWidth: constraints.maxWidth),
-              child: DataTable(
-                columnSpacing: _denseTable ? 16 : 24,
-                horizontalMargin: _denseTable ? 12 : 16,
-                headingRowHeight: _denseTable ? 38 : 44,
-                dataRowMinHeight: _denseTable ? 34 : 40,
-                dataRowMaxHeight: _denseTable ? 44 : 52,
-                columns: columns,
-                rows: rows,
-              ),
-            ),
-          );
-        },
-      ),
+    return ListView.separated(
+      itemCount: dies.length,
+      separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
+      itemBuilder: (context, index) {
+        final die = dies[index];
+        return _buildSummaryCard(context, viewModel, die, isMobile);
+      },
     );
   }
 
@@ -337,212 +285,41 @@ class _DieListViewState extends State<_DieListView> {
       padding: EdgeInsets.zero,
       actions: LayoutBuilder(
         builder: (context, constraints) {
-          final searchField = SizedBox(
+          final searchField = ListSearchField(
+            controller: _searchController,
+            hintText: _searchHintText,
+            height: PageActionStyle.height,
             width: isMobile ? constraints.maxWidth : _searchWidth,
-            child: SizedBox(
-              height: PageActionStyle.height,
-              child: ValueListenableBuilder<TextEditingValue>(
-                valueListenable: _searchController,
-                builder: (context, value, _) {
-                  return TextField(
-                    controller: _searchController,
-                    textAlignVertical: TextAlignVertical.center,
-                    onChanged: (_) => _scheduleSearch(viewModel),
-                    onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
-                    decoration: InputDecoration(
-                      constraints: const BoxConstraints.tightFor(height: PageActionStyle.height),
-                      hintText: _searchHintText,
-                      prefixIcon: const Icon(Icons.search, size: 18),
-                      suffixIcon: value.text.isEmpty
-                          ? null
-                          : IconButton(
-                              tooltip: _clearText,
-                              icon: const Icon(Icons.close, size: 18),
-                              onPressed: () {
-                                _searchController.clear();
-                                _scheduleSearch(viewModel, immediate: true);
-                              },
-                            ),
-                      border: const OutlineInputBorder(),
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                    ),
-                  );
-                },
-              ),
-            ),
+            onChanged: (_) => _scheduleSearch(viewModel),
+            onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
+            onClear: () {
+              _searchController.clear();
+              _scheduleSearch(viewModel, immediate: true);
+            },
           );
 
-          if (isMobile) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                searchField,
-                const SizedBox(height: _spacingSm),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    PageActionButton.outlined(
-                      onPressed: () => viewModel.loadDies(resetPage: true),
-                      icon: const Icon(Icons.refresh, size: 16),
-                      label: _refreshButtonText,
-                    ),
-                    const SizedBox(width: _spacingSm),
-                    PageActionButton.filled(
-                      onPressed: () => _openEditPage(context, viewModel, null),
-                      icon: const Icon(Icons.add),
-                      label: _createButtonText,
-                    ),
-                  ],
-                ),
-              ],
-            );
-          }
+          final actions = <Widget>[
+            PageActionButton.outlined(
+              onPressed: () => viewModel.loadDies(resetPage: true),
+              icon: const Icon(Icons.refresh, size: 16),
+              label: _refreshButtonText,
+            ),
+            PageActionButton.filled(
+              onPressed: () => _openEditPage(context, viewModel, null),
+              icon: const Icon(Icons.add),
+              label: _createButtonText,
+            ),
+          ];
 
-          return Wrap(
+          return ListToolbar(
+            isMobile: isMobile,
+            searchField: searchField,
+            actions: actions,
             spacing: _spacingSm,
-            runSpacing: 6,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              searchField,
-              PageActionButton.outlined(
-                onPressed: () => viewModel.loadDies(resetPage: true),
-                icon: const Icon(Icons.refresh, size: 16),
-                label: _refreshButtonText,
-              ),
-              PageActionButton.outlined(
-                key: _columnsMenuKey,
-                onPressed: () => _openColumnsMenu(context),
-                icon: const Icon(Icons.view_column_outlined, size: 18),
-                square: true,
-              ),
-              ToggleButtons(
-                isSelected: [_denseTable == false, _denseTable == true],
-                onPressed: (index) {
-                  setState(() {
-                    _denseTable = index == 1;
-                  });
-                },
-                borderRadius: BorderRadius.circular(_controlRadius),
-                constraints: const BoxConstraints(minHeight: _controlHeight, minWidth: 52),
-                children: const [
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(_densityComfortLabel),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(_densityCompactLabel),
-                  ),
-                ],
-              ),
-              PageActionButton.filled(
-                onPressed: () => _openEditPage(context, viewModel, null),
-                icon: const Icon(Icons.add),
-                label: _createButtonText,
-              ),
-            ],
           );
         },
       ),
     );
-  }
-
-  List<DataColumn> _buildColumns() {
-    final columns = <DataColumn>[];
-    if (_visibleColumns.contains(_DieColumn.code)) {
-      columns.add(const DataColumn(label: Text('刀模编码')));
-    }
-    if (_visibleColumns.contains(_DieColumn.name)) {
-      columns.add(const DataColumn(label: Text('刀模名称')));
-    }
-    if (_visibleColumns.contains(_DieColumn.type)) {
-      columns.add(const DataColumn(label: Text('刀模类型')));
-    }
-    if (_visibleColumns.contains(_DieColumn.size)) {
-      columns.add(const DataColumn(label: Text('尺寸')));
-    }
-    if (_visibleColumns.contains(_DieColumn.material)) {
-      columns.add(const DataColumn(label: Text('材质')));
-    }
-    if (_visibleColumns.contains(_DieColumn.thickness)) {
-      columns.add(const DataColumn(label: Text('厚度')));
-    }
-    if (_visibleColumns.contains(_DieColumn.confirmed)) {
-      columns.add(const DataColumn(label: Text('确认状态')));
-    }
-    if (_visibleColumns.contains(_DieColumn.products)) {
-      columns.add(const DataColumn(label: Text('包含产品')));
-    }
-    if (_visibleColumns.contains(_DieColumn.notes)) {
-      columns.add(const DataColumn(label: Text('备注')));
-    }
-    if (_visibleColumns.contains(_DieColumn.createdAt)) {
-      columns.add(const DataColumn(label: Text('创建时间')));
-    }
-    if (_visibleColumns.contains(_DieColumn.actions)) {
-      columns.add(const DataColumn(label: Text('操作')));
-    }
-    return columns;
-  }
-
-  List<DataRow> _buildRows(BuildContext context, DieViewModel viewModel, List<Die> dies) {
-    final theme = Theme.of(context);
-    return dies.map((die) {
-      final cells = <DataCell>[];
-      if (_visibleColumns.contains(_DieColumn.code)) {
-        cells.add(DataCell(Text(_displayText(die.code))));
-      }
-      if (_visibleColumns.contains(_DieColumn.name)) {
-        cells.add(DataCell(Text(_displayText(die.name))));
-      }
-      if (_visibleColumns.contains(_DieColumn.type)) {
-        cells.add(DataCell(Text(_displayText(die.dieTypeDisplay ?? _dieTypeLabel(die.dieType)))));
-      }
-      if (_visibleColumns.contains(_DieColumn.size)) {
-        cells.add(DataCell(Text(_displayText(die.size))));
-      }
-      if (_visibleColumns.contains(_DieColumn.material)) {
-        cells.add(DataCell(Text(_displayText(die.material))));
-      }
-      if (_visibleColumns.contains(_DieColumn.thickness)) {
-        cells.add(DataCell(Text(_displayText(die.thickness))));
-      }
-      if (_visibleColumns.contains(_DieColumn.confirmed)) {
-        cells.add(DataCell(_statusPill(theme, die.confirmed)));
-      }
-      if (_visibleColumns.contains(_DieColumn.products)) {
-        cells.add(DataCell(_productCell(die.products)));
-      }
-      if (_visibleColumns.contains(_DieColumn.notes)) {
-        cells.add(DataCell(Text(_displayText(die.notes))));
-      }
-      if (_visibleColumns.contains(_DieColumn.createdAt)) {
-        cells.add(DataCell(Text(_formatDateTime(die.createdAt))));
-      }
-      if (_visibleColumns.contains(_DieColumn.actions)) {
-        cells.add(
-          DataCell(
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  tooltip: '编辑',
-                  icon: Icon(Icons.edit, color: theme.colorScheme.primary),
-                  onPressed: () => _openEditPage(context, viewModel, die),
-                ),
-                IconButton(
-                  tooltip: '删除',
-                  icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
-                  onPressed: () => _confirmDelete(context, viewModel, die),
-                ),
-              ],
-            ),
-          ),
-        );
-      }
-      return DataRow(cells: cells);
-    }).toList();
   }
 
   static String _displayText(String? value) {
@@ -563,39 +340,6 @@ class _DieListViewState extends State<_DieListView> {
     }
   }
 
-  static Widget _statusPill(ThemeData theme, bool isActive) {
-    final background = isActive
-        ? theme.colorScheme.primary.withOpacity(0.12)
-        : theme.colorScheme.outline.withOpacity(0.2);
-    final foreground = isActive ? theme.colorScheme.primary : theme.colorScheme.outline;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        isActive ? '已确认' : '待确认',
-        style: theme.textTheme.bodySmall?.copyWith(color: foreground),
-      ),
-    );
-  }
-
-  static Widget _productCell(List<DieProduct> products) {
-    if (products.isEmpty) {
-      return const Text(_emptyCellText);
-    }
-    final display = products.map((item) => '${item.productName}(${item.quantity ?? 1}拼)').toList();
-    return SizedBox(
-      width: 220,
-      child: Text(
-        display.join('、'),
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-      ),
-    );
-  }
-
   static String _formatDateTime(DateTime? value) {
     if (value == null) return _emptyCellText;
     final local = value.toLocal();
@@ -606,259 +350,124 @@ class _DieListViewState extends State<_DieListView> {
     final minute = local.minute.toString().padLeft(2, '0');
     return '$year-$month-$day $hour:$minute';
   }
-}
-
-enum _DieColumn {
-  code,
-  name,
-  type,
-  size,
-  material,
-  thickness,
-  confirmed,
-  products,
-  notes,
-  createdAt,
-  actions;
-
-  static const List<_DieColumn> optionalValues = [
-    _DieColumn.type,
-    _DieColumn.size,
-    _DieColumn.material,
-    _DieColumn.thickness,
-    _DieColumn.confirmed,
-    _DieColumn.products,
-    _DieColumn.notes,
-    _DieColumn.createdAt,
-  ];
-
-  String get label {
-    switch (this) {
-      case _DieColumn.code:
-        return '刀模编码';
-      case _DieColumn.name:
-        return '刀模名称';
-      case _DieColumn.type:
-        return '刀模类型';
-      case _DieColumn.size:
-        return '尺寸';
-      case _DieColumn.material:
-        return '材质';
-      case _DieColumn.thickness:
-        return '厚度';
-      case _DieColumn.confirmed:
-        return '确认状态';
-      case _DieColumn.products:
-        return '包含产品';
-      case _DieColumn.notes:
-        return '备注';
-      case _DieColumn.createdAt:
-        return '创建时间';
-      case _DieColumn.actions:
-        return '操作';
-    }
+  static String _productSummary(List<DieProduct> products) {
+    if (products.isEmpty) return _emptyCellText;
+    final display = products
+        .map((item) => '${item.productName}(${item.quantity ?? 1}拼)')
+        .toList();
+    return display.join('、');
   }
-}
 
-class _PaginationBar extends StatelessWidget {
-  const _PaginationBar({required this.viewModel});
-
-  static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
-  static const String _pageSizeLabel = '每页 {size}';
-
-  final DieViewModel viewModel;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildSummaryCard(
+    BuildContext context,
+    DieViewModel viewModel,
+    Die die,
+    bool isMobile,
+  ) {
     final theme = Theme.of(context);
-    final info = _pageInfoTemplate
-        .replaceFirst('{page}', viewModel.page.toString())
-        .replaceFirst('{total}', viewModel.totalPages.toString())
-        .replaceFirst('{count}', viewModel.total.toString());
+    final colors = theme.extension<AppColors>();
+    final sectionSpacing = LayoutTokens.sectionSpacing(context);
+    final code = _displayText(die.code);
+    final name = _displayText(die.name);
+    final type = _displayText(die.dieTypeDisplay ?? _dieTypeLabel(die.dieType));
+    final size = _displayText(die.size);
+    final material = _displayText(die.material);
+    final thickness = _displayText(die.thickness);
+    final confirmed = die.confirmed ? '已确认' : '待确认';
+    final products = _productSummary(die.products);
+    final notes = _displayText(die.notes);
+    final createdAt = _formatDateTime(die.createdAt);
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Text(info, style: theme.textTheme.bodySmall),
-        const SizedBox(width: 12),
-        DropdownButton<int>(
-          value: viewModel.pageSize,
-          items: viewModel.pageSizeOptions
-              .map(
-                (size) => DropdownMenuItem<int>(
-                  value: size,
-                  child: Text(_pageSizeLabel.replaceFirst('{size}', size.toString())),
-                ),
-              )
-              .toList(),
-          onChanged: (value) {
-            if (value == null) return;
-            viewModel.setPageSize(value);
-          },
-        ),
-        const SizedBox(width: 4),
-        IconButton(
-          onPressed: viewModel.hasPrev ? () => viewModel.setPage(viewModel.page - 1) : null,
-          icon: const Icon(Icons.chevron_left),
-        ),
-        Text('${viewModel.page}', style: theme.textTheme.bodyMedium),
-        IconButton(
-          onPressed: viewModel.hasNext ? () => viewModel.setPage(viewModel.page + 1) : null,
-          icon: const Icon(Icons.chevron_right),
-        ),
-      ],
-    );
-  }
-}
-
-class _DieListTile extends StatelessWidget {
-  const _DieListTile({
-    required this.die,
-    this.onEdit,
-    this.onDelete,
-  });
-
-  static const double _verticalMargin = 8;
-  static const String _codeLabel = '编码';
-  static const String _typeLabel = '类型';
-  static const String _statusLabel = '状态';
-  static const String _subtitleSeparator = ' · ';
-  static const String _emptySubtitle = '暂无更多信息';
-
-  final Die die;
-  final VoidCallback? onEdit;
-  final VoidCallback? onDelete;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final primary = theme.colorScheme.primary;
-    final subtleText = theme.textTheme.bodySmall?.copyWith(color: theme.hintColor);
-    final subtitleLines = <String>[];
-    if ((die.code ?? '').trim().isNotEmpty) {
-      subtitleLines.add('$_codeLabel：${die.code}');
-    }
-    subtitleLines.add(
-      '$_typeLabel：${die.dieTypeDisplay ?? _DieListViewState._dieTypeLabel(die.dieType)}',
-    );
-    subtitleLines.add('$_statusLabel：${die.confirmed ? "已确认" : "待确认"}');
-
-    final tile = ListTile(
-      leading: CircleAvatar(
-        backgroundColor: primary.withOpacity(0.12),
-        foregroundColor: primary,
-        child: Text(die.name.isNotEmpty ? die.name[0].toUpperCase() : '?'),
-      ),
-      title: Text(
-        die.name.isNotEmpty ? die.name : _DieListViewState._emptyCellText,
-        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-      ),
-      subtitle: subtitleLines.isEmpty
-          ? Text(_emptySubtitle, style: subtleText)
-          : Text(subtitleLines.join(_subtitleSeparator), style: subtleText),
-      isThreeLine: subtitleLines.length > 2,
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
+    return ExpandableSummaryCard(
+      headerBuilder: (context, expanded) {
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: colors?.sidebarText,
+                    ),
+                  ),
+                  SizedBox(height: sectionSpacing),
+                  Text(
+                    '$code · $type',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colors?.subtleText ?? theme.hintColor,
+                    ),
+                  ),
+                  SizedBox(height: sectionSpacing),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _SummaryChip(label: '状态', value: confirmed),
+                      _SummaryChip(label: '尺寸', value: size),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(width: sectionSpacing),
+            AnimatedRotation(
+              turns: expanded ? 0.5 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              child: Icon(
+                Icons.expand_more,
+                size: 20,
+                color: colors?.subtleText ?? theme.hintColor,
+              ),
+            ),
+          ],
+        );
+      },
+      expandedChild: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          IconButton(
-            tooltip: '编辑',
-            icon: Icon(Icons.edit, color: primary),
-            onPressed: onEdit,
+          SummaryFieldWrap(
+            isMobile: isMobile,
+            children: [
+              _SummaryField(label: '编码', value: code),
+              _SummaryField(label: '类型', value: type),
+              _SummaryField(label: '尺寸', value: size),
+              _SummaryField(label: '材质', value: material),
+              _SummaryField(label: '厚度', value: thickness),
+              _SummaryField(label: '确认状态', value: confirmed),
+              _SummaryField(label: '包含产品', value: products),
+              _SummaryField(label: '备注', value: notes),
+              _SummaryField(label: '创建时间', value: createdAt),
+            ],
           ),
-          PopupMenuButton<String>(
-            tooltip: '更多',
-            onSelected: (value) {
-              switch (value) {
-                case 'delete':
-                  onDelete?.call();
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'delete',
-                child: Text('删除'),
+          SizedBox(height: sectionSpacing),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () => _openEditPage(context, viewModel, die),
+                icon: const Icon(Icons.edit, size: 16),
+                label: const Text('编辑'),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => _confirmDelete(context, viewModel, die),
+                icon: const Icon(Icons.delete_outline, size: 16),
+                label: const Text('删除'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: theme.colorScheme.error,
+                ),
               ),
             ],
-            icon: const Icon(Icons.more_horiz),
-          ),
-        ],
-      ),
-      onTap: onEdit,
-    );
-
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: _verticalMargin),
-      child: tile,
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
-  static const double _verticalPadding = 32;
-  static const double _borderRadius = 12;
-  static const double _iconSize = 36;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: _verticalPadding),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(_borderRadius),
-        color: theme.colorScheme.primary.withOpacity(0.05),
-        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.15)),
-      ),
-      child: Column(
-        children: [
-          Icon(Icons.cut_outlined, color: theme.colorScheme.primary, size: _iconSize),
-          const SizedBox(height: _DieListViewState._spacingSm),
-          Text(_DieListViewState._emptyText, style: theme.textTheme.bodyMedium),
-        ],
-      ),
-    );
-  }
-}
-
-class _ErrorState extends StatelessWidget {
-  const _ErrorState({required this.message, required this.onRetry});
-
-  static const double _verticalPadding = 32;
-  static const double _borderRadius = 12;
-  static const double _iconSize = 32;
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: _verticalPadding),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(_borderRadius),
-        color: theme.colorScheme.error.withOpacity(0.06),
-        border: Border.all(color: theme.colorScheme.error.withOpacity(0.2)),
-      ),
-      child: Column(
-        children: [
-          Icon(Icons.error_outline, color: theme.colorScheme.error, size: _iconSize),
-          const SizedBox(height: _DieListViewState._spacingSm),
-          Text(message, style: theme.textTheme.bodyMedium),
-          const SizedBox(height: _DieListViewState._spacingSm),
-          OutlinedButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh),
-            label: const Text(_DieListViewState._retryText),
           ),
         ],
       ),
     );
   }
 }
+
+typedef _SummaryField = SummaryField;
+typedef _SummaryChip = SummaryChip;
