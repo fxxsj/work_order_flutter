@@ -373,6 +373,7 @@ class _TaskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
+    final isCompleted = task.status == 'completed';
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -387,7 +388,11 @@ class _TaskCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: TaskListTile(task: task, onTap: onTap),
+                child: TaskListTile(
+                  task: task,
+                  onTap: onTap,
+                  showDivider: false,
+                ),
               ),
               if (trailing != null) trailing!,
             ],
@@ -398,14 +403,14 @@ class _TaskCard extends StatelessWidget {
             runSpacing: 8,
             children: [
               OutlinedButton.icon(
-                onPressed: onUpdate,
+                onPressed: isCompleted ? null : onUpdate,
                 icon: const Icon(Icons.edit, size: 16),
-                label: const Text('更新进度'),
+                label: Text(isCompleted ? '已完成' : '更新进度'),
               ),
               OutlinedButton.icon(
-                onPressed: onComplete,
+                onPressed: isCompleted ? null : onComplete,
                 icon: const Icon(Icons.check_circle_outline, size: 16),
-                label: const Text('完成任务'),
+                label: Text(isCompleted ? '已完成' : '完成任务'),
               ),
             ],
           ),

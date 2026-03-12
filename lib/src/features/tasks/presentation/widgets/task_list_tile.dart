@@ -9,10 +9,14 @@ class TaskListTile extends StatelessWidget {
     super.key,
     required this.task,
     this.onTap,
+    this.showDivider = true,
+    this.showAssignee = false,
   });
 
   final Task task;
   final VoidCallback? onTap;
+  final bool showDivider;
+  final bool showAssignee;
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +27,7 @@ class TaskListTile extends StatelessWidget {
         ? task.workContent!
         : '任务 #${task.id}';
     final progressText = _buildProgressText();
+    final deliveryDate = task.deliveryDate;
 
     return Material(
       color: Colors.transparent,
@@ -32,9 +37,11 @@ class TaskListTile extends StatelessWidget {
           padding: EdgeInsets.fromLTRB(16, isXs ? 12 : 14, 16, isXs ? 12 : 14),
           decoration: BoxDecoration(
             color: colors.surface,
-            border: Border(
-              bottom: BorderSide(color: colors.borderColor),
-            ),
+            border: showDivider
+                ? Border(
+                    bottom: BorderSide(color: colors.borderColor),
+                  )
+                : null,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,6 +88,12 @@ class TaskListTile extends StatelessWidget {
                     _MetaChip(label: '工序', value: task.processName!),
                   if (task.statusDisplay?.isNotEmpty == true)
                     _MetaChip(label: '状态', value: task.statusDisplay!),
+                  if (task.priorityDisplay?.isNotEmpty == true)
+                    _MetaChip(label: '优先级', value: task.priorityDisplay!),
+                  if (deliveryDate != null)
+                    _MetaChip(label: '交付', value: _formatDate(deliveryDate)),
+                  if (showAssignee && task.assignedOperatorName?.isNotEmpty == true)
+                    _MetaChip(label: '执行人', value: task.assignedOperatorName!),
                 ],
               ),
             ],
@@ -96,7 +109,14 @@ class TaskListTile extends StatelessWidget {
     }
     final total = task.productionQuantity ?? 0;
     final completed = task.quantityCompleted ?? 0;
+    if (total <= 0) return null;
     return '${completed.toStringAsFixed(0)}/${total.toStringAsFixed(0)}';
+  }
+
+  String _formatDate(DateTime date) {
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '${date.year}-$month-$day';
   }
 }
 

@@ -445,6 +445,7 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
         return TaskListTile(
           task: task,
           onTap: () => _openTaskDetail(context, task),
+          showDivider: false,
         );
       },
     );
@@ -684,6 +685,7 @@ class _BoardColumn extends StatelessWidget {
                   TaskListTile(
                     task: data.tasks[i],
                     onTap: () => onTapTask(data.tasks[i]),
+                    showDivider: false,
                   ),
                   if (i != data.tasks.length - 1)
                     const SizedBox(height: 8),

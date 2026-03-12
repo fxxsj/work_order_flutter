@@ -79,6 +79,7 @@ class _TaskSupervisorDashboardViewState extends State<_TaskSupervisorDashboardVi
   List<_OperatorOption> _operators = [];
   String _viewMode = 'dashboard';
   int? _assigningTaskId;
+  String _taskStatusFilter = 'all';
 
   @override
   void initState() {
@@ -271,23 +272,38 @@ class _TaskSupervisorDashboardViewState extends State<_TaskSupervisorDashboardVi
         text: '暂无部门任务',
       );
     }
-    return ListView.separated(
-      itemCount: _departmentTasks.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (context, index) {
-        final task = _departmentTasks[index];
-        return _SupervisorTaskCard(
-          task: task,
-          onTap: () {
-            if (task.workOrderId != null) {
-              context.go('/workorders/${task.workOrderId}');
-            } else {
-              ToastUtil.showError('该任务暂无施工单详情');
-            }
-          },
-          onAssign: () => _openAssignDialog(task),
-        );
-      },
+    final filteredTasks = _filterTasks(_departmentTasks);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildTaskStatusFilters(_departmentTasks),
+        const SizedBox(height: 12),
+        Expanded(
+          child: filteredTasks.isEmpty
+              ? const EmptyStateCard(
+                  icon: Icons.filter_alt_off_outlined,
+                  text: '暂无符合条件的任务',
+                )
+              : ListView.separated(
+                  itemCount: filteredTasks.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  itemBuilder: (context, index) {
+                    final task = filteredTasks[index];
+                    return _SupervisorTaskCard(
+                      task: task,
+                      onTap: () {
+                        if (task.workOrderId != null) {
+                          context.go('/workorders/${task.workOrderId}');
+                        } else {
+                          ToastUtil.showError('该任务暂无施工单详情');
+                        }
+                      },
+                      onAssign: () => _openAssignDialog(task),
+                    );
+                  },
+                ),
+        ),
+      ],
     );
   }
 
@@ -451,6 +467,59 @@ class _TaskSupervisorDashboardViewState extends State<_TaskSupervisorDashboardVi
     }
   }
 
+  Widget _buildTaskStatusFilters(List<Task> tasks) {
+    final counts = _buildStatusCounts(tasks);
+    final items = [
+      _StatusFilterItem(key: 'all', label: '全部', count: tasks.length),
+      _StatusFilterItem(key: 'pending', label: '待处理', count: counts['pending'] ?? 0),
+      _StatusFilterItem(key: 'in_progress', label: '进行中', count: counts['in_progress'] ?? 0),
+      _StatusFilterItem(key: 'completed', label: '已完成', count: counts['completed'] ?? 0),
+      if ((counts['other'] ?? 0) > 0)
+        _StatusFilterItem(key: 'other', label: '其他', count: counts['other'] ?? 0),
+    ];
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: items.map((item) {
+        final selected = _taskStatusFilter == item.key;
+        return ChoiceChip(
+          label: Text('${item.label} ${item.count}'),
+          selected: selected,
+          onSelected: (_) => setState(() => _taskStatusFilter = item.key),
+        );
+      }).toList(),
+    );
+  }
+
+  List<Task> _filterTasks(List<Task> tasks) {
+    if (_taskStatusFilter == 'all') return tasks;
+    if (_taskStatusFilter == 'other') {
+      return tasks
+          .where((task) => task.status != 'pending' && task.status != 'in_progress' && task.status != 'completed')
+          .toList();
+    }
+    return tasks.where((task) => task.status == _taskStatusFilter).toList();
+  }
+
+  Map<String, int> _buildStatusCounts(List<Task> tasks) {
+    final counts = <String, int>{
+      'pending': 0,
+      'in_progress': 0,
+      'completed': 0,
+      'other': 0,
+    };
+    for (final task in tasks) {
+      final status = task.status ?? '';
+      if (counts.containsKey(status)) {
+        counts[status] = (counts[status] ?? 0) + 1;
+      } else {
+        counts['other'] = (counts['other'] ?? 0) + 1;
+      }
+    }
+    return counts;
+  }
+
   int _toInt(dynamic value) {
     if (value is num) return value.toInt();
     return int.tryParse(value?.toString() ?? '') ?? 0;
@@ -482,6 +551,18 @@ class _OperatorOption {
     if (value is num) return value.toInt();
     return int.tryParse(value?.toString() ?? '') ?? 0;
   }
+}
+
+class _StatusFilterItem {
+  const _StatusFilterItem({
+    required this.key,
+    required this.label,
+    required this.count,
+  });
+
+  final String key;
+  final String label;
+  final int count;
 }
 
 class _PriorityChip extends StatelessWidget {
@@ -722,7 +803,11 @@ class _DraggableTaskCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
         border: Border.all(color: colors.borderColor),
       ),
-      child: TaskListTile(task: task, onTap: null),
+      child: TaskListTile(
+        task: task,
+        onTap: null,
+        showDivider: false,
+      ),
     );
 
     return LongPressDraggable<_TaskDragData>(
@@ -781,7 +866,12 @@ class _SupervisorTaskCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TaskListTile(task: task, onTap: onTap),
+          TaskListTile(
+            task: task,
+            onTap: onTap,
+            showDivider: false,
+            showAssignee: true,
+          ),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
