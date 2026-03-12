@@ -352,8 +352,8 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                 ? (maxWidth - 24) / 2
                 : 240.0;
         return Wrap(
-          spacing: 24,
-          runSpacing: 12,
+          spacing: LayoutTokens.gapLg,
+          runSpacing: LayoutTokens.gapMd,
           children: items
               .map(
                 (item) => SizedBox(
@@ -367,8 +367,282 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     );
   }
 
+  Widget _buildOverviewSection(
+    WorkOrderDetail detail, {
+    required List<DropdownMenuItem<String>> statusOptions,
+  }) {
+    final sectionSpacing = LayoutTokens.sectionSpacing(context);
+    final summary = _buildSection(
+      '施工单信息',
+      _buildSummaryContent(detail),
+    );
+    final actions = _buildSection(
+      '流程操作',
+      _buildActionPanel(detail, statusOptions: statusOptions),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < Breakpoints.lg;
+        if (isNarrow) {
+          return Column(
+            children: [
+              summary,
+              SizedBox(height: sectionSpacing),
+              actions,
+            ],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: summary),
+            SizedBox(width: sectionSpacing),
+            SizedBox(width: 300, child: actions),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildSummaryContent(WorkOrderDetail detail) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>();
+    final sectionSpacing = LayoutTokens.sectionSpacing(context);
+    final dividerColor = colors?.borderColor.withValues(alpha: 0.6);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildInfoGrid([
+          _InfoItem('客户', detail.customerName ?? _emptyText),
+          _InfoItem('业务员', detail.salespersonName ?? _emptyText),
+          _InfoItem('负责人', detail.managerName ?? _emptyText),
+          _InfoItem('创建人', detail.createdByName ?? _emptyText),
+          _InfoItem('审核人', detail.approvedByName ?? _emptyText),
+          _InfoItem('状态', detail.statusDisplay ?? detail.status ?? _emptyText),
+          _InfoItem(
+              '优先级', detail.priorityDisplay ?? detail.priority ?? _emptyText),
+          _InfoItem(
+              '审批状态',
+              detail.approvalStatusDisplay ??
+                  detail.approvalStatus ??
+                  _emptyText),
+          _InfoItem('审批说明', detail.approvalComment ?? _emptyText),
+          _InfoItem('下单日期', _formatDate(detail.orderDate)),
+          _InfoItem('交货日期', _formatDate(detail.deliveryDate)),
+          _InfoItem('实际交货', _formatDate(detail.actualDeliveryDate)),
+          _InfoItem(
+              '生产数量', detail.productionQuantity?.toString() ?? _emptyText),
+          _InfoItem(
+              '不良数量', detail.defectiveQuantity?.toString() ?? _emptyText),
+          _InfoItem(
+            '任务数',
+            detail.totalTaskCount == null
+                ? _emptyText
+                : detail.totalTaskCount!.toString(),
+          ),
+          _InfoItem(
+            '草稿任务',
+            detail.draftTaskCount == null
+                ? _emptyText
+                : detail.draftTaskCount!.toString(),
+          ),
+          _InfoItem(
+            '总金额',
+            detail.totalAmount == null
+                ? _emptyText
+                : detail.totalAmount!.toStringAsFixed(2),
+          ),
+          _InfoItem(
+            '进度',
+            detail.progressPercentage == null
+                ? _emptyText
+                : '${detail.progressPercentage}%',
+          ),
+          _InfoItem(
+              '印刷形式',
+              detail.printingTypeDisplay ??
+                  detail.printingType ??
+                  _emptyText),
+          _InfoItem('印刷色数', detail.printingColorsDisplay ?? _emptyText),
+        ]),
+        SizedBox(height: sectionSpacing),
+        Divider(height: sectionSpacing, color: dividerColor),
+        SizedBox(height: sectionSpacing),
+        _buildInfoGrid([
+          _InfoItem('备注', detail.notes ?? _emptyText),
+          _InfoItem(
+            'CMYK 颜色',
+            detail.printingCmykColors.isEmpty
+                ? _emptyText
+                : detail.printingCmykColors.join(', '),
+          ),
+          _InfoItem(
+            '其他颜色',
+            detail.printingOtherColors.isEmpty
+                ? _emptyText
+                : detail.printingOtherColors.join(', '),
+          ),
+        ]),
+        SizedBox(height: sectionSpacing),
+        _buildResourceGroup(
+          '图稿',
+          detail.artworkNames.isNotEmpty
+              ? detail.artworkNames
+              : detail.artworkCodes,
+        ),
+        SizedBox(height: sectionSpacing),
+        _buildResourceGroup(
+          '刀模',
+          detail.dieNames.isNotEmpty ? detail.dieNames : detail.dieCodes,
+        ),
+        SizedBox(height: sectionSpacing),
+        _buildResourceGroup(
+          '烫金版',
+          detail.foilingPlateNames.isNotEmpty
+              ? detail.foilingPlateNames
+              : detail.foilingPlateCodes,
+        ),
+        SizedBox(height: sectionSpacing),
+        _buildResourceGroup(
+          '压凸版',
+          detail.embossingPlateNames.isNotEmpty
+              ? detail.embossingPlateNames
+              : detail.embossingPlateCodes,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionPanel(
+    WorkOrderDetail detail, {
+    required List<DropdownMenuItem<String>> statusOptions,
+  }) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>();
+    final spacing = LayoutTokens.gapSm;
+    final dividerColor = colors?.borderColor.withValues(alpha: 0.6);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final useColumnButtons = constraints.maxWidth < 320;
+        final approvalActions = <Widget>[];
+
+        if (detail.approvalStatus == 'pending') {
+          if (useColumnButtons) {
+            approvalActions.addAll([
+              FilledButton(
+                onPressed: _actionLoading
+                    ? null
+                    : () => _showApproveDialog(approved: true),
+                child: const Text('审核通过'),
+              ),
+              SizedBox(height: spacing),
+              OutlinedButton(
+                onPressed: _actionLoading
+                    ? null
+                    : () => _showApproveDialog(approved: false),
+                child: const Text('审核拒绝'),
+              ),
+            ]);
+          } else {
+            approvalActions.add(
+              Row(
+                children: [
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: _actionLoading
+                          ? null
+                          : () => _showApproveDialog(approved: true),
+                      child: const Text('审核通过'),
+                    ),
+                  ),
+                  SizedBox(width: spacing),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _actionLoading
+                          ? null
+                          : () => _showApproveDialog(approved: false),
+                      child: const Text('审核拒绝'),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+        }
+        if (detail.approvalStatus == 'rejected') {
+          approvalActions.add(
+            FilledButton(
+              onPressed: _actionLoading ? null : _handleResubmit,
+              child: const Text('重新提交审核'),
+            ),
+          );
+        }
+        if (detail.approvalStatus == 'approved') {
+          approvalActions.add(
+            OutlinedButton(
+              onPressed: _actionLoading ? null : _showReapprovalDialog,
+              child: const Text('请求重新审核'),
+            ),
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            DropdownButtonFormField<String>(
+              initialValue: _statusSelection,
+              isExpanded: true,
+              decoration: const InputDecoration(labelText: '状态'),
+              items: statusOptions,
+              onChanged: _actionLoading
+                  ? null
+                  : (value) => setState(() => _statusSelection = value),
+            ),
+            SizedBox(height: spacing),
+            FilledButton(
+              onPressed: _actionLoading ? null : _handleUpdateStatus,
+              child: const Text('更新状态'),
+            ),
+            if (approvalActions.isNotEmpty) ...[
+              SizedBox(height: LayoutTokens.gapMd),
+              Divider(height: LayoutTokens.gapMd, color: dividerColor),
+              Text(
+                '审批操作',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: colors?.sidebarText,
+                ),
+              ),
+              SizedBox(height: spacing),
+              ...approvalActions,
+            ],
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildSection(String title, Widget child) {
     return DetailSectionCard(title: title, child: child);
+  }
+
+  Widget _buildResourceGroup(String title, List<String> items) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: theme.textTheme.titleSmall?.copyWith(
+            color: colors?.sidebarText,
+          ),
+        ),
+        const SizedBox(height: 6),
+        _buildChipGroup(items),
+      ],
+    );
   }
 
   Widget _buildChipGroup(List<String> items) {
@@ -595,7 +869,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
             PageActionButton.outlined(
               onPressed: _actionLoading ? null : _confirmDelete,
               icon: const Icon(Icons.delete_outline, size: 16),
-              label: '删除',
+              square: true,
             ),
           ],
         ),
@@ -629,216 +903,9 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                     )
                   : ListView(
                       children: [
-                        _buildSection(
-                          '操作',
-                          LayoutBuilder(
-                            builder: (context, constraints) {
-                              final statusWidth =
-                                  constraints.maxWidth < Breakpoints.sm
-                                      ? constraints.maxWidth
-                                      : 200.0;
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Wrap(
-                                    spacing: 12,
-                                    runSpacing: 8,
-                                    crossAxisAlignment:
-                                        WrapCrossAlignment.center,
-                                    children: [
-                                      SizedBox(
-                                        width: statusWidth,
-                                        child: DropdownButtonFormField<String>(
-                                          initialValue: _statusSelection,
-                                          isExpanded: true,
-                                          decoration: const InputDecoration(labelText: '状态'),
-                                          items: statusOptions,
-                                          onChanged: _actionLoading
-                                              ? null
-                                              : (value) => setState(() =>
-                                                  _statusSelection = value),
-                                        ),
-                                      ),
-                                      FilledButton(
-                                        onPressed: _actionLoading
-                                            ? null
-                                            : _handleUpdateStatus,
-                                        child: const Text('更新状态'),
-                                      ),
-                                      if (detail.approvalStatus ==
-                                          'pending') ...[
-                                        FilledButton(
-                                          onPressed: _actionLoading
-                                              ? null
-                                              : () => _showApproveDialog(
-                                                  approved: true),
-                                          child: const Text('审核通过'),
-                                        ),
-                                        OutlinedButton(
-                                          onPressed: _actionLoading
-                                              ? null
-                                              : () => _showApproveDialog(
-                                                  approved: false),
-                                          child: const Text('审核拒绝'),
-                                        ),
-                                      ],
-                                      if (detail.approvalStatus == 'rejected')
-                                        FilledButton(
-                                          onPressed: _actionLoading
-                                              ? null
-                                              : _handleResubmit,
-                                          child: const Text('重新提交审核'),
-                                        ),
-                                      if (detail.approvalStatus == 'approved')
-                                        OutlinedButton(
-                                          onPressed: _actionLoading
-                                              ? null
-                                              : _showReapprovalDialog,
-                                          child: const Text('请求重新审核'),
-                                        ),
-                                    ],
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                        ),
-                        SizedBox(height: sectionSpacing),
-                        _buildSection(
-                          title,
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildInfoGrid([
-                                _InfoItem(
-                                    '客户', detail.customerName ?? _emptyText),
-                                _InfoItem('业务员',
-                                    detail.salespersonName ?? _emptyText),
-                                _InfoItem(
-                                    '负责人', detail.managerName ?? _emptyText),
-                                _InfoItem(
-                                    '创建人', detail.createdByName ?? _emptyText),
-                                _InfoItem(
-                                    '审核人', detail.approvedByName ?? _emptyText),
-                                _InfoItem(
-                                    '状态',
-                                    detail.statusDisplay ??
-                                        detail.status ??
-                                        _emptyText),
-                                _InfoItem(
-                                    '优先级',
-                                    detail.priorityDisplay ??
-                                        detail.priority ??
-                                        _emptyText),
-                                _InfoItem(
-                                    '审批状态',
-                                    detail.approvalStatusDisplay ??
-                                        detail.approvalStatus ??
-                                        _emptyText),
-                                _InfoItem('审批说明',
-                                    detail.approvalComment ?? _emptyText),
-                                _InfoItem(
-                                    '下单日期', _formatDate(detail.orderDate)),
-                                _InfoItem(
-                                    '交货日期', _formatDate(detail.deliveryDate)),
-                                _InfoItem('实际交货',
-                                    _formatDate(detail.actualDeliveryDate)),
-                                _InfoItem(
-                                    '生产数量',
-                                    detail.productionQuantity?.toString() ??
-                                        _emptyText),
-                                _InfoItem(
-                                    '不良数量',
-                                    detail.defectiveQuantity?.toString() ??
-                                        _emptyText),
-                                _InfoItem(
-                                  '任务数',
-                                  detail.totalTaskCount == null
-                                      ? _emptyText
-                                      : detail.totalTaskCount!.toString(),
-                                ),
-                                _InfoItem(
-                                  '草稿任务',
-                                  detail.draftTaskCount == null
-                                      ? _emptyText
-                                      : detail.draftTaskCount!.toString(),
-                                ),
-                                _InfoItem(
-                                  '总金额',
-                                  detail.totalAmount == null
-                                      ? _emptyText
-                                      : detail.totalAmount!.toStringAsFixed(2),
-                                ),
-                                _InfoItem(
-                                  '进度',
-                                  detail.progressPercentage == null
-                                      ? _emptyText
-                                      : '${detail.progressPercentage}%',
-                                ),
-                                _InfoItem(
-                                    '印刷形式',
-                                    detail.printingTypeDisplay ??
-                                        detail.printingType ??
-                                        _emptyText),
-                                _InfoItem('印刷色数',
-                                    detail.printingColorsDisplay ?? _emptyText),
-                              ]),
-                              const SizedBox(height: 12),
-                              _InfoRow(
-                                  label: '备注',
-                                  value: detail.notes ?? _emptyText),
-                              const SizedBox(height: 12),
-                              _InfoRow(
-                                label: 'CMYK 颜色',
-                                value: detail.printingCmykColors.isEmpty
-                                    ? _emptyText
-                                    : detail.printingCmykColors.join(', '),
-                              ),
-                              const SizedBox(height: 12),
-                              _InfoRow(
-                                label: '其他颜色',
-                                value: detail.printingOtherColors.isEmpty
-                                    ? _emptyText
-                                    : detail.printingOtherColors.join(', '),
-                              ),
-                              const SizedBox(height: 12),
-                              Text('图稿',
-                                  style:
-                                      Theme.of(context).textTheme.titleSmall),
-                              const SizedBox(height: 6),
-                              _buildChipGroup(detail.artworkNames.isNotEmpty
-                                  ? detail.artworkNames
-                                  : detail.artworkCodes),
-                              const SizedBox(height: 12),
-                              Text('刀模',
-                                  style:
-                                      Theme.of(context).textTheme.titleSmall),
-                              const SizedBox(height: 6),
-                              _buildChipGroup(detail.dieNames.isNotEmpty
-                                  ? detail.dieNames
-                                  : detail.dieCodes),
-                              const SizedBox(height: 12),
-                              Text('烫金版',
-                                  style:
-                                      Theme.of(context).textTheme.titleSmall),
-                              const SizedBox(height: 6),
-                              _buildChipGroup(
-                                detail.foilingPlateNames.isNotEmpty
-                                    ? detail.foilingPlateNames
-                                    : detail.foilingPlateCodes,
-                              ),
-                              const SizedBox(height: 12),
-                              Text('压凸版',
-                                  style:
-                                      Theme.of(context).textTheme.titleSmall),
-                              const SizedBox(height: 6),
-                              _buildChipGroup(
-                                detail.embossingPlateNames.isNotEmpty
-                                    ? detail.embossingPlateNames
-                                    : detail.embossingPlateCodes,
-                              ),
-                            ],
-                          ),
+                        _buildOverviewSection(
+                          detail,
+                          statusOptions: statusOptions,
                         ),
                         SizedBox(height: sectionSpacing),
                         _buildSection(
@@ -874,11 +941,13 @@ class _InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
+            style:
+                theme.textTheme.bodySmall?.copyWith(color: colors?.subtleText)),
         const SizedBox(height: 4),
         Text(
           value,

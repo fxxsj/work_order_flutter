@@ -108,7 +108,6 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
   static const double _spacing = 12;
   static const double _sectionSpacing = 16;
   static const String _breadcrumbSeparator = ' / ';
-  static const String _emptyText = '-';
   static const String _summaryHintText = '用统一表单完成施工单创建、补充和编辑。';
 
   final TextEditingController _notesController = TextEditingController();
@@ -461,11 +460,48 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     return DetailSectionCard(title: title, child: child);
   }
 
+  Widget _buildSubsectionTitle(String title) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>();
+    return Text(
+      title,
+      style: theme.textTheme.titleSmall?.copyWith(
+        color: colors?.sidebarText,
+      ),
+    );
+  }
+
   String _selectedCustomerName() {
     for (final item in _customers) {
       if (item.id == _customerId) return item.name;
     }
-    return _emptyText;
+    return '';
+  }
+
+  List<WorkbenchStatItem> _buildHeaderStats() {
+    final items = <WorkbenchStatItem>[
+      WorkbenchStatItem(
+        label: '模式',
+        value: widget.mode == WorkOrderFormMode.create ? '新建' : '编辑',
+      ),
+    ];
+
+    final productCount =
+        _productDrafts.where((item) => item.productId != null).length;
+    if (productCount > 0) {
+      items.add(WorkbenchStatItem(label: '产品', value: '$productCount 项'));
+    }
+
+    if (_processIds.isNotEmpty) {
+      items.add(WorkbenchStatItem(label: '工序', value: '${_processIds.length} 项'));
+    }
+
+    final customerName = _selectedCustomerName();
+    if (customerName.isNotEmpty) {
+      items.add(WorkbenchStatItem(label: '客户', value: customerName));
+    }
+
+    return items;
   }
 
   @override
@@ -486,25 +522,8 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
         title: title,
         subtitle: _summaryHintText,
         titleMaxWidth: 420,
-        stats: [
-          WorkbenchStatItem(
-            label: '模式',
-            value: widget.mode == WorkOrderFormMode.create ? '新建' : '编辑',
-          ),
-          WorkbenchStatItem(
-            label: '产品',
-            value:
-                '${_productDrafts.where((item) => item.productId != null).length} 项',
-          ),
-          WorkbenchStatItem(
-            label: '工序',
-            value: _processIds.isEmpty ? _emptyText : '${_processIds.length} 项',
-          ),
-          WorkbenchStatItem(
-            label: '客户',
-            value: _selectedCustomerName(),
-          ),
-        ],
+        stats: _buildHeaderStats(),
+        mobileStatCount: 2,
         actions: Wrap(
           spacing: _spacing,
           runSpacing: 8,
@@ -558,16 +577,13 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                         LayoutBuilder(
                           builder: (context, constraints) {
                             final maxWidth = constraints.maxWidth;
+                            final fieldSpacing = LayoutTokens.gapLg;
                             final fieldWidth = maxWidth < Breakpoints.sm
                                 ? maxWidth
-                                : maxWidth < Breakpoints.md
-                                    ? (maxWidth - 16) / 2
-                                    : maxWidth < Breakpoints.lg
-                                        ? (maxWidth - 32) / 3
-                                        : 240.0;
+                                : (maxWidth - fieldSpacing) / 2;
                             return Wrap(
-                              spacing: 16,
-                              runSpacing: 12,
+                              spacing: fieldSpacing,
+                              runSpacing: LayoutTokens.gapMd,
                               children: [
                                 SizedBox(
                                   width: fieldWidth,
@@ -696,7 +712,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                             );
                           },
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: LayoutTokens.gapMd),
                         TextFormField(
                           controller: _notesController,
                           decoration: const InputDecoration(
@@ -777,142 +793,168 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                   const SizedBox(height: _sectionSpacing),
                   _buildSection(
                     '印刷与版信息',
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        DropdownButtonFormField<String>(
-                          initialValue: _printingType,
-                          decoration: const InputDecoration(
-                              labelText: '印刷形式'),
-                          items: const [
-                            DropdownMenuItem(
-                                value: 'none', child: Text('不需要印刷')),
-                            DropdownMenuItem(
-                                value: 'front', child: Text('正面印刷')),
-                            DropdownMenuItem(
-                                value: 'back', child: Text('背面印刷')),
-                            DropdownMenuItem(
-                                value: 'self_reverse', child: Text('自反印刷')),
-                            DropdownMenuItem(
-                                value: 'reverse_gripper', child: Text('反咬口印刷')),
-                            DropdownMenuItem(
-                                value: 'register', child: Text('套版印刷')),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isNarrow = constraints.maxWidth < Breakpoints.lg;
+                        final columnSpacing = LayoutTokens.gapLg;
+                        final leftColumn = Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            DropdownButtonFormField<String>(
+                              initialValue: _printingType,
+                              decoration: const InputDecoration(
+                                  labelText: '印刷形式'),
+                              items: const [
+                                DropdownMenuItem(
+                                    value: 'none', child: Text('不需要印刷')),
+                                DropdownMenuItem(
+                                    value: 'front', child: Text('正面印刷')),
+                                DropdownMenuItem(
+                                    value: 'back', child: Text('背面印刷')),
+                                DropdownMenuItem(
+                                    value: 'self_reverse', child: Text('自反印刷')),
+                                DropdownMenuItem(
+                                    value: 'reverse_gripper',
+                                    child: Text('反咬口印刷')),
+                                DropdownMenuItem(
+                                    value: 'register', child: Text('套版印刷')),
+                              ],
+                              onChanged: (value) => setState(
+                                  () => _printingType = value ?? 'none'),
+                            ),
+                            SizedBox(height: LayoutTokens.gapMd),
+                            _buildSubsectionTitle('CMYK 颜色'),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              children: ['C', 'M', 'Y', 'K']
+                                  .map(
+                                    (color) => FilterChip(
+                                      label: Text(color),
+                                      selected: _printingCmyk.contains(color),
+                                      onSelected: (selected) {
+                                        setState(() {
+                                          if (selected) {
+                                            _printingCmyk.add(color);
+                                          } else {
+                                            _printingCmyk.remove(color);
+                                          }
+                                        });
+                                      },
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                            SizedBox(height: LayoutTokens.gapMd),
+                            TextFormField(
+                              controller: _printingOtherColorsController,
+                              decoration: const InputDecoration(
+                                labelText: '其他颜色（逗号分隔）',
+                              ),
+                            ),
                           ],
-                          onChanged: (value) =>
-                              setState(() => _printingType = value ?? 'none'),
-                        ),
-                        const SizedBox(height: 12),
-                        Text('CMYK 颜色',
-                            style: Theme.of(context).textTheme.titleSmall),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          children: ['C', 'M', 'Y', 'K']
-                              .map(
-                                (color) => FilterChip(
-                                  label: Text(color),
-                                  selected: _printingCmyk.contains(color),
-                                  onSelected: (selected) {
-                                    setState(() {
-                                      if (selected) {
-                                        _printingCmyk.add(color);
-                                      } else {
-                                        _printingCmyk.remove(color);
-                                      }
-                                    });
-                                  },
-                                ),
-                              )
-                              .toList(),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _printingOtherColorsController,
-                          decoration: const InputDecoration(
-                            labelText: '其他颜色 (逗号分隔)',
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text('图稿',
-                            style: Theme.of(context).textTheme.titleSmall),
-                        const SizedBox(height: 8),
-                        _MultiSelectChips(
-                          items: _artworks
-                              .map(
-                                (item) => _OptionItem(
-                                    item.id,
-                                    item.fullCode.isNotEmpty
-                                        ? item.fullCode
-                                        : item.name),
-                              )
-                              .toList(),
-                          selected: _artworkIds,
-                          emptyText: '暂无图稿数据',
-                          title: '图稿',
-                          placeholder: '请选择图稿（可多选）',
-                          onChanged: () => setState(() {}),
-                        ),
-                        const SizedBox(height: 12),
-                        Text('刀模',
-                            style: Theme.of(context).textTheme.titleSmall),
-                        const SizedBox(height: 8),
-                        _MultiSelectChips(
-                          items: _dies
-                              .map(
-                                (item) => _OptionItem(
-                                    item.id,
-                                    item.code?.isNotEmpty == true
-                                        ? '${item.name} (${item.code})'
-                                        : item.name),
-                              )
-                              .toList(),
-                          selected: _dieIds,
-                          emptyText: '暂无刀模数据',
-                          title: '刀模',
-                          placeholder: '请选择刀模（可多选）',
-                          onChanged: () => setState(() {}),
-                        ),
-                        const SizedBox(height: 12),
-                        Text('烫金版',
-                            style: Theme.of(context).textTheme.titleSmall),
-                        const SizedBox(height: 8),
-                        _MultiSelectChips(
-                          items: _foilingPlates
-                              .map(
-                                (item) => _OptionItem(
-                                    item.id,
-                                    item.code?.isNotEmpty == true
-                                        ? '${item.name} (${item.code})'
-                                        : item.name),
-                              )
-                              .toList(),
-                          selected: _foilingPlateIds,
-                          emptyText: '暂无烫金版数据',
-                          title: '烫金版',
-                          placeholder: '请选择烫金版（可多选）',
-                          onChanged: () => setState(() {}),
-                        ),
-                        const SizedBox(height: 12),
-                        Text('压凸版',
-                            style: Theme.of(context).textTheme.titleSmall),
-                        const SizedBox(height: 8),
-                        _MultiSelectChips(
-                          items: _embossingPlates
-                              .map(
-                                (item) => _OptionItem(
-                                    item.id,
-                                    item.code?.isNotEmpty == true
-                                        ? '${item.name} (${item.code})'
-                                        : item.name),
-                              )
-                              .toList(),
-                          selected: _embossingPlateIds,
-                          emptyText: '暂无压凸版数据',
-                          title: '压凸版',
-                          placeholder: '请选择压凸版（可多选）',
-                          onChanged: () => setState(() {}),
-                        ),
-                      ],
+                        );
+
+                        final rightColumn = Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSubsectionTitle('图稿'),
+                            const SizedBox(height: 8),
+                            _MultiSelectChips(
+                              items: _artworks
+                                  .map(
+                                    (item) => _OptionItem(
+                                        item.id,
+                                        item.fullCode.isNotEmpty
+                                            ? item.fullCode
+                                            : item.name),
+                                  )
+                                  .toList(),
+                              selected: _artworkIds,
+                              emptyText: '暂无图稿数据',
+                              title: '图稿',
+                              placeholder: '请选择图稿（可多选）',
+                              onChanged: () => setState(() {}),
+                            ),
+                            SizedBox(height: LayoutTokens.gapMd),
+                            _buildSubsectionTitle('刀模'),
+                            const SizedBox(height: 8),
+                            _MultiSelectChips(
+                              items: _dies
+                                  .map(
+                                    (item) => _OptionItem(
+                                        item.id,
+                                        item.code?.isNotEmpty == true
+                                            ? '${item.name} (${item.code})'
+                                            : item.name),
+                                  )
+                                  .toList(),
+                              selected: _dieIds,
+                              emptyText: '暂无刀模数据',
+                              title: '刀模',
+                              placeholder: '请选择刀模（可多选）',
+                              onChanged: () => setState(() {}),
+                            ),
+                            SizedBox(height: LayoutTokens.gapMd),
+                            _buildSubsectionTitle('烫金版'),
+                            const SizedBox(height: 8),
+                            _MultiSelectChips(
+                              items: _foilingPlates
+                                  .map(
+                                    (item) => _OptionItem(
+                                        item.id,
+                                        item.code?.isNotEmpty == true
+                                            ? '${item.name} (${item.code})'
+                                            : item.name),
+                                  )
+                                  .toList(),
+                              selected: _foilingPlateIds,
+                              emptyText: '暂无烫金版数据',
+                              title: '烫金版',
+                              placeholder: '请选择烫金版（可多选）',
+                              onChanged: () => setState(() {}),
+                            ),
+                            SizedBox(height: LayoutTokens.gapMd),
+                            _buildSubsectionTitle('压凸版'),
+                            const SizedBox(height: 8),
+                            _MultiSelectChips(
+                              items: _embossingPlates
+                                  .map(
+                                    (item) => _OptionItem(
+                                        item.id,
+                                        item.code?.isNotEmpty == true
+                                            ? '${item.name} (${item.code})'
+                                            : item.name),
+                                  )
+                                  .toList(),
+                              selected: _embossingPlateIds,
+                              emptyText: '暂无压凸版数据',
+                              title: '压凸版',
+                              placeholder: '请选择压凸版（可多选）',
+                              onChanged: () => setState(() {}),
+                            ),
+                          ],
+                        );
+
+                        if (isNarrow) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              leftColumn,
+                              SizedBox(height: columnSpacing),
+                              rightColumn,
+                            ],
+                          );
+                        }
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: leftColumn),
+                            SizedBox(width: columnSpacing),
+                            Expanded(child: rightColumn),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -929,7 +971,7 @@ class _OptionItem {
   final String label;
 }
 
-class _MultiSelectChips extends StatelessWidget {
+class _MultiSelectChips extends StatefulWidget {
   const _MultiSelectChips({
     required this.items,
     required this.selected,
@@ -947,59 +989,111 @@ class _MultiSelectChips extends StatelessWidget {
   final VoidCallback onChanged;
 
   @override
+  State<_MultiSelectChips> createState() => _MultiSelectChipsState();
+}
+
+class _MultiSelectChipsState extends State<_MultiSelectChips> {
+  late bool _expanded;
+
+  @override
+  void initState() {
+    super.initState();
+    _expanded = false;
+  }
+
+  @override
+  void didUpdateWidget(covariant _MultiSelectChips oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selected.isEmpty && _expanded) {
+      _expanded = false;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
-    if (items.isEmpty) {
+    if (widget.items.isEmpty) {
       return Text(
-        emptyText,
+        widget.emptyText,
         style: theme.textTheme.bodySmall?.copyWith(
           color: colors?.subtleText ?? theme.hintColor,
         ),
       );
     }
     final resolvedColors = colors!;
-    final selectedItems =
-        items.where((item) => selected.contains(item.id)).toList();
-    return InkWell(
-      onTap: () => _openDialog(context),
-      borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: theme.colorScheme.primary.withValues(alpha: 0.03),
-          contentPadding: const EdgeInsets.all(12),
-          suffixIcon: const Icon(Icons.arrow_drop_down),
-        ),
-        child: selectedItems.isEmpty
-            ? Text(
-                placeholder,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: resolvedColors.subtleText,
+    final selectedItems = widget.items
+        .where((item) => widget.selected.contains(item.id))
+        .toList();
+    final hasSelected = selectedItems.isNotEmpty;
+    final summaryText = hasSelected
+        ? '已选 ${selectedItems.length} 项'
+        : widget.placeholder;
+
+    return InputDecorator(
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: theme.colorScheme.primary.withValues(alpha: 0.03),
+        contentPadding: const EdgeInsets.all(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  summaryText,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: hasSelected
+                        ? resolvedColors.sidebarText
+                        : resolvedColors.subtleText,
+                  ),
                 ),
-              )
-            : Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: selectedItems
-                    .map(
-                      (item) => InputChip(
-                        label: Text(item.label),
-                        visualDensity: VisualDensity.compact,
-                        onDeleted: () {
-                          selected.remove(item.id);
-                          onChanged();
-                        },
-                      ),
-                    )
-                    .toList(),
               ),
+              if (hasSelected)
+                IconButton(
+                  onPressed: () => setState(() => _expanded = !_expanded),
+                  icon: Icon(
+                      _expanded ? Icons.expand_less : Icons.expand_more),
+                  tooltip: _expanded ? '收起' : '展开',
+                  visualDensity: VisualDensity.compact,
+                ),
+              IconButton(
+                onPressed: () => _openDialog(context),
+                icon: const Icon(Icons.edit_outlined),
+                tooltip: '选择',
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
+          ),
+          if (_expanded && hasSelected) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: selectedItems
+                  .map(
+                    (item) => InputChip(
+                      label: Text(item.label),
+                      visualDensity: VisualDensity.compact,
+                      onDeleted: () {
+                        widget.selected.remove(item.id);
+                        widget.onChanged();
+                        setState(() {});
+                      },
+                    ),
+                  )
+                  .toList(),
+            ),
+          ],
+        ],
       ),
     );
   }
 
   Future<void> _openDialog(BuildContext context) async {
-    final original = Set<int>.from(selected);
+    final original = Set<int>.from(widget.selected);
     String query = '';
     await showDialog<void>(
       context: context,
@@ -1007,7 +1101,7 @@ class _MultiSelectChips extends StatelessWidget {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             final media = MediaQuery.of(context).size;
-            final filtered = items
+            final filtered = widget.items
                 .where((item) =>
                     item.label.toLowerCase().contains(query.toLowerCase()))
                 .toList();
@@ -1016,7 +1110,7 @@ class _MultiSelectChips extends StatelessWidget {
                 horizontal: media.width < Breakpoints.md ? 16 : 40,
                 vertical: 24,
               ),
-              title: Text(title),
+              title: Text(widget.title),
               content: SizedBox(
                 width: media.width < Breakpoints.md ? media.width - 64 : 520,
                 height: media.height < 720 ? media.height * 0.62 : 420,
@@ -1043,7 +1137,8 @@ class _MultiSelectChips extends StatelessWidget {
                                 itemCount: filtered.length,
                                 itemBuilder: (context, index) {
                                   final item = filtered[index];
-                                  final isSelected = selected.contains(item.id);
+                                  final isSelected =
+                                      widget.selected.contains(item.id);
                                   return CheckboxListTile(
                                     value: isSelected,
                                     dense: true,
@@ -1053,12 +1148,12 @@ class _MultiSelectChips extends StatelessWidget {
                                     onChanged: (value) {
                                       setDialogState(() {
                                         if (value == true) {
-                                          selected.add(item.id);
+                                          widget.selected.add(item.id);
                                         } else {
-                                          selected.remove(item.id);
+                                          widget.selected.remove(item.id);
                                         }
                                       });
-                                      onChanged();
+                                      widget.onChanged();
                                     },
                                   );
                                 },
@@ -1071,18 +1166,18 @@ class _MultiSelectChips extends StatelessWidget {
               actions: [
                 TextButton(
                   onPressed: () {
-                    selected
+                    widget.selected
                       ..clear()
                       ..addAll(original);
-                    onChanged();
+                    widget.onChanged();
                     Navigator.of(dialogContext).pop();
                   },
                   child: const Text('取消'),
                 ),
                 TextButton(
                   onPressed: () {
-                    selected.clear();
-                    onChanged();
+                    widget.selected.clear();
+                    widget.onChanged();
                     setDialogState(() {});
                   },
                   child: const Text('清空'),

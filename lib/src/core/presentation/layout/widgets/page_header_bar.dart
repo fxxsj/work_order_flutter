@@ -78,7 +78,7 @@ class PageActionStyle {
   const PageActionStyle._();
 
   static const double height = 36;
-  static const double radius = 4;
+  static const double radius = LayoutTokens.radiusSm;
   static const double minWidth = 88;
   static const double iconButtonSize = 36;
 }
@@ -267,57 +267,101 @@ class WorkbenchHeaderBar extends StatelessWidget {
             ),
             SizedBox(height: breadcrumbSpacing),
           ],
-          Wrap(
-            spacing: titleSpacing,
-            runSpacing: titleSpacing,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              if (shouldShowTitleBlock)
-                ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: isMobile ? double.infinity : titleMaxWidth,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: (isXs
-                                ? theme.textTheme.titleMedium
-                                : theme.textTheme.titleLarge)
-                            ?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: colors.sidebarText,
-                        ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isNarrow = isMobile || constraints.maxWidth < 720;
+              final titleBlock = shouldShowTitleBlock
+                  ? ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: isNarrow ? double.infinity : titleMaxWidth,
                       ),
-                      if (subtitle.trim().isNotEmpty &&
-                          !(isMobile && hideSubtitleOnMobile)) ...[
-                        SizedBox(height: isXs ? 3 : 4),
-                        Text(
-                          subtitle,
-                          maxLines: isXs ? 2 : null,
-                          overflow: isXs ? TextOverflow.ellipsis : null,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: colors.subtleText,
-                            height: 1.4,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: (isXs
+                                    ? theme.textTheme.titleMedium
+                                    : theme.textTheme.titleLarge)
+                                ?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: colors.sidebarText,
+                            ),
                           ),
-                        ),
+                          if (subtitle.trim().isNotEmpty &&
+                              !(isMobile && hideSubtitleOnMobile)) ...[
+                            SizedBox(height: isXs ? 3 : 4),
+                            Text(
+                              subtitle,
+                              maxLines: isXs ? 2 : null,
+                              overflow: isXs ? TextOverflow.ellipsis : null,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: colors.subtleText,
+                                height: 1.4,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    )
+                  : const SizedBox.shrink();
+
+              final statsRow = visibleStats.isEmpty
+                  ? const SizedBox.shrink()
+                  : Wrap(
+                      spacing: titleSpacing,
+                      runSpacing: titleSpacing,
+                      children: [
+                        for (final item in visibleStats)
+                          WorkbenchStatChip(item: item),
                       ],
-                    ],
-                  ),
+                    );
+
+              final actionBlock = DefaultTextStyle.merge(
+                style: theme.textTheme.bodyMedium,
+                child: Align(
+                  alignment: Alignment.topRight,
+                  child: actions,
                 ),
-              for (final item in visibleStats) WorkbenchStatChip(item: item),
-            ],
-          ),
-          SizedBox(height: sectionSpacing),
-          DefaultTextStyle.merge(
-            style: theme.textTheme.bodyMedium,
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: actions,
-            ),
+              );
+
+              if (isNarrow) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (shouldShowTitleBlock) titleBlock,
+                    if (visibleStats.isNotEmpty) ...[
+                      SizedBox(height: titleSpacing),
+                      statsRow,
+                    ],
+                    SizedBox(height: sectionSpacing),
+                    actionBlock,
+                  ],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (shouldShowTitleBlock) titleBlock,
+                        if (visibleStats.isNotEmpty) ...[
+                          SizedBox(height: titleSpacing),
+                          statsRow,
+                        ],
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: sectionSpacing),
+                  actionBlock,
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -346,7 +390,8 @@ class WorkbenchStatChip extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLowest.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(isXs ? 14 : 16),
+        borderRadius:
+            BorderRadius.circular(isXs ? LayoutTokens.radiusMd : LayoutTokens.radiusLg),
         border: Border.all(color: colors.borderColor),
       ),
       child: Column(
