@@ -12,6 +12,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
 import 'package:work_order_app/src/features/departments/domain/department.dart';
 import 'package:work_order_app/src/features/tasks/application/task_view_model.dart';
@@ -114,6 +115,8 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
   bool _showListView = false;
   bool _hideEmptyColumns = false;
   bool _sortByDeliveryDate = false;
+  int? _draggingTaskId;
+  int? _updatingTaskId;
   String? _statusFilter;
   int? _departmentFilterId;
 
@@ -505,6 +508,13 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
           return _BoardColumn(
             data: column,
             onTapTask: (task) => _openTaskDetail(context, task),
+            onDrop: (data) => _handleStatusDrop(context, viewModel, data.task, column.key),
+            canAccept: (data) => _canAcceptDrop(data.task, column.key),
+            onDragStart: _handleDragStart,
+            onDragEnd: _handleDragEnd,
+            updatingTaskId: _updatingTaskId,
+            draggingTaskId: _draggingTaskId,
+            useLongPress: true,
             fullWidth: true,
           );
         },
@@ -524,6 +534,14 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
                       _BoardColumn(
                         data: columns[i],
                         onTapTask: (task) => _openTaskDetail(context, task),
+                        onDrop: (data) =>
+                            _handleStatusDrop(context, viewModel, data.task, columns[i].key),
+                        canAccept: (data) => _canAcceptDrop(data.task, columns[i].key),
+                        onDragStart: _handleDragStart,
+                        onDragEnd: _handleDragEnd,
+                        updatingTaskId: _updatingTaskId,
+                        draggingTaskId: _draggingTaskId,
+                        useLongPress: false,
                         width: _columnWidth,
                       ),
                       if (i != columns.length - 1) const SizedBox(width: 16),
@@ -624,6 +642,112 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('该任务暂无施工单详情可查看。')),
     );
+  }
+
+  void _handleDragStart(Task task) {
+    setState(() => _draggingTaskId = task.id);
+  }
+
+  void _handleDragEnd() {
+    if (_draggingTaskId != null) {
+      setState(() => _draggingTaskId = null);
+    }
+  }
+
+  bool _canAcceptDrop(Task task, String targetStatus) {
+    if (_updatingTaskId != null) return false;
+    if (targetStatus == 'other') return false;
+    final current = task.status ?? '';
+    if (current == targetStatus) return false;
+    if (current == 'completed') return false;
+    if (targetStatus == 'pending') return false;
+    if (targetStatus == 'in_progress') {
+      return current == 'pending';
+    }
+    if (targetStatus == 'completed') {
+      return current == 'pending' || current == 'in_progress';
+    }
+    return false;
+  }
+
+  Future<void> _handleStatusDrop(
+    BuildContext context,
+    TaskViewModel viewModel,
+    Task task,
+    String targetStatus,
+  ) async {
+    if (!_canAcceptDrop(task, targetStatus)) return;
+    if (targetStatus == 'in_progress') {
+      await _openQuantityDialog(context, viewModel, task);
+      return;
+    }
+    if (targetStatus == 'completed') {
+      await _openCompleteDialog(context, viewModel, task);
+    }
+  }
+
+  Future<void> _openQuantityDialog(
+    BuildContext context,
+    TaskViewModel viewModel,
+    Task task,
+  ) async {
+    await showDialog<void>(
+      context: context,
+      builder: (_) => _TaskQuantityDialog(
+        task: task,
+        onSubmit: (payload) => _submitQuantityUpdate(viewModel, task, payload),
+      ),
+    );
+  }
+
+  Future<void> _openCompleteDialog(
+    BuildContext context,
+    TaskViewModel viewModel,
+    Task task,
+  ) async {
+    await showDialog<void>(
+      context: context,
+      builder: (_) => _TaskCompleteDialog(
+        task: task,
+        onSubmit: (payload) => _submitComplete(viewModel, task, payload),
+      ),
+    );
+  }
+
+  Future<void> _submitQuantityUpdate(
+    TaskViewModel viewModel,
+    Task task,
+    Map<String, dynamic> payload,
+  ) async {
+    setState(() => _updatingTaskId = task.id);
+    try {
+      final api = context.read<TaskApiService>();
+      await api.updateQuantity(task.id, payload);
+      ToastUtil.showSuccess('已更新任务进度');
+      await viewModel.loadTasks(resetPage: false);
+    } catch (err) {
+      ToastUtil.showError(err.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _updatingTaskId = null);
+    }
+  }
+
+  Future<void> _submitComplete(
+    TaskViewModel viewModel,
+    Task task,
+    Map<String, dynamic> payload,
+  ) async {
+    setState(() => _updatingTaskId = task.id);
+    try {
+      final api = context.read<TaskApiService>();
+      await api.complete(task.id, payload);
+      ToastUtil.showSuccess('任务已完成');
+      await viewModel.loadTasks(resetPage: false);
+    } catch (err) {
+      ToastUtil.showError(err.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _updatingTaskId = null);
+    }
   }
 
   Widget _buildBoardQuickFilters(TaskViewModel viewModel, List<Task> tasks) {
@@ -728,12 +852,26 @@ class _BoardColumn extends StatelessWidget {
   const _BoardColumn({
     required this.data,
     required this.onTapTask,
+    this.onDrop,
+    this.canAccept,
+    this.onDragStart,
+    this.onDragEnd,
+    this.updatingTaskId,
+    this.draggingTaskId,
+    this.useLongPress = false,
     this.width,
     this.fullWidth = false,
   });
 
   final _BoardColumnData data;
   final ValueChanged<Task> onTapTask;
+  final ValueChanged<_TaskDragData>? onDrop;
+  final bool Function(_TaskDragData data)? canAccept;
+  final ValueChanged<Task>? onDragStart;
+  final VoidCallback? onDragEnd;
+  final int? updatingTaskId;
+  final int? draggingTaskId;
+  final bool useLongPress;
   final double? width;
   final bool fullWidth;
 
@@ -745,14 +883,42 @@ class _BoardColumn extends StatelessWidget {
     final share = data.totalCount == 0
         ? 0
         : (data.tasks.length / data.totalCount * 100).round();
+    final dragTarget = DragTarget<_TaskDragData>(
+      onWillAccept: (data) => data != null && (canAccept?.call(data) ?? false),
+      onAccept: (data) => onDrop?.call(data),
+      builder: (context, candidates, rejected) {
+        final highlight = candidates.isNotEmpty;
+        return _buildColumnShell(
+          context,
+          colors,
+          resolvedWidth,
+          highlight,
+          share,
+        );
+      },
+    );
 
+    return dragTarget;
+  }
+
+  Widget _buildColumnShell(
+    BuildContext context,
+    AppColors colors,
+    double resolvedWidth,
+    bool highlight,
+    int share,
+  ) {
+    final theme = Theme.of(context);
     return Container(
       width: resolvedWidth,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
-        border: Border.all(color: colors.borderColor),
+        border: Border.all(
+          color: highlight ? theme.colorScheme.primary : colors.borderColor,
+          width: highlight ? 1.4 : 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -794,10 +960,14 @@ class _BoardColumn extends StatelessWidget {
             Column(
               children: [
                 for (var i = 0; i < data.tasks.length; i++) ...[
-                  TaskListTile(
+                  _DraggableTaskCard(
                     task: data.tasks[i],
                     onTap: () => onTapTask(data.tasks[i]),
-                    showDivider: false,
+                    onDragStart: onDragStart,
+                    onDragEnd: onDragEnd,
+                    isBusy: updatingTaskId == data.tasks[i].id,
+                    isDragging: draggingTaskId == data.tasks[i].id,
+                    useLongPress: useLongPress,
                   ),
                   if (i != data.tasks.length - 1)
                     const SizedBox(height: 8),
@@ -807,5 +977,318 @@ class _BoardColumn extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _TaskDragData {
+  const _TaskDragData({
+    required this.task,
+    required this.fromStatus,
+  });
+
+  final Task task;
+  final String fromStatus;
+}
+
+class _DraggableTaskCard extends StatelessWidget {
+  const _DraggableTaskCard({
+    required this.task,
+    required this.onTap,
+    required this.onDragStart,
+    required this.onDragEnd,
+    required this.isBusy,
+    required this.isDragging,
+    required this.useLongPress,
+  });
+
+  final Task task;
+  final VoidCallback onTap;
+  final ValueChanged<Task>? onDragStart;
+  final VoidCallback? onDragEnd;
+  final bool isBusy;
+  final bool isDragging;
+  final bool useLongPress;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>()!;
+
+    final card = Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+        border: Border.all(color: colors.borderColor),
+      ),
+      child: TaskListTile(
+        task: task,
+        onTap: onTap,
+        showDivider: false,
+      ),
+    );
+
+    final draggable = useLongPress
+        ? LongPressDraggable<_TaskDragData>(
+            data: _TaskDragData(task: task, fromStatus: task.status ?? ''),
+            onDragStarted: () => onDragStart?.call(task),
+            onDragEnd: (_) => onDragEnd?.call(),
+            feedback: Material(
+              color: Colors.transparent,
+              child: SizedBox(width: 280, child: card),
+            ),
+            childWhenDragging: Opacity(opacity: 0.4, child: card),
+            child: _buildContent(colors, card),
+          )
+        : Draggable<_TaskDragData>(
+            data: _TaskDragData(task: task, fromStatus: task.status ?? ''),
+            onDragStarted: () => onDragStart?.call(task),
+            onDragEnd: (_) => onDragEnd?.call(),
+            feedback: Material(
+              color: Colors.transparent,
+              child: SizedBox(width: 280, child: card),
+            ),
+            childWhenDragging: Opacity(opacity: 0.4, child: card),
+            child: _buildContent(colors, card),
+          );
+
+    return draggable;
+  }
+
+  Widget _buildContent(AppColors colors, Widget card) {
+    return Stack(
+      children: [
+        card,
+        if (isDragging)
+          Positioned.fill(
+            child: Container(
+              color: colors.surface.withValues(alpha: 0.6),
+              child: const Center(
+                child: Icon(Icons.open_with, size: 18),
+              ),
+            ),
+          ),
+        if (isBusy)
+          Positioned.fill(
+            child: Container(
+              color: colors.surface.withValues(alpha: 0.7),
+              child: const Center(
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+}
+
+class _TaskQuantityDialog extends StatefulWidget {
+  const _TaskQuantityDialog({
+    required this.task,
+    required this.onSubmit,
+  });
+
+  final Task task;
+  final Future<void> Function(Map<String, dynamic> payload) onSubmit;
+
+  @override
+  State<_TaskQuantityDialog> createState() => _TaskQuantityDialogState();
+}
+
+class _TaskQuantityDialogState extends State<_TaskQuantityDialog> {
+  final _formKey = GlobalKey<FormState>();
+  int _quantityIncrement = 1;
+  int _quantityDefective = 0;
+  String _notes = '';
+  bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _quantityIncrement = 1;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final task = widget.task;
+    final total = task.productionQuantity ?? 0;
+    final completed = task.quantityCompleted ?? 0;
+    final remaining = (total - completed).clamp(0, double.infinity).toInt();
+
+    return AlertDialog(
+      title: const Text('更新进度'),
+      content: SizedBox(
+        width: 420,
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(task.workContent ?? '任务 #${task.id}'),
+                const SizedBox(height: 8),
+                Text('已完成 $completed / $total · 剩余 $remaining'),
+                const SizedBox(height: 12),
+                TextFormField(
+                  initialValue: _quantityIncrement.toString(),
+                  decoration: const InputDecoration(labelText: '本次完成数量'),
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    final parsed = int.tryParse(value ?? '');
+                    if (parsed == null || parsed <= 0) {
+                      return '请输入大于 0 的数量';
+                    }
+                    return null;
+                  },
+                  onChanged: (value) {
+                    _quantityIncrement = int.tryParse(value) ?? 0;
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  initialValue: _quantityDefective.toString(),
+                  decoration: const InputDecoration(labelText: '不良品数量'),
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    _quantityDefective = int.tryParse(value) ?? 0;
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  decoration: const InputDecoration(labelText: '备注（可选）'),
+                  onChanged: (value) => _notes = value,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _submitting ? null : () => Navigator.of(context).pop(),
+          child: const Text('取消'),
+        ),
+        FilledButton(
+          onPressed: _submitting ? null : _submit,
+          child: _submitting
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('确认更新'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _submit() async {
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      return;
+    }
+    setState(() => _submitting = true);
+    try {
+      await widget.onSubmit({
+        'quantity_increment': _quantityIncrement,
+        'quantity_defective': _quantityDefective,
+        'notes': _notes,
+      });
+      if (mounted) Navigator.of(context).pop();
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+}
+
+class _TaskCompleteDialog extends StatefulWidget {
+  const _TaskCompleteDialog({
+    required this.task,
+    required this.onSubmit,
+  });
+
+  final Task task;
+  final Future<void> Function(Map<String, dynamic> payload) onSubmit;
+
+  @override
+  State<_TaskCompleteDialog> createState() => _TaskCompleteDialogState();
+}
+
+class _TaskCompleteDialogState extends State<_TaskCompleteDialog> {
+  int _quantityDefective = 0;
+  String _completionReason = '';
+  String _notes = '';
+  bool _submitting = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final task = widget.task;
+    return AlertDialog(
+      title: const Text('完成任务'),
+      content: SizedBox(
+        width: 420,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(task.workContent ?? '任务 #${task.id}'),
+              const SizedBox(height: 12),
+              TextFormField(
+                initialValue: _quantityDefective.toString(),
+                decoration: const InputDecoration(labelText: '不良品数量'),
+                keyboardType: TextInputType.number,
+                onChanged: (value) {
+                  _quantityDefective = int.tryParse(value) ?? 0;
+                },
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                decoration: const InputDecoration(labelText: '完成理由（可选）'),
+                onChanged: (value) => _completionReason = value,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                decoration: const InputDecoration(labelText: '备注（可选）'),
+                onChanged: (value) => _notes = value,
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _submitting ? null : () => Navigator.of(context).pop(),
+          child: const Text('取消'),
+        ),
+        FilledButton(
+          onPressed: _submitting ? null : _submit,
+          child: _submitting
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('确认完成'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _submit() async {
+    setState(() => _submitting = true);
+    try {
+      await widget.onSubmit({
+        'quantity_defective': _quantityDefective,
+        'completion_reason': _completionReason,
+        'notes': _notes,
+      });
+      if (mounted) Navigator.of(context).pop();
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 }
