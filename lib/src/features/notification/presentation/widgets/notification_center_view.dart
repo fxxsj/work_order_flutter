@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/features/notification/application/notification_view_model.dart';
 import 'package:work_order_app/src/features/notification/domain/notification_model.dart';
@@ -30,6 +31,7 @@ class NotificationCenterView extends StatelessWidget {
             ? allItems.where((item) => !item.isRead).toList()
             : allItems;
 
+        final theme = Theme.of(context);
         return Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
@@ -68,7 +70,11 @@ class NotificationCenterView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
                   ),
                   child: Center(
-                    child: Text('暂无通知', style: TextStyle(color: subtleText)),
+                    child: Text(
+                      '暂无通知',
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(color: subtleText),
+                    ),
                   ),
                 )
               else ...[
@@ -126,6 +132,7 @@ class _NotificationToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Wrap(
       spacing: 12,
       runSpacing: 12,
@@ -133,9 +140,15 @@ class _NotificationToolbar extends StatelessWidget {
       children: [
         Text(
           '通知中心',
-          style: TextStyle(fontWeight: FontWeight.w700, color: accent, fontSize: 16),
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: accent,
+          ),
         ),
-        Text('未读 $unreadCount / 总数 $totalCount', style: TextStyle(color: subtleText)),
+        Text(
+          '未读 $unreadCount / 总数 $totalCount',
+          style: theme.textTheme.bodySmall?.copyWith(color: subtleText),
+        ),
         FilterChip(
           label: const Text('仅看未读'),
           selected: showUnreadOnly,
@@ -175,7 +188,9 @@ class _NotificationListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final levelColor = _levelColorFor(item.level, primary);
+    final semantic = Theme.of(context).extension<AppSemanticColors>();
+    final theme = Theme.of(context);
+    final levelColor = _levelColorFor(item.level, primary, semantic);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
@@ -185,7 +200,7 @@ class _NotificationListItem extends StatelessWidget {
         border: Border.all(color: item.isRead ? Colors.transparent : levelColor.withAlpha(77)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(10),
+            color: (semantic?.shadowStrong ?? Colors.black).withAlpha(10),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -210,12 +225,26 @@ class _NotificationListItem extends StatelessWidget {
               children: [
                 Text(
                   item.title,
-                  style: TextStyle(fontWeight: FontWeight.w700, color: accent),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: accent,
+                  ),
                 ),
                 const SizedBox(height: 6),
-                Text(item.content, style: TextStyle(color: subtleText, height: 1.4)),
+                Text(
+                  item.content,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: subtleText,
+                    height: 1.4,
+                  ),
+                ),
                 const SizedBox(height: 8),
-                Text(_formatRelativeTime(item.createdAt), style: TextStyle(color: subtleText, fontSize: 12)),
+                Text(
+                  _formatRelativeTime(item.createdAt),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: subtleText,
+                  ),
+                ),
               ],
             ),
           ),
@@ -230,12 +259,16 @@ class _NotificationListItem extends StatelessWidget {
   }
 }
 
-Color _levelColorFor(NotificationLevel level, Color primary) {
+Color _levelColorFor(
+  NotificationLevel level,
+  Color primary,
+  AppSemanticColors? semantic,
+) {
   switch (level) {
     case NotificationLevel.warning:
-      return const Color(0xFFF59E0B);
+      return semantic?.warning ?? const Color(0xFFF59E0B);
     case NotificationLevel.urgent:
-      return const Color(0xFFEF4444);
+      return semantic?.danger ?? const Color(0xFFEF4444);
     case NotificationLevel.info:
       return primary;
   }

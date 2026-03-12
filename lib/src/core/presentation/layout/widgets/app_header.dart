@@ -343,7 +343,8 @@ class _NotificationListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final levelColor = _levelColorFor(item.level, primary);
+    final semantic = theme.extension<AppSemanticColors>();
+    final levelColor = _levelColorFor(item.level, primary, semantic);
     final titleStyle = theme.textTheme.bodySmall?.copyWith(
       color: accent,
       fontWeight: item.isRead ? FontWeight.w500 : FontWeight.w700,
@@ -499,12 +500,16 @@ String _formatRelativeTime(DateTime createdAt) {
   return '${createdAt.month}月${createdAt.day}日 $hour:$minute';
 }
 
-Color _levelColorFor(NotificationLevel level, Color primary) {
+Color _levelColorFor(
+  NotificationLevel level,
+  Color primary,
+  AppSemanticColors? semantic,
+) {
   switch (level) {
     case NotificationLevel.warning:
-      return const Color(0xFFF59E0B);
+      return semantic?.warning ?? const Color(0xFFF59E0B);
     case NotificationLevel.urgent:
-      return const Color(0xFFEF4444);
+      return semantic?.danger ?? const Color(0xFFEF4444);
     case NotificationLevel.info:
       return primary;
   }

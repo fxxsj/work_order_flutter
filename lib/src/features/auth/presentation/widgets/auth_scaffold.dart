@@ -41,10 +41,14 @@ class AuthScaffold extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            const Positioned(
-                top: -120,
-                left: -80,
-                child: _GlowOrb(size: 280, color: Color(0xFFE6B84C))),
+            Positioned(
+              top: -120,
+              left: -80,
+              child: _GlowOrb(
+                size: 280,
+                color: semantic.warning.withValues(alpha: 0.32),
+              ),
+            ),
             Positioned(
               top: 72,
               right: -56,
@@ -177,8 +181,10 @@ class _HeroPanel extends StatelessWidget {
           colors: [
             Color.alphaBlend(
                 scheme.primary.withValues(alpha: 0.25), colors.sidebar),
-            Color.alphaBlend(const Color(0xFF0F4C5C).withValues(alpha: 0.16),
-                colors.surface),
+            Color.alphaBlend(
+              scheme.secondary.withValues(alpha: 0.16),
+              colors.surface,
+            ),
           ],
         ),
       ),
@@ -190,11 +196,8 @@ class _HeroPanel extends StatelessWidget {
           Text(
             '新西彩',
             style: theme.textTheme.displaySmall?.copyWith(
-              fontFamily: 'BowlbyDisplay',
               height: 0.92,
-              fontSize: compact ? 36 : 46,
-              letterSpacing: 0.2,
-              color: const Color(0xFF162033),
+              color: colors.sidebarText,
             ),
           ),
           const SizedBox(height: 8),
@@ -204,7 +207,7 @@ class _HeroPanel extends StatelessWidget {
               heroTitle,
               style: theme.textTheme.titleMedium?.copyWith(
                 height: 1.35,
-                color: const Color(0xFF334155),
+                color: colors.subtleText,
               ),
             ),
           ),
@@ -248,7 +251,7 @@ class _FormPanel extends StatelessWidget {
             title,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w800,
-              color: const Color(0xFF101828),
+              color: theme.colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 18),
