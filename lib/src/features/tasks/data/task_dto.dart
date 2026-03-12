@@ -8,7 +8,9 @@ class TaskDto {
     this.statusDisplay,
     this.taskType,
     this.taskTypeDisplay,
+    this.assignedDepartmentId,
     this.assignedDepartmentName,
+    this.assignedOperatorId,
     this.assignedOperatorName,
     this.productionQuantity,
     this.quantityCompleted,
@@ -25,7 +27,9 @@ class TaskDto {
   final String? statusDisplay;
   final String? taskType;
   final String? taskTypeDisplay;
+  final int? assignedDepartmentId;
   final String? assignedDepartmentName;
+  final int? assignedOperatorId;
   final String? assignedOperatorName;
   final double? productionQuantity;
   final double? quantityCompleted;
@@ -47,7 +51,9 @@ class TaskDto {
       statusDisplay: statusDisplay,
       taskType: taskType,
       taskTypeDisplay: taskTypeDisplay,
+      assignedDepartmentId: assignedDepartmentId,
       assignedDepartmentName: assignedDepartmentName,
+      assignedOperatorId: assignedOperatorId,
       assignedOperatorName: assignedOperatorName,
       productionQuantity: productionQuantity,
       quantityCompleted: quantityCompleted,
@@ -69,7 +75,9 @@ extension TaskMapper on Task {
       statusDisplay: statusDisplay,
       taskType: taskType,
       taskTypeDisplay: taskTypeDisplay,
+      assignedDepartmentId: assignedDepartmentId,
       assignedDepartmentName: assignedDepartmentName,
+      assignedOperatorId: assignedOperatorId,
       assignedOperatorName: assignedOperatorName,
       productionQuantity: productionQuantity,
       quantityCompleted: quantityCompleted,

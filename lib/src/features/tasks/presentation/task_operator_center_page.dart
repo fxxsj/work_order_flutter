@@ -1,0 +1,584 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/common/theme_ext.dart';
+import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/utils/toast_util.dart';
+import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
+import 'package:work_order_app/src/features/tasks/domain/task.dart';
+import 'package:work_order_app/src/features/tasks/presentation/widgets/task_list_tile.dart';
+
+/// 操作员任务中心入口。
+class TaskOperatorCenterEntry extends StatefulWidget {
+  const TaskOperatorCenterEntry({super.key});
+
+  @override
+  State<TaskOperatorCenterEntry> createState() => _TaskOperatorCenterEntryState();
+}
+
+class _TaskOperatorCenterEntryState extends State<TaskOperatorCenterEntry> {
+  TaskApiService? _apiService;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_apiService != null) return;
+    final apiClient = context.read<ApiClient>();
+    _apiService = TaskApiService(apiClient);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final apiService = _apiService;
+    if (apiService == null) {
+      return const SizedBox.shrink();
+    }
+    return Provider<TaskApiService>.value(
+      value: apiService,
+      child: const TaskOperatorCenterPage(),
+    );
+  }
+}
+
+class TaskOperatorCenterPage extends StatelessWidget {
+  const TaskOperatorCenterPage({super.key});
+
+  @override
+  Widget build(BuildContext context) => const _TaskOperatorCenterView();
+}
+
+class _TaskOperatorCenterView extends StatefulWidget {
+  const _TaskOperatorCenterView();
+
+  @override
+  State<_TaskOperatorCenterView> createState() => _TaskOperatorCenterViewState();
+}
+
+class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
+  static const double _spacingSm = LayoutTokens.gapSm;
+  static const double _controlHeight = PageActionStyle.height;
+  static const String _refreshButtonText = '刷新';
+  static const String _emptyText = '暂无任务数据';
+  static const String _errorFallbackText = '加载失败';
+  static const String _retryText = '重新加载';
+
+  bool _loading = false;
+  String? _errorMessage;
+  List<Task> _myTasks = [];
+  List<Task> _claimableTasks = [];
+  Map<String, dynamic> _summary = const {};
+  int? _claimingTaskId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() {
+      _loading = true;
+      _errorMessage = null;
+    });
+    try {
+      final api = context.read<TaskApiService>();
+      final payload = await api.fetchOperatorCenterData();
+      final myTasksPayload = payload['my_tasks'];
+      final claimablePayload = payload['claimable_tasks'];
+      final summaryPayload = payload['summary'];
+      setState(() {
+        _myTasks = _mapTasks(myTasksPayload);
+        _claimableTasks = _mapTasks(claimablePayload);
+        _summary = summaryPayload is Map<String, dynamic>
+            ? summaryPayload
+            : <String, dynamic>{};
+      });
+    } catch (err) {
+      setState(() {
+        _errorMessage = err.toString().replaceFirst('Exception: ', '');
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    }
+  }
+
+  List<Task> _mapTasks(dynamic payload) {
+    if (payload is List) {
+      return payload
+          .whereType<Map>()
+          .map((item) => Task.fromJson(Map<String, dynamic>.from(item)))
+          .toList();
+    }
+    return [];
+  }
+
+  Future<void> _claimTask(Task task) async {
+    setState(() => _claimingTaskId = task.id);
+    try {
+      final api = context.read<TaskApiService>();
+      await api.claimTask(task.id);
+      ToastUtil.showSuccess('任务已认领');
+      await _loadData();
+    } catch (err) {
+      ToastUtil.showError('认领失败: ${err.toString().replaceFirst('Exception: ', '')}');
+    } finally {
+      if (mounted) {
+        setState(() => _claimingTaskId = null);
+      }
+    }
+  }
+
+  int _summaryValue(String key) {
+    final value = _summary[key];
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = BreakpointsUtil.isMobile(context);
+    final stats = [
+      WorkbenchStatItem(label: '我的任务', value: '${_summaryValue('my_total')}'),
+      WorkbenchStatItem(label: '待开始', value: '${_summaryValue('my_pending')}'),
+      WorkbenchStatItem(label: '进行中', value: '${_summaryValue('my_in_progress')}'),
+      WorkbenchStatItem(label: '可认领', value: '${_summaryValue('claimable_count')}'),
+    ];
+
+    return ListPageScaffold(
+      spacing: _spacingSm,
+      header: WorkbenchHeaderBar(
+        breadcrumb: null,
+        title: '操作员任务中心',
+        subtitle: '聚合我的任务与可认领任务，快速更新进度。',
+        stats: stats,
+        titleMaxWidth: isMobile ? double.infinity : 460,
+        hideSubtitleOnMobile: true,
+        mobileStatCount: 2,
+        hideBreadcrumbOnMobile: true,
+        actions: ListToolbar(
+          isMobile: isMobile,
+          actions: [
+            ListToolbarButton(
+              onPressed: _loadData,
+              icon: Icons.refresh,
+              label: _refreshButtonText,
+              height: _controlHeight,
+              compact: isMobile,
+            ),
+          ],
+        ),
+      ),
+      body: _buildBody(context, isMobile),
+    );
+  }
+
+  Widget _buildBody(BuildContext context, bool isMobile) {
+    if (_loading && _myTasks.isEmpty && _claimableTasks.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_errorMessage != null && !_loading) {
+      return ErrorStateCard(
+        message: _errorMessage ?? _errorFallbackText,
+        retryLabel: _retryText,
+        onRetry: _loadData,
+      );
+    }
+
+    final hasData = _myTasks.isNotEmpty || _claimableTasks.isNotEmpty;
+    if (!hasData && !_loading) {
+      return const EmptyStateCard(
+        icon: Icons.assignment_turned_in_outlined,
+        text: _emptyText,
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = isMobile || constraints.maxWidth < 960;
+        final children = [
+          _buildMyTasksSection(isNarrow),
+          const SizedBox(height: 16, width: 16),
+          _buildClaimableSection(isNarrow),
+        ];
+        return SingleChildScrollView(
+          padding: EdgeInsets.zero,
+          child: isNarrow
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [children[0], const SizedBox(height: 16), children[2]],
+                )
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: children[0]),
+                    const SizedBox(width: 16),
+                    Expanded(child: children[2]),
+                  ],
+                ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMyTasksSection(bool isNarrow) {
+    final tabs = [
+      _TaskTab(label: '全部', filter: null),
+      _TaskTab(label: '待开始', filter: 'pending'),
+      _TaskTab(label: '进行中', filter: 'in_progress'),
+      _TaskTab(label: '已完成', filter: 'completed'),
+    ];
+
+    return DetailSectionCard(
+      title: '我的任务',
+      child: DefaultTabController(
+        length: tabs.length,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TabBar(
+              isScrollable: true,
+              labelPadding: const EdgeInsets.symmetric(horizontal: 12),
+              tabs: tabs.map((tab) => Tab(text: tab.label)).toList(),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 420,
+              child: TabBarView(
+                children: tabs.map((tab) {
+                  final list = tab.filter == null
+                      ? _myTasks
+                      : _myTasks.where((task) => task.status == tab.filter).toList();
+                  return _buildTaskList(list, emptyText: '暂无${tab.label}任务');
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildClaimableSection(bool isNarrow) {
+    return DetailSectionCard(
+      title: '可认领任务',
+      child: SizedBox(
+        height: 420,
+        child: _buildTaskList(
+          _claimableTasks,
+          emptyText: '暂无可认领任务',
+          trailingBuilder: (task) {
+            final claiming = _claimingTaskId == task.id;
+            return TextButton(
+              onPressed: claiming ? null : () => _claimTask(task),
+              child: claiming
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('认领'),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTaskList(
+    List<Task> tasks, {
+    required String emptyText,
+    Widget Function(Task task)? trailingBuilder,
+  }) {
+    if (tasks.isEmpty) {
+      return Center(
+        child: Text(
+          emptyText,
+          style: const TextStyle(color: Colors.black54),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      itemCount: tasks.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        final task = tasks[index];
+        return _TaskCard(
+          task: task,
+          trailing: trailingBuilder?.call(task),
+          onTap: () => _openTaskDetail(context, task),
+          onUpdate: () => _openUpdateDialog(context, task, completeMode: false),
+          onComplete: () => _openUpdateDialog(context, task, completeMode: true),
+        );
+      },
+    );
+  }
+
+  void _openTaskDetail(BuildContext context, Task task) {
+    if (task.workOrderId != null) {
+      context.go('/workorders/${task.workOrderId}');
+      return;
+    }
+    ToastUtil.showError('该任务暂无施工单可查看');
+  }
+
+  Future<void> _openUpdateDialog(
+    BuildContext context,
+    Task task, {
+    required bool completeMode,
+  }) async {
+    await showDialog<void>(
+      context: context,
+      builder: (_) => _TaskUpdateDialog(
+        task: task,
+        completeMode: completeMode,
+        onSuccess: _loadData,
+      ),
+    );
+  }
+}
+
+class _TaskTab {
+  const _TaskTab({required this.label, required this.filter});
+
+  final String label;
+  final String? filter;
+}
+
+class _TaskCard extends StatelessWidget {
+  const _TaskCard({
+    required this.task,
+    required this.onTap,
+    required this.onUpdate,
+    required this.onComplete,
+    this.trailing,
+  });
+
+  final Task task;
+  final VoidCallback onTap;
+  final VoidCallback onUpdate;
+  final VoidCallback onComplete;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>()!;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+        border: Border.all(color: colors.borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: TaskListTile(task: task, onTap: onTap),
+              ),
+              if (trailing != null) trailing!,
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: onUpdate,
+                icon: const Icon(Icons.edit, size: 16),
+                label: const Text('更新进度'),
+              ),
+              OutlinedButton.icon(
+                onPressed: onComplete,
+                icon: const Icon(Icons.check_circle_outline, size: 16),
+                label: const Text('完成任务'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TaskUpdateDialog extends StatefulWidget {
+  const _TaskUpdateDialog({
+    required this.task,
+    required this.completeMode,
+    required this.onSuccess,
+  });
+
+  final Task task;
+  final bool completeMode;
+  final VoidCallback onSuccess;
+
+  @override
+  State<_TaskUpdateDialog> createState() => _TaskUpdateDialogState();
+}
+
+class _TaskUpdateDialogState extends State<_TaskUpdateDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late bool _completeMode;
+  int _quantityIncrement = 1;
+  int _quantityDefective = 0;
+  String _completionReason = '';
+  String _notes = '';
+  bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _completeMode = widget.completeMode;
+    final remaining = ((widget.task.productionQuantity ?? 0) -
+            (widget.task.quantityCompleted ?? 0))
+        .clamp(0, double.infinity)
+        .toInt();
+    _quantityIncrement = remaining == 0 ? 1 : remaining.clamp(1, remaining).toInt();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final task = widget.task;
+    final total = task.productionQuantity ?? 0;
+    final completed = task.quantityCompleted ?? 0;
+    final progress = total > 0 ? (completed / total * 100).round() : 0;
+
+    return AlertDialog(
+      title: Text(_completeMode ? '完成任务' : '更新进度'),
+      content: SizedBox(
+        width: 420,
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(task.workContent ?? '任务 #${task.id}'),
+                const SizedBox(height: 8),
+                LinearProgressIndicator(value: total > 0 ? completed / total : 0),
+                const SizedBox(height: 6),
+                Text('$completed / $total · $progress%'),
+                const SizedBox(height: 16),
+                ToggleButtons(
+                  isSelected: [_completeMode == false, _completeMode == true],
+                  onPressed: (index) {
+                    setState(() => _completeMode = index == 1);
+                  },
+                  children: const [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: Text('增量更新'),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: Text('直接完成'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                if (!_completeMode) ...[
+                  TextFormField(
+                    initialValue: _quantityIncrement.toString(),
+                    decoration: const InputDecoration(labelText: '本次完成数量'),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      final parsed = int.tryParse(value ?? '');
+                      if (parsed == null || parsed <= 0) {
+                        return '请输入大于 0 的数量';
+                      }
+                      return null;
+                    },
+                    onChanged: (value) {
+                      _quantityIncrement = int.tryParse(value) ?? 0;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                TextFormField(
+                  initialValue: _quantityDefective.toString(),
+                  decoration: const InputDecoration(labelText: '不良品数量'),
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    _quantityDefective = int.tryParse(value) ?? 0;
+                  },
+                ),
+                if (_completeMode) ...[
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    decoration: const InputDecoration(labelText: '完成理由（可选）'),
+                    onChanged: (value) => _completionReason = value,
+                  ),
+                ],
+                const SizedBox(height: 12),
+                TextFormField(
+                  decoration: const InputDecoration(labelText: '备注（可选）'),
+                  onChanged: (value) => _notes = value,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _submitting ? null : () => Navigator.of(context).pop(),
+          child: const Text('取消'),
+        ),
+        FilledButton(
+          onPressed: _submitting ? null : _submit,
+          child: _submitting
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(_completeMode ? '确认完成' : '确认更新'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _submit() async {
+    if (!_completeMode && !(_formKey.currentState?.validate() ?? false)) {
+      return;
+    }
+    setState(() => _submitting = true);
+    try {
+      final api = context.read<TaskApiService>();
+      if (_completeMode) {
+        await api.complete(widget.task.id, {
+          'quantity_defective': _quantityDefective,
+          'completion_reason': _completionReason,
+          'notes': _notes,
+        });
+      } else {
+        await api.updateQuantity(widget.task.id, {
+          'quantity_increment': _quantityIncrement,
+          'quantity_defective': _quantityDefective,
+          'notes': _notes,
+        });
+      }
+      ToastUtil.showSuccess(_completeMode ? '任务已完成' : '进度已更新');
+      widget.onSuccess();
+      if (mounted) Navigator.of(context).pop();
+    } catch (err) {
+      ToastUtil.showError(err.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+}

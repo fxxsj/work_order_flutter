@@ -8,7 +8,9 @@ class Task {
     this.statusDisplay,
     this.taskType,
     this.taskTypeDisplay,
+    this.assignedDepartmentId,
     this.assignedDepartmentName,
+    this.assignedOperatorId,
     this.assignedOperatorName,
     this.productionQuantity,
     this.quantityCompleted,
@@ -25,7 +27,9 @@ class Task {
   final String? statusDisplay;
   final String? taskType;
   final String? taskTypeDisplay;
+  final int? assignedDepartmentId;
   final String? assignedDepartmentName;
+  final int? assignedOperatorId;
   final String? assignedOperatorName;
   final double? productionQuantity;
   final double? quantityCompleted;
@@ -47,7 +51,9 @@ class Task {
       statusDisplay: toStringOrNull(json['status_display']),
       taskType: toStringOrNull(json['task_type']),
       taskTypeDisplay: toStringOrNull(json['task_type_display']),
+      assignedDepartmentId: toInt(json['assigned_department']),
       assignedDepartmentName: toStringOrNull(json['assigned_department_name']),
+      assignedOperatorId: toInt(json['assigned_operator']),
       assignedOperatorName: toStringOrNull(json['assigned_operator_name']),
       productionQuantity: _toDouble(json['production_quantity']),
       quantityCompleted: _toDouble(json['quantity_completed']),
