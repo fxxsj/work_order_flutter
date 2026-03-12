@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/content_page_types.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/page_registry.dart';
 
@@ -198,7 +199,7 @@ class _DashboardHero extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
       decoration: BoxDecoration(
         color: surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusXl),
         border: Border.all(color: borderColor),
       ),
       child: LayoutBuilder(
@@ -238,7 +239,7 @@ class _DashboardHero extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
                   ),
                   child:
                       Icon(Icons.dashboard_outlined, color: primary, size: 18),
@@ -259,7 +260,7 @@ class _DashboardHero extends StatelessWidget {
                 height: 40,
                 decoration: BoxDecoration(
                   color: primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
                 ),
                 child: Icon(Icons.dashboard_outlined, color: primary, size: 18),
               ),
@@ -477,7 +478,7 @@ class _DefaultHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
       decoration: BoxDecoration(
         color: surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusXl),
         border: Border.all(color: borderColor),
       ),
       child: Column(
@@ -534,7 +535,7 @@ class _ModulePlaceholder extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: style.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusXl),
         border: Border.all(color: style.borderColor),
       ),
       child: Column(
@@ -584,7 +585,7 @@ class _PanelShell extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusXl),
         border: Border.all(color: borderColor),
       ),
       child: Column(
@@ -639,12 +640,12 @@ class _QuickEntryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: item.path == null ? null : () => context.go(item.path!),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(LayoutTokens.radiusXl),
       child: Container(
         width: width,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
           border: Border.all(color: borderColor),
           color: surface,
         ),
@@ -655,7 +656,7 @@ class _QuickEntryCard extends StatelessWidget {
               height: 38,
               decoration: BoxDecoration(
                 color: primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
               ),
               child: Icon(item.icon, color: primary, size: 18),
             ),
@@ -704,7 +705,7 @@ class _SimpleNavRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: item.path == null ? null : () => context.go(item.path!),
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
@@ -793,18 +794,19 @@ class _RoutePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return InkWell(
       onTap: item.path == null ? null : () => context.go(item.path!),
-      borderRadius: BorderRadius.circular(999),
+      borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: primary.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
         ),
         child: Text(
           item.label,
-          style: TextStyle(
+          style: theme.textTheme.labelSmall?.copyWith(
             color: subtleText,
             fontWeight: FontWeight.w600,
           ),
@@ -827,18 +829,18 @@ class _TinyBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
       ),
       child: Text(
         label,
-        style: TextStyle(
+        style: theme.textTheme.labelSmall?.copyWith(
           color: color,
           fontWeight: FontWeight.w700,
-          fontSize: 12,
         ),
       ),
     );

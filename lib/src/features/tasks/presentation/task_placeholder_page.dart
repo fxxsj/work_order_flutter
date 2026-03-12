@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 
@@ -59,33 +60,15 @@ class _SectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>()!;
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: colors.borderColor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: colors.sidebarText,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            subtitle,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colors.subtleText,
-              height: 1.5,
-            ),
-          ),
-        ],
+    final colors = theme.extension<AppColors>();
+    return DetailSectionCard(
+      title: title,
+      child: Text(
+        subtitle,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: colors?.subtleText,
+          height: 1.5,
+        ),
       ),
     );
   }

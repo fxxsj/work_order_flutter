@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
@@ -200,13 +201,17 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
   Widget _sectionTitle(ThemeData theme, String text) {
     return Text(
       text,
-      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+      style: theme.textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.w700,
+        color: theme.colorScheme.onSurface,
+      ),
     );
   }
 
   Widget _buildProductSection(ThemeData theme, double sectionSpacing) {
+    final colors = theme.extension<AppColors>();
     final content = _productItems.isEmpty
-        ? Text('暂无产品项', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor))
+        ? Text('暂无产品项', style: theme.textTheme.bodySmall?.copyWith(color: colors?.subtleText ?? theme.hintColor))
         : Column(
             children: List.generate(_productItems.length, (index) {
               final item = _productItems[index];
@@ -219,10 +224,7 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
                       child: DropdownButtonFormField<int>(
                         initialValue: item.productId,
                         isExpanded: true,
-                        decoration: const InputDecoration(
-                          labelText: _productLabel,
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: const InputDecoration(labelText: _productLabel),
                         items: _productOptions
                             .map(
                               (product) => DropdownMenuItem<int>(
@@ -242,10 +244,7 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
                     Expanded(
                       child: TextFormField(
                         controller: item.quantityController,
-                        decoration: const InputDecoration(
-                          labelText: _quantityLabel,
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: const InputDecoration(labelText: _quantityLabel),
                         keyboardType: TextInputType.number,
                       ),
                     ),
@@ -300,7 +299,6 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
       controller: _codeController,
       decoration: const InputDecoration(
         labelText: _codeLabel,
-        border: OutlineInputBorder(),
         hintText: '留空则系统自动生成',
       ),
       enabled: !isConfirmed,
@@ -308,10 +306,7 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
 
     final nameField = TextFormField(
       controller: _nameController,
-      decoration: const InputDecoration(
-        labelText: _nameLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _nameLabel),
       enabled: !isConfirmed,
       validator: (value) {
         final text = value?.trim() ?? '';
@@ -324,10 +319,7 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
 
     final typeField = DropdownButtonFormField<String>(
       initialValue: _foilingType,
-      decoration: const InputDecoration(
-        labelText: _typeLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _typeLabel),
       items: const [
         DropdownMenuItem(value: 'gold', child: Text('烫金')),
         DropdownMenuItem(value: 'silver', child: Text('烫银')),
@@ -342,37 +334,25 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
 
     final sizeField = TextFormField(
       controller: _sizeController,
-      decoration: const InputDecoration(
-        labelText: _sizeLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _sizeLabel),
       enabled: !isConfirmed,
     );
 
     final materialField = TextFormField(
       controller: _materialController,
-      decoration: const InputDecoration(
-        labelText: _materialLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _materialLabel),
       enabled: !isConfirmed,
     );
 
     final thicknessField = TextFormField(
       controller: _thicknessController,
-      decoration: const InputDecoration(
-        labelText: _thicknessLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _thicknessLabel),
       enabled: !isConfirmed,
     );
 
     final notesField = TextFormField(
       controller: _notesController,
-      decoration: const InputDecoration(
-        labelText: _notesLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _notesLabel),
       maxLines: 3,
     );
 

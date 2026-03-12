@@ -94,7 +94,7 @@ class _QualityInspectionListView extends StatefulWidget {
 class _QualityInspectionListViewState extends State<_QualityInspectionListView> {
   static const _searchDebounceDuration = Duration(milliseconds: 450);
   static const double _searchWidth = 320;
-  static const double _spacingSm = 8;
+  static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
   static const String _emptyCellText = '-';
 

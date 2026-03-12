@@ -117,7 +117,10 @@ class _ProcessEditPageState extends State<ProcessEditPage> {
   Widget _sectionTitle(ThemeData theme, String text) {
     return Text(
       text,
-      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+      style: theme.textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.w700,
+        color: theme.colorScheme.onSurface,
+      ),
     );
   }
 
@@ -135,10 +138,7 @@ class _ProcessEditPageState extends State<ProcessEditPage> {
 
     final codeField = TextFormField(
       controller: _codeController,
-      decoration: const InputDecoration(
-        labelText: _codeLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _codeLabel),
       enabled: widget.process == null,
       validator: (value) {
         final text = value?.trim() ?? '';
@@ -151,10 +151,7 @@ class _ProcessEditPageState extends State<ProcessEditPage> {
 
     final nameField = TextFormField(
       controller: _nameController,
-      decoration: const InputDecoration(
-        labelText: _nameLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _nameLabel),
       validator: (value) {
         final text = value?.trim() ?? '';
         if (text.isEmpty) {
@@ -166,36 +163,24 @@ class _ProcessEditPageState extends State<ProcessEditPage> {
 
     final descField = TextFormField(
       controller: _descController,
-      decoration: const InputDecoration(
-        labelText: _descLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _descLabel),
       maxLines: 3,
     );
 
     final durationField = TextFormField(
       controller: _durationController,
-      decoration: const InputDecoration(
-        labelText: _durationLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _durationLabel),
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
     );
 
     final sortField = TextFormField(
       controller: _sortController,
-      decoration: const InputDecoration(
-        labelText: _sortLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _sortLabel),
       keyboardType: TextInputType.number,
     );
 
     final statusField = InputDecorator(
-      decoration: const InputDecoration(
-        labelText: _statusLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _statusLabel),
       child: Align(
         alignment: Alignment.centerLeft,
         child: Switch(

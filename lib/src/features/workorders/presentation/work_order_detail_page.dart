@@ -503,7 +503,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: theme.colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
             border:
                 Border.all(color: theme.dividerColor.withValues(alpha: 0.4)),
           ),
@@ -651,10 +651,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                                         child: DropdownButtonFormField<String>(
                                           initialValue: _statusSelection,
                                           isExpanded: true,
-                                          decoration: const InputDecoration(
-                                            labelText: '状态',
-                                            border: OutlineInputBorder(),
-                                          ),
+                                          decoration: const InputDecoration(labelText: '状态'),
                                           items: statusOptions,
                                           onChanged: _actionLoading
                                               ? null

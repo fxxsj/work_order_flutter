@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 
 class AppSidebarDrawer extends StatelessWidget {
   const AppSidebarDrawer({
@@ -27,6 +28,11 @@ class AppSidebarDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final parentStyle = theme.textTheme.bodySmall?.copyWith(
+      color: sidebarText,
+      fontWeight: FontWeight.w700,
+    );
     final children = <Widget>[
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 18, 16, 10),
@@ -67,11 +73,7 @@ class AppSidebarDrawer extends StatelessWidget {
               leading: Icon(item.icon, color: sidebarText, size: 18),
               title: Text(
                 item.label,
-                style: TextStyle(
-                  color: sidebarText,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: parentStyle,
               ),
               children: [
                 for (final child in item.children)
@@ -144,18 +146,19 @@ class AppSidebarRail extends StatelessWidget {
               sidebarText: sidebarText,
             ),
           ),
-          ..._buildRailItems(),
+          ..._buildRailItems(context),
         ],
       ),
     );
   }
 
-  List<Widget> _buildRailItems() {
+  List<Widget> _buildRailItems(BuildContext context) {
     final items = <Widget>[];
     for (final item in navItems) {
       if (item.children.isEmpty) {
         items.add(
           _buildRailTile(
+            context,
             item,
             isSelected: currentId == item.id,
             onTap: () => onSelectId(item.id),
@@ -166,6 +169,7 @@ class AppSidebarRail extends StatelessWidget {
             item.children.any((c) => c.id == currentId);
         items.add(
           _buildRailTile(
+            context,
             item,
             isSelected: false,
             isParent: true,
@@ -177,6 +181,7 @@ class AppSidebarRail extends StatelessWidget {
           for (final child in item.children) {
             items.add(
               _buildRailTile(
+                context,
                 child,
                 isSelected: currentId == child.id,
                 indent: railExtended ? 16 : 0,
@@ -191,6 +196,7 @@ class AppSidebarRail extends StatelessWidget {
   }
 
   Widget _buildRailTile(
+    BuildContext context,
     NavItem item, {
     required bool isSelected,
     required VoidCallback onTap,
@@ -198,20 +204,25 @@ class AppSidebarRail extends StatelessWidget {
     bool isExpanded = false,
     double indent = 0,
   }) {
+    final theme = Theme.of(context);
     final background =
         isSelected ? primary.withValues(alpha: 0.08) : Colors.transparent;
     final iconColor = isSelected ? primary : sidebarText;
     final textColor = isSelected ? primary : sidebarText;
+    final labelStyle = theme.textTheme.bodySmall?.copyWith(
+      color: textColor,
+      fontWeight: isParent ? FontWeight.w600 : FontWeight.w500,
+    );
 
     final tile = InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
       child: Container(
-        height: 40,
+        height: LayoutTokens.navItemHeight,
         padding: EdgeInsets.symmetric(horizontal: railExtended ? 10 : 0),
         decoration: BoxDecoration(
           color: background,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
           border: Border.all(
             color: isSelected
                 ? primary.withValues(alpha: 0.12)
@@ -229,11 +240,7 @@ class AppSidebarRail extends StatelessWidget {
               Expanded(
                 child: Text(
                   item.label,
-                  style: TextStyle(
-                    color: textColor,
-                    fontWeight: isParent ? FontWeight.w600 : FontWeight.w500,
-                    fontSize: 12.5,
-                  ),
+                  style: labelStyle,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -304,18 +311,27 @@ class _DrawerTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final background =
         isSelected ? primary.withValues(alpha: 0.08) : Colors.transparent;
+    final theme = Theme.of(context);
+    final labelStyle = theme.textTheme.bodySmall?.copyWith(
+      color: isSelected ? primary : sidebarText,
+      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+    );
+    final badgeStyle = theme.textTheme.labelSmall?.copyWith(
+      color: primary,
+      fontWeight: FontWeight.w600,
+    );
     return Padding(
       padding: EdgeInsets.symmetric(
           horizontal: dense ? 18 : 12, vertical: dense ? 1 : 3),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
         child: Container(
           padding:
               EdgeInsets.symmetric(horizontal: 12, vertical: dense ? 7 : 9),
           decoration: BoxDecoration(
             color: background,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
             border: Border.all(
               color: isSelected
                   ? primary.withValues(alpha: 0.12)
@@ -330,10 +346,7 @@ class _DrawerTile extends StatelessWidget {
               Expanded(
                 child: Text(
                   item.label,
-                  style: TextStyle(
-                    color: isSelected ? primary : sidebarText,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: labelStyle,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -343,15 +356,11 @@ class _DrawerTile extends StatelessWidget {
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
                   ),
                   child: Text(
                     badgeText!,
-                    style: TextStyle(
-                      color: primary,
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: badgeStyle,
                   ),
                 ),
             ],
@@ -376,17 +385,17 @@ class _RailBadge extends StatelessWidget {
     if (badgeText == null) {
       return const SizedBox.shrink();
     }
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
       ),
       child: Text(
         badgeText!,
-        style: TextStyle(
+        style: theme.textTheme.labelSmall?.copyWith(
           color: primary,
-          fontSize: 10,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -414,7 +423,7 @@ class _SidebarBrand extends StatelessWidget {
         height: 40,
         decoration: BoxDecoration(
           color: primary.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
         ),
         child: Icon(Icons.grid_view_rounded, color: primary, size: 18),
       );
@@ -429,7 +438,7 @@ class _SidebarBrand extends StatelessWidget {
             height: 34,
             decoration: BoxDecoration(
               color: primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
             ),
             child: Icon(Icons.grid_view_rounded, color: primary, size: 18),
           ),

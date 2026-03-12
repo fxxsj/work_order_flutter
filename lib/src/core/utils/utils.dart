@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class Utils {
@@ -62,10 +63,10 @@ class Utils {
         filled: true,
         fillColor: appColors.surface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
           borderSide: BorderSide(color: scheme.primary, width: 1.4),
         ),
       ),

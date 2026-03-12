@@ -132,7 +132,10 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
   Widget _sectionTitle(ThemeData theme, String text) {
     return Text(
       text,
-      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+      style: theme.textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.w700,
+        color: theme.colorScheme.onSurface,
+      ),
     );
   }
 
@@ -150,10 +153,7 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
 
     final codeField = TextFormField(
       controller: _codeController,
-      decoration: const InputDecoration(
-        labelText: _codeLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _codeLabel),
       enabled: widget.supplier == null,
       validator: (value) {
         final text = value?.trim() ?? '';
@@ -172,10 +172,7 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
 
     final nameField = TextFormField(
       controller: _nameController,
-      decoration: const InputDecoration(
-        labelText: _nameLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _nameLabel),
       validator: (value) {
         final text = value?.trim() ?? '';
         if (text.isEmpty) {
@@ -187,18 +184,12 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
 
     final contactField = TextFormField(
       controller: _contactController,
-      decoration: const InputDecoration(
-        labelText: _contactLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _contactLabel),
     );
 
     final phoneField = TextFormField(
       controller: _phoneController,
-      decoration: const InputDecoration(
-        labelText: _phoneLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _phoneLabel),
       keyboardType: TextInputType.phone,
       validator: (value) {
         final text = value?.trim() ?? '';
@@ -212,10 +203,7 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
 
     final emailField = TextFormField(
       controller: _emailController,
-      decoration: const InputDecoration(
-        labelText: _emailLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _emailLabel),
       keyboardType: TextInputType.emailAddress,
       validator: (value) {
         final text = value?.trim() ?? '';
@@ -229,10 +217,7 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
 
     final statusField = DropdownButtonFormField<String>(
       initialValue: _status,
-      decoration: const InputDecoration(
-        labelText: _statusLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _statusLabel),
       items: const [
         DropdownMenuItem(value: _statusActive, child: Text('启用')),
         DropdownMenuItem(value: _statusInactive, child: Text('停用')),
@@ -247,20 +232,14 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
 
     final addressField = TextFormField(
       controller: _addressController,
-      decoration: const InputDecoration(
-        labelText: _addressLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _addressLabel),
       minLines: 2,
       maxLines: 3,
     );
 
     final notesField = TextFormField(
       controller: _notesController,
-      decoration: const InputDecoration(
-        labelText: _notesLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _notesLabel),
       minLines: 2,
       maxLines: 3,
     );

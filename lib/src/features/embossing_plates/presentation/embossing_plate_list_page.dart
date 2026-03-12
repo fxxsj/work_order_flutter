@@ -94,7 +94,7 @@ class _EmbossingPlateListView extends StatefulWidget {
 class _EmbossingPlateListViewState extends State<_EmbossingPlateListView> {
   static const _searchDebounceDuration = Duration(milliseconds: 450);
   static const double _searchWidth = 300;
-  static const double _spacingSm = 8;
+  static const double _spacingSm = LayoutTokens.gapSm;
   static const String _emptyCellText = '-';
 
   static const String _searchHintText = '搜索压凸版编码、名称、尺寸、材质';

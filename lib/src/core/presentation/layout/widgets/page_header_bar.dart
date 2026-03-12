@@ -9,7 +9,7 @@ class PageHeaderBar extends StatelessWidget {
     super.key,
     required this.actions,
     this.breadcrumb,
-    this.padding = const EdgeInsets.fromLTRB(16, 16, 16, 12),
+    this.padding,
     this.useSurface = true,
     this.showDivider = true,
     this.breadcrumbBottomSpacing = 4,
@@ -18,7 +18,7 @@ class PageHeaderBar extends StatelessWidget {
 
   final String? breadcrumb;
   final Widget actions;
-  final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry? padding;
   final bool useSurface;
   final bool showDivider;
   final double breadcrumbBottomSpacing;
@@ -28,6 +28,7 @@ class PageHeaderBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
+    final resolvedPadding = padding ?? LayoutTokens.pageHeaderPadding(context);
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -58,7 +59,7 @@ class PageHeaderBar extends StatelessWidget {
     }
 
     return Container(
-      padding: padding,
+      padding: resolvedPadding,
       decoration: BoxDecoration(
         color: useSurface ? theme.colorScheme.surface : null,
         border: showDivider

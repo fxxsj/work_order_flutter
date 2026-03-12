@@ -54,10 +54,11 @@ class _ExpandableSummaryCardState extends State<ExpandableSummaryCard>
     final resolvedHeaderPadding =
         (widget.headerPadding ?? LayoutTokens.cardPadding(context))
             .resolve(Directionality.of(context));
+    final expandedSpacing = LayoutTokens.sectionSpacing(context);
     final resolvedExpandedPadding = widget.expandedPadding ??
         EdgeInsets.fromLTRB(
           resolvedHeaderPadding.left,
-          12,
+          expandedSpacing,
           resolvedHeaderPadding.right,
           resolvedHeaderPadding.bottom,
         );

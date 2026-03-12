@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/api_exception.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/features/auth/application/auth_view_model.dart';
 import 'package:work_order_app/src/features/auth/domain/user.dart';
 import 'package:work_order_app/src/features/auth/presentation/widgets/auth_scaffold.dart';
@@ -110,18 +111,21 @@ class _RegisterState extends State {
               child: FilledButton(
                 onPressed: _isLoading ? null : _register,
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFB45309),
-                  foregroundColor: Colors.white,
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: theme.colorScheme.onPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18)),
+                    borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
+                  ),
                 ),
                 child: _isLoading
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
+                          strokeWidth: 2,
+                          color: theme.colorScheme.onPrimary,
+                        ),
                       )
                     : const Text('注册'),
               ),

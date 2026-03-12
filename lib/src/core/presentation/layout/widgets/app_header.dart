@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/common/theme_ext.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/controllers/app_badge_controller.dart';
 import 'package:work_order_app/src/features/notification/application/notification_view_model.dart';
 import 'package:work_order_app/src/features/notification/domain/notification_model.dart';
@@ -49,6 +51,17 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final semantic = theme.extension<AppSemanticColors>();
+    final appTitleStyle = theme.textTheme.labelSmall?.copyWith(
+      color: subtleText,
+      fontWeight: FontWeight.w600,
+    );
+    final sectionStyle = (isMobile ? theme.textTheme.titleSmall : theme.textTheme.titleMedium)
+        ?.copyWith(
+      color: accent,
+      fontWeight: FontWeight.w700,
+    );
     return AppBar(
       backgroundColor: surface,
       elevation: 0,
@@ -71,20 +84,12 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                 if (!isMobile)
                   Text(
                     appTitle,
-                    style: TextStyle(
-                      color: subtleText,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 11,
-                    ),
+                    style: appTitleStyle,
                     overflow: TextOverflow.ellipsis,
                   ),
                 Text(
                   sectionTitle,
-                  style: TextStyle(
-                    color: accent,
-                    fontWeight: FontWeight.w700,
-                    fontSize: isMobile ? 16 : 17,
-                  ),
+                  style: sectionStyle,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -129,7 +134,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
               offset: const Offset(0, 46),
               constraints: const BoxConstraints(minWidth: 280, maxWidth: 320),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
+                  borderRadius: BorderRadius.circular(LayoutTokens.radiusMd)),
               onSelected: (value) {
                 notifyCtrl.markRead(value);
               },
@@ -146,7 +151,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                 child: Badge(
                   isLabelVisible: unread > 0,
                   label: Text(label),
-                  backgroundColor: Colors.redAccent,
+                  backgroundColor: semantic?.danger ?? Colors.redAccent,
                   offset: const Offset(6, -6),
                   child: const Icon(Icons.notifications_none_outlined),
                 ),
@@ -209,6 +214,13 @@ List<PopupMenuEntry<String>> _buildNotificationMenuItems(
   Color primary,
   VoidCallback onNotificationViewAll,
 ) {
+  final theme = Theme.of(context);
+  final headerStyle = theme.textTheme.titleSmall?.copyWith(
+    color: accent,
+    fontWeight: FontWeight.w600,
+  );
+  final actionStyle = theme.textTheme.labelSmall ?? theme.textTheme.bodySmall;
+  final emptyStyle = theme.textTheme.bodySmall?.copyWith(color: subtleText);
   final items = <PopupMenuEntry<String>>[];
   items.add(
     PopupMenuItem<String>(
@@ -218,11 +230,7 @@ List<PopupMenuEntry<String>> _buildNotificationMenuItems(
         children: [
           Text(
             '通知',
-            style: TextStyle(
-              color: accent,
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-            ),
+            style: headerStyle,
           ),
           const Spacer(),
           TextButton(
@@ -236,7 +244,7 @@ List<PopupMenuEntry<String>> _buildNotificationMenuItems(
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: const Text('全部已读', style: TextStyle(fontSize: 12)),
+            child: Text('全部已读', style: actionStyle),
           ),
         ],
       ),
@@ -250,7 +258,7 @@ List<PopupMenuEntry<String>> _buildNotificationMenuItems(
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
         child: Text(
           '暂无通知',
-          style: TextStyle(color: subtleText, fontSize: 12),
+          style: emptyStyle,
         ),
       ),
     );
@@ -305,7 +313,7 @@ List<PopupMenuEntry<String>> _buildNotificationMenuItems(
             minimumSize: Size.zero,
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
-          child: const Text('查看全部', style: TextStyle(fontSize: 12)),
+          child: Text('查看全部', style: actionStyle),
         ),
       ),
     ),
@@ -334,7 +342,17 @@ class _NotificationListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final levelColor = _levelColorFor(item.level, primary);
+    final titleStyle = theme.textTheme.bodySmall?.copyWith(
+      color: accent,
+      fontWeight: item.isRead ? FontWeight.w500 : FontWeight.w700,
+    );
+    final timeStyle = theme.textTheme.labelSmall?.copyWith(color: subtleText);
+    final contentStyle = theme.textTheme.bodySmall?.copyWith(
+      color: subtleText,
+      height: 1.4,
+    );
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
@@ -360,18 +378,14 @@ class _NotificationListItem extends StatelessWidget {
               Expanded(
                 child: Text(
                   item.title,
-                  style: TextStyle(
-                    color: accent,
-                    fontWeight: item.isRead ? FontWeight.w500 : FontWeight.w700,
-                    fontSize: 13,
-                  ),
+                  style: titleStyle,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
               const SizedBox(width: 6),
               Text(
                 timeLabel,
-                style: TextStyle(color: subtleText, fontSize: 11),
+                style: timeStyle,
               ),
               const SizedBox(width: 6),
               IconButton(
@@ -385,7 +399,7 @@ class _NotificationListItem extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             item.content,
-            style: TextStyle(color: subtleText, fontSize: 12, height: 1.4),
+            style: contentStyle,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -409,20 +423,20 @@ class _AppBarChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       margin: const EdgeInsets.only(left: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
         border: Border.all(color: color.withValues(alpha: 0.14)),
       ),
       child: Text(
         label,
-        style: TextStyle(
+        style: theme.textTheme.labelSmall?.copyWith(
           color: color,
           fontWeight: FontWeight.w600,
-          fontSize: 11,
         ),
       ),
     );
@@ -445,7 +459,7 @@ class _AvatarMenu extends StatelessWidget {
     return PopupMenuButton<String>(
       tooltip: '账户',
       offset: const Offset(0, 48),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(LayoutTokens.radiusMd)),
       onSelected: (value) {
         if (value == 'profile') {
           onProfileTap();

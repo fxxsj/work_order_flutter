@@ -4,7 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/constants/breakpoints.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -455,30 +458,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
   }
 
   Widget _buildSection(String title, Widget child) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>()!;
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: colors.borderColor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: colors.sidebarText,
-            ),
-          ),
-          const SizedBox(height: 12),
-          child,
-        ],
-      ),
-    );
+    return DetailSectionCard(title: title, child: child);
   }
 
   String _selectedCustomerName() {
@@ -561,7 +541,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                         DropdownButtonFormField<int>(
                           initialValue: _customerId,
                           decoration: const InputDecoration(
-                              labelText: '客户', border: OutlineInputBorder()),
+                              labelText: '客户'),
                           items: _customers
                               .map(
                                 (item) => DropdownMenuItem(
@@ -595,7 +575,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                                     initialValue: _status,
                                     decoration: const InputDecoration(
                                         labelText: '状态',
-                                        border: OutlineInputBorder()),
+                                        ),
                                     items: const [
                                       DropdownMenuItem(
                                           value: 'pending', child: Text('待开始')),
@@ -621,7 +601,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                                     initialValue: _priority,
                                     decoration: const InputDecoration(
                                         labelText: '优先级',
-                                        border: OutlineInputBorder()),
+                                        ),
                                     items: const [
                                       DropdownMenuItem(
                                           value: 'low', child: Text('低')),
@@ -642,7 +622,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                                     readOnly: true,
                                     decoration: const InputDecoration(
                                         labelText: '下单日期',
-                                        border: OutlineInputBorder()),
+                                        ),
                                     controller: _orderDateController,
                                     onTap: () => _pickDate(isOrderDate: true),
                                   ),
@@ -653,7 +633,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                                     readOnly: true,
                                     decoration: const InputDecoration(
                                         labelText: '交货日期',
-                                        border: OutlineInputBorder()),
+                                        ),
                                     controller: _deliveryDateController,
                                     onTap: () => _pickDate(isOrderDate: false),
                                     validator: (value) =>
@@ -668,7 +648,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                                     controller: _productionQuantityController,
                                     decoration: const InputDecoration(
                                         labelText: '生产数量',
-                                        border: OutlineInputBorder()),
+                                        ),
                                     keyboardType: TextInputType.number,
                                     validator: (value) {
                                       final text = value?.trim() ?? '';
@@ -687,7 +667,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                                     controller: _defectiveQuantityController,
                                     decoration: const InputDecoration(
                                         labelText: '预损数量',
-                                        border: OutlineInputBorder()),
+                                        ),
                                     keyboardType: TextInputType.number,
                                     validator: (value) {
                                       final text = value?.trim() ?? '';
@@ -707,7 +687,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                                       readOnly: true,
                                       decoration: const InputDecoration(
                                           labelText: '实际交货日期',
-                                          border: OutlineInputBorder()),
+                                          ),
                                       controller: _actualDeliveryDateController,
                                       onTap: _pickActualDeliveryDate,
                                     ),
@@ -720,7 +700,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                         TextFormField(
                           controller: _notesController,
                           decoration: const InputDecoration(
-                              labelText: '备注', border: OutlineInputBorder()),
+                              labelText: '备注'),
                           maxLines: 3,
                         ),
                       ],
@@ -803,7 +783,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                         DropdownButtonFormField<String>(
                           initialValue: _printingType,
                           decoration: const InputDecoration(
-                              labelText: '印刷形式', border: OutlineInputBorder()),
+                              labelText: '印刷形式'),
                           items: const [
                             DropdownMenuItem(
                                 value: 'none', child: Text('不需要印刷')),
@@ -850,7 +830,6 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                           controller: _printingOtherColorsController,
                           decoration: const InputDecoration(
                             labelText: '其他颜色 (逗号分隔)',
-                            border: OutlineInputBorder(),
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -969,28 +948,26 @@ class _MultiSelectChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (items.isEmpty) {
-      return Text(emptyText, style: Theme.of(context).textTheme.bodyMedium);
-    }
     final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>()!;
+    final colors = theme.extension<AppColors>();
+    if (items.isEmpty) {
+      return Text(
+        emptyText,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: colors?.subtleText ?? theme.hintColor,
+        ),
+      );
+    }
+    final resolvedColors = colors!;
     final selectedItems =
         items.where((item) => selected.contains(item.id)).toList();
     return InkWell(
       onTap: () => _openDialog(context),
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
       child: InputDecorator(
         decoration: InputDecoration(
           filled: true,
           fillColor: theme.colorScheme.primary.withValues(alpha: 0.03),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(18),
-            borderSide: BorderSide(color: colors.borderColor),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(18),
-            borderSide: BorderSide(color: colors.borderColor),
-          ),
           contentPadding: const EdgeInsets.all(12),
           suffixIcon: const Icon(Icons.arrow_drop_down),
         ),
@@ -998,7 +975,7 @@ class _MultiSelectChips extends StatelessWidget {
             ? Text(
                 placeholder,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colors.subtleText,
+                  color: resolvedColors.subtleText,
                 ),
               )
             : Wrap(
@@ -1050,7 +1027,7 @@ class _MultiSelectChips extends StatelessWidget {
                       decoration: const InputDecoration(
                         hintText: '搜索名称或编码',
                         prefixIcon: Icon(Icons.search),
-                        border: OutlineInputBorder(),
+                        
                       ),
                       onChanged: (value) =>
                           setDialogState(() => query = value.trim()),
@@ -1229,7 +1206,7 @@ class _ProductRowState extends State<_ProductRow> {
                     initialValue: widget.draft.productId,
                     isExpanded: true,
                     decoration: const InputDecoration(
-                        labelText: '产品', border: OutlineInputBorder()),
+                        labelText: '产品'),
                     items: widget.products
                         .map(
                           (item) => DropdownMenuItem(
@@ -1249,7 +1226,7 @@ class _ProductRowState extends State<_ProductRow> {
                   child: TextFormField(
                     controller: widget.draft.quantityController,
                     decoration: const InputDecoration(
-                        labelText: '数量', border: OutlineInputBorder()),
+                        labelText: '数量'),
                     keyboardType: TextInputType.number,
                   ),
                 ),
@@ -1258,7 +1235,7 @@ class _ProductRowState extends State<_ProductRow> {
                   child: TextFormField(
                     controller: widget.draft.unitController,
                     decoration: const InputDecoration(
-                        labelText: '单位', border: OutlineInputBorder()),
+                        labelText: '单位'),
                   ),
                 ),
                 SizedBox(
@@ -1266,7 +1243,7 @@ class _ProductRowState extends State<_ProductRow> {
                   child: TextFormField(
                     controller: widget.draft.specController,
                     decoration: const InputDecoration(
-                        labelText: '规格', border: OutlineInputBorder()),
+                        labelText: '规格'),
                   ),
                 ),
                 SizedBox(
@@ -1274,7 +1251,7 @@ class _ProductRowState extends State<_ProductRow> {
                   child: TextFormField(
                     controller: widget.draft.sortOrderController,
                     decoration: const InputDecoration(
-                        labelText: '排序', border: OutlineInputBorder()),
+                        labelText: '排序'),
                     keyboardType: TextInputType.number,
                   ),
                 ),
@@ -1333,7 +1310,7 @@ class _MaterialRowState extends State<_MaterialRow> {
                     initialValue: widget.draft.materialId,
                     isExpanded: true,
                     decoration: const InputDecoration(
-                        labelText: '物料', border: OutlineInputBorder()),
+                        labelText: '物料'),
                     items: widget.materials
                         .map(
                           (item) => DropdownMenuItem(
@@ -1352,7 +1329,7 @@ class _MaterialRowState extends State<_MaterialRow> {
                   child: TextFormField(
                     controller: widget.draft.sizeController,
                     decoration: const InputDecoration(
-                        labelText: '规格', border: OutlineInputBorder()),
+                        labelText: '规格'),
                   ),
                 ),
                 SizedBox(
@@ -1360,7 +1337,7 @@ class _MaterialRowState extends State<_MaterialRow> {
                   child: TextFormField(
                     controller: widget.draft.usageController,
                     decoration: const InputDecoration(
-                        labelText: '用量', border: OutlineInputBorder()),
+                        labelText: '用量'),
                   ),
                 ),
                 Row(
@@ -1379,7 +1356,7 @@ class _MaterialRowState extends State<_MaterialRow> {
                   child: TextFormField(
                     controller: widget.draft.notesController,
                     decoration: const InputDecoration(
-                        labelText: '备注', border: OutlineInputBorder()),
+                        labelText: '备注'),
                   ),
                 ),
                 IconButton(
@@ -1403,15 +1380,7 @@ class _FormCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<AppColors>()!;
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: colors.borderColor),
-      ),
-      child: child,
-    );
+    return DetailSurfaceCard(child: child);
   }
 }
 
@@ -1424,13 +1393,11 @@ class _FormRowCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.borderColor),
-      ),
+    return AppCard(
+      padding: LayoutTokens.cardPadding(context),
+      background: theme.colorScheme.primary.withValues(alpha: 0.03),
+      borderColor: colors.borderColor,
+      radius: LayoutTokens.radiusLg,
       child: child,
     );
   }

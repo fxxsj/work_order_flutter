@@ -96,7 +96,7 @@ class _SupplierListView extends StatefulWidget {
 class _SupplierListViewState extends State<_SupplierListView> {
   static const _searchDebounceDuration = Duration(milliseconds: 450);
   static const double _searchWidth = 300;
-  static const double _spacingSm = 8;
+  static const double _spacingSm = LayoutTokens.gapSm;
   static const String _emptyCellText = '-';
 
   static const String _searchHintText = '搜索供应商名称/编码';

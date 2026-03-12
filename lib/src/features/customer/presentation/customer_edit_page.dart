@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
@@ -150,16 +151,21 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
   Widget _sectionTitle(ThemeData theme, String text) {
     return Text(
       text,
-      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+      style: theme.textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.w700,
+        color: theme.colorScheme.onSurface,
+      ),
     );
   }
 
   Widget _readonlyField(ThemeData theme, String label, String value) {
+    final colors = theme.extension<AppColors>();
+    final subtleText = colors?.subtleText ?? theme.hintColor;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
-        const SizedBox(height: 6),
+        Text(label, style: theme.textTheme.bodySmall?.copyWith(color: subtleText)),
+        const SizedBox(height: LayoutTokens.gapSm),
         Text(value, style: theme.textTheme.bodyMedium),
       ],
     );
@@ -210,10 +216,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                 SizedBox(height: sectionSpacing),
                 TextFormField(
                   controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: _nameLabel,
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: const InputDecoration(labelText: _nameLabel),
                   validator: (value) {
                     final text = value?.trim() ?? '';
                     if (text.isEmpty) {
@@ -228,10 +231,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                 SizedBox(height: sectionSpacing),
                 DropdownButtonFormField<int?>(
                   initialValue: _salespersonId,
-                  decoration: const InputDecoration(
-                    labelText: _salespersonLabel,
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: const InputDecoration(labelText: _salespersonLabel),
                   items: [
                     const DropdownMenuItem<int?>(
                       value: null,
@@ -289,19 +289,13 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                 SizedBox(height: sectionSpacing),
                 TextFormField(
                   controller: _contactController,
-                  decoration: const InputDecoration(
-                    labelText: _contactLabel,
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: const InputDecoration(labelText: _contactLabel),
                   validator: (_) => null,
                 ),
                 SizedBox(height: sectionSpacing),
                 TextFormField(
                   controller: _phoneController,
-                  decoration: const InputDecoration(
-                    labelText: _phoneLabel,
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: const InputDecoration(labelText: _phoneLabel),
                   keyboardType: TextInputType.phone,
                   validator: (value) {
                     final text = value?.trim() ?? '';
@@ -318,10 +312,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                 SizedBox(height: sectionSpacing),
                 TextFormField(
                   controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: _emailLabel,
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: const InputDecoration(labelText: _emailLabel),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
                     final text = value?.trim() ?? '';
@@ -340,20 +331,14 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                 SizedBox(height: sectionSpacing),
                 TextFormField(
                   controller: _addressController,
-                  decoration: const InputDecoration(
-                    labelText: _addressLabel,
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: const InputDecoration(labelText: _addressLabel),
                   maxLines: 2,
                   validator: (_) => null,
                 ),
                 SizedBox(height: sectionSpacing),
                 TextFormField(
                   controller: _notesController,
-                  decoration: const InputDecoration(
-                    labelText: _notesLabel,
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: const InputDecoration(labelText: _notesLabel),
                   maxLines: 3,
                   validator: (_) => null,
                 ),
@@ -377,10 +362,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                           SizedBox(height: sectionSpacing),
                           TextFormField(
                             controller: _nameController,
-                            decoration: const InputDecoration(
-                              labelText: _nameLabel,
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration: const InputDecoration(labelText: _nameLabel),
                             validator: (value) {
                               final text = value?.trim() ?? '';
                               if (text.isEmpty) {
@@ -395,10 +377,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                           SizedBox(height: sectionSpacing),
                           DropdownButtonFormField<int?>(
                             initialValue: _salespersonId,
-                            decoration: const InputDecoration(
-                              labelText: _salespersonLabel,
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration: const InputDecoration(labelText: _salespersonLabel),
                             items: [
                               const DropdownMenuItem<int?>(
                                 value: null,
@@ -457,19 +436,13 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                           SizedBox(height: sectionSpacing),
                           TextFormField(
                             controller: _contactController,
-                            decoration: const InputDecoration(
-                              labelText: _contactLabel,
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration: const InputDecoration(labelText: _contactLabel),
                             validator: (_) => null,
                           ),
                           SizedBox(height: sectionSpacing),
                           TextFormField(
                             controller: _phoneController,
-                            decoration: const InputDecoration(
-                              labelText: _phoneLabel,
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration: const InputDecoration(labelText: _phoneLabel),
                             keyboardType: TextInputType.phone,
                             validator: (value) {
                               final text = value?.trim() ?? '';
@@ -486,10 +459,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                           SizedBox(height: sectionSpacing),
                           TextFormField(
                             controller: _emailController,
-                            decoration: const InputDecoration(
-                              labelText: _emailLabel,
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration: const InputDecoration(labelText: _emailLabel),
                             keyboardType: TextInputType.emailAddress,
                             validator: (value) {
                               final text = value?.trim() ?? '';
@@ -516,20 +486,14 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                           SizedBox(height: sectionSpacing),
                           TextFormField(
                             controller: _addressController,
-                            decoration: const InputDecoration(
-                              labelText: _addressLabel,
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration: const InputDecoration(labelText: _addressLabel),
                             maxLines: 2,
                             validator: (_) => null,
                           ),
                           SizedBox(height: sectionSpacing),
                           TextFormField(
                             controller: _notesController,
-                            decoration: const InputDecoration(
-                              labelText: _notesLabel,
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration: const InputDecoration(labelText: _notesLabel),
                             maxLines: 3,
                             validator: (_) => null,
                           ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
@@ -265,7 +266,10 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
   Widget _sectionTitle(ThemeData theme, String text) {
     return Text(
       text,
-      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+      style: theme.textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.w700,
+        color: theme.colorScheme.onSurface,
+      ),
     );
   }
 
@@ -277,25 +281,26 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
     required String placeholder,
     required double sectionSpacing,
   }) {
+    final colors = theme.extension<AppColors>();
+    final subtleText = colors?.subtleText ?? theme.hintColor;
     final selectedItems = options.where((item) => selectedIds.contains(item.id)).toList();
 
     final content = options.isEmpty
-        ? Text('暂无可选项', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor))
+        ? Text('暂无可选项', style: theme.textTheme.bodySmall?.copyWith(color: subtleText))
         : InkWell(
             onTap: () => _openMultiSelectDialog(
               title: title,
               options: options,
               selectedIds: selectedIds,
             ),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
             child: InputDecorator(
               decoration: InputDecoration(
-                border: const OutlineInputBorder(),
                 contentPadding: const EdgeInsets.all(12),
                 suffixIcon: const Icon(Icons.arrow_drop_down),
               ),
               child: selectedItems.isEmpty
-                  ? Text(placeholder, style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor))
+                  ? Text(placeholder, style: theme.textTheme.bodyMedium?.copyWith(color: subtleText))
                   : Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -357,7 +362,6 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                       decoration: const InputDecoration(
                         hintText: _searchHint,
                         prefixIcon: Icon(Icons.search),
-                        border: OutlineInputBorder(),
                       ),
                       onChanged: (value) => setDialogState(() => query = value.trim()),
                     ),
@@ -426,8 +430,10 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
   }
 
   Widget _buildProductSection(ThemeData theme, double sectionSpacing) {
+    final colors = theme.extension<AppColors>();
+    final subtleText = colors?.subtleText ?? theme.hintColor;
     final content = _productItems.isEmpty
-        ? Text('暂无产品项', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor))
+        ? Text('暂无产品项', style: theme.textTheme.bodySmall?.copyWith(color: subtleText))
         : Column(
             children: List.generate(_productItems.length, (index) {
               final item = _productItems[index];
@@ -440,10 +446,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                       child: DropdownButtonFormField<int>(
                         initialValue: item.productId,
                         isExpanded: true,
-                        decoration: const InputDecoration(
-                          labelText: _productLabel,
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: const InputDecoration(labelText: _productLabel),
                         items: _productOptions
                             .map(
                               (product) => DropdownMenuItem<int>(
@@ -463,10 +466,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                     Expanded(
                       child: TextFormField(
                         controller: item.quantityController,
-                        decoration: const InputDecoration(
-                          labelText: _quantityLabel,
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: const InputDecoration(labelText: _quantityLabel),
                         keyboardType: TextInputType.number,
                       ),
                     ),
@@ -520,7 +520,6 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
       controller: _baseCodeController,
       decoration: const InputDecoration(
         labelText: _baseCodeLabel,
-        border: OutlineInputBorder(),
         hintText: '留空则系统自动生成',
       ),
       enabled: widget.artwork == null,
@@ -530,19 +529,13 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
         ? const SizedBox.shrink()
         : TextFormField(
             initialValue: widget.artwork?.version?.toString() ?? '1',
-            decoration: const InputDecoration(
-              labelText: _versionLabel,
-              border: OutlineInputBorder(),
-            ),
+            decoration: const InputDecoration(labelText: _versionLabel),
             enabled: false,
           );
 
     final nameField = TextFormField(
       controller: _nameController,
-      decoration: const InputDecoration(
-        labelText: _nameLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _nameLabel),
       validator: (value) {
         final text = value?.trim() ?? '';
         if (text.isEmpty) {
@@ -553,10 +546,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
     );
 
     final cmykField = InputDecorator(
-      decoration: const InputDecoration(
-        labelText: _cmykLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _cmykLabel),
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
@@ -583,25 +573,18 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
       controller: _otherColorsController,
       decoration: const InputDecoration(
         labelText: _otherColorsLabel,
-        border: OutlineInputBorder(),
         hintText: '多个颜色用逗号或顿号分隔',
       ),
     );
 
     final impositionField = TextFormField(
       controller: _impositionController,
-      decoration: const InputDecoration(
-        labelText: _impositionLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _impositionLabel),
     );
 
     final notesField = TextFormField(
       controller: _notesController,
-      decoration: const InputDecoration(
-        labelText: _notesLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _notesLabel),
       maxLines: 3,
     );
 

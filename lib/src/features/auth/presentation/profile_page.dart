@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/api_exception.dart';
 import 'package:go_router/go_router.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/features/auth/application/auth_controller.dart';
 import 'package:work_order_app/src/features/auth/application/auth_view_model.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -168,7 +169,7 @@ class _ProfilePageState extends State<ProfilePage> {
       elevation: 0,
       color: surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
         side: BorderSide(color: borderColor),
       ),
       child: Padding(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
 
@@ -112,6 +113,13 @@ class _MetaChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
+    final labelStyle = theme.textTheme.labelSmall?.copyWith(
+      color: colors.subtleText,
+    );
+    final valueStyle = theme.textTheme.labelSmall?.copyWith(
+      color: colors.sidebarText,
+      fontWeight: FontWeight.w700,
+    );
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -120,22 +128,17 @@ class _MetaChip extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: theme.colorScheme.primary.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
         border: Border.all(color: colors.borderColor),
       ),
       child: RichText(
         text: TextSpan(
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: colors.subtleText,
-          ),
+          style: labelStyle,
           children: [
             TextSpan(text: '$label '),
             TextSpan(
               text: value,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colors.sidebarText,
-                fontWeight: FontWeight.w700,
-              ),
+              style: valueStyle,
             ),
           ],
         ),

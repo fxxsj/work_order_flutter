@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 
 class ListToolbar extends StatelessWidget {
   const ListToolbar({
@@ -6,8 +7,8 @@ class ListToolbar extends StatelessWidget {
     required this.isMobile,
     required this.actions,
     this.searchField,
-    this.spacing = 8,
-    this.runSpacing = 6,
+    this.spacing = LayoutTokens.gapSm,
+    this.runSpacing = LayoutTokens.gapSm,
     this.mobileActionAlignment = WrapAlignment.end,
   });
 

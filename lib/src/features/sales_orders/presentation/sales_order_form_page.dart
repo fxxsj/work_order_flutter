@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -312,23 +313,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
   }
 
   Widget _buildSection(String title, Widget child) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.dividerColor.withAlpha(153)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: theme.textTheme.titleMedium),
-          const SizedBox(height: 12),
-          child,
-        ],
-      ),
-    );
+    return DetailSectionCard(title: title, child: child);
   }
 
   @override
@@ -379,7 +364,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                       children: [
                         DropdownButtonFormField<int>(
                           initialValue: _customerId,
-                          decoration: const InputDecoration(labelText: '客户', border: OutlineInputBorder()),
+                          decoration: const InputDecoration(labelText: '客户'),
                           items: _customers
                               .map(
                                 (item) => DropdownMenuItem(
@@ -400,7 +385,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                               width: 220,
                               child: DropdownButtonFormField<String>(
                                 initialValue: _status,
-                                decoration: const InputDecoration(labelText: '状态', border: OutlineInputBorder()),
+                                decoration: const InputDecoration(labelText: '状态'),
                                 items: const [
                                   DropdownMenuItem(value: 'draft', child: Text('草稿')),
                                   DropdownMenuItem(value: 'submitted', child: Text('已提交')),
@@ -417,7 +402,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                               width: 220,
                               child: DropdownButtonFormField<String>(
                                 initialValue: _paymentStatus,
-                                decoration: const InputDecoration(labelText: '付款状态', border: OutlineInputBorder()),
+                                decoration: const InputDecoration(labelText: '付款状态'),
                                 items: const [
                                   DropdownMenuItem(value: 'unpaid', child: Text('未付款')),
                                   DropdownMenuItem(value: 'partial', child: Text('部分付款')),
@@ -430,7 +415,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                               width: 220,
                               child: TextFormField(
                                 readOnly: true,
-                                decoration: const InputDecoration(labelText: '下单日期', border: OutlineInputBorder()),
+                                decoration: const InputDecoration(labelText: '下单日期'),
                                 controller: _orderDateController,
                                 onTap: () => _pickDate(isOrderDate: true),
                               ),
@@ -439,7 +424,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                               width: 220,
                               child: TextFormField(
                                 readOnly: true,
-                                decoration: const InputDecoration(labelText: '交货日期', border: OutlineInputBorder()),
+                                decoration: const InputDecoration(labelText: '交货日期'),
                                 controller: _deliveryDateController,
                                 onTap: () => _pickDate(isOrderDate: false),
                                 validator: (value) => (value == null || value.isEmpty) ? '请选择交货日期' : null,
@@ -456,7 +441,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                               width: 220,
                               child: TextFormField(
                                 controller: _taxRateController,
-                                decoration: const InputDecoration(labelText: '税率 (%)', border: OutlineInputBorder()),
+                                decoration: const InputDecoration(labelText: '税率 (%)'),
                                 keyboardType: TextInputType.number,
                               ),
                             ),
@@ -464,7 +449,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                               width: 220,
                               child: TextFormField(
                                 controller: _discountAmountController,
-                                decoration: const InputDecoration(labelText: '折扣金额', border: OutlineInputBorder()),
+                                decoration: const InputDecoration(labelText: '折扣金额'),
                                 keyboardType: TextInputType.number,
                               ),
                             ),
@@ -472,7 +457,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                               width: 220,
                               child: TextFormField(
                                 controller: _depositAmountController,
-                                decoration: const InputDecoration(labelText: '定金', border: OutlineInputBorder()),
+                                decoration: const InputDecoration(labelText: '定金'),
                                 keyboardType: TextInputType.number,
                               ),
                             ),
@@ -480,7 +465,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                               width: 220,
                               child: TextFormField(
                                 controller: _paidAmountController,
-                                decoration: const InputDecoration(labelText: '已付金额', border: OutlineInputBorder()),
+                                decoration: const InputDecoration(labelText: '已付金额'),
                                 keyboardType: TextInputType.number,
                               ),
                             ),
@@ -520,22 +505,22 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                       children: [
                         TextFormField(
                           controller: _contactPersonController,
-                          decoration: const InputDecoration(labelText: '联系人', border: OutlineInputBorder()),
+                          decoration: const InputDecoration(labelText: '联系人'),
                         ),
                         const SizedBox(height: 12),
                         TextFormField(
                           controller: _contactPhoneController,
-                          decoration: const InputDecoration(labelText: '联系电话', border: OutlineInputBorder()),
+                          decoration: const InputDecoration(labelText: '联系电话'),
                         ),
                         const SizedBox(height: 12),
                         TextFormField(
                           controller: _shippingAddressController,
-                          decoration: const InputDecoration(labelText: '送货地址', border: OutlineInputBorder()),
+                          decoration: const InputDecoration(labelText: '送货地址'),
                         ),
                         const SizedBox(height: 12),
                         TextFormField(
                           controller: _notesController,
-                          decoration: const InputDecoration(labelText: '备注', border: OutlineInputBorder()),
+                          decoration: const InputDecoration(labelText: '备注'),
                           maxLines: 3,
                         ),
                       ],
@@ -620,7 +605,7 @@ class _ItemRowState extends State<_ItemRow> {
             width: 220,
             child: DropdownButtonFormField<int>(
               initialValue: widget.draft.productId,
-              decoration: const InputDecoration(labelText: '产品', border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: '产品'),
               items: widget.products
                   .map(
                     (item) => DropdownMenuItem(
@@ -637,7 +622,7 @@ class _ItemRowState extends State<_ItemRow> {
             width: 120,
             child: TextFormField(
               controller: widget.draft.quantityController,
-              decoration: const InputDecoration(labelText: '数量', border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: '数量'),
               keyboardType: TextInputType.number,
             ),
           ),
@@ -645,14 +630,14 @@ class _ItemRowState extends State<_ItemRow> {
             width: 120,
             child: TextFormField(
               controller: widget.draft.unitController,
-              decoration: const InputDecoration(labelText: '单位', border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: '单位'),
             ),
           ),
           SizedBox(
             width: 140,
             child: TextFormField(
               controller: widget.draft.unitPriceController,
-              decoration: const InputDecoration(labelText: '单价', border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: '单价'),
               keyboardType: TextInputType.number,
             ),
           ),
@@ -660,7 +645,7 @@ class _ItemRowState extends State<_ItemRow> {
             width: 140,
             child: TextFormField(
               controller: widget.draft.taxRateController,
-              decoration: const InputDecoration(labelText: '税率', border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: '税率'),
               keyboardType: TextInputType.number,
             ),
           ),
@@ -668,7 +653,7 @@ class _ItemRowState extends State<_ItemRow> {
             width: 140,
             child: TextFormField(
               controller: widget.draft.discountAmountController,
-              decoration: const InputDecoration(labelText: '折扣', border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: '折扣'),
               keyboardType: TextInputType.number,
             ),
           ),
@@ -676,7 +661,7 @@ class _ItemRowState extends State<_ItemRow> {
             width: 220,
             child: TextFormField(
               controller: widget.draft.notesController,
-              decoration: const InputDecoration(labelText: '备注', border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: '备注'),
             ),
           ),
           if (widget.onRemove != null)

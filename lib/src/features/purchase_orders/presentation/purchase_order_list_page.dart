@@ -94,7 +94,7 @@ class _PurchaseOrderListView extends StatefulWidget {
 class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
   static const _searchDebounceDuration = Duration(milliseconds: 450);
   static const double _searchWidth = 320;
-  static const double _spacingSm = 8;
+  static const double _spacingSm = LayoutTokens.gapSm;
   static const String _emptyCellText = '-';
 
   static const String _searchHintText = '搜索采购单号/供应商';

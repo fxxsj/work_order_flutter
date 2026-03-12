@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 
 class SummaryField extends StatelessWidget {
   const SummaryField({super.key, required this.label, required this.value});
@@ -16,11 +17,11 @@ class SummaryField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: theme.textTheme.bodySmall?.copyWith(
+          style: theme.textTheme.labelSmall?.copyWith(
             color: colors?.subtleText ?? theme.hintColor,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: LayoutTokens.gapXs),
         Text(
           value,
           style: theme.textTheme.bodyMedium?.copyWith(
@@ -47,19 +48,19 @@ class SummaryChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: theme.colorScheme.primary.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
         border: Border.all(color: colors?.borderColor ?? theme.dividerColor),
       ),
       child: RichText(
         text: TextSpan(
-          style: theme.textTheme.bodySmall?.copyWith(
+          style: theme.textTheme.labelSmall?.copyWith(
             color: colors?.subtleText ?? theme.hintColor,
           ),
           children: [
             TextSpan(text: '$label '),
             TextSpan(
               text: value,
-              style: theme.textTheme.bodySmall?.copyWith(
+              style: theme.textTheme.labelSmall?.copyWith(
                 color: colors?.sidebarText,
                 fontWeight: FontWeight.w700,
               ),

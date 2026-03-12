@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/edit_page_scaffold.dart';
@@ -130,7 +131,10 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
   Widget _sectionTitle(ThemeData theme, String text) {
     return Text(
       text,
-      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+      style: theme.textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.w700,
+        color: theme.colorScheme.onSurface,
+      ),
     );
   }
 
@@ -138,6 +142,8 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
   Widget build(BuildContext context) {
     final viewModel = context.watch<DepartmentViewModel>();
     final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>();
+    final subtleText = colors?.subtleText ?? theme.hintColor;
     final isMobile = BreakpointsUtil.isMobile(context);
     final breadcrumb = buildBreadcrumbForPath('/departments');
     final availableParents = _availableParents(viewModel.departmentOptions);
@@ -150,10 +156,7 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
 
     final codeField = TextFormField(
       controller: _codeController,
-      decoration: const InputDecoration(
-        labelText: _codeLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _codeLabel),
       enabled: widget.department == null,
       validator: (value) {
         final text = value?.trim() ?? '';
@@ -169,10 +172,7 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
 
     final nameField = TextFormField(
       controller: _nameController,
-      decoration: const InputDecoration(
-        labelText: _nameLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _nameLabel),
       validator: (value) {
         final text = value?.trim() ?? '';
         if (text.isEmpty) {
@@ -184,10 +184,7 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
 
     final parentField = DropdownButtonFormField<int?>(
       initialValue: _parentId,
-      decoration: const InputDecoration(
-        labelText: _parentLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _parentLabel),
       items: [
         const DropdownMenuItem<int?>(value: null, child: Text('不设置')),
         ...availableParents.map(
@@ -205,27 +202,23 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
 
     final sortField = TextFormField(
       controller: _sortController,
-      decoration: const InputDecoration(
-        labelText: _sortLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _sortLabel),
       keyboardType: TextInputType.number,
     );
 
     final processField = InkWell(
       onTap: viewModel.processOptions.isEmpty ? null : () => _openProcessDialog(viewModel),
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
       child: InputDecorator(
         decoration: const InputDecoration(
           labelText: _processLabel,
-          border: OutlineInputBorder(),
           contentPadding: EdgeInsets.all(12),
           suffixIcon: Icon(Icons.arrow_drop_down),
         ),
         child: viewModel.processOptions.isEmpty
-            ? Text('暂无工序数据', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor))
+            ? Text('暂无工序数据', style: theme.textTheme.bodySmall?.copyWith(color: subtleText))
             : _processIds.isEmpty
-                ? Text(_processPlaceholder, style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor))
+                ? Text(_processPlaceholder, style: theme.textTheme.bodyMedium?.copyWith(color: subtleText))
                 : Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -247,10 +240,7 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
     );
 
     final statusField = InputDecorator(
-      decoration: const InputDecoration(
-        labelText: _statusLabel,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(labelText: _statusLabel),
       child: Align(
         alignment: Alignment.centerLeft,
         child: Switch(
@@ -398,7 +388,6 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
                       decoration: const InputDecoration(
                         hintText: _processSearchHint,
                         prefixIcon: Icon(Icons.search),
-                        border: OutlineInputBorder(),
                       ),
                       onChanged: (value) => setDialogState(() => query = value.trim()),
                     ),

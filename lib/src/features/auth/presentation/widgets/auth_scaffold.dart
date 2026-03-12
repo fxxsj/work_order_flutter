@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 
 class AuthScaffold extends StatelessWidget {
   const AuthScaffold({
@@ -213,7 +214,7 @@ class _HeroPanel extends StatelessWidget {
             height: 3,
             decoration: BoxDecoration(
               color: semantic.success.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
             ),
           ),
         ],

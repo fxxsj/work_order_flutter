@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/features/notification/application/notification_view_model.dart';
 import 'package:work_order_app/src/features/notification/domain/notification_model.dart';
 
@@ -33,7 +34,7 @@ class NotificationCenterView extends StatelessWidget {
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             color: surface,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
             border: Border.all(color: borderColor),
           ),
           child: Column(
@@ -64,7 +65,7 @@ class NotificationCenterView extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 24),
                   decoration: BoxDecoration(
                     color: primary.withAlpha(10),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
                   ),
                   child: Center(
                     child: Text('暂无通知', style: TextStyle(color: subtleText)),
@@ -180,7 +181,7 @@ class _NotificationListItem extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
         border: Border.all(color: item.isRead ? Colors.transparent : levelColor.withAlpha(77)),
         boxShadow: [
           BoxShadow(

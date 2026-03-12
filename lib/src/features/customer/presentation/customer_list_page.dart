@@ -96,7 +96,7 @@ class _CustomerListView extends StatefulWidget {
 class _CustomerListViewState extends State<_CustomerListView> {
   static const _searchDebounceDuration = Duration(milliseconds: 450);
   static const double _searchWidth = 300;
-  static const double _spacingSm = 8;
+  static const double _spacingSm = LayoutTokens.gapSm;
   static const String _emptyCellText = '-';
 
   static const String _createButtonText = '新建客户';

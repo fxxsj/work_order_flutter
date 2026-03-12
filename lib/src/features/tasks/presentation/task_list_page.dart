@@ -100,7 +100,7 @@ class _TaskListView extends StatefulWidget {
 class _TaskListViewState extends State<_TaskListView> {
   static const _searchDebounceDuration = Duration(milliseconds: 450);
   static const double _searchWidth = 320;
-  static const double _spacingSm = 8;
+  static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
   static const String _emptyCellText = '-';
 
@@ -369,8 +369,7 @@ class _TaskListViewState extends State<_TaskListView> {
               DropdownButtonFormField<String>(
                 initialValue: _statusFilter,
                 isExpanded: true,
-                decoration: const InputDecoration(
-                    labelText: '状态', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: '状态'),
                 items: statusItems,
                 onChanged: (value) {
                   setState(() => _statusFilter = value);
@@ -381,8 +380,7 @@ class _TaskListViewState extends State<_TaskListView> {
               DropdownButtonFormField<String>(
                 initialValue: _priorityFilter,
                 isExpanded: true,
-                decoration: const InputDecoration(
-                    labelText: '优先级', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: '优先级'),
                 items: priorityItems,
                 onChanged: (value) {
                   setState(() => _priorityFilter = value);
@@ -393,8 +391,7 @@ class _TaskListViewState extends State<_TaskListView> {
               DropdownButtonFormField<int?>(
                 initialValue: _departmentFilterId,
                 isExpanded: true,
-                decoration: const InputDecoration(
-                    labelText: '部门', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: '部门'),
                 items: departmentItems,
                 onChanged: (value) {
                   setState(() => _departmentFilterId = value);
@@ -405,8 +402,7 @@ class _TaskListViewState extends State<_TaskListView> {
               DropdownButtonFormField<int?>(
                 initialValue: _processFilterId,
                 isExpanded: true,
-                decoration: const InputDecoration(
-                    labelText: '工序', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: '工序'),
                 items: processItems,
                 onChanged: (value) {
                   setState(() => _processFilterId = value);
@@ -431,8 +427,7 @@ class _TaskListViewState extends State<_TaskListView> {
                 child: DropdownButtonFormField<String>(
                   initialValue: _statusFilter,
                   isExpanded: true,
-                  decoration: const InputDecoration(
-                      labelText: '状态', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(labelText: '状态'),
                   items: statusItems,
                   onChanged: (value) {
                     setState(() => _statusFilter = value);
@@ -445,8 +440,7 @@ class _TaskListViewState extends State<_TaskListView> {
                 child: DropdownButtonFormField<String>(
                   initialValue: _priorityFilter,
                   isExpanded: true,
-                  decoration: const InputDecoration(
-                      labelText: '优先级', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(labelText: '优先级'),
                   items: priorityItems,
                   onChanged: (value) {
                     setState(() => _priorityFilter = value);
@@ -459,8 +453,7 @@ class _TaskListViewState extends State<_TaskListView> {
                 child: DropdownButtonFormField<int?>(
                   initialValue: _departmentFilterId,
                   isExpanded: true,
-                  decoration: const InputDecoration(
-                      labelText: '部门', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(labelText: '部门'),
                   items: departmentItems,
                   onChanged: (value) {
                     setState(() => _departmentFilterId = value);
@@ -473,8 +466,7 @@ class _TaskListViewState extends State<_TaskListView> {
                 child: DropdownButtonFormField<int?>(
                   initialValue: _processFilterId,
                   isExpanded: true,
-                  decoration: const InputDecoration(
-                      labelText: '工序', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(labelText: '工序'),
                   items: processItems,
                   onChanged: (value) {
                     setState(() => _processFilterId = value);

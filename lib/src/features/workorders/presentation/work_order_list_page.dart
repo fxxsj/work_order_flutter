@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -104,7 +105,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     with SingleTickerProviderStateMixin {
   static const _searchDebounceDuration = Duration(milliseconds: 450);
   static const double _searchWidth = 320;
-  static const double _spacingSm = 8;
+  static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
   static const String _emptyCellText = '-';
 
@@ -549,8 +550,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
               DropdownButtonFormField<String>(
                 initialValue: _statusFilter,
                 isExpanded: true,
-                decoration: const InputDecoration(
-                    labelText: '状态', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: '状态'),
                 items: statusItems,
                 onChanged: (value) {
                   setState(() => _statusFilter = value);
@@ -561,8 +561,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
               DropdownButtonFormField<String>(
                 initialValue: _priorityFilter,
                 isExpanded: true,
-                decoration: const InputDecoration(
-                    labelText: '优先级', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: '优先级'),
                 items: priorityItems,
                 onChanged: (value) {
                   setState(() => _priorityFilter = value);
@@ -573,8 +572,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
               DropdownButtonFormField<String>(
                 initialValue: _approvalStatusFilter,
                 isExpanded: true,
-                decoration: const InputDecoration(
-                    labelText: '审核状态', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: '审核状态'),
                 items: approvalItems,
                 onChanged: (value) {
                   setState(() => _approvalStatusFilter = value);
@@ -585,8 +583,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
               DropdownButtonFormField<int?>(
                 initialValue: _customerFilterId,
                 isExpanded: true,
-                decoration: const InputDecoration(
-                    labelText: '客户', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: '客户'),
                 items: customerItems,
                 onChanged: (value) {
                   setState(() => _customerFilterId = value);
@@ -597,8 +594,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
               DropdownButtonFormField<int?>(
                 initialValue: _productFilterId,
                 isExpanded: true,
-                decoration: const InputDecoration(
-                    labelText: '产品', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: '产品'),
                 items: productItems,
                 onChanged: (value) {
                   setState(() => _productFilterId = value);
@@ -609,8 +605,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
               DropdownButtonFormField<int?>(
                 initialValue: _processFilterId,
                 isExpanded: true,
-                decoration: const InputDecoration(
-                    labelText: '工序', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: '工序'),
                 items: processItems,
                 onChanged: (value) {
                   setState(() => _processFilterId = value);
@@ -635,8 +630,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
                 child: DropdownButtonFormField<String>(
                   initialValue: _statusFilter,
                   isExpanded: true,
-                  decoration: const InputDecoration(
-                      labelText: '状态', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(labelText: '状态'),
                   items: statusItems,
                   onChanged: (value) {
                     setState(() => _statusFilter = value);
@@ -649,8 +643,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
                 child: DropdownButtonFormField<String>(
                   initialValue: _priorityFilter,
                   isExpanded: true,
-                  decoration: const InputDecoration(
-                      labelText: '优先级', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(labelText: '优先级'),
                   items: priorityItems,
                   onChanged: (value) {
                     setState(() => _priorityFilter = value);
@@ -663,8 +656,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
                 child: DropdownButtonFormField<String>(
                   initialValue: _approvalStatusFilter,
                   isExpanded: true,
-                  decoration: const InputDecoration(
-                      labelText: '审核状态', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(labelText: '审核状态'),
                   items: approvalItems,
                   onChanged: (value) {
                     setState(() => _approvalStatusFilter = value);
@@ -677,8 +669,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
                 child: DropdownButtonFormField<int?>(
                   initialValue: _customerFilterId,
                   isExpanded: true,
-                  decoration: const InputDecoration(
-                      labelText: '客户', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(labelText: '客户'),
                   items: customerItems,
                   onChanged: (value) {
                     setState(() => _customerFilterId = value);
@@ -691,8 +682,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
                 child: DropdownButtonFormField<int?>(
                   initialValue: _productFilterId,
                   isExpanded: true,
-                  decoration: const InputDecoration(
-                      labelText: '产品', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(labelText: '产品'),
                   items: productItems,
                   onChanged: (value) {
                     setState(() => _productFilterId = value);
@@ -705,8 +695,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
                 child: DropdownButtonFormField<int?>(
                   initialValue: _processFilterId,
                   isExpanded: true,
-                  decoration: const InputDecoration(
-                      labelText: '工序', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(labelText: '工序'),
                   items: processItems,
                   onChanged: (value) {
                     setState(() => _processFilterId = value);
@@ -857,16 +846,6 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>()!;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: colors.borderColor),
-      ),
-      child: child,
-    );
+    return DetailSurfaceCard(child: child);
   }
 }

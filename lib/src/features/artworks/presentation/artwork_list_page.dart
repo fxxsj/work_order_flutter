@@ -94,7 +94,7 @@ class _ArtworkListView extends StatefulWidget {
 class _ArtworkListViewState extends State<_ArtworkListView> {
   static const _searchDebounceDuration = Duration(milliseconds: 450);
   static const double _searchWidth = 300;
-  static const double _spacingSm = 8;
+  static const double _spacingSm = LayoutTokens.gapSm;
   static const String _emptyCellText = '-';
 
   static const String _searchHintText = '搜索图稿编码、名称、拼版尺寸';

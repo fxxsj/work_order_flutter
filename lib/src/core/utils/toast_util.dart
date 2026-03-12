@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/router/app_router.dart';
 
 class ToastUtil {
@@ -203,7 +204,7 @@ class _ToastCardState extends State<_ToastCard> with SingleTickerProviderStateMi
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             color: background,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withAlpha(51),
@@ -234,7 +235,7 @@ class _ToastCardState extends State<_ToastCard> with SingleTickerProviderStateMi
                     ),
                     const SizedBox(height: 8),
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
                       child: AnimatedBuilder(
                         animation: _progressController,
                         builder: (context, _) {

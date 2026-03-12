@@ -35,19 +35,17 @@ class ResponsivePaginationBar extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
     final compact = MediaQuery.sizeOf(context).width < Breakpoints.sm;
+    final resolvedPadding = LayoutTokens.cardPadding(context);
 
     return AppCard(
-      padding: EdgeInsets.symmetric(
-        horizontal: compact ? 12 : 16,
-        vertical: compact ? 10 : 12,
-      ),
+      padding: resolvedPadding,
       radius: compact ? LayoutTokens.radiusMd : LayoutTokens.radiusLg,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final compact = constraints.maxWidth < Breakpoints.sm;
           final pagerControls = Wrap(
-            spacing: 4,
-            runSpacing: 4,
+            spacing: LayoutTokens.gapXs,
+            runSpacing: LayoutTokens.gapXs,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               DropdownButton<int>(
@@ -88,7 +86,7 @@ class ResponsivePaginationBar extends StatelessWidget {
                   style: theme.textTheme.bodySmall
                       ?.copyWith(color: colors.subtleText),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: LayoutTokens.gapSm),
                 pagerControls,
               ],
             );
@@ -141,7 +139,7 @@ class EmptyStateCard extends StatelessWidget {
         child: Column(
           children: [
             Icon(icon, color: theme.colorScheme.primary, size: 36),
-            const SizedBox(height: 8),
+            const SizedBox(height: LayoutTokens.gapSm),
             Text(text, style: theme.textTheme.bodyMedium),
           ],
         ),
@@ -179,9 +177,9 @@ class ErrorStateCard extends StatelessWidget {
         child: Column(
           children: [
             Icon(Icons.error_outline, color: theme.colorScheme.error, size: 32),
-            const SizedBox(height: 8),
+            const SizedBox(height: LayoutTokens.gapSm),
             Text(message, style: theme.textTheme.bodyMedium),
-            const SizedBox(height: 8),
+            const SizedBox(height: LayoutTokens.gapSm),
             OutlinedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
@@ -239,10 +237,9 @@ class ListSearchField extends StatelessWidget {
                         icon: const Icon(Icons.close, size: 18),
                         onPressed: onClear,
                       ),
-                border: const OutlineInputBorder(),
                 isDense: true,
                 contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
               ),
             );
           },
@@ -259,7 +256,7 @@ class ListDensityToggle extends StatelessWidget {
     required this.onChanged,
     required this.height,
     this.minWidth = 52,
-    this.radius = 8,
+    this.radius = LayoutTokens.radiusSm,
     this.comfortLabel = '舒适',
     this.compactLabel = '紧凑',
   });

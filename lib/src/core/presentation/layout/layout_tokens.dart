@@ -10,6 +10,13 @@ class LayoutTokens {
   static const double radiusMd = 16;
   static const double radiusLg = 18;
   static const double radiusXl = 20;
+  static const double radiusPill = 999;
+  static const double navItemHeight = 40;
+
+  static const double gapXs = 4;
+  static const double gapSm = 8;
+  static const double gapMd = 12;
+  static const double gapLg = 16;
 
   static EdgeInsets pagePadding(BuildContext context) {
     final isXs = BreakpointsUtil.isXs(context);
@@ -29,6 +36,26 @@ class LayoutTokens {
       return const EdgeInsets.fromLTRB(28, 28, 28, 36);
     }
     return const EdgeInsets.fromLTRB(32, 32, 32, 40);
+  }
+
+  static EdgeInsets pageHeaderPadding(BuildContext context) {
+    final isXs = BreakpointsUtil.isXs(context);
+    final isSm = BreakpointsUtil.isSm(context);
+    final isMd = BreakpointsUtil.isMd(context);
+    final isXl = BreakpointsUtil.isXl(context);
+    if (isXs) {
+      return const EdgeInsets.fromLTRB(12, 12, 12, 10);
+    }
+    if (isSm) {
+      return const EdgeInsets.fromLTRB(14, 14, 14, 12);
+    }
+    if (isMd) {
+      return const EdgeInsets.fromLTRB(16, 16, 16, 12);
+    }
+    if (isXl) {
+      return const EdgeInsets.fromLTRB(18, 18, 18, 14);
+    }
+    return const EdgeInsets.fromLTRB(20, 20, 20, 16);
   }
 
   static EdgeInsets cardPadding(BuildContext context) {
