@@ -112,6 +112,8 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
   Timer? _searchDebounce;
   bool _filtersExpanded = false;
   bool _showListView = false;
+  bool _hideEmptyColumns = false;
+  bool _sortByDeliveryDate = false;
   String? _statusFilter;
   int? _departmentFilterId;
 
@@ -260,7 +262,7 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
     if (_showListView) {
       return _buildListView(context, tasks);
     }
-    return _buildBoardView(context, tasks, isMobile);
+    return _buildBoardView(context, viewModel, tasks, isMobile);
   }
 
   Widget _buildPageHeader(
@@ -451,38 +453,51 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
     );
   }
 
-  Widget _buildBoardView(BuildContext context, List<Task> tasks, bool isMobile) {
-    final grouped = _groupTasks(tasks);
-    final columns = [
+  Widget _buildBoardView(
+    BuildContext context,
+    TaskViewModel viewModel,
+    List<Task> tasks,
+    bool isMobile,
+  ) {
+    final grouped = _groupTasks(tasks, sortByDeliveryDate: _sortByDeliveryDate);
+    var columns = [
       _BoardColumnData(
         key: 'pending',
         title: '待开始',
         icon: Icons.pause_circle_outline,
         tasks: grouped['pending'] ?? const [],
+        totalCount: tasks.length,
       ),
       _BoardColumnData(
         key: 'in_progress',
         title: '进行中',
         icon: Icons.play_circle_outline,
         tasks: grouped['in_progress'] ?? const [],
+        totalCount: tasks.length,
       ),
       _BoardColumnData(
         key: 'completed',
         title: '已完成',
         icon: Icons.check_circle_outline,
         tasks: grouped['completed'] ?? const [],
+        totalCount: tasks.length,
       ),
-      if ((grouped['other'] ?? const []).isNotEmpty)
-        _BoardColumnData(
-          key: 'other',
-          title: '其他',
-          icon: Icons.more_horiz,
-          tasks: grouped['other'] ?? const [],
-        ),
+      _BoardColumnData(
+        key: 'other',
+        title: '其他',
+        icon: Icons.more_horiz,
+        tasks: grouped['other'] ?? const [],
+        totalCount: tasks.length,
+      ),
     ];
 
+    if (_hideEmptyColumns) {
+      columns = columns.where((column) => column.tasks.isNotEmpty).toList();
+    }
+
+    Widget boardContent;
     if (isMobile) {
-      return ListView.separated(
+      boardContent = ListView.separated(
         itemCount: columns.length,
         separatorBuilder: (_, __) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
@@ -494,36 +509,48 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
           );
         },
       );
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: constraints.maxHeight),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  for (var i = 0; i < columns.length; i++) ...[
-                    _BoardColumn(
-                      data: columns[i],
-                      onTapTask: (task) => _openTaskDetail(context, task),
-                      width: _columnWidth,
-                    ),
-                    if (i != columns.length - 1) const SizedBox(width: 16),
+    } else {
+      boardContent = LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (var i = 0; i < columns.length; i++) ...[
+                      _BoardColumn(
+                        data: columns[i],
+                        onTapTask: (task) => _openTaskDetail(context, task),
+                        width: _columnWidth,
+                      ),
+                      if (i != columns.length - 1) const SizedBox(width: 16),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildBoardQuickFilters(viewModel, tasks),
+        const SizedBox(height: 12),
+        Expanded(child: boardContent),
+      ],
     );
   }
 
-  Map<String, List<Task>> _groupTasks(List<Task> tasks) {
+  Map<String, List<Task>> _groupTasks(
+    List<Task> tasks, {
+    required bool sortByDeliveryDate,
+  }) {
     final grouped = <String, List<Task>>{
       'pending': [],
       'in_progress': [],
@@ -536,6 +563,19 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
         grouped[status]!.add(task);
       } else {
         grouped['other']!.add(task);
+      }
+    }
+    if (sortByDeliveryDate) {
+      for (final entry in grouped.entries) {
+        entry.value.sort((a, b) {
+          final aDate = a.deliveryDate;
+          final bDate = b.deliveryDate;
+          if (aDate == null && bDate == null) return a.id.compareTo(b.id);
+          if (aDate == null) return 1;
+          if (bDate == null) return -1;
+          final compare = aDate.compareTo(bDate);
+          return compare != 0 ? compare : a.id.compareTo(b.id);
+        });
       }
     }
     return grouped;
@@ -585,6 +625,61 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
       const SnackBar(content: Text('该任务暂无施工单详情可查看。')),
     );
   }
+
+  Widget _buildBoardQuickFilters(TaskViewModel viewModel, List<Task> tasks) {
+    final statusCounts = _buildStatusCounts(tasks);
+    final filters = [
+      _QuickFilterItem(label: '全部', value: null, count: tasks.length),
+      _QuickFilterItem(label: '待开始', value: 'pending', count: statusCounts['pending'] ?? 0),
+      _QuickFilterItem(
+        label: '进行中',
+        value: 'in_progress',
+        count: statusCounts['in_progress'] ?? 0,
+      ),
+      _QuickFilterItem(label: '已完成', value: 'completed', count: statusCounts['completed'] ?? 0),
+    ];
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final filter in filters)
+          ChoiceChip(
+            label: Text('${filter.label} ${filter.count}'),
+            selected: _statusFilter == filter.value,
+            onSelected: (_) {
+              setState(() => _statusFilter = filter.value);
+              _applyFilters(viewModel);
+            },
+          ),
+        FilterChip(
+          label: const Text('隐藏空列'),
+          selected: _hideEmptyColumns,
+          onSelected: (value) => setState(() => _hideEmptyColumns = value),
+        ),
+        FilterChip(
+          label: const Text('按交期排序'),
+          selected: _sortByDeliveryDate,
+          onSelected: (value) => setState(() => _sortByDeliveryDate = value),
+        ),
+      ],
+    );
+  }
+
+  Map<String, int> _buildStatusCounts(List<Task> tasks) {
+    final counts = <String, int>{
+      'pending': 0,
+      'in_progress': 0,
+      'completed': 0,
+    };
+    for (final task in tasks) {
+      final status = task.status ?? '';
+      if (counts.containsKey(status)) {
+        counts[status] = (counts[status] ?? 0) + 1;
+      }
+    }
+    return counts;
+  }
 }
 
 class _TaskBoardStats {
@@ -601,18 +696,32 @@ class _TaskBoardStats {
   final int completed;
 }
 
+class _QuickFilterItem {
+  const _QuickFilterItem({
+    required this.label,
+    required this.value,
+    required this.count,
+  });
+
+  final String label;
+  final String? value;
+  final int count;
+}
+
 class _BoardColumnData {
   const _BoardColumnData({
     required this.key,
     required this.title,
     required this.icon,
     required this.tasks,
+    required this.totalCount,
   });
 
   final String key;
   final String title;
   final IconData icon;
   final List<Task> tasks;
+  final int totalCount;
 }
 
 class _BoardColumn extends StatelessWidget {
@@ -633,6 +742,9 @@ class _BoardColumn extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
     final resolvedWidth = fullWidth ? double.infinity : (width ?? 320);
+    final share = data.totalCount == 0
+        ? 0
+        : (data.tasks.length / data.totalCount * 100).round();
 
     return Container(
       width: resolvedWidth,
@@ -659,7 +771,7 @@ class _BoardColumn extends StatelessWidget {
                 ),
               ),
               Text(
-                '${data.tasks.length}',
+                '${data.tasks.length} · $share%',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: colors.subtleText,
                   fontWeight: FontWeight.w600,
