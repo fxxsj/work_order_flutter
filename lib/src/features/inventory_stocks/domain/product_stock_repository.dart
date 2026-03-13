@@ -5,6 +5,7 @@ abstract class ProductStockRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? status,
   });
 
   Future<Map<String, dynamic>> getLowStock({Map<String, dynamic>? params});

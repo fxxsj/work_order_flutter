@@ -12,8 +12,14 @@ class ProductStockRepositoryImpl implements ProductStockRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? status,
   }) {
-    return _apiService.fetchProductStocks(page: page, pageSize: pageSize, search: search);
+    return _apiService.fetchProductStocks(
+      page: page,
+      pageSize: pageSize,
+      search: search,
+      status: status,
+    );
   }
 
   @override
@@ -37,7 +43,8 @@ class ProductStockRepositoryImpl implements ProductStockRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> adjustStock(int id, Map<String, dynamic> payload) {
+  Future<Map<String, dynamic>> adjustStock(
+      int id, Map<String, dynamic> payload) {
     return _apiService.adjustStock(id, payload);
   }
 }

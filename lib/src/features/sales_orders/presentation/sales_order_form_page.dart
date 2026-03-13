@@ -8,6 +8,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
+import 'package:work_order_app/src/features/customer/data/customer_dto.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/products/data/product_api_service.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
@@ -87,14 +88,20 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
 
   final TextEditingController _orderDateController = TextEditingController();
   final TextEditingController _deliveryDateController = TextEditingController();
-  final TextEditingController _contactPersonController = TextEditingController();
+  final TextEditingController _contactPersonController =
+      TextEditingController();
   final TextEditingController _contactPhoneController = TextEditingController();
-  final TextEditingController _shippingAddressController = TextEditingController();
+  final TextEditingController _shippingAddressController =
+      TextEditingController();
   final TextEditingController _notesController = TextEditingController();
-  final TextEditingController _taxRateController = TextEditingController(text: '0');
-  final TextEditingController _discountAmountController = TextEditingController(text: '0');
-  final TextEditingController _depositAmountController = TextEditingController(text: '0');
-  final TextEditingController _paidAmountController = TextEditingController(text: '0');
+  final TextEditingController _taxRateController =
+      TextEditingController(text: '0');
+  final TextEditingController _discountAmountController =
+      TextEditingController(text: '0');
+  final TextEditingController _depositAmountController =
+      TextEditingController(text: '0');
+  final TextEditingController _paidAmountController =
+      TextEditingController(text: '0');
 
   DateTime? _orderDate;
   DateTime? _deliveryDate;
@@ -152,10 +159,12 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
         customerApi.fetchCustomers(page: 1, pageSize: 200),
         productApi.fetchProducts(pageSize: 200, isActive: true),
       ]);
-      final customerPage = results[0] as dynamic;
+      final customerPage = results[0] as CustomerPageDto;
       final productOptions = results[1] as List<ProductOption>;
       setState(() {
-        _customers = customerPage.items.map<Customer>((item) => item.toEntity()).toList();
+        _customers = customerPage.items
+            .map<Customer>((item) => item.toEntity())
+            .toList();
         _products = productOptions;
       });
     } catch (err) {
@@ -194,7 +203,8 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
       _taxRateController.text = detail.taxRate!.toStringAsFixed(2);
     }
     if (detail.discountAmount != null) {
-      _discountAmountController.text = detail.discountAmount!.toStringAsFixed(2);
+      _discountAmountController.text =
+          detail.discountAmount!.toStringAsFixed(2);
     }
     if (detail.depositAmount != null) {
       _depositAmountController.text = detail.depositAmount!.toStringAsFixed(2);
@@ -223,7 +233,9 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
   }
 
   Future<void> _pickDate({required bool isOrderDate}) async {
-    final initial = isOrderDate ? (_orderDate ?? DateTime.now()) : (_deliveryDate ?? DateTime.now());
+    final initial = isOrderDate
+        ? (_orderDate ?? DateTime.now())
+        : (_deliveryDate ?? DateTime.now());
     final picked = await showDatePicker(
       context: context,
       initialDate: initial,
@@ -267,8 +279,10 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
       'order_date': orderDate.isEmpty ? null : orderDate,
       'delivery_date': deliveryDate.isEmpty ? null : deliveryDate,
       'tax_rate': double.tryParse(_taxRateController.text.trim()) ?? 0,
-      'discount_amount': double.tryParse(_discountAmountController.text.trim()) ?? 0,
-      'deposit_amount': double.tryParse(_depositAmountController.text.trim()) ?? 0,
+      'discount_amount':
+          double.tryParse(_discountAmountController.text.trim()) ?? 0,
+      'deposit_amount':
+          double.tryParse(_depositAmountController.text.trim()) ?? 0,
       'paid_amount': double.tryParse(_paidAmountController.text.trim()) ?? 0,
       'contact_person': _contactPersonController.text.trim(),
       'contact_phone': _contactPhoneController.text.trim(),
@@ -318,7 +332,8 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
 
   @override
   Widget build(BuildContext context) {
-    final title = widget.mode == SalesOrderFormMode.create ? '新建销售订单' : '编辑销售订单';
+    final title =
+        widget.mode == SalesOrderFormMode.create ? '新建销售订单' : '编辑销售订单';
     final breadcrumb = [
       ...buildBreadcrumbForPathWith(
         GoRouterState.of(context).uri.path,
@@ -373,7 +388,8 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                                 ),
                               )
                               .toList(),
-                          onChanged: (value) => setState(() => _customerId = value),
+                          onChanged: (value) =>
+                              setState(() => _customerId = value),
                           validator: (value) => value == null ? '请选择客户' : null,
                         ),
                         const SizedBox(height: 12),
@@ -385,37 +401,53 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                               width: 220,
                               child: DropdownButtonFormField<String>(
                                 initialValue: _status,
-                                decoration: const InputDecoration(labelText: '状态'),
+                                decoration:
+                                    const InputDecoration(labelText: '状态'),
                                 items: const [
-                                  DropdownMenuItem(value: 'draft', child: Text('草稿')),
-                                  DropdownMenuItem(value: 'submitted', child: Text('已提交')),
-                                  DropdownMenuItem(value: 'approved', child: Text('已审核')),
-                                  DropdownMenuItem(value: 'rejected', child: Text('已拒绝')),
-                                  DropdownMenuItem(value: 'in_production', child: Text('生产中')),
-                                  DropdownMenuItem(value: 'completed', child: Text('已完成')),
-                                  DropdownMenuItem(value: 'cancelled', child: Text('已取消')),
+                                  DropdownMenuItem(
+                                      value: 'draft', child: Text('草稿')),
+                                  DropdownMenuItem(
+                                      value: 'submitted', child: Text('已提交')),
+                                  DropdownMenuItem(
+                                      value: 'approved', child: Text('已审核')),
+                                  DropdownMenuItem(
+                                      value: 'rejected', child: Text('已拒绝')),
+                                  DropdownMenuItem(
+                                      value: 'in_production',
+                                      child: Text('生产中')),
+                                  DropdownMenuItem(
+                                      value: 'completed', child: Text('已完成')),
+                                  DropdownMenuItem(
+                                      value: 'cancelled', child: Text('已取消')),
                                 ],
-                                onChanged: (value) => setState(() => _status = value ?? 'draft'),
+                                onChanged: (value) =>
+                                    setState(() => _status = value ?? 'draft'),
                               ),
                             ),
                             SizedBox(
                               width: 220,
                               child: DropdownButtonFormField<String>(
                                 initialValue: _paymentStatus,
-                                decoration: const InputDecoration(labelText: '付款状态'),
+                                decoration:
+                                    const InputDecoration(labelText: '付款状态'),
                                 items: const [
-                                  DropdownMenuItem(value: 'unpaid', child: Text('未付款')),
-                                  DropdownMenuItem(value: 'partial', child: Text('部分付款')),
-                                  DropdownMenuItem(value: 'paid', child: Text('已付款')),
+                                  DropdownMenuItem(
+                                      value: 'unpaid', child: Text('未付款')),
+                                  DropdownMenuItem(
+                                      value: 'partial', child: Text('部分付款')),
+                                  DropdownMenuItem(
+                                      value: 'paid', child: Text('已付款')),
                                 ],
-                                onChanged: (value) => setState(() => _paymentStatus = value ?? 'unpaid'),
+                                onChanged: (value) => setState(
+                                    () => _paymentStatus = value ?? 'unpaid'),
                               ),
                             ),
                             SizedBox(
                               width: 220,
                               child: TextFormField(
                                 readOnly: true,
-                                decoration: const InputDecoration(labelText: '下单日期'),
+                                decoration:
+                                    const InputDecoration(labelText: '下单日期'),
                                 controller: _orderDateController,
                                 onTap: () => _pickDate(isOrderDate: true),
                               ),
@@ -424,10 +456,14 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                               width: 220,
                               child: TextFormField(
                                 readOnly: true,
-                                decoration: const InputDecoration(labelText: '交货日期'),
+                                decoration:
+                                    const InputDecoration(labelText: '交货日期'),
                                 controller: _deliveryDateController,
                                 onTap: () => _pickDate(isOrderDate: false),
-                                validator: (value) => (value == null || value.isEmpty) ? '请选择交货日期' : null,
+                                validator: (value) =>
+                                    (value == null || value.isEmpty)
+                                        ? '请选择交货日期'
+                                        : null,
                               ),
                             ),
                           ],
@@ -441,7 +477,8 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                               width: 220,
                               child: TextFormField(
                                 controller: _taxRateController,
-                                decoration: const InputDecoration(labelText: '税率 (%)'),
+                                decoration:
+                                    const InputDecoration(labelText: '税率 (%)'),
                                 keyboardType: TextInputType.number,
                               ),
                             ),
@@ -449,7 +486,8 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                               width: 220,
                               child: TextFormField(
                                 controller: _discountAmountController,
-                                decoration: const InputDecoration(labelText: '折扣金额'),
+                                decoration:
+                                    const InputDecoration(labelText: '折扣金额'),
                                 keyboardType: TextInputType.number,
                               ),
                             ),
@@ -457,7 +495,8 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                               width: 220,
                               child: TextFormField(
                                 controller: _depositAmountController,
-                                decoration: const InputDecoration(labelText: '定金'),
+                                decoration:
+                                    const InputDecoration(labelText: '定金'),
                                 keyboardType: TextInputType.number,
                               ),
                             ),
@@ -465,7 +504,8 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                               width: 220,
                               child: TextFormField(
                                 controller: _paidAmountController,
-                                decoration: const InputDecoration(labelText: '已付金额'),
+                                decoration:
+                                    const InputDecoration(labelText: '已付金额'),
                                 keyboardType: TextInputType.number,
                               ),
                             ),
@@ -484,13 +524,15 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                             draft: _itemDrafts[index],
                             products: _products,
                             onRemove: _itemDrafts.length > 1
-                                ? () => setState(() => _itemDrafts.removeAt(index))
+                                ? () =>
+                                    setState(() => _itemDrafts.removeAt(index))
                                 : null,
                           ),
                         Align(
                           alignment: Alignment.centerLeft,
                           child: TextButton.icon(
-                            onPressed: () => setState(() => _itemDrafts.add(_ItemDraft())),
+                            onPressed: () =>
+                                setState(() => _itemDrafts.add(_ItemDraft())),
                             icon: const Icon(Icons.add),
                             label: const Text('新增明细'),
                           ),
@@ -544,11 +586,15 @@ class _ItemDraft {
 
   _ItemDraft.fromDetail(SalesOrderItem item, double? orderTaxRate)
       : productId = item.productId,
-        quantityController = TextEditingController(text: item.quantity?.toString() ?? '1'),
+        quantityController =
+            TextEditingController(text: item.quantity?.toString() ?? '1'),
         unitController = TextEditingController(text: item.unit ?? '件'),
-        unitPriceController = TextEditingController(text: item.unitPrice?.toStringAsFixed(2) ?? '0'),
-        taxRateController = TextEditingController(text: (item.taxRate ?? orderTaxRate ?? 0).toStringAsFixed(2)),
-        discountAmountController = TextEditingController(text: item.discountAmount?.toStringAsFixed(2) ?? '0'),
+        unitPriceController = TextEditingController(
+            text: item.unitPrice?.toStringAsFixed(2) ?? '0'),
+        taxRateController = TextEditingController(
+            text: (item.taxRate ?? orderTaxRate ?? 0).toStringAsFixed(2)),
+        discountAmountController = TextEditingController(
+            text: item.discountAmount?.toStringAsFixed(2) ?? '0'),
         notesController = TextEditingController(text: item.notes ?? '');
 
   int? productId;
@@ -560,10 +606,14 @@ class _ItemDraft {
   final TextEditingController notesController;
 
   int get quantityValue => int.tryParse(quantityController.text.trim()) ?? 1;
-  String get unitValue => unitController.text.trim().isEmpty ? '件' : unitController.text.trim();
-  double get unitPriceValue => double.tryParse(unitPriceController.text.trim()) ?? 0;
-  double get taxRateValue => double.tryParse(taxRateController.text.trim()) ?? 0;
-  double get discountAmountValue => double.tryParse(discountAmountController.text.trim()) ?? 0;
+  String get unitValue =>
+      unitController.text.trim().isEmpty ? '件' : unitController.text.trim();
+  double get unitPriceValue =>
+      double.tryParse(unitPriceController.text.trim()) ?? 0;
+  double get taxRateValue =>
+      double.tryParse(taxRateController.text.trim()) ?? 0;
+  double get discountAmountValue =>
+      double.tryParse(discountAmountController.text.trim()) ?? 0;
   String get notesValue => notesController.text.trim();
 
   void dispose() {
@@ -606,15 +656,33 @@ class _ItemRowState extends State<_ItemRow> {
             child: DropdownButtonFormField<int>(
               initialValue: widget.draft.productId,
               decoration: const InputDecoration(labelText: '产品'),
+              isExpanded: true,
+              selectedItemBuilder: (context) {
+                return widget.products
+                    .map(
+                      (item) => Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          item.displayLabel,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    )
+                    .toList();
+              },
               items: widget.products
                   .map(
                     (item) => DropdownMenuItem(
                       value: item.id,
-                      child: Text(item.displayLabel),
+                      child: Text(
+                        item.displayLabel,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   )
                   .toList(),
-              onChanged: (value) => setState(() => widget.draft.productId = value),
+              onChanged: (value) =>
+                  setState(() => widget.draft.productId = value),
               validator: (value) => value == null ? '请选择产品' : null,
             ),
           ),

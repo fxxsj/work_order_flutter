@@ -6,12 +6,27 @@ class DeliveryOrderViewModel extends PaginatedViewModel<DeliveryOrder> {
   DeliveryOrderViewModel(this._repository);
 
   final DeliveryOrderRepository _repository;
+  String _statusFilter = '';
+  int _customerId = 0;
 
   List<DeliveryOrder> get deliveryOrders => items;
+  String get statusFilter => _statusFilter;
+  int get customerId => _customerId;
 
   Future<void> initialize() => loadItems(resetPage: true);
 
-  Future<void> loadDeliveryOrders({bool resetPage = false}) => loadItems(resetPage: resetPage);
+  Future<void> loadDeliveryOrders({bool resetPage = false}) =>
+      loadItems(resetPage: resetPage);
+
+  Future<void> setStatusFilter(String value) async {
+    _statusFilter = value;
+    await loadDeliveryOrders(resetPage: true);
+  }
+
+  Future<void> setCustomerId(int value) async {
+    _customerId = value;
+    await loadDeliveryOrders(resetPage: true);
+  }
 
   @override
   Future<PageData<DeliveryOrder>> fetchPage({
@@ -23,6 +38,8 @@ class DeliveryOrderViewModel extends PaginatedViewModel<DeliveryOrder> {
       page: page,
       pageSize: pageSize,
       search: search,
+      status: _statusFilter.isEmpty ? null : _statusFilter,
+      customerId: _customerId > 0 ? _customerId : null,
     );
     return PageData(
       items: result.items.map((dto) => dto.toEntity()).toList(),

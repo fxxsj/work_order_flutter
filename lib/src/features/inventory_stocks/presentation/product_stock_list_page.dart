@@ -14,6 +14,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/inventory_stocks/application/product_stock_view_model.dart';
 import 'package:work_order_app/src/features/inventory_stocks/data/product_stock_api_service.dart';
 import 'package:work_order_app/src/features/inventory_stocks/data/product_stock_repository_impl.dart';
@@ -103,12 +104,35 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
   static const String _emptyText = '暂无库存数据';
   static const String _errorFallbackText = '加载失败';
   static const String _retryText = '重新加载';
+  static const String _adjustTitle = '库存调整';
+  static const String _adjustSuccessText = '库存调整成功';
+  static const String _adjustErrorText = '库存调整失败: ';
+  static const String _adjustSubmitText = '提交';
+  static const String _cancelText = '取消';
+  static const String _detailTitle = '库存详情';
+  static const String _lowStockTitle = '库存预警';
+  static const String _expiredTitle = '过期库存';
+  static const String _lowStockText = '库存预警';
+  static const String _expiredText = '过期库存';
+  static const String _statusFilterLabel = '库存状态';
   static const String _breadcrumbSeparator = ' / ';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
   static const String _pageSizeLabel = '每页 {size}';
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
+  Map<String, dynamic> _summary = {};
+  bool _summaryLoading = false;
+  bool _lowStockLoading = false;
+  bool _expiredLoading = false;
+  List<ProductStock> _lowStockList = [];
+  List<ProductStock> _expiredList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadSummary());
+  }
 
   @override
   void dispose() {
@@ -117,7 +141,8 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     super.dispose();
   }
 
-  void _scheduleSearch(ProductStockViewModel viewModel, {bool immediate = false}) {
+  void _scheduleSearch(ProductStockViewModel viewModel,
+      {bool immediate = false}) {
     _searchDebounce?.cancel();
     if (immediate) {
       viewModel.setSearchText(_searchController.text.trim());
@@ -128,6 +153,304 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadStocks(resetPage: true);
     });
+  }
+
+  Future<void> _loadSummary() async {
+    final apiService = context.read<ProductStockApiService>();
+    setState(() => _summaryLoading = true);
+    try {
+      final summary = await apiService.fetchSummary();
+      if (!mounted) return;
+      setState(() => _summary = summary);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _summary = {});
+    } finally {
+      if (!mounted) return;
+      setState(() => _summaryLoading = false);
+    }
+  }
+
+  Future<void> _openLowStockDialog() async {
+    final apiService = context.read<ProductStockApiService>();
+    setState(() {
+      _lowStockLoading = true;
+      _lowStockList = [];
+    });
+    try {
+      final response = await apiService.fetchLowStock();
+      final list = _parseStockList(response);
+      if (!mounted) return;
+      setState(() => _lowStockList = list);
+    } catch (err) {
+      if (!mounted) return;
+      ToastUtil.showError('获取库存预警失败: $err');
+    } finally {
+      if (!mounted) return;
+      setState(() => _lowStockLoading = false);
+    }
+
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text(_lowStockTitle),
+        content: SizedBox(
+          width: 640,
+          child: _lowStockLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _buildStockDialogList(_lowStockList, highlightLowStock: true),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text(_cancelText),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openExpiredDialog() async {
+    final apiService = context.read<ProductStockApiService>();
+    setState(() {
+      _expiredLoading = true;
+      _expiredList = [];
+    });
+    try {
+      final response = await apiService.fetchExpired();
+      final list = _parseStockList(response);
+      if (!mounted) return;
+      setState(() => _expiredList = list);
+    } catch (err) {
+      if (!mounted) return;
+      ToastUtil.showError('获取过期库存失败: $err');
+    } finally {
+      if (!mounted) return;
+      setState(() => _expiredLoading = false);
+    }
+
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text(_expiredTitle),
+        content: SizedBox(
+          width: 640,
+          child: _expiredLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _buildStockDialogList(_expiredList, highlightExpired: true),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text(_cancelText),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<ProductStock> _parseStockList(Map<String, dynamic> response) {
+    final results = response['results'];
+    if (results is List) {
+      return results
+          .whereType<Map>()
+          .map((item) => ProductStock.fromJson(Map<String, dynamic>.from(item)))
+          .toList();
+    }
+    return [];
+  }
+
+  Future<void> _openDetailDialog(ProductStock stock) async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text(_detailTitle),
+          content: SizedBox(
+            width: 640,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _DetailRow(
+                      label: '产品名称', value: _displayText(stock.productName)),
+                  _DetailRow(
+                      label: '产品编码', value: _displayText(stock.productCode)),
+                  _DetailRow(label: '批次号', value: _displayText(stock.batchNo)),
+                  _DetailRow(
+                      label: '库存数量', value: _formatAmount(stock.quantity)),
+                  _DetailRow(
+                      label: '预留数量',
+                      value: _formatAmount(stock.reservedQuantity)),
+                  _DetailRow(
+                      label: '可用数量',
+                      value: _formatAmount(stock.availableQuantity)),
+                  _DetailRow(
+                    label: '最小库存',
+                    value: stock.minStockLevel?.toString() ?? _emptyCellText,
+                  ),
+                  _DetailRow(label: '库位', value: _displayText(stock.location)),
+                  _DetailRow(
+                      label: '生产日期', value: _formatDate(stock.productionDate)),
+                  _DetailRow(
+                      label: '到期日期', value: _formatDate(stock.expiryDate)),
+                  _DetailRow(
+                    label: '状态',
+                    value: _displayText(stock.statusDisplay ?? stock.status),
+                  ),
+                  _DetailRow(
+                      label: '单位成本', value: _formatAmount(stock.unitCost)),
+                  _DetailRow(
+                      label: '总价值', value: _formatAmount(stock.totalValue)),
+                  _DetailRow(
+                      label: '创建时间', value: _formatDate(stock.createdAt)),
+                  if ((stock.notes ?? '').trim().isNotEmpty)
+                    _DetailRow(
+                        label: '备注', value: stock.notes ?? _emptyCellText),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text(_cancelText),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _openAdjustDialog(
+    BuildContext context,
+    ProductStockViewModel viewModel,
+    ProductStock stock,
+  ) async {
+    final apiService = context.read<ProductStockApiService>();
+    final formKey = GlobalKey<FormState>();
+    final quantityController = TextEditingController();
+    final reasonController = TextEditingController();
+    String adjustType = 'add';
+    bool submitting = false;
+
+    Future<void> submit(StateSetter setState) async {
+      if (!(formKey.currentState?.validate() ?? false)) return;
+      final quantityText = quantityController.text.trim();
+      final quantity = double.tryParse(quantityText);
+      if (quantity == null) {
+        ToastUtil.showError('请输入有效数量');
+        return;
+      }
+      final reason = reasonController.text.trim();
+      setState(() => submitting = true);
+      try {
+        await apiService.adjustStock(stock.id, {
+          'adjust_type': adjustType,
+          'quantity': quantity,
+          'reason': reason,
+        });
+        if (!mounted) return;
+        Navigator.of(context).pop();
+        ToastUtil.showSuccess(_adjustSuccessText);
+        await viewModel.loadStocks(resetPage: false);
+        _loadSummary();
+      } catch (err) {
+        if (!mounted) return;
+        setState(() => submitting = false);
+        ToastUtil.showError('$_adjustErrorText$err');
+      }
+    }
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text(_adjustTitle),
+              content: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: SingleChildScrollView(
+                  child: Form(
+                    key: formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        DropdownButtonFormField<String>(
+                          value: adjustType,
+                          decoration: const InputDecoration(labelText: '调整方式'),
+                          items: const [
+                            DropdownMenuItem(value: 'add', child: Text('增加库存')),
+                            DropdownMenuItem(
+                                value: 'subtract', child: Text('减少库存')),
+                            DropdownMenuItem(value: 'set', child: Text('设定库存')),
+                          ],
+                          onChanged: submitting
+                              ? null
+                              : (value) {
+                                  if (value == null) return;
+                                  setState(() => adjustType = value);
+                                },
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: quantityController,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
+                          decoration: const InputDecoration(labelText: '调整数量'),
+                          validator: (value) {
+                            final text = value?.trim() ?? '';
+                            final parsed = double.tryParse(text);
+                            if (parsed == null) return '请输入有效数量';
+                            if (adjustType == 'set' && parsed < 0) {
+                              return '数量不能小于 0';
+                            }
+                            if (adjustType != 'set' && parsed <= 0) {
+                              return '数量必须大于 0';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: reasonController,
+                          maxLines: 3,
+                          decoration: const InputDecoration(labelText: '调整原因'),
+                          validator: (value) {
+                            if ((value?.trim() ?? '').isEmpty) {
+                              return '请输入调整原因';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: submitting
+                      ? null
+                      : () => Navigator.of(dialogContext).pop(),
+                  child: const Text(_cancelText),
+                ),
+                FilledButton(
+                  onPressed: submitting ? null : () => submit(setState),
+                  child: Text(submitting ? '提交中...' : _adjustSubmitText),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    quantityController.dispose();
+    reasonController.dispose();
   }
 
   static String _pageInfoText(ProductStockViewModel viewModel) {
@@ -179,30 +502,38 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     bool isMobile,
   ) {
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
+    Widget listContent;
     if (viewModel.loading && stocks.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (viewModel.errorMessage != null && !viewModel.loading) {
-      return ErrorStateCard(
+      listContent = const Center(child: CircularProgressIndicator());
+    } else if (viewModel.errorMessage != null && !viewModel.loading) {
+      listContent = ErrorStateCard(
         message: viewModel.errorMessage ?? _errorFallbackText,
         retryLabel: _retryText,
         onRetry: () => viewModel.loadStocks(resetPage: true),
       );
-    }
-    if (!viewModel.loading && stocks.isEmpty) {
-      return const EmptyStateCard(
+    } else if (!viewModel.loading && stocks.isEmpty) {
+      listContent = const EmptyStateCard(
         icon: Icons.warehouse_outlined,
         text: _emptyText,
       );
+    } else {
+      listContent = ListView.separated(
+        itemCount: stocks.length,
+        separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
+        itemBuilder: (context, index) {
+          final stock = stocks[index];
+          return _buildSummaryCard(context, viewModel, stock, isMobile);
+        },
+      );
     }
 
-    return ListView.separated(
-      itemCount: stocks.length,
-      separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
-      itemBuilder: (context, index) {
-        final stock = stocks[index];
-        return _buildSummaryCard(context, stock, isMobile);
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSummarySection(context),
+        SizedBox(height: sectionSpacing),
+        Expanded(child: listContent),
+      ],
     );
   }
 
@@ -213,7 +544,8 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     bool isMobile,
   ) {
     return PageHeaderBar(
-      breadcrumb: breadcrumb.isEmpty ? null : breadcrumb.join(_breadcrumbSeparator),
+      breadcrumb:
+          breadcrumb.isEmpty ? null : breadcrumb.join(_breadcrumbSeparator),
       useSurface: false,
       showDivider: false,
       padding: EdgeInsets.zero,
@@ -232,11 +564,44 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
             },
           );
 
+          final statusValue =
+              viewModel.statusFilter.isEmpty ? '' : viewModel.statusFilter;
+          final statusField = SizedBox(
+            width: isMobile ? constraints.maxWidth : 160,
+            child: DropdownButtonFormField<String>(
+              value: statusValue,
+              decoration: const InputDecoration(
+                labelText: _statusFilterLabel,
+                isDense: true,
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(value: '', child: Text('全部状态')),
+                DropdownMenuItem(value: 'in_stock', child: Text('在库')),
+                DropdownMenuItem(value: 'reserved', child: Text('已预留')),
+                DropdownMenuItem(value: 'quality_check', child: Text('质检中')),
+                DropdownMenuItem(value: 'defective', child: Text('次品')),
+              ],
+              onChanged: (value) => viewModel.setStatusFilter(value ?? ''),
+            ),
+          );
+
           final actions = <Widget>[
+            statusField,
             PageActionButton.outlined(
               onPressed: () => viewModel.loadStocks(resetPage: true),
               icon: const Icon(Icons.refresh, size: 16),
               label: _refreshButtonText,
+            ),
+            PageActionButton.outlined(
+              onPressed: _lowStockLoading ? null : _openLowStockDialog,
+              icon: const Icon(Icons.warning_amber_outlined, size: 16),
+              label: _lowStockText,
+            ),
+            PageActionButton.outlined(
+              onPressed: _expiredLoading ? null : _openExpiredDialog,
+              icon: const Icon(Icons.event_busy_outlined, size: 16),
+              label: _expiredText,
             ),
           ];
 
@@ -250,6 +615,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
       ),
     );
   }
+
   static String _displayText(String? value) {
     final text = value?.trim() ?? '';
     return text.isEmpty ? _emptyCellText : text;
@@ -269,7 +635,12 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     return '$year-$month-$day';
   }
 
-  Widget _buildSummaryCard(BuildContext context, ProductStock stock, bool isMobile) {
+  Widget _buildSummaryCard(
+    BuildContext context,
+    ProductStockViewModel viewModel,
+    ProductStock stock,
+    bool isMobile,
+  ) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
@@ -331,18 +702,157 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
           ],
         );
       },
-      expandedChild: SummaryFieldWrap(
-        isMobile: isMobile,
+      expandedChild: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SummaryField(label: '产品编码', value: productCode),
-          _SummaryField(label: '施工单', value: workOrder),
-          _SummaryField(label: '库存', value: quantity),
-          _SummaryField(label: '预留', value: reserved),
-          _SummaryField(label: '可用', value: available),
-          _SummaryField(label: '库存价值', value: totalValue),
-          _SummaryField(label: '状态', value: status),
-          _SummaryField(label: '到期日', value: expiryDate),
+          SummaryFieldWrap(
+            isMobile: isMobile,
+            children: [
+              _SummaryField(label: '产品编码', value: productCode),
+              _SummaryField(label: '施工单', value: workOrder),
+              _SummaryField(label: '库存', value: quantity),
+              _SummaryField(label: '预留', value: reserved),
+              _SummaryField(label: '可用', value: available),
+              _SummaryField(label: '库存价值', value: totalValue),
+              _SummaryField(label: '状态', value: status),
+              _SummaryField(label: '到期日', value: expiryDate),
+            ],
+          ),
+          SizedBox(height: sectionSpacing),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () => _openDetailDialog(stock),
+                icon: const Icon(Icons.visibility_outlined, size: 16),
+                label: const Text('查看'),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => _openAdjustDialog(context, viewModel, stock),
+                icon: const Icon(Icons.tune, size: 16),
+                label: const Text(_adjustTitle),
+              ),
+            ],
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSummarySection(BuildContext context) {
+    final spacing = LayoutTokens.sectionSpacing(context);
+    if (_summaryLoading && _summary.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    String formatValue(dynamic value) {
+      if (value == null) return _emptyCellText;
+      if (value is num) {
+        if (value % 1 == 0) return value.toInt().toString();
+        return value.toStringAsFixed(2);
+      }
+      return value.toString();
+    }
+
+    return Wrap(
+      spacing: spacing,
+      runSpacing: spacing,
+      children: [
+        _StatTile(
+          label: '总库存量',
+          value: formatValue(_summary['total_quantity']),
+          icon: Icons.inventory_2_outlined,
+        ),
+        _StatTile(
+          label: '产品数',
+          value: formatValue(_summary['total_products']),
+          icon: Icons.category_outlined,
+        ),
+        _StatTile(
+          label: '低库存',
+          value: formatValue(_summary['low_stock_count']),
+          icon: Icons.warning_amber_outlined,
+        ),
+        _StatTile(
+          label: '已过期',
+          value: formatValue(_summary['expired_count']),
+          icon: Icons.event_busy_outlined,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStockDialogList(
+    List<ProductStock> items, {
+    bool highlightLowStock = false,
+    bool highlightExpired = false,
+  }) {
+    if (items.isEmpty) {
+      return const EmptyStateCard(
+        icon: Icons.inventory_outlined,
+        text: '暂无数据',
+      );
+    }
+    return SizedBox(
+      height: 360,
+      child: ListView.separated(
+        itemCount: items.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 8),
+        itemBuilder: (context, index) {
+          final stock = items[index];
+          final qty = _formatAmount(stock.quantity);
+          final available = _formatAmount(stock.availableQuantity);
+          final expiry = _formatDate(stock.expiryDate);
+          final days = stock.daysUntilExpiry;
+          final daysText = days == null
+              ? _emptyCellText
+              : days >= 0
+                  ? '$days 天'
+                  : '已过期 ${days.abs()} 天';
+          final title = _displayText(stock.productName);
+          final subtitle =
+              '批次: ${_displayText(stock.batchNo)} · 库位: ${_displayText(stock.location)}';
+          Color? valueColor;
+          if (highlightLowStock && (stock.isLowStock ?? false)) {
+            valueColor = Theme.of(context).colorScheme.tertiary;
+          }
+          if (highlightExpired && (days != null && days < 0)) {
+            valueColor = Theme.of(context).colorScheme.error;
+          }
+          return Card(
+            margin: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          )),
+                  const SizedBox(height: 4),
+                  Text(subtitle,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).hintColor,
+                          )),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 6,
+                    children: [
+                      _InlineMeta(
+                          label: '库存', value: qty, valueColor: valueColor),
+                      _InlineMeta(label: '可用', value: available),
+                      _InlineMeta(label: '到期', value: expiry),
+                      _InlineMeta(label: '剩余', value: daysText),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -350,3 +860,115 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
 
 typedef _SummaryField = SummaryField;
 typedef _SummaryChip = SummaryChip;
+
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 90,
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).hintColor,
+                  ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatTile extends StatelessWidget {
+  const _StatTile({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>();
+    return Container(
+      width: 170,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors?.surface ?? theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
+        border: Border.all(color: colors?.borderColor ?? theme.dividerColor),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: theme.colorScheme.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: theme.textTheme.bodySmall),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InlineMeta extends StatelessWidget {
+  const _InlineMeta({
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
+
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          '$label ',
+          style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+        ),
+        Text(
+          value,
+          style: theme.textTheme.bodySmall?.copyWith(color: valueColor),
+        ),
+      ],
+    );
+  }
+}

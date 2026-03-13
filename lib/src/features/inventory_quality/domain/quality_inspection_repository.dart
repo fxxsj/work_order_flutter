@@ -5,6 +5,8 @@ abstract class QualityInspectionRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? result,
+    String? inspectionType,
   });
 
   Future<Map<String, dynamic>> complete(int id, Map<String, dynamic> payload);

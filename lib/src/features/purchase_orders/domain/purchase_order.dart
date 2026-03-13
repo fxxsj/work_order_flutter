@@ -13,6 +13,11 @@ class PurchaseOrder {
     this.receivedProgress,
     this.workOrderNumber,
     this.orderDate,
+    this.submittedByName,
+    this.approvedByName,
+    this.createdAt,
+    this.submittedAt,
+    this.approvedAt,
   });
 
   final int id;
@@ -26,6 +31,11 @@ class PurchaseOrder {
   final double? receivedProgress;
   final String? workOrderNumber;
   final DateTime? orderDate;
+  final String? submittedByName;
+  final String? approvedByName;
+  final DateTime? createdAt;
+  final DateTime? submittedAt;
+  final DateTime? approvedAt;
 
   factory PurchaseOrder.fromJson(Map<String, dynamic> json) {
     return PurchaseOrder(
@@ -40,6 +50,11 @@ class PurchaseOrder {
       receivedProgress: _toDouble(json['received_progress']),
       workOrderNumber: toStringOrNull(json['work_order_number']),
       orderDate: toDateTime(json['order_date']),
+      submittedByName: toStringOrNull(json['submitted_by_name']),
+      approvedByName: toStringOrNull(json['approved_by_name']),
+      createdAt: toDateTime(json['created_at']),
+      submittedAt: toDateTime(json['submitted_at']),
+      approvedAt: toDateTime(json['approved_at']),
     );
   }
 

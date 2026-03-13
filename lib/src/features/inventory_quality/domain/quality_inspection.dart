@@ -10,12 +10,20 @@ class QualityInspection {
     this.resultDisplay,
     this.workOrderNumber,
     this.productName,
+    this.batchNo,
     this.inspectorName,
     this.inspectionDate,
     this.inspectionQuantity,
     this.passedQuantity,
     this.failedQuantity,
     this.defectiveRateFormatted,
+    this.inspectionStandard,
+    this.inspectionItems = const [],
+    this.defects = const [],
+    this.defectDescription,
+    this.disposition,
+    this.dispositionNotes,
+    this.notes,
   });
 
   final int id;
@@ -26,12 +34,20 @@ class QualityInspection {
   final String? resultDisplay;
   final String? workOrderNumber;
   final String? productName;
+  final String? batchNo;
   final String? inspectorName;
   final DateTime? inspectionDate;
   final double? inspectionQuantity;
   final double? passedQuantity;
   final double? failedQuantity;
   final String? defectiveRateFormatted;
+  final String? inspectionStandard;
+  final List<String> inspectionItems;
+  final List<String> defects;
+  final String? defectDescription;
+  final String? disposition;
+  final String? dispositionNotes;
+  final String? notes;
 
   factory QualityInspection.fromJson(Map<String, dynamic> json) {
     return QualityInspection(
@@ -43,12 +59,20 @@ class QualityInspection {
       resultDisplay: toStringOrNull(json['result_display']),
       workOrderNumber: toStringOrNull(json['work_order_number']),
       productName: toStringOrNull(json['product_name']),
+      batchNo: toStringOrNull(json['batch_no']),
       inspectorName: toStringOrNull(json['inspector_name']),
       inspectionDate: toDateTime(json['inspection_date']),
       inspectionQuantity: _toDouble(json['inspection_quantity']),
       passedQuantity: _toDouble(json['passed_quantity']),
       failedQuantity: _toDouble(json['failed_quantity']),
       defectiveRateFormatted: toStringOrNull(json['defective_rate_formatted']),
+      inspectionStandard: toStringOrNull(json['inspection_standard']),
+      inspectionItems: _toStringList(json['inspection_items']),
+      defects: _toStringList(json['defects']),
+      defectDescription: toStringOrNull(json['defect_description']),
+      disposition: toStringOrNull(json['disposition']),
+      dispositionNotes: toStringOrNull(json['disposition_notes']),
+      notes: toStringOrNull(json['notes']),
     );
   }
 
@@ -56,5 +80,10 @@ class QualityInspection {
     if (value == null) return null;
     if (value is num) return value.toDouble();
     return double.tryParse(value.toString());
+  }
+
+  static List<String> _toStringList(dynamic value) {
+    if (value is! List) return const [];
+    return value.map((item) => item.toString()).toList();
   }
 }

@@ -1,4 +1,5 @@
 import 'package:work_order_app/src/core/core.dart';
+import 'package:work_order_app/src/features/product_groups/data/product_group_dto.dart';
 import 'package:work_order_app/src/features/product_groups/domain/product_group.dart';
 import 'package:work_order_app/src/features/product_groups/domain/product_group_repository.dart';
 
@@ -12,6 +13,20 @@ class ProductGroupViewModel extends PaginatedViewModel<ProductGroup> {
   Future<void> initialize() => loadItems(resetPage: true);
 
   Future<void> loadProductGroups({bool resetPage = false}) => loadItems(resetPage: resetPage);
+
+  Future<void> createProductGroup(ProductGroup group) async {
+    await _repository.createProductGroup(group.toDto());
+    await loadItems(resetPage: true);
+  }
+
+  Future<void> updateProductGroup(ProductGroup group) async {
+    await _repository.updateProductGroup(group.toDto());
+    await loadItems();
+  }
+
+  Future<void> deleteProductGroup(int id) async {
+    await deleteAndReload(() => _repository.deleteProductGroup(id));
+  }
 
   @override
   Future<PageData<ProductGroup>> fetchPage({

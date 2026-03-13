@@ -12,8 +12,16 @@ class QualityInspectionRepositoryImpl implements QualityInspectionRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? result,
+    String? inspectionType,
   }) {
-    return _apiService.fetchQualityInspections(page: page, pageSize: pageSize, search: search);
+    return _apiService.fetchQualityInspections(
+      page: page,
+      pageSize: pageSize,
+      search: search,
+      result: result,
+      inspectionType: inspectionType,
+    );
   }
 
   @override

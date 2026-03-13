@@ -15,4 +15,19 @@ class ProductGroupRepositoryImpl implements ProductGroupRepository {
   }) {
     return _apiService.fetchProductGroups(page: page, pageSize: pageSize, search: search);
   }
+
+  @override
+  Future<ProductGroupDto> createProductGroup(ProductGroupDto dto) {
+    return _apiService.createProductGroup(dto);
+  }
+
+  @override
+  Future<ProductGroupDto> updateProductGroup(ProductGroupDto dto) {
+    return _apiService.updateProductGroup(dto);
+  }
+
+  @override
+  Future<void> deleteProductGroup(int id) {
+    return _apiService.deleteProductGroup(id);
+  }
 }

@@ -1,6 +1,7 @@
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/purchase_orders/data/purchase_order_dto.dart';
+import 'package:work_order_app/src/features/purchase_orders/domain/purchase_order_detail.dart';
 
 class PurchaseOrderApiService {
   PurchaseOrderApiService(this._client);
@@ -12,6 +13,7 @@ class PurchaseOrderApiService {
     int pageSize = 20,
     String? search,
     String? status,
+    int? supplierId,
   }) async {
     final params = <String, dynamic>{
       'page': page,
@@ -23,6 +25,9 @@ class PurchaseOrderApiService {
     }
     if (status != null && status.isNotEmpty) {
       params['status'] = status;
+    }
+    if (supplierId != null && supplierId > 0) {
+      params['supplier'] = supplierId;
     }
 
     final response = await _client.get('/purchase-orders/', queryParameters: params);
@@ -46,6 +51,33 @@ class PurchaseOrderApiService {
       return PurchaseOrderPageDto(items: list, total: list.length, page: 1, pageSize: list.length);
     }
     return const PurchaseOrderPageDto(items: [], total: 0, page: 1, pageSize: 20);
+  }
+
+  Future<PurchaseOrderDetail> fetchDetail(int id) async {
+    final response = await _client.get('/purchase-orders/$id/');
+    final payload = response.data;
+    final map = _unwrapDetail(payload);
+    return PurchaseOrderDetail.fromJson(map);
+  }
+
+  Future<PurchaseOrderDetail> createPurchaseOrder(Map<String, dynamic> payload) async {
+    final response = await _client.post('/purchase-orders/', data: payload);
+    return PurchaseOrderDetail.fromJson(_unwrapDetail(response.data));
+  }
+
+  Future<PurchaseOrderDetail> updatePurchaseOrder(int id, Map<String, dynamic> payload) async {
+    final response = await _client.put('/purchase-orders/$id/', data: payload);
+    return PurchaseOrderDetail.fromJson(_unwrapDetail(response.data));
+  }
+
+  Map<String, dynamic> _unwrapDetail(dynamic payload) {
+    if (payload is Map<String, dynamic>) {
+      if (payload['data'] is Map) {
+        return Map<String, dynamic>.from(payload['data'] as Map);
+      }
+      return Map<String, dynamic>.from(payload);
+    }
+    return {};
   }
 
   Future<Map<String, dynamic>> submit(int id) async {

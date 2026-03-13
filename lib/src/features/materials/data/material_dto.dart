@@ -25,6 +25,17 @@ class MaterialDto {
     return MaterialItem.fromJson(json).toDto();
   }
 
+  Map<String, dynamic> toPayload() {
+    return {
+      'code': code,
+      'name': name,
+      if (unit != null) 'unit': unit,
+      if (unitPrice != null) 'unit_price': unitPrice,
+      if (stockQuantity != null) 'stock_quantity': stockQuantity,
+      if (minStockQuantity != null) 'min_stock_quantity': minStockQuantity,
+    };
+  }
+
   MaterialItem toEntity() {
     return MaterialItem(
       id: id,

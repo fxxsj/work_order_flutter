@@ -6,4 +6,10 @@ abstract class ProductGroupRepository {
     int pageSize = 20,
     String? search,
   });
+
+  Future<ProductGroupDto> createProductGroup(ProductGroupDto dto);
+
+  Future<ProductGroupDto> updateProductGroup(ProductGroupDto dto);
+
+  Future<void> deleteProductGroup(int id);
 }

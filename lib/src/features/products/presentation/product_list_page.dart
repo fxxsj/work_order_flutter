@@ -14,11 +14,13 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/products/application/product_view_model.dart';
 import 'package:work_order_app/src/features/products/data/product_api_service.dart';
 import 'package:work_order_app/src/features/products/data/product_repository_impl.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/products/domain/product_repository.dart';
+import 'package:work_order_app/src/features/products/presentation/product_edit_page.dart';
 
 /// 产品列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
 class ProductListEntry extends StatefulWidget {
@@ -104,6 +106,14 @@ class _ProductListViewState extends State<_ProductListView> {
   static const String _emptyText = '暂无产品数据';
   static const String _errorFallbackText = '加载失败';
   static const String _retryText = '重新加载';
+  static const String _deleteDialogTitle = '确认删除';
+  static const String _deleteDialogContent = '确定要删除产品 \"{name}\" 吗？此操作不可恢复。';
+  static const String _cancelText = '取消';
+  static const String _deleteText = '删除';
+  static const String _deleteSuccessText = '删除成功';
+  static const String _deleteFailedText = '删除失败: ';
+  static const String _createSuccessText = '创建成功';
+  static const String _updateSuccessText = '更新成功';
   static const String _breadcrumbSeparator = ' / ';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
   static const String _pageSizeLabel = '每页 {size}';
@@ -129,6 +139,63 @@ class _ProductListViewState extends State<_ProductListView> {
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadProducts(resetPage: true);
     });
+  }
+
+  Future<void> _openEditPage(
+    BuildContext context,
+    ProductViewModel viewModel,
+    Product? product,
+  ) async {
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => ChangeNotifierProvider.value(
+          value: viewModel,
+          child: ProductEditPage(product: product),
+        ),
+      ),
+    );
+    if (!mounted) return;
+    if (result == true) {
+      ToastUtil.showSuccess(product == null ? _createSuccessText : _updateSuccessText);
+    }
+  }
+
+  Future<void> _confirmDelete(
+    BuildContext context,
+    ProductViewModel viewModel,
+    Product product,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(_deleteDialogTitle),
+        content: Text(_deleteDialogContent.replaceFirst('{name}', product.name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text(_cancelText),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text(_deleteText),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await viewModel.deleteProduct(product.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(_deleteSuccessText)),
+      );
+    } catch (err) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$_deleteFailedText$err')),
+      );
+    }
   }
 
   static String _pageInfoText(ProductViewModel viewModel) {
@@ -202,7 +269,7 @@ class _ProductListViewState extends State<_ProductListView> {
       separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
       itemBuilder: (context, index) {
         final product = products[index];
-        return _buildSummaryCard(context, product, isMobile);
+        return _buildSummaryCard(context, viewModel, product, isMobile);
       },
     );
   }
@@ -240,7 +307,7 @@ class _ProductListViewState extends State<_ProductListView> {
               label: _refreshButtonText,
             ),
             PageActionButton.filled(
-              onPressed: null,
+              onPressed: () => _openEditPage(context, viewModel, null),
               icon: const Icon(Icons.add),
               label: _createButtonText,
             ),
@@ -269,6 +336,7 @@ class _ProductListViewState extends State<_ProductListView> {
 
   Widget _buildSummaryCard(
     BuildContext context,
+    ProductViewModel viewModel,
     Product product,
     bool isMobile,
   ) {
@@ -348,6 +416,23 @@ class _ProductListViewState extends State<_ProductListView> {
               _SummaryField(label: '单价', value: price),
               _SummaryField(label: '库存', value: stock),
               _SummaryField(label: '状态', value: status),
+            ],
+          ),
+          SizedBox(height: sectionSpacing),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () => _openEditPage(context, viewModel, product),
+                icon: const Icon(Icons.edit, size: 16),
+                label: const Text('编辑'),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => _confirmDelete(context, viewModel, product),
+                icon: const Icon(Icons.delete_outline, size: 16),
+                label: const Text('删除'),
+              ),
             ],
           ),
         ],

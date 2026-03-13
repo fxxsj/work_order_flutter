@@ -6,12 +6,20 @@ class ProductStockViewModel extends PaginatedViewModel<ProductStock> {
   ProductStockViewModel(this._repository);
 
   final ProductStockRepository _repository;
+  String _statusFilter = '';
 
   List<ProductStock> get stocks => items;
+  String get statusFilter => _statusFilter;
 
   Future<void> initialize() => loadItems(resetPage: true);
 
-  Future<void> loadStocks({bool resetPage = false}) => loadItems(resetPage: resetPage);
+  Future<void> loadStocks({bool resetPage = false}) =>
+      loadItems(resetPage: resetPage);
+
+  Future<void> setStatusFilter(String value) async {
+    _statusFilter = value;
+    await loadStocks(resetPage: true);
+  }
 
   @override
   Future<PageData<ProductStock>> fetchPage({
@@ -23,6 +31,7 @@ class ProductStockViewModel extends PaginatedViewModel<ProductStock> {
       page: page,
       pageSize: pageSize,
       search: search,
+      status: _statusFilter.isEmpty ? null : _statusFilter,
     );
     return PageData(
       items: result.items.map((dto) => dto.toEntity()).toList(),

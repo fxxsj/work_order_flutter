@@ -6,12 +6,27 @@ class QualityInspectionViewModel extends PaginatedViewModel<QualityInspection> {
   QualityInspectionViewModel(this._repository);
 
   final QualityInspectionRepository _repository;
+  String _resultFilter = '';
+  String _typeFilter = '';
 
   List<QualityInspection> get inspections => items;
+  String get resultFilter => _resultFilter;
+  String get typeFilter => _typeFilter;
 
   Future<void> initialize() => loadItems(resetPage: true);
 
-  Future<void> loadInspections({bool resetPage = false}) => loadItems(resetPage: resetPage);
+  Future<void> loadInspections({bool resetPage = false}) =>
+      loadItems(resetPage: resetPage);
+
+  Future<void> setResultFilter(String value) async {
+    _resultFilter = value;
+    await loadInspections(resetPage: true);
+  }
+
+  Future<void> setTypeFilter(String value) async {
+    _typeFilter = value;
+    await loadInspections(resetPage: true);
+  }
 
   @override
   Future<PageData<QualityInspection>> fetchPage({
@@ -23,6 +38,8 @@ class QualityInspectionViewModel extends PaginatedViewModel<QualityInspection> {
       page: page,
       pageSize: pageSize,
       search: search,
+      result: _resultFilter.isEmpty ? null : _resultFilter,
+      inspectionType: _typeFilter.isEmpty ? null : _typeFilter,
     );
     return PageData(
       items: result.items.map((dto) => dto.toEntity()).toList(),

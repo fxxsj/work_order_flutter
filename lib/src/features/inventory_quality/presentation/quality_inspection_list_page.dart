@@ -14,6 +14,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/inventory_quality/application/quality_inspection_view_model.dart';
 import 'package:work_order_app/src/features/inventory_quality/data/quality_inspection_api_service.dart';
 import 'package:work_order_app/src/features/inventory_quality/data/quality_inspection_repository_impl.dart';
@@ -25,10 +26,12 @@ class QualityInspectionListEntry extends StatefulWidget {
   const QualityInspectionListEntry({super.key});
 
   @override
-  State<QualityInspectionListEntry> createState() => _QualityInspectionListEntryState();
+  State<QualityInspectionListEntry> createState() =>
+      _QualityInspectionListEntryState();
 }
 
-class _QualityInspectionListEntryState extends State<QualityInspectionListEntry> {
+class _QualityInspectionListEntryState
+    extends State<QualityInspectionListEntry> {
   QualityInspectionApiService? _apiService;
   QualityInspectionRepositoryImpl? _repository;
   QualityInspectionViewModel? _viewModel;
@@ -69,7 +72,8 @@ class _QualityInspectionListEntryState extends State<QualityInspectionListEntry>
       providers: [
         Provider<QualityInspectionApiService>.value(value: apiService),
         Provider<QualityInspectionRepository>.value(value: repository),
-        ChangeNotifierProvider<QualityInspectionViewModel>.value(value: viewModel),
+        ChangeNotifierProvider<QualityInspectionViewModel>.value(
+            value: viewModel),
       ],
       child: const QualityInspectionListPage(),
     );
@@ -88,10 +92,12 @@ class _QualityInspectionListView extends StatefulWidget {
   const _QualityInspectionListView();
 
   @override
-  State<_QualityInspectionListView> createState() => _QualityInspectionListViewState();
+  State<_QualityInspectionListView> createState() =>
+      _QualityInspectionListViewState();
 }
 
-class _QualityInspectionListViewState extends State<_QualityInspectionListView> {
+class _QualityInspectionListViewState
+    extends State<_QualityInspectionListView> {
   static const _searchDebounceDuration = Duration(milliseconds: 450);
   static const double _searchWidth = 320;
   static const double _spacingSm = LayoutTokens.gapSm;
@@ -103,12 +109,28 @@ class _QualityInspectionListViewState extends State<_QualityInspectionListView> 
   static const String _emptyText = '暂无质检数据';
   static const String _errorFallbackText = '加载失败';
   static const String _retryText = '重新加载';
+  static const String _completeTitle = '完成检验';
+  static const String _completeSuccessText = '检验完成';
+  static const String _completeErrorText = '检验提交失败: ';
+  static const String _submitText = '提交';
+  static const String _cancelText = '取消';
+  static const String _detailTitle = '质检详情';
+  static const String _resultFilterLabel = '检验结果';
+  static const String _typeFilterLabel = '检验类型';
   static const String _breadcrumbSeparator = ' / ';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
   static const String _pageSizeLabel = '每页 {size}';
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
+  Map<String, dynamic> _summary = {};
+  bool _summaryLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadSummary());
+  }
 
   @override
   void dispose() {
@@ -117,7 +139,8 @@ class _QualityInspectionListViewState extends State<_QualityInspectionListView> 
     super.dispose();
   }
 
-  void _scheduleSearch(QualityInspectionViewModel viewModel, {bool immediate = false}) {
+  void _scheduleSearch(QualityInspectionViewModel viewModel,
+      {bool immediate = false}) {
     _searchDebounce?.cancel();
     if (immediate) {
       viewModel.setSearchText(_searchController.text.trim());
@@ -128,6 +151,259 @@ class _QualityInspectionListViewState extends State<_QualityInspectionListView> 
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadInspections(resetPage: true);
     });
+  }
+
+  Future<void> _loadSummary() async {
+    final apiService = context.read<QualityInspectionApiService>();
+    setState(() => _summaryLoading = true);
+    try {
+      final data = await apiService.fetchSummary();
+      if (!mounted) return;
+      setState(() => _summary = data);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _summary = {});
+    } finally {
+      if (!mounted) return;
+      setState(() => _summaryLoading = false);
+    }
+  }
+
+  Future<void> _openDetailDialog(QualityInspection inspection) async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text(_detailTitle),
+          content: SizedBox(
+            width: 640,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _DetailRow(label: '质检单号', value: inspection.inspectionNumber),
+                  _DetailRow(
+                    label: '检验类型',
+                    value: _displayText(inspection.inspectionTypeDisplay ??
+                        inspection.inspectionType),
+                  ),
+                  _DetailRow(
+                    label: '产品',
+                    value: _displayText(inspection.productName),
+                  ),
+                  _DetailRow(
+                    label: '批次号',
+                    value: _displayText(inspection.batchNo),
+                  ),
+                  _DetailRow(
+                    label: '施工单号',
+                    value: _displayText(inspection.workOrderNumber),
+                  ),
+                  _DetailRow(
+                    label: '检验员',
+                    value: _displayText(inspection.inspectorName),
+                  ),
+                  _DetailRow(
+                    label: '检验日期',
+                    value: _formatDate(inspection.inspectionDate),
+                  ),
+                  _DetailRow(
+                    label: '检验数量',
+                    value: _formatAmount(inspection.inspectionQuantity),
+                  ),
+                  _DetailRow(
+                    label: '合格数量',
+                    value: _formatAmount(inspection.passedQuantity),
+                  ),
+                  _DetailRow(
+                    label: '不合格数量',
+                    value: _formatAmount(inspection.failedQuantity),
+                  ),
+                  _DetailRow(
+                    label: '检验结果',
+                    value: _displayText(
+                        inspection.resultDisplay ?? inspection.result),
+                  ),
+                  if ((inspection.inspectionStandard ?? '').trim().isNotEmpty)
+                    _DetailRow(
+                      label: '检验标准',
+                      value: inspection.inspectionStandard ?? '',
+                    ),
+                  if (inspection.inspectionItems.isNotEmpty)
+                    _DetailRow(
+                      label: '检验项目',
+                      value: inspection.inspectionItems.join('、'),
+                    ),
+                  if (inspection.defects.isNotEmpty)
+                    _DetailRow(
+                      label: '缺陷',
+                      value: inspection.defects.join('、'),
+                    ),
+                  if ((inspection.defectDescription ?? '').trim().isNotEmpty)
+                    _DetailRow(
+                      label: '缺陷描述',
+                      value: inspection.defectDescription ?? '',
+                    ),
+                  if ((inspection.disposition ?? '').trim().isNotEmpty)
+                    _DetailRow(
+                      label: '处理意见',
+                      value: inspection.disposition ?? '',
+                    ),
+                  if ((inspection.dispositionNotes ?? '').trim().isNotEmpty)
+                    _DetailRow(
+                      label: '处理备注',
+                      value: inspection.dispositionNotes ?? '',
+                    ),
+                  if ((inspection.notes ?? '').trim().isNotEmpty)
+                    _DetailRow(label: '备注', value: inspection.notes ?? ''),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text(_cancelText),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _openCompleteDialog(
+    BuildContext context,
+    QualityInspectionViewModel viewModel,
+    QualityInspection inspection,
+  ) async {
+    final apiService = context.read<QualityInspectionApiService>();
+    final formKey = GlobalKey<FormState>();
+    final passedController = TextEditingController(
+      text: inspection.passedQuantity?.toStringAsFixed(0) ?? '',
+    );
+    final failedController = TextEditingController(
+      text: inspection.failedQuantity?.toStringAsFixed(0) ?? '',
+    );
+    String result = inspection.result == null || inspection.result == 'pending'
+        ? 'passed'
+        : inspection.result!;
+    bool submitting = false;
+
+    Future<void> submit(StateSetter setState) async {
+      if (!(formKey.currentState?.validate() ?? false)) return;
+      final passedText = passedController.text.trim();
+      final failedText = failedController.text.trim();
+      final passed = int.tryParse(passedText);
+      final failed = int.tryParse(failedText);
+      if (passed == null || failed == null) {
+        ToastUtil.showError('请输入有效数量');
+        return;
+      }
+      setState(() => submitting = true);
+      try {
+        await apiService.complete(inspection.id, {
+          'result': result,
+          'passed_quantity': passed,
+          'failed_quantity': failed,
+        });
+        if (!mounted) return;
+        Navigator.of(context).pop();
+        ToastUtil.showSuccess(_completeSuccessText);
+        await viewModel.loadInspections(resetPage: false);
+        _loadSummary();
+      } catch (err) {
+        if (!mounted) return;
+        setState(() => submitting = false);
+        ToastUtil.showError('$_completeErrorText$err');
+      }
+    }
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text(_completeTitle),
+              content: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: SingleChildScrollView(
+                  child: Form(
+                    key: formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        DropdownButtonFormField<String>(
+                          value: result,
+                          decoration: const InputDecoration(labelText: '检验结果'),
+                          items: const [
+                            DropdownMenuItem(
+                                value: 'passed', child: Text('合格')),
+                            DropdownMenuItem(
+                                value: 'failed', child: Text('不合格')),
+                            DropdownMenuItem(
+                                value: 'conditional', child: Text('条件接收')),
+                          ],
+                          onChanged: submitting
+                              ? null
+                              : (value) {
+                                  if (value == null) return;
+                                  setState(() => result = value);
+                                },
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: passedController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(labelText: '合格数量'),
+                          validator: (value) {
+                            final text = value?.trim() ?? '';
+                            final parsed = int.tryParse(text);
+                            if (parsed == null || parsed < 0) {
+                              return '请输入有效数量';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: failedController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(labelText: '不合格数量'),
+                          validator: (value) {
+                            final text = value?.trim() ?? '';
+                            final parsed = int.tryParse(text);
+                            if (parsed == null || parsed < 0) {
+                              return '请输入有效数量';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: submitting
+                      ? null
+                      : () => Navigator.of(dialogContext).pop(),
+                  child: const Text(_cancelText),
+                ),
+                FilledButton(
+                  onPressed: submitting ? null : () => submit(setState),
+                  child: Text(submitting ? '提交中...' : _submitText),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    passedController.dispose();
+    failedController.dispose();
   }
 
   static String _pageInfoText(QualityInspectionViewModel viewModel) {
@@ -179,30 +455,38 @@ class _QualityInspectionListViewState extends State<_QualityInspectionListView> 
     bool isMobile,
   ) {
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
+    Widget listContent;
     if (viewModel.loading && inspections.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (viewModel.errorMessage != null && !viewModel.loading) {
-      return ErrorStateCard(
+      listContent = const Center(child: CircularProgressIndicator());
+    } else if (viewModel.errorMessage != null && !viewModel.loading) {
+      listContent = ErrorStateCard(
         message: viewModel.errorMessage ?? _errorFallbackText,
         retryLabel: _retryText,
         onRetry: () => viewModel.loadInspections(resetPage: true),
       );
-    }
-    if (!viewModel.loading && inspections.isEmpty) {
-      return const EmptyStateCard(
+    } else if (!viewModel.loading && inspections.isEmpty) {
+      listContent = const EmptyStateCard(
         icon: Icons.verified_outlined,
         text: _emptyText,
       );
+    } else {
+      listContent = ListView.separated(
+        itemCount: inspections.length,
+        separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
+        itemBuilder: (context, index) {
+          final inspection = inspections[index];
+          return _buildSummaryCard(context, viewModel, inspection, isMobile);
+        },
+      );
     }
 
-    return ListView.separated(
-      itemCount: inspections.length,
-      separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
-      itemBuilder: (context, index) {
-        final inspection = inspections[index];
-        return _buildSummaryCard(context, inspection, isMobile);
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSummarySection(context),
+        SizedBox(height: sectionSpacing),
+        Expanded(child: listContent),
+      ],
     );
   }
 
@@ -213,7 +497,8 @@ class _QualityInspectionListViewState extends State<_QualityInspectionListView> 
     bool isMobile,
   ) {
     return PageHeaderBar(
-      breadcrumb: breadcrumb.isEmpty ? null : breadcrumb.join(_breadcrumbSeparator),
+      breadcrumb:
+          breadcrumb.isEmpty ? null : breadcrumb.join(_breadcrumbSeparator),
       useSurface: false,
       showDivider: false,
       padding: EdgeInsets.zero,
@@ -232,7 +517,53 @@ class _QualityInspectionListViewState extends State<_QualityInspectionListView> 
             },
           );
 
+          final resultValue =
+              viewModel.resultFilter.isEmpty ? '' : viewModel.resultFilter;
+          final resultField = SizedBox(
+            width: isMobile ? constraints.maxWidth : 140,
+            child: DropdownButtonFormField<String>(
+              value: resultValue,
+              decoration: const InputDecoration(
+                labelText: _resultFilterLabel,
+                isDense: true,
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(value: '', child: Text('全部结果')),
+                DropdownMenuItem(value: 'pending', child: Text('待检验')),
+                DropdownMenuItem(value: 'passed', child: Text('合格')),
+                DropdownMenuItem(value: 'failed', child: Text('不合格')),
+                DropdownMenuItem(value: 'conditional', child: Text('条件接收')),
+              ],
+              onChanged: (value) => viewModel.setResultFilter(value ?? ''),
+            ),
+          );
+
+          final typeValue =
+              viewModel.typeFilter.isEmpty ? '' : viewModel.typeFilter;
+          final typeField = SizedBox(
+            width: isMobile ? constraints.maxWidth : 160,
+            child: DropdownButtonFormField<String>(
+              value: typeValue,
+              decoration: const InputDecoration(
+                labelText: _typeFilterLabel,
+                isDense: true,
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(value: '', child: Text('全部类型')),
+                DropdownMenuItem(value: 'incoming', child: Text('来料检验')),
+                DropdownMenuItem(value: 'process', child: Text('过程检验')),
+                DropdownMenuItem(value: 'final', child: Text('成品检验')),
+                DropdownMenuItem(value: 'customer', child: Text('客诉检验')),
+              ],
+              onChanged: (value) => viewModel.setTypeFilter(value ?? ''),
+            ),
+          );
+
           final actions = <Widget>[
+            typeField,
+            resultField,
             PageActionButton.outlined(
               onPressed: () => viewModel.loadInspections(resetPage: true),
               icon: const Icon(Icons.refresh, size: 16),
@@ -265,8 +596,15 @@ class _QualityInspectionListViewState extends State<_QualityInspectionListView> 
     return '$year-$month-$day';
   }
 
+  String _formatAmount(double? value) {
+    if (value == null) return _emptyCellText;
+    if (value % 1 == 0) return value.toInt().toString();
+    return value.toStringAsFixed(2);
+  }
+
   Widget _buildSummaryCard(
     BuildContext context,
+    QualityInspectionViewModel viewModel,
     QualityInspection inspection,
     bool isMobile,
   ) {
@@ -279,9 +617,11 @@ class _QualityInspectionListViewState extends State<_QualityInspectionListView> 
     final workOrder = _displayText(inspection.workOrderNumber);
     final product = _displayText(inspection.productName);
     final inspector = _displayText(inspection.inspectorName);
-    final result = inspection.resultDisplay ?? inspection.result ?? _emptyCellText;
+    final result =
+        inspection.resultDisplay ?? inspection.result ?? _emptyCellText;
     final defectiveRate = inspection.defectiveRateFormatted ?? _emptyCellText;
     final inspectionDate = _formatDate(inspection.inspectionDate);
+    final canComplete = (inspection.result ?? 'pending') == 'pending';
 
     return ExpandableSummaryCard(
       headerBuilder: (context, expanded) {
@@ -343,21 +683,173 @@ class _QualityInspectionListViewState extends State<_QualityInspectionListView> 
           ],
         );
       },
-      expandedChild: SummaryFieldWrap(
-        isMobile: isMobile,
+      expandedChild: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SummaryField(label: '质检单号', value: number),
-          _SummaryField(label: '施工单号', value: workOrder),
-          _SummaryField(label: '产品', value: product),
-          _SummaryField(label: '检验员', value: inspector),
-          _SummaryField(label: '检验日期', value: inspectionDate),
-          _SummaryField(label: '结果', value: result),
-          _SummaryField(label: '不良率', value: defectiveRate),
+          SummaryFieldWrap(
+            isMobile: isMobile,
+            children: [
+              _SummaryField(label: '质检单号', value: number),
+              _SummaryField(label: '施工单号', value: workOrder),
+              _SummaryField(label: '产品', value: product),
+              _SummaryField(label: '检验员', value: inspector),
+              _SummaryField(label: '检验日期', value: inspectionDate),
+              _SummaryField(label: '结果', value: result),
+              _SummaryField(label: '不良率', value: defectiveRate),
+            ],
+          ),
+          SizedBox(height: sectionSpacing),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () => _openDetailDialog(inspection),
+                icon: const Icon(Icons.visibility_outlined, size: 16),
+                label: const Text('查看'),
+              ),
+              if (canComplete)
+                OutlinedButton.icon(
+                  onPressed: () =>
+                      _openCompleteDialog(context, viewModel, inspection),
+                  icon: const Icon(Icons.verified_outlined, size: 16),
+                  label: const Text(_completeTitle),
+                ),
+            ],
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSummarySection(BuildContext context) {
+    final spacing = LayoutTokens.sectionSpacing(context);
+    if (_summaryLoading && _summary.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    final summary = _summary['summary'] is Map
+        ? Map<String, dynamic>.from(_summary['summary'] as Map)
+        : <String, dynamic>{};
+
+    String formatValue(dynamic value) {
+      if (value == null) return _emptyCellText;
+      if (value is num) {
+        if (value % 1 == 0) return value.toInt().toString();
+        return value.toStringAsFixed(2);
+      }
+      return value.toString();
+    }
+
+    return Wrap(
+      spacing: spacing,
+      runSpacing: spacing,
+      children: [
+        _StatTile(
+          label: '检验总数',
+          value: formatValue(summary['total_count']),
+          icon: Icons.verified_outlined,
+        ),
+        _StatTile(
+          label: '检验数量',
+          value: formatValue(summary['total_quantity']),
+          icon: Icons.fact_check_outlined,
+        ),
+        _StatTile(
+          label: '合格数量',
+          value: formatValue(summary['total_passed']),
+          icon: Icons.check_circle_outline,
+        ),
+        _StatTile(
+          label: '不合格数量',
+          value: formatValue(summary['total_failed']),
+          icon: Icons.cancel_outlined,
+        ),
+      ],
     );
   }
 }
 
 typedef _SummaryField = SummaryField;
 typedef _SummaryChip = SummaryChip;
+
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 90,
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).hintColor,
+                  ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatTile extends StatelessWidget {
+  const _StatTile({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>();
+    return Container(
+      width: 170,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors?.surface ?? theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
+        border: Border.all(color: colors?.borderColor ?? theme.dividerColor),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: theme.colorScheme.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: theme.textTheme.bodySmall),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

@@ -5,6 +5,8 @@ abstract class DeliveryOrderRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? status,
+    int? customerId,
   });
 
   Future<Map<String, dynamic>> ship(int id, Map<String, dynamic> payload);

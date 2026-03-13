@@ -21,6 +21,15 @@ class ProductGroupDto {
     return ProductGroup.fromJson(json).toDto();
   }
 
+  Map<String, dynamic> toPayload() {
+    return {
+      'code': code,
+      'name': name,
+      if (description != null) 'description': description,
+      if (isActive != null) 'is_active': isActive,
+    };
+  }
+
   ProductGroup toEntity() {
     return ProductGroup(
       id: id,

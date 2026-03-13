@@ -6,6 +6,7 @@ abstract class PurchaseOrderRepository {
     int pageSize = 20,
     String? search,
     String? status,
+    int? supplierId,
   });
 
   Future<Map<String, dynamic>> submit(int id);

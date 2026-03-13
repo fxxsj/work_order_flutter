@@ -43,4 +43,22 @@ class ProductGroupApiService {
     }
     return const ProductGroupPageDto(items: [], total: 0, page: 1, pageSize: 20);
   }
+
+  Future<ProductGroupDto> createProductGroup(ProductGroupDto dto) async {
+    final response = await _client.post('/product-groups/', data: dto.toPayload());
+    final payload = response.data;
+    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    return ProductGroupDto.fromJson(map);
+  }
+
+  Future<ProductGroupDto> updateProductGroup(ProductGroupDto dto) async {
+    final response = await _client.put('/product-groups/${dto.id}/', data: dto.toPayload());
+    final payload = response.data;
+    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    return ProductGroupDto.fromJson(map);
+  }
+
+  Future<void> deleteProductGroup(int id) async {
+    await _client.delete('/product-groups/$id/');
+  }
 }

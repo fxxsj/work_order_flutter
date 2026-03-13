@@ -43,4 +43,22 @@ class MaterialApiService {
     }
     return const MaterialPageDto(items: [], total: 0, page: 1, pageSize: 20);
   }
+
+  Future<MaterialDto> createMaterial(MaterialDto dto) async {
+    final response = await _client.post('/materials/', data: dto.toPayload());
+    final payload = response.data;
+    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    return MaterialDto.fromJson(map);
+  }
+
+  Future<MaterialDto> updateMaterial(MaterialDto dto) async {
+    final response = await _client.put('/materials/${dto.id}/', data: dto.toPayload());
+    final payload = response.data;
+    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    return MaterialDto.fromJson(map);
+  }
+
+  Future<void> deleteMaterial(int id) async {
+    await _client.delete('/materials/$id/');
+  }
 }

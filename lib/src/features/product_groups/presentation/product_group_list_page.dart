@@ -14,11 +14,13 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/product_groups/application/product_group_view_model.dart';
 import 'package:work_order_app/src/features/product_groups/data/product_group_api_service.dart';
 import 'package:work_order_app/src/features/product_groups/data/product_group_repository_impl.dart';
 import 'package:work_order_app/src/features/product_groups/domain/product_group.dart';
 import 'package:work_order_app/src/features/product_groups/domain/product_group_repository.dart';
+import 'package:work_order_app/src/features/product_groups/presentation/product_group_edit_page.dart';
 
 /// 产品组列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
 class ProductGroupListEntry extends StatefulWidget {
@@ -104,6 +106,14 @@ class _ProductGroupListViewState extends State<_ProductGroupListView> {
   static const String _emptyText = '暂无产品组数据';
   static const String _errorFallbackText = '加载失败';
   static const String _retryText = '重新加载';
+  static const String _deleteDialogTitle = '确认删除';
+  static const String _deleteDialogContent = '确定要删除产品组 \"{name}\" 吗？此操作不可恢复。';
+  static const String _cancelText = '取消';
+  static const String _deleteText = '删除';
+  static const String _deleteSuccessText = '删除成功';
+  static const String _deleteFailedText = '删除失败: ';
+  static const String _createSuccessText = '创建成功';
+  static const String _updateSuccessText = '更新成功';
   static const String _breadcrumbSeparator = ' / ';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
   static const String _pageSizeLabel = '每页 {size}';
@@ -129,6 +139,63 @@ class _ProductGroupListViewState extends State<_ProductGroupListView> {
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadProductGroups(resetPage: true);
     });
+  }
+
+  Future<void> _openEditPage(
+    BuildContext context,
+    ProductGroupViewModel viewModel,
+    ProductGroup? group,
+  ) async {
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => ChangeNotifierProvider.value(
+          value: viewModel,
+          child: ProductGroupEditPage(group: group),
+        ),
+      ),
+    );
+    if (!mounted) return;
+    if (result == true) {
+      ToastUtil.showSuccess(group == null ? _createSuccessText : _updateSuccessText);
+    }
+  }
+
+  Future<void> _confirmDelete(
+    BuildContext context,
+    ProductGroupViewModel viewModel,
+    ProductGroup group,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(_deleteDialogTitle),
+        content: Text(_deleteDialogContent.replaceFirst('{name}', group.name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text(_cancelText),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text(_deleteText),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await viewModel.deleteProductGroup(group.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(_deleteSuccessText)),
+      );
+    } catch (err) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$_deleteFailedText$err')),
+      );
+    }
   }
 
   static String _pageInfoText(ProductGroupViewModel viewModel) {
@@ -202,7 +269,7 @@ class _ProductGroupListViewState extends State<_ProductGroupListView> {
       separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
       itemBuilder: (context, index) {
         final group = groups[index];
-        return _buildSummaryCard(context, group, isMobile);
+        return _buildSummaryCard(context, viewModel, group, isMobile);
       },
     );
   }
@@ -240,7 +307,7 @@ class _ProductGroupListViewState extends State<_ProductGroupListView> {
               label: _refreshButtonText,
             ),
             PageActionButton.filled(
-              onPressed: null,
+              onPressed: () => _openEditPage(context, viewModel, null),
               icon: const Icon(Icons.add),
               label: _createButtonText,
             ),
@@ -267,7 +334,12 @@ class _ProductGroupListViewState extends State<_ProductGroupListView> {
     return isActive ? '启用' : '停用';
   }
 
-  Widget _buildSummaryCard(BuildContext context, ProductGroup group, bool isMobile) {
+  Widget _buildSummaryCard(
+    BuildContext context,
+    ProductGroupViewModel viewModel,
+    ProductGroup group,
+    bool isMobile,
+  ) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
@@ -325,13 +397,35 @@ class _ProductGroupListViewState extends State<_ProductGroupListView> {
           ],
         );
       },
-      expandedChild: SummaryFieldWrap(
-        isMobile: isMobile,
+      expandedChild: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SummaryField(label: '编码', value: code),
-          _SummaryField(label: '状态', value: status),
-          _SummaryField(label: '明细数', value: itemsCount),
-          _SummaryField(label: '描述', value: description),
+          SummaryFieldWrap(
+            isMobile: isMobile,
+            children: [
+              _SummaryField(label: '编码', value: code),
+              _SummaryField(label: '状态', value: status),
+              _SummaryField(label: '明细数', value: itemsCount),
+              _SummaryField(label: '描述', value: description),
+            ],
+          ),
+          SizedBox(height: sectionSpacing),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () => _openEditPage(context, viewModel, group),
+                icon: const Icon(Icons.edit, size: 16),
+                label: const Text('编辑'),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => _confirmDelete(context, viewModel, group),
+                icon: const Icon(Icons.delete_outline, size: 16),
+                label: const Text('删除'),
+              ),
+            ],
+          ),
         ],
       ),
     );

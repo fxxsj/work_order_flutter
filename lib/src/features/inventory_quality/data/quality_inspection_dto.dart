@@ -10,12 +10,20 @@ class QualityInspectionDto {
     this.resultDisplay,
     this.workOrderNumber,
     this.productName,
+    this.batchNo,
     this.inspectorName,
     this.inspectionDate,
     this.inspectionQuantity,
     this.passedQuantity,
     this.failedQuantity,
     this.defectiveRateFormatted,
+    this.inspectionStandard,
+    this.inspectionItems,
+    this.defects,
+    this.defectDescription,
+    this.disposition,
+    this.dispositionNotes,
+    this.notes,
   });
 
   final int id;
@@ -26,12 +34,20 @@ class QualityInspectionDto {
   final String? resultDisplay;
   final String? workOrderNumber;
   final String? productName;
+  final String? batchNo;
   final String? inspectorName;
   final DateTime? inspectionDate;
   final double? inspectionQuantity;
   final double? passedQuantity;
   final double? failedQuantity;
   final String? defectiveRateFormatted;
+  final String? inspectionStandard;
+  final List<String>? inspectionItems;
+  final List<String>? defects;
+  final String? defectDescription;
+  final String? disposition;
+  final String? dispositionNotes;
+  final String? notes;
 
   factory QualityInspectionDto.fromJson(Map<String, dynamic> json) {
     return QualityInspection.fromJson(json).toDto();
@@ -47,12 +63,20 @@ class QualityInspectionDto {
       resultDisplay: resultDisplay,
       workOrderNumber: workOrderNumber,
       productName: productName,
+      batchNo: batchNo,
       inspectorName: inspectorName,
       inspectionDate: inspectionDate,
       inspectionQuantity: inspectionQuantity,
       passedQuantity: passedQuantity,
       failedQuantity: failedQuantity,
       defectiveRateFormatted: defectiveRateFormatted,
+      inspectionStandard: inspectionStandard,
+      inspectionItems: inspectionItems ?? const [],
+      defects: defects ?? const [],
+      defectDescription: defectDescription,
+      disposition: disposition,
+      dispositionNotes: dispositionNotes,
+      notes: notes,
     );
   }
 }
@@ -68,12 +92,20 @@ extension QualityInspectionMapper on QualityInspection {
       resultDisplay: resultDisplay,
       workOrderNumber: workOrderNumber,
       productName: productName,
+      batchNo: batchNo,
       inspectorName: inspectorName,
       inspectionDate: inspectionDate,
       inspectionQuantity: inspectionQuantity,
       passedQuantity: passedQuantity,
       failedQuantity: failedQuantity,
       defectiveRateFormatted: defectiveRateFormatted,
+      inspectionStandard: inspectionStandard,
+      inspectionItems: inspectionItems,
+      defects: defects,
+      defectDescription: defectDescription,
+      disposition: disposition,
+      dispositionNotes: dispositionNotes,
+      notes: notes,
     );
   }
 }

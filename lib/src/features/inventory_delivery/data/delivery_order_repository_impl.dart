@@ -12,8 +12,16 @@ class DeliveryOrderRepositoryImpl implements DeliveryOrderRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? status,
+    int? customerId,
   }) {
-    return _apiService.fetchDeliveryOrders(page: page, pageSize: pageSize, search: search);
+    return _apiService.fetchDeliveryOrders(
+      page: page,
+      pageSize: pageSize,
+      search: search,
+      status: status,
+      customerId: customerId,
+    );
   }
 
   @override

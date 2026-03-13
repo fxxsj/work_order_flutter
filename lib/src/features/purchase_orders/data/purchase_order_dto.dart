@@ -13,6 +13,11 @@ class PurchaseOrderDto {
     this.receivedProgress,
     this.workOrderNumber,
     this.orderDate,
+    this.submittedByName,
+    this.approvedByName,
+    this.createdAt,
+    this.submittedAt,
+    this.approvedAt,
   });
 
   final int id;
@@ -26,6 +31,11 @@ class PurchaseOrderDto {
   final double? receivedProgress;
   final String? workOrderNumber;
   final DateTime? orderDate;
+  final String? submittedByName;
+  final String? approvedByName;
+  final DateTime? createdAt;
+  final DateTime? submittedAt;
+  final DateTime? approvedAt;
 
   factory PurchaseOrderDto.fromJson(Map<String, dynamic> json) {
     return PurchaseOrder.fromJson(json).toDto();
@@ -44,6 +54,11 @@ class PurchaseOrderDto {
       receivedProgress: receivedProgress,
       workOrderNumber: workOrderNumber,
       orderDate: orderDate,
+      submittedByName: submittedByName,
+      approvedByName: approvedByName,
+      createdAt: createdAt,
+      submittedAt: submittedAt,
+      approvedAt: approvedAt,
     );
   }
 }
@@ -62,6 +77,11 @@ extension PurchaseOrderMapper on PurchaseOrder {
       receivedProgress: receivedProgress,
       workOrderNumber: workOrderNumber,
       orderDate: orderDate,
+      submittedByName: submittedByName,
+      approvedByName: approvedByName,
+      createdAt: createdAt,
+      submittedAt: submittedAt,
+      approvedAt: approvedAt,
     );
   }
 }

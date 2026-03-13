@@ -1,4 +1,5 @@
 import 'package:work_order_app/src/core/core.dart';
+import 'package:work_order_app/src/features/materials/data/material_dto.dart';
 import 'package:work_order_app/src/features/materials/domain/material.dart';
 import 'package:work_order_app/src/features/materials/domain/material_repository.dart';
 
@@ -12,6 +13,20 @@ class MaterialViewModel extends PaginatedViewModel<MaterialItem> {
   Future<void> initialize() => loadItems(resetPage: true);
 
   Future<void> loadMaterials({bool resetPage = false}) => loadItems(resetPage: resetPage);
+
+  Future<void> createMaterial(MaterialItem material) async {
+    await _repository.createMaterial(material.toDto());
+    await loadItems(resetPage: true);
+  }
+
+  Future<void> updateMaterial(MaterialItem material) async {
+    await _repository.updateMaterial(material.toDto());
+    await loadItems();
+  }
+
+  Future<void> deleteMaterial(int id) async {
+    await deleteAndReload(() => _repository.deleteMaterial(id));
+  }
 
   @override
   Future<PageData<MaterialItem>> fetchPage({

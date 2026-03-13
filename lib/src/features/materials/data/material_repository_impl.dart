@@ -15,4 +15,19 @@ class MaterialRepositoryImpl implements MaterialRepository {
   }) {
     return _apiService.fetchMaterials(page: page, pageSize: pageSize, search: search);
   }
+
+  @override
+  Future<MaterialDto> createMaterial(MaterialDto dto) {
+    return _apiService.createMaterial(dto);
+  }
+
+  @override
+  Future<MaterialDto> updateMaterial(MaterialDto dto) {
+    return _apiService.updateMaterial(dto);
+  }
+
+  @override
+  Future<void> deleteMaterial(int id) {
+    return _apiService.deleteMaterial(id);
+  }
 }

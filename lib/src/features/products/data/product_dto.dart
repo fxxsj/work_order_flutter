@@ -41,6 +41,18 @@ class ProductDto {
     );
   }
 
+  Map<String, dynamic> toPayload() {
+    return {
+      'code': code,
+      'name': name,
+      if (specification != null) 'specification': specification,
+      if (unit != null) 'unit': unit,
+      if (unitPrice != null) 'unit_price': unitPrice,
+      if (stockQuantity != null) 'stock_quantity': stockQuantity,
+      if (isActive != null) 'is_active': isActive,
+    };
+  }
+
   Product toEntity() {
     return Product(
       id: id,
@@ -60,6 +72,23 @@ class ProductDto {
     if (value == null) return null;
     if (value is num) return value.toDouble();
     return double.tryParse(value.toString());
+  }
+}
+
+extension ProductMapper on Product {
+  ProductDto toDto() {
+    return ProductDto(
+      id: id,
+      code: code,
+      name: name,
+      productTypeDisplay: productTypeDisplay,
+      productGroupName: productGroupName,
+      specification: specification,
+      unit: unit,
+      unitPrice: unitPrice,
+      stockQuantity: stockQuantity,
+      isActive: isActive,
+    );
   }
 }
 

@@ -13,12 +13,14 @@ class PurchaseOrderRepositoryImpl implements PurchaseOrderRepository {
     int pageSize = 20,
     String? search,
     String? status,
+    int? supplierId,
   }) {
     return _apiService.fetchPurchaseOrders(
       page: page,
       pageSize: pageSize,
       search: search,
       status: status,
+      supplierId: supplierId,
     );
   }
 

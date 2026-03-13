@@ -92,4 +92,22 @@ class ProductApiService {
     }
     return const ProductPageDto(items: [], total: 0, page: 1, pageSize: 20);
   }
+
+  Future<ProductDto> createProduct(ProductDto dto) async {
+    final response = await _client.post('/products/', data: dto.toPayload());
+    final payload = response.data;
+    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    return ProductDto.fromJson(map);
+  }
+
+  Future<ProductDto> updateProduct(ProductDto dto) async {
+    final response = await _client.put('/products/${dto.id}/', data: dto.toPayload());
+    final payload = response.data;
+    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    return ProductDto.fromJson(map);
+  }
+
+  Future<void> deleteProduct(int id) async {
+    await _client.delete('/products/$id/');
+  }
 }

@@ -6,4 +6,10 @@ abstract class ProductRepository {
     int pageSize = 20,
     String? search,
   });
+
+  Future<ProductDto> createProduct(ProductDto dto);
+
+  Future<ProductDto> updateProduct(ProductDto dto);
+
+  Future<void> deleteProduct(int id);
 }
