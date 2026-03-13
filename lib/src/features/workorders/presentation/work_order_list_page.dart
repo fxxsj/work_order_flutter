@@ -9,6 +9,7 @@ import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -397,23 +398,23 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
                   _formatQuantity(workOrder.quantity, workOrder.unit),
                   style: textStyle,
                 )),
-                DataCell(Wrap(
-                  spacing: 8,
-                  children: [
-                    TextButton(
+                DataCell(RowActionGroup(
+                  actions: [
+                    RowAction(
+                      label: '查看',
                       onPressed: () =>
                           context.go('/workorders/${workOrder.id}'),
-                      child: const Text('查看'),
                     ),
-                    TextButton(
+                    RowAction(
+                      label: '编辑',
                       onPressed: () =>
                           context.go('/workorders/${workOrder.id}/edit'),
-                      child: const Text('编辑'),
                     ),
-                    TextButton(
+                    RowAction(
+                      label: '删除',
                       onPressed: () =>
                           _confirmDelete(context, viewModel, workOrder),
-                      child: const Text('删除'),
+                      destructive: true,
                     ),
                   ],
                 )),

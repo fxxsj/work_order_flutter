@@ -13,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -1182,41 +1183,41 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
                       style: textStyle)),
                   DataCell(Text(_displayText(order.trackingNumber),
                       style: textStyle)),
-                  DataCell(Wrap(
-                    spacing: 8,
-                    children: [
-                      TextButton(
+                  DataCell(RowActionGroup(
+                    actions: [
+                      RowAction(
+                        label: '查看',
                         onPressed: () => _openDetailDialog(order),
-                        child: const Text('查看'),
                       ),
                       if (canEdit)
-                        TextButton(
+                        RowAction(
+                          label: '编辑',
                           onPressed: () =>
                               _openFormDialog(viewModel, order: order),
-                          child: const Text('编辑'),
                         ),
                       if (canShip)
-                        TextButton(
+                        RowAction(
+                          label: _shipTitle,
                           onPressed: () =>
                               _openShipDialog(context, viewModel, order),
-                          child: const Text(_shipTitle),
                         ),
                       if (canReceive)
-                        TextButton(
+                        RowAction(
+                          label: _receiveTitle,
                           onPressed: () =>
                               _openReceiveDialog(context, viewModel, order),
-                          child: const Text(_receiveTitle),
                         ),
                       if (canReject)
-                        TextButton(
+                        RowAction(
+                          label: _rejectTitle,
                           onPressed: () =>
                               _openRejectDialog(context, viewModel, order),
-                          child: const Text(_rejectTitle),
                         ),
                       if (canDelete)
-                        TextButton(
+                        RowAction(
+                          label: '删除',
                           onPressed: () => _confirmDelete(viewModel, order),
-                          child: const Text('删除'),
+                          destructive: true,
                         ),
                     ],
                   )),

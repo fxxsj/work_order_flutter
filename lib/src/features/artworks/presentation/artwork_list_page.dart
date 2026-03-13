@@ -13,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -404,29 +405,29 @@ class _ArtworkListViewState extends State<_ArtworkListView> {
                     Text(_productSummary(artwork.products), style: textStyle)),
                 DataCell(
                     Text(_formatDateTime(artwork.createdAt), style: textStyle)),
-                DataCell(Wrap(
-                  spacing: 8,
-                  children: [
-                    TextButton(
+                DataCell(RowActionGroup(
+                  actions: [
+                    RowAction(
+                      label: '编辑',
                       onPressed: () =>
                           _openEditPage(context, viewModel, artwork),
-                      child: const Text('编辑'),
                     ),
-                    TextButton(
+                    RowAction(
+                      label: '新版本',
                       onPressed: () =>
                           _createVersion(context, viewModel, artwork),
-                      child: const Text('新版本'),
                     ),
                     if (!artwork.confirmed)
-                      TextButton(
+                      RowAction(
+                        label: '确认',
                         onPressed: () =>
                             _confirmArtwork(context, viewModel, artwork),
-                        child: const Text('确认'),
                       ),
-                    TextButton(
+                    RowAction(
+                      label: '删除',
                       onPressed: () =>
                           _confirmDelete(context, viewModel, artwork),
-                      child: const Text('删除'),
+                      destructive: true,
                     ),
                   ],
                 )),

@@ -13,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -359,24 +360,24 @@ class _EmbossingPlateListViewState extends State<_EmbossingPlateListView> {
                     Text(_productSummary(plate.products), style: textStyle)),
                 DataCell(
                     Text(_formatDateTime(plate.createdAt), style: textStyle)),
-                DataCell(Wrap(
-                  spacing: 8,
-                  children: [
-                    TextButton(
+                DataCell(RowActionGroup(
+                  actions: [
+                    RowAction(
+                      label: '编辑',
                       onPressed: () =>
                           _openEditPage(context, viewModel, plate),
-                      child: const Text('编辑'),
                     ),
                     if (!plate.confirmed)
-                      TextButton(
+                      RowAction(
+                        label: '确认',
                         onPressed: () =>
                             _confirmPlate(context, viewModel, plate),
-                        child: const Text('确认'),
                       ),
-                    TextButton(
+                    RowAction(
+                      label: '删除',
                       onPressed: () =>
                           _confirmDelete(context, viewModel, plate),
-                      child: const Text('删除'),
+                      destructive: true,
                     ),
                   ],
                 )),

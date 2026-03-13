@@ -13,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -342,33 +343,30 @@ class _TaskListViewState extends State<_TaskListView> {
                     task.statusDisplay ?? task.status ?? _emptyCellText,
                     style: textStyle,
                   )),
-                  DataCell(Wrap(
-                    spacing: 8,
-                    children: [
+                  DataCell(RowActionGroup(
+                    actions: [
                       if (task.workOrderId != null)
-                        TextButton(
+                        RowAction(
+                          label: '查看施工单',
                           onPressed: () =>
                               context.go('/workorders/${task.workOrderId}'),
-                          child: const Text('查看施工单'),
                         ),
-                      TextButton(
-                        onPressed: canUpdate
-                            ? () => _openUpdateDialog(context, viewModel, task)
-                            : null,
-                        child:
-                            Text(canUpdate ? _updateButtonText : '不可更新'),
-                      ),
-                      TextButton(
-                        onPressed: canComplete
-                            ? () => _openCompleteDialog(context, viewModel, task)
-                            : null,
-                        child: Text(
-                            canComplete ? _completeButtonText : '不可完成'),
-                      ),
-                      TextButton(
+                      if (canUpdate)
+                        RowAction(
+                          label: _updateButtonText,
+                          onPressed: () =>
+                              _openUpdateDialog(context, viewModel, task),
+                        ),
+                      if (canComplete)
+                        RowAction(
+                          label: _completeButtonText,
+                          onPressed: () =>
+                              _openCompleteDialog(context, viewModel, task),
+                        ),
+                      RowAction(
+                        label: _assignButtonText,
                         onPressed: () =>
                             _openAssignDialog(context, viewModel, task),
-                        child: const Text(_assignButtonText),
                       ),
                     ],
                   )),

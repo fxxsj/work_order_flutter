@@ -10,6 +10,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
@@ -385,23 +386,34 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
                 )),
                 DataCell(Wrap(
                   spacing: 8,
+                  runSpacing: 4,
                   children: [
-                    TextButton(
-                      onPressed: () => _openTaskDetail(context, task),
-                      child: const Text('查看'),
+                    RowActionGroup(
+                      actions: [
+                        RowAction(
+                          label: '查看',
+                          onPressed: () => _openTaskDetail(context, task),
+                        ),
+                        if (showUpdateActions)
+                          RowAction(
+                            label: '更新进度',
+                            onPressed: () => _openUpdateDialog(
+                              context,
+                              task,
+                              completeMode: false,
+                            ),
+                          ),
+                        if (showUpdateActions)
+                          RowAction(
+                            label: '完成任务',
+                            onPressed: () => _openUpdateDialog(
+                              context,
+                              task,
+                              completeMode: true,
+                            ),
+                          ),
+                      ],
                     ),
-                    if (showUpdateActions) ...[
-                      TextButton(
-                        onPressed: () =>
-                            _openUpdateDialog(context, task, completeMode: false),
-                        child: const Text('更新进度'),
-                      ),
-                      TextButton(
-                        onPressed: () =>
-                            _openUpdateDialog(context, task, completeMode: true),
-                        child: const Text('完成任务'),
-                      ),
-                    ],
                     if (trailingBuilder != null) trailingBuilder(task),
                   ],
                 )),

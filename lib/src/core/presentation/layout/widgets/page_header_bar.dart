@@ -46,7 +46,10 @@ class PageHeaderBar extends StatelessWidget {
             Expanded(
               child: Align(
                 alignment: Alignment.centerRight,
-                child: actions,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: actions,
+                ),
               ),
             ),
           ],
@@ -321,10 +324,7 @@ class WorkbenchHeaderBar extends StatelessWidget {
 
               final actionBlock = DefaultTextStyle.merge(
                 style: theme.textTheme.bodyMedium,
-                child: Align(
-                  alignment: Alignment.topRight,
-                  child: actions,
-                ),
+                child: actions,
               );
 
               if (isNarrow) {
@@ -358,7 +358,16 @@ class WorkbenchHeaderBar extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: sectionSpacing),
-                  actionBlock,
+                  Flexible(
+                    fit: FlexFit.loose,
+                    child: Align(
+                      alignment: Alignment.topRight,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: actionBlock,
+                      ),
+                    ),
+                  ),
                 ],
               );
             },
