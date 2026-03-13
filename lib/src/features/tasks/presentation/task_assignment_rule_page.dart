@@ -1,11 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -234,34 +232,17 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
   @override
   Widget build(BuildContext context) {
     final isMobile = BreakpointsUtil.isMobile(context);
-    final breadcrumb = buildBreadcrumbForPathWith(
-      GoRouterState.of(context).uri.path,
-      buildPathToIdMap(),
-    );
 
     return Consumer<TaskAssignmentRuleViewModel>(
       builder: (context, viewModel, _) {
         final rules = viewModel.rules;
-        final stats = [
-          WorkbenchStatItem(label: '规则总数', value: '${viewModel.total}'),
-          WorkbenchStatItem(
-            label: '当前启用',
-            value: '${rules.where((rule) => rule.isActive).length}',
-          ),
-          WorkbenchStatItem(label: '预览工序', value: '${_previewData.length}'),
-        ];
-
         return ListPageScaffold(
           spacing: _spacingSm,
-          header: WorkbenchHeaderBar(
-            breadcrumb: breadcrumb.isEmpty ? null : breadcrumb.join(' / '),
-            title: '分派规则配置',
-            subtitle: '维护自动分派规则与预览效果。',
-            stats: stats,
-            titleMaxWidth: isMobile ? double.infinity : 420,
-            hideSubtitleOnMobile: true,
-            mobileStatCount: 2,
-            hideBreadcrumbOnMobile: true,
+          header: PageHeaderBar(
+            breadcrumb: null,
+            useSurface: false,
+            showDivider: false,
+            padding: EdgeInsets.zero,
             actions: _buildFilters(context, viewModel, isMobile),
           ),
           body: _buildBody(context, viewModel, rules, isMobile),
@@ -314,84 +295,82 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
       DropdownMenuItem<bool?>(value: false, child: Text('仅禁用')),
     ];
 
-    final searchField = ListSearchField(
-      controller: _searchController,
-      hintText: '搜索工序/部门/备注',
-      height: _controlHeight,
-      width: isMobile ? double.infinity : 260,
-      onChanged: (_) => _scheduleSearch(viewModel),
-      onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
-      onClear: () {
-        _searchController.clear();
-        _scheduleSearch(viewModel, immediate: true);
-      },
-    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final searchField = ListSearchField(
+          controller: _searchController,
+          hintText: '搜索工序/部门/备注',
+          height: _controlHeight,
+          width: isMobile ? constraints.maxWidth : 260,
+          onChanged: (_) => _scheduleSearch(viewModel),
+          onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
+          onClear: () {
+            _searchController.clear();
+            _scheduleSearch(viewModel, immediate: true);
+          },
+        );
 
-    return ListToolbar(
-      isMobile: isMobile,
-      searchField: searchField,
-      actions: [
-        SizedBox(
-          width: isMobile ? double.infinity : 180,
-          child: DropdownButtonFormField<int?>(
-            key: ValueKey<int?>(viewModel.processId),
-            initialValue: viewModel.processId,
-            decoration: const InputDecoration(labelText: '工序'),
-            items: processItems,
-            onChanged: (value) {
-              viewModel.setProcessId(value);
-              viewModel.loadRules(resetPage: true);
-            },
-          ),
-        ),
-        SizedBox(
-          width: isMobile ? double.infinity : 180,
-          child: DropdownButtonFormField<int?>(
-            key: ValueKey<int?>(viewModel.departmentId),
-            initialValue: viewModel.departmentId,
-            decoration: const InputDecoration(labelText: '部门'),
-            items: departmentItems,
-            onChanged: (value) {
-              viewModel.setDepartmentId(value);
-              viewModel.loadRules(resetPage: true);
-            },
-          ),
-        ),
-        SizedBox(
-          width: isMobile ? double.infinity : 150,
-          child: DropdownButtonFormField<bool?>(
-            key: ValueKey<bool?>(viewModel.isActive),
-            initialValue: viewModel.isActive,
-            decoration: const InputDecoration(labelText: '状态'),
-            items: activeItems,
-            onChanged: (value) {
-              viewModel.setIsActive(value);
-              viewModel.loadRules(resetPage: true);
-            },
-          ),
-        ),
-        ListToolbarButton(
-          onPressed: () => _resetFilters(viewModel),
-          icon: Icons.restart_alt,
-          label: _resetButtonText,
-          height: _controlHeight,
-          compact: isMobile,
-        ),
-        ListToolbarButton(
-          onPressed: () => viewModel.loadRules(resetPage: true),
-          icon: Icons.refresh,
-          label: _refreshButtonText,
-          height: _controlHeight,
-          compact: isMobile,
-        ),
-        ListToolbarButton(
-          onPressed: () => _openRuleDialog(context, viewModel, null),
-          icon: Icons.add,
-          label: _createButtonText,
-          height: _controlHeight,
-          compact: isMobile,
-        ),
-      ],
+        return ListToolbar(
+          isMobile: isMobile,
+          searchField: searchField,
+          actions: [
+            SizedBox(
+              width: isMobile ? double.infinity : 180,
+              child: DropdownButtonFormField<int?>(
+                key: ValueKey<int?>(viewModel.processId),
+                initialValue: viewModel.processId,
+                decoration: const InputDecoration(labelText: '工序'),
+                items: processItems,
+                onChanged: (value) {
+                  viewModel.setProcessId(value);
+                  viewModel.loadRules(resetPage: true);
+                },
+              ),
+            ),
+            SizedBox(
+              width: isMobile ? double.infinity : 180,
+              child: DropdownButtonFormField<int?>(
+                key: ValueKey<int?>(viewModel.departmentId),
+                initialValue: viewModel.departmentId,
+                decoration: const InputDecoration(labelText: '部门'),
+                items: departmentItems,
+                onChanged: (value) {
+                  viewModel.setDepartmentId(value);
+                  viewModel.loadRules(resetPage: true);
+                },
+              ),
+            ),
+            SizedBox(
+              width: isMobile ? double.infinity : 150,
+              child: DropdownButtonFormField<bool?>(
+                key: ValueKey<bool?>(viewModel.isActive),
+                initialValue: viewModel.isActive,
+                decoration: const InputDecoration(labelText: '状态'),
+                items: activeItems,
+                onChanged: (value) {
+                  viewModel.setIsActive(value);
+                  viewModel.loadRules(resetPage: true);
+                },
+              ),
+            ),
+            PageActionButton.outlined(
+              onPressed: () => _resetFilters(viewModel),
+              icon: const Icon(Icons.restart_alt, size: 16),
+              label: _resetButtonText,
+            ),
+            PageActionButton.outlined(
+              onPressed: () => viewModel.loadRules(resetPage: true),
+              icon: const Icon(Icons.refresh, size: 16),
+              label: _refreshButtonText,
+            ),
+            PageActionButton.filled(
+              onPressed: () => _openRuleDialog(context, viewModel, null),
+              icon: const Icon(Icons.add),
+              label: _createButtonText,
+            ),
+          ],
+        );
+      },
     );
   }
 
