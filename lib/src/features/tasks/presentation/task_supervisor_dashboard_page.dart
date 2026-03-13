@@ -5,6 +5,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -283,6 +284,7 @@ class _TaskSupervisorDashboardViewState
         text: '暂无部门任务',
       );
     }
+    final isMobile = BreakpointsUtil.isMobile(context);
     final filteredTasks = _filterTasks(_departmentTasks);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -295,27 +297,119 @@ class _TaskSupervisorDashboardViewState
                   icon: Icons.filter_alt_off_outlined,
                   text: '暂无符合条件的任务',
                 )
-              : ListView.separated(
-                  itemCount: filteredTasks.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemBuilder: (context, index) {
-                    final task = filteredTasks[index];
-                    return _SupervisorTaskCard(
-                      task: task,
-                      onTap: () {
+              : isMobile
+                  ? ListView.separated(
+                      itemCount: filteredTasks.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final task = filteredTasks[index];
+                        return _SupervisorTaskCard(
+                          task: task,
+                          onTap: () {
+                            if (task.workOrderId != null) {
+                              context.go('/workorders/${task.workOrderId}');
+                            } else {
+                              ToastUtil.showError('该任务暂无施工单详情');
+                            }
+                          },
+                          onAssign: () => _openAssignDialog(task),
+                        );
+                      },
+                    )
+                  : _buildTaskTable(filteredTasks),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTaskTable(List<Task> tasks) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('任务')),
+        DataColumn(label: Text('施工单号')),
+        DataColumn(label: Text('工序')),
+        DataColumn(label: Text('部门')),
+        DataColumn(label: Text('操作员')),
+        DataColumn(label: Text('生产数量')),
+        DataColumn(label: Text('完成数量')),
+        DataColumn(label: Text('进度')),
+        DataColumn(label: Text('状态')),
+        DataColumn(label: Text('操作')),
+      ],
+      rows: tasks
+          .map(
+            (task) => DataRow(
+              cells: [
+                DataCell(Text(
+                  _displayText(
+                    task.workContent?.trim().isNotEmpty == true
+                        ? task.workContent
+                        : (task.processName ?? '任务 #${task.id}'),
+                  ),
+                  style: theme.textTheme.bodyMedium,
+                )),
+                DataCell(Text(_displayText(task.workOrderNumber),
+                    style: textStyle)),
+                DataCell(
+                    Text(_displayText(task.processName), style: textStyle)),
+                DataCell(Text(_displayText(task.assignedDepartmentName),
+                    style: textStyle)),
+                DataCell(Text(_displayText(task.assignedOperatorName),
+                    style: textStyle)),
+                DataCell(Text(_formatNumber(task.productionQuantity),
+                    style: textStyle)),
+                DataCell(Text(_formatNumber(task.quantityCompleted),
+                    style: textStyle)),
+                DataCell(Text(_formatProgress(task), style: textStyle)),
+                DataCell(Text(
+                  task.statusDisplay ?? task.status ?? '-',
+                  style: textStyle,
+                )),
+                DataCell(Wrap(
+                  spacing: 8,
+                  children: [
+                    TextButton(
+                      onPressed: () {
                         if (task.workOrderId != null) {
                           context.go('/workorders/${task.workOrderId}');
                         } else {
                           ToastUtil.showError('该任务暂无施工单详情');
                         }
                       },
-                      onAssign: () => _openAssignDialog(task),
-                    );
-                  },
-                ),
-        ),
-      ],
+                      child: const Text('查看施工单'),
+                    ),
+                    TextButton(
+                      onPressed: () => _openAssignDialog(task),
+                      child: const Text('分派操作员'),
+                    ),
+                  ],
+                )),
+              ],
+            ),
+          )
+          .toList(),
     );
+  }
+
+  static String _displayText(String? value) {
+    final text = value?.trim() ?? '';
+    return text.isEmpty ? '-' : text;
+  }
+
+  String _formatNumber(double? value) {
+    if (value == null) return '-';
+    return value.toStringAsFixed(0);
+  }
+
+  String _formatProgress(Task task) {
+    final total = task.productionQuantity ?? 0;
+    final completed = task.quantityCompleted ?? 0;
+    if (total <= 0) return '-';
+    final percentage =
+        (completed / total * 100).clamp(0, 100).toStringAsFixed(0);
+    return '$percentage%';
   }
 
   Widget _buildDashboardView() {

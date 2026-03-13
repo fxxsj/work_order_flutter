@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -257,7 +258,12 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
                   final list = tab.filter == null
                       ? _myTasks
                       : _myTasks.where((task) => task.status == tab.filter).toList();
-                  return _buildTaskList(list, emptyText: '暂无${tab.label}任务');
+                  return _buildTaskList(
+                    list,
+                    isNarrow: isNarrow,
+                    emptyText: '暂无${tab.label}任务',
+                    showUpdateActions: true,
+                  );
                 }).toList(),
               ),
             ),
@@ -274,6 +280,7 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
         height: 420,
         child: _buildTaskList(
           _claimableTasks,
+          isNarrow: isNarrow,
           emptyText: '暂无可认领任务',
           trailingBuilder: (task) {
             final claiming = _claimingTaskId == task.id;
@@ -295,8 +302,10 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
 
   Widget _buildTaskList(
     List<Task> tasks, {
+    required bool isNarrow,
     required String emptyText,
     Widget Function(Task task)? trailingBuilder,
+    bool showUpdateActions = false,
   }) {
     if (tasks.isEmpty) {
       return Center(
@@ -304,6 +313,14 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
           emptyText,
           style: const TextStyle(color: Colors.black54),
         ),
+      );
+    }
+
+    if (!isNarrow) {
+      return _buildTaskTable(
+        tasks,
+        trailingBuilder: trailingBuilder,
+        showUpdateActions: showUpdateActions,
       );
     }
 
@@ -321,6 +338,97 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
         );
       },
     );
+  }
+
+  Widget _buildTaskTable(
+    List<Task> tasks, {
+    Widget Function(Task task)? trailingBuilder,
+    bool showUpdateActions = false,
+  }) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('任务')),
+        DataColumn(label: Text('施工单号')),
+        DataColumn(label: Text('工序')),
+        DataColumn(label: Text('生产数量')),
+        DataColumn(label: Text('完成数量')),
+        DataColumn(label: Text('进度')),
+        DataColumn(label: Text('状态')),
+        DataColumn(label: Text('操作')),
+      ],
+      rows: tasks
+          .map(
+            (task) => DataRow(
+              cells: [
+                DataCell(Text(
+                  _displayText(
+                    task.workContent?.trim().isNotEmpty == true
+                        ? task.workContent
+                        : (task.processName ?? '任务 #${task.id}'),
+                  ),
+                  style: theme.textTheme.bodyMedium,
+                )),
+                DataCell(Text(_displayText(task.workOrderNumber),
+                    style: textStyle)),
+                DataCell(
+                    Text(_displayText(task.processName), style: textStyle)),
+                DataCell(Text(_formatNumber(task.productionQuantity),
+                    style: textStyle)),
+                DataCell(Text(_formatNumber(task.quantityCompleted),
+                    style: textStyle)),
+                DataCell(Text(_formatProgress(task), style: textStyle)),
+                DataCell(Text(
+                  task.statusDisplay ?? task.status ?? '-',
+                  style: textStyle,
+                )),
+                DataCell(Wrap(
+                  spacing: 8,
+                  children: [
+                    TextButton(
+                      onPressed: () => _openTaskDetail(context, task),
+                      child: const Text('查看'),
+                    ),
+                    if (showUpdateActions) ...[
+                      TextButton(
+                        onPressed: () =>
+                            _openUpdateDialog(context, task, completeMode: false),
+                        child: const Text('更新进度'),
+                      ),
+                      TextButton(
+                        onPressed: () =>
+                            _openUpdateDialog(context, task, completeMode: true),
+                        child: const Text('完成任务'),
+                      ),
+                    ],
+                    if (trailingBuilder != null) trailingBuilder(task),
+                  ],
+                )),
+              ],
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  static String _displayText(String? value) {
+    final text = value?.trim() ?? '';
+    return text.isEmpty ? '-' : text;
+  }
+
+  String _formatNumber(double? value) {
+    if (value == null) return '-';
+    return value.toStringAsFixed(0);
+  }
+
+  String _formatProgress(Task task) {
+    final total = task.productionQuantity ?? 0;
+    final completed = task.quantityCompleted ?? 0;
+    if (total <= 0) return '-';
+    final percentage =
+        (completed / total * 100).clamp(0, 100).toStringAsFixed(0);
+    return '$percentage%';
   }
 
   void _openTaskDetail(BuildContext context, Task task) {

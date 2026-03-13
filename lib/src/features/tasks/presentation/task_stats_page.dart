@@ -5,6 +5,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -286,6 +287,7 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
   }
 
   Widget _buildBody(BuildContext context) {
+    final isMobile = BreakpointsUtil.isMobile(context);
     if (_loading && _stats.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -303,6 +305,10 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
       );
     }
 
+    if (!isMobile) {
+      return _buildDesktopTable(context);
+    }
+
     return ListView.separated(
       itemCount: _stats.length,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
@@ -310,6 +316,72 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
         final item = _stats[index];
         return _StatsCard(item: item);
       },
+    );
+  }
+
+  Widget _buildDesktopTable(BuildContext context) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('操作员')),
+        DataColumn(label: Text('部门')),
+        DataColumn(label: Text('完成率')),
+        DataColumn(label: Text('任务总数')),
+        DataColumn(label: Text('已完成')),
+        DataColumn(label: Text('进行中')),
+        DataColumn(label: Text('待开始')),
+        DataColumn(label: Text('完成总数')),
+        DataColumn(label: Text('不良品数')),
+        DataColumn(label: Text('不良品率')),
+        DataColumn(label: Text('平均完成时长')),
+      ],
+      rows: _stats
+          .map(
+            (item) {
+              final name = item['operator_name']?.toString() ??
+                  item['operator_username']?.toString() ??
+                  '-';
+              final departments = item['departments'] as List? ?? const [];
+              final deptText =
+                  departments.isEmpty ? '未分配部门' : departments.join('、');
+              final completionRate = _toNum(item['completion_rate']);
+              final defectiveRate = _toNum(item['defective_rate']);
+              final avgHours = item['avg_completion_hours'] == null
+                  ? '-'
+                  : '${_toNum(item['avg_completion_hours']).toStringAsFixed(1)} 小时';
+
+              return DataRow(
+                cells: [
+                  DataCell(
+                      Text(name, style: theme.textTheme.bodyMedium)),
+                  DataCell(Text(deptText, style: textStyle)),
+                  DataCell(Text('${completionRate.toStringAsFixed(1)}%',
+                      style: textStyle)),
+                  DataCell(Text('${_toInt(item['total_tasks'])}',
+                      style: textStyle)),
+                  DataCell(Text('${_toInt(item['completed_tasks'])}',
+                      style: textStyle)),
+                  DataCell(Text('${_toInt(item['in_progress_tasks'])}',
+                      style: textStyle)),
+                  DataCell(Text('${_toInt(item['pending_tasks'])}',
+                      style: textStyle)),
+                  DataCell(Text(
+                      _toNum(item['total_completed_quantity'])
+                          .toStringAsFixed(0),
+                      style: textStyle)),
+                  DataCell(Text(
+                      _toNum(item['total_defective_quantity'])
+                          .toStringAsFixed(0),
+                      style: textStyle)),
+                  DataCell(Text('${defectiveRate.toStringAsFixed(2)}%',
+                      style: textStyle)),
+                  DataCell(Text(avgHours, style: textStyle)),
+                ],
+              );
+            },
+          )
+          .toList(),
     );
   }
 
