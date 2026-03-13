@@ -229,6 +229,15 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
     viewModel.loadRules(resetPage: true);
   }
 
+  int _activeFilterCount(TaskAssignmentRuleViewModel viewModel) {
+    var count = 0;
+    if (_searchController.text.trim().isNotEmpty) count += 1;
+    if (viewModel.processId != null) count += 1;
+    if (viewModel.departmentId != null) count += 1;
+    if (viewModel.isActive != null) count += 1;
+    return count;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isMobile = BreakpointsUtil.isMobile(context);
@@ -297,6 +306,76 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        final activeCount = _activeFilterCount(viewModel);
+        void openFilterDrawer() {
+          if (isMobile) {
+            showModalBottomSheet<void>(
+              context: context,
+              isScrollControlled: true,
+              useSafeArea: true,
+              showDragHandle: true,
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+              builder: (sheetContext) {
+                return _FilterDrawerContent(
+                  title: activeCount > 0 ? '筛选 ($activeCount)' : '筛选',
+                  child: _buildFilterPanel(
+                    sheetContext,
+                    viewModel,
+                    processItems: processItems,
+                    departmentItems: departmentItems,
+                    activeItems: activeItems,
+                  ),
+                );
+              },
+            );
+            return;
+          }
+
+          showGeneralDialog(
+            context: context,
+            barrierDismissible: true,
+            barrierLabel: '筛选',
+            barrierColor: Colors.black.withValues(alpha: 0.3),
+            transitionDuration: const Duration(milliseconds: 220),
+            pageBuilder: (dialogContext, animation, secondaryAnimation) {
+              return Align(
+                alignment: Alignment.centerRight,
+                child: Material(
+                  color: Theme.of(dialogContext).colorScheme.surface,
+                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                  child: SizedBox(
+                    width: 360,
+                    height: double.infinity,
+                    child: SafeArea(
+                      child: _FilterDrawerContent(
+                        title: activeCount > 0 ? '筛选 ($activeCount)' : '筛选',
+                        child: _buildFilterPanel(
+                          dialogContext,
+                          viewModel,
+                          processItems: processItems,
+                          departmentItems: departmentItems,
+                          activeItems: activeItems,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+            transitionBuilder: (context, animation, secondaryAnimation, child) {
+              final offsetTween =
+                  Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero);
+              return SlideTransition(
+                position: animation.drive(
+                  CurveTween(curve: Curves.easeOutCubic),
+                ).drive(offsetTween),
+                child: child,
+              );
+            },
+          );
+        }
+
         final searchField = ListSearchField(
           controller: _searchController,
           hintText: '搜索工序/部门/备注',
@@ -314,50 +393,6 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
           isMobile: isMobile,
           searchField: searchField,
           actions: [
-            SizedBox(
-              width: isMobile ? double.infinity : 180,
-              child: DropdownButtonFormField<int?>(
-                key: ValueKey<int?>(viewModel.processId),
-                initialValue: viewModel.processId,
-                decoration: const InputDecoration(labelText: '工序'),
-                items: processItems,
-                onChanged: (value) {
-                  viewModel.setProcessId(value);
-                  viewModel.loadRules(resetPage: true);
-                },
-              ),
-            ),
-            SizedBox(
-              width: isMobile ? double.infinity : 180,
-              child: DropdownButtonFormField<int?>(
-                key: ValueKey<int?>(viewModel.departmentId),
-                initialValue: viewModel.departmentId,
-                decoration: const InputDecoration(labelText: '部门'),
-                items: departmentItems,
-                onChanged: (value) {
-                  viewModel.setDepartmentId(value);
-                  viewModel.loadRules(resetPage: true);
-                },
-              ),
-            ),
-            SizedBox(
-              width: isMobile ? double.infinity : 150,
-              child: DropdownButtonFormField<bool?>(
-                key: ValueKey<bool?>(viewModel.isActive),
-                initialValue: viewModel.isActive,
-                decoration: const InputDecoration(labelText: '状态'),
-                items: activeItems,
-                onChanged: (value) {
-                  viewModel.setIsActive(value);
-                  viewModel.loadRules(resetPage: true);
-                },
-              ),
-            ),
-            PageActionButton.outlined(
-              onPressed: () => _resetFilters(viewModel),
-              icon: const Icon(Icons.restart_alt, size: 16),
-              label: _resetButtonText,
-            ),
             PageActionButton.outlined(
               onPressed: () => viewModel.loadRules(resetPage: true),
               icon: const Icon(Icons.refresh, size: 16),
@@ -368,9 +403,80 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
               icon: const Icon(Icons.add),
               label: _createButtonText,
             ),
+            PageActionButton.outlined(
+              onPressed: openFilterDrawer,
+              icon: const Icon(Icons.filter_alt_outlined, size: 16),
+              label: activeCount > 0
+                  ? '筛选 $activeCount'
+                  : '筛选',
+            ),
           ],
         );
       },
+    );
+  }
+
+  Widget _buildFilterPanel(
+    BuildContext context,
+    TaskAssignmentRuleViewModel viewModel, {
+    required List<DropdownMenuItem<int?>> processItems,
+    required List<DropdownMenuItem<int?>> departmentItems,
+    required List<DropdownMenuItem<bool?>> activeItems,
+  }) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      children: [
+        DropdownButtonFormField<int?>(
+          key: ValueKey<int?>(viewModel.processId),
+          initialValue: viewModel.processId,
+          isExpanded: true,
+          decoration: const InputDecoration(labelText: '工序'),
+          items: processItems,
+          onChanged: (value) {
+            viewModel.setProcessId(value);
+            viewModel.loadRules(resetPage: true);
+          },
+        ),
+        const SizedBox(height: _spacingSm),
+        DropdownButtonFormField<int?>(
+          key: ValueKey<int?>(viewModel.departmentId),
+          initialValue: viewModel.departmentId,
+          isExpanded: true,
+          decoration: const InputDecoration(labelText: '部门'),
+          items: departmentItems,
+          onChanged: (value) {
+            viewModel.setDepartmentId(value);
+            viewModel.loadRules(resetPage: true);
+          },
+        ),
+        const SizedBox(height: _spacingSm),
+        DropdownButtonFormField<bool?>(
+          key: ValueKey<bool?>(viewModel.isActive),
+          initialValue: viewModel.isActive,
+          isExpanded: true,
+          decoration: const InputDecoration(labelText: '状态'),
+          items: activeItems,
+          onChanged: (value) {
+            viewModel.setIsActive(value);
+            viewModel.loadRules(resetPage: true);
+          },
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            OutlinedButton.icon(
+              onPressed: () => _resetFilters(viewModel),
+              icon: const Icon(Icons.restart_alt, size: 16),
+              label: const Text(_resetButtonText),
+            ),
+            const SizedBox(width: 12),
+            FilledButton(
+              onPressed: () => Navigator.of(context).maybePop(),
+              child: const Text('完成'),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -903,6 +1009,48 @@ class _RuleCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _FilterDrawerContent extends StatelessWidget {
+  const _FilterDrawerContent({
+    required this.title,
+    required this.child,
+  });
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: '关闭',
+                onPressed: () => Navigator.of(context).maybePop(),
+                icon: const Icon(Icons.close),
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+        Expanded(child: child),
+      ],
     );
   }
 }
