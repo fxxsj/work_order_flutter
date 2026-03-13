@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/edit_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
@@ -39,11 +38,9 @@ class _MaterialEditPageState extends State<MaterialEditPage> {
   static const String _codeInvalidText = '编码只能包含字母、数字和连字符';
   static const String _nameRequiredText = '请输入物料名称';
   static const String _unitRequiredText = '请输入单位';
-  static const String _backText = '返回';
-  static const String _cancelText = '取消';
+  static const String _cancelText = '返回';
   static const String _basicSectionTitle = '基本信息';
   static const String _extraSectionTitle = '库存信息';
-  static const String _breadcrumbSeparator = ' / ';
 
   late final TextEditingController _codeController;
   late final TextEditingController _nameController;
@@ -138,7 +135,6 @@ class _MaterialEditPageState extends State<MaterialEditPage> {
     final viewModel = context.watch<MaterialViewModel>();
     final theme = Theme.of(context);
     final isMobile = BreakpointsUtil.isMobile(context);
-    final breadcrumb = buildBreadcrumbForPath('/materials');
     final contentPadding = LayoutTokens.pagePadding(context);
     final sectionSpacing = LayoutTokens.formSectionSpacing(context);
     final actionSpacing = LayoutTokens.formActionSpacing(context);
@@ -236,7 +232,7 @@ class _MaterialEditPageState extends State<MaterialEditPage> {
           spacing: pageSpacing,
           contentPadding: contentPadding,
           header: PageHeaderBar(
-            breadcrumb: breadcrumb.join(_breadcrumbSeparator),
+            breadcrumb: null,
             useSurface: false,
             showDivider: false,
             padding: EdgeInsets.zero,
@@ -246,17 +242,6 @@ class _MaterialEditPageState extends State<MaterialEditPage> {
                 PageActionButton.outlined(
                   onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
                   icon: const Icon(Icons.arrow_back, size: 16),
-                  label: _backText,
-                ),
-              ],
-            ),
-          ),
-          body: body,
-          footer: EditPageFooterBar(
-            child: Row(
-              children: [
-                PageActionButton.outlined(
-                  onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
                   label: _cancelText,
                 ),
                 const SizedBox(width: _inlineSpacing),
@@ -269,11 +254,12 @@ class _MaterialEditPageState extends State<MaterialEditPage> {
                           width: _submitIndicatorSize,
                           child: CircularProgressIndicator(strokeWidth: _indicatorStrokeWidth),
                         )
-                      : null,
+                      : const Icon(Icons.save, size: 16),
                 ),
               ],
             ),
           ),
+          body: body,
         ),
       ),
     );

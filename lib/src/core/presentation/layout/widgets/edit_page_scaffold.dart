@@ -7,14 +7,14 @@ class EditPageScaffold extends StatelessWidget {
     super.key,
     required this.header,
     required this.body,
-    required this.footer,
+    this.footer,
     this.spacing,
     this.contentPadding,
   });
 
   final Widget header;
   final Widget body;
-  final Widget footer;
+  final Widget? footer;
   final double? spacing;
   final EdgeInsetsGeometry? contentPadding;
 
@@ -34,8 +34,10 @@ class EditPageScaffold extends StatelessWidget {
             child: body,
           ),
         ),
-        SizedBox(height: resolvedSpacing),
-        footer,
+        if (footer != null) ...[
+          SizedBox(height: resolvedSpacing),
+          footer!,
+        ],
       ],
     );
   }
@@ -59,9 +61,9 @@ class EditPageFooterBar extends StatelessWidget {
     final resolvedPadding = padding ??
         EdgeInsets.fromLTRB(
           basePadding.left,
-          12,
+          8,
           basePadding.right,
-          basePadding.bottom,
+          basePadding.bottom * 0.7,
         );
 
     return Container(

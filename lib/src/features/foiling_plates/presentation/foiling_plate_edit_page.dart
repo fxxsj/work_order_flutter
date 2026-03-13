@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
-import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/edit_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
@@ -44,11 +43,9 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
   static const String _submitText = '保存';
   static const String _submitErrorText = '操作失败: ';
   static const String _nameRequiredText = '请输入烫金版名称';
-  static const String _backText = '返回';
-  static const String _cancelText = '取消';
+  static const String _cancelText = '返回';
   static const String _basicSectionTitle = '基本信息';
   static const String _extraSectionTitle = '补充信息';
-  static const String _breadcrumbSeparator = ' / ';
 
   late final TextEditingController _codeController;
   late final TextEditingController _nameController;
@@ -288,7 +285,6 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
     final theme = Theme.of(context);
     final isMobile = BreakpointsUtil.isMobile(context);
     final isConfirmed = widget.plate?.confirmed == true;
-    final breadcrumb = buildBreadcrumbForPath('/foiling-plates');
     final contentPadding = LayoutTokens.pagePadding(context);
     final sectionSpacing = LayoutTokens.formSectionSpacing(context);
     final actionSpacing = LayoutTokens.formActionSpacing(context);
@@ -432,7 +428,7 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
           spacing: pageSpacing,
           contentPadding: contentPadding,
           header: PageHeaderBar(
-            breadcrumb: breadcrumb.join(_breadcrumbSeparator),
+            breadcrumb: null,
             useSurface: false,
             showDivider: false,
             padding: EdgeInsets.zero,
@@ -442,17 +438,6 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
                 PageActionButton.outlined(
                   onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
                   icon: const Icon(Icons.arrow_back, size: 16),
-                  label: _backText,
-                ),
-              ],
-            ),
-          ),
-          body: mainContent,
-          footer: EditPageFooterBar(
-            child: Row(
-              children: [
-                PageActionButton.outlined(
-                  onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
                   label: _cancelText,
                 ),
                 const SizedBox(width: _inlineSpacing),
@@ -465,11 +450,12 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
                           width: _submitIndicatorSize,
                           child: CircularProgressIndicator(strokeWidth: _indicatorStrokeWidth),
                         )
-                      : null,
+                      : const Icon(Icons.save, size: 16),
                 ),
               ],
             ),
           ),
+          body: mainContent,
         ),
       ),
     );

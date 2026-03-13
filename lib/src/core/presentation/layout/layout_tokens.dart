@@ -91,10 +91,10 @@ class LayoutTokens {
   }
 
   static double formActionSpacing(BuildContext context) {
-    return BreakpointsUtil.isXs(context) ? 16 : 24;
+    return BreakpointsUtil.isXs(context) ? 12 : 18;
   }
 
   static double formPageSpacing(BuildContext context) {
-    return BreakpointsUtil.isXs(context) ? 8 : 10;
+    return BreakpointsUtil.isXs(context) ? 6 : 8;
   }
 }

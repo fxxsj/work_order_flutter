@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/edit_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
@@ -36,11 +35,9 @@ class _ProductGroupEditPageState extends State<ProductGroupEditPage> {
   static const String _codeLengthText = '编码长度在2-50个字符之间';
   static const String _codeInvalidText = '编码只能包含字母、数字和连字符';
   static const String _nameRequiredText = '请输入产品组名称';
-  static const String _backText = '返回';
-  static const String _cancelText = '取消';
+  static const String _cancelText = '返回';
   static const String _basicSectionTitle = '基本信息';
   static const String _extraSectionTitle = '补充信息';
-  static const String _breadcrumbSeparator = ' / ';
 
   late final TextEditingController _codeController;
   late final TextEditingController _nameController;
@@ -114,7 +111,6 @@ class _ProductGroupEditPageState extends State<ProductGroupEditPage> {
     final viewModel = context.watch<ProductGroupViewModel>();
     final theme = Theme.of(context);
     final isMobile = BreakpointsUtil.isMobile(context);
-    final breadcrumb = buildBreadcrumbForPath('/product-groups');
     final contentPadding = LayoutTokens.pagePadding(context);
     final sectionSpacing = LayoutTokens.formSectionSpacing(context);
     final actionSpacing = LayoutTokens.formActionSpacing(context);
@@ -197,7 +193,7 @@ class _ProductGroupEditPageState extends State<ProductGroupEditPage> {
           spacing: pageSpacing,
           contentPadding: contentPadding,
           header: PageHeaderBar(
-            breadcrumb: breadcrumb.join(_breadcrumbSeparator),
+            breadcrumb: null,
             useSurface: false,
             showDivider: false,
             padding: EdgeInsets.zero,
@@ -207,17 +203,6 @@ class _ProductGroupEditPageState extends State<ProductGroupEditPage> {
                 PageActionButton.outlined(
                   onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
                   icon: const Icon(Icons.arrow_back, size: 16),
-                  label: _backText,
-                ),
-              ],
-            ),
-          ),
-          body: body,
-          footer: EditPageFooterBar(
-            child: Row(
-              children: [
-                PageActionButton.outlined(
-                  onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
                   label: _cancelText,
                 ),
                 const SizedBox(width: _inlineSpacing),
@@ -230,11 +215,12 @@ class _ProductGroupEditPageState extends State<ProductGroupEditPage> {
                           width: _submitIndicatorSize,
                           child: CircularProgressIndicator(strokeWidth: _indicatorStrokeWidth),
                         )
-                      : null,
+                      : const Icon(Icons.save, size: 16),
                 ),
               ],
             ),
           ),
+          body: body,
         ),
       ),
     );

@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/edit_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -43,8 +42,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
   static const String _nameLengthText = '客户名称至少需要2个字符';
   static const String _phoneInvalidText = '电话号码格式不正确';
   static const String _emailInvalidText = '请输入正确的邮箱地址';
-  static const String _cancelText = '取消';
-  static const String _backText = '返回';
+  static const String _cancelText = '返回';
   static const String _basicSectionTitle = '基本信息';
   static const String _contactSectionTitle = '联系信息';
   static const String _extraSectionTitle = '补充信息';
@@ -52,7 +50,6 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
   static const String _createdAtLabel = '创建时间';
   static const String _updatedAtLabel = '更新时间';
   static const String _emptyText = '-';
-  static const String _breadcrumbSeparator = ' / ';
 
   late final TextEditingController _nameController;
   late final TextEditingController _contactController;
@@ -179,7 +176,6 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
     final theme = Theme.of(context);
     final isMobile = BreakpointsUtil.isMobile(context);
     final customer = widget.customer;
-    final breadcrumb = buildBreadcrumbForPath('/customers');
     final contentPadding = LayoutTokens.pagePadding(context);
     final sectionSpacing = LayoutTokens.formSectionSpacing(context);
     final actionSpacing = LayoutTokens.formActionSpacing(context);
@@ -193,7 +189,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
           spacing: pageSpacing,
           contentPadding: contentPadding,
           header: PageHeaderBar(
-            breadcrumb: breadcrumb.join(_breadcrumbSeparator),
+            breadcrumb: null,
             useSurface: false,
             showDivider: false,
             padding: EdgeInsets.zero,
@@ -203,7 +199,19 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                 PageActionButton.outlined(
                   onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
                   icon: const Icon(Icons.arrow_back, size: 16),
-                  label: _backText,
+                  label: _cancelText,
+                ),
+                const SizedBox(width: _inlineSpacing),
+                PageActionButton.filled(
+                  onPressed: _submitting ? null : () => _handleSubmit(viewModel),
+                  label: customer == null ? _submitCreateText : _submitUpdateText,
+                  icon: _submitting
+                      ? const SizedBox(
+                          height: _submitIndicatorSize,
+                          width: _submitIndicatorSize,
+                          child: CircularProgressIndicator(strokeWidth: _indicatorStrokeWidth),
+                        )
+                      : const Icon(Icons.save, size: 16),
                 ),
               ],
             ),
@@ -521,28 +529,6 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
               ],
               SizedBox(height: actionSpacing),
             ],
-          ),
-          footer: EditPageFooterBar(
-            child: Row(
-              children: [
-                PageActionButton.outlined(
-                  onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
-                  label: _cancelText,
-                ),
-                const SizedBox(width: _inlineSpacing),
-                PageActionButton.filled(
-                  onPressed: _submitting ? null : () => _handleSubmit(viewModel),
-                  label: customer == null ? _submitCreateText : _submitUpdateText,
-                  icon: _submitting
-                      ? const SizedBox(
-                          height: _submitIndicatorSize,
-                          width: _submitIndicatorSize,
-                          child: CircularProgressIndicator(strokeWidth: _indicatorStrokeWidth),
-                        )
-                      : null,
-                ),
-              ],
-            ),
           ),
         ),
       ),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/edit_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
@@ -46,12 +45,10 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
   static const String _nameRequiredText = '请输入供应商名称';
   static const String _phoneInvalidText = '请输入正确的联系电话';
   static const String _emailInvalidText = '请输入正确的邮箱地址';
-  static const String _backText = '返回';
-  static const String _cancelText = '取消';
+  static const String _cancelText = '返回';
   static const String _basicSectionTitle = '基本信息';
   static const String _contactSectionTitle = '联系信息';
   static const String _extraSectionTitle = '补充信息';
-  static const String _breadcrumbSeparator = ' / ';
 
   late final TextEditingController _codeController;
   late final TextEditingController _nameController;
@@ -144,7 +141,6 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
     final viewModel = context.watch<SupplierViewModel>();
     final theme = Theme.of(context);
     final isMobile = BreakpointsUtil.isMobile(context);
-    final breadcrumb = buildBreadcrumbForPath('/suppliers');
     final contentPadding = LayoutTokens.pagePadding(context);
     final sectionSpacing = LayoutTokens.formSectionSpacing(context);
     final actionSpacing = LayoutTokens.formActionSpacing(context);
@@ -322,7 +318,7 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
           spacing: pageSpacing,
           contentPadding: contentPadding,
           header: PageHeaderBar(
-            breadcrumb: breadcrumb.join(_breadcrumbSeparator),
+            breadcrumb: null,
             useSurface: false,
             showDivider: false,
             padding: EdgeInsets.zero,
@@ -332,17 +328,6 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
                 PageActionButton.outlined(
                   onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
                   icon: const Icon(Icons.arrow_back, size: 16),
-                  label: _backText,
-                ),
-              ],
-            ),
-          ),
-          body: mainContent,
-          footer: EditPageFooterBar(
-            child: Row(
-              children: [
-                PageActionButton.outlined(
-                  onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
                   label: _cancelText,
                 ),
                 const SizedBox(width: _inlineSpacing),
@@ -355,11 +340,12 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
                           width: _submitIndicatorSize,
                           child: CircularProgressIndicator(strokeWidth: _indicatorStrokeWidth),
                         )
-                      : null,
+                      : const Icon(Icons.save, size: 16),
                 ),
               ],
             ),
           ),
+          body: mainContent,
         ),
       ),
     );

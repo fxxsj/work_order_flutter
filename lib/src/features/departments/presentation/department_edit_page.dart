@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/edit_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
@@ -39,11 +38,9 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
   static const String _codeRequiredText = '请输入部门编码';
   static const String _codeInvalidText = '部门编码只能包含小写字母、数字和下划线';
   static const String _nameRequiredText = '请输入部门名称';
-  static const String _backText = '返回';
-  static const String _cancelText = '取消';
+  static const String _cancelText = '返回';
   static const String _basicSectionTitle = '基本信息';
   static const String _extraSectionTitle = '补充信息';
-  static const String _breadcrumbSeparator = ' / ';
   static const String _processPlaceholder = '请选择工序（可多选）';
   static const String _processSearchHint = '搜索工序名称';
   static const String _emptyMatchText = '无匹配项';
@@ -145,7 +142,6 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
     final colors = theme.extension<AppColors>();
     final subtleText = colors?.subtleText ?? theme.hintColor;
     final isMobile = BreakpointsUtil.isMobile(context);
-    final breadcrumb = buildBreadcrumbForPath('/departments');
     final availableParents = _availableParents(viewModel.departmentOptions);
     final disableParent = widget.department != null && (widget.department?.childrenCount ?? 0) > 0;
     final contentPadding = LayoutTokens.pagePadding(context);
@@ -320,7 +316,7 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
           spacing: pageSpacing,
           contentPadding: contentPadding,
           header: PageHeaderBar(
-            breadcrumb: breadcrumb.join(_breadcrumbSeparator),
+            breadcrumb: null,
             useSurface: false,
             showDivider: false,
             padding: EdgeInsets.zero,
@@ -330,17 +326,6 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
                 PageActionButton.outlined(
                   onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
                   icon: const Icon(Icons.arrow_back, size: 16),
-                  label: _backText,
-                ),
-              ],
-            ),
-          ),
-          body: mainContent,
-          footer: EditPageFooterBar(
-            child: Row(
-              children: [
-                PageActionButton.outlined(
-                  onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
                   label: _cancelText,
                 ),
                 const SizedBox(width: _inlineSpacing),
@@ -353,11 +338,12 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
                           width: _submitIndicatorSize,
                           child: CircularProgressIndicator(strokeWidth: _indicatorStrokeWidth),
                         )
-                      : null,
+                      : const Icon(Icons.save, size: 16),
                 ),
               ],
             ),
           ),
+          body: mainContent,
         ),
       ),
     );
