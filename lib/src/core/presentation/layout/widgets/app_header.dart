@@ -24,8 +24,10 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
     required this.surface,
     required this.accent,
     required this.subtleText,
+    required this.borderColor,
     required this.height,
     required this.isCompactActions,
+    required this.showAppTitle,
   });
 
   final bool isMobile;
@@ -43,8 +45,10 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   final Color surface;
   final Color accent;
   final Color subtleText;
+  final Color borderColor;
   final double height;
   final bool isCompactActions;
+  final bool showAppTitle;
 
   @override
   Size get preferredSize => Size.fromHeight(height);
@@ -63,9 +67,14 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
       fontWeight: FontWeight.w700,
     );
     return AppBar(
+      primary: isMobile,
       backgroundColor: surface,
       elevation: 0,
       scrolledUnderElevation: 0,
+      shape: Border(
+        bottom: BorderSide(color: borderColor.withValues(alpha: 0.75)),
+      ),
+      toolbarHeight: height,
       iconTheme: IconThemeData(color: subtleText),
       titleSpacing: isMobile ? 0 : 8,
       leading: isMobile
@@ -81,7 +90,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (!isMobile)
+                if (!isMobile && showAppTitle)
                   Text(
                     appTitle,
                     style: appTitleStyle,

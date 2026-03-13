@@ -19,7 +19,11 @@ class ContentContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
+    final semantic = theme.extension<AppSemanticColors>();
     final padding = LayoutTokens.pagePadding(context);
+    final innerPadding = LayoutTokens.cardPadding(context);
+    final isMobile = BreakpointsUtil.isMobile(context);
+    final isTablet = BreakpointsUtil.isTablet(context);
     double resolvedMaxWidth = maxWidth;
     if (maxWidth == LayoutTokens.maxContentWidth) {
       if (BreakpointsUtil.is2xl(context)) {
@@ -31,6 +35,32 @@ class ContentContainer extends StatelessWidget {
       }
     }
 
+    final useSurfaceCanvas = !isMobile;
+    final borderColor = colors?.borderColor ?? theme.dividerColor;
+    final canvasRadius = BorderRadius.circular(LayoutTokens.radiusLg);
+    final canvas = Container(
+      decoration: BoxDecoration(
+        color: colors?.surface ?? theme.colorScheme.surface,
+        borderRadius: canvasRadius,
+        border: Border.all(color: borderColor.withValues(alpha: 0.7)),
+        boxShadow: [
+          if (semantic != null)
+            BoxShadow(
+              color: semantic.shadowStrong.withValues(alpha: isTablet ? 0.06 : 0.08),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: canvasRadius,
+        child: Padding(
+          padding: innerPadding,
+          child: child,
+        ),
+      ),
+    );
+
     final container = Container(
       color: colors?.background ?? theme.scaffoldBackgroundColor,
       child: Center(
@@ -38,7 +68,7 @@ class ContentContainer extends StatelessWidget {
           constraints: BoxConstraints(maxWidth: resolvedMaxWidth),
           child: Padding(
             padding: padding,
-            child: child,
+            child: useSurfaceCanvas ? canvas : child,
           ),
         ),
       ),

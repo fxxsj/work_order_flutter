@@ -14,6 +14,7 @@ class AppSidebarDrawer extends StatelessWidget {
     required this.primary,
     required this.sidebarText,
     required this.badgeTextForItem,
+    required this.headerHeight,
   });
 
   final String appTitle;
@@ -25,6 +26,7 @@ class AppSidebarDrawer extends StatelessWidget {
   final Color primary;
   final Color sidebarText;
   final String? Function(NavItem) badgeTextForItem;
+  final double headerHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -33,21 +35,11 @@ class AppSidebarDrawer extends StatelessWidget {
       color: sidebarText,
       fontWeight: FontWeight.w700,
     );
-    final children = <Widget>[
-      Padding(
-        padding: const EdgeInsets.fromLTRB(16, 18, 16, 10),
-        child: _SidebarBrand(
-          compact: false,
-          title: appTitle,
-          primary: primary,
-          sidebarText: sidebarText,
-        ),
-      ),
-    ];
+    final tiles = <Widget>[];
 
     for (final item in navItems) {
       if (item.children.isEmpty) {
-        children.add(
+        tiles.add(
           _buildDrawerTile(
             item,
             primary: primary,
@@ -60,7 +52,7 @@ class AppSidebarDrawer extends StatelessWidget {
       } else {
         final isExpanded = expandedIds.contains(item.id) ||
             item.children.any((c) => c.id == currentId);
-        children.add(
+        tiles.add(
           Theme(
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
@@ -93,9 +85,31 @@ class AppSidebarDrawer extends StatelessWidget {
       }
     }
 
-    return ListView(
-      padding: EdgeInsets.zero,
-      children: children,
+    return Column(
+      children: [
+        Container(
+          width: double.infinity,
+          height: headerHeight,
+          color: primary,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          alignment: Alignment.centerLeft,
+          child: _SidebarBrand(
+            compact: false,
+            title: appTitle,
+            primary: primary,
+            sidebarText: sidebarText,
+          ),
+        ),
+        Expanded(
+          child: ScrollConfiguration(
+            behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: tiles,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -114,6 +128,7 @@ class AppSidebarRail extends StatelessWidget {
     required this.railExtended,
     required this.badgeTextForItem,
     required this.controller,
+    required this.headerHeight,
   });
 
   final String appTitle;
@@ -127,28 +142,36 @@ class AppSidebarRail extends StatelessWidget {
   final bool railExtended;
   final String? Function(NavItem) badgeTextForItem;
   final ScrollController controller;
+  final double headerHeight;
 
   @override
   Widget build(BuildContext context) {
-    return Scrollbar(
-      thumbVisibility: false,
-      controller: controller,
-      child: ListView(
-        controller: controller,
-        padding: const EdgeInsets.fromLTRB(10, 10, 10, 16),
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: _SidebarBrand(
-              compact: !railExtended,
-              title: appTitle,
-              primary: primary,
-              sidebarText: sidebarText,
+    return Column(
+      children: [
+        Container(
+          width: double.infinity,
+          height: headerHeight,
+          color: primary,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          alignment: Alignment.centerLeft,
+          child: _SidebarBrand(
+            compact: !railExtended,
+            title: appTitle,
+            primary: primary,
+            sidebarText: sidebarText,
+          ),
+        ),
+        Expanded(
+          child: ScrollConfiguration(
+            behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+            child: ListView(
+              controller: controller,
+              padding: const EdgeInsets.fromLTRB(10, 6, 10, 16),
+              children: _buildRailItems(context),
             ),
           ),
-          ..._buildRailItems(context),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -389,7 +412,7 @@ class _RailBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: primary.withValues(alpha: 0.1),
+        color: primary.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
       ),
       child: Text(
@@ -422,13 +445,15 @@ class _SidebarBrand extends StatelessWidget {
       return Container(
         height: 40,
         decoration: BoxDecoration(
-          color: primary.withValues(alpha: 0.08),
+          color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.18),
           borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
         ),
-        child: Icon(Icons.grid_view_rounded, color: primary, size: 18),
+        child: Icon(Icons.grid_view_rounded,
+            color: Theme.of(context).colorScheme.onPrimary, size: 18),
       );
     }
 
+    final onPrimary = Theme.of(context).colorScheme.onPrimary;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       child: Row(
@@ -437,17 +462,17 @@ class _SidebarBrand extends StatelessWidget {
             width: 34,
             height: 34,
             decoration: BoxDecoration(
-              color: primary.withValues(alpha: 0.08),
+              color: onPrimary.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
             ),
-            child: Icon(Icons.grid_view_rounded, color: primary, size: 18),
+            child: Icon(Icons.grid_view_rounded, color: onPrimary, size: 18),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               title,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: sidebarText,
+                    color: onPrimary,
                     fontWeight: FontWeight.w700,
                   ),
               overflow: TextOverflow.ellipsis,

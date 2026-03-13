@@ -72,14 +72,14 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     final is2xl = BreakpointsUtil.is2xl(context);
 
     final background = colors.background;
-    final surface = colors.surface;
     final primary = theme.primaryColor;
-    final accent = colors.sidebarText;
+    final headerForeground = theme.colorScheme.onPrimary;
+    final headerMuted = headerForeground.withValues(alpha: 0.78);
     final sidebar = colors.sidebar;
-    final subtleText = colors.subtleText;
     final sidebarText = colors.sidebarText;
     final sidebarItems = sidebarNavItems();
     final borderColor = colors.borderColor;
+    final headerBorderColor = Colors.transparent;
     final appBarHeight = isXs ? 52.0 : 54.0;
     final currentId = _currentId(context);
     final isActionCompact = size.width < Breakpoints.lg;
@@ -87,6 +87,35 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     final railExtended = (isXl || is2xl) && !_sidebarCollapsed;
     final railWidth = railExtended ? 198.0 : 56.0;
     final showDesktopSidebar = !isMobile;
+
+    final appHeader = AppHeader(
+      isMobile: isMobile,
+      showSidebarToggle: !isMobile,
+      isSidebarCollapsed: _sidebarCollapsed,
+      onSidebarToggle: () {
+        setState(() {
+          _sidebarCollapsed = !_sidebarCollapsed;
+        });
+        context
+            .read<AppStorage>()
+            .write(Constant.KEY_SIDEBAR_COLLAPSED, _sidebarCollapsed);
+      },
+      appTitle: _appTitle,
+      sectionTitle: labelFor(currentId),
+      onMenuTap: () => scaffoldKey.currentState?.openDrawer(),
+      onSettingTap: () => scaffoldKey.currentState?.openEndDrawer(),
+      onNotificationViewAll: () => _handleSelectId('notifications'),
+      onProfileTap: () => _handleSelectId('profile'),
+      onLogoutTap: _handleLogout,
+      primary: headerForeground,
+      surface: primary,
+      accent: headerForeground,
+      subtleText: headerMuted,
+      borderColor: headerBorderColor,
+      height: appBarHeight,
+      isCompactActions: isActionCompact,
+      showAppTitle: false,
+    );
 
     return Scaffold(
       key: scaffoldKey,
@@ -101,41 +130,17 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
                   expandedIds: _expandedIds,
                   currentId: currentId,
                   onToggleExpand: _setExpanded,
-                  onSelectId: _handleSelectId,
-                  primary: primary,
-                  sidebarText: sidebarText,
-                  badgeTextForItem: _badgeTextForItem,
-                ),
+                onSelectId: _handleSelectId,
+                primary: primary,
+                sidebarText: sidebarText,
+                badgeTextForItem: _badgeTextForItem,
+                headerHeight: appBarHeight,
               ),
-            )
+            ),
+          )
           : null,
       endDrawer: LayoutSetting(),
-      appBar: AppHeader(
-        isMobile: isMobile,
-        showSidebarToggle: !isMobile,
-        isSidebarCollapsed: _sidebarCollapsed,
-        onSidebarToggle: () {
-          setState(() {
-            _sidebarCollapsed = !_sidebarCollapsed;
-          });
-          context
-              .read<AppStorage>()
-              .write(Constant.KEY_SIDEBAR_COLLAPSED, _sidebarCollapsed);
-        },
-        appTitle: _appTitle,
-        sectionTitle: labelFor(currentId),
-        onMenuTap: () => scaffoldKey.currentState?.openDrawer(),
-        onSettingTap: () => scaffoldKey.currentState?.openEndDrawer(),
-        onNotificationViewAll: () => _handleSelectId('notifications'),
-        onProfileTap: () => _handleSelectId('profile'),
-        onLogoutTap: _handleLogout,
-        primary: primary,
-        surface: surface,
-        accent: accent,
-        subtleText: subtleText,
-        height: appBarHeight,
-        isCompactActions: isActionCompact,
-      ),
+      appBar: isMobile ? appHeader : null,
       body: Row(
         children: [
           if (showDesktopSidebar)
@@ -161,14 +166,23 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
                 railExtended: railExtended,
                 badgeTextForItem: _badgeTextForItem,
                 controller: _railScrollController,
+                headerHeight: appBarHeight,
               ),
             ),
           Expanded(
             child: SafeArea(
-              child: ContentContainer(
-                scrollable: false,
-                maxWidth: LayoutTokens.maxContentWidth,
-                child: widget.navigationShell,
+              top: false,
+              child: Column(
+                children: [
+                  if (!isMobile) appHeader,
+                  Expanded(
+                    child: ContentContainer(
+                      scrollable: false,
+                      maxWidth: LayoutTokens.maxContentWidth,
+                      child: widget.navigationShell,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

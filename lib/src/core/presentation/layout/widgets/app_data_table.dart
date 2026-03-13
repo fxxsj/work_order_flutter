@@ -28,6 +28,7 @@ class AppDataTable extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
+    final semantic = theme.extension<AppSemanticColors>();
     final headingStyle = theme.textTheme.labelLarge?.copyWith(
       color: colors?.subtleText ?? theme.hintColor,
       fontWeight: FontWeight.w600,
@@ -50,11 +51,16 @@ class AppDataTable extends StatelessWidget {
                   columns: columns,
                   rows: rows,
                   headingTextStyle: headingStyle,
+                  headingRowColor: WidgetStateProperty.all(
+                    semantic?.surfaceAlt ??
+                        theme.colorScheme.surfaceContainerHighest,
+                  ),
                   columnSpacing: columnSpacing,
                   horizontalMargin: horizontalMargin,
                   headingRowHeight: headingRowHeight,
                   dataRowMinHeight: dataRowMinHeight,
                   dataRowMaxHeight: dataRowMaxHeight,
+                  dividerThickness: 0.6,
                   showBottomBorder: true,
                 ),
               ),
