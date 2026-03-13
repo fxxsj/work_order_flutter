@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
@@ -111,7 +110,6 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
-  bool _filtersExpanded = false;
   bool _showListView = false;
   bool _hideEmptyColumns = false;
   bool _sortByDeliveryDate = false;
@@ -192,21 +190,15 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
   @override
   Widget build(BuildContext context) {
     final isMobile = BreakpointsUtil.isMobile(context);
-    final breadcrumb = buildBreadcrumbForPathWith(
-      GoRouterState.of(context).uri.path,
-      buildPathToIdMap(),
-    );
 
     return Consumer<TaskViewModel>(
       builder: (context, viewModel, _) {
         final tasks = viewModel.tasks;
         _statusFilter = viewModel.statusFilter;
         _departmentFilterId = viewModel.departmentFilterId;
-        final stats = _buildStats(tasks, viewModel.total);
         return ListPageScaffold(
           spacing: _spacingSm,
-          header:
-              _buildPageHeader(context, viewModel, breadcrumb, isMobile, stats),
+          header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildBody(context, viewModel, tasks, isMobile),
           footer: viewModel.total > 0
               ? ResponsivePaginationBar(
@@ -273,9 +265,7 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
   Widget _buildPageHeader(
     BuildContext context,
     TaskViewModel viewModel,
-    List<String> breadcrumb,
     bool isMobile,
-    _TaskBoardStats stats,
   ) {
     final departmentItems = [
       const DropdownMenuItem<int?>(
@@ -296,24 +286,13 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
       DropdownMenuItem(value: 'completed', child: Text('已完成')),
     ];
 
-    return WorkbenchHeaderBar(
-      breadcrumb: breadcrumb.isEmpty ? null : breadcrumb.join(' / '),
-      title: '部门任务看板',
-      subtitle: '支持看板与列表视图切换，按部门/状态快速筛选任务。',
-      stats: [
-        WorkbenchStatItem(label: '总任务', value: '${stats.total}'),
-        WorkbenchStatItem(label: '待开始', value: '${stats.pending}'),
-        WorkbenchStatItem(label: '进行中', value: '${stats.inProgress}'),
-        WorkbenchStatItem(label: '已完成', value: '${stats.completed}'),
-      ],
-      titleMaxWidth: isMobile ? double.infinity : 420,
-      hideSubtitleOnMobile: true,
-      mobileStatCount: 2,
-      hideTitleOnMobile: false,
-      hideBreadcrumbOnMobile: true,
+    return PageHeaderBar(
+      breadcrumb: null,
+      useSurface: false,
+      showDivider: false,
+      padding: EdgeInsets.zero,
       actions: LayoutBuilder(
         builder: (context, constraints) {
-          final filtersExpanded = _filtersExpanded;
           final activeFilters = _activeFilterCount();
           final searchField = ListSearchField(
             controller: _searchController,
@@ -328,124 +307,161 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
             },
           );
 
-          final filterToggle = ListToolbarButton(
-            onPressed: () =>
-                setState(() => _filtersExpanded = !filtersExpanded),
-            icon: filtersExpanded
-                ? Icons.filter_alt_off
-                : Icons.filter_alt_outlined,
-            label: filtersExpanded
-                ? '收起筛选'
-                : activeFilters > 0
-                    ? '筛选 $activeFilters'
-                    : '筛选',
-            height: _controlHeight,
-            compact: isMobile,
-          );
-
-          final viewToggle = ListToolbarButton(
-            onPressed: () => setState(() => _showListView = !_showListView),
-            icon: _showListView
-                ? Icons.view_kanban_outlined
-                : Icons.view_list_outlined,
-            label: _showListView ? '看板视图' : '列表视图',
-            height: _controlHeight,
-            compact: isMobile,
-          );
-
-          final actions = <Widget>[
-            filterToggle,
-            if (activeFilters > 0)
-              ListToolbarButton(
-                onPressed: () => _resetFilters(viewModel),
-                icon: Icons.restart_alt,
-                label: _resetButtonText,
-                height: _controlHeight,
-                compact: isMobile,
-              ),
-            ListToolbarButton(
-              onPressed: () => viewModel.loadTasks(resetPage: true),
-              icon: Icons.refresh,
-              label: _refreshButtonText,
-              height: _controlHeight,
-              compact: isMobile,
-            ),
-            viewToggle,
-          ];
-
-          final filterWidgets = Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (_loadingDepartments)
-                const LinearProgressIndicator(minHeight: 2),
-              DropdownButtonFormField<int?>(
-                key: ValueKey<int?>(_departmentFilterId),
-                initialValue: _departmentFilterId,
-                isExpanded: true,
-                decoration: const InputDecoration(labelText: '部门'),
-                items: departmentItems,
-                onChanged: (value) {
-                  setState(() => _departmentFilterId = value);
-                  _applyFilters(viewModel);
+          void openFilterDrawer() {
+            if (isMobile) {
+              showModalBottomSheet<void>(
+                context: context,
+                isScrollControlled: true,
+                useSafeArea: true,
+                showDragHandle: true,
+                backgroundColor: Theme.of(context).colorScheme.surface,
+                shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.zero),
+                builder: (sheetContext) {
+                  return _FilterDrawerContent(
+                    title: activeFilters > 0 ? '筛选 ($activeFilters)' : '筛选',
+                    child: _buildFilterPanel(
+                      sheetContext,
+                      viewModel,
+                      departmentItems: departmentItems,
+                      statusItems: statusItems,
+                    ),
+                  );
                 },
-              ),
-              const SizedBox(height: _spacingSm),
-              DropdownButtonFormField<String?>(
-                key: ValueKey<String?>(_statusFilter),
-                initialValue: _statusFilter,
-                isExpanded: true,
-                decoration: const InputDecoration(labelText: '状态'),
-                items: statusItems,
-                onChanged: (value) {
-                  setState(() => _statusFilter = value);
-                  _applyFilters(viewModel);
-                },
-              ),
-            ],
-          );
+              );
+              return;
+            }
 
-          if (isMobile) {
-            final maxFilterHeight = MediaQuery.of(context).size.height * 0.45;
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ListToolbar(
-                  isMobile: true,
-                  searchField: searchField,
-                  actions: actions,
-                  spacing: _spacingSm,
-                  mobileActionAlignment: WrapAlignment.start,
-                ),
-                const SizedBox(height: _spacingSm),
-                ExpandableFilters(
-                  expanded: filtersExpanded,
-                  maxHeight: maxFilterHeight,
-                  child: filterWidgets,
-                ),
-              ],
+            showGeneralDialog(
+              context: context,
+              barrierDismissible: true,
+              barrierLabel: '筛选',
+              barrierColor: Colors.black.withValues(alpha: 0.3),
+              transitionDuration: const Duration(milliseconds: 220),
+              pageBuilder: (dialogContext, animation, secondaryAnimation) {
+                return Align(
+                  alignment: Alignment.centerRight,
+                  child: Material(
+                    color: Theme.of(dialogContext).colorScheme.surface,
+                    shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero),
+                    child: SizedBox(
+                      width: 360,
+                      height: double.infinity,
+                      child: SafeArea(
+                        child: _FilterDrawerContent(
+                          title: activeFilters > 0
+                              ? '筛选 ($activeFilters)'
+                              : '筛选',
+                          child: _buildFilterPanel(
+                            dialogContext,
+                            viewModel,
+                            departmentItems: departmentItems,
+                            statusItems: statusItems,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+              transitionBuilder:
+                  (context, animation, secondaryAnimation, child) {
+                final offsetTween =
+                    Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero);
+                return SlideTransition(
+                  position: animation.drive(
+                    CurveTween(curve: Curves.easeOutCubic),
+                  ).drive(offsetTween),
+                  child: child,
+                );
+              },
             );
           }
 
-          final maxFilterHeight = MediaQuery.of(context).size.height * 0.35;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ListToolbar(
-                isMobile: false,
-                searchField: searchField,
-                actions: actions,
-                spacing: _spacingSm,
+          final actions = <Widget>[
+            PageActionButton.outlined(
+              onPressed: () => viewModel.loadTasks(resetPage: true),
+              icon: const Icon(Icons.refresh, size: 16),
+              label: _refreshButtonText,
+            ),
+            PageActionButton.outlined(
+              onPressed: () => setState(() => _showListView = !_showListView),
+              icon: Icon(
+                _showListView
+                    ? Icons.view_kanban_outlined
+                    : Icons.view_list_outlined,
+                size: 16,
               ),
-              ExpandableFilters(
-                expanded: filtersExpanded,
-                maxHeight: maxFilterHeight,
-                topPadding: _spacingSm,
-                child: filterWidgets,
-              ),
-            ],
+              label: _showListView ? '看板视图' : '列表视图',
+            ),
+            PageActionButton.outlined(
+              onPressed: openFilterDrawer,
+              icon: const Icon(Icons.filter_alt_outlined, size: 16),
+              label: activeFilters > 0 ? '筛选 $activeFilters' : '筛选',
+            ),
+          ];
+
+          return ListToolbar(
+            isMobile: isMobile,
+            searchField: searchField,
+            actions: actions,
+            spacing: _spacingSm,
           );
         },
       ),
+    );
+  }
+
+  Widget _buildFilterPanel(
+    BuildContext context,
+    TaskViewModel viewModel, {
+    required List<DropdownMenuItem<int?>> departmentItems,
+    required List<DropdownMenuItem<String?>> statusItems,
+  }) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      children: [
+        if (_loadingDepartments) const LinearProgressIndicator(minHeight: 2),
+        DropdownButtonFormField<int?>(
+          key: ValueKey<int?>(_departmentFilterId),
+          initialValue: _departmentFilterId,
+          isExpanded: true,
+          decoration: const InputDecoration(labelText: '部门'),
+          items: departmentItems,
+          onChanged: (value) {
+            setState(() => _departmentFilterId = value);
+            _applyFilters(viewModel);
+          },
+        ),
+        const SizedBox(height: _spacingSm),
+        DropdownButtonFormField<String?>(
+          key: ValueKey<String?>(_statusFilter),
+          initialValue: _statusFilter,
+          isExpanded: true,
+          decoration: const InputDecoration(labelText: '状态'),
+          items: statusItems,
+          onChanged: (value) {
+            setState(() => _statusFilter = value);
+            _applyFilters(viewModel);
+          },
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            OutlinedButton.icon(
+              onPressed: () => _resetFilters(viewModel),
+              icon: const Icon(Icons.restart_alt, size: 16),
+              label: const Text(_resetButtonText),
+            ),
+            const SizedBox(width: 12),
+            FilledButton(
+              onPressed: () => Navigator.of(context).maybePop(),
+              child: const Text('完成'),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -608,31 +624,6 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
       }
     }
     return grouped;
-  }
-
-  _TaskBoardStats _buildStats(List<Task> tasks, int total) {
-    var pending = 0;
-    var inProgress = 0;
-    var completed = 0;
-    for (final task in tasks) {
-      switch (task.status) {
-        case 'pending':
-          pending += 1;
-          break;
-        case 'in_progress':
-          inProgress += 1;
-          break;
-        case 'completed':
-          completed += 1;
-          break;
-      }
-    }
-    return _TaskBoardStats(
-      total: total,
-      pending: pending,
-      inProgress: inProgress,
-      completed: completed,
-    );
   }
 
   int _activeFilterCount() {
@@ -821,18 +812,46 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
   }
 }
 
-class _TaskBoardStats {
-  const _TaskBoardStats({
-    required this.total,
-    required this.pending,
-    required this.inProgress,
-    required this.completed,
+class _FilterDrawerContent extends StatelessWidget {
+  const _FilterDrawerContent({
+    required this.title,
+    required this.child,
   });
 
-  final int total;
-  final int pending;
-  final int inProgress;
-  final int completed;
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: '关闭',
+                onPressed: () => Navigator.of(context).maybePop(),
+                icon: const Icon(Icons.close),
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+        Expanded(child: child),
+      ],
+    );
+  }
 }
 
 class _QuickFilterItem {

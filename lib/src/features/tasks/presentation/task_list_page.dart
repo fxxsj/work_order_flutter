@@ -120,7 +120,6 @@ class _TaskListViewState extends State<_TaskListView> {
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
-  bool _filtersExpanded = false;
   String? _statusFilter;
   String? _priorityFilter;
   int? _departmentFilterId;
@@ -376,11 +375,8 @@ class _TaskListViewState extends State<_TaskListView> {
   Widget _buildPageHeader(
     BuildContext context,
     TaskViewModel viewModel,
-bool isMobile,
+    bool isMobile,
   ) {
-    final summaryItems = [
-      WorkbenchStatItem(label: '总任务', value: '${viewModel.total}'),
-    ];
     final statusItems = const [
       DropdownMenuItem(value: 'draft', child: Text('草稿')),
       DropdownMenuItem(value: 'pending', child: Text('待开始')),
@@ -415,19 +411,13 @@ bool isMobile,
       ),
     ];
 
-    return WorkbenchHeaderBar(
+    return PageHeaderBar(
       breadcrumb: null,
-      title: '任务列表',
-      subtitle: '',
-      stats: summaryItems,
-      titleMaxWidth: isMobile ? double.infinity : 420,
-      hideSubtitleOnMobile: true,
-      mobileStatCount: 1,
-      hideTitleOnMobile: true,
-      hideBreadcrumbOnMobile: true,
+      useSurface: false,
+      showDivider: false,
+      padding: EdgeInsets.zero,
       actions: LayoutBuilder(
         builder: (context, constraints) {
-          final filtersExpanded = _filtersExpanded;
           final activeFilters = _activeFilterCount();
           final searchField = ListSearchField(
             controller: _searchController,
@@ -442,197 +432,176 @@ bool isMobile,
             },
           );
 
-          final filterToggle = ListToolbarButton(
-            onPressed: () =>
-                setState(() => _filtersExpanded = !filtersExpanded),
-            icon: filtersExpanded
-                ? Icons.filter_alt_off
-                : Icons.filter_alt_outlined,
-            label: filtersExpanded
-                ? '收起筛选'
-                : activeFilters > 0
-                    ? '筛选 $activeFilters'
-                    : '筛选',
-            height: _controlHeight,
-            compact: isMobile,
-          );
-
-          final mobileFilters = Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (_loadingOptions) const LinearProgressIndicator(minHeight: 2),
-              DropdownButtonFormField<String>(
-                initialValue: _statusFilter,
-                isExpanded: true,
-                decoration: const InputDecoration(labelText: '状态'),
-                items: statusItems,
-                onChanged: (value) {
-                  setState(() => _statusFilter = value);
-                  _applyFilters(viewModel);
+          void openFilterDrawer() {
+            if (isMobile) {
+              showModalBottomSheet<void>(
+                context: context,
+                isScrollControlled: true,
+                useSafeArea: true,
+                showDragHandle: true,
+                backgroundColor: Theme.of(context).colorScheme.surface,
+                shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.zero),
+                builder: (sheetContext) {
+                  return _FilterDrawerContent(
+                    title: activeFilters > 0 ? '筛选 ($activeFilters)' : '筛选',
+                    child: _buildFilterPanel(
+                      sheetContext,
+                      viewModel,
+                      statusItems: statusItems,
+                      priorityItems: priorityItems,
+                      departmentItems: departmentItems,
+                      processItems: processItems,
+                    ),
+                  );
                 },
-              ),
-              const SizedBox(height: _spacingSm),
-              DropdownButtonFormField<String>(
-                initialValue: _priorityFilter,
-                isExpanded: true,
-                decoration: const InputDecoration(labelText: '优先级'),
-                items: priorityItems,
-                onChanged: (value) {
-                  setState(() => _priorityFilter = value);
-                  _applyFilters(viewModel);
-                },
-              ),
-              const SizedBox(height: _spacingSm),
-              DropdownButtonFormField<int?>(
-                initialValue: _departmentFilterId,
-                isExpanded: true,
-                decoration: const InputDecoration(labelText: '部门'),
-                items: departmentItems,
-                onChanged: (value) {
-                  setState(() => _departmentFilterId = value);
-                  _applyFilters(viewModel);
-                },
-              ),
-              const SizedBox(height: _spacingSm),
-              DropdownButtonFormField<int?>(
-                initialValue: _processFilterId,
-                isExpanded: true,
-                decoration: const InputDecoration(labelText: '工序'),
-                items: processItems,
-                onChanged: (value) {
-                  setState(() => _processFilterId = value);
-                  _applyFilters(viewModel);
-                },
-              ),
-            ],
-          );
+              );
+              return;
+            }
 
-          final desktopFilters = Wrap(
-            spacing: _spacingSm,
-            runSpacing: 6,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              if (_loadingOptions)
-                const SizedBox(
-                  width: 120,
-                  child: LinearProgressIndicator(minHeight: 2),
-                ),
-              SizedBox(
-                width: 180,
-                child: DropdownButtonFormField<String>(
-                  initialValue: _statusFilter,
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: '状态'),
-                  items: statusItems,
-                  onChanged: (value) {
-                    setState(() => _statusFilter = value);
-                    _applyFilters(viewModel);
-                  },
-                ),
-              ),
-              SizedBox(
-                width: 180,
-                child: DropdownButtonFormField<String>(
-                  initialValue: _priorityFilter,
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: '优先级'),
-                  items: priorityItems,
-                  onChanged: (value) {
-                    setState(() => _priorityFilter = value);
-                    _applyFilters(viewModel);
-                  },
-                ),
-              ),
-              SizedBox(
-                width: 220,
-                child: DropdownButtonFormField<int?>(
-                  initialValue: _departmentFilterId,
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: '部门'),
-                  items: departmentItems,
-                  onChanged: (value) {
-                    setState(() => _departmentFilterId = value);
-                    _applyFilters(viewModel);
-                  },
-                ),
-              ),
-              SizedBox(
-                width: 220,
-                child: DropdownButtonFormField<int?>(
-                  initialValue: _processFilterId,
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: '工序'),
-                  items: processItems,
-                  onChanged: (value) {
-                    setState(() => _processFilterId = value);
-                    _applyFilters(viewModel);
-                  },
-                ),
-              ),
-            ],
-          );
-
-          final actions = <Widget>[
-            filterToggle,
-            if (activeFilters > 0)
-              ListToolbarButton(
-                onPressed: () => _resetFilters(viewModel),
-                icon: Icons.restart_alt,
-                label: _resetButtonText,
-                height: _controlHeight,
-                compact: isMobile,
-              ),
-            ListToolbarButton(
-              onPressed: () => viewModel.loadTasks(resetPage: true),
-              icon: Icons.refresh,
-              label: _refreshButtonText,
-              height: _controlHeight,
-              compact: isMobile,
-            ),
-          ];
-
-          if (isMobile) {
-            final maxFilterHeight = MediaQuery.of(context).size.height * 0.45;
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ListToolbar(
-                  isMobile: true,
-                  searchField: searchField,
-                  actions: actions,
-                  spacing: _spacingSm,
-                  mobileActionAlignment: WrapAlignment.start,
-                ),
-                const SizedBox(height: _spacingSm),
-                ExpandableFilters(
-                  expanded: filtersExpanded,
-                  maxHeight: maxFilterHeight,
-                  child: mobileFilters,
-                ),
-              ],
+            showGeneralDialog(
+              context: context,
+              barrierDismissible: true,
+              barrierLabel: '筛选',
+              barrierColor: Colors.black.withValues(alpha: 0.3),
+              transitionDuration: const Duration(milliseconds: 220),
+              pageBuilder: (dialogContext, animation, secondaryAnimation) {
+                return Align(
+                  alignment: Alignment.centerRight,
+                  child: Material(
+                    color: Theme.of(dialogContext).colorScheme.surface,
+                    shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero),
+                    child: SizedBox(
+                      width: 360,
+                      height: double.infinity,
+                      child: SafeArea(
+                        child: _FilterDrawerContent(
+                          title:
+                              activeFilters > 0 ? '筛选 ($activeFilters)' : '筛选',
+                          child: _buildFilterPanel(
+                            dialogContext,
+                            viewModel,
+                            statusItems: statusItems,
+                            priorityItems: priorityItems,
+                            departmentItems: departmentItems,
+                            processItems: processItems,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+              transitionBuilder:
+                  (context, animation, secondaryAnimation, child) {
+                final offsetTween =
+                    Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero);
+                return SlideTransition(
+                  position: animation.drive(
+                    CurveTween(curve: Curves.easeOutCubic),
+                  ).drive(offsetTween),
+                  child: child,
+                );
+              },
             );
           }
 
-          final maxFilterHeight = MediaQuery.of(context).size.height * 0.35;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ListToolbar(
-                isMobile: false,
-                searchField: searchField,
-                actions: actions,
-                spacing: _spacingSm,
-              ),
-              ExpandableFilters(
-                expanded: filtersExpanded,
-                maxHeight: maxFilterHeight,
-                topPadding: _spacingSm,
-                child: desktopFilters,
-              ),
-            ],
+          final actions = <Widget>[
+            PageActionButton.outlined(
+              onPressed: () => viewModel.loadTasks(resetPage: true),
+              icon: const Icon(Icons.refresh, size: 16),
+              label: _refreshButtonText,
+            ),
+            PageActionButton.outlined(
+              onPressed: openFilterDrawer,
+              icon: const Icon(Icons.filter_alt_outlined, size: 16),
+              label: activeFilters > 0 ? '筛选 $activeFilters' : '筛选',
+            ),
+          ];
+
+          return ListToolbar(
+            isMobile: isMobile,
+            searchField: searchField,
+            actions: actions,
+            spacing: _spacingSm,
           );
         },
       ),
+    );
+  }
+
+  Widget _buildFilterPanel(
+    BuildContext context,
+    TaskViewModel viewModel, {
+    required List<DropdownMenuItem<String>> statusItems,
+    required List<DropdownMenuItem<String>> priorityItems,
+    required List<DropdownMenuItem<int?>> departmentItems,
+    required List<DropdownMenuItem<int?>> processItems,
+  }) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      children: [
+        if (_loadingOptions) const LinearProgressIndicator(minHeight: 2),
+        DropdownButtonFormField<String>(
+          initialValue: _statusFilter,
+          isExpanded: true,
+          decoration: const InputDecoration(labelText: '状态'),
+          items: statusItems,
+          onChanged: (value) {
+            setState(() => _statusFilter = value);
+            _applyFilters(viewModel);
+          },
+        ),
+        const SizedBox(height: _spacingSm),
+        DropdownButtonFormField<String>(
+          initialValue: _priorityFilter,
+          isExpanded: true,
+          decoration: const InputDecoration(labelText: '优先级'),
+          items: priorityItems,
+          onChanged: (value) {
+            setState(() => _priorityFilter = value);
+            _applyFilters(viewModel);
+          },
+        ),
+        const SizedBox(height: _spacingSm),
+        DropdownButtonFormField<int?>(
+          initialValue: _departmentFilterId,
+          isExpanded: true,
+          decoration: const InputDecoration(labelText: '部门'),
+          items: departmentItems,
+          onChanged: (value) {
+            setState(() => _departmentFilterId = value);
+            _applyFilters(viewModel);
+          },
+        ),
+        const SizedBox(height: _spacingSm),
+        DropdownButtonFormField<int?>(
+          initialValue: _processFilterId,
+          isExpanded: true,
+          decoration: const InputDecoration(labelText: '工序'),
+          items: processItems,
+          onChanged: (value) {
+            setState(() => _processFilterId = value);
+            _applyFilters(viewModel);
+          },
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            OutlinedButton.icon(
+              onPressed: () => _resetFilters(viewModel),
+              icon: const Icon(Icons.restart_alt, size: 16),
+              label: const Text(_resetButtonText),
+            ),
+            const SizedBox(width: 12),
+            FilledButton(
+              onPressed: () => Navigator.of(context).maybePop(),
+              child: const Text('完成'),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -1238,6 +1207,48 @@ class _TaskAssignDialogState extends State<_TaskAssignDialog> {
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
+  }
+}
+
+class _FilterDrawerContent extends StatelessWidget {
+  const _FilterDrawerContent({
+    required this.title,
+    required this.child,
+  });
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: '关闭',
+                onPressed: () => Navigator.of(context).maybePop(),
+                icon: const Icon(Icons.close),
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+        Expanded(child: child),
+      ],
+    );
   }
 }
 

@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
@@ -71,7 +70,6 @@ class _TaskAssignmentHistoryView extends StatefulWidget {
 class _TaskAssignmentHistoryViewState
     extends State<_TaskAssignmentHistoryView> {
   static const double _spacingSm = LayoutTokens.gapSm;
-  static const double _controlHeight = PageActionStyle.height;
   static const String _refreshButtonText = '刷新';
   static const String _resetButtonText = '重置筛选';
   static const String _emptyText = '暂无分派历史记录';
@@ -201,23 +199,13 @@ class _TaskAssignmentHistoryViewState
   @override
   Widget build(BuildContext context) {
     final isMobile = BreakpointsUtil.isMobile(context);
-    final breadcrumb = buildBreadcrumbForPathWith(
-      GoRouterState.of(context).uri.path,
-      buildPathToIdMap(),
-    );
-    final summary = _buildSummary();
-
     return ListPageScaffold(
       spacing: _spacingSm,
-      header: WorkbenchHeaderBar(
-        breadcrumb: breadcrumb.isEmpty ? null : breadcrumb.join(' / '),
-        title: '分派历史',
-        subtitle: '追踪任务分派与调整记录。',
-        stats: summary,
-        titleMaxWidth: isMobile ? double.infinity : 420,
-        hideSubtitleOnMobile: true,
-        mobileStatCount: 2,
-        hideBreadcrumbOnMobile: true,
+      header: PageHeaderBar(
+        breadcrumb: null,
+        useSurface: false,
+        showDivider: false,
+        padding: EdgeInsets.zero,
         actions: _buildFilters(isMobile),
       ),
       body: _buildBody(context),
@@ -267,72 +255,160 @@ class _TaskAssignmentHistoryViewState
       }),
     ];
 
-    return ListToolbar(
-      isMobile: isMobile,
-      actions: [
-        SizedBox(
-          width: isMobile ? double.infinity : 160,
-          child: _DateField(
-            label: '开始日期',
-            value: _startDate,
-            onTap: () => _pickDate(isStart: true),
-            onClear: () {
-              setState(() => _startDate = null);
-              _loadData(resetPage: true);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        void openFilterDrawer() {
+          if (isMobile) {
+            showModalBottomSheet<void>(
+              context: context,
+              isScrollControlled: true,
+              useSafeArea: true,
+              showDragHandle: true,
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              shape:
+                  const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+              builder: (sheetContext) {
+                return _FilterDrawerContent(
+                  title: '筛选',
+                  child: _buildFilterPanel(
+                    sheetContext,
+                    deptItems: deptItems,
+                    userItems: userItems,
+                  ),
+                );
+              },
+            );
+            return;
+          }
+
+          showGeneralDialog(
+            context: context,
+            barrierDismissible: true,
+            barrierLabel: '筛选',
+            barrierColor: Colors.black.withValues(alpha: 0.3),
+            transitionDuration: const Duration(milliseconds: 220),
+            pageBuilder: (dialogContext, animation, secondaryAnimation) {
+              return Align(
+                alignment: Alignment.centerRight,
+                child: Material(
+                  color: Theme.of(dialogContext).colorScheme.surface,
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero),
+                  child: SizedBox(
+                    width: 360,
+                    height: double.infinity,
+                    child: SafeArea(
+                      child: _FilterDrawerContent(
+                        title: '筛选',
+                        child: _buildFilterPanel(
+                          dialogContext,
+                          deptItems: deptItems,
+                          userItems: userItems,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
             },
-          ),
-        ),
-        SizedBox(
-          width: isMobile ? double.infinity : 160,
-          child: _DateField(
-            label: '结束日期',
-            value: _endDate,
-            onTap: () => _pickDate(isStart: false),
-            onClear: () {
-              setState(() => _endDate = null);
-              _loadData(resetPage: true);
+            transitionBuilder:
+                (context, animation, secondaryAnimation, child) {
+              final offsetTween =
+                  Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero);
+              return SlideTransition(
+                position: animation.drive(
+                  CurveTween(curve: Curves.easeOutCubic),
+                ).drive(offsetTween),
+                child: child,
+              );
             },
-          ),
+          );
+        }
+
+        return ListToolbar(
+          isMobile: isMobile,
+          actions: [
+            PageActionButton.outlined(
+              onPressed: () => _loadData(resetPage: true),
+              icon: const Icon(Icons.refresh, size: 16),
+              label: _refreshButtonText,
+            ),
+            PageActionButton.outlined(
+              onPressed: openFilterDrawer,
+              icon: const Icon(Icons.filter_alt_outlined, size: 16),
+              label: '筛选',
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildFilterPanel(
+    BuildContext context, {
+    required List<DropdownMenuItem<int?>> deptItems,
+    required List<DropdownMenuItem<int?>> userItems,
+  }) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      children: [
+        _DateField(
+          label: '开始日期',
+          value: _startDate,
+          onTap: () => _pickDate(isStart: true),
+          onClear: () {
+            setState(() => _startDate = null);
+            _loadData(resetPage: true);
+          },
         ),
-        SizedBox(
-          width: isMobile ? double.infinity : 180,
-          child: DropdownButtonFormField<int?>(
-            key: ValueKey<int?>(_departmentId),
-            initialValue: _departmentId,
-            decoration: const InputDecoration(labelText: '部门'),
-            items: deptItems,
-            onChanged: (value) {
-              setState(() => _departmentId = value);
-              _loadData(resetPage: true);
-            },
-          ),
+        const SizedBox(height: _spacingSm),
+        _DateField(
+          label: '结束日期',
+          value: _endDate,
+          onTap: () => _pickDate(isStart: false),
+          onClear: () {
+            setState(() => _endDate = null);
+            _loadData(resetPage: true);
+          },
         ),
-        SizedBox(
-          width: isMobile ? double.infinity : 180,
-          child: DropdownButtonFormField<int?>(
-            key: ValueKey<int?>(_operatorId),
-            initialValue: _operatorId,
-            decoration: const InputDecoration(labelText: '操作员'),
-            items: userItems,
-            onChanged: (value) {
-              setState(() => _operatorId = value);
-              _loadData(resetPage: true);
-            },
-          ),
+        const SizedBox(height: _spacingSm),
+        DropdownButtonFormField<int?>(
+          key: ValueKey<int?>(_departmentId),
+          initialValue: _departmentId,
+          isExpanded: true,
+          decoration: const InputDecoration(labelText: '部门'),
+          items: deptItems,
+          onChanged: (value) {
+            setState(() => _departmentId = value);
+            _loadData(resetPage: true);
+          },
         ),
-        ListToolbarButton(
-          onPressed: _resetFilters,
-          icon: Icons.restart_alt,
-          label: _resetButtonText,
-          height: _controlHeight,
-          compact: isMobile,
+        const SizedBox(height: _spacingSm),
+        DropdownButtonFormField<int?>(
+          key: ValueKey<int?>(_operatorId),
+          initialValue: _operatorId,
+          isExpanded: true,
+          decoration: const InputDecoration(labelText: '操作员'),
+          items: userItems,
+          onChanged: (value) {
+            setState(() => _operatorId = value);
+            _loadData(resetPage: true);
+          },
         ),
-        ListToolbarButton(
-          onPressed: () => _loadData(resetPage: true),
-          icon: Icons.refresh,
-          label: _refreshButtonText,
-          height: _controlHeight,
-          compact: isMobile,
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            OutlinedButton.icon(
+              onPressed: _resetFilters,
+              icon: const Icon(Icons.restart_alt, size: 16),
+              label: const Text(_resetButtonText),
+            ),
+            const SizedBox(width: 12),
+            FilledButton(
+              onPressed: () => Navigator.of(context).maybePop(),
+              child: const Text('完成'),
+            ),
+          ],
         ),
       ],
     );
@@ -438,35 +514,6 @@ class _TaskAssignmentHistoryViewState
     );
   }
 
-  List<WorkbenchStatItem> _buildSummary() {
-    final uniqueTasks = <int>{};
-    final uniqueDepartments = <String>{};
-    final uniqueOperators = <String>{};
-
-    for (final item in _items) {
-      final taskInfo = item['task_info'];
-      if (taskInfo is Map) {
-        final taskId = _toInt(taskInfo['id']);
-        if (taskId > 0) uniqueTasks.add(taskId);
-        final dept = taskInfo['assigned_department']?.toString();
-        if (dept != null && dept.isNotEmpty) uniqueDepartments.add(dept);
-        final op = taskInfo['assigned_operator']?.toString();
-        if (op != null && op.isNotEmpty) uniqueOperators.add(op);
-      }
-      final operatorName = item['operator_name']?.toString();
-      if (operatorName != null && operatorName.isNotEmpty) {
-        uniqueOperators.add(operatorName);
-      }
-    }
-
-    return [
-      WorkbenchStatItem(label: '总记录', value: '$_total'),
-      WorkbenchStatItem(label: '涉及任务', value: '${uniqueTasks.length}'),
-      WorkbenchStatItem(label: '涉及部门', value: '${uniqueDepartments.length}'),
-      WorkbenchStatItem(label: '涉及操作员', value: '${uniqueOperators.length}'),
-    ];
-  }
-
   String _pageInfoText() {
     return _pageInfoTemplate
         .replaceFirst('{page}', _page.toString())
@@ -481,6 +528,48 @@ class _TaskAssignmentHistoryViewState
   int _toInt(dynamic value) {
     if (value is num) return value.toInt();
     return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+}
+
+class _FilterDrawerContent extends StatelessWidget {
+  const _FilterDrawerContent({
+    required this.title,
+    required this.child,
+  });
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: '关闭',
+                onPressed: () => Navigator.of(context).maybePop(),
+                icon: const Icon(Icons.close),
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+        Expanded(child: child),
+      ],
+    );
   }
 }
 

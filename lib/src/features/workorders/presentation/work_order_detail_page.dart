@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/constants/breakpoints.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
-import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -76,11 +75,9 @@ class WorkOrderDetailPage extends StatefulWidget {
 }
 
 class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
-  static const String _breadcrumbSeparator = ' / ';
   static const String _emptyText = '-';
   static const String _deleteDialogTitle = '确认删除';
   static const String _deleteDialogContent = '确定要删除施工单 "{name}" 吗？此操作不可恢复。';
-  static const String _summaryHintText = '统一查看施工单状态、明细、物料和审核记录。';
 
   WorkOrderDetail? _detail;
   bool _loading = false;
@@ -805,18 +802,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final breadcrumb = [
-      ...buildBreadcrumbForPathWith(
-        GoRouterState.of(context).uri.path,
-        buildPathToIdMap(),
-      ),
-      '详情',
-    ];
-
     final detail = _detail;
-    final title = detail?.orderNumber.isNotEmpty == true
-        ? '施工单 ${detail!.orderNumber}'
-        : '施工单 #${widget.workOrderId}';
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
 
     final statusOptions = const [
@@ -829,28 +815,11 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
 
     return ListPageScaffold(
       spacing: sectionSpacing,
-      header: WorkbenchHeaderBar(
-        breadcrumb: breadcrumb.join(_breadcrumbSeparator),
-        title: title,
-        subtitle: _summaryHintText,
-        stats: [
-          WorkbenchStatItem(
-            label: '状态',
-            value: detail?.statusDisplay ?? detail?.status ?? _emptyText,
-          ),
-          WorkbenchStatItem(
-            label: '审批',
-            value: detail?.approvalStatusDisplay ??
-                detail?.approvalStatus ??
-                _emptyText,
-          ),
-          WorkbenchStatItem(
-            label: '进度',
-            value: detail?.progressPercentage == null
-                ? _emptyText
-                : '${detail!.progressPercentage}%',
-          ),
-        ],
+      header: PageHeaderBar(
+        breadcrumb: null,
+        useSurface: false,
+        showDivider: false,
+        padding: EdgeInsets.zero,
         actions: Wrap(
           spacing: sectionSpacing,
           runSpacing: 8,

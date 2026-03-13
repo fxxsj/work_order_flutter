@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
@@ -62,7 +60,6 @@ class _TaskStatsView extends StatefulWidget {
 
 class _TaskStatsViewState extends State<_TaskStatsView> {
   static const double _spacingSm = LayoutTokens.gapSm;
-  static const double _controlHeight = PageActionStyle.height;
   static const String _refreshButtonText = '刷新';
   static const String _resetButtonText = '重置筛选';
   static const String _emptyText = '暂无统计数据';
@@ -71,7 +68,6 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
 
   bool _loading = false;
   String? _errorMessage;
-  Map<String, dynamic>? _summary;
   List<Map<String, dynamic>> _stats = [];
 
   List<Department> _departments = [];
@@ -119,7 +115,6 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
       }
       final payload = await api.fetchCollaborationStats(params: params);
       final results = payload['results'];
-      final summary = payload['summary'];
       setState(() {
         _stats = results is List
             ? results
@@ -127,8 +122,6 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
                 .map((item) => Map<String, dynamic>.from(item))
                 .toList()
             : [];
-        _summary =
-            summary is Map<String, dynamic> ? summary : <String, dynamic>{};
       });
     } catch (err) {
       setState(() {
@@ -170,42 +163,14 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
   @override
   Widget build(BuildContext context) {
     final isMobile = BreakpointsUtil.isMobile(context);
-    final breadcrumb = buildBreadcrumbForPathWith(
-      GoRouterState.of(context).uri.path,
-      buildPathToIdMap(),
-    );
-    final summary = _summary ?? const {};
-    final stats = [
-      WorkbenchStatItem(
-        label: '操作员',
-        value: '${_toInt(summary['total_operators'])}',
-      ),
-      WorkbenchStatItem(
-        label: '任务总数',
-        value: '${_toInt(summary['total_tasks'])}',
-      ),
-      WorkbenchStatItem(
-        label: '已完成',
-        value: '${_toInt(summary['total_completed_tasks'])}',
-      ),
-      WorkbenchStatItem(
-        label: '不良品率',
-        value:
-            '${_toNum(summary['overall_defective_rate']).toStringAsFixed(2)}%',
-      ),
-    ];
 
     return ListPageScaffold(
       spacing: _spacingSm,
-      header: WorkbenchHeaderBar(
-        breadcrumb: breadcrumb.isEmpty ? null : breadcrumb.join(' / '),
-        title: '协作统计',
-        subtitle: '按操作员汇总任务完成与质量指标。',
-        stats: stats,
-        titleMaxWidth: isMobile ? double.infinity : 420,
-        hideSubtitleOnMobile: true,
-        mobileStatCount: 2,
-        hideBreadcrumbOnMobile: true,
+      header: PageHeaderBar(
+        breadcrumb: null,
+        useSurface: false,
+        showDivider: false,
+        padding: EdgeInsets.zero,
         actions: _buildFilters(isMobile),
       ),
       body: _buildBody(context),
@@ -213,8 +178,6 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
   }
 
   Widget _buildFilters(bool isMobile) {
-    final dateWidth = isMobile ? double.infinity : 160.0;
-    final deptWidth = isMobile ? double.infinity : 180.0;
     final departmentItems = [
       const DropdownMenuItem<int?>(
         value: null,
@@ -228,59 +191,145 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
       ),
     ];
 
-    return ListToolbar(
-      isMobile: isMobile,
-      actions: [
-        SizedBox(
-          width: dateWidth,
-          child: _DateField(
-            label: '开始日期',
-            value: _startDate,
-            onTap: () => _pickDate(isStart: true),
-            onClear: () {
-              setState(() => _startDate = null);
-              _loadStats();
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        void openFilterDrawer() {
+          if (isMobile) {
+            showModalBottomSheet<void>(
+              context: context,
+              isScrollControlled: true,
+              useSafeArea: true,
+              showDragHandle: true,
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              shape:
+                  const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+              builder: (sheetContext) {
+                return _FilterDrawerContent(
+                  title: '筛选',
+                  child: _buildFilterPanel(
+                    sheetContext,
+                    departmentItems: departmentItems,
+                  ),
+                );
+              },
+            );
+            return;
+          }
+
+          showGeneralDialog(
+            context: context,
+            barrierDismissible: true,
+            barrierLabel: '筛选',
+            barrierColor: Colors.black.withValues(alpha: 0.3),
+            transitionDuration: const Duration(milliseconds: 220),
+            pageBuilder: (dialogContext, animation, secondaryAnimation) {
+              return Align(
+                alignment: Alignment.centerRight,
+                child: Material(
+                  color: Theme.of(dialogContext).colorScheme.surface,
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero),
+                  child: SizedBox(
+                    width: 360,
+                    height: double.infinity,
+                    child: SafeArea(
+                      child: _FilterDrawerContent(
+                        title: '筛选',
+                        child: _buildFilterPanel(
+                          dialogContext,
+                          departmentItems: departmentItems,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
             },
-          ),
-        ),
-        SizedBox(
-          width: dateWidth,
-          child: _DateField(
-            label: '结束日期',
-            value: _endDate,
-            onTap: () => _pickDate(isStart: false),
-            onClear: () {
-              setState(() => _endDate = null);
-              _loadStats();
+            transitionBuilder:
+                (context, animation, secondaryAnimation, child) {
+              final offsetTween =
+                  Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero);
+              return SlideTransition(
+                position: animation.drive(
+                  CurveTween(curve: Curves.easeOutCubic),
+                ).drive(offsetTween),
+                child: child,
+              );
             },
-          ),
+          );
+        }
+
+        return ListToolbar(
+          isMobile: isMobile,
+          actions: [
+            PageActionButton.outlined(
+              onPressed: _loadStats,
+              icon: const Icon(Icons.refresh, size: 16),
+              label: _refreshButtonText,
+            ),
+            PageActionButton.outlined(
+              onPressed: openFilterDrawer,
+              icon: const Icon(Icons.filter_alt_outlined, size: 16),
+              label: '筛选',
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildFilterPanel(
+    BuildContext context, {
+    required List<DropdownMenuItem<int?>> departmentItems,
+  }) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      children: [
+        _DateField(
+          label: '开始日期',
+          value: _startDate,
+          onTap: () => _pickDate(isStart: true),
+          onClear: () {
+            setState(() => _startDate = null);
+            _loadStats();
+          },
         ),
-        SizedBox(
-          width: deptWidth,
-          child: DropdownButtonFormField<int?>(
-            key: ValueKey<int?>(_departmentId),
-            initialValue: _departmentId,
-            decoration: const InputDecoration(labelText: '部门'),
-            items: departmentItems,
-            onChanged: (value) {
-              setState(() => _departmentId = value);
-              _loadStats();
-            },
-          ),
+        const SizedBox(height: _spacingSm),
+        _DateField(
+          label: '结束日期',
+          value: _endDate,
+          onTap: () => _pickDate(isStart: false),
+          onClear: () {
+            setState(() => _endDate = null);
+            _loadStats();
+          },
         ),
-        ListToolbarButton(
-          onPressed: _resetFilters,
-          icon: Icons.restart_alt,
-          label: _resetButtonText,
-          height: _controlHeight,
-          compact: isMobile,
+        const SizedBox(height: _spacingSm),
+        DropdownButtonFormField<int?>(
+          key: ValueKey<int?>(_departmentId),
+          initialValue: _departmentId,
+          isExpanded: true,
+          decoration: const InputDecoration(labelText: '部门'),
+          items: departmentItems,
+          onChanged: (value) {
+            setState(() => _departmentId = value);
+            _loadStats();
+          },
         ),
-        ListToolbarButton(
-          onPressed: _loadStats,
-          icon: Icons.refresh,
-          label: _refreshButtonText,
-          height: _controlHeight,
-          compact: isMobile,
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            OutlinedButton.icon(
+              onPressed: _resetFilters,
+              icon: const Icon(Icons.restart_alt, size: 16),
+              label: const Text(_resetButtonText),
+            ),
+            const SizedBox(width: 12),
+            FilledButton(
+              onPressed: () => Navigator.of(context).maybePop(),
+              child: const Text('完成'),
+            ),
+          ],
         ),
       ],
     );
@@ -397,6 +446,48 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
 
   String _formatDate(DateTime date) {
     return '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+}
+
+class _FilterDrawerContent extends StatelessWidget {
+  const _FilterDrawerContent({
+    required this.title,
+    required this.child,
+  });
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: '关闭',
+                onPressed: () => Navigator.of(context).maybePop(),
+                icon: const Icon(Icons.close),
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+        Expanded(child: child),
+      ],
+    );
   }
 }
 

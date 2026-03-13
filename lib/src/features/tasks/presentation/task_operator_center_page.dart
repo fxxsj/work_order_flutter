@@ -65,7 +65,6 @@ class _TaskOperatorCenterView extends StatefulWidget {
 
 class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
   static const double _spacingSm = LayoutTokens.gapSm;
-  static const double _controlHeight = PageActionStyle.height;
   static const String _refreshButtonText = '刷新';
   static const String _emptyText = '暂无任务数据';
   static const String _errorFallbackText = '加载失败';
@@ -75,7 +74,6 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
   String? _errorMessage;
   List<Task> _myTasks = [];
   List<Task> _claimableTasks = [];
-  Map<String, dynamic> _summary = const {};
   int? _claimingTaskId;
 
   @override
@@ -94,13 +92,9 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
       final payload = await api.fetchOperatorCenterData();
       final myTasksPayload = payload['my_tasks'];
       final claimablePayload = payload['claimable_tasks'];
-      final summaryPayload = payload['summary'];
       setState(() {
         _myTasks = _mapTasks(myTasksPayload);
         _claimableTasks = _mapTasks(claimablePayload);
-        _summary = summaryPayload is Map<String, dynamic>
-            ? summaryPayload
-            : <String, dynamic>{};
       });
     } catch (err) {
       setState(() {
@@ -139,42 +133,23 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
     }
   }
 
-  int _summaryValue(String key) {
-    final value = _summary[key];
-    if (value is num) return value.toInt();
-    return int.tryParse(value?.toString() ?? '') ?? 0;
-  }
-
   @override
   Widget build(BuildContext context) {
     final isMobile = BreakpointsUtil.isMobile(context);
-    final stats = [
-      WorkbenchStatItem(label: '我的任务', value: '${_summaryValue('my_total')}'),
-      WorkbenchStatItem(label: '待开始', value: '${_summaryValue('my_pending')}'),
-      WorkbenchStatItem(label: '进行中', value: '${_summaryValue('my_in_progress')}'),
-      WorkbenchStatItem(label: '可认领', value: '${_summaryValue('claimable_count')}'),
-    ];
-
     return ListPageScaffold(
       spacing: _spacingSm,
-      header: WorkbenchHeaderBar(
+      header: PageHeaderBar(
         breadcrumb: null,
-        title: '操作员任务中心',
-        subtitle: '聚合我的任务与可认领任务，快速更新进度。',
-        stats: stats,
-        titleMaxWidth: isMobile ? double.infinity : 460,
-        hideSubtitleOnMobile: true,
-        mobileStatCount: 2,
-        hideBreadcrumbOnMobile: true,
+        useSurface: false,
+        showDivider: false,
+        padding: EdgeInsets.zero,
         actions: ListToolbar(
           isMobile: isMobile,
           actions: [
-            ListToolbarButton(
+            PageActionButton.outlined(
               onPressed: _loadData,
-              icon: Icons.refresh,
+              icon: const Icon(Icons.refresh, size: 16),
               label: _refreshButtonText,
-              height: _controlHeight,
-              compact: isMobile,
             ),
           ],
         ),

@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
@@ -154,34 +153,14 @@ class _TaskSupervisorDashboardViewState
   @override
   Widget build(BuildContext context) {
     final isMobile = BreakpointsUtil.isMobile(context);
-    final breadcrumb = buildBreadcrumbForPathWith(
-      GoRouterState.of(context).uri.path,
-      buildPathToIdMap(),
-    );
-    final summary = _workload?['summary'] as Map<String, dynamic>? ?? const {};
-
-    final stats = [
-      WorkbenchStatItem(
-          label: '总任务', value: '${_toInt(summary['total_tasks'])}'),
-      WorkbenchStatItem(
-          label: '待处理', value: '${_toInt(summary['pending_tasks'])}'),
-      WorkbenchStatItem(
-          label: '进行中', value: '${_toInt(summary['in_progress_tasks'])}'),
-      WorkbenchStatItem(
-          label: '已完成', value: '${_toInt(summary['completed_tasks'])}'),
-    ];
 
     return ListPageScaffold(
       spacing: _spacingSm,
-      header: WorkbenchHeaderBar(
-        breadcrumb: breadcrumb.isEmpty ? null : breadcrumb.join(' / '),
-        title: '主管看板',
-        subtitle: '部门任务负载与优先级概览。',
-        stats: stats,
-        titleMaxWidth: isMobile ? double.infinity : 420,
-        hideSubtitleOnMobile: true,
-        mobileStatCount: 2,
-        hideBreadcrumbOnMobile: true,
+      header: PageHeaderBar(
+        breadcrumb: null,
+        useSurface: false,
+        showDivider: false,
+        padding: EdgeInsets.zero,
         actions: _buildActions(isMobile),
       ),
       body: _buildBody(context),
@@ -194,57 +173,139 @@ class _TaskSupervisorDashboardViewState
             DropdownMenuItem<int?>(value: dept.id, child: Text(dept.name)))
         .toList();
 
-    return ListToolbar(
-      isMobile: isMobile,
-      actions: [
-        SizedBox(
-          width: isMobile ? double.infinity : 200,
-          child: DropdownButtonFormField<int?>(
-            key: ValueKey<int?>(_departmentId),
-            initialValue: _departmentId,
-            decoration: const InputDecoration(labelText: '部门'),
-            items: deptItems,
-            onChanged: (value) {
-              setState(() => _departmentId = value);
-              _loadWorkload();
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        void openFilterDrawer() {
+          if (isMobile) {
+            showModalBottomSheet<void>(
+              context: context,
+              isScrollControlled: true,
+              useSafeArea: true,
+              showDragHandle: true,
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              shape:
+                  const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+              builder: (sheetContext) {
+                return _FilterDrawerContent(
+                  title: '筛选',
+                  child: _buildFilterPanel(sheetContext, deptItems: deptItems),
+                );
+              },
+            );
+            return;
+          }
+
+          showGeneralDialog(
+            context: context,
+            barrierDismissible: true,
+            barrierLabel: '筛选',
+            barrierColor: Colors.black.withValues(alpha: 0.3),
+            transitionDuration: const Duration(milliseconds: 220),
+            pageBuilder: (dialogContext, animation, secondaryAnimation) {
+              return Align(
+                alignment: Alignment.centerRight,
+                child: Material(
+                  color: Theme.of(dialogContext).colorScheme.surface,
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero),
+                  child: SizedBox(
+                    width: 320,
+                    height: double.infinity,
+                    child: SafeArea(
+                      child: _FilterDrawerContent(
+                        title: '筛选',
+                        child:
+                            _buildFilterPanel(dialogContext, deptItems: deptItems),
+                      ),
+                    ),
+                  ),
+                ),
+              );
             },
-          ),
-        ),
-        ToggleButtons(
-          isSelected: [
-            _viewMode == 'dashboard',
-            _viewMode == 'tasks',
-            _viewMode == 'dragdrop',
+            transitionBuilder:
+                (context, animation, secondaryAnimation, child) {
+              final offsetTween =
+                  Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero);
+              return SlideTransition(
+                position: animation.drive(
+                  CurveTween(curve: Curves.easeOutCubic),
+                ).drive(offsetTween),
+                child: child,
+              );
+            },
+          );
+        }
+
+        return ListToolbar(
+          isMobile: isMobile,
+          actions: [
+            PageActionButton.outlined(
+              onPressed: _loadWorkload,
+              icon: const Icon(Icons.refresh, size: 16),
+              label: _refreshButtonText,
+            ),
+            ToggleButtons(
+              isSelected: [
+                _viewMode == 'dashboard',
+                _viewMode == 'tasks',
+                _viewMode == 'dragdrop',
+              ],
+              onPressed: (index) {
+                setState(() {
+                  if (index == 0) _viewMode = 'dashboard';
+                  if (index == 1) _viewMode = 'tasks';
+                  if (index == 2) _viewMode = 'dragdrop';
+                });
+              },
+              constraints: BoxConstraints(minHeight: _controlHeight, minWidth: 88),
+              children: const [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: Text('统计视图'),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: Text('任务列表'),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: Text('拖拽分派'),
+                ),
+              ],
+            ),
+            PageActionButton.outlined(
+              onPressed: openFilterDrawer,
+              icon: const Icon(Icons.filter_alt_outlined, size: 16),
+              label: '筛选',
+            ),
           ],
-          onPressed: (index) {
-            setState(() {
-              if (index == 0) _viewMode = 'dashboard';
-              if (index == 1) _viewMode = 'tasks';
-              if (index == 2) _viewMode = 'dragdrop';
-            });
+        );
+      },
+    );
+  }
+
+  Widget _buildFilterPanel(
+    BuildContext context, {
+    required List<DropdownMenuItem<int?>> deptItems,
+  }) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      children: [
+        DropdownButtonFormField<int?>(
+          key: ValueKey<int?>(_departmentId),
+          initialValue: _departmentId,
+          isExpanded: true,
+          decoration: const InputDecoration(labelText: '部门'),
+          items: deptItems,
+          onChanged: (value) {
+            setState(() => _departmentId = value);
+            _loadWorkload();
           },
-          constraints: BoxConstraints(minHeight: _controlHeight, minWidth: 88),
-          children: const [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              child: Text('统计视图'),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              child: Text('任务列表'),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              child: Text('拖拽分派'),
-            ),
-          ],
         ),
-        ListToolbarButton(
-          onPressed: _loadWorkload,
-          icon: Icons.refresh,
-          label: _refreshButtonText,
-          height: _controlHeight,
-          compact: isMobile,
+        const SizedBox(height: 16),
+        FilledButton(
+          onPressed: () => Navigator.of(context).maybePop(),
+          child: const Text('完成'),
         ),
       ],
     );
@@ -1036,6 +1097,48 @@ class _SupervisorTaskCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _FilterDrawerContent extends StatelessWidget {
+  const _FilterDrawerContent({
+    required this.title,
+    required this.child,
+  });
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: '关闭',
+                onPressed: () => Navigator.of(context).maybePop(),
+                icon: const Icon(Icons.close),
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+        Expanded(child: child),
+      ],
     );
   }
 }

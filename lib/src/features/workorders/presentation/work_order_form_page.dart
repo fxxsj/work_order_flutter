@@ -5,7 +5,6 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/constants/breakpoints.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -107,8 +106,6 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
   final _formKey = GlobalKey<FormState>();
   static const double _spacing = 12;
   static const double _sectionSpacing = 16;
-  static const String _breadcrumbSeparator = ' / ';
-  static const String _summaryHintText = '用统一表单完成施工单创建、补充和编辑。';
 
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _printingOtherColorsController =
@@ -471,59 +468,15 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     );
   }
 
-  String _selectedCustomerName() {
-    for (final item in _customers) {
-      if (item.id == _customerId) return item.name;
-    }
-    return '';
-  }
-
-  List<WorkbenchStatItem> _buildHeaderStats() {
-    final items = <WorkbenchStatItem>[
-      WorkbenchStatItem(
-        label: '模式',
-        value: widget.mode == WorkOrderFormMode.create ? '新建' : '编辑',
-      ),
-    ];
-
-    final productCount =
-        _productDrafts.where((item) => item.productId != null).length;
-    if (productCount > 0) {
-      items.add(WorkbenchStatItem(label: '产品', value: '$productCount 项'));
-    }
-
-    if (_processIds.isNotEmpty) {
-      items.add(WorkbenchStatItem(label: '工序', value: '${_processIds.length} 项'));
-    }
-
-    final customerName = _selectedCustomerName();
-    if (customerName.isNotEmpty) {
-      items.add(WorkbenchStatItem(label: '客户', value: customerName));
-    }
-
-    return items;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final title = widget.mode == WorkOrderFormMode.create ? '新建施工单' : '编辑施工单';
-    final breadcrumb = [
-      ...buildBreadcrumbForPathWith(
-        GoRouterState.of(context).uri.path,
-        buildPathToIdMap(),
-      ),
-      title,
-    ];
-
     return ListPageScaffold(
       spacing: _spacing,
-      header: WorkbenchHeaderBar(
-        breadcrumb: breadcrumb.join(_breadcrumbSeparator),
-        title: title,
-        subtitle: _summaryHintText,
-        titleMaxWidth: 420,
-        stats: _buildHeaderStats(),
-        mobileStatCount: 2,
+      header: PageHeaderBar(
+        breadcrumb: null,
+        useSurface: false,
+        showDivider: false,
+        padding: EdgeInsets.zero,
         actions: Wrap(
           spacing: _spacing,
           runSpacing: 8,

@@ -16,21 +16,16 @@ class TaskPlaceholderPage extends StatelessWidget {
 
   static const double _spacing = 12;
   static const double _sectionSpacing = 16;
-  static const String _summaryHintText = '当前页面正在完善。';
 
   @override
   Widget build(BuildContext context) {
     return ListPageScaffold(
       spacing: _spacing,
-      header: WorkbenchHeaderBar(
+      header: PageHeaderBar(
         breadcrumb: null,
-        title: title,
-        subtitle: _summaryHintText,
-        titleMaxWidth: 420,
-        stats: const [
-          WorkbenchStatItem(label: '状态', value: '建设中'),
-        ],
-        hideBreadcrumbOnMobile: true,
+        useSurface: false,
+        showDivider: false,
+        padding: EdgeInsets.zero,
         actions: PageActionButton.outlined(
           onPressed: () => Navigator.of(context).maybePop(),
           icon: const Icon(Icons.arrow_back, size: 16),
