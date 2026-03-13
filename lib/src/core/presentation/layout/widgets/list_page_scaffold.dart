@@ -24,10 +24,7 @@ class ListPageScaffold extends StatelessWidget {
         header,
         SizedBox(height: resolvedSpacing),
         Expanded(child: body),
-        if (footer != null) ...[
-          SizedBox(height: resolvedSpacing),
-          footer!,
-        ],
+        if (footer != null) footer!,
       ],
     );
   }

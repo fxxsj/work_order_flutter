@@ -214,8 +214,7 @@ class _ProductGroupListViewState extends State<_ProductGroupListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, groups, isMobile),
-          footer: viewModel.total > 0
-              ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,

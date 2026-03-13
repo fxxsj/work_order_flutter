@@ -37,12 +37,16 @@ class ResponsivePaginationBar extends StatelessWidget {
     final compact = MediaQuery.sizeOf(context).width < Breakpoints.sm;
     final resolvedPadding = LayoutTokens.cardPadding(context);
 
-    return AppCard(
-      padding: resolvedPadding,
-      radius: compact ? LayoutTokens.radiusMd : LayoutTokens.radiusLg,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final compact = constraints.maxWidth < Breakpoints.sm;
+    return SizedBox(
+      width: double.infinity,
+      child: AppCard(
+        padding: resolvedPadding,
+        radius: compact ? LayoutTokens.radiusMd : LayoutTokens.radiusLg,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < Breakpoints.sm;
+          final infoStyle = theme.textTheme.bodySmall
+              ?.copyWith(color: colors.subtleText);
           final pagerControls = Wrap(
             spacing: LayoutTokens.gapXs,
             runSpacing: LayoutTokens.gapXs,
@@ -50,12 +54,15 @@ class ResponsivePaginationBar extends StatelessWidget {
             children: [
               DropdownButton<int>(
                 value: pageSize,
+                style: infoStyle,
+                iconSize: 18,
                 items: pageSizeOptions
                     .map(
                       (size) => DropdownMenuItem<int>(
                         value: size,
                         child: Text(
                           pageSizeLabelBuilder?.call(size) ?? '$size',
+                          style: infoStyle,
                         ),
                       ),
                     )
@@ -67,27 +74,41 @@ class ResponsivePaginationBar extends StatelessWidget {
               ),
               IconButton(
                 onPressed: hasPrev ? onPrev : null,
-                icon: const Icon(Icons.chevron_left),
+                icon: const Icon(Icons.chevron_left, size: 18),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
               ),
-              Text('$page', style: theme.textTheme.bodyMedium),
+              Text('$page', style: infoStyle),
               IconButton(
                 onPressed: hasNext ? onNext : null,
-                icon: const Icon(Icons.chevron_right),
+                icon: const Icon(Icons.chevron_right, size: 18),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
               ),
             ],
           );
 
           if (compact) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            return Row(
               children: [
-                Text(
-                  infoText,
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: colors.subtleText),
+                Expanded(
+                  child: Text(
+                    infoText,
+                    style: infoStyle,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                const SizedBox(height: LayoutTokens.gapSm),
-                pagerControls,
+                const SizedBox(width: 12),
+                IconTheme(
+                  data: IconThemeData(
+                    size: 18,
+                    color: colors.subtleText,
+                  ),
+                  child: DefaultTextStyle.merge(
+                    style: infoStyle,
+                    child: pagerControls,
+                  ),
+                ),
               ],
             );
           }
@@ -98,15 +119,24 @@ class ResponsivePaginationBar extends StatelessWidget {
               Expanded(
                 child: Text(
                   infoText,
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: colors.subtleText),
+                  style: infoStyle,
                 ),
               ),
               const SizedBox(width: 12),
-              pagerControls,
+              IconTheme(
+                data: IconThemeData(
+                  size: 18,
+                  color: colors.subtleText,
+                ),
+                child: DefaultTextStyle.merge(
+                  style: infoStyle,
+                  child: pagerControls,
+                ),
+              ),
             ],
           );
         },
+      ),
       ),
     );
   }

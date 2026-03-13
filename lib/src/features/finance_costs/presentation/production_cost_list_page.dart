@@ -146,8 +146,7 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, costs, isMobile),
-          footer: viewModel.total > 0
-              ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,

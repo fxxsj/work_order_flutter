@@ -281,8 +281,7 @@ class _ArtworkListViewState extends State<_ArtworkListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, artworks, isMobile),
-          footer: viewModel.total > 0
-              ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,
