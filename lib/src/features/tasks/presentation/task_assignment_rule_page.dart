@@ -29,7 +29,8 @@ class TaskAssignmentRuleEntry extends StatefulWidget {
   const TaskAssignmentRuleEntry({super.key});
 
   @override
-  State<TaskAssignmentRuleEntry> createState() => _TaskAssignmentRuleEntryState();
+  State<TaskAssignmentRuleEntry> createState() =>
+      _TaskAssignmentRuleEntryState();
 }
 
 class _TaskAssignmentRuleEntryState extends State<TaskAssignmentRuleEntry> {
@@ -70,7 +71,8 @@ class _TaskAssignmentRuleEntryState extends State<TaskAssignmentRuleEntry> {
       providers: [
         Provider<TaskAssignmentRuleApiService>.value(value: _apiService!),
         Provider<TaskAssignmentRuleRepository>.value(value: _repository!),
-        ChangeNotifierProvider<TaskAssignmentRuleViewModel>.value(value: _viewModel!),
+        ChangeNotifierProvider<TaskAssignmentRuleViewModel>.value(
+            value: _viewModel!),
       ],
       child: const TaskAssignmentRulePage(),
     );
@@ -88,7 +90,8 @@ class _TaskAssignmentRuleView extends StatefulWidget {
   const _TaskAssignmentRuleView();
 
   @override
-  State<_TaskAssignmentRuleView> createState() => _TaskAssignmentRuleViewState();
+  State<_TaskAssignmentRuleView> createState() =>
+      _TaskAssignmentRuleViewState();
 }
 
 class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
@@ -134,12 +137,15 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
       final apiClient = context.read<ApiClient>();
       final processApi = ProcessApiService(apiClient);
       final deptApi = DepartmentApiService(apiClient);
-      final processPage = await processApi.fetchProcesses(page: 1, pageSize: 200);
-      final departmentPage = await deptApi.fetchDepartments(page: 1, pageSize: 200);
+      final processPage =
+          await processApi.fetchProcesses(page: 1, pageSize: 200);
+      final departmentPage =
+          await deptApi.fetchDepartments(page: 1, pageSize: 200);
       if (!mounted) return;
       setState(() {
         _processes = processPage.items.map((dto) => dto.toEntity()).toList();
-        _departments = departmentPage.items.map((dto) => dto.toEntity()).toList();
+        _departments =
+            departmentPage.items.map((dto) => dto.toEntity()).toList();
       });
     } catch (_) {
       // ignore
@@ -166,7 +172,8 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
         }
       });
     } catch (err) {
-      ToastUtil.showError('生成预览失败: ${err.toString().replaceFirst('Exception: ', '')}');
+      ToastUtil.showError(
+          '生成预览失败: ${err.toString().replaceFirst('Exception: ', '')}');
     } finally {
       if (mounted) setState(() => _previewLoading = false);
     }
@@ -195,11 +202,13 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
       _loadPreview();
     } catch (err) {
       setState(() => _globalEnabled = !value);
-      ToastUtil.showError('更新失败: ${err.toString().replaceFirst('Exception: ', '')}');
+      ToastUtil.showError(
+          '更新失败: ${err.toString().replaceFirst('Exception: ', '')}');
     }
   }
 
-  void _scheduleSearch(TaskAssignmentRuleViewModel viewModel, {bool immediate = false}) {
+  void _scheduleSearch(TaskAssignmentRuleViewModel viewModel,
+      {bool immediate = false}) {
     _searchDebounce?.cancel();
     if (immediate) {
       viewModel.setSearchText(_searchController.text.trim());
@@ -325,7 +334,8 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
         SizedBox(
           width: isMobile ? double.infinity : 180,
           child: DropdownButtonFormField<int?>(
-            value: viewModel.processId,
+            key: ValueKey<int?>(viewModel.processId),
+            initialValue: viewModel.processId,
             decoration: const InputDecoration(labelText: '工序'),
             items: processItems,
             onChanged: (value) {
@@ -337,7 +347,8 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
         SizedBox(
           width: isMobile ? double.infinity : 180,
           child: DropdownButtonFormField<int?>(
-            value: viewModel.departmentId,
+            key: ValueKey<int?>(viewModel.departmentId),
+            initialValue: viewModel.departmentId,
             decoration: const InputDecoration(labelText: '部门'),
             items: departmentItems,
             onChanged: (value) {
@@ -349,7 +360,8 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
         SizedBox(
           width: isMobile ? double.infinity : 150,
           child: DropdownButtonFormField<bool?>(
-            value: viewModel.isActive,
+            key: ValueKey<bool?>(viewModel.isActive),
+            initialValue: viewModel.isActive,
             decoration: const InputDecoration(labelText: '状态'),
             items: activeItems,
             onChanged: (value) {
@@ -429,8 +441,8 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   buildDefaultDragHandles: false,
-                  onReorder: (oldIndex, newIndex) =>
-                      _handleReorder(viewModel, displayedRules, oldIndex, newIndex),
+                  onReorder: (oldIndex, newIndex) => _handleReorder(
+                      viewModel, displayedRules, oldIndex, newIndex),
                   itemCount: displayedRules.length,
                   itemBuilder: (context, index) {
                     final rule = displayedRules[index];
@@ -439,9 +451,15 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
                       padding: const EdgeInsets.only(bottom: 12),
                       child: _RuleCard(
                         rule: rule,
-                        onEdit: _reordering ? null : () => _openRuleDialog(context, viewModel, rule),
-                        onDelete: _reordering ? null : () => _deleteRule(viewModel, rule),
-                        onToggle: _reordering ? null : (value) => _toggleRule(viewModel, rule, value),
+                        onEdit: _reordering
+                            ? null
+                            : () => _openRuleDialog(context, viewModel, rule),
+                        onDelete: _reordering
+                            ? null
+                            : () => _deleteRule(viewModel, rule),
+                        onToggle: _reordering
+                            ? null
+                            : (value) => _toggleRule(viewModel, rule, value),
                         dragHandle: ReorderableDragStartListener(
                           index: index,
                           child: Icon(
@@ -468,9 +486,11 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
                         padding: const EdgeInsets.only(bottom: 12),
                         child: _RuleCard(
                           rule: rule,
-                          onEdit: () => _openRuleDialog(context, viewModel, rule),
+                          onEdit: () =>
+                              _openRuleDialog(context, viewModel, rule),
                           onDelete: () => _deleteRule(viewModel, rule),
-                          onToggle: (value) => _toggleRule(viewModel, rule, value),
+                          onToggle: (value) =>
+                              _toggleRule(viewModel, rule, value),
                         ),
                       ),
                     ),
@@ -489,9 +509,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
         onChanged: _toggleGlobal,
       ),
       child: Text(
-        _globalEnabled
-            ? '已启用自动分派，任务将按规则分派到部门。'
-            : '自动分派已禁用，仅提供预览。',
+        _globalEnabled ? '已启用自动分派，任务将按规则分派到部门。' : '自动分派已禁用，仅提供预览。',
       ),
     );
   }
@@ -515,9 +533,11 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
           : Column(
               children: _previewData.map((item) {
                 final process = item['process_name']?.toString() ?? '-';
-                final target = item['target_department_name']?.toString() ?? '-';
+                final target =
+                    item['target_department_name']?.toString() ?? '-';
                 final priority = item['priority']?.toString() ?? '-';
-                final strategy = item['operator_selection_strategy']?.toString() ?? '-';
+                final strategy =
+                    item['operator_selection_strategy']?.toString() ?? '-';
                 final load = item['current_load']?.toString() ?? '0';
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
@@ -539,15 +559,21 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
     );
   }
 
-  Future<void> _deleteRule(TaskAssignmentRuleViewModel viewModel, TaskAssignmentRule rule) async {
+  Future<void> _deleteRule(
+      TaskAssignmentRuleViewModel viewModel, TaskAssignmentRule rule) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('确认删除'),
-        content: Text('确定要删除 ${rule.processName ?? '工序'} - ${rule.departmentName ?? '部门'} 规则吗？'),
+        content: Text(
+            '确定要删除 ${rule.processName ?? '工序'} - ${rule.departmentName ?? '部门'} 规则吗？'),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('取消')),
-          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('删除')),
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('取消')),
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('删除')),
         ],
       ),
     );
@@ -557,7 +583,8 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
       ToastUtil.showSuccess('规则已删除');
       _loadPreview();
     } catch (err) {
-      ToastUtil.showError('删除失败: ${err.toString().replaceFirst('Exception: ', '')}');
+      ToastUtil.showError(
+          '删除失败: ${err.toString().replaceFirst('Exception: ', '')}');
     }
   }
 
@@ -571,7 +598,8 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
       ToastUtil.showSuccess(value ? '已启用' : '已禁用');
       _loadPreview();
     } catch (err) {
-      ToastUtil.showError('更新失败: ${err.toString().replaceFirst('Exception: ', '')}');
+      ToastUtil.showError(
+          '更新失败: ${err.toString().replaceFirst('Exception: ', '')}');
     }
   }
 
@@ -601,7 +629,8 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
             }
             _loadPreview();
           } catch (err) {
-            ToastUtil.showError('保存失败: ${err.toString().replaceFirst('Exception: ', '')}');
+            ToastUtil.showError(
+                '保存失败: ${err.toString().replaceFirst('Exception: ', '')}');
             rethrow;
           }
         },
@@ -630,7 +659,8 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
       await viewModel.loadRules(resetPage: true);
       _loadPreview();
     } catch (err) {
-      ToastUtil.showError('更新失败: ${err.toString().replaceFirst('Exception: ', '')}');
+      ToastUtil.showError(
+          '更新失败: ${err.toString().replaceFirst('Exception: ', '')}');
       await viewModel.loadRules(resetPage: true);
     } finally {
       if (mounted) {
@@ -649,12 +679,16 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
     if (rules.isEmpty) return;
     const maxPriority = 100;
     const minPriority = 0;
-    final steps = rules.length > 1 ? (maxPriority - minPriority) / (rules.length - 1) : 0.0;
+    final steps = rules.length > 1
+        ? (maxPriority - minPriority) / (rules.length - 1)
+        : 0.0;
     for (var i = 0; i < rules.length; i++) {
-      final priority = (maxPriority - (steps * i)).round().clamp(minPriority, maxPriority);
+      final priority =
+          (maxPriority - (steps * i)).round().clamp(minPriority, maxPriority);
       final rule = rules[i];
       if (rule.priority == priority) continue;
-      await viewModel.updateRule(rule.id, {'priority': priority}, reload: false);
+      await viewModel.updateRule(rule.id, {'priority': priority},
+          reload: false);
     }
   }
 
@@ -718,7 +752,8 @@ class _RuleDialogState extends State<_RuleDialog> {
             child: Column(
               children: [
                 DropdownButtonFormField<int>(
-                  value: _processId,
+                  key: ValueKey<int>(_processId),
+                  initialValue: _processId,
                   decoration: const InputDecoration(labelText: '工序'),
                   items: widget.processes
                       .map((p) => DropdownMenuItem(
@@ -726,11 +761,15 @@ class _RuleDialogState extends State<_RuleDialog> {
                             child: Text('${p.code} ${p.name}'),
                           ))
                       .toList(),
-                  onChanged: isEdit ? null : (value) => setState(() => _processId = value ?? _processId),
+                  onChanged: isEdit
+                      ? null
+                      : (value) =>
+                          setState(() => _processId = value ?? _processId),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<int>(
-                  value: _departmentId,
+                  key: ValueKey<int>(_departmentId),
+                  initialValue: _departmentId,
                   decoration: const InputDecoration(labelText: '分派部门'),
                   items: widget.departments
                       .map((d) => DropdownMenuItem(
@@ -738,7 +777,10 @@ class _RuleDialogState extends State<_RuleDialog> {
                             child: Text(d.name),
                           ))
                       .toList(),
-                  onChanged: isEdit ? null : (value) => setState(() => _departmentId = value ?? _departmentId),
+                  onChanged: isEdit
+                      ? null
+                      : (value) => setState(
+                          () => _departmentId = value ?? _departmentId),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
@@ -752,19 +794,23 @@ class _RuleDialogState extends State<_RuleDialog> {
                     }
                     return null;
                   },
-                  onChanged: (value) => _priority = int.tryParse(value) ?? _priority,
+                  onChanged: (value) =>
+                      _priority = int.tryParse(value) ?? _priority,
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _strategy,
+                  key: ValueKey<String>(_strategy),
+                  initialValue: _strategy,
                   decoration: const InputDecoration(labelText: '操作员选择策略'),
                   items: const [
                     DropdownMenuItem(value: 'least_tasks', child: Text('任务最少')),
                     DropdownMenuItem(value: 'random', child: Text('随机选择')),
                     DropdownMenuItem(value: 'round_robin', child: Text('轮询分配')),
-                    DropdownMenuItem(value: 'first_available', child: Text('第一个可用')),
+                    DropdownMenuItem(
+                        value: 'first_available', child: Text('第一个可用')),
                   ],
-                  onChanged: (value) => setState(() => _strategy = value ?? _strategy),
+                  onChanged: (value) =>
+                      setState(() => _strategy = value ?? _strategy),
                 ),
                 const SizedBox(height: 12),
                 SwitchListTile(
@@ -784,11 +830,16 @@ class _RuleDialogState extends State<_RuleDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: _submitting ? null : () => Navigator.of(context).pop(), child: const Text('取消')),
+        TextButton(
+            onPressed: _submitting ? null : () => Navigator.of(context).pop(),
+            child: const Text('取消')),
         FilledButton(
           onPressed: _submitting ? null : _submit,
           child: _submitting
-              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2))
               : const Text('保存'),
         ),
       ],
@@ -847,7 +898,8 @@ class _RuleCard extends StatelessWidget {
           ],
           Switch(value: rule.isActive, onChanged: onToggle),
           IconButton(onPressed: onEdit, icon: const Icon(Icons.edit)),
-          IconButton(onPressed: onDelete, icon: const Icon(Icons.delete_outline)),
+          IconButton(
+              onPressed: onDelete, icon: const Icon(Icons.delete_outline)),
         ],
       ),
       child: Column(
@@ -861,10 +913,13 @@ class _RuleCard extends StatelessWidget {
               SummaryField(label: '优先级', value: rule.priority.toString()),
               SummaryField(
                 label: '操作员策略',
-                value: rule.operatorSelectionStrategyDisplay ?? rule.operatorSelectionStrategy,
+                value: rule.operatorSelectionStrategyDisplay ??
+                    rule.operatorSelectionStrategy,
               ),
               SummaryField(label: '部门编码', value: rule.departmentCode ?? '-'),
-              SummaryField(label: '备注', value: rule.notes?.isNotEmpty == true ? rule.notes! : '-'),
+              SummaryField(
+                  label: '备注',
+                  value: rule.notes?.isNotEmpty == true ? rule.notes! : '-'),
             ],
           ),
         ],

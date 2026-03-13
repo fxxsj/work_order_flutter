@@ -169,7 +169,8 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
     try {
       final apiClient = context.read<ApiClient>();
       final departmentApi = DepartmentApiService(apiClient);
-      final result = await departmentApi.fetchDepartments(page: 1, pageSize: 200);
+      final result =
+          await departmentApi.fetchDepartments(page: 1, pageSize: 200);
       if (!mounted) return;
       setState(() {
         _departments = result.items.map((item) => item.toEntity()).toList();
@@ -204,7 +205,8 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
         final stats = _buildStats(tasks, viewModel.total);
         return ListPageScaffold(
           spacing: _spacingSm,
-          header: _buildPageHeader(context, viewModel, breadcrumb, isMobile, stats),
+          header:
+              _buildPageHeader(context, viewModel, breadcrumb, isMobile, stats),
           body: _buildBody(context, viewModel, tasks, isMobile),
           footer: viewModel.total > 0
               ? ResponsivePaginationBar(
@@ -327,8 +329,11 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
           );
 
           final filterToggle = ListToolbarButton(
-            onPressed: () => setState(() => _filtersExpanded = !filtersExpanded),
-            icon: filtersExpanded ? Icons.filter_alt_off : Icons.filter_alt_outlined,
+            onPressed: () =>
+                setState(() => _filtersExpanded = !filtersExpanded),
+            icon: filtersExpanded
+                ? Icons.filter_alt_off
+                : Icons.filter_alt_outlined,
             label: filtersExpanded
                 ? '收起筛选'
                 : activeFilters > 0
@@ -340,7 +345,9 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
 
           final viewToggle = ListToolbarButton(
             onPressed: () => setState(() => _showListView = !_showListView),
-            icon: _showListView ? Icons.view_kanban_outlined : Icons.view_list_outlined,
+            icon: _showListView
+                ? Icons.view_kanban_outlined
+                : Icons.view_list_outlined,
             label: _showListView ? '看板视图' : '列表视图',
             height: _controlHeight,
             compact: isMobile,
@@ -372,7 +379,8 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
               if (_loadingDepartments)
                 const LinearProgressIndicator(minHeight: 2),
               DropdownButtonFormField<int?>(
-                value: _departmentFilterId,
+                key: ValueKey<int?>(_departmentFilterId),
+                initialValue: _departmentFilterId,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: '部门'),
                 items: departmentItems,
@@ -383,7 +391,8 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
               ),
               const SizedBox(height: _spacingSm),
               DropdownButtonFormField<String?>(
-                value: _statusFilter,
+                key: ValueKey<String?>(_statusFilter),
+                initialValue: _statusFilter,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: '状态'),
                 items: statusItems,
@@ -508,7 +517,8 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
           return _BoardColumn(
             data: column,
             onTapTask: (task) => _openTaskDetail(context, task),
-            onDrop: (data) => _handleStatusDrop(context, viewModel, data.task, column.key),
+            onDrop: (data) =>
+                _handleStatusDrop(context, viewModel, data.task, column.key),
             canAccept: (data) => _canAcceptDrop(data.task, column.key),
             onDragStart: _handleDragStart,
             onDragEnd: _handleDragEnd,
@@ -534,9 +544,10 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
                       _BoardColumn(
                         data: columns[i],
                         onTapTask: (task) => _openTaskDetail(context, task),
-                        onDrop: (data) =>
-                            _handleStatusDrop(context, viewModel, data.task, columns[i].key),
-                        canAccept: (data) => _canAcceptDrop(data.task, columns[i].key),
+                        onDrop: (data) => _handleStatusDrop(
+                            context, viewModel, data.task, columns[i].key),
+                        canAccept: (data) =>
+                            _canAcceptDrop(data.task, columns[i].key),
                         onDragStart: _handleDragStart,
                         onDragEnd: _handleDragEnd,
                         updatingTaskId: _updatingTaskId,
@@ -754,13 +765,17 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
     final statusCounts = _buildStatusCounts(tasks);
     final filters = [
       _QuickFilterItem(label: '全部', value: null, count: tasks.length),
-      _QuickFilterItem(label: '待开始', value: 'pending', count: statusCounts['pending'] ?? 0),
+      _QuickFilterItem(
+          label: '待开始', value: 'pending', count: statusCounts['pending'] ?? 0),
       _QuickFilterItem(
         label: '进行中',
         value: 'in_progress',
         count: statusCounts['in_progress'] ?? 0,
       ),
-      _QuickFilterItem(label: '已完成', value: 'completed', count: statusCounts['completed'] ?? 0),
+      _QuickFilterItem(
+          label: '已完成',
+          value: 'completed',
+          count: statusCounts['completed'] ?? 0),
     ];
 
     return Wrap(
@@ -884,8 +899,9 @@ class _BoardColumn extends StatelessWidget {
         ? 0
         : (data.tasks.length / data.totalCount * 100).round();
     final dragTarget = DragTarget<_TaskDragData>(
-      onWillAccept: (data) => data != null && (canAccept?.call(data) ?? false),
-      onAccept: (data) => onDrop?.call(data),
+      onWillAcceptWithDetails: (details) =>
+          canAccept?.call(details.data) ?? false,
+      onAcceptWithDetails: (details) => onDrop?.call(details.data),
       builder: (context, candidates, rejected) {
         final highlight = candidates.isNotEmpty;
         return _buildColumnShell(
@@ -969,8 +985,7 @@ class _BoardColumn extends StatelessWidget {
                     isDragging: draggingTaskId == data.tasks[i].id,
                     useLongPress: useLongPress,
                   ),
-                  if (i != data.tasks.length - 1)
-                    const SizedBox(height: 8),
+                  if (i != data.tasks.length - 1) const SizedBox(height: 8),
                 ],
               ],
             ),
@@ -1084,7 +1099,6 @@ class _DraggableTaskCard extends StatelessWidget {
       ],
     );
   }
-
 }
 
 class _TaskQuantityDialog extends StatefulWidget {

@@ -513,7 +513,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
     final apiService = context.read<PurchaseOrderApiService>();
     final isEdit = order != null;
     PurchaseOrderDetail? detail;
-    if (isEdit && order != null) {
+    if (isEdit) {
       detail = await _fetchDetail(order.id);
       if (detail == null) return;
     }
@@ -584,7 +584,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
               .toList(),
         };
 
-        if (isEdit && order != null) {
+        if (isEdit) {
           await apiService.updatePurchaseOrder(order.id, payload);
         } else {
           await apiService.createPurchaseOrder(payload);
@@ -631,7 +631,8 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         DropdownButtonFormField<int>(
-                          value: supplierId,
+                          key: ValueKey<int?>(supplierId),
+                          initialValue: supplierId,
                           decoration: const InputDecoration(
                             labelText: '供应商',
                             border: OutlineInputBorder(),
@@ -656,7 +657,8 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
                         ),
                         const SizedBox(height: 12),
                         DropdownButtonFormField<int>(
-                          value: workOrderId,
+                          key: ValueKey<int?>(workOrderId),
+                          initialValue: workOrderId,
                           decoration: const InputDecoration(
                             labelText: '关联施工单',
                             border: OutlineInputBorder(),
@@ -1478,7 +1480,8 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
           final statusField = SizedBox(
             width: isMobile ? constraints.maxWidth : 150,
             child: DropdownButtonFormField<String>(
-              value: statusValue,
+              key: ValueKey<String>(statusValue),
+              initialValue: statusValue,
               decoration: const InputDecoration(
                 labelText: _statusFilterLabel,
                 isDense: true,
@@ -1501,7 +1504,8 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
           final supplierField = SizedBox(
             width: isMobile ? constraints.maxWidth : 180,
             child: DropdownButtonFormField<int>(
-              value: supplierValue,
+              key: ValueKey<int>(supplierValue),
+              initialValue: supplierValue,
               decoration: const InputDecoration(
                 labelText: _supplierFilterLabel,
                 isDense: true,
@@ -1833,7 +1837,8 @@ class _PurchaseItemRow extends StatelessWidget {
         children: [
           Expanded(
             child: DropdownButtonFormField<int>(
-              value: selectedValue,
+              key: ValueKey<int?>(selectedValue),
+              initialValue: selectedValue,
               decoration: const InputDecoration(
                 labelText: '物料',
                 isDense: true,

@@ -411,7 +411,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     final salesOrderService = SalesOrderApiService(context.read<ApiClient>());
     final isEdit = order != null;
     DeliveryOrderDetail? detail;
-    if (isEdit && order != null) {
+    if (isEdit) {
       detail = await _fetchDetail(order);
       if (detail == null) {
         return;
@@ -532,7 +532,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
               .toList(),
         };
 
-        if (isEdit && order != null) {
+        if (isEdit) {
           await apiService.updateDeliveryOrder(order.id, payload);
         } else {
           if (selectedSalesOrderId == null || selectedCustomerId == null) {
@@ -573,7 +573,8 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
                       children: [
                         if (!isEdit)
                           DropdownButtonFormField<int>(
-                            value: selectedSalesOrderId,
+                            key: ValueKey<int?>(selectedSalesOrderId),
+                            initialValue: selectedSalesOrderId,
                             decoration: const InputDecoration(
                               labelText: '销售订单',
                               border: OutlineInputBorder(),
@@ -1150,7 +1151,8 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
           final statusField = SizedBox(
             width: isMobile ? constraints.maxWidth : 150,
             child: DropdownButtonFormField<String>(
-              value: statusValue,
+              key: ValueKey<String>(statusValue),
+              initialValue: statusValue,
               decoration: const InputDecoration(
                 labelText: _statusFilterLabel,
                 isDense: true,
@@ -1172,7 +1174,8 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
           final customerField = SizedBox(
             width: isMobile ? constraints.maxWidth : 180,
             child: DropdownButtonFormField<int>(
-              value: customerValue,
+              key: ValueKey<int>(customerValue),
+              initialValue: customerValue,
               decoration: const InputDecoration(
                 labelText: _customerFilterLabel,
                 isDense: true,
@@ -1597,7 +1600,8 @@ class _DeliveryItemRow extends StatelessWidget {
         children: [
           Expanded(
             child: DropdownButtonFormField<int>(
-              value: item.productId == 0 ? null : item.productId,
+              key: ValueKey<int?>(item.productId),
+              initialValue: item.productId == 0 ? null : item.productId,
               decoration: const InputDecoration(
                 labelText: '产品',
                 isDense: true,

@@ -23,10 +23,12 @@ class TaskSupervisorDashboardEntry extends StatefulWidget {
   const TaskSupervisorDashboardEntry({super.key});
 
   @override
-  State<TaskSupervisorDashboardEntry> createState() => _TaskSupervisorDashboardEntryState();
+  State<TaskSupervisorDashboardEntry> createState() =>
+      _TaskSupervisorDashboardEntryState();
 }
 
-class _TaskSupervisorDashboardEntryState extends State<TaskSupervisorDashboardEntry> {
+class _TaskSupervisorDashboardEntryState
+    extends State<TaskSupervisorDashboardEntry> {
   TaskApiService? _taskApi;
 
   @override
@@ -59,10 +61,12 @@ class _TaskSupervisorDashboardView extends StatefulWidget {
   const _TaskSupervisorDashboardView();
 
   @override
-  State<_TaskSupervisorDashboardView> createState() => _TaskSupervisorDashboardViewState();
+  State<_TaskSupervisorDashboardView> createState() =>
+      _TaskSupervisorDashboardViewState();
 }
 
-class _TaskSupervisorDashboardViewState extends State<_TaskSupervisorDashboardView> {
+class _TaskSupervisorDashboardViewState
+    extends State<_TaskSupervisorDashboardView> {
   static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
   static const String _refreshButtonText = '刷新';
@@ -130,7 +134,8 @@ class _TaskSupervisorDashboardViewState extends State<_TaskSupervisorDashboardVi
       final operators = await api.fetchDepartmentOperators(_departmentId!);
       setState(() {
         _workload = payload;
-        _departmentTasks = tasksPage.items.map((dto) => dto.toEntity()).toList();
+        _departmentTasks =
+            tasksPage.items.map((dto) => dto.toEntity()).toList();
         _operators = operators
             .map((item) => _OperatorOption.fromJson(item))
             .where((item) => item.id > 0)
@@ -155,10 +160,14 @@ class _TaskSupervisorDashboardViewState extends State<_TaskSupervisorDashboardVi
     final summary = _workload?['summary'] as Map<String, dynamic>? ?? const {};
 
     final stats = [
-      WorkbenchStatItem(label: '总任务', value: '${_toInt(summary['total_tasks'])}'),
-      WorkbenchStatItem(label: '待处理', value: '${_toInt(summary['pending_tasks'])}'),
-      WorkbenchStatItem(label: '进行中', value: '${_toInt(summary['in_progress_tasks'])}'),
-      WorkbenchStatItem(label: '已完成', value: '${_toInt(summary['completed_tasks'])}'),
+      WorkbenchStatItem(
+          label: '总任务', value: '${_toInt(summary['total_tasks'])}'),
+      WorkbenchStatItem(
+          label: '待处理', value: '${_toInt(summary['pending_tasks'])}'),
+      WorkbenchStatItem(
+          label: '进行中', value: '${_toInt(summary['in_progress_tasks'])}'),
+      WorkbenchStatItem(
+          label: '已完成', value: '${_toInt(summary['completed_tasks'])}'),
     ];
 
     return ListPageScaffold(
@@ -180,7 +189,8 @@ class _TaskSupervisorDashboardViewState extends State<_TaskSupervisorDashboardVi
 
   Widget _buildActions(bool isMobile) {
     final deptItems = _departments
-        .map((dept) => DropdownMenuItem<int?>(value: dept.id, child: Text(dept.name)))
+        .map((dept) =>
+            DropdownMenuItem<int?>(value: dept.id, child: Text(dept.name)))
         .toList();
 
     return ListToolbar(
@@ -189,7 +199,8 @@ class _TaskSupervisorDashboardViewState extends State<_TaskSupervisorDashboardVi
         SizedBox(
           width: isMobile ? double.infinity : 200,
           child: DropdownButtonFormField<int?>(
-            value: _departmentId,
+            key: ValueKey<int?>(_departmentId),
+            initialValue: _departmentId,
             decoration: const InputDecoration(labelText: '部门'),
             items: deptItems,
             onChanged: (value) {
@@ -309,7 +320,9 @@ class _TaskSupervisorDashboardViewState extends State<_TaskSupervisorDashboardVi
 
   Widget _buildDashboardView() {
     final summary = _workload?['summary'] as Map<String, dynamic>? ?? const {};
-    final priority = _workload?['priority_distribution'] as Map<String, dynamic>? ?? const {};
+    final priority =
+        _workload?['priority_distribution'] as Map<String, dynamic>? ??
+            const {};
     final operators = _workload?['operators'] as List? ?? const [];
 
     return SingleChildScrollView(
@@ -321,14 +334,23 @@ class _TaskSupervisorDashboardViewState extends State<_TaskSupervisorDashboardVi
             child: SummaryFieldWrap(
               isMobile: BreakpointsUtil.isMobile(context),
               children: [
-                SummaryField(label: '总任务', value: '${_toInt(summary['total_tasks'])}'),
-                SummaryField(label: '待处理', value: '${_toInt(summary['pending_tasks'])}'),
-                SummaryField(label: '进行中', value: '${_toInt(summary['in_progress_tasks'])}'),
-                SummaryField(label: '已完成', value: '${_toInt(summary['completed_tasks'])}'),
-                SummaryField(label: '已取消', value: '${_toInt(summary['cancelled_tasks'])}'),
+                SummaryField(
+                    label: '总任务', value: '${_toInt(summary['total_tasks'])}'),
+                SummaryField(
+                    label: '待处理', value: '${_toInt(summary['pending_tasks'])}'),
+                SummaryField(
+                    label: '进行中',
+                    value: '${_toInt(summary['in_progress_tasks'])}'),
+                SummaryField(
+                    label: '已完成',
+                    value: '${_toInt(summary['completed_tasks'])}'),
+                SummaryField(
+                    label: '已取消',
+                    value: '${_toInt(summary['cancelled_tasks'])}'),
                 SummaryField(
                   label: '完成率',
-                  value: '${_toNum(summary['completion_rate']).toStringAsFixed(1)}%',
+                  value:
+                      '${_toNum(summary['completion_rate']).toStringAsFixed(1)}%',
                 ),
               ],
             ),
@@ -340,10 +362,22 @@ class _TaskSupervisorDashboardViewState extends State<_TaskSupervisorDashboardVi
               spacing: 8,
               runSpacing: 8,
               children: [
-                _PriorityChip(label: '紧急', value: _toInt(priority['urgent']), color: Colors.redAccent),
-                _PriorityChip(label: '高', value: _toInt(priority['high']), color: Colors.orangeAccent),
-                _PriorityChip(label: '普通', value: _toInt(priority['normal']), color: Colors.blueAccent),
-                _PriorityChip(label: '低', value: _toInt(priority['low']), color: Colors.grey),
+                _PriorityChip(
+                    label: '紧急',
+                    value: _toInt(priority['urgent']),
+                    color: Colors.redAccent),
+                _PriorityChip(
+                    label: '高',
+                    value: _toInt(priority['high']),
+                    color: Colors.orangeAccent),
+                _PriorityChip(
+                    label: '普通',
+                    value: _toInt(priority['normal']),
+                    color: Colors.blueAccent),
+                _PriorityChip(
+                    label: '低',
+                    value: _toInt(priority['low']),
+                    color: Colors.grey),
               ],
             ),
           ),
@@ -355,7 +389,8 @@ class _TaskSupervisorDashboardViewState extends State<_TaskSupervisorDashboardVi
                 : Column(
                     children: operators
                         .whereType<Map>()
-                        .map((item) => _OperatorCard(item: Map<String, dynamic>.from(item)))
+                        .map((item) => _OperatorCard(
+                            item: Map<String, dynamic>.from(item)))
                         .toList(),
                   ),
           ),
@@ -441,7 +476,8 @@ class _TaskSupervisorDashboardViewState extends State<_TaskSupervisorDashboardVi
             ToastUtil.showSuccess('任务已分派');
             await _loadWorkload();
           } catch (err) {
-            ToastUtil.showError('分派失败: ${err.toString().replaceFirst('Exception: ', '')}');
+            ToastUtil.showError(
+                '分派失败: ${err.toString().replaceFirst('Exception: ', '')}');
             rethrow;
           }
         },
@@ -461,7 +497,8 @@ class _TaskSupervisorDashboardViewState extends State<_TaskSupervisorDashboardVi
       ToastUtil.showSuccess('已分派给 ${operator.name}');
       await _loadWorkload();
     } catch (err) {
-      ToastUtil.showError('分派失败: ${err.toString().replaceFirst('Exception: ', '')}');
+      ToastUtil.showError(
+          '分派失败: ${err.toString().replaceFirst('Exception: ', '')}');
     } finally {
       if (mounted) setState(() => _assigningTaskId = null);
     }
@@ -471,11 +508,15 @@ class _TaskSupervisorDashboardViewState extends State<_TaskSupervisorDashboardVi
     final counts = _buildStatusCounts(tasks);
     final items = [
       _StatusFilterItem(key: 'all', label: '全部', count: tasks.length),
-      _StatusFilterItem(key: 'pending', label: '待处理', count: counts['pending'] ?? 0),
-      _StatusFilterItem(key: 'in_progress', label: '进行中', count: counts['in_progress'] ?? 0),
-      _StatusFilterItem(key: 'completed', label: '已完成', count: counts['completed'] ?? 0),
+      _StatusFilterItem(
+          key: 'pending', label: '待处理', count: counts['pending'] ?? 0),
+      _StatusFilterItem(
+          key: 'in_progress', label: '进行中', count: counts['in_progress'] ?? 0),
+      _StatusFilterItem(
+          key: 'completed', label: '已完成', count: counts['completed'] ?? 0),
       if ((counts['other'] ?? 0) > 0)
-        _StatusFilterItem(key: 'other', label: '其他', count: counts['other'] ?? 0),
+        _StatusFilterItem(
+            key: 'other', label: '其他', count: counts['other'] ?? 0),
     ];
 
     return Wrap(
@@ -496,7 +537,10 @@ class _TaskSupervisorDashboardViewState extends State<_TaskSupervisorDashboardVi
     if (_taskStatusFilter == 'all') return tasks;
     if (_taskStatusFilter == 'other') {
       return tasks
-          .where((task) => task.status != 'pending' && task.status != 'in_progress' && task.status != 'completed')
+          .where((task) =>
+              task.status != 'pending' &&
+              task.status != 'in_progress' &&
+              task.status != 'completed')
           .toList();
     }
     return tasks.where((task) => task.status == _taskStatusFilter).toList();
@@ -543,7 +587,9 @@ class _OperatorOption {
     final last = json['last_name']?.toString() ?? '';
     final username = json['username']?.toString() ?? '';
     final fullName = '$first$last'.trim();
-    final name = fullName.isNotEmpty ? fullName : (username.isNotEmpty ? username : '操作员 $id');
+    final name = fullName.isNotEmpty
+        ? fullName
+        : (username.isNotEmpty ? username : '操作员 $id');
     return _OperatorOption(id: id, name: name);
   }
 
@@ -617,7 +663,8 @@ class _OperatorCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 18,
-                backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.15),
+                backgroundColor:
+                    theme.colorScheme.primary.withValues(alpha: 0.15),
                 child: Icon(Icons.person, color: theme.colorScheme.primary),
               ),
               const SizedBox(width: 12),
@@ -625,12 +672,18 @@ class _OperatorCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(name, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
-                    Text('共 $total 个任务', style: theme.textTheme.bodySmall?.copyWith(color: colors.subtleText)),
+                    Text(name,
+                        style: theme.textTheme.titleSmall
+                            ?.copyWith(fontWeight: FontWeight.w700)),
+                    Text('共 $total 个任务',
+                        style: theme.textTheme.bodySmall
+                            ?.copyWith(color: colors.subtleText)),
                   ],
                 ),
               ),
-              Text('${completionRate.toStringAsFixed(1)}%', style: theme.textTheme.titleSmall?.copyWith(color: theme.colorScheme.primary)),
+              Text('${completionRate.toStringAsFixed(1)}%',
+                  style: theme.textTheme.titleSmall
+                      ?.copyWith(color: theme.colorScheme.primary)),
             ],
           ),
           const SizedBox(height: 10),
@@ -739,9 +792,10 @@ class _DragColumn extends StatelessWidget {
 
     if (canAccept) {
       return DragTarget<_TaskDragData>(
-        onWillAccept: (data) =>
-            data != null && operatorId != null && data.task.assignedOperatorId != operatorId,
-        onAccept: (data) => onDrop?.call(data.task),
+        onWillAcceptWithDetails: (details) =>
+            operatorId != null &&
+            details.data.task.assignedOperatorId != operatorId,
+        onAcceptWithDetails: (details) => onDrop?.call(details.data.task),
         builder: (context, candidates, rejected) {
           final highlight = candidates.isNotEmpty;
           return _columnShell(context, colors, highlight, content);
@@ -765,7 +819,9 @@ class _DragColumn extends StatelessWidget {
         color: colors.surface,
         borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
         border: Border.all(
-          color: highlight ? Theme.of(context).colorScheme.primary : colors.borderColor,
+          color: highlight
+              ? Theme.of(context).colorScheme.primary
+              : colors.borderColor,
           width: highlight ? 1.5 : 1,
         ),
       ),
@@ -929,12 +985,15 @@ class _AssignDialogState extends State<_AssignDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<int>(
-                value: _operatorId,
+                key: ValueKey<int>(_operatorId),
+                initialValue: _operatorId,
                 decoration: const InputDecoration(labelText: '操作员'),
                 items: widget.operators
-                    .map((op) => DropdownMenuItem(value: op.id, child: Text(op.name)))
+                    .map((op) =>
+                        DropdownMenuItem(value: op.id, child: Text(op.name)))
                     .toList(),
-                onChanged: (value) => setState(() => _operatorId = value ?? _operatorId),
+                onChanged: (value) =>
+                    setState(() => _operatorId = value ?? _operatorId),
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -953,7 +1012,10 @@ class _AssignDialogState extends State<_AssignDialog> {
         FilledButton(
           onPressed: _submitting ? null : _submit,
           child: _submitting
-              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2))
               : const Text('确认分派'),
         ),
       ],

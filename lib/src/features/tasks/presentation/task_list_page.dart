@@ -1048,7 +1048,8 @@ class _TaskAssignDialogState extends State<_TaskAssignDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             DropdownButtonFormField<int?>(
-              value: _departmentId,
+              key: ValueKey<int?>(_departmentId),
+              initialValue: _departmentId,
               decoration: const InputDecoration(labelText: '部门'),
               items: [
                 for (final dept in widget.departments)
@@ -1071,10 +1072,12 @@ class _TaskAssignDialogState extends State<_TaskAssignDialog> {
             const SizedBox(height: 12),
             if (_loadingOperators) const LinearProgressIndicator(minHeight: 2),
             DropdownButtonFormField<int?>(
-              value: _operatorId,
+              key: ValueKey<int?>(_operatorId),
+              initialValue: _operatorId,
               decoration: const InputDecoration(labelText: '操作员'),
               items: _operators
-                  .map((op) => DropdownMenuItem<int?>(value: op.id, child: Text(op.name)))
+                  .map((op) => DropdownMenuItem<int?>(
+                      value: op.id, child: Text(op.name)))
                   .toList(),
               onChanged: (value) => setState(() => _operatorId = value),
             ),
@@ -1159,7 +1162,9 @@ class _OperatorOption {
     final last = json['last_name']?.toString() ?? '';
     final username = json['username']?.toString() ?? '';
     final fullName = '$first$last'.trim();
-    final name = fullName.isNotEmpty ? fullName : (username.isNotEmpty ? username : '操作员 $id');
+    final name = fullName.isNotEmpty
+        ? fullName
+        : (username.isNotEmpty ? username : '操作员 $id');
     return _OperatorOption(id: id, name: name);
   }
 

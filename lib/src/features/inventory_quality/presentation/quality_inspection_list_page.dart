@@ -334,7 +334,8 @@ class _QualityInspectionListViewState
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         DropdownButtonFormField<String>(
-                          value: result,
+                          key: ValueKey<String>(result),
+                          initialValue: result,
                           decoration: const InputDecoration(labelText: '检验结果'),
                           items: const [
                             DropdownMenuItem(
@@ -522,7 +523,8 @@ class _QualityInspectionListViewState
           final resultField = SizedBox(
             width: isMobile ? constraints.maxWidth : 140,
             child: DropdownButtonFormField<String>(
-              value: resultValue,
+              key: ValueKey<String>(resultValue),
+              initialValue: resultValue,
               decoration: const InputDecoration(
                 labelText: _resultFilterLabel,
                 isDense: true,
@@ -544,7 +546,8 @@ class _QualityInspectionListViewState
           final typeField = SizedBox(
             width: isMobile ? constraints.maxWidth : 160,
             child: DropdownButtonFormField<String>(
-              value: typeValue,
+              key: ValueKey<String>(typeValue),
+              initialValue: typeValue,
               decoration: const InputDecoration(
                 labelText: _typeFilterLabel,
                 isDense: true,

@@ -21,10 +21,12 @@ class TaskAssignmentHistoryEntry extends StatefulWidget {
   const TaskAssignmentHistoryEntry({super.key});
 
   @override
-  State<TaskAssignmentHistoryEntry> createState() => _TaskAssignmentHistoryEntryState();
+  State<TaskAssignmentHistoryEntry> createState() =>
+      _TaskAssignmentHistoryEntryState();
 }
 
-class _TaskAssignmentHistoryEntryState extends State<TaskAssignmentHistoryEntry> {
+class _TaskAssignmentHistoryEntryState
+    extends State<TaskAssignmentHistoryEntry> {
   TaskApiService? _taskApi;
   AuthApi? _authApi;
 
@@ -61,10 +63,12 @@ class _TaskAssignmentHistoryView extends StatefulWidget {
   const _TaskAssignmentHistoryView();
 
   @override
-  State<_TaskAssignmentHistoryView> createState() => _TaskAssignmentHistoryViewState();
+  State<_TaskAssignmentHistoryView> createState() =>
+      _TaskAssignmentHistoryViewState();
 }
 
-class _TaskAssignmentHistoryViewState extends State<_TaskAssignmentHistoryView> {
+class _TaskAssignmentHistoryViewState
+    extends State<_TaskAssignmentHistoryView> {
   static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
   static const String _refreshButtonText = '刷新';
@@ -101,12 +105,16 @@ class _TaskAssignmentHistoryViewState extends State<_TaskAssignmentHistoryView> 
       final apiClient = context.read<ApiClient>();
       final deptApi = DepartmentApiService(apiClient);
       final deptPage = await deptApi.fetchDepartments(page: 1, pageSize: 200);
-      final usersResponse = await context.read<AuthApi>().getUsersByDepartment();
+      final usersResponse =
+          await context.read<AuthApi>().getUsersByDepartment();
       final users = usersResponse.data ?? const [];
       if (!mounted) return;
       setState(() {
         _departments = deptPage.items.map((dto) => dto.toEntity()).toList();
-        _users = users.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+        _users = users
+            .whereType<Map>()
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList();
       });
     } catch (_) {
       // ignore
@@ -128,7 +136,9 @@ class _TaskAssignmentHistoryViewState extends State<_TaskAssignmentHistoryView> 
       if (_operatorId != null) params['operator_id'] = _operatorId;
       if (_startDate != null) params['start_date'] = _formatDate(_startDate!);
       if (_endDate != null) params['end_date'] = _formatDate(_endDate!);
-      final payload = await context.read<TaskApiService>().fetchAssignmentHistory(params: params);
+      final payload = await context
+          .read<TaskApiService>()
+          .fetchAssignmentHistory(params: params);
       final results = payload['results'];
       setState(() {
         _items = results is List
@@ -243,7 +253,8 @@ class _TaskAssignmentHistoryViewState extends State<_TaskAssignmentHistoryView> 
     final deptItems = [
       const DropdownMenuItem<int?>(value: null, child: Text('全部部门')),
       ..._departments.map(
-        (dept) => DropdownMenuItem<int?>(value: dept.id, child: Text(dept.name)),
+        (dept) =>
+            DropdownMenuItem<int?>(value: dept.id, child: Text(dept.name)),
       ),
     ];
     final userItems = [
@@ -285,7 +296,8 @@ class _TaskAssignmentHistoryViewState extends State<_TaskAssignmentHistoryView> 
         SizedBox(
           width: isMobile ? double.infinity : 180,
           child: DropdownButtonFormField<int?>(
-            value: _departmentId,
+            key: ValueKey<int?>(_departmentId),
+            initialValue: _departmentId,
             decoration: const InputDecoration(labelText: '部门'),
             items: deptItems,
             onChanged: (value) {
@@ -297,7 +309,8 @@ class _TaskAssignmentHistoryViewState extends State<_TaskAssignmentHistoryView> 
         SizedBox(
           width: isMobile ? double.infinity : 180,
           child: DropdownButtonFormField<int?>(
-            value: _operatorId,
+            key: ValueKey<int?>(_operatorId),
+            initialValue: _operatorId,
             decoration: const InputDecoration(labelText: '操作员'),
             items: userItems,
             onChanged: (value) {
@@ -463,10 +476,10 @@ class _HistoryCard extends StatelessWidget {
         ? taskInfo['assigned_operator']?.toString() ?? '未分配操作员'
         : '未分配操作员';
 
-    final workOrderId = _toInt(workOrderInfo is Map ? workOrderInfo['id'] : null);
-    final workOrderNumber = workOrderInfo is Map
-        ? workOrderInfo['order_number']?.toString()
-        : null;
+    final workOrderId =
+        _toInt(workOrderInfo is Map ? workOrderInfo['id'] : null);
+    final workOrderNumber =
+        workOrderInfo is Map ? workOrderInfo['order_number']?.toString() : null;
 
     return DetailSectionCard(
       title: taskTitle,

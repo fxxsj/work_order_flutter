@@ -47,12 +47,27 @@
     </div>
 </div>
 <script>
-  window.addEventListener('flutter-first-frame', function () {
+  (function () {
     var loading = document.getElementById('loading');
-    if (loading) {
+    var hidden = false;
+
+    function hideLoading() {
+      if (!loading || hidden) return;
+      hidden = true;
       loading.style.display = 'none';
     }
-  });
+
+    window.addEventListener('flutter-first-frame', hideLoading);
+    window.addEventListener('flutter-app-run', hideLoading);
+
+    setTimeout(function () {
+      if (!loading || hidden) return;
+      var info = loading.querySelector('.info');
+      if (info) {
+        info.innerHTML = '<p>加载超时，请刷新页面</p><p>如仍无响应，请检查后端服务</p>';
+      }
+    }, 12000);
+  })();
 </script>
  
 <script src="flutter_bootstrap.js" async></script>

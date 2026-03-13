@@ -380,7 +380,8 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         DropdownButtonFormField<String>(
-                          value: adjustType,
+                          key: ValueKey<String>(adjustType),
+                          initialValue: adjustType,
                           decoration: const InputDecoration(labelText: '调整方式'),
                           items: const [
                             DropdownMenuItem(value: 'add', child: Text('增加库存')),
@@ -569,7 +570,8 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
           final statusField = SizedBox(
             width: isMobile ? constraints.maxWidth : 160,
             child: DropdownButtonFormField<String>(
-              value: statusValue,
+              key: ValueKey<String>(statusValue),
+              initialValue: statusValue,
               decoration: const InputDecoration(
                 labelText: _statusFilterLabel,
                 isDense: true,

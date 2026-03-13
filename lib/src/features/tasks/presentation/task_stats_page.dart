@@ -126,9 +126,8 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
                 .map((item) => Map<String, dynamic>.from(item))
                 .toList()
             : [];
-        _summary = summary is Map<String, dynamic>
-            ? summary
-            : <String, dynamic>{};
+        _summary =
+            summary is Map<String, dynamic> ? summary : <String, dynamic>{};
       });
     } catch (err) {
       setState(() {
@@ -190,7 +189,8 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
       ),
       WorkbenchStatItem(
         label: '不良品率',
-        value: '${_toNum(summary['overall_defective_rate']).toStringAsFixed(2)}%',
+        value:
+            '${_toNum(summary['overall_defective_rate']).toStringAsFixed(2)}%',
       ),
     ];
 
@@ -257,7 +257,8 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
         SizedBox(
           width: deptWidth,
           child: DropdownButtonFormField<int?>(
-            value: _departmentId,
+            key: ValueKey<int?>(_departmentId),
+            initialValue: _departmentId,
             decoration: const InputDecoration(labelText: '部门'),
             items: departmentItems,
             onChanged: (value) {
@@ -372,7 +373,9 @@ class _StatsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
-    final name = item['operator_name']?.toString() ?? item['operator_username']?.toString() ?? '-';
+    final name = item['operator_name']?.toString() ??
+        item['operator_username']?.toString() ??
+        '-';
     final departments = item['departments'] as List? ?? const [];
     final completionRate = _toNum(item['completion_rate']);
     final defectiveRate = _toNum(item['defective_rate']);
@@ -397,19 +400,31 @@ class _StatsCard extends StatelessWidget {
           else
             Text(
               '未分配部门',
-              style: theme.textTheme.bodySmall?.copyWith(color: colors.subtleText),
+              style:
+                  theme.textTheme.bodySmall?.copyWith(color: colors.subtleText),
             ),
           const SizedBox(height: 12),
           SummaryFieldWrap(
             isMobile: BreakpointsUtil.isMobile(context),
             children: [
-              SummaryField(label: '任务总数', value: '${_toInt(item['total_tasks'])}'),
-              SummaryField(label: '已完成', value: '${_toInt(item['completed_tasks'])}'),
-              SummaryField(label: '进行中', value: '${_toInt(item['in_progress_tasks'])}'),
-              SummaryField(label: '待开始', value: '${_toInt(item['pending_tasks'])}'),
-              SummaryField(label: '完成总数', value: '${_toNum(item['total_completed_quantity']).toStringAsFixed(0)}'),
-              SummaryField(label: '不良品数', value: '${_toNum(item['total_defective_quantity']).toStringAsFixed(0)}'),
-              SummaryField(label: '不良品率', value: '${defectiveRate.toStringAsFixed(2)}%'),
+              SummaryField(
+                  label: '任务总数', value: '${_toInt(item['total_tasks'])}'),
+              SummaryField(
+                  label: '已完成', value: '${_toInt(item['completed_tasks'])}'),
+              SummaryField(
+                  label: '进行中', value: '${_toInt(item['in_progress_tasks'])}'),
+              SummaryField(
+                  label: '待开始', value: '${_toInt(item['pending_tasks'])}'),
+              SummaryField(
+                  label: '完成总数',
+                  value:
+                      '${_toNum(item['total_completed_quantity']).toStringAsFixed(0)}'),
+              SummaryField(
+                  label: '不良品数',
+                  value:
+                      '${_toNum(item['total_defective_quantity']).toStringAsFixed(0)}'),
+              SummaryField(
+                  label: '不良品率', value: '${defectiveRate.toStringAsFixed(2)}%'),
               SummaryField(
                 label: '平均完成时长',
                 value: item['avg_completion_hours'] == null
