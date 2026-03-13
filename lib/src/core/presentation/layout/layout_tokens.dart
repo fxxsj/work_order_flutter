@@ -25,18 +25,18 @@ class LayoutTokens {
     final isMd = BreakpointsUtil.isMd(context);
     final isXl = BreakpointsUtil.isXl(context);
     if (isXs) {
-      return const EdgeInsets.fromLTRB(16, 16, 16, 22);
+      return const EdgeInsets.fromLTRB(12, 12, 12, 16);
     }
     if (isSm) {
-      return const EdgeInsets.fromLTRB(22, 20, 22, 26);
+      return const EdgeInsets.fromLTRB(16, 14, 16, 18);
     }
     if (isMd) {
-      return const EdgeInsets.fromLTRB(28, 24, 28, 30);
+      return const EdgeInsets.fromLTRB(20, 18, 20, 22);
     }
     if (isXl) {
-      return const EdgeInsets.fromLTRB(34, 28, 34, 36);
+      return const EdgeInsets.fromLTRB(24, 20, 24, 24);
     }
-    return const EdgeInsets.fromLTRB(40, 32, 40, 40);
+    return const EdgeInsets.fromLTRB(28, 22, 28, 28);
   }
 
   static EdgeInsets pageHeaderPadding(BuildContext context) {
@@ -63,12 +63,12 @@ class LayoutTokens {
     final isXs = BreakpointsUtil.isXs(context);
     final isSm = BreakpointsUtil.isSm(context);
     if (isXs) {
-      return const EdgeInsets.all(12);
+      return const EdgeInsets.all(10);
     }
     if (isSm) {
-      return const EdgeInsets.all(14);
+      return const EdgeInsets.all(12);
     }
-    return const EdgeInsets.all(16);
+    return const EdgeInsets.all(14);
   }
 
   static double sectionSpacing(BuildContext context) {

@@ -41,18 +41,29 @@ class PageHeaderBar extends StatelessWidget {
           ),
           SizedBox(height: breadcrumbBottomSpacing),
         ],
-        Row(
-          children: [
-            Expanded(
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: actions,
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final isMobile = BreakpointsUtil.isMobile(context);
+            final actionContent = isMobile
+                ? ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: constraints.maxWidth),
+                    child: actions,
+                  )
+                : SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: actions,
+                  );
+            return Row(
+              children: [
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: actionContent,
+                  ),
                 ),
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         ),
       ],
     );

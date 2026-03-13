@@ -1,11 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
-import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
@@ -116,7 +114,6 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
   static const String _lowStockText = '库存预警';
   static const String _expiredText = '过期库存';
   static const String _statusFilterLabel = '库存状态';
-  static const String _breadcrumbSeparator = ' / ';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
   static const String _pageSizeLabel = '每页 {size}';
 
@@ -465,17 +462,13 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
   @override
   Widget build(BuildContext context) {
     final isMobile = BreakpointsUtil.isMobile(context);
-    final breadcrumb = buildBreadcrumbForPathWith(
-      GoRouterState.of(context).uri.path,
-      buildPathToIdMap(),
-    );
 
     return Consumer<ProductStockViewModel>(
       builder: (context, viewModel, _) {
         final stocks = viewModel.stocks;
         return ListPageScaffold(
           spacing: _spacingSm,
-          header: _buildPageHeader(context, viewModel, breadcrumb, isMobile),
+          header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, stocks, isMobile),
           footer: viewModel.total > 0
               ? ResponsivePaginationBar(
@@ -609,12 +602,10 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
   Widget _buildPageHeader(
     BuildContext context,
     ProductStockViewModel viewModel,
-    List<String> breadcrumb,
-    bool isMobile,
+bool isMobile,
   ) {
     return PageHeaderBar(
-      breadcrumb:
-          breadcrumb.isEmpty ? null : breadcrumb.join(_breadcrumbSeparator),
+      breadcrumb: null,
       useSurface: false,
       showDivider: false,
       padding: EdgeInsets.zero,

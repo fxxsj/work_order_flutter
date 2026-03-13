@@ -37,7 +37,7 @@ class ContentContainer extends StatelessWidget {
 
     final useSurfaceCanvas = !isMobile;
     final borderColor = colors?.borderColor ?? theme.dividerColor;
-    final canvasRadius = BorderRadius.circular(LayoutTokens.radiusLg);
+    final canvasRadius = BorderRadius.zero;
     final canvas = Container(
       decoration: BoxDecoration(
         color: colors?.surface ?? theme.colorScheme.surface,

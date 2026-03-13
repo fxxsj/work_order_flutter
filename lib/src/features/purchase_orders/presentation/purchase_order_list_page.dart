@@ -1,11 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
-import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
@@ -133,7 +131,6 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
   static const String _inspectText = '质检';
   static const String _cancelOrderText = '取消采购单';
   static const String _deletePrompt = '确认取消该采购单？';
-  static const String _breadcrumbSeparator = ' / ';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
   static const String _pageSizeLabel = '每页 {size}';
 
@@ -1383,17 +1380,13 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
   @override
   Widget build(BuildContext context) {
     final isMobile = BreakpointsUtil.isMobile(context);
-    final breadcrumb = buildBreadcrumbForPathWith(
-      GoRouterState.of(context).uri.path,
-      buildPathToIdMap(),
-    );
 
     return Consumer<PurchaseOrderViewModel>(
       builder: (context, viewModel, _) {
         final orders = viewModel.purchaseOrders;
         return ListPageScaffold(
           spacing: _spacingSm,
-          header: _buildPageHeader(context, viewModel, breadcrumb, isMobile),
+          header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, orders, isMobile),
           footer: viewModel.total > 0
               ? ResponsivePaginationBar(
@@ -1517,12 +1510,10 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
   Widget _buildPageHeader(
     BuildContext context,
     PurchaseOrderViewModel viewModel,
-    List<String> breadcrumb,
-    bool isMobile,
+bool isMobile,
   ) {
     return PageHeaderBar(
-      breadcrumb:
-          breadcrumb.isEmpty ? null : breadcrumb.join(_breadcrumbSeparator),
+      breadcrumb: null,
       useSurface: false,
       showDivider: false,
       padding: EdgeInsets.zero,

@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/features/customer/application/customer_view_model.dart';
@@ -18,7 +17,6 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
-import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
 import 'package:work_order_app/src/features/customer/data/customer_repository_impl.dart';
 import 'package:work_order_app/src/features/customer/domain/customer_repository.dart';
@@ -114,7 +112,6 @@ class _CustomerListViewState extends State<_CustomerListView> {
   static const String _deleteFailedText = '删除失败: ';
   static const String _createSuccessText = '创建成功';
   static const String _updateSuccessText = '更新成功';
-  static const String _breadcrumbSeparator = ' / ';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
   static const String _pageSizeLabel = '每页 {size}';
 
@@ -209,10 +206,6 @@ class _CustomerListViewState extends State<_CustomerListView> {
   @override
   Widget build(BuildContext context) {
     final isMobile = BreakpointsUtil.isMobile(context);
-    final breadcrumb = buildBreadcrumbForPathWith(
-      GoRouterState.of(context).uri.path,
-      buildPathToIdMap(),
-    );
 
     return Consumer<CustomerViewModel>(
       builder: (context, viewModel, _) {
@@ -222,7 +215,6 @@ class _CustomerListViewState extends State<_CustomerListView> {
           header: _buildPageHeader(
             context,
             viewModel,
-            breadcrumb,
             isMobile,
           ),
           body: _buildListBody(context, viewModel, customers, isMobile),
@@ -471,11 +463,10 @@ class _CustomerListViewState extends State<_CustomerListView> {
   Widget _buildPageHeader(
     BuildContext context,
     CustomerViewModel viewModel,
-    List<String> breadcrumb,
     bool isMobile,
   ) {
     return PageHeaderBar(
-      breadcrumb: breadcrumb.isEmpty ? null : breadcrumb.join(_breadcrumbSeparator),
+      breadcrumb: null,
       useSurface: false,
       showDivider: false,
       padding: EdgeInsets.zero,

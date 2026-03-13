@@ -1,11 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
-import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
@@ -117,7 +115,6 @@ class _EmbossingPlateListViewState extends State<_EmbossingPlateListView> {
   static const String _confirmFailedText = '确认失败: ';
   static const String _createSuccessText = '创建成功';
   static const String _updateSuccessText = '更新成功';
-  static const String _breadcrumbSeparator = ' / ';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
   static const String _pageSizeLabel = '每页 {size}';
 
@@ -253,17 +250,13 @@ class _EmbossingPlateListViewState extends State<_EmbossingPlateListView> {
   @override
   Widget build(BuildContext context) {
     final isMobile = BreakpointsUtil.isMobile(context);
-    final breadcrumb = buildBreadcrumbForPathWith(
-      GoRouterState.of(context).uri.path,
-      buildPathToIdMap(),
-    );
 
     return Consumer<EmbossingPlateViewModel>(
       builder: (context, viewModel, _) {
         final plates = viewModel.embossingPlates;
         return ListPageScaffold(
           spacing: _spacingSm,
-          header: _buildPageHeader(context, viewModel, breadcrumb, isMobile),
+          header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, plates, isMobile),
           footer: viewModel.total > 0
               ? ResponsivePaginationBar(
@@ -391,11 +384,10 @@ class _EmbossingPlateListViewState extends State<_EmbossingPlateListView> {
   Widget _buildPageHeader(
     BuildContext context,
     EmbossingPlateViewModel viewModel,
-    List<String> breadcrumb,
-    bool isMobile,
+bool isMobile,
   ) {
     return PageHeaderBar(
-      breadcrumb: breadcrumb.isEmpty ? null : breadcrumb.join(_breadcrumbSeparator),
+      breadcrumb: null,
       useSurface: false,
       showDivider: false,
       padding: EdgeInsets.zero,

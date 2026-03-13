@@ -1,11 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
-import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
@@ -104,7 +102,6 @@ class _PaymentListViewState extends State<_PaymentListView> {
   static const String _emptyText = '暂无收款数据';
   static const String _errorFallbackText = '加载失败';
   static const String _retryText = '重新加载';
-  static const String _breadcrumbSeparator = ' / ';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
   static const String _pageSizeLabel = '每页 {size}';
 
@@ -141,17 +138,13 @@ class _PaymentListViewState extends State<_PaymentListView> {
   @override
   Widget build(BuildContext context) {
     final isMobile = BreakpointsUtil.isMobile(context);
-    final breadcrumb = buildBreadcrumbForPathWith(
-      GoRouterState.of(context).uri.path,
-      buildPathToIdMap(),
-    );
 
     return Consumer<PaymentViewModel>(
       builder: (context, viewModel, _) {
         final payments = viewModel.payments;
         return ListPageScaffold(
           spacing: _spacingSm,
-          header: _buildPageHeader(context, viewModel, breadcrumb, isMobile),
+          header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, payments, isMobile),
           footer: viewModel.total > 0
               ? ResponsivePaginationBar(
@@ -257,11 +250,10 @@ class _PaymentListViewState extends State<_PaymentListView> {
   Widget _buildPageHeader(
     BuildContext context,
     PaymentViewModel viewModel,
-    List<String> breadcrumb,
-    bool isMobile,
+bool isMobile,
   ) {
     return PageHeaderBar(
-      breadcrumb: breadcrumb.isEmpty ? null : breadcrumb.join(_breadcrumbSeparator),
+      breadcrumb: null,
       useSurface: false,
       showDivider: false,
       padding: EdgeInsets.zero,

@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
-import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
@@ -213,10 +212,6 @@ class _TaskListViewState extends State<_TaskListView> {
   @override
   Widget build(BuildContext context) {
     final isMobile = BreakpointsUtil.isMobile(context);
-    final breadcrumb = buildBreadcrumbForPathWith(
-      GoRouterState.of(context).uri.path,
-      buildPathToIdMap(),
-    );
 
     return Consumer<TaskViewModel>(
       builder: (context, viewModel, _) {
@@ -227,7 +222,7 @@ class _TaskListViewState extends State<_TaskListView> {
         _processFilterId = viewModel.processFilterId;
         return ListPageScaffold(
           spacing: _spacingSm,
-          header: _buildPageHeader(context, viewModel, breadcrumb, isMobile),
+          header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, tasks, isMobile),
           footer: viewModel.total > 0
               ? ResponsivePaginationBar(
@@ -381,8 +376,7 @@ class _TaskListViewState extends State<_TaskListView> {
   Widget _buildPageHeader(
     BuildContext context,
     TaskViewModel viewModel,
-    List<String> breadcrumb,
-    bool isMobile,
+bool isMobile,
   ) {
     final summaryItems = [
       WorkbenchStatItem(label: '总任务', value: '${viewModel.total}'),
