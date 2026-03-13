@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -196,6 +197,10 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
       );
     }
 
+    if (!isMobile) {
+      return _buildDesktopTable(context, viewModel, invoices);
+    }
+
     return ListView.separated(
       itemCount: invoices.length,
       separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
@@ -203,6 +208,49 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
         final invoice = invoices[index];
         return _buildSummaryCard(context, invoice, isMobile);
       },
+    );
+  }
+
+  Widget _buildDesktopTable(
+    BuildContext context,
+    InvoiceViewModel viewModel,
+    List<Invoice> invoices,
+  ) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('发票号')),
+        DataColumn(label: Text('客户')),
+        DataColumn(label: Text('施工单号')),
+        DataColumn(label: Text('金额')),
+        DataColumn(label: Text('状态')),
+        DataColumn(label: Text('开票日期')),
+      ],
+      rows: invoices
+          .map(
+            (invoice) => DataRow(
+              cells: [
+                DataCell(Text(
+                  _displayText(invoice.invoiceNumber ?? '发票 #${invoice.id}'),
+                  style: theme.textTheme.bodyMedium,
+                )),
+                DataCell(
+                    Text(_displayText(invoice.customerName), style: textStyle)),
+                DataCell(
+                    Text(_displayText(invoice.workOrderNumber), style: textStyle)),
+                DataCell(Text(_formatAmount(invoice.amount), style: textStyle)),
+                DataCell(Text(
+                  invoice.statusDisplay ??
+                      invoice.status ??
+                      _emptyCellText,
+                  style: textStyle,
+                )),
+                DataCell(Text(_formatDate(invoice.issueDate), style: textStyle)),
+              ],
+            ),
+          )
+          .toList(),
     );
   }
 

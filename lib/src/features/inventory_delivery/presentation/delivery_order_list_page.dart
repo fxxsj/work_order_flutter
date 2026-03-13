@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -1099,14 +1100,18 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
         text: _emptyText,
       );
     } else {
-      listContent = ListView.separated(
-        itemCount: orders.length,
-        separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
-        itemBuilder: (context, index) {
-          final order = orders[index];
-          return _buildSummaryCard(context, viewModel, order, isMobile);
-        },
-      );
+      if (!isMobile) {
+        listContent = _buildDesktopTable(context, viewModel, orders);
+      } else {
+        listContent = ListView.separated(
+          itemCount: orders.length,
+          separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
+          itemBuilder: (context, index) {
+            final order = orders[index];
+            return _buildSummaryCard(context, viewModel, order, isMobile);
+          },
+        );
+      }
     }
 
     return Column(
@@ -1116,6 +1121,110 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
         SizedBox(height: sectionSpacing),
         Expanded(child: listContent),
       ],
+    );
+  }
+
+  Widget _buildDesktopTable(
+    BuildContext context,
+    DeliveryOrderViewModel viewModel,
+    List<DeliveryOrder> orders,
+  ) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('发货单号')),
+        DataColumn(label: Text('客户')),
+        DataColumn(label: Text('销售订单')),
+        DataColumn(label: Text('状态')),
+        DataColumn(label: Text('发货日期')),
+        DataColumn(label: Text('明细数')),
+        DataColumn(label: Text('发货数量')),
+        DataColumn(label: Text('物流公司')),
+        DataColumn(label: Text('运单号')),
+        DataColumn(label: Text('操作')),
+      ],
+      rows: orders
+          .map(
+            (order) {
+              final statusCode = order.status ?? '';
+              final canShip = statusCode == 'pending';
+              final canReceive =
+                  statusCode == 'shipped' || statusCode == 'in_transit';
+              final canReject = canReceive;
+              final canEdit = statusCode == 'pending';
+              final canDelete = statusCode == 'pending';
+
+              return DataRow(
+                cells: [
+                  DataCell(Text(
+                    order.orderNumber.isEmpty
+                        ? '发货单 #${order.id}'
+                        : order.orderNumber,
+                    style: theme.textTheme.bodyMedium,
+                  )),
+                  DataCell(
+                      Text(_displayText(order.customerName), style: textStyle)),
+                  DataCell(Text(_displayText(order.salesOrderNumber),
+                      style: textStyle)),
+                  DataCell(Text(
+                    _displayText(order.statusDisplay ?? order.status),
+                    style: textStyle,
+                  )),
+                  DataCell(
+                      Text(_formatDate(order.deliveryDate), style: textStyle)),
+                  DataCell(Text(
+                      order.itemsCount?.toString() ?? _emptyCellText,
+                      style: textStyle)),
+                  DataCell(
+                      Text(_formatAmount(order.totalQuantity), style: textStyle)),
+                  DataCell(Text(_displayText(order.logisticsCompany),
+                      style: textStyle)),
+                  DataCell(Text(_displayText(order.trackingNumber),
+                      style: textStyle)),
+                  DataCell(Wrap(
+                    spacing: 8,
+                    children: [
+                      TextButton(
+                        onPressed: () => _openDetailDialog(order),
+                        child: const Text('查看'),
+                      ),
+                      if (canEdit)
+                        TextButton(
+                          onPressed: () =>
+                              _openFormDialog(viewModel, order: order),
+                          child: const Text('编辑'),
+                        ),
+                      if (canShip)
+                        TextButton(
+                          onPressed: () =>
+                              _openShipDialog(context, viewModel, order),
+                          child: const Text(_shipTitle),
+                        ),
+                      if (canReceive)
+                        TextButton(
+                          onPressed: () =>
+                              _openReceiveDialog(context, viewModel, order),
+                          child: const Text(_receiveTitle),
+                        ),
+                      if (canReject)
+                        TextButton(
+                          onPressed: () =>
+                              _openRejectDialog(context, viewModel, order),
+                          child: const Text(_rejectTitle),
+                        ),
+                      if (canDelete)
+                        TextButton(
+                          onPressed: () => _confirmDelete(viewModel, order),
+                          child: const Text('删除'),
+                        ),
+                    ],
+                  )),
+                ],
+              );
+            },
+          )
+          .toList(),
     );
   }
 

@@ -9,6 +9,7 @@ import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/customer/presentation/customer_edit_page.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
@@ -269,6 +270,10 @@ class _CustomerListViewState extends State<_CustomerListView> {
       );
     }
 
+    if (!isMobile) {
+      return _buildDesktopTable(context, viewModel, customers);
+    }
+
     return ListView.separated(
       itemCount: customers.length,
       separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
@@ -276,6 +281,78 @@ class _CustomerListViewState extends State<_CustomerListView> {
         final customer = customers[index];
         return _buildSummaryCard(context, viewModel, customer, isMobile);
       },
+    );
+  }
+
+  Widget _buildDesktopTable(
+    BuildContext context,
+    CustomerViewModel viewModel,
+    List<Customer> customers,
+  ) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('客户')),
+        DataColumn(label: Text('联系人')),
+        DataColumn(label: Text('电话')),
+        DataColumn(label: Text('业务员')),
+        DataColumn(label: Text('更新日期')),
+        DataColumn(label: Text('地址')),
+        DataColumn(label: Text('操作')),
+      ],
+      rows: customers
+          .map(
+            (customer) => DataRow(
+              cells: [
+                DataCell(Text(
+                  customer.name.isNotEmpty ? customer.name : _emptyCellText,
+                  style: theme.textTheme.bodyMedium,
+                )),
+                DataCell(Text(
+                  customer.contactPerson?.trim().isNotEmpty == true
+                      ? customer.contactPerson!.trim()
+                      : _emptyCellText,
+                  style: textStyle,
+                )),
+                DataCell(Text(
+                  customer.phone?.trim().isNotEmpty == true
+                      ? customer.phone!.trim()
+                      : _emptyCellText,
+                  style: textStyle,
+                )),
+                DataCell(Text(
+                  customer.salespersonName?.trim().isNotEmpty == true
+                      ? customer.salespersonName!.trim()
+                      : _emptyCellText,
+                  style: textStyle,
+                )),
+                DataCell(Text(_formatDate(customer.updatedAt), style: textStyle)),
+                DataCell(Text(
+                  customer.address?.trim().isNotEmpty == true
+                      ? customer.address!.trim()
+                      : _emptyCellText,
+                  style: textStyle,
+                )),
+                DataCell(Wrap(
+                  spacing: 8,
+                  children: [
+                    TextButton(
+                      onPressed: () =>
+                          _openEditPage(context, viewModel, customer),
+                      child: const Text('编辑'),
+                    ),
+                    TextButton(
+                      onPressed: () =>
+                          _confirmDelete(context, viewModel, customer),
+                      child: const Text('删除'),
+                    ),
+                  ],
+                )),
+              ],
+            ),
+          )
+          .toList(),
     );
   }
 

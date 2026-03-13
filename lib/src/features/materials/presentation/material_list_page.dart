@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -264,6 +265,10 @@ class _MaterialListViewState extends State<_MaterialListView> {
       );
     }
 
+    if (!isMobile) {
+      return _buildDesktopTable(context, viewModel, materials);
+    }
+
     return ListView.separated(
       itemCount: materials.length,
       separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
@@ -271,6 +276,66 @@ class _MaterialListViewState extends State<_MaterialListView> {
         final material = materials[index];
         return _buildSummaryCard(context, viewModel, material, isMobile);
       },
+    );
+  }
+
+  Widget _buildDesktopTable(
+    BuildContext context,
+    MaterialViewModel viewModel,
+    List<MaterialItem> materials,
+  ) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('物料')),
+        DataColumn(label: Text('编码')),
+        DataColumn(label: Text('单位')),
+        DataColumn(label: Text('单价')),
+        DataColumn(label: Text('库存')),
+        DataColumn(label: Text('安全库存')),
+        DataColumn(label: Text('状态')),
+        DataColumn(label: Text('操作')),
+      ],
+      rows: materials
+          .map(
+            (material) => DataRow(
+              cells: [
+                DataCell(Text(
+                  material.name.isNotEmpty ? material.name : _emptyCellText,
+                  style: theme.textTheme.bodyMedium,
+                )),
+                DataCell(Text(
+                  material.code.isNotEmpty ? material.code : _emptyCellText,
+                  style: textStyle,
+                )),
+                DataCell(Text(material.unit ?? _emptyCellText, style: textStyle)),
+                DataCell(Text(_formatAmount(material.unitPrice), style: textStyle)),
+                DataCell(
+                    Text(_formatAmount(material.stockQuantity), style: textStyle)),
+                DataCell(Text(_formatAmount(material.minStockQuantity),
+                    style: textStyle)),
+                DataCell(
+                    Text(_formatStatus(material.isActive), style: textStyle)),
+                DataCell(Wrap(
+                  spacing: 8,
+                  children: [
+                    TextButton(
+                      onPressed: () =>
+                          _openEditPage(context, viewModel, material),
+                      child: const Text('编辑'),
+                    ),
+                    TextButton(
+                      onPressed: () =>
+                          _confirmDelete(context, viewModel, material),
+                      child: const Text('删除'),
+                    ),
+                  ],
+                )),
+              ],
+            ),
+          )
+          .toList(),
     );
   }
 

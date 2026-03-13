@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -307,6 +308,10 @@ class _EmbossingPlateListViewState extends State<_EmbossingPlateListView> {
       );
     }
 
+    if (!isMobile) {
+      return _buildDesktopTable(context, viewModel, plates);
+    }
+
     return ListView.separated(
       itemCount: plates.length,
       separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
@@ -314,6 +319,71 @@ class _EmbossingPlateListViewState extends State<_EmbossingPlateListView> {
         final plate = plates[index];
         return _buildSummaryCard(context, viewModel, plate, isMobile);
       },
+    );
+  }
+
+  Widget _buildDesktopTable(
+    BuildContext context,
+    EmbossingPlateViewModel viewModel,
+    List<EmbossingPlate> plates,
+  ) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('压凸版')),
+        DataColumn(label: Text('编码')),
+        DataColumn(label: Text('尺寸')),
+        DataColumn(label: Text('材质')),
+        DataColumn(label: Text('厚度')),
+        DataColumn(label: Text('确认状态')),
+        DataColumn(label: Text('包含产品')),
+        DataColumn(label: Text('创建时间')),
+        DataColumn(label: Text('操作')),
+      ],
+      rows: plates
+          .map(
+            (plate) => DataRow(
+              cells: [
+                DataCell(Text(
+                  _displayText(plate.name),
+                  style: theme.textTheme.bodyMedium,
+                )),
+                DataCell(Text(_displayText(plate.code), style: textStyle)),
+                DataCell(Text(_displayText(plate.size), style: textStyle)),
+                DataCell(Text(_displayText(plate.material), style: textStyle)),
+                DataCell(Text(_displayText(plate.thickness), style: textStyle)),
+                DataCell(Text(plate.confirmed ? '已确认' : '待确认',
+                    style: textStyle)),
+                DataCell(
+                    Text(_productSummary(plate.products), style: textStyle)),
+                DataCell(
+                    Text(_formatDateTime(plate.createdAt), style: textStyle)),
+                DataCell(Wrap(
+                  spacing: 8,
+                  children: [
+                    TextButton(
+                      onPressed: () =>
+                          _openEditPage(context, viewModel, plate),
+                      child: const Text('编辑'),
+                    ),
+                    if (!plate.confirmed)
+                      TextButton(
+                        onPressed: () =>
+                            _confirmPlate(context, viewModel, plate),
+                        child: const Text('确认'),
+                      ),
+                    TextButton(
+                      onPressed: () =>
+                          _confirmDelete(context, viewModel, plate),
+                      child: const Text('删除'),
+                    ),
+                  ],
+                )),
+              ],
+            ),
+          )
+          .toList(),
     );
   }
 

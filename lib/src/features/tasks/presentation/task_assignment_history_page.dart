@@ -5,6 +5,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -338,6 +339,7 @@ class _TaskAssignmentHistoryViewState
   }
 
   Widget _buildBody(BuildContext context) {
+    final isMobile = BreakpointsUtil.isMobile(context);
     if (_loading && _items.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -355,6 +357,10 @@ class _TaskAssignmentHistoryViewState
       );
     }
 
+    if (!isMobile) {
+      return _buildDesktopTable(context);
+    }
+
     return ListView.separated(
       itemCount: _items.length,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
@@ -365,6 +371,70 @@ class _TaskAssignmentHistoryViewState
           onOpenWorkOrder: (id) => context.go('/workorders/$id'),
         );
       },
+    );
+  }
+
+  Widget _buildDesktopTable(BuildContext context) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('任务')),
+        DataColumn(label: Text('当前部门')),
+        DataColumn(label: Text('当前操作员')),
+        DataColumn(label: Text('操作人')),
+        DataColumn(label: Text('内容')),
+        DataColumn(label: Text('时间')),
+        DataColumn(label: Text('施工单')),
+      ],
+      rows: _items
+          .map(
+            (item) {
+              final createdAt = item['created_at']?.toString() ?? '-';
+              final content = item['content']?.toString() ?? '-';
+              final operatorName = item['operator_name']?.toString() ?? '-';
+              final taskInfo = item['task_info'];
+              final workOrderInfo = item['work_order_info'];
+
+              final taskTitle = taskInfo is Map
+                  ? taskInfo['work_content']?.toString() ??
+                      '任务 #${taskInfo['id'] ?? '-'}'
+                  : '-';
+              final department = taskInfo is Map
+                  ? taskInfo['assigned_department']?.toString() ?? '未分配部门'
+                  : '未分配部门';
+              final assignedOperator = taskInfo is Map
+                  ? taskInfo['assigned_operator']?.toString() ?? '未分配操作员'
+                  : '未分配操作员';
+
+              final workOrderId =
+                  _toInt(workOrderInfo is Map ? workOrderInfo['id'] : null);
+              final workOrderNumber = workOrderInfo is Map
+                  ? workOrderInfo['order_number']?.toString()
+                  : null;
+
+              return DataRow(
+                cells: [
+                  DataCell(Text(taskTitle, style: theme.textTheme.bodyMedium)),
+                  DataCell(Text(department, style: textStyle)),
+                  DataCell(Text(assignedOperator, style: textStyle)),
+                  DataCell(Text(operatorName, style: textStyle)),
+                  DataCell(Text(content, style: textStyle)),
+                  DataCell(Text(createdAt, style: textStyle)),
+                  DataCell(
+                    workOrderId > 0 && workOrderNumber != null
+                        ? TextButton(
+                            onPressed: () =>
+                                context.go('/workorders/$workOrderId'),
+                            child: Text('查看 $workOrderNumber'),
+                          )
+                        : Text('-', style: textStyle),
+                  ),
+                ],
+              );
+            },
+          )
+          .toList(),
     );
   }
 

@@ -13,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -1438,6 +1439,10 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
       );
     }
 
+    if (!isMobile) {
+      return _buildDesktopTable(context, viewModel, orders);
+    }
+
     return ListView.separated(
       itemCount: orders.length,
       separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
@@ -1445,6 +1450,67 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
         final order = orders[index];
         return _buildSummaryCard(context, viewModel, order, isMobile);
       },
+    );
+  }
+
+  Widget _buildDesktopTable(
+    BuildContext context,
+    PurchaseOrderViewModel viewModel,
+    List<PurchaseOrder> orders,
+  ) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('采购单号')),
+        DataColumn(label: Text('供应商')),
+        DataColumn(label: Text('状态')),
+        DataColumn(label: Text('金额')),
+        DataColumn(label: Text('明细数')),
+        DataColumn(label: Text('收货进度')),
+        DataColumn(label: Text('关联施工单')),
+        DataColumn(label: Text('操作')),
+      ],
+      rows: orders
+          .map(
+            (order) => DataRow(
+              cells: [
+                DataCell(Text(
+                  order.orderNumber.isEmpty ? '采购单 #${order.id}' : order.orderNumber,
+                  style: theme.textTheme.bodyMedium,
+                )),
+                DataCell(Text(_displayText(order.supplierName), style: textStyle)),
+                DataCell(Text(
+                  _displayText(order.statusDisplay ?? order.status),
+                  style: textStyle,
+                )),
+                DataCell(Text(_formatAmount(order.totalAmount), style: textStyle)),
+                DataCell(Text(order.itemsCount?.toString() ?? _emptyCellText,
+                    style: textStyle)),
+                DataCell(Text(
+                  order.receivedProgress == null
+                      ? _emptyCellText
+                      : '${order.receivedProgress!.toStringAsFixed(0)}%',
+                  style: textStyle,
+                )),
+                DataCell(Text(_displayText(order.workOrderNumber), style: textStyle)),
+                DataCell(Row(
+                  children: [
+                    TextButton(
+                      onPressed: () => _openDetailDialog(order),
+                      child: const Text('查看'),
+                    ),
+                    if ((order.status ?? '') == 'draft')
+                      TextButton(
+                        onPressed: () => _openFormDialog(viewModel, order: order),
+                        child: const Text('编辑'),
+                      ),
+                  ],
+                )),
+              ],
+            ),
+          )
+          .toList(),
     );
   }
 

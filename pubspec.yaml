@@ -31,3 +31,6 @@ flutter:
     - family: BowlbyDisplay
       fonts:
         - asset: assets/fonts/BowlbyOneSC-Regular.ttf
+    - family: AGENCYR
+      fonts:
+        - asset: assets/fonts/AGENCYR.TTF

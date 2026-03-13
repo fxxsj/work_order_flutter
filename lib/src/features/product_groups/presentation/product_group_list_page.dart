@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -264,6 +265,10 @@ class _ProductGroupListViewState extends State<_ProductGroupListView> {
       );
     }
 
+    if (!isMobile) {
+      return _buildDesktopTable(context, viewModel, groups);
+    }
+
     return ListView.separated(
       itemCount: groups.length,
       separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
@@ -271,6 +276,59 @@ class _ProductGroupListViewState extends State<_ProductGroupListView> {
         final group = groups[index];
         return _buildSummaryCard(context, viewModel, group, isMobile);
       },
+    );
+  }
+
+  Widget _buildDesktopTable(
+    BuildContext context,
+    ProductGroupViewModel viewModel,
+    List<ProductGroup> groups,
+  ) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('产品组')),
+        DataColumn(label: Text('编码')),
+        DataColumn(label: Text('状态')),
+        DataColumn(label: Text('明细数')),
+        DataColumn(label: Text('描述')),
+        DataColumn(label: Text('操作')),
+      ],
+      rows: groups
+          .map(
+            (group) => DataRow(
+              cells: [
+                DataCell(Text(
+                  _displayText(group.name),
+                  style: theme.textTheme.bodyMedium,
+                )),
+                DataCell(Text(_displayText(group.code), style: textStyle)),
+                DataCell(
+                    Text(_formatStatus(group.isActive), style: textStyle)),
+                DataCell(Text(
+                    group.itemsCount?.toString() ?? _emptyCellText,
+                    style: textStyle)),
+                DataCell(Text(_displayText(group.description), style: textStyle)),
+                DataCell(Wrap(
+                  spacing: 8,
+                  children: [
+                    TextButton(
+                      onPressed: () =>
+                          _openEditPage(context, viewModel, group),
+                      child: const Text('编辑'),
+                    ),
+                    TextButton(
+                      onPressed: () =>
+                          _confirmDelete(context, viewModel, group),
+                      child: const Text('删除'),
+                    ),
+                  ],
+                )),
+              ],
+            ),
+          )
+          .toList(),
     );
   }
 

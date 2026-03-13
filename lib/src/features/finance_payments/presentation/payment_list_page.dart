@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -196,6 +197,10 @@ class _PaymentListViewState extends State<_PaymentListView> {
       );
     }
 
+    if (!isMobile) {
+      return _buildDesktopTable(context, viewModel, payments);
+    }
+
     return ListView.separated(
       itemCount: payments.length,
       separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
@@ -203,6 +208,49 @@ class _PaymentListViewState extends State<_PaymentListView> {
         final payment = payments[index];
         return _buildSummaryCard(context, payment, isMobile);
       },
+    );
+  }
+
+  Widget _buildDesktopTable(
+    BuildContext context,
+    PaymentViewModel viewModel,
+    List<Payment> payments,
+  ) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('收款单号')),
+        DataColumn(label: Text('客户')),
+        DataColumn(label: Text('施工单号')),
+        DataColumn(label: Text('金额')),
+        DataColumn(label: Text('状态')),
+        DataColumn(label: Text('收款日期')),
+      ],
+      rows: payments
+          .map(
+            (payment) => DataRow(
+              cells: [
+                DataCell(Text(
+                  _displayText(payment.paymentNumber ?? '收款 #${payment.id}'),
+                  style: theme.textTheme.bodyMedium,
+                )),
+                DataCell(
+                    Text(_displayText(payment.customerName), style: textStyle)),
+                DataCell(
+                    Text(_displayText(payment.workOrderNumber), style: textStyle)),
+                DataCell(Text(_formatAmount(payment.amount), style: textStyle)),
+                DataCell(Text(
+                  payment.statusDisplay ??
+                      payment.status ??
+                      _emptyCellText,
+                  style: textStyle,
+                )),
+                DataCell(Text(_formatDate(payment.paymentDate), style: textStyle)),
+              ],
+            ),
+          )
+          .toList(),
     );
   }
 

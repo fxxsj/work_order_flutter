@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -251,6 +252,10 @@ class _ProcessListViewState extends State<_ProcessListView> {
       );
     }
 
+    if (!isMobile) {
+      return _buildDesktopTable(context, viewModel, processes);
+    }
+
     return ListView.separated(
       itemCount: processes.length,
       separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
@@ -258,6 +263,62 @@ class _ProcessListViewState extends State<_ProcessListView> {
         final process = processes[index];
         return _buildSummaryCard(context, viewModel, process, isMobile);
       },
+    );
+  }
+
+  Widget _buildDesktopTable(
+    BuildContext context,
+    ProcessViewModel viewModel,
+    List<Process> processes,
+  ) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('工序')),
+        DataColumn(label: Text('编码')),
+        DataColumn(label: Text('标准工时(小时)')),
+        DataColumn(label: Text('排序')),
+        DataColumn(label: Text('状态')),
+        DataColumn(label: Text('描述')),
+        DataColumn(label: Text('操作')),
+      ],
+      rows: processes
+          .map(
+            (process) => DataRow(
+              cells: [
+                DataCell(Text(
+                  _displayText(process.name),
+                  style: theme.textTheme.bodyMedium,
+                )),
+                DataCell(Text(_displayText(process.code), style: textStyle)),
+                DataCell(Text(_displayDuration(process.standardDuration),
+                    style: textStyle)),
+                DataCell(
+                    Text(_displayNumber(process.sortOrder), style: textStyle)),
+                DataCell(
+                    Text(process.isActive ? '启用' : '禁用', style: textStyle)),
+                DataCell(
+                    Text(_displayText(process.description), style: textStyle)),
+                DataCell(Wrap(
+                  spacing: 8,
+                  children: [
+                    TextButton(
+                      onPressed: () =>
+                          _openEditPage(context, viewModel, process),
+                      child: const Text('编辑'),
+                    ),
+                    TextButton(
+                      onPressed: () =>
+                          _confirmDelete(context, viewModel, process),
+                      child: const Text('删除'),
+                    ),
+                  ],
+                )),
+              ],
+            ),
+          )
+          .toList(),
     );
   }
 

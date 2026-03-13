@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -271,6 +272,10 @@ class _TaskListViewState extends State<_TaskListView> {
       );
     }
 
+    if (!isMobile) {
+      return _buildDesktopTable(context, viewModel, tasks);
+    }
+
     return ListView.separated(
       itemCount: tasks.length,
       separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
@@ -278,6 +283,100 @@ class _TaskListViewState extends State<_TaskListView> {
         final task = tasks[index];
         return _buildSummaryCard(context, viewModel, task, isMobile);
       },
+    );
+  }
+
+  Widget _buildDesktopTable(
+    BuildContext context,
+    TaskViewModel viewModel,
+    List<Task> tasks,
+  ) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('任务')),
+        DataColumn(label: Text('施工单号')),
+        DataColumn(label: Text('工序')),
+        DataColumn(label: Text('分派部门')),
+        DataColumn(label: Text('分派操作员')),
+        DataColumn(label: Text('生产数量')),
+        DataColumn(label: Text('完成数量')),
+        DataColumn(label: Text('进度')),
+        DataColumn(label: Text('状态')),
+        DataColumn(label: Text('操作')),
+      ],
+      rows: tasks
+          .map(
+            (task) {
+              final isCompleted = task.status == 'completed';
+              final isCancelled = task.status == 'cancelled';
+              final isDraft = task.status == 'draft';
+              final canUpdate = !(isCompleted || isCancelled || isDraft);
+              final canComplete = !(isCompleted || isCancelled || isDraft);
+
+              return DataRow(
+                cells: [
+                  DataCell(Text(
+                    _displayText(
+                      task.workContent?.trim().isNotEmpty == true
+                          ? task.workContent
+                          : (task.processName ?? '任务 #${task.id}'),
+                    ),
+                    style: theme.textTheme.bodyMedium,
+                  )),
+                  DataCell(Text(_displayText(task.workOrderNumber),
+                      style: textStyle)),
+                  DataCell(
+                      Text(_displayText(task.processName), style: textStyle)),
+                  DataCell(Text(_displayText(task.assignedDepartmentName),
+                      style: textStyle)),
+                  DataCell(Text(_displayText(task.assignedOperatorName),
+                      style: textStyle)),
+                  DataCell(Text(_formatNumber(task.productionQuantity),
+                      style: textStyle)),
+                  DataCell(Text(_formatNumber(task.quantityCompleted),
+                      style: textStyle)),
+                  DataCell(Text(_formatProgress(task), style: textStyle)),
+                  DataCell(Text(
+                    task.statusDisplay ?? task.status ?? _emptyCellText,
+                    style: textStyle,
+                  )),
+                  DataCell(Wrap(
+                    spacing: 8,
+                    children: [
+                      if (task.workOrderId != null)
+                        TextButton(
+                          onPressed: () =>
+                              context.go('/workorders/${task.workOrderId}'),
+                          child: const Text('查看施工单'),
+                        ),
+                      TextButton(
+                        onPressed: canUpdate
+                            ? () => _openUpdateDialog(context, viewModel, task)
+                            : null,
+                        child:
+                            Text(canUpdate ? _updateButtonText : '不可更新'),
+                      ),
+                      TextButton(
+                        onPressed: canComplete
+                            ? () => _openCompleteDialog(context, viewModel, task)
+                            : null,
+                        child: Text(
+                            canComplete ? _completeButtonText : '不可完成'),
+                      ),
+                      TextButton(
+                        onPressed: () =>
+                            _openAssignDialog(context, viewModel, task),
+                        child: const Text(_assignButtonText),
+                      ),
+                    ],
+                  )),
+                ],
+              );
+            },
+          )
+          .toList(),
     );
   }
 

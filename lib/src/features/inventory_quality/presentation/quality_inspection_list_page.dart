@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -471,14 +472,18 @@ class _QualityInspectionListViewState
         text: _emptyText,
       );
     } else {
-      listContent = ListView.separated(
-        itemCount: inspections.length,
-        separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
-        itemBuilder: (context, index) {
-          final inspection = inspections[index];
-          return _buildSummaryCard(context, viewModel, inspection, isMobile);
-        },
-      );
+      if (!isMobile) {
+        listContent = _buildDesktopTable(context, viewModel, inspections);
+      } else {
+        listContent = ListView.separated(
+          itemCount: inspections.length,
+          separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
+          itemBuilder: (context, index) {
+            final inspection = inspections[index];
+            return _buildSummaryCard(context, viewModel, inspection, isMobile);
+          },
+        );
+      }
     }
 
     return Column(
@@ -488,6 +493,75 @@ class _QualityInspectionListViewState
         SizedBox(height: sectionSpacing),
         Expanded(child: listContent),
       ],
+    );
+  }
+
+  Widget _buildDesktopTable(
+    BuildContext context,
+    QualityInspectionViewModel viewModel,
+    List<QualityInspection> inspections,
+  ) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('质检单号')),
+        DataColumn(label: Text('施工单号')),
+        DataColumn(label: Text('产品')),
+        DataColumn(label: Text('检验员')),
+        DataColumn(label: Text('检验日期')),
+        DataColumn(label: Text('结果')),
+        DataColumn(label: Text('不良率')),
+        DataColumn(label: Text('操作')),
+      ],
+      rows: inspections
+          .map(
+            (inspection) {
+              final canComplete =
+                  (inspection.result ?? 'pending') == 'pending';
+              return DataRow(
+                cells: [
+                  DataCell(Text(
+                    _displayText(inspection.inspectionNumber),
+                    style: theme.textTheme.bodyMedium,
+                  )),
+                  DataCell(Text(
+                      _displayText(inspection.workOrderNumber), style: textStyle)),
+                  DataCell(Text(
+                      _displayText(inspection.productName), style: textStyle)),
+                  DataCell(Text(
+                      _displayText(inspection.inspectorName), style: textStyle)),
+                  DataCell(Text(_formatDate(inspection.inspectionDate),
+                      style: textStyle)),
+                  DataCell(Text(
+                    inspection.resultDisplay ??
+                        inspection.result ??
+                        _emptyCellText,
+                    style: textStyle,
+                  )),
+                  DataCell(Text(
+                      inspection.defectiveRateFormatted ?? _emptyCellText,
+                      style: textStyle)),
+                  DataCell(Wrap(
+                    spacing: 8,
+                    children: [
+                      TextButton(
+                        onPressed: () => _openDetailDialog(inspection),
+                        child: const Text('查看'),
+                      ),
+                      if (canComplete)
+                        TextButton(
+                          onPressed: () => _openCompleteDialog(
+                              context, viewModel, inspection),
+                          child: const Text(_completeTitle),
+                        ),
+                    ],
+                  )),
+                ],
+              );
+            },
+          )
+          .toList(),
     );
   }
 

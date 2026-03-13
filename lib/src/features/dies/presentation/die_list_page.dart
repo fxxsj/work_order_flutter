@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -262,6 +263,10 @@ class _DieListViewState extends State<_DieListView> {
       );
     }
 
+    if (!isMobile) {
+      return _buildDesktopTable(context, viewModel, dies);
+    }
+
     return ListView.separated(
       itemCount: dies.length,
       separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
@@ -269,6 +274,66 @@ class _DieListViewState extends State<_DieListView> {
         final die = dies[index];
         return _buildSummaryCard(context, viewModel, die, isMobile);
       },
+    );
+  }
+
+  Widget _buildDesktopTable(
+    BuildContext context,
+    DieViewModel viewModel,
+    List<Die> dies,
+  ) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('刀模')),
+        DataColumn(label: Text('编码')),
+        DataColumn(label: Text('类型')),
+        DataColumn(label: Text('尺寸')),
+        DataColumn(label: Text('材质')),
+        DataColumn(label: Text('厚度')),
+        DataColumn(label: Text('确认状态')),
+        DataColumn(label: Text('包含产品')),
+        DataColumn(label: Text('创建时间')),
+        DataColumn(label: Text('操作')),
+      ],
+      rows: dies
+          .map(
+            (die) => DataRow(
+              cells: [
+                DataCell(Text(
+                  _displayText(die.name),
+                  style: theme.textTheme.bodyMedium,
+                )),
+                DataCell(Text(_displayText(die.code), style: textStyle)),
+                DataCell(Text(
+                  _displayText(die.dieTypeDisplay ?? _dieTypeLabel(die.dieType)),
+                  style: textStyle,
+                )),
+                DataCell(Text(_displayText(die.size), style: textStyle)),
+                DataCell(Text(_displayText(die.material), style: textStyle)),
+                DataCell(Text(_displayText(die.thickness), style: textStyle)),
+                DataCell(Text(die.confirmed ? '已确认' : '待确认',
+                    style: textStyle)),
+                DataCell(Text(_productSummary(die.products), style: textStyle)),
+                DataCell(Text(_formatDateTime(die.createdAt), style: textStyle)),
+                DataCell(Wrap(
+                  spacing: 8,
+                  children: [
+                    TextButton(
+                      onPressed: () => _openEditPage(context, viewModel, die),
+                      child: const Text('编辑'),
+                    ),
+                    TextButton(
+                      onPressed: () => _confirmDelete(context, viewModel, die),
+                      child: const Text('删除'),
+                    ),
+                  ],
+                )),
+              ],
+            ),
+          )
+          .toList(),
     );
   }
 

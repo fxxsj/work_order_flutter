@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -196,6 +197,10 @@ class _StatementListViewState extends State<_StatementListView> {
       );
     }
 
+    if (!isMobile) {
+      return _buildDesktopTable(context, viewModel, statements);
+    }
+
     return ListView.separated(
       itemCount: statements.length,
       separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
@@ -203,6 +208,49 @@ class _StatementListViewState extends State<_StatementListView> {
         final statement = statements[index];
         return _buildSummaryCard(context, statement, isMobile);
       },
+    );
+  }
+
+  Widget _buildDesktopTable(
+    BuildContext context,
+    StatementViewModel viewModel,
+    List<Statement> statements,
+  ) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('对账单号')),
+        DataColumn(label: Text('客户')),
+        DataColumn(label: Text('对账周期')),
+        DataColumn(label: Text('金额')),
+        DataColumn(label: Text('状态')),
+      ],
+      rows: statements
+          .map(
+            (statement) => DataRow(
+              cells: [
+                DataCell(Text(
+                  _displayText(
+                      statement.statementNumber ?? '对账单 #${statement.id}'),
+                  style: theme.textTheme.bodyMedium,
+                )),
+                DataCell(
+                    Text(_displayText(statement.customerName), style: textStyle)),
+                DataCell(Text(_formatPeriod(statement.periodStart,
+                    statement.periodEnd), style: textStyle)),
+                DataCell(Text(_formatAmount(statement.totalAmount),
+                    style: theme.textTheme.bodyMedium)),
+                DataCell(Text(
+                  statement.statusDisplay ??
+                      statement.status ??
+                      _emptyCellText,
+                  style: textStyle,
+                )),
+              ],
+            ),
+          )
+          .toList(),
     );
   }
 

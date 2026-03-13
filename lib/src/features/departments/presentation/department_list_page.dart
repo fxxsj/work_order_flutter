@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -251,6 +252,10 @@ class _DepartmentListViewState extends State<_DepartmentListView> {
       );
     }
 
+    if (!isMobile) {
+      return _buildDesktopTable(context, viewModel, departments);
+    }
+
     return ListView.separated(
       itemCount: departments.length,
       separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
@@ -258,6 +263,73 @@ class _DepartmentListViewState extends State<_DepartmentListView> {
         final department = departments[index];
         return _buildSummaryCard(context, viewModel, department, isMobile);
       },
+    );
+  }
+
+  Widget _buildDesktopTable(
+    BuildContext context,
+    DepartmentViewModel viewModel,
+    List<Department> departments,
+  ) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('部门')),
+        DataColumn(label: Text('编码')),
+        DataColumn(label: Text('上级部门')),
+        DataColumn(label: Text('子部门')),
+        DataColumn(label: Text('工序')),
+        DataColumn(label: Text('排序')),
+        DataColumn(label: Text('状态')),
+        DataColumn(label: Text('创建时间')),
+        DataColumn(label: Text('操作')),
+      ],
+      rows: departments
+          .map(
+            (department) => DataRow(
+              cells: [
+                DataCell(Text(
+                  _displayText(department.name),
+                  style: theme.textTheme.bodyMedium,
+                )),
+                DataCell(Text(_displayText(department.code), style: textStyle)),
+                DataCell(
+                    Text(_displayText(department.parentName), style: textStyle)),
+                DataCell(Text(
+                    department.childrenCount?.toString() ?? _emptyCellText,
+                    style: textStyle)),
+                DataCell(Text(
+                    department.processNames.isEmpty
+                        ? _emptyCellText
+                        : department.processNames.join('、'),
+                    style: textStyle)),
+                DataCell(
+                    Text(_displayNumber(department.sortOrder), style: textStyle)),
+                DataCell(Text(
+                    department.isActive ? '启用' : '禁用',
+                    style: textStyle)),
+                DataCell(
+                    Text(_formatDateTime(department.createdAt), style: textStyle)),
+                DataCell(Wrap(
+                  spacing: 8,
+                  children: [
+                    TextButton(
+                      onPressed: () =>
+                          _openEditPage(context, viewModel, department),
+                      child: const Text('编辑'),
+                    ),
+                    TextButton(
+                      onPressed: () =>
+                          _confirmDelete(context, viewModel, department),
+                      child: const Text('删除'),
+                    ),
+                  ],
+                )),
+              ],
+            ),
+          )
+          .toList(),
     );
   }
 

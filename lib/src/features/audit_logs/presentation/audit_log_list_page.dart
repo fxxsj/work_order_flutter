@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -196,6 +197,10 @@ class _AuditLogListViewState extends State<_AuditLogListView> {
       );
     }
 
+    if (!isMobile) {
+      return _buildDesktopTable(context, viewModel, logs);
+    }
+
     return ListView.separated(
       itemCount: logs.length,
       separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
@@ -203,6 +208,45 @@ class _AuditLogListViewState extends State<_AuditLogListView> {
         final log = logs[index];
         return _buildSummaryCard(context, log, isMobile);
       },
+    );
+  }
+
+  Widget _buildDesktopTable(
+    BuildContext context,
+    AuditLogViewModel viewModel,
+    List<AuditLog> logs,
+  ) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('日志ID')),
+        DataColumn(label: Text('操作类型')),
+        DataColumn(label: Text('用户')),
+        DataColumn(label: Text('对象类型')),
+        DataColumn(label: Text('对象')),
+        DataColumn(label: Text('变更字段')),
+        DataColumn(label: Text('IP')),
+        DataColumn(label: Text('时间')),
+      ],
+      rows: logs
+          .map(
+            (log) => DataRow(
+              cells: [
+                DataCell(Text(log.id.toString(),
+                    style: theme.textTheme.bodyMedium)),
+                DataCell(Text(_displayText(log.actionType), style: textStyle)),
+                DataCell(Text(_displayText(log.username), style: textStyle)),
+                DataCell(
+                    Text(_displayText(log.contentTypeName), style: textStyle)),
+                DataCell(Text(_displayText(log.objectRepr), style: textStyle)),
+                DataCell(Text(_displayText(log.changedFields), style: textStyle)),
+                DataCell(Text(_displayText(log.ipAddress), style: textStyle)),
+                DataCell(Text(_formatDateTime(log.createdAt), style: textStyle)),
+              ],
+            ),
+          )
+          .toList(),
     );
   }
 

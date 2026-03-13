@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -264,6 +265,10 @@ class _ProductListViewState extends State<_ProductListView> {
       );
     }
 
+    if (!isMobile) {
+      return _buildDesktopTable(context, viewModel, products);
+    }
+
     return ListView.separated(
       itemCount: products.length,
       separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
@@ -271,6 +276,73 @@ class _ProductListViewState extends State<_ProductListView> {
         final product = products[index];
         return _buildSummaryCard(context, viewModel, product, isMobile);
       },
+    );
+  }
+
+  Widget _buildDesktopTable(
+    BuildContext context,
+    ProductViewModel viewModel,
+    List<Product> products,
+  ) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('产品')),
+        DataColumn(label: Text('编码')),
+        DataColumn(label: Text('类型')),
+        DataColumn(label: Text('规格')),
+        DataColumn(label: Text('单位')),
+        DataColumn(label: Text('单价')),
+        DataColumn(label: Text('库存')),
+        DataColumn(label: Text('状态')),
+        DataColumn(label: Text('操作')),
+      ],
+      rows: products
+          .map(
+            (product) => DataRow(
+              cells: [
+                DataCell(Text(
+                  product.name.isNotEmpty ? product.name : _emptyCellText,
+                  style: theme.textTheme.bodyMedium,
+                )),
+                DataCell(Text(
+                  product.code.isNotEmpty ? product.code : _emptyCellText,
+                  style: textStyle,
+                )),
+                DataCell(Text(
+                  product.productTypeDisplay ?? _emptyCellText,
+                  style: textStyle,
+                )),
+                DataCell(Text(
+                  product.specification ?? _emptyCellText,
+                  style: textStyle,
+                )),
+                DataCell(Text(product.unit ?? _emptyCellText, style: textStyle)),
+                DataCell(Text(_formatAmount(product.unitPrice), style: textStyle)),
+                DataCell(
+                    Text(_formatAmount(product.stockQuantity), style: textStyle)),
+                DataCell(
+                    Text(_formatStatus(product.isActive), style: textStyle)),
+                DataCell(Wrap(
+                  spacing: 8,
+                  children: [
+                    TextButton(
+                      onPressed: () =>
+                          _openEditPage(context, viewModel, product),
+                      child: const Text('编辑'),
+                    ),
+                    TextButton(
+                      onPressed: () =>
+                          _confirmDelete(context, viewModel, product),
+                      child: const Text('删除'),
+                    ),
+                  ],
+                )),
+              ],
+            ),
+          )
+          .toList(),
     );
   }
 

@@ -6,6 +6,7 @@ import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
 import 'package:work_order_app/src/features/customer/data/customer_dto.dart';
@@ -330,8 +331,191 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
     return DetailSectionCard(title: title, child: child);
   }
 
+  Widget _buildBasicSection(double fieldWidth) {
+    return _buildSection(
+      '基本信息',
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DropdownButtonFormField<int>(
+            initialValue: _customerId,
+            decoration: const InputDecoration(labelText: '客户'),
+            items: _customers
+                .map(
+                  (item) => DropdownMenuItem(
+                    value: item.id,
+                    child: Text(item.name),
+                  ),
+                )
+                .toList(),
+            onChanged: (value) => setState(() => _customerId = value),
+            validator: (value) => value == null ? '请选择客户' : null,
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 16,
+            runSpacing: 12,
+            children: [
+              SizedBox(
+                width: fieldWidth,
+                child: DropdownButtonFormField<String>(
+                  initialValue: _status,
+                  decoration: const InputDecoration(labelText: '状态'),
+                  items: const [
+                    DropdownMenuItem(value: 'draft', child: Text('草稿')),
+                    DropdownMenuItem(value: 'submitted', child: Text('已提交')),
+                    DropdownMenuItem(value: 'approved', child: Text('已审核')),
+                    DropdownMenuItem(value: 'rejected', child: Text('已拒绝')),
+                    DropdownMenuItem(
+                        value: 'in_production', child: Text('生产中')),
+                    DropdownMenuItem(value: 'completed', child: Text('已完成')),
+                    DropdownMenuItem(value: 'cancelled', child: Text('已取消')),
+                  ],
+                  onChanged: (value) =>
+                      setState(() => _status = value ?? 'draft'),
+                ),
+              ),
+              SizedBox(
+                width: fieldWidth,
+                child: DropdownButtonFormField<String>(
+                  initialValue: _paymentStatus,
+                  decoration: const InputDecoration(labelText: '付款状态'),
+                  items: const [
+                    DropdownMenuItem(value: 'unpaid', child: Text('未付款')),
+                    DropdownMenuItem(value: 'partial', child: Text('部分付款')),
+                    DropdownMenuItem(value: 'paid', child: Text('已付款')),
+                  ],
+                  onChanged: (value) =>
+                      setState(() => _paymentStatus = value ?? 'unpaid'),
+                ),
+              ),
+              SizedBox(
+                width: fieldWidth,
+                child: TextFormField(
+                  readOnly: true,
+                  decoration: const InputDecoration(labelText: '下单日期'),
+                  controller: _orderDateController,
+                  onTap: () => _pickDate(isOrderDate: true),
+                ),
+              ),
+              SizedBox(
+                width: fieldWidth,
+                child: TextFormField(
+                  readOnly: true,
+                  decoration: const InputDecoration(labelText: '交货日期'),
+                  controller: _deliveryDateController,
+                  onTap: () => _pickDate(isOrderDate: false),
+                  validator: (value) =>
+                      (value == null || value.isEmpty) ? '请选择交货日期' : null,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 16,
+            runSpacing: 12,
+            children: [
+              SizedBox(
+                width: fieldWidth,
+                child: TextFormField(
+                  controller: _taxRateController,
+                  decoration: const InputDecoration(labelText: '税率 (%)'),
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+              SizedBox(
+                width: fieldWidth,
+                child: TextFormField(
+                  controller: _discountAmountController,
+                  decoration: const InputDecoration(labelText: '折扣金额'),
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+              SizedBox(
+                width: fieldWidth,
+                child: TextFormField(
+                  controller: _depositAmountController,
+                  decoration: const InputDecoration(labelText: '定金'),
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+              SizedBox(
+                width: fieldWidth,
+                child: TextFormField(
+                  controller: _paidAmountController,
+                  decoration: const InputDecoration(labelText: '已付金额'),
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildItemsSection() {
+    return _buildSection(
+      '订单明细',
+      Column(
+        children: [
+          for (int index = 0; index < _itemDrafts.length; index++)
+            _ItemRow(
+              draft: _itemDrafts[index],
+              products: _products,
+              onRemove: _itemDrafts.length > 1
+                  ? () => setState(() => _itemDrafts.removeAt(index))
+                  : null,
+            ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () => setState(() => _itemDrafts.add(_ItemDraft())),
+              icon: const Icon(Icons.add),
+              label: const Text('新增明细'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContactSection() {
+    return _buildSection(
+      '联系与备注',
+      Column(
+        children: [
+          TextFormField(
+            controller: _contactPersonController,
+            decoration: const InputDecoration(labelText: '联系人'),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _contactPhoneController,
+            decoration: const InputDecoration(labelText: '联系电话'),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _shippingAddressController,
+            decoration: const InputDecoration(labelText: '送货地址'),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _notesController,
+            decoration: const InputDecoration(labelText: '备注'),
+            maxLines: 3,
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isDesktop = BreakpointsUtil.isDesktop(context);
+    final isTablet = BreakpointsUtil.isTablet(context);
+    final fieldWidth = isDesktop ? 260.0 : (isTablet ? 220.0 : double.infinity);
     final title =
         widget.mode == SalesOrderFormMode.create ? '新建销售订单' : '编辑销售订单';
     final breadcrumb = [
@@ -372,202 +556,24 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               key: _formKey,
               child: ListView(
                 children: [
-                  _buildSection(
-                    '基本信息',
-                    Column(
+                  if (isDesktop)
+                    Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        DropdownButtonFormField<int>(
-                          initialValue: _customerId,
-                          decoration: const InputDecoration(labelText: '客户'),
-                          items: _customers
-                              .map(
-                                (item) => DropdownMenuItem(
-                                  value: item.id,
-                                  child: Text(item.name),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (value) =>
-                              setState(() => _customerId = value),
-                          validator: (value) => value == null ? '请选择客户' : null,
-                        ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 16,
-                          runSpacing: 12,
-                          children: [
-                            SizedBox(
-                              width: 220,
-                              child: DropdownButtonFormField<String>(
-                                initialValue: _status,
-                                decoration:
-                                    const InputDecoration(labelText: '状态'),
-                                items: const [
-                                  DropdownMenuItem(
-                                      value: 'draft', child: Text('草稿')),
-                                  DropdownMenuItem(
-                                      value: 'submitted', child: Text('已提交')),
-                                  DropdownMenuItem(
-                                      value: 'approved', child: Text('已审核')),
-                                  DropdownMenuItem(
-                                      value: 'rejected', child: Text('已拒绝')),
-                                  DropdownMenuItem(
-                                      value: 'in_production',
-                                      child: Text('生产中')),
-                                  DropdownMenuItem(
-                                      value: 'completed', child: Text('已完成')),
-                                  DropdownMenuItem(
-                                      value: 'cancelled', child: Text('已取消')),
-                                ],
-                                onChanged: (value) =>
-                                    setState(() => _status = value ?? 'draft'),
-                              ),
-                            ),
-                            SizedBox(
-                              width: 220,
-                              child: DropdownButtonFormField<String>(
-                                initialValue: _paymentStatus,
-                                decoration:
-                                    const InputDecoration(labelText: '付款状态'),
-                                items: const [
-                                  DropdownMenuItem(
-                                      value: 'unpaid', child: Text('未付款')),
-                                  DropdownMenuItem(
-                                      value: 'partial', child: Text('部分付款')),
-                                  DropdownMenuItem(
-                                      value: 'paid', child: Text('已付款')),
-                                ],
-                                onChanged: (value) => setState(
-                                    () => _paymentStatus = value ?? 'unpaid'),
-                              ),
-                            ),
-                            SizedBox(
-                              width: 220,
-                              child: TextFormField(
-                                readOnly: true,
-                                decoration:
-                                    const InputDecoration(labelText: '下单日期'),
-                                controller: _orderDateController,
-                                onTap: () => _pickDate(isOrderDate: true),
-                              ),
-                            ),
-                            SizedBox(
-                              width: 220,
-                              child: TextFormField(
-                                readOnly: true,
-                                decoration:
-                                    const InputDecoration(labelText: '交货日期'),
-                                controller: _deliveryDateController,
-                                onTap: () => _pickDate(isOrderDate: false),
-                                validator: (value) =>
-                                    (value == null || value.isEmpty)
-                                        ? '请选择交货日期'
-                                        : null,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 16,
-                          runSpacing: 12,
-                          children: [
-                            SizedBox(
-                              width: 220,
-                              child: TextFormField(
-                                controller: _taxRateController,
-                                decoration:
-                                    const InputDecoration(labelText: '税率 (%)'),
-                                keyboardType: TextInputType.number,
-                              ),
-                            ),
-                            SizedBox(
-                              width: 220,
-                              child: TextFormField(
-                                controller: _discountAmountController,
-                                decoration:
-                                    const InputDecoration(labelText: '折扣金额'),
-                                keyboardType: TextInputType.number,
-                              ),
-                            ),
-                            SizedBox(
-                              width: 220,
-                              child: TextFormField(
-                                controller: _depositAmountController,
-                                decoration:
-                                    const InputDecoration(labelText: '定金'),
-                                keyboardType: TextInputType.number,
-                              ),
-                            ),
-                            SizedBox(
-                              width: 220,
-                              child: TextFormField(
-                                controller: _paidAmountController,
-                                decoration:
-                                    const InputDecoration(labelText: '已付金额'),
-                                keyboardType: TextInputType.number,
-                              ),
-                            ),
-                          ],
-                        ),
+                        Expanded(child: _buildBasicSection(fieldWidth)),
+                        const SizedBox(width: _sectionSpacing),
+                        Expanded(child: _buildContactSection()),
                       ],
-                    ),
-                  ),
-                  const SizedBox(height: _sectionSpacing),
-                  _buildSection(
-                    '订单明细',
-                    Column(
-                      children: [
-                        for (int index = 0; index < _itemDrafts.length; index++)
-                          _ItemRow(
-                            draft: _itemDrafts[index],
-                            products: _products,
-                            onRemove: _itemDrafts.length > 1
-                                ? () =>
-                                    setState(() => _itemDrafts.removeAt(index))
-                                : null,
-                          ),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: TextButton.icon(
-                            onPressed: () =>
-                                setState(() => _itemDrafts.add(_ItemDraft())),
-                            icon: const Icon(Icons.add),
-                            label: const Text('新增明细'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: _sectionSpacing),
-                  _buildSection(
-                    '联系与备注',
-                    Column(
-                      children: [
-                        TextFormField(
-                          controller: _contactPersonController,
-                          decoration: const InputDecoration(labelText: '联系人'),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _contactPhoneController,
-                          decoration: const InputDecoration(labelText: '联系电话'),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _shippingAddressController,
-                          decoration: const InputDecoration(labelText: '送货地址'),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _notesController,
-                          decoration: const InputDecoration(labelText: '备注'),
-                          maxLines: 3,
-                        ),
-                      ],
-                    ),
-                  ),
+                    )
+                  else ...[
+                    _buildBasicSection(fieldWidth),
+                    const SizedBox(height: _sectionSpacing),
+                  ],
+                  _buildItemsSection(),
+                  if (!isDesktop) ...[
+                    const SizedBox(height: _sectionSpacing),
+                    _buildContactSection(),
+                  ],
                 ],
               ),
             ),

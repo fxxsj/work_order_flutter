@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 
 class ContentContainer extends StatelessWidget {
   const ContentContainer({
@@ -19,12 +20,22 @@ class ContentContainer extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final padding = LayoutTokens.pagePadding(context);
+    double resolvedMaxWidth = maxWidth;
+    if (maxWidth == LayoutTokens.maxContentWidth) {
+      if (BreakpointsUtil.is2xl(context)) {
+        resolvedMaxWidth = LayoutTokens.maxContentWidthWide;
+      } else if (BreakpointsUtil.isDesktop(context)) {
+        resolvedMaxWidth = LayoutTokens.maxContentWidth;
+      } else {
+        resolvedMaxWidth = double.infinity;
+      }
+    }
 
     final container = Container(
       color: colors?.background ?? theme.scaffoldBackgroundColor,
       child: Center(
         child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: maxWidth),
+          constraints: BoxConstraints(maxWidth: resolvedMaxWidth),
           child: Padding(
             padding: padding,
             child: child,

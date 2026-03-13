@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -518,6 +519,9 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
         text: _emptyText,
       );
     } else {
+      if (!isMobile) {
+        listContent = _buildDesktopTable(context, viewModel, stocks);
+      } else {
       listContent = ListView.separated(
         itemCount: stocks.length,
         separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
@@ -526,6 +530,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
           return _buildSummaryCard(context, viewModel, stock, isMobile);
         },
       );
+      }
     }
 
     return Column(
@@ -535,6 +540,69 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
         SizedBox(height: sectionSpacing),
         Expanded(child: listContent),
       ],
+    );
+  }
+
+  Widget _buildDesktopTable(
+    BuildContext context,
+    ProductStockViewModel viewModel,
+    List<ProductStock> stocks,
+  ) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('产品')),
+        DataColumn(label: Text('批次')),
+        DataColumn(label: Text('状态')),
+        DataColumn(label: Text('库存')),
+        DataColumn(label: Text('预留')),
+        DataColumn(label: Text('可用')),
+        DataColumn(label: Text('库位')),
+        DataColumn(label: Text('到期日')),
+        DataColumn(label: Text('库存价值')),
+        DataColumn(label: Text('操作')),
+      ],
+      rows: stocks
+          .map(
+            (stock) => DataRow(
+              cells: [
+                DataCell(Text(
+                  _displayText(stock.productName),
+                  style: theme.textTheme.bodyMedium,
+                )),
+                DataCell(Text(_displayText(stock.batchNo), style: textStyle)),
+                DataCell(Text(
+                  _displayText(stock.statusDisplay ?? stock.status),
+                  style: textStyle,
+                )),
+                DataCell(Text(_formatAmount(stock.quantity), style: textStyle)),
+                DataCell(
+                    Text(_formatAmount(stock.reservedQuantity), style: textStyle)),
+                DataCell(
+                    Text(_formatAmount(stock.availableQuantity), style: textStyle)),
+                DataCell(Text(_displayText(stock.location), style: textStyle)),
+                DataCell(Text(_formatDate(stock.expiryDate), style: textStyle)),
+                DataCell(Text(_formatAmount(stock.totalValue),
+                    style: theme.textTheme.bodyMedium)),
+                DataCell(Wrap(
+                  spacing: 8,
+                  children: [
+                    TextButton(
+                      onPressed: () => _openDetailDialog(stock),
+                      child: const Text('查看'),
+                    ),
+                    TextButton(
+                      onPressed: () =>
+                          _openAdjustDialog(context, viewModel, stock),
+                      child: const Text(_adjustTitle),
+                    ),
+                  ],
+                )),
+              ],
+            ),
+          )
+          .toList(),
     );
   }
 

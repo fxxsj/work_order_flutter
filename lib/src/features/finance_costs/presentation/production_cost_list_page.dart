@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -196,6 +197,10 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
       );
     }
 
+    if (!isMobile) {
+      return _buildDesktopTable(context, viewModel, costs);
+    }
+
     return ListView.separated(
       itemCount: costs.length,
       separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
@@ -203,6 +208,42 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
         final cost = costs[index];
         return _buildSummaryCard(context, cost, isMobile);
       },
+    );
+  }
+
+  Widget _buildDesktopTable(
+    BuildContext context,
+    ProductionCostViewModel viewModel,
+    List<ProductionCost> costs,
+  ) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('施工单号')),
+        DataColumn(label: Text('总成本')),
+        DataColumn(label: Text('状态')),
+        DataColumn(label: Text('计算时间')),
+      ],
+      rows: costs
+          .map(
+            (cost) => DataRow(
+              cells: [
+                DataCell(Text(
+                  _displayText(cost.workOrderNumber ?? '成本 #${cost.id}'),
+                  style: theme.textTheme.bodyMedium,
+                )),
+                DataCell(Text(_formatAmount(cost.totalCost), style: textStyle)),
+                DataCell(Text(
+                  cost.statusDisplay ?? cost.status ?? _emptyCellText,
+                  style: textStyle,
+                )),
+                DataCell(
+                    Text(_formatDate(cost.calculatedAt), style: textStyle)),
+              ],
+            ),
+          )
+          .toList(),
     );
   }
 

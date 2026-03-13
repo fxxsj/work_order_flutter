@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -330,6 +331,10 @@ class _ArtworkListViewState extends State<_ArtworkListView> {
       );
     }
 
+    if (!isMobile) {
+      return _buildDesktopTable(context, viewModel, artworks);
+    }
+
     return ListView.separated(
       itemCount: artworks.length,
       separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
@@ -337,6 +342,98 @@ class _ArtworkListViewState extends State<_ArtworkListView> {
         final artwork = artworks[index];
         return _buildSummaryCard(context, viewModel, artwork, isMobile);
       },
+    );
+  }
+
+  Widget _buildDesktopTable(
+    BuildContext context,
+    ArtworkViewModel viewModel,
+    List<Artwork> artworks,
+  ) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('稿件')),
+        DataColumn(label: Text('编码')),
+        DataColumn(label: Text('色数')),
+        DataColumn(label: Text('拼版尺寸')),
+        DataColumn(label: Text('状态')),
+        DataColumn(label: Text('关联刀模')),
+        DataColumn(label: Text('烫金版')),
+        DataColumn(label: Text('压凸版')),
+        DataColumn(label: Text('包含产品')),
+        DataColumn(label: Text('创建时间')),
+        DataColumn(label: Text('操作')),
+      ],
+      rows: artworks
+          .map(
+            (artwork) => DataRow(
+              cells: [
+                DataCell(Text(
+                  _displayText(artwork.name),
+                  style: theme.textTheme.bodyMedium,
+                )),
+                DataCell(Text(
+                  _displayText(
+                      artwork.fullCode.isNotEmpty ? artwork.fullCode : artwork.code),
+                  style: textStyle,
+                )),
+                DataCell(
+                    Text(_displayText(artwork.colorDisplay), style: textStyle)),
+                DataCell(Text(_displayText(artwork.impositionSize),
+                    style: textStyle)),
+                DataCell(
+                    Text(artwork.confirmed ? '已确认' : '未确认',
+                        style: textStyle)),
+                DataCell(Text(
+                  _compactListText(artwork.dieCodes, artwork.dieNames),
+                  style: textStyle,
+                )),
+                DataCell(Text(
+                  _compactListText(
+                      artwork.foilingPlateCodes, artwork.foilingPlateNames),
+                  style: textStyle,
+                )),
+                DataCell(Text(
+                  _compactListText(
+                      artwork.embossingPlateCodes, artwork.embossingPlateNames),
+                  style: textStyle,
+                )),
+                DataCell(
+                    Text(_productSummary(artwork.products), style: textStyle)),
+                DataCell(
+                    Text(_formatDateTime(artwork.createdAt), style: textStyle)),
+                DataCell(Wrap(
+                  spacing: 8,
+                  children: [
+                    TextButton(
+                      onPressed: () =>
+                          _openEditPage(context, viewModel, artwork),
+                      child: const Text('编辑'),
+                    ),
+                    TextButton(
+                      onPressed: () =>
+                          _createVersion(context, viewModel, artwork),
+                      child: const Text('新版本'),
+                    ),
+                    if (!artwork.confirmed)
+                      TextButton(
+                        onPressed: () =>
+                            _confirmArtwork(context, viewModel, artwork),
+                        child: const Text('确认'),
+                      ),
+                    TextButton(
+                      onPressed: () =>
+                          _confirmDelete(context, viewModel, artwork),
+                      child: const Text('删除'),
+                    ),
+                  ],
+                )),
+              ],
+            ),
+          )
+          .toList(),
     );
   }
 

@@ -4,7 +4,8 @@ import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 class LayoutTokens {
   const LayoutTokens._();
 
-  static const double maxContentWidth = 1240;
+  static const double maxContentWidth = 1440;
+  static const double maxContentWidthWide = 1680;
 
   static const double radiusSm = 12;
   static const double radiusMd = 16;
@@ -24,18 +25,18 @@ class LayoutTokens {
     final isMd = BreakpointsUtil.isMd(context);
     final isXl = BreakpointsUtil.isXl(context);
     if (isXs) {
-      return const EdgeInsets.fromLTRB(16, 16, 16, 24);
+      return const EdgeInsets.fromLTRB(16, 16, 16, 22);
     }
     if (isSm) {
-      return const EdgeInsets.fromLTRB(20, 20, 20, 28);
+      return const EdgeInsets.fromLTRB(22, 20, 22, 26);
     }
     if (isMd) {
-      return const EdgeInsets.fromLTRB(24, 24, 24, 32);
+      return const EdgeInsets.fromLTRB(28, 24, 28, 30);
     }
     if (isXl) {
-      return const EdgeInsets.fromLTRB(28, 28, 28, 36);
+      return const EdgeInsets.fromLTRB(34, 28, 34, 36);
     }
-    return const EdgeInsets.fromLTRB(32, 32, 32, 40);
+    return const EdgeInsets.fromLTRB(40, 32, 40, 40);
   }
 
   static EdgeInsets pageHeaderPadding(BuildContext context) {
@@ -44,18 +45,18 @@ class LayoutTokens {
     final isMd = BreakpointsUtil.isMd(context);
     final isXl = BreakpointsUtil.isXl(context);
     if (isXs) {
-      return const EdgeInsets.fromLTRB(12, 12, 12, 10);
+      return const EdgeInsets.fromLTRB(12, 12, 12, 8);
     }
     if (isSm) {
-      return const EdgeInsets.fromLTRB(14, 14, 14, 12);
+      return const EdgeInsets.fromLTRB(14, 14, 14, 10);
     }
     if (isMd) {
-      return const EdgeInsets.fromLTRB(16, 16, 16, 12);
+      return const EdgeInsets.fromLTRB(18, 16, 18, 12);
     }
     if (isXl) {
-      return const EdgeInsets.fromLTRB(18, 18, 18, 14);
+      return const EdgeInsets.fromLTRB(20, 18, 20, 12);
     }
-    return const EdgeInsets.fromLTRB(20, 20, 20, 16);
+    return const EdgeInsets.fromLTRB(22, 20, 22, 14);
   }
 
   static EdgeInsets cardPadding(BuildContext context) {
@@ -71,7 +72,10 @@ class LayoutTokens {
   }
 
   static double sectionSpacing(BuildContext context) {
-    return BreakpointsUtil.isXs(context) ? 10 : 12;
+    if (BreakpointsUtil.isXs(context)) return 12;
+    if (BreakpointsUtil.isSm(context)) return 12;
+    if (BreakpointsUtil.isMd(context)) return 14;
+    return 16;
   }
 
   static double formSectionSpacing(BuildContext context) {

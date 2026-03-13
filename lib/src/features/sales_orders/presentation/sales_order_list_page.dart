@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -195,6 +196,10 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
       );
     }
 
+    if (!isMobile) {
+      return _buildDesktopTable(context, orders);
+    }
+
     return ListView.separated(
       itemCount: orders.length,
       separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
@@ -208,6 +213,84 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         );
       },
     );
+  }
+
+  Widget _buildDesktopTable(BuildContext context, List<SalesOrder> orders) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>();
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('订单号')),
+        DataColumn(label: Text('客户')),
+        DataColumn(label: Text('状态')),
+        DataColumn(label: Text('付款')),
+        DataColumn(label: Text('下单日期')),
+        DataColumn(label: Text('交货日期')),
+        DataColumn(label: Text('金额')),
+        DataColumn(label: Text('操作')),
+      ],
+      rows: orders
+          .map(
+            (order) => DataRow(
+              cells: [
+                DataCell(Text(
+                  order.orderNumber.isEmpty
+                      ? '销售订单 #${order.id}'
+                      : order.orderNumber,
+                  style: theme.textTheme.bodyMedium,
+                )),
+                DataCell(Text(_displayText(order.customerName), style: textStyle)),
+                DataCell(Text(
+                  _displayText(order.statusDisplay ?? order.status),
+                  style: textStyle?.copyWith(color: colors?.sidebarText),
+                )),
+                DataCell(Text(
+                  _displayText(
+                      order.paymentStatusDisplay ?? order.paymentStatus),
+                  style: textStyle,
+                )),
+                DataCell(Text(_formatDate(order.orderDate), style: textStyle)),
+                DataCell(Text(_formatDate(order.deliveryDate), style: textStyle)),
+                DataCell(Text(_formatAmount(order.totalAmount),
+                    style: theme.textTheme.bodyMedium)),
+                DataCell(Row(
+                  children: [
+                    TextButton(
+                      onPressed: () => context.go('/sales-orders/${order.id}'),
+                      child: const Text('查看'),
+                    ),
+                    TextButton(
+                      onPressed: () =>
+                          context.go('/sales-orders/${order.id}/edit'),
+                      child: const Text('编辑'),
+                    ),
+                  ],
+                )),
+              ],
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  static String _displayText(String? value) {
+    final text = value?.trim() ?? '';
+    return text.isEmpty ? _SalesOrderSummaryCard._emptyCellText : text;
+  }
+
+  String _formatDate(DateTime? value) {
+    if (value == null) return _SalesOrderSummaryCard._emptyCellText;
+    final local = value.toLocal();
+    final year = local.year.toString().padLeft(4, '0');
+    final month = local.month.toString().padLeft(2, '0');
+    final day = local.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
+  }
+
+  String _formatAmount(double? value) {
+    if (value == null) return _SalesOrderSummaryCard._emptyCellText;
+    return value.toStringAsFixed(2);
   }
 
   Widget _buildPageHeader(

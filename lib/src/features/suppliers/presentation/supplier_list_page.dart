@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -251,6 +252,10 @@ class _SupplierListViewState extends State<_SupplierListView> {
       );
     }
 
+    if (!isMobile) {
+      return _buildDesktopTable(context, viewModel, suppliers);
+    }
+
     return ListView.separated(
       itemCount: suppliers.length,
       separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
@@ -258,6 +263,60 @@ class _SupplierListViewState extends State<_SupplierListView> {
         final supplier = suppliers[index];
         return _buildSummaryCard(context, viewModel, supplier, isMobile);
       },
+    );
+  }
+
+  Widget _buildDesktopTable(
+    BuildContext context,
+    SupplierViewModel viewModel,
+    List<Supplier> suppliers,
+  ) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('供应商')),
+        DataColumn(label: Text('编码')),
+        DataColumn(label: Text('联系人')),
+        DataColumn(label: Text('电话')),
+        DataColumn(label: Text('状态')),
+        DataColumn(label: Text('物料数')),
+        DataColumn(label: Text('操作')),
+      ],
+      rows: suppliers
+          .map(
+            (supplier) => DataRow(
+              cells: [
+                DataCell(Text(
+                  _displayText(supplier.name),
+                  style: theme.textTheme.bodyMedium,
+                )),
+                DataCell(Text(_displayText(supplier.code), style: textStyle)),
+                DataCell(
+                    Text(_displayText(supplier.contactPerson), style: textStyle)),
+                DataCell(Text(_displayText(supplier.phone), style: textStyle)),
+                DataCell(Text(_displayStatus(supplier), style: textStyle)),
+                DataCell(
+                    Text(_displayNumber(supplier.materialCount), style: textStyle)),
+                DataCell(Wrap(
+                  spacing: 8,
+                  children: [
+                    TextButton(
+                      onPressed: () =>
+                          _openEditPage(context, viewModel, supplier),
+                      child: const Text('编辑'),
+                    ),
+                    TextButton(
+                      onPressed: () =>
+                          _confirmDelete(context, viewModel, supplier),
+                      child: const Text('删除'),
+                    ),
+                  ],
+                )),
+              ],
+            ),
+          )
+          .toList(),
     );
   }
 

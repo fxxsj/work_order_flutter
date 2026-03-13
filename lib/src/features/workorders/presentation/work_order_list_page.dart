@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
@@ -243,7 +244,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
         return ListPageScaffold(
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, breadcrumb, isMobile),
-          body: _buildListBody(context, viewModel, workOrders),
+          body: _buildListBody(context, viewModel, workOrders, isMobile),
           footer: viewModel.total > 0
               ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
@@ -268,6 +269,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     BuildContext context,
     WorkOrderViewModel viewModel,
     List<WorkOrder> workOrders,
+    bool isMobile,
   ) {
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
 
@@ -304,6 +306,10 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
       );
     }
 
+    if (!isMobile) {
+      return _buildDesktopTable(context, viewModel, workOrders);
+    }
+
     return ListView.separated(
       itemCount: workOrders.length,
       separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
@@ -311,6 +317,110 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
         final workOrder = workOrders[index];
         return _buildSummaryCard(context, workOrder);
       },
+    );
+  }
+
+  Widget _buildDesktopTable(
+    BuildContext context,
+    WorkOrderViewModel viewModel,
+    List<WorkOrder> workOrders,
+  ) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    return AppDataTable(
+      columns: const [
+        DataColumn(label: Text('施工单号')),
+        DataColumn(label: Text('客户')),
+        DataColumn(label: Text('产品')),
+        DataColumn(label: Text('状态')),
+        DataColumn(label: Text('审核')),
+        DataColumn(label: Text('优先级')),
+        DataColumn(label: Text('交货日期')),
+        DataColumn(label: Text('金额')),
+        DataColumn(label: Text('进度')),
+        DataColumn(label: Text('负责人')),
+        DataColumn(label: Text('业务员')),
+        DataColumn(label: Text('数量')),
+        DataColumn(label: Text('操作')),
+      ],
+      rows: workOrders
+          .map(
+            (workOrder) => DataRow(
+              cells: [
+                DataCell(Text(
+                  workOrder.orderNumber.isEmpty
+                      ? '施工单 #${workOrder.id}'
+                      : workOrder.orderNumber,
+                  style: theme.textTheme.bodyMedium,
+                )),
+                DataCell(Text(
+                    workOrder.customerName ?? _emptyCellText,
+                    style: textStyle)),
+                DataCell(Text(
+                    workOrder.productName ?? _emptyCellText,
+                    style: textStyle)),
+                DataCell(Text(
+                  workOrder.statusDisplay ??
+                      workOrder.status ??
+                      _emptyCellText,
+                  style: textStyle,
+                )),
+                DataCell(Text(
+                  workOrder.approvalStatusDisplay ??
+                      workOrder.approvalStatus ??
+                      _emptyCellText,
+                  style: textStyle,
+                )),
+                DataCell(Text(
+                  workOrder.priorityDisplay ??
+                      workOrder.priority ??
+                      _emptyCellText,
+                  style: textStyle,
+                )),
+                DataCell(Text(_formatDate(workOrder.deliveryDate),
+                    style: textStyle)),
+                DataCell(Text(_formatAmount(workOrder.totalAmount),
+                    style: textStyle)),
+                DataCell(Text(
+                  workOrder.progressPercentage == null
+                      ? _emptyCellText
+                      : '${workOrder.progressPercentage}%',
+                  style: textStyle,
+                )),
+                DataCell(Text(
+                    workOrder.managerName ?? _emptyCellText,
+                    style: textStyle)),
+                DataCell(Text(
+                    workOrder.salespersonName ?? _emptyCellText,
+                    style: textStyle)),
+                DataCell(Text(
+                  _formatQuantity(workOrder.quantity, workOrder.unit),
+                  style: textStyle,
+                )),
+                DataCell(Wrap(
+                  spacing: 8,
+                  children: [
+                    TextButton(
+                      onPressed: () =>
+                          context.go('/workorders/${workOrder.id}'),
+                      child: const Text('查看'),
+                    ),
+                    TextButton(
+                      onPressed: () =>
+                          context.go('/workorders/${workOrder.id}/edit'),
+                      child: const Text('编辑'),
+                    ),
+                    TextButton(
+                      onPressed: () =>
+                          _confirmDelete(context, viewModel, workOrder),
+                      child: const Text('删除'),
+                    ),
+                  ],
+                )),
+              ],
+            ),
+          )
+          .toList(),
     );
   }
 
