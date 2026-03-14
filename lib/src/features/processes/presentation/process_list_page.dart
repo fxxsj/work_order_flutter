@@ -11,6 +11,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -138,7 +139,8 @@ class _ProcessListViewState extends State<_ProcessListView> {
     });
   }
 
-  Future<void> _openEditPage(BuildContext context, ProcessViewModel viewModel, Process? process) async {
+  Future<void> _openEditPage(BuildContext context, ProcessViewModel viewModel,
+      Process? process) async {
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => ChangeNotifierProvider.value(
@@ -149,16 +151,19 @@ class _ProcessListViewState extends State<_ProcessListView> {
     );
     if (!mounted) return;
     if (result == true) {
-      ToastUtil.showSuccess(process == null ? _createSuccessText : _updateSuccessText);
+      ToastUtil.showSuccess(
+          process == null ? _createSuccessText : _updateSuccessText);
     }
   }
 
-  Future<void> _confirmDelete(BuildContext context, ProcessViewModel viewModel, Process process) async {
+  Future<void> _confirmDelete(
+      BuildContext context, ProcessViewModel viewModel, Process process) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text(_deleteDialogTitle),
-        content: Text(_deleteDialogContent.replaceFirst('{name}', process.name)),
+        content:
+            Text(_deleteDialogContent.replaceFirst('{name}', process.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -201,7 +206,8 @@ class _ProcessListViewState extends State<_ProcessListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, processes, isMobile),
-          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1
+              ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,
@@ -292,18 +298,18 @@ class _ProcessListViewState extends State<_ProcessListView> {
                     Text(process.isActive ? '启用' : '禁用', style: textStyle)),
                 DataCell(
                     Text(_displayText(process.description), style: textStyle)),
-                DataCell(Wrap(
-                  spacing: 8,
-                  children: [
-                    TextButton(
+                DataCell(RowActionGroup(
+                  actions: [
+                    RowAction(
+                      label: '编辑',
                       onPressed: () =>
                           _openEditPage(context, viewModel, process),
-                      child: const Text('编辑'),
                     ),
-                    TextButton(
+                    RowAction(
+                      label: '删除',
                       onPressed: () =>
                           _confirmDelete(context, viewModel, process),
-                      child: const Text('删除'),
+                      destructive: true,
                     ),
                   ],
                 )),
@@ -317,7 +323,7 @@ class _ProcessListViewState extends State<_ProcessListView> {
   Widget _buildPageHeader(
     BuildContext context,
     ProcessViewModel viewModel,
-bool isMobile,
+    bool isMobile,
   ) {
     return PageHeaderBar(
       breadcrumb: null,

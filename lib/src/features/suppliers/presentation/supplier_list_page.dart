@@ -11,6 +11,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -138,7 +139,8 @@ class _SupplierListViewState extends State<_SupplierListView> {
     });
   }
 
-  Future<void> _openEditPage(BuildContext context, SupplierViewModel viewModel, Supplier? supplier) async {
+  Future<void> _openEditPage(BuildContext context, SupplierViewModel viewModel,
+      Supplier? supplier) async {
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => ChangeNotifierProvider.value(
@@ -149,16 +151,19 @@ class _SupplierListViewState extends State<_SupplierListView> {
     );
     if (!mounted) return;
     if (result == true) {
-      ToastUtil.showSuccess(supplier == null ? _createSuccessText : _updateSuccessText);
+      ToastUtil.showSuccess(
+          supplier == null ? _createSuccessText : _updateSuccessText);
     }
   }
 
-  Future<void> _confirmDelete(BuildContext context, SupplierViewModel viewModel, Supplier supplier) async {
+  Future<void> _confirmDelete(BuildContext context, SupplierViewModel viewModel,
+      Supplier supplier) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text(_deleteDialogTitle),
-        content: Text(_deleteDialogContent.replaceFirst('{name}', supplier.name)),
+        content:
+            Text(_deleteDialogContent.replaceFirst('{name}', supplier.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -201,7 +206,8 @@ class _SupplierListViewState extends State<_SupplierListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, suppliers, isMobile),
-          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1
+              ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,
@@ -284,24 +290,24 @@ class _SupplierListViewState extends State<_SupplierListView> {
                   style: theme.textTheme.bodyMedium,
                 )),
                 DataCell(Text(_displayText(supplier.code), style: textStyle)),
-                DataCell(
-                    Text(_displayText(supplier.contactPerson), style: textStyle)),
+                DataCell(Text(_displayText(supplier.contactPerson),
+                    style: textStyle)),
                 DataCell(Text(_displayText(supplier.phone), style: textStyle)),
                 DataCell(Text(_displayStatus(supplier), style: textStyle)),
-                DataCell(
-                    Text(_displayNumber(supplier.materialCount), style: textStyle)),
-                DataCell(Wrap(
-                  spacing: 8,
-                  children: [
-                    TextButton(
+                DataCell(Text(_displayNumber(supplier.materialCount),
+                    style: textStyle)),
+                DataCell(RowActionGroup(
+                  actions: [
+                    RowAction(
+                      label: '编辑',
                       onPressed: () =>
                           _openEditPage(context, viewModel, supplier),
-                      child: const Text('编辑'),
                     ),
-                    TextButton(
+                    RowAction(
+                      label: '删除',
                       onPressed: () =>
                           _confirmDelete(context, viewModel, supplier),
-                      child: const Text('删除'),
+                      destructive: true,
                     ),
                   ],
                 )),
@@ -315,7 +321,7 @@ class _SupplierListViewState extends State<_SupplierListView> {
   Widget _buildPageHeader(
     BuildContext context,
     SupplierViewModel viewModel,
-bool isMobile,
+    bool isMobile,
   ) {
     return PageHeaderBar(
       breadcrumb: null,

@@ -11,6 +11,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -154,7 +155,8 @@ class _MaterialListViewState extends State<_MaterialListView> {
     );
     if (!mounted) return;
     if (result == true) {
-      ToastUtil.showSuccess(material == null ? _createSuccessText : _updateSuccessText);
+      ToastUtil.showSuccess(
+          material == null ? _createSuccessText : _updateSuccessText);
     }
   }
 
@@ -167,7 +169,8 @@ class _MaterialListViewState extends State<_MaterialListView> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text(_deleteDialogTitle),
-        content: Text(_deleteDialogContent.replaceFirst('{name}', material.name)),
+        content:
+            Text(_deleteDialogContent.replaceFirst('{name}', material.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -214,7 +217,8 @@ class _MaterialListViewState extends State<_MaterialListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, materials, isMobile),
-          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1
+              ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,
@@ -301,26 +305,28 @@ class _MaterialListViewState extends State<_MaterialListView> {
                   material.code.isNotEmpty ? material.code : _emptyCellText,
                   style: textStyle,
                 )),
-                DataCell(Text(material.unit ?? _emptyCellText, style: textStyle)),
-                DataCell(Text(_formatAmount(material.unitPrice), style: textStyle)),
                 DataCell(
-                    Text(_formatAmount(material.stockQuantity), style: textStyle)),
+                    Text(material.unit ?? _emptyCellText, style: textStyle)),
+                DataCell(
+                    Text(_formatAmount(material.unitPrice), style: textStyle)),
+                DataCell(Text(_formatAmount(material.stockQuantity),
+                    style: textStyle)),
                 DataCell(Text(_formatAmount(material.minStockQuantity),
                     style: textStyle)),
                 DataCell(
                     Text(_formatStatus(material.isActive), style: textStyle)),
-                DataCell(Wrap(
-                  spacing: 8,
-                  children: [
-                    TextButton(
+                DataCell(RowActionGroup(
+                  actions: [
+                    RowAction(
+                      label: '编辑',
                       onPressed: () =>
                           _openEditPage(context, viewModel, material),
-                      child: const Text('编辑'),
                     ),
-                    TextButton(
+                    RowAction(
+                      label: '删除',
                       onPressed: () =>
                           _confirmDelete(context, viewModel, material),
-                      child: const Text('删除'),
+                      destructive: true,
                     ),
                   ],
                 )),
@@ -334,7 +340,7 @@ class _MaterialListViewState extends State<_MaterialListView> {
   Widget _buildPageHeader(
     BuildContext context,
     MaterialViewModel viewModel,
-bool isMobile,
+    bool isMobile,
   ) {
     return PageHeaderBar(
       breadcrumb: null,

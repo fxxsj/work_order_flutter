@@ -11,6 +11,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -143,7 +144,8 @@ class _DieListViewState extends State<_DieListView> {
         .replaceFirst('{count}', viewModel.total.toString());
   }
 
-  Future<void> _openEditPage(BuildContext context, DieViewModel viewModel, Die? die) async {
+  Future<void> _openEditPage(
+      BuildContext context, DieViewModel viewModel, Die? die) async {
     Die? target = die;
     if (die != null) {
       try {
@@ -166,11 +168,13 @@ class _DieListViewState extends State<_DieListView> {
     );
     if (!mounted) return;
     if (result == true) {
-      ToastUtil.showSuccess(die == null ? _createSuccessText : _updateSuccessText);
+      ToastUtil.showSuccess(
+          die == null ? _createSuccessText : _updateSuccessText);
     }
   }
 
-  Future<void> _confirmDelete(BuildContext context, DieViewModel viewModel, Die die) async {
+  Future<void> _confirmDelete(
+      BuildContext context, DieViewModel viewModel, Die die) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -200,7 +204,6 @@ class _DieListViewState extends State<_DieListView> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     final isMobile = BreakpointsUtil.isMobile(context);
@@ -212,7 +215,8 @@ class _DieListViewState extends State<_DieListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, dies, isMobile),
-          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1
+              ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,
@@ -299,26 +303,27 @@ class _DieListViewState extends State<_DieListView> {
                 )),
                 DataCell(Text(_displayText(die.code), style: textStyle)),
                 DataCell(Text(
-                  _displayText(die.dieTypeDisplay ?? _dieTypeLabel(die.dieType)),
+                  _displayText(
+                      die.dieTypeDisplay ?? _dieTypeLabel(die.dieType)),
                   style: textStyle,
                 )),
                 DataCell(Text(_displayText(die.size), style: textStyle)),
                 DataCell(Text(_displayText(die.material), style: textStyle)),
                 DataCell(Text(_displayText(die.thickness), style: textStyle)),
-                DataCell(Text(die.confirmed ? '已确认' : '待确认',
-                    style: textStyle)),
+                DataCell(Text(die.confirmed ? '已确认' : '待确认', style: textStyle)),
                 DataCell(Text(_productSummary(die.products), style: textStyle)),
-                DataCell(Text(_formatDateTime(die.createdAt), style: textStyle)),
-                DataCell(Wrap(
-                  spacing: 8,
-                  children: [
-                    TextButton(
+                DataCell(
+                    Text(_formatDateTime(die.createdAt), style: textStyle)),
+                DataCell(RowActionGroup(
+                  actions: [
+                    RowAction(
+                      label: '编辑',
                       onPressed: () => _openEditPage(context, viewModel, die),
-                      child: const Text('编辑'),
                     ),
-                    TextButton(
+                    RowAction(
+                      label: '删除',
                       onPressed: () => _confirmDelete(context, viewModel, die),
-                      child: const Text('删除'),
+                      destructive: true,
                     ),
                   ],
                 )),
@@ -332,7 +337,7 @@ class _DieListViewState extends State<_DieListView> {
   Widget _buildPageHeader(
     BuildContext context,
     DieViewModel viewModel,
-bool isMobile,
+    bool isMobile,
   ) {
     return PageHeaderBar(
       breadcrumb: null,
@@ -406,6 +411,7 @@ bool isMobile,
     final minute = local.minute.toString().padLeft(2, '0');
     return '$year-$month-$day $hour:$minute';
   }
+
   static String _productSummary(List<DieProduct> products) {
     if (products.isEmpty) return _emptyCellText;
     final display = products

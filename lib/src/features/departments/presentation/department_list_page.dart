@@ -11,6 +11,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -125,7 +126,8 @@ class _DepartmentListViewState extends State<_DepartmentListView> {
     super.dispose();
   }
 
-  void _scheduleSearch(DepartmentViewModel viewModel, {bool immediate = false}) {
+  void _scheduleSearch(DepartmentViewModel viewModel,
+      {bool immediate = false}) {
     _searchDebounce?.cancel();
     if (immediate) {
       viewModel.setSearchText(_searchController.text.trim());
@@ -138,7 +140,8 @@ class _DepartmentListViewState extends State<_DepartmentListView> {
     });
   }
 
-  Future<void> _openEditPage(BuildContext context, DepartmentViewModel viewModel, Department? department) async {
+  Future<void> _openEditPage(BuildContext context,
+      DepartmentViewModel viewModel, Department? department) async {
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => ChangeNotifierProvider.value(
@@ -149,16 +152,19 @@ class _DepartmentListViewState extends State<_DepartmentListView> {
     );
     if (!mounted) return;
     if (result == true) {
-      ToastUtil.showSuccess(department == null ? _createSuccessText : _updateSuccessText);
+      ToastUtil.showSuccess(
+          department == null ? _createSuccessText : _updateSuccessText);
     }
   }
 
-  Future<void> _confirmDelete(BuildContext context, DepartmentViewModel viewModel, Department department) async {
+  Future<void> _confirmDelete(BuildContext context,
+      DepartmentViewModel viewModel, Department department) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text(_deleteDialogTitle),
-        content: Text(_deleteDialogContent.replaceFirst('{name}', department.name)),
+        content:
+            Text(_deleteDialogContent.replaceFirst('{name}', department.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -201,7 +207,8 @@ class _DepartmentListViewState extends State<_DepartmentListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, departments, isMobile),
-          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1
+              ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,
@@ -286,8 +293,8 @@ class _DepartmentListViewState extends State<_DepartmentListView> {
                   style: theme.textTheme.bodyMedium,
                 )),
                 DataCell(Text(_displayText(department.code), style: textStyle)),
-                DataCell(
-                    Text(_displayText(department.parentName), style: textStyle)),
+                DataCell(Text(_displayText(department.parentName),
+                    style: textStyle)),
                 DataCell(Text(
                     department.childrenCount?.toString() ?? _emptyCellText,
                     style: textStyle)),
@@ -296,25 +303,24 @@ class _DepartmentListViewState extends State<_DepartmentListView> {
                         ? _emptyCellText
                         : department.processNames.join('、'),
                     style: textStyle)),
-                DataCell(
-                    Text(_displayNumber(department.sortOrder), style: textStyle)),
-                DataCell(Text(
-                    department.isActive ? '启用' : '禁用',
+                DataCell(Text(_displayNumber(department.sortOrder),
                     style: textStyle)),
                 DataCell(
-                    Text(_formatDateTime(department.createdAt), style: textStyle)),
-                DataCell(Wrap(
-                  spacing: 8,
-                  children: [
-                    TextButton(
+                    Text(department.isActive ? '启用' : '禁用', style: textStyle)),
+                DataCell(Text(_formatDateTime(department.createdAt),
+                    style: textStyle)),
+                DataCell(RowActionGroup(
+                  actions: [
+                    RowAction(
+                      label: '编辑',
                       onPressed: () =>
                           _openEditPage(context, viewModel, department),
-                      child: const Text('编辑'),
                     ),
-                    TextButton(
+                    RowAction(
+                      label: '删除',
                       onPressed: () =>
                           _confirmDelete(context, viewModel, department),
-                      child: const Text('删除'),
+                      destructive: true,
                     ),
                   ],
                 )),
@@ -328,7 +334,7 @@ class _DepartmentListViewState extends State<_DepartmentListView> {
   Widget _buildPageHeader(
     BuildContext context,
     DepartmentViewModel viewModel,
-bool isMobile,
+    bool isMobile,
   ) {
     return PageHeaderBar(
       breadcrumb: null,
@@ -394,6 +400,7 @@ bool isMobile,
     final minute = local.minute.toString().padLeft(2, '0');
     return '$year-$month-$day $hour:$minute';
   }
+
   Widget _buildSummaryCard(
     BuildContext context,
     DepartmentViewModel viewModel,

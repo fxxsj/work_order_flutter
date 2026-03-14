@@ -12,6 +12,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/sales_orders/application/sales_order_view_model.dart';
@@ -115,7 +116,8 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     super.dispose();
   }
 
-  void _scheduleSearch(SalesOrderViewModel viewModel, {bool immediate = false}) {
+  void _scheduleSearch(SalesOrderViewModel viewModel,
+      {bool immediate = false}) {
     _searchDebounce?.cancel();
     if (immediate) {
       viewModel.setSearchText(_searchController.text.trim());
@@ -146,7 +148,8 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, orders, isMobile),
-          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1
+              ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,
@@ -233,7 +236,8 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
                       : order.orderNumber,
                   style: theme.textTheme.bodyMedium,
                 )),
-                DataCell(Text(_displayText(order.customerName), style: textStyle)),
+                DataCell(
+                    Text(_displayText(order.customerName), style: textStyle)),
                 DataCell(Text(
                   _displayText(order.statusDisplay ?? order.status),
                   style: textStyle?.copyWith(color: colors?.sidebarText),
@@ -244,19 +248,20 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
                   style: textStyle,
                 )),
                 DataCell(Text(_formatDate(order.orderDate), style: textStyle)),
-                DataCell(Text(_formatDate(order.deliveryDate), style: textStyle)),
+                DataCell(
+                    Text(_formatDate(order.deliveryDate), style: textStyle)),
                 DataCell(Text(_formatAmount(order.totalAmount),
                     style: theme.textTheme.bodyMedium)),
-                DataCell(Row(
-                  children: [
-                    TextButton(
+                DataCell(RowActionGroup(
+                  actions: [
+                    RowAction(
+                      label: '查看',
                       onPressed: () => context.go('/sales-orders/${order.id}'),
-                      child: const Text('查看'),
                     ),
-                    TextButton(
+                    RowAction(
+                      label: '编辑',
                       onPressed: () =>
                           context.go('/sales-orders/${order.id}/edit'),
-                      child: const Text('编辑'),
                     ),
                   ],
                 )),
@@ -289,7 +294,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
   Widget _buildPageHeader(
     BuildContext context,
     SalesOrderViewModel viewModel,
-bool isMobile,
+    bool isMobile,
   ) {
     return PageHeaderBar(
       breadcrumb: null,
@@ -334,7 +339,6 @@ bool isMobile,
       ),
     );
   }
-
 }
 
 class _SalesOrderSummaryCard extends StatelessWidget {
@@ -356,10 +360,12 @@ class _SalesOrderSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
-    final title = order.orderNumber.isEmpty ? '销售订单 #${order.id}' : order.orderNumber;
+    final title =
+        order.orderNumber.isEmpty ? '销售订单 #${order.id}' : order.orderNumber;
     final customer = order.customerName ?? _emptyCellText;
     final status = order.statusDisplay ?? order.status ?? _emptyCellText;
-    final payment = order.paymentStatusDisplay ?? order.paymentStatus ?? _emptyCellText;
+    final payment =
+        order.paymentStatusDisplay ?? order.paymentStatus ?? _emptyCellText;
     final amount = _formatAmount(order.totalAmount);
     final deliveryDate = _formatDate(order.deliveryDate);
     final orderDate = _formatDate(order.orderDate);
@@ -439,7 +445,8 @@ class _SalesOrderSummaryCard extends StatelessWidget {
               _SummaryField(label: '交货日期', value: deliveryDate),
               _SummaryField(label: '付款状态', value: payment),
               _SummaryField(label: '明细数量', value: itemsCount),
-              _SummaryField(label: '客户编码', value: order.customerCode ?? _emptyCellText),
+              _SummaryField(
+                  label: '客户编码', value: order.customerCode ?? _emptyCellText),
             ],
           ),
           SizedBox(height: sectionSpacing),

@@ -14,6 +14,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -154,7 +155,8 @@ class _CustomerListViewState extends State<_CustomerListView> {
         .replaceFirst('{count}', viewModel.total.toString());
   }
 
-  Future<void> _openEditPage(BuildContext context, CustomerViewModel viewModel, Customer? customer) async {
+  Future<void> _openEditPage(BuildContext context, CustomerViewModel viewModel,
+      Customer? customer) async {
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => ChangeNotifierProvider.value(
@@ -165,16 +167,19 @@ class _CustomerListViewState extends State<_CustomerListView> {
     );
     if (!mounted) return;
     if (result == true) {
-      ToastUtil.showSuccess(customer == null ? _createSuccessText : _updateSuccessText);
+      ToastUtil.showSuccess(
+          customer == null ? _createSuccessText : _updateSuccessText);
     }
   }
 
-  Future<void> _confirmDelete(BuildContext context, CustomerViewModel viewModel, Customer customer) async {
+  Future<void> _confirmDelete(BuildContext context, CustomerViewModel viewModel,
+      Customer customer) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text(_deleteDialogTitle),
-        content: Text(_deleteDialogContent.replaceFirst('{name}', customer.name)),
+        content:
+            Text(_deleteDialogContent.replaceFirst('{name}', customer.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -218,7 +223,8 @@ class _CustomerListViewState extends State<_CustomerListView> {
             isMobile,
           ),
           body: _buildListBody(context, viewModel, customers, isMobile),
-          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1
+              ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,
@@ -318,25 +324,26 @@ class _CustomerListViewState extends State<_CustomerListView> {
                       : _emptyCellText,
                   style: textStyle,
                 )),
-                DataCell(Text(_formatDate(customer.updatedAt), style: textStyle)),
+                DataCell(
+                    Text(_formatDate(customer.updatedAt), style: textStyle)),
                 DataCell(Text(
                   customer.address?.trim().isNotEmpty == true
                       ? customer.address!.trim()
                       : _emptyCellText,
                   style: textStyle,
                 )),
-                DataCell(Wrap(
-                  spacing: 8,
-                  children: [
-                    TextButton(
+                DataCell(RowActionGroup(
+                  actions: [
+                    RowAction(
+                      label: '编辑',
                       onPressed: () =>
                           _openEditPage(context, viewModel, customer),
-                      child: const Text('编辑'),
                     ),
-                    TextButton(
+                    RowAction(
+                      label: '删除',
                       onPressed: () =>
                           _confirmDelete(context, viewModel, customer),
-                      child: const Text('删除'),
+                      destructive: true,
                     ),
                   ],
                 )),

@@ -11,6 +11,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -126,7 +127,8 @@ class _ProductGroupListViewState extends State<_ProductGroupListView> {
     super.dispose();
   }
 
-  void _scheduleSearch(ProductGroupViewModel viewModel, {bool immediate = false}) {
+  void _scheduleSearch(ProductGroupViewModel viewModel,
+      {bool immediate = false}) {
     _searchDebounce?.cancel();
     if (immediate) {
       viewModel.setSearchText(_searchController.text.trim());
@@ -154,7 +156,8 @@ class _ProductGroupListViewState extends State<_ProductGroupListView> {
     );
     if (!mounted) return;
     if (result == true) {
-      ToastUtil.showSuccess(group == null ? _createSuccessText : _updateSuccessText);
+      ToastUtil.showSuccess(
+          group == null ? _createSuccessText : _updateSuccessText);
     }
   }
 
@@ -214,7 +217,8 @@ class _ProductGroupListViewState extends State<_ProductGroupListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, groups, isMobile),
-          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1
+              ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,
@@ -296,24 +300,22 @@ class _ProductGroupListViewState extends State<_ProductGroupListView> {
                   style: theme.textTheme.bodyMedium,
                 )),
                 DataCell(Text(_displayText(group.code), style: textStyle)),
-                DataCell(
-                    Text(_formatStatus(group.isActive), style: textStyle)),
-                DataCell(Text(
-                    group.itemsCount?.toString() ?? _emptyCellText,
+                DataCell(Text(_formatStatus(group.isActive), style: textStyle)),
+                DataCell(Text(group.itemsCount?.toString() ?? _emptyCellText,
                     style: textStyle)),
-                DataCell(Text(_displayText(group.description), style: textStyle)),
-                DataCell(Wrap(
-                  spacing: 8,
-                  children: [
-                    TextButton(
-                      onPressed: () =>
-                          _openEditPage(context, viewModel, group),
-                      child: const Text('编辑'),
+                DataCell(
+                    Text(_displayText(group.description), style: textStyle)),
+                DataCell(RowActionGroup(
+                  actions: [
+                    RowAction(
+                      label: '编辑',
+                      onPressed: () => _openEditPage(context, viewModel, group),
                     ),
-                    TextButton(
+                    RowAction(
+                      label: '删除',
                       onPressed: () =>
                           _confirmDelete(context, viewModel, group),
-                      child: const Text('删除'),
+                      destructive: true,
                     ),
                   ],
                 )),
@@ -327,7 +329,7 @@ class _ProductGroupListViewState extends State<_ProductGroupListView> {
   Widget _buildPageHeader(
     BuildContext context,
     ProductGroupViewModel viewModel,
-bool isMobile,
+    bool isMobile,
   ) {
     return PageHeaderBar(
       breadcrumb: null,

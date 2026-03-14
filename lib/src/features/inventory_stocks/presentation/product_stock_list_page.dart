@@ -11,6 +11,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -470,7 +471,8 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, stocks, isMobile),
-          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1
+              ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,
@@ -514,14 +516,14 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
       if (!isMobile) {
         listContent = _buildDesktopTable(context, viewModel, stocks);
       } else {
-      listContent = ListView.separated(
-        itemCount: stocks.length,
-        separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
-        itemBuilder: (context, index) {
-          final stock = stocks[index];
-          return _buildSummaryCard(context, viewModel, stock, isMobile);
-        },
-      );
+        listContent = ListView.separated(
+          itemCount: stocks.length,
+          separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
+          itemBuilder: (context, index) {
+            final stock = stocks[index];
+            return _buildSummaryCard(context, viewModel, stock, isMobile);
+          },
+        );
       }
     }
 
@@ -569,25 +571,24 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
                   style: textStyle,
                 )),
                 DataCell(Text(_formatAmount(stock.quantity), style: textStyle)),
-                DataCell(
-                    Text(_formatAmount(stock.reservedQuantity), style: textStyle)),
-                DataCell(
-                    Text(_formatAmount(stock.availableQuantity), style: textStyle)),
+                DataCell(Text(_formatAmount(stock.reservedQuantity),
+                    style: textStyle)),
+                DataCell(Text(_formatAmount(stock.availableQuantity),
+                    style: textStyle)),
                 DataCell(Text(_displayText(stock.location), style: textStyle)),
                 DataCell(Text(_formatDate(stock.expiryDate), style: textStyle)),
                 DataCell(Text(_formatAmount(stock.totalValue),
                     style: theme.textTheme.bodyMedium)),
-                DataCell(Wrap(
-                  spacing: 8,
-                  children: [
-                    TextButton(
+                DataCell(RowActionGroup(
+                  actions: [
+                    RowAction(
+                      label: '查看',
                       onPressed: () => _openDetailDialog(stock),
-                      child: const Text('查看'),
                     ),
-                    TextButton(
+                    RowAction(
+                      label: _adjustTitle,
                       onPressed: () =>
                           _openAdjustDialog(context, viewModel, stock),
-                      child: const Text(_adjustTitle),
                     ),
                   ],
                 )),
@@ -601,7 +602,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
   Widget _buildPageHeader(
     BuildContext context,
     ProductStockViewModel viewModel,
-bool isMobile,
+    bool isMobile,
   ) {
     return PageHeaderBar(
       breadcrumb: null,

@@ -11,6 +11,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -154,7 +155,8 @@ class _ProductListViewState extends State<_ProductListView> {
     );
     if (!mounted) return;
     if (result == true) {
-      ToastUtil.showSuccess(product == null ? _createSuccessText : _updateSuccessText);
+      ToastUtil.showSuccess(
+          product == null ? _createSuccessText : _updateSuccessText);
     }
   }
 
@@ -167,7 +169,8 @@ class _ProductListViewState extends State<_ProductListView> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text(_deleteDialogTitle),
-        content: Text(_deleteDialogContent.replaceFirst('{name}', product.name)),
+        content:
+            Text(_deleteDialogContent.replaceFirst('{name}', product.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -214,7 +217,8 @@ class _ProductListViewState extends State<_ProductListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, products, isMobile),
-          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1
+              ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,
@@ -310,24 +314,26 @@ class _ProductListViewState extends State<_ProductListView> {
                   product.specification ?? _emptyCellText,
                   style: textStyle,
                 )),
-                DataCell(Text(product.unit ?? _emptyCellText, style: textStyle)),
-                DataCell(Text(_formatAmount(product.unitPrice), style: textStyle)),
                 DataCell(
-                    Text(_formatAmount(product.stockQuantity), style: textStyle)),
+                    Text(product.unit ?? _emptyCellText, style: textStyle)),
+                DataCell(
+                    Text(_formatAmount(product.unitPrice), style: textStyle)),
+                DataCell(Text(_formatAmount(product.stockQuantity),
+                    style: textStyle)),
                 DataCell(
                     Text(_formatStatus(product.isActive), style: textStyle)),
-                DataCell(Wrap(
-                  spacing: 8,
-                  children: [
-                    TextButton(
+                DataCell(RowActionGroup(
+                  actions: [
+                    RowAction(
+                      label: '编辑',
                       onPressed: () =>
                           _openEditPage(context, viewModel, product),
-                      child: const Text('编辑'),
                     ),
-                    TextButton(
+                    RowAction(
+                      label: '删除',
                       onPressed: () =>
                           _confirmDelete(context, viewModel, product),
-                      child: const Text('删除'),
+                      destructive: true,
                     ),
                   ],
                 )),
@@ -341,7 +347,7 @@ class _ProductListViewState extends State<_ProductListView> {
   Widget _buildPageHeader(
     BuildContext context,
     ProductViewModel viewModel,
-bool isMobile,
+    bool isMobile,
   ) {
     return PageHeaderBar(
       breadcrumb: null,

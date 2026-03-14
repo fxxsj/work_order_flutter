@@ -11,6 +11,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -423,7 +424,8 @@ class _QualityInspectionListViewState
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, inspections, isMobile),
-          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1
+              ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,
@@ -506,61 +508,54 @@ class _QualityInspectionListViewState
         DataColumn(label: Text('不良率')),
         DataColumn(label: Text('操作')),
       ],
-      rows: inspections
-          .map(
-            (inspection) {
-              final canComplete =
-                  (inspection.result ?? 'pending') == 'pending';
-              return DataRow(
-                cells: [
-                  DataCell(Text(
-                    _displayText(inspection.inspectionNumber),
-                    style: theme.textTheme.bodyMedium,
-                  )),
-                  DataCell(Text(
-                      _displayText(inspection.workOrderNumber), style: textStyle)),
-                  DataCell(Text(
-                      _displayText(inspection.productName), style: textStyle)),
-                  DataCell(Text(
-                      _displayText(inspection.inspectorName), style: textStyle)),
-                  DataCell(Text(_formatDate(inspection.inspectionDate),
-                      style: textStyle)),
-                  DataCell(Text(
-                    inspection.resultDisplay ??
-                        inspection.result ??
-                        _emptyCellText,
-                    style: textStyle,
-                  )),
-                  DataCell(Text(
-                      inspection.defectiveRateFormatted ?? _emptyCellText,
-                      style: textStyle)),
-                  DataCell(Wrap(
-                    spacing: 8,
-                    children: [
-                      TextButton(
-                        onPressed: () => _openDetailDialog(inspection),
-                        child: const Text('查看'),
-                      ),
-                      if (canComplete)
-                        TextButton(
-                          onPressed: () => _openCompleteDialog(
-                              context, viewModel, inspection),
-                          child: const Text(_completeTitle),
-                        ),
-                    ],
-                  )),
+      rows: inspections.map(
+        (inspection) {
+          final canComplete = (inspection.result ?? 'pending') == 'pending';
+          return DataRow(
+            cells: [
+              DataCell(Text(
+                _displayText(inspection.inspectionNumber),
+                style: theme.textTheme.bodyMedium,
+              )),
+              DataCell(Text(_displayText(inspection.workOrderNumber),
+                  style: textStyle)),
+              DataCell(
+                  Text(_displayText(inspection.productName), style: textStyle)),
+              DataCell(Text(_displayText(inspection.inspectorName),
+                  style: textStyle)),
+              DataCell(Text(_formatDate(inspection.inspectionDate),
+                  style: textStyle)),
+              DataCell(Text(
+                inspection.resultDisplay ?? inspection.result ?? _emptyCellText,
+                style: textStyle,
+              )),
+              DataCell(Text(inspection.defectiveRateFormatted ?? _emptyCellText,
+                  style: textStyle)),
+              DataCell(RowActionGroup(
+                actions: [
+                  RowAction(
+                    label: '查看',
+                    onPressed: () => _openDetailDialog(inspection),
+                  ),
+                  if (canComplete)
+                    RowAction(
+                      label: _completeTitle,
+                      onPressed: () =>
+                          _openCompleteDialog(context, viewModel, inspection),
+                    ),
                 ],
-              );
-            },
-          )
-          .toList(),
+              )),
+            ],
+          );
+        },
+      ).toList(),
     );
   }
 
   Widget _buildPageHeader(
     BuildContext context,
     QualityInspectionViewModel viewModel,
-bool isMobile,
+    bool isMobile,
   ) {
     return PageHeaderBar(
       breadcrumb: null,

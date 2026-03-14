@@ -10,6 +10,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
@@ -1388,7 +1389,8 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, orders, isMobile),
-          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1
+              ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,
@@ -1468,15 +1470,19 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
             (order) => DataRow(
               cells: [
                 DataCell(Text(
-                  order.orderNumber.isEmpty ? '采购单 #${order.id}' : order.orderNumber,
+                  order.orderNumber.isEmpty
+                      ? '采购单 #${order.id}'
+                      : order.orderNumber,
                   style: theme.textTheme.bodyMedium,
                 )),
-                DataCell(Text(_displayText(order.supplierName), style: textStyle)),
+                DataCell(
+                    Text(_displayText(order.supplierName), style: textStyle)),
                 DataCell(Text(
                   _displayText(order.statusDisplay ?? order.status),
                   style: textStyle,
                 )),
-                DataCell(Text(_formatAmount(order.totalAmount), style: textStyle)),
+                DataCell(
+                    Text(_formatAmount(order.totalAmount), style: textStyle)),
                 DataCell(Text(order.itemsCount?.toString() ?? _emptyCellText,
                     style: textStyle)),
                 DataCell(Text(
@@ -1485,17 +1491,19 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
                       : '${order.receivedProgress!.toStringAsFixed(0)}%',
                   style: textStyle,
                 )),
-                DataCell(Text(_displayText(order.workOrderNumber), style: textStyle)),
-                DataCell(Row(
-                  children: [
-                    TextButton(
+                DataCell(Text(_displayText(order.workOrderNumber),
+                    style: textStyle)),
+                DataCell(RowActionGroup(
+                  actions: [
+                    RowAction(
+                      label: '查看',
                       onPressed: () => _openDetailDialog(order),
-                      child: const Text('查看'),
                     ),
                     if ((order.status ?? '') == 'draft')
-                      TextButton(
-                        onPressed: () => _openFormDialog(viewModel, order: order),
-                        child: const Text('编辑'),
+                      RowAction(
+                        label: '编辑',
+                        onPressed: () =>
+                            _openFormDialog(viewModel, order: order),
                       ),
                   ],
                 )),
@@ -1509,7 +1517,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
   Widget _buildPageHeader(
     BuildContext context,
     PurchaseOrderViewModel viewModel,
-bool isMobile,
+    bool isMobile,
   ) {
     return PageHeaderBar(
       breadcrumb: null,
