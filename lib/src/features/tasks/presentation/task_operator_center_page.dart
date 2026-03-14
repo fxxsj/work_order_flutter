@@ -260,15 +260,27 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
           emptyText: '暂无可认领任务',
           trailingBuilder: (task) {
             final claiming = _claimingTaskId == task.id;
-            return TextButton(
-              onPressed: claiming ? null : () => _claimTask(task),
-              child: claiming
-                  ? const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('认领'),
+            if (claiming) {
+              return const SizedBox(
+                width: 32,
+                height: 32,
+                child: Center(
+                  child: SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              );
+            }
+            return RowActionGroup(
+              actions: [
+                RowAction(
+                  label: '认领',
+                  icon: Icons.assignment_turned_in_outlined,
+                  onPressed: () => _claimTask(task),
+                ),
+              ],
             );
           },
         ),
