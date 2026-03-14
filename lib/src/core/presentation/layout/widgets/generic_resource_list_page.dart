@@ -1,0 +1,513 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/common/theme_ext.dart';
+import 'package:work_order_app/src/core/data/generic_api_service.dart';
+import 'package:work_order_app/src/core/data/generic_repository.dart';
+import 'package:work_order_app/src/core/data/generic_repository_impl.dart';
+import 'package:work_order_app/src/core/models/generic_record.dart';
+import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
+
+class GenericResourceConfig {
+  const GenericResourceConfig({
+    required this.id,
+    required this.title,
+    required this.endpoint,
+    required this.searchHintText,
+    required this.emptyText,
+    required this.emptyIcon,
+    required this.columns,
+    required this.summaryFields,
+    this.enableSearch = true,
+    this.enableDetails = true,
+    this.pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条',
+    this.pageSizeLabel = '每页 {size}',
+    this.refreshLabel = '刷新',
+    this.retryLabel = '重新加载',
+    this.errorFallbackText = '加载失败',
+    this.titleBuilder,
+    this.detailTitle,
+    this.detailFields,
+  });
+
+  final String id;
+  final String title;
+  final String endpoint;
+  final String searchHintText;
+  final String emptyText;
+  final IconData emptyIcon;
+  final List<GenericColumn> columns;
+  final List<GenericSummaryField> summaryFields;
+  final bool enableSearch;
+  final bool enableDetails;
+  final String pageInfoTemplate;
+  final String pageSizeLabel;
+  final String refreshLabel;
+  final String retryLabel;
+  final String errorFallbackText;
+  final String Function(GenericRecord record)? titleBuilder;
+  final String? detailTitle;
+  final List<GenericDetailField>? detailFields;
+}
+
+class GenericColumn {
+  const GenericColumn({
+    required this.label,
+    required this.value,
+    this.numeric = false,
+  });
+
+  final String label;
+  final String Function(GenericRecord record) value;
+  final bool numeric;
+}
+
+class GenericSummaryField {
+  const GenericSummaryField({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String Function(GenericRecord record) value;
+}
+
+class GenericDetailField {
+  const GenericDetailField({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String Function(GenericRecord record) value;
+}
+
+class GenericValueFormatter {
+  static const String empty = '-';
+
+  static String text(dynamic value) {
+    if (value == null) return empty;
+    final asString = value.toString().trim();
+    return asString.isEmpty ? empty : asString;
+  }
+
+  static String boolText(bool? value) {
+    if (value == null) return empty;
+    return value ? '是' : '否';
+  }
+
+  static String date(dynamic value) {
+    if (value == null) return empty;
+    if (value is DateTime) {
+      return _formatDate(value);
+    }
+    if (value is String) {
+      final parsed = DateTime.tryParse(value);
+      return parsed == null ? text(value) : _formatDate(parsed);
+    }
+    return text(value);
+  }
+
+  static String _formatDate(DateTime value) {
+    final month = value.month.toString().padLeft(2, '0');
+    final day = value.day.toString().padLeft(2, '0');
+    return '${value.year}-$month-$day';
+  }
+}
+
+class GenericResourceListEntry extends StatefulWidget {
+  const GenericResourceListEntry({super.key, required this.config});
+
+  final GenericResourceConfig config;
+
+  @override
+  State<GenericResourceListEntry> createState() => _GenericResourceListEntryState();
+}
+
+class _GenericResourceListEntryState extends State<GenericResourceListEntry> {
+  GenericApiService? _apiService;
+  GenericRepositoryImpl? _repository;
+  GenericListViewModel? _viewModel;
+  bool _initialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_viewModel != null) return;
+    final apiClient = context.read<ApiClient>();
+    _apiService = GenericApiService(apiClient, resourcePath: widget.config.endpoint);
+    _repository = GenericRepositoryImpl(_apiService!);
+    _viewModel = GenericListViewModel(_repository!);
+    if (!_initialized) {
+      _initialized = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _viewModel?.initialize();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _viewModel?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final apiService = _apiService;
+    final repository = _repository;
+    final viewModel = _viewModel;
+    if (apiService == null || repository == null || viewModel == null) {
+      return const SizedBox.shrink();
+    }
+    return MultiProvider(
+      providers: [
+        Provider<GenericApiService>.value(value: apiService),
+        Provider<GenericRepository>.value(value: repository),
+        ChangeNotifierProvider<GenericListViewModel>.value(value: viewModel),
+      ],
+      child: GenericResourceListPage(config: widget.config),
+    );
+  }
+}
+
+class GenericResourceListPage extends StatefulWidget {
+  const GenericResourceListPage({super.key, required this.config});
+
+  final GenericResourceConfig config;
+
+  @override
+  State<GenericResourceListPage> createState() => _GenericResourceListPageState();
+}
+
+class _GenericResourceListPageState extends State<GenericResourceListPage> {
+  static const _searchDebounceDuration = Duration(milliseconds: 450);
+  static const double _searchWidth = 320;
+  static const double _spacingSm = LayoutTokens.gapSm;
+
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _searchDebounce;
+
+  @override
+  void dispose() {
+    _searchDebounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _scheduleSearch(GenericListViewModel viewModel, {bool immediate = false}) {
+    _searchDebounce?.cancel();
+    if (immediate) {
+      viewModel.setSearchText(_searchController.text.trim());
+      viewModel.reload(resetPage: true);
+      return;
+    }
+    _searchDebounce = Timer(_searchDebounceDuration, () {
+      viewModel.setSearchText(_searchController.text.trim());
+      viewModel.reload(resetPage: true);
+    });
+  }
+
+  String _pageInfoText(GenericListViewModel viewModel) {
+    return widget.config.pageInfoTemplate
+        .replaceFirst('{page}', viewModel.page.toString())
+        .replaceFirst('{total}', viewModel.totalPages.toString())
+        .replaceFirst('{count}', viewModel.total.toString());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = BreakpointsUtil.isMobile(context);
+
+    return Consumer<GenericListViewModel>(
+      builder: (context, viewModel, _) {
+        final records = viewModel.records;
+        return ListPageScaffold(
+          spacing: _spacingSm,
+          header: _buildPageHeader(context, viewModel, isMobile),
+          body: _buildListBody(context, viewModel, records, isMobile),
+          footer: viewModel.totalPages > 1
+              ? ResponsivePaginationBar(
+                  infoText: _pageInfoText(viewModel),
+                  page: viewModel.page,
+                  pageSize: viewModel.pageSize,
+                  pageSizeOptions: viewModel.pageSizeOptions,
+                  onPageSizeChanged: viewModel.setPageSize,
+                  onPrev: () => viewModel.setPage(viewModel.page - 1),
+                  onNext: () => viewModel.setPage(viewModel.page + 1),
+                  hasPrev: viewModel.hasPrev,
+                  hasNext: viewModel.hasNext,
+                  pageSizeLabelBuilder: (size) =>
+                      widget.config.pageSizeLabel.replaceFirst('{size}', size.toString()),
+                )
+              : null,
+        );
+      },
+    );
+  }
+
+  Widget _buildPageHeader(
+    BuildContext context,
+    GenericListViewModel viewModel,
+    bool isMobile,
+  ) {
+    return PageHeaderBar(
+      breadcrumb: null,
+      useSurface: false,
+      showDivider: false,
+      padding: EdgeInsets.zero,
+      actions: LayoutBuilder(
+        builder: (context, constraints) {
+          final searchField = widget.config.enableSearch
+              ? ListSearchField(
+                  controller: _searchController,
+                  hintText: widget.config.searchHintText,
+                  height: PageActionStyle.height,
+                  width: isMobile ? constraints.maxWidth : _searchWidth,
+                  onChanged: (_) => _scheduleSearch(viewModel),
+                  onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
+                  onClear: () {
+                    _searchController.clear();
+                    _scheduleSearch(viewModel, immediate: true);
+                  },
+                )
+              : null;
+
+          final actions = <Widget>[
+            PageActionButton.outlined(
+              onPressed: () => viewModel.reload(resetPage: true),
+              icon: const Icon(Icons.refresh, size: 16),
+              label: widget.config.refreshLabel,
+            ),
+          ];
+
+          return ListToolbar(
+            isMobile: isMobile,
+            searchField: searchField,
+            actions: actions,
+            spacing: _spacingSm,
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildListBody(
+    BuildContext context,
+    GenericListViewModel viewModel,
+    List<GenericRecord> records,
+    bool isMobile,
+  ) {
+    final sectionSpacing = LayoutTokens.sectionSpacing(context);
+    if (viewModel.loading && records.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (viewModel.errorMessage != null && !viewModel.loading) {
+      return ErrorStateCard(
+        message: viewModel.errorMessage ?? widget.config.errorFallbackText,
+        retryLabel: widget.config.retryLabel,
+        onRetry: () => viewModel.reload(resetPage: true),
+      );
+    }
+    if (!viewModel.loading && records.isEmpty) {
+      return EmptyStateCard(
+        icon: widget.config.emptyIcon,
+        text: widget.config.emptyText,
+      );
+    }
+
+    if (!isMobile) {
+      return _buildDesktopTable(context, records);
+    }
+
+    return ListView.separated(
+      itemCount: records.length,
+      separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
+      itemBuilder: (context, index) {
+        final record = records[index];
+        return _buildSummaryCard(context, record, isMobile);
+      },
+    );
+  }
+
+  Widget _buildDesktopTable(BuildContext context, List<GenericRecord> records) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    final columns = [
+      for (final column in widget.config.columns)
+        DataColumn(
+          label: Text(column.label),
+          numeric: column.numeric,
+        ),
+      if (widget.config.enableDetails) const DataColumn(label: Text('操作')),
+    ];
+
+    return AppDataTable(
+      columns: columns,
+      rows: records.map((record) {
+        return DataRow(
+          cells: [
+            for (final column in widget.config.columns)
+              DataCell(Text(
+                column.value(record),
+                style: textStyle,
+              )),
+            if (widget.config.enableDetails)
+              DataCell(
+                RowActionGroup(
+                  actions: [
+                    RowAction(
+                      label: '查看',
+                      onPressed: () => _openDetails(context, record),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildSummaryCard(
+    BuildContext context,
+    GenericRecord record,
+    bool isMobile,
+  ) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>();
+    final titleBuilder = widget.config.titleBuilder ??
+        (GenericRecord record) =>
+            record.getString('name') ?? record.getString('title') ?? record.id.toString();
+    final summaryFields = widget.config.summaryFields
+        .map((field) => SummaryField(
+              label: field.label,
+              value: field.value(record),
+            ))
+        .toList();
+
+    return ExpandableSummaryCard(
+      headerBuilder: (context, expanded) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              titleBuilder(record),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: colors?.sidebarText,
+              ),
+            ),
+            if (widget.config.enableDetails) ...[
+              const SizedBox(height: LayoutTokens.gapSm),
+              Text(
+                '查看详情',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colors?.subtleText,
+                ),
+              ),
+            ],
+          ],
+        );
+      },
+      expandedChild: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SummaryFieldWrap(isMobile: isMobile, children: summaryFields),
+          if (widget.config.enableDetails) ...[
+            const SizedBox(height: LayoutTokens.gapSm),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton.icon(
+                onPressed: () => _openDetails(context, record),
+                icon: const Icon(Icons.visibility_outlined, size: 16),
+                label: const Text('查看'),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openDetails(BuildContext context, GenericRecord record) async {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>();
+    final title = widget.config.detailTitle ?? widget.config.title;
+    final detailFields = widget.config.detailFields ??
+        record.data.keys
+            .map((key) => GenericDetailField(
+                  label: key,
+                  value: (record) => _formatDetailValue(record.data[key]),
+                ))
+            .toList();
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: SizedBox(
+          width: 520,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final field in detailFields) ...[
+                  Text(
+                    field.label,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: colors?.subtleText ?? theme.hintColor,
+                    ),
+                  ),
+                  const SizedBox(height: LayoutTokens.gapXs),
+                  Text(
+                    field.value(record),
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: LayoutTokens.gapSm),
+                ],
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('关闭'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDetailValue(dynamic value) {
+    if (value == null) return GenericValueFormatter.empty;
+    if (value is Map) {
+      final map = Map<String, dynamic>.from(value);
+      final preferKeys = ['name', 'title', 'label', 'order_number', 'code'];
+      for (final key in preferKeys) {
+        final candidate = map[key];
+        if (candidate != null) return GenericValueFormatter.text(candidate);
+      }
+      return GenericValueFormatter.text(map);
+    }
+    if (value is List) {
+      if (value.isEmpty) return GenericValueFormatter.empty;
+      return value.map(_formatDetailValue).join(' / ');
+    }
+    return GenericValueFormatter.text(value);
+  }
+}

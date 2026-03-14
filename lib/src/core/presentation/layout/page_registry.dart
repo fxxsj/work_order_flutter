@@ -31,6 +31,30 @@ import 'package:work_order_app/src/features/artworks/presentation/artwork_list_p
 import 'package:work_order_app/src/features/dies/presentation/die_list_page.dart';
 import 'package:work_order_app/src/features/foiling_plates/presentation/foiling_plate_list_page.dart';
 import 'package:work_order_app/src/features/embossing_plates/presentation/embossing_plate_list_page.dart';
+import 'package:work_order_app/src/features/stock_in/presentation/stock_in_list_page.dart';
+import 'package:work_order_app/src/features/stock_out/presentation/stock_out_list_page.dart';
+import 'package:work_order_app/src/features/product_materials/presentation/product_material_list_page.dart';
+import 'package:work_order_app/src/features/materials/presentation/material_supplier_list_page.dart';
+import 'package:work_order_app/src/features/product_groups/presentation/product_group_item_list_page.dart';
+import 'package:work_order_app/src/features/purchase_orders/presentation/purchase_order_item_list_page.dart';
+import 'package:work_order_app/src/features/sales_orders/presentation/sales_order_item_list_page.dart';
+import 'package:work_order_app/src/features/inventory_delivery/presentation/delivery_item_list_page.dart';
+import 'package:work_order_app/src/features/artworks/presentation/artwork_product_list_page.dart';
+import 'package:work_order_app/src/features/dies/presentation/die_product_list_page.dart';
+import 'package:work_order_app/src/features/foiling_plates/presentation/foiling_plate_product_list_page.dart';
+import 'package:work_order_app/src/features/embossing_plates/presentation/embossing_plate_product_list_page.dart';
+import 'package:work_order_app/src/features/finance_costs/presentation/cost_center_list_page.dart';
+import 'package:work_order_app/src/features/finance_costs/presentation/cost_item_list_page.dart';
+import 'package:work_order_app/src/features/finance_payments/presentation/payment_plan_list_page.dart';
+import 'package:work_order_app/src/features/processes/presentation/process_log_list_page.dart';
+import 'package:work_order_app/src/features/approvals/presentation/approval_center_page.dart';
+import 'package:work_order_app/src/features/approvals/presentation/approval_workflow_list_page.dart';
+import 'package:work_order_app/src/features/approvals/presentation/approval_step_list_page.dart';
+import 'package:work_order_app/src/features/approvals/presentation/urgent_order_page.dart';
+import 'package:work_order_app/src/features/approvals/presentation/approval_report_page.dart';
+import 'package:work_order_app/src/features/notification_admin/presentation/system_notification_page.dart';
+import 'package:work_order_app/src/features/notification_admin/presentation/user_notification_settings_page.dart';
+import 'package:work_order_app/src/features/notification_admin/presentation/notification_template_page.dart';
 
 Widget? buildFullPage(String id) {
   switch (id) {
@@ -94,6 +118,54 @@ Widget? buildFullPage(String id) {
       return const FoilingPlateListEntry();
     case 'embossing':
       return const EmbossingPlateListEntry();
+    case 'stock_ins':
+      return const StockInListEntry();
+    case 'stock_outs':
+      return const StockOutListEntry();
+    case 'product_materials':
+      return const ProductMaterialListEntry();
+    case 'material_suppliers':
+      return const MaterialSupplierListEntry();
+    case 'product_group_items':
+      return const ProductGroupItemListEntry();
+    case 'purchase_order_items':
+      return const PurchaseOrderItemListEntry();
+    case 'sales_order_items':
+      return const SalesOrderItemListEntry();
+    case 'delivery_items':
+      return const DeliveryItemListEntry();
+    case 'artwork_products':
+      return const ArtworkProductListEntry();
+    case 'die_products':
+      return const DieProductListEntry();
+    case 'foiling_plate_products':
+      return const FoilingPlateProductListEntry();
+    case 'embossing_plate_products':
+      return const EmbossingPlateProductListEntry();
+    case 'cost_centers':
+      return const CostCenterListEntry();
+    case 'cost_items':
+      return const CostItemListEntry();
+    case 'payment_plans':
+      return const PaymentPlanListEntry();
+    case 'process_logs':
+      return const ProcessLogListEntry();
+    case 'approval_center':
+      return const ApprovalCenterPage();
+    case 'approval_workflows':
+      return const ApprovalWorkflowListEntry();
+    case 'approval_steps':
+      return const ApprovalStepListEntry();
+    case 'urgent_orders':
+      return const UrgentOrderPage();
+    case 'approval_reports':
+      return const ApprovalReportPage();
+    case 'system_notifications':
+      return const SystemNotificationPage();
+    case 'user_notification_settings':
+      return const UserNotificationSettingsPage();
+    case 'notification_templates':
+      return const NotificationTemplatePage();
     default:
       return null;
   }
