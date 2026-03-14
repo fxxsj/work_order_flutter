@@ -45,57 +45,83 @@ class ResponsivePaginationBar extends StatelessWidget {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final compact = constraints.maxWidth < Breakpoints.sm;
-          final infoStyle = theme.textTheme.bodySmall
-              ?.copyWith(color: colors.subtleText);
-          final pagerControls = Wrap(
-            spacing: LayoutTokens.gapXs,
-            runSpacing: LayoutTokens.gapXs,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              DropdownButton<int>(
-                value: pageSize,
-                style: infoStyle,
-                iconSize: 18,
-                items: pageSizeOptions
-                    .map(
-                      (size) => DropdownMenuItem<int>(
-                        value: size,
-                        child: Text(
-                          pageSizeLabelBuilder?.call(size) ?? '$size',
-                          style: infoStyle,
+            final infoStyle =
+                theme.textTheme.bodySmall?.copyWith(color: colors.subtleText);
+            final pagerControls = Wrap(
+              spacing: LayoutTokens.gapXs,
+              runSpacing: LayoutTokens.gapXs,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                DropdownButton<int>(
+                  value: pageSize,
+                  style: infoStyle,
+                  iconSize: 18,
+                  items: pageSizeOptions
+                      .map(
+                        (size) => DropdownMenuItem<int>(
+                          value: size,
+                          child: Text(
+                            pageSizeLabelBuilder?.call(size) ?? '$size',
+                            style: infoStyle,
+                          ),
                         ),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (value) {
-                  if (value == null) return;
-                  onPageSizeChanged(value);
-                },
-              ),
-              IconButton(
-                onPressed: hasPrev ? onPrev : null,
-                icon: const Icon(Icons.chevron_left, size: 18),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-              ),
-              Text('$page', style: infoStyle),
-              IconButton(
-                onPressed: hasNext ? onNext : null,
-                icon: const Icon(Icons.chevron_right, size: 18),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-              ),
-            ],
-          );
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    onPageSizeChanged(value);
+                  },
+                ),
+                IconButton(
+                  onPressed: hasPrev ? onPrev : null,
+                  icon: const Icon(Icons.chevron_left, size: 18),
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 28, minHeight: 28),
+                ),
+                Text('$page', style: infoStyle),
+                IconButton(
+                  onPressed: hasNext ? onNext : null,
+                  icon: const Icon(Icons.chevron_right, size: 18),
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 28, minHeight: 28),
+                ),
+              ],
+            );
 
-          if (compact) {
+            if (compact) {
+              return Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      infoText,
+                      style: infoStyle,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  IconTheme(
+                    data: IconThemeData(
+                      size: 18,
+                      color: colors.subtleText,
+                    ),
+                    child: DefaultTextStyle.merge(
+                      style: infoStyle,
+                      child: pagerControls,
+                    ),
+                  ),
+                ],
+              );
+            }
+
             return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
                   child: Text(
                     infoText,
                     style: infoStyle,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -111,32 +137,8 @@ class ResponsivePaginationBar extends StatelessWidget {
                 ),
               ],
             );
-          }
-
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  infoText,
-                  style: infoStyle,
-                ),
-              ),
-              const SizedBox(width: 12),
-              IconTheme(
-                data: IconThemeData(
-                  size: 18,
-                  color: colors.subtleText,
-                ),
-                child: DefaultTextStyle.merge(
-                  style: infoStyle,
-                  child: pagerControls,
-                ),
-              ),
-            ],
-          );
-        },
-      ),
+          },
+        ),
       ),
     );
   }
@@ -158,22 +160,33 @@ class EmptyStateCard extends StatelessWidget {
     final background = theme.colorScheme.primary.withValues(alpha: 0.05);
     final border = theme.colorScheme.primary.withValues(alpha: 0.15);
 
-    return SizedBox(
-      width: double.infinity,
-      child: AppCard(
-        padding: const EdgeInsets.symmetric(vertical: 32),
-        radius: LayoutTokens.radiusMd,
-        background: background,
-        borderColor: border,
-        borderAlpha: 1,
-        child: Column(
-          children: [
-            Icon(icon, color: theme.colorScheme.primary, size: 36),
-            const SizedBox(height: LayoutTokens.gapSm),
-            Text(text, style: theme.textTheme.bodyMedium),
-          ],
-        ),
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final hasBoundedHeight = constraints.maxHeight.isFinite;
+        final card = AppCard(
+          padding: const EdgeInsets.symmetric(vertical: 32),
+          radius: LayoutTokens.radiusMd,
+          background: background,
+          borderColor: border,
+          borderAlpha: 1,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, color: theme.colorScheme.primary, size: 36),
+                const SizedBox(height: LayoutTokens.gapSm),
+                Text(text, style: theme.textTheme.bodyMedium),
+              ],
+            ),
+          ),
+        );
+
+        return SizedBox(
+          width: double.infinity,
+          height: hasBoundedHeight ? constraints.maxHeight : null,
+          child: card,
+        );
+      },
     );
   }
 }

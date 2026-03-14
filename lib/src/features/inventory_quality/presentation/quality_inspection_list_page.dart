@@ -117,6 +117,7 @@ class _QualityInspectionListViewState
   static const String _detailTitle = '质检详情';
   static const String _resultFilterLabel = '检验结果';
   static const String _typeFilterLabel = '检验类型';
+  static const String _resetButtonText = '重置筛选';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
   static const String _pageSizeLabel = '每页 {size}';
 
@@ -557,6 +558,74 @@ class _QualityInspectionListViewState
     QualityInspectionViewModel viewModel,
     bool isMobile,
   ) {
+    void openFilterDrawer() {
+      if (isMobile) {
+        showModalBottomSheet<void>(
+          context: context,
+          isScrollControlled: true,
+          useSafeArea: true,
+          showDragHandle: true,
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+          builder: (sheetContext) {
+            return _FilterDrawerContent(
+              title: '筛选',
+              child: _buildFilterPanel(
+                sheetContext,
+                viewModel,
+                bottomSpacing: 16,
+              ),
+            );
+          },
+        );
+        return;
+      }
+
+      showGeneralDialog(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel: '筛选',
+        barrierColor: Colors.black.withValues(alpha: 0.3),
+        transitionDuration: const Duration(milliseconds: 220),
+        pageBuilder: (dialogContext, animation, secondaryAnimation) {
+          return Align(
+            alignment: Alignment.centerRight,
+            child: Material(
+              color: Theme.of(dialogContext).colorScheme.surface,
+              shape:
+                  const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+              child: SizedBox(
+                width: 360,
+                height: double.infinity,
+                child: SafeArea(
+                  child: _FilterDrawerContent(
+                    title: '筛选',
+                    child: _buildFilterPanel(
+                      dialogContext,
+                      viewModel,
+                      bottomSpacing: 20,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+        transitionBuilder: (context, animation, secondaryAnimation, child) {
+          final offsetTween =
+              Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero);
+          return SlideTransition(
+            position: animation
+                .drive(
+                  CurveTween(curve: Curves.easeOutCubic),
+                )
+                .drive(offsetTween),
+            child: child,
+          );
+        },
+      );
+    }
+
     return PageHeaderBar(
       breadcrumb: null,
       useSurface: false,
@@ -564,6 +633,7 @@ class _QualityInspectionListViewState
       padding: EdgeInsets.zero,
       actions: LayoutBuilder(
         builder: (context, constraints) {
+          final activeFilters = _activeFilterCount(viewModel);
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -577,59 +647,16 @@ class _QualityInspectionListViewState
             },
           );
 
-          final resultValue =
-              viewModel.resultFilter.isEmpty ? '' : viewModel.resultFilter;
-          final resultField = SizedBox(
-            width: isMobile ? constraints.maxWidth : 140,
-            child: DropdownButtonFormField<String>(
-              key: ValueKey<String>(resultValue),
-              initialValue: resultValue,
-              decoration: const InputDecoration(
-                labelText: _resultFilterLabel,
-                isDense: true,
-                border: OutlineInputBorder(),
-              ),
-              items: const [
-                DropdownMenuItem(value: '', child: Text('全部结果')),
-                DropdownMenuItem(value: 'pending', child: Text('待检验')),
-                DropdownMenuItem(value: 'passed', child: Text('合格')),
-                DropdownMenuItem(value: 'failed', child: Text('不合格')),
-                DropdownMenuItem(value: 'conditional', child: Text('条件接收')),
-              ],
-              onChanged: (value) => viewModel.setResultFilter(value ?? ''),
-            ),
-          );
-
-          final typeValue =
-              viewModel.typeFilter.isEmpty ? '' : viewModel.typeFilter;
-          final typeField = SizedBox(
-            width: isMobile ? constraints.maxWidth : 160,
-            child: DropdownButtonFormField<String>(
-              key: ValueKey<String>(typeValue),
-              initialValue: typeValue,
-              decoration: const InputDecoration(
-                labelText: _typeFilterLabel,
-                isDense: true,
-                border: OutlineInputBorder(),
-              ),
-              items: const [
-                DropdownMenuItem(value: '', child: Text('全部类型')),
-                DropdownMenuItem(value: 'incoming', child: Text('来料检验')),
-                DropdownMenuItem(value: 'process', child: Text('过程检验')),
-                DropdownMenuItem(value: 'final', child: Text('成品检验')),
-                DropdownMenuItem(value: 'customer', child: Text('客诉检验')),
-              ],
-              onChanged: (value) => viewModel.setTypeFilter(value ?? ''),
-            ),
-          );
-
           final actions = <Widget>[
-            typeField,
-            resultField,
             PageActionButton.outlined(
               onPressed: () => viewModel.loadInspections(resetPage: true),
               icon: const Icon(Icons.refresh, size: 16),
               label: _refreshButtonText,
+            ),
+            PageActionButton.outlined(
+              onPressed: openFilterDrawer,
+              icon: const Icon(Icons.filter_alt_outlined, size: 16),
+              label: activeFilters > 0 ? '筛选 $activeFilters' : '筛选',
             ),
           ];
 
@@ -642,6 +669,95 @@ class _QualityInspectionListViewState
         },
       ),
     );
+  }
+
+  Widget _buildFilterPanel(
+    BuildContext context,
+    QualityInspectionViewModel viewModel, {
+    required double bottomSpacing,
+  }) {
+    final resultValue =
+        viewModel.resultFilter.isEmpty ? '' : viewModel.resultFilter;
+    final typeValue = viewModel.typeFilter.isEmpty ? '' : viewModel.typeFilter;
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DropdownButtonFormField<String>(
+          key: ValueKey<String>(typeValue),
+          initialValue: typeValue,
+          isExpanded: true,
+          decoration: const InputDecoration(labelText: _typeFilterLabel),
+          items: const [
+            DropdownMenuItem(value: '', child: Text('全部类型')),
+            DropdownMenuItem(value: 'incoming', child: Text('来料检验')),
+            DropdownMenuItem(value: 'process', child: Text('过程检验')),
+            DropdownMenuItem(value: 'final', child: Text('成品检验')),
+            DropdownMenuItem(value: 'customer', child: Text('客诉检验')),
+          ],
+          onChanged: (value) => viewModel.setTypeFilter(value ?? ''),
+        ),
+        const SizedBox(height: _spacingSm),
+        DropdownButtonFormField<String>(
+          key: ValueKey<String>(resultValue),
+          initialValue: resultValue,
+          isExpanded: true,
+          decoration: const InputDecoration(labelText: _resultFilterLabel),
+          items: const [
+            DropdownMenuItem(value: '', child: Text('全部结果')),
+            DropdownMenuItem(value: 'pending', child: Text('待检验')),
+            DropdownMenuItem(value: 'passed', child: Text('合格')),
+            DropdownMenuItem(value: 'failed', child: Text('不合格')),
+            DropdownMenuItem(value: 'conditional', child: Text('条件接收')),
+          ],
+          onChanged: (value) => viewModel.setResultFilter(value ?? ''),
+        ),
+        SizedBox(height: bottomSpacing),
+        Row(
+          children: [
+            OutlinedButton.icon(
+              onPressed: () => _resetFilters(viewModel),
+              icon: const Icon(Icons.restart_alt),
+              label: const Text(_resetButtonText),
+            ),
+            const SizedBox(width: 12),
+            FilledButton(
+              onPressed: () => Navigator.of(context).maybePop(),
+              child: const Text('完成'),
+            ),
+          ],
+        ),
+      ],
+    );
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      children: [content],
+    );
+  }
+
+  int _activeFilterCount(QualityInspectionViewModel viewModel) {
+    var count = 0;
+    if (_searchController.text.trim().isNotEmpty) count += 1;
+    if (viewModel.typeFilter.isNotEmpty) count += 1;
+    if (viewModel.resultFilter.isNotEmpty) count += 1;
+    return count;
+  }
+
+  void _resetFilters(QualityInspectionViewModel viewModel) {
+    _searchController.clear();
+    viewModel.setSearchText('');
+    var needsReload = false;
+    if (viewModel.typeFilter.isNotEmpty) {
+      needsReload = true;
+      viewModel.setTypeFilter('');
+    }
+    if (viewModel.resultFilter.isNotEmpty) {
+      needsReload = true;
+      viewModel.setResultFilter('');
+    }
+    if (!needsReload) {
+      viewModel.loadInspections(resetPage: true);
+    }
   }
 
   static String _displayText(String? value) {
@@ -912,6 +1028,48 @@ class _StatTile extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _FilterDrawerContent extends StatelessWidget {
+  const _FilterDrawerContent({
+    required this.title,
+    required this.child,
+  });
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: '关闭',
+                onPressed: () => Navigator.of(context).maybePop(),
+                icon: const Icon(Icons.close),
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+        Expanded(child: child),
+      ],
     );
   }
 }

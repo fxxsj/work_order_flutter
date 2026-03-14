@@ -13,7 +13,16 @@
       * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
     -->
 
-    <base href="/work_order_app/">
+    <base href="/">
+    <script>
+      (function () {
+        var base = document.getElementsByTagName('base')[0];
+        if (!base) return;
+        var path = window.location.pathname || '/';
+        var appBase = '/work_order_app/';
+        base.setAttribute('href', path.startsWith(appBase) ? appBase : '/');
+      })();
+    </script>
 
     <meta charset="UTF-8">
     <meta content="IE=Edge" http-equiv="X-UA-Compatible">

@@ -129,6 +129,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
   static const String _deleteErrorText = '删除失败: ';
   static const String _statusFilterLabel = '发货状态';
   static const String _customerFilterLabel = '客户';
+  static const String _resetButtonText = '重置筛选';
   static const String _submitText = '提交';
   static const String _cancelText = '取消';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
@@ -1052,7 +1053,8 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, orders, isMobile),
-          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1
+              ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,
@@ -1137,95 +1139,158 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
         DataColumn(label: Text('运单号')),
         DataColumn(label: Text('操作')),
       ],
-      rows: orders
-          .map(
-            (order) {
-              final statusCode = order.status ?? '';
-              final canShip = statusCode == 'pending';
-              final canReceive =
-                  statusCode == 'shipped' || statusCode == 'in_transit';
-              final canReject = canReceive;
-              final canEdit = statusCode == 'pending';
-              final canDelete = statusCode == 'pending';
+      rows: orders.map(
+        (order) {
+          final statusCode = order.status ?? '';
+          final canShip = statusCode == 'pending';
+          final canReceive =
+              statusCode == 'shipped' || statusCode == 'in_transit';
+          final canReject = canReceive;
+          final canEdit = statusCode == 'pending';
+          final canDelete = statusCode == 'pending';
 
-              return DataRow(
-                cells: [
-                  DataCell(Text(
-                    order.orderNumber.isEmpty
-                        ? '发货单 #${order.id}'
-                        : order.orderNumber,
-                    style: theme.textTheme.bodyMedium,
-                  )),
-                  DataCell(
-                      Text(_displayText(order.customerName), style: textStyle)),
-                  DataCell(Text(_displayText(order.salesOrderNumber),
-                      style: textStyle)),
-                  DataCell(Text(
-                    _displayText(order.statusDisplay ?? order.status),
-                    style: textStyle,
-                  )),
-                  DataCell(
-                      Text(_formatDate(order.deliveryDate), style: textStyle)),
-                  DataCell(Text(
-                      order.itemsCount?.toString() ?? _emptyCellText,
-                      style: textStyle)),
-                  DataCell(
-                      Text(_formatAmount(order.totalQuantity), style: textStyle)),
-                  DataCell(Text(_displayText(order.logisticsCompany),
-                      style: textStyle)),
-                  DataCell(Text(_displayText(order.trackingNumber),
-                      style: textStyle)),
-                  DataCell(RowActionGroup(
-                    actions: [
-                      RowAction(
-                        label: '查看',
-                        onPressed: () => _openDetailDialog(order),
-                      ),
-                      if (canEdit)
-                        RowAction(
-                          label: '编辑',
-                          onPressed: () =>
-                              _openFormDialog(viewModel, order: order),
-                        ),
-                      if (canShip)
-                        RowAction(
-                          label: _shipTitle,
-                          onPressed: () =>
-                              _openShipDialog(context, viewModel, order),
-                        ),
-                      if (canReceive)
-                        RowAction(
-                          label: _receiveTitle,
-                          onPressed: () =>
-                              _openReceiveDialog(context, viewModel, order),
-                        ),
-                      if (canReject)
-                        RowAction(
-                          label: _rejectTitle,
-                          onPressed: () =>
-                              _openRejectDialog(context, viewModel, order),
-                        ),
-                      if (canDelete)
-                        RowAction(
-                          label: '删除',
-                          onPressed: () => _confirmDelete(viewModel, order),
-                          destructive: true,
-                        ),
-                    ],
-                  )),
+          return DataRow(
+            cells: [
+              DataCell(Text(
+                order.orderNumber.isEmpty
+                    ? '发货单 #${order.id}'
+                    : order.orderNumber,
+                style: theme.textTheme.bodyMedium,
+              )),
+              DataCell(
+                  Text(_displayText(order.customerName), style: textStyle)),
+              DataCell(
+                  Text(_displayText(order.salesOrderNumber), style: textStyle)),
+              DataCell(Text(
+                _displayText(order.statusDisplay ?? order.status),
+                style: textStyle,
+              )),
+              DataCell(Text(_formatDate(order.deliveryDate), style: textStyle)),
+              DataCell(Text(order.itemsCount?.toString() ?? _emptyCellText,
+                  style: textStyle)),
+              DataCell(
+                  Text(_formatAmount(order.totalQuantity), style: textStyle)),
+              DataCell(
+                  Text(_displayText(order.logisticsCompany), style: textStyle)),
+              DataCell(
+                  Text(_displayText(order.trackingNumber), style: textStyle)),
+              DataCell(RowActionGroup(
+                actions: [
+                  RowAction(
+                    label: '查看',
+                    onPressed: () => _openDetailDialog(order),
+                  ),
+                  if (canEdit)
+                    RowAction(
+                      label: '编辑',
+                      onPressed: () => _openFormDialog(viewModel, order: order),
+                    ),
+                  if (canShip)
+                    RowAction(
+                      label: _shipTitle,
+                      onPressed: () =>
+                          _openShipDialog(context, viewModel, order),
+                    ),
+                  if (canReceive)
+                    RowAction(
+                      label: _receiveTitle,
+                      onPressed: () =>
+                          _openReceiveDialog(context, viewModel, order),
+                    ),
+                  if (canReject)
+                    RowAction(
+                      label: _rejectTitle,
+                      onPressed: () =>
+                          _openRejectDialog(context, viewModel, order),
+                    ),
+                  if (canDelete)
+                    RowAction(
+                      label: '删除',
+                      onPressed: () => _confirmDelete(viewModel, order),
+                      destructive: true,
+                    ),
                 ],
-              );
-            },
-          )
-          .toList(),
+              )),
+            ],
+          );
+        },
+      ).toList(),
     );
   }
 
   Widget _buildPageHeader(
     BuildContext context,
     DeliveryOrderViewModel viewModel,
-bool isMobile,
+    bool isMobile,
   ) {
+    void openFilterDrawer() {
+      if (isMobile) {
+        showModalBottomSheet<void>(
+          context: context,
+          isScrollControlled: true,
+          useSafeArea: true,
+          showDragHandle: true,
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+          builder: (sheetContext) {
+            return _FilterDrawerContent(
+              title: '筛选',
+              child: _buildFilterPanel(
+                sheetContext,
+                viewModel,
+                bottomSpacing: 16,
+              ),
+            );
+          },
+        );
+        return;
+      }
+
+      showGeneralDialog(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel: '筛选',
+        barrierColor: Colors.black.withValues(alpha: 0.3),
+        transitionDuration: const Duration(milliseconds: 220),
+        pageBuilder: (dialogContext, animation, secondaryAnimation) {
+          return Align(
+            alignment: Alignment.centerRight,
+            child: Material(
+              color: Theme.of(dialogContext).colorScheme.surface,
+              shape:
+                  const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+              child: SizedBox(
+                width: 360,
+                height: double.infinity,
+                child: SafeArea(
+                  child: _FilterDrawerContent(
+                    title: '筛选',
+                    child: _buildFilterPanel(
+                      dialogContext,
+                      viewModel,
+                      bottomSpacing: 20,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+        transitionBuilder: (context, animation, secondaryAnimation, child) {
+          final offsetTween =
+              Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero);
+          return SlideTransition(
+            position: animation
+                .drive(
+                  CurveTween(curve: Curves.easeOutCubic),
+                )
+                .drive(offsetTween),
+            child: child,
+          );
+        },
+      );
+    }
+
     return PageHeaderBar(
       breadcrumb: null,
       useSurface: false,
@@ -1233,6 +1298,7 @@ bool isMobile,
       padding: EdgeInsets.zero,
       actions: LayoutBuilder(
         builder: (context, constraints) {
+          final activeFilters = _activeFilterCount(viewModel);
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -1246,62 +1312,7 @@ bool isMobile,
             },
           );
 
-          final statusValue =
-              viewModel.statusFilter.isEmpty ? '' : viewModel.statusFilter;
-          final statusField = SizedBox(
-            width: isMobile ? constraints.maxWidth : 150,
-            child: DropdownButtonFormField<String>(
-              key: ValueKey<String>(statusValue),
-              initialValue: statusValue,
-              decoration: const InputDecoration(
-                labelText: _statusFilterLabel,
-                isDense: true,
-                border: OutlineInputBorder(),
-              ),
-              items: const [
-                DropdownMenuItem(value: '', child: Text('全部状态')),
-                DropdownMenuItem(value: 'pending', child: Text('待发货')),
-                DropdownMenuItem(value: 'shipped', child: Text('已发货')),
-                DropdownMenuItem(value: 'in_transit', child: Text('运输中')),
-                DropdownMenuItem(value: 'received', child: Text('已签收')),
-                DropdownMenuItem(value: 'rejected', child: Text('拒收')),
-              ],
-              onChanged: (value) => viewModel.setStatusFilter(value ?? ''),
-            ),
-          );
-
-          final customerValue = viewModel.customerId;
-          final customerField = SizedBox(
-            width: isMobile ? constraints.maxWidth : 180,
-            child: DropdownButtonFormField<int>(
-              key: ValueKey<int>(customerValue),
-              initialValue: customerValue,
-              decoration: const InputDecoration(
-                labelText: _customerFilterLabel,
-                isDense: true,
-                border: OutlineInputBorder(),
-              ),
-              items: [
-                const DropdownMenuItem<int>(
-                  value: 0,
-                  child: Text('全部客户'),
-                ),
-                ..._customers.map(
-                  (customer) => DropdownMenuItem<int>(
-                    value: customer.id,
-                    child: Text(customer.name),
-                  ),
-                ),
-              ],
-              onChanged: _customersLoading
-                  ? null
-                  : (value) => viewModel.setCustomerId(value ?? 0),
-            ),
-          );
-
           final actions = <Widget>[
-            statusField,
-            customerField,
             PageActionButton.outlined(
               onPressed: () => viewModel.loadDeliveryOrders(resetPage: true),
               icon: const Icon(Icons.refresh, size: 16),
@@ -1314,6 +1325,11 @@ bool isMobile,
               icon: const Icon(Icons.add, size: 16),
               label: '新建发货单',
             ),
+            PageActionButton.outlined(
+              onPressed: openFilterDrawer,
+              icon: const Icon(Icons.filter_alt_outlined, size: 16),
+              label: activeFilters > 0 ? '筛选 $activeFilters' : '筛选',
+            ),
           ];
 
           return ListToolbar(
@@ -1325,6 +1341,103 @@ bool isMobile,
         },
       ),
     );
+  }
+
+  Widget _buildFilterPanel(
+    BuildContext context,
+    DeliveryOrderViewModel viewModel, {
+    required double bottomSpacing,
+  }) {
+    final statusValue =
+        viewModel.statusFilter.isEmpty ? '' : viewModel.statusFilter;
+    final customerValue = viewModel.customerId;
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DropdownButtonFormField<String>(
+          key: ValueKey<String>(statusValue),
+          initialValue: statusValue,
+          isExpanded: true,
+          decoration: const InputDecoration(labelText: _statusFilterLabel),
+          items: const [
+            DropdownMenuItem(value: '', child: Text('全部状态')),
+            DropdownMenuItem(value: 'pending', child: Text('待发货')),
+            DropdownMenuItem(value: 'shipped', child: Text('已发货')),
+            DropdownMenuItem(value: 'in_transit', child: Text('运输中')),
+            DropdownMenuItem(value: 'received', child: Text('已签收')),
+            DropdownMenuItem(value: 'rejected', child: Text('拒收')),
+          ],
+          onChanged: (value) => viewModel.setStatusFilter(value ?? ''),
+        ),
+        const SizedBox(height: _spacingSm),
+        DropdownButtonFormField<int>(
+          key: ValueKey<int>(customerValue),
+          initialValue: customerValue,
+          isExpanded: true,
+          decoration: const InputDecoration(labelText: _customerFilterLabel),
+          items: [
+            const DropdownMenuItem<int>(
+              value: 0,
+              child: Text('全部客户'),
+            ),
+            ..._customers.map(
+              (customer) => DropdownMenuItem<int>(
+                value: customer.id,
+                child: Text(customer.name),
+              ),
+            ),
+          ],
+          onChanged: _customersLoading
+              ? null
+              : (value) => viewModel.setCustomerId(value ?? 0),
+        ),
+        SizedBox(height: bottomSpacing),
+        Row(
+          children: [
+            OutlinedButton.icon(
+              onPressed: () => _resetFilters(viewModel),
+              icon: const Icon(Icons.restart_alt),
+              label: const Text(_resetButtonText),
+            ),
+            const SizedBox(width: 12),
+            FilledButton(
+              onPressed: () => Navigator.of(context).maybePop(),
+              child: const Text('完成'),
+            ),
+          ],
+        ),
+      ],
+    );
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      children: [content],
+    );
+  }
+
+  int _activeFilterCount(DeliveryOrderViewModel viewModel) {
+    var count = 0;
+    if (_searchController.text.trim().isNotEmpty) count += 1;
+    if (viewModel.statusFilter.isNotEmpty) count += 1;
+    if (viewModel.customerId > 0) count += 1;
+    return count;
+  }
+
+  void _resetFilters(DeliveryOrderViewModel viewModel) {
+    _searchController.clear();
+    viewModel.setSearchText('');
+    var needsReload = false;
+    if (viewModel.statusFilter.isNotEmpty) {
+      needsReload = true;
+      viewModel.setStatusFilter('');
+    }
+    if (viewModel.customerId > 0) {
+      needsReload = true;
+      viewModel.setCustomerId(0);
+    }
+    if (!needsReload) {
+      viewModel.loadDeliveryOrders(resetPage: true);
+    }
   }
 
   static String _displayText(String? value) {
@@ -1848,6 +1961,48 @@ class _DateField extends StatelessWidget {
           onPicked(picked);
         }
       },
+    );
+  }
+}
+
+class _FilterDrawerContent extends StatelessWidget {
+  const _FilterDrawerContent({
+    required this.title,
+    required this.child,
+  });
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: '关闭',
+                onPressed: () => Navigator.of(context).maybePop(),
+                icon: const Icon(Icons.close),
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+        Expanded(child: child),
+      ],
     );
   }
 }

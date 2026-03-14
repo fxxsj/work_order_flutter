@@ -115,6 +115,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
   static const String _lowStockText = '库存预警';
   static const String _expiredText = '过期库存';
   static const String _statusFilterLabel = '库存状态';
+  static const String _resetButtonText = '重置筛选';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
   static const String _pageSizeLabel = '每页 {size}';
 
@@ -604,6 +605,74 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     ProductStockViewModel viewModel,
     bool isMobile,
   ) {
+    void openFilterDrawer() {
+      if (isMobile) {
+        showModalBottomSheet<void>(
+          context: context,
+          isScrollControlled: true,
+          useSafeArea: true,
+          showDragHandle: true,
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+          builder: (sheetContext) {
+            return _FilterDrawerContent(
+              title: '筛选',
+              child: _buildFilterPanel(
+                sheetContext,
+                viewModel,
+                bottomSpacing: 16,
+              ),
+            );
+          },
+        );
+        return;
+      }
+
+      showGeneralDialog(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel: '筛选',
+        barrierColor: Colors.black.withValues(alpha: 0.3),
+        transitionDuration: const Duration(milliseconds: 220),
+        pageBuilder: (dialogContext, animation, secondaryAnimation) {
+          return Align(
+            alignment: Alignment.centerRight,
+            child: Material(
+              color: Theme.of(dialogContext).colorScheme.surface,
+              shape:
+                  const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+              child: SizedBox(
+                width: 360,
+                height: double.infinity,
+                child: SafeArea(
+                  child: _FilterDrawerContent(
+                    title: '筛选',
+                    child: _buildFilterPanel(
+                      dialogContext,
+                      viewModel,
+                      bottomSpacing: 20,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+        transitionBuilder: (context, animation, secondaryAnimation, child) {
+          final offsetTween =
+              Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero);
+          return SlideTransition(
+            position: animation
+                .drive(
+                  CurveTween(curve: Curves.easeOutCubic),
+                )
+                .drive(offsetTween),
+            child: child,
+          );
+        },
+      );
+    }
+
     return PageHeaderBar(
       breadcrumb: null,
       useSurface: false,
@@ -611,6 +680,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
       padding: EdgeInsets.zero,
       actions: LayoutBuilder(
         builder: (context, constraints) {
+          final activeFilters = _activeFilterCount(viewModel);
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -624,31 +694,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
             },
           );
 
-          final statusValue =
-              viewModel.statusFilter.isEmpty ? '' : viewModel.statusFilter;
-          final statusField = SizedBox(
-            width: isMobile ? constraints.maxWidth : 160,
-            child: DropdownButtonFormField<String>(
-              key: ValueKey<String>(statusValue),
-              initialValue: statusValue,
-              decoration: const InputDecoration(
-                labelText: _statusFilterLabel,
-                isDense: true,
-                border: OutlineInputBorder(),
-              ),
-              items: const [
-                DropdownMenuItem(value: '', child: Text('全部状态')),
-                DropdownMenuItem(value: 'in_stock', child: Text('在库')),
-                DropdownMenuItem(value: 'reserved', child: Text('已预留')),
-                DropdownMenuItem(value: 'quality_check', child: Text('质检中')),
-                DropdownMenuItem(value: 'defective', child: Text('次品')),
-              ],
-              onChanged: (value) => viewModel.setStatusFilter(value ?? ''),
-            ),
-          );
-
           final actions = <Widget>[
-            statusField,
             PageActionButton.outlined(
               onPressed: () => viewModel.loadStocks(resetPage: true),
               icon: const Icon(Icons.refresh, size: 16),
@@ -664,6 +710,11 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
               icon: const Icon(Icons.event_busy_outlined, size: 16),
               label: _expiredText,
             ),
+            PageActionButton.outlined(
+              onPressed: openFilterDrawer,
+              icon: const Icon(Icons.filter_alt_outlined, size: 16),
+              label: activeFilters > 0 ? '筛选 $activeFilters' : '筛选',
+            ),
           ];
 
           return ListToolbar(
@@ -675,6 +726,71 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
         },
       ),
     );
+  }
+
+  Widget _buildFilterPanel(
+    BuildContext context,
+    ProductStockViewModel viewModel, {
+    required double bottomSpacing,
+  }) {
+    final statusValue =
+        viewModel.statusFilter.isEmpty ? '' : viewModel.statusFilter;
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DropdownButtonFormField<String>(
+          key: ValueKey<String>(statusValue),
+          initialValue: statusValue,
+          isExpanded: true,
+          decoration: const InputDecoration(labelText: _statusFilterLabel),
+          items: const [
+            DropdownMenuItem(value: '', child: Text('全部状态')),
+            DropdownMenuItem(value: 'in_stock', child: Text('在库')),
+            DropdownMenuItem(value: 'reserved', child: Text('已预留')),
+            DropdownMenuItem(value: 'quality_check', child: Text('质检中')),
+            DropdownMenuItem(value: 'defective', child: Text('次品')),
+          ],
+          onChanged: (value) => viewModel.setStatusFilter(value ?? ''),
+        ),
+        SizedBox(height: bottomSpacing),
+        Row(
+          children: [
+            OutlinedButton.icon(
+              onPressed: () => _resetFilters(viewModel),
+              icon: const Icon(Icons.restart_alt),
+              label: const Text(_resetButtonText),
+            ),
+            const SizedBox(width: 12),
+            FilledButton(
+              onPressed: () => Navigator.of(context).maybePop(),
+              child: const Text('完成'),
+            ),
+          ],
+        ),
+      ],
+    );
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      children: [content],
+    );
+  }
+
+  int _activeFilterCount(ProductStockViewModel viewModel) {
+    var count = 0;
+    if (_searchController.text.trim().isNotEmpty) count += 1;
+    if (viewModel.statusFilter.isNotEmpty) count += 1;
+    return count;
+  }
+
+  void _resetFilters(ProductStockViewModel viewModel) {
+    _searchController.clear();
+    viewModel.setSearchText('');
+    if (viewModel.statusFilter.isNotEmpty) {
+      viewModel.setStatusFilter('');
+    } else {
+      viewModel.loadStocks(resetPage: true);
+    }
   }
 
   static String _displayText(String? value) {
@@ -1029,6 +1145,48 @@ class _InlineMeta extends StatelessWidget {
           value,
           style: theme.textTheme.bodySmall?.copyWith(color: valueColor),
         ),
+      ],
+    );
+  }
+}
+
+class _FilterDrawerContent extends StatelessWidget {
+  const _FilterDrawerContent({
+    required this.title,
+    required this.child,
+  });
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: '关闭',
+                onPressed: () => Navigator.of(context).maybePop(),
+                icon: const Icon(Icons.close),
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+        Expanded(child: child),
       ],
     );
   }
