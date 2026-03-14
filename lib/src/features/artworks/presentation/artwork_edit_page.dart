@@ -31,8 +31,6 @@ class ArtworkEditPage extends StatefulWidget {
 class _ArtworkEditPageState extends State<ArtworkEditPage> {
   final _formKey = GlobalKey<FormState>();
 
-  static const double _submitIndicatorSize = 20;
-  static const double _indicatorStrokeWidth = 2;
   static const double _inlineSpacing = 8;
 
   static const String _baseCodeLabel = '图稿主编码';
@@ -732,8 +730,9 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
             useSurface: false,
             showDivider: false,
             padding: EdgeInsets.zero,
-            actions: Row(
-              mainAxisSize: MainAxisSize.min,
+            actions: Wrap(
+              spacing: _inlineSpacing,
+              runSpacing: 8,
               children: [
                 PageActionButton.outlined(
                   onPressed: _submitting
@@ -742,19 +741,11 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                   icon: const Icon(Icons.arrow_back, size: 16),
                   label: _cancelText,
                 ),
-                const SizedBox(width: _inlineSpacing),
                 PageActionButton.filled(
                   onPressed:
                       _submitting ? null : () => _handleSubmit(viewModel),
-                  label: _submitText,
-                  icon: _submitting
-                      ? const SizedBox(
-                          height: _submitIndicatorSize,
-                          width: _submitIndicatorSize,
-                          child: CircularProgressIndicator(
-                              strokeWidth: _indicatorStrokeWidth),
-                        )
-                      : const Icon(Icons.save, size: 16),
+                  icon: const Icon(Icons.save, size: 16),
+                  label: _submitting ? '保存中' : _submitText,
                 ),
               ],
             ),

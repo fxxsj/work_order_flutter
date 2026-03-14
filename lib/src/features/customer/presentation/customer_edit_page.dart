@@ -23,7 +23,6 @@ class CustomerEditPage extends StatefulWidget {
 class _CustomerEditPageState extends State<CustomerEditPage> {
   final _formKey = GlobalKey<FormState>();
   static const double _loadingIndicatorSize = 14;
-  static const double _submitIndicatorSize = 20;
   static const double _indicatorStrokeWidth = 2;
   static const double _inlineSpacing = 8;
 
@@ -196,8 +195,9 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
             useSurface: false,
             showDivider: false,
             padding: EdgeInsets.zero,
-            actions: Row(
-              mainAxisSize: MainAxisSize.min,
+            actions: Wrap(
+              spacing: _inlineSpacing,
+              runSpacing: 8,
               children: [
                 PageActionButton.outlined(
                   onPressed: _submitting
@@ -206,20 +206,15 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                   icon: const Icon(Icons.arrow_back, size: 16),
                   label: _cancelText,
                 ),
-                const SizedBox(width: _inlineSpacing),
                 PageActionButton.filled(
                   onPressed:
                       _submitting ? null : () => _handleSubmit(viewModel),
-                  label:
-                      customer == null ? _submitCreateText : _submitUpdateText,
-                  icon: _submitting
-                      ? const SizedBox(
-                          height: _submitIndicatorSize,
-                          width: _submitIndicatorSize,
-                          child: CircularProgressIndicator(
-                              strokeWidth: _indicatorStrokeWidth),
-                        )
-                      : const Icon(Icons.save, size: 16),
+                  icon: const Icon(Icons.save, size: 16),
+                  label: _submitting
+                      ? '保存中'
+                      : (customer == null
+                          ? _submitCreateText
+                          : _submitUpdateText),
                 ),
               ],
             ),

@@ -522,15 +522,15 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
         useSurface: false,
         showDivider: false,
         padding: EdgeInsets.zero,
-        actions: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+        actions: Wrap(
+          spacing: _spacing,
+          runSpacing: 8,
           children: [
             PageActionButton.outlined(
               onPressed: _submitting ? null : () => context.pop(),
               icon: const Icon(Icons.arrow_back, size: 16),
               label: '返回',
             ),
-            const SizedBox(width: _spacing),
             PageActionButton.filled(
               onPressed: _submitting ? null : _handleSubmit,
               icon: const Icon(Icons.save, size: 16),
