@@ -33,7 +33,6 @@ class ContentPage extends StatelessWidget {
 
     return _ContentArea(
       selectedId: selectedId,
-      breadcrumb: buildBreadcrumb(selectedId),
       style: style,
       bodyBuilder: buildContentBody(selectedId),
     );
@@ -413,32 +412,22 @@ class _GroupPanel extends StatelessWidget {
 class _ContentArea extends StatelessWidget {
   const _ContentArea({
     required this.selectedId,
-    required this.breadcrumb,
     required this.style,
     required this.bodyBuilder,
   });
 
   final String selectedId;
-  final List<String> breadcrumb;
   final ContentAreaStyle style;
   final ContentBodyBuilder? bodyBuilder;
 
   @override
   Widget build(BuildContext context) {
+    final padding = LayoutTokens.pagePadding(context);
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 18, 24, 32),
+      padding: padding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _DefaultHeader(
-            breadcrumb: breadcrumb,
-            title: labelFor(selectedId),
-            accent: style.accent,
-            subtleText: style.subtleText,
-            borderColor: style.borderColor,
-            surface: style.surface,
-          ),
-          const SizedBox(height: 18),
           if (bodyBuilder != null)
             bodyBuilder!(context, style)
           else
@@ -446,73 +435,6 @@ class _ContentArea extends StatelessWidget {
               title: labelFor(selectedId),
               style: style,
             ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DefaultHeader extends StatelessWidget {
-  const _DefaultHeader({
-    required this.breadcrumb,
-    required this.title,
-    required this.accent,
-    required this.subtleText,
-    required this.borderColor,
-    required this.surface,
-  });
-
-  final List<String> breadcrumb;
-  final String title;
-  final Color accent;
-  final Color subtleText;
-  final Color borderColor;
-  final Color surface;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
-      decoration: BoxDecoration(
-        color: surface,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusXl),
-        border: Border.all(color: borderColor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (var i = 0; i < breadcrumb.length; i++) ...[
-                Text(
-                  breadcrumb[i],
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: i == breadcrumb.length - 1 ? accent : subtleText,
-                    fontWeight: i == breadcrumb.length - 1
-                        ? FontWeight.w700
-                        : FontWeight.w500,
-                  ),
-                ),
-                if (i != breadcrumb.length - 1)
-                  Text(' / ',
-                      style: theme.textTheme.bodySmall
-                          ?.copyWith(color: subtleText)),
-              ],
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: theme.textTheme.titleLarge?.copyWith(
-              color: accent,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
         ],
       ),
     );
@@ -530,12 +452,14 @@ class _ModulePlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final padding = LayoutTokens.cardPadding(context);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: padding,
       decoration: BoxDecoration(
         color: style.surface,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusXl),
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
         border: Border.all(color: style.borderColor),
       ),
       child: Column(
@@ -543,16 +467,16 @@ class _ModulePlaceholder extends StatelessWidget {
         children: [
           Text(
             title,
-            style: TextStyle(
+            style: theme.textTheme.titleMedium?.copyWith(
               color: style.accent,
               fontWeight: FontWeight.w700,
-              fontSize: 17,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             '当前模块入口已接入统一布局。',
-            style: TextStyle(color: style.subtleText, height: 1.4),
+            style:
+                theme.textTheme.bodySmall?.copyWith(color: style.subtleText),
           ),
         ],
       ),
@@ -579,13 +503,14 @@ class _PanelShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
+    final padding = LayoutTokens.cardPadding(context);
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: padding,
       decoration: BoxDecoration(
         color: surface,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusXl),
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
         border: Border.all(color: borderColor),
       ),
       child: Column(
