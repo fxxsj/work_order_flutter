@@ -41,6 +41,7 @@ class GenericResourceConfig {
     this.detailTitle,
     this.detailFields,
     this.rowActionsBuilder,
+    this.headerActionsBuilder,
   });
 
   final String id;
@@ -66,6 +67,10 @@ class GenericResourceConfig {
     GenericRecord record,
     VoidCallback openDetails,
   )? rowActionsBuilder;
+  final List<Widget> Function(
+    BuildContext context,
+    GenericListViewModel viewModel,
+  )? headerActionsBuilder;
 }
 
 class GenericColumn {
@@ -298,6 +303,7 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
               icon: const Icon(Icons.refresh, size: 16),
               label: widget.config.refreshLabel,
             ),
+            ...?widget.config.headerActionsBuilder?.call(context, viewModel),
           ];
 
           return ListToolbar(
