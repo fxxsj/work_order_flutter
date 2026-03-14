@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:work_order_app/src/core/models/generic_record.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/generic_resource_list_page.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 
 class SalesOrderItemListEntry extends StatelessWidget {
   const SalesOrderItemListEntry({super.key});
@@ -30,6 +32,21 @@ class SalesOrderItemListEntry extends StatelessWidget {
           GenericSummaryField(label: '小计', value: _subtotal),
         ],
         titleBuilder: _productName,
+        rowActionsBuilder: (context, record, openDetails) {
+          final actions = <RowAction>[
+            RowAction(label: '查看', onPressed: openDetails),
+          ];
+          final orderId = record.getNumber('sales_order') ??
+              int.tryParse(record.getString('sales_order') ?? '');
+          if (orderId != null && orderId.toInt() > 0) {
+            actions.add(RowAction(
+              label: '查看订单',
+              icon: Icons.receipt_long_outlined,
+              onPressed: () => context.go('/sales-orders/${orderId.toInt()}'),
+            ));
+          }
+          return actions;
+        },
       ),
     );
   }

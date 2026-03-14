@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:work_order_app/src/core/models/generic_record.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/generic_resource_list_page.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 
 class StockInListEntry extends StatelessWidget {
   const StockInListEntry({super.key});
@@ -30,6 +32,21 @@ class StockInListEntry extends StatelessWidget {
           GenericSummaryField(label: '操作员', value: _operator),
         ],
         titleBuilder: _orderNumber,
+        rowActionsBuilder: (context, record, openDetails) {
+          final actions = <RowAction>[
+            RowAction(label: '查看', onPressed: openDetails),
+          ];
+          final workOrderId = record.getNumber('work_order') ??
+              int.tryParse(record.getString('work_order') ?? '');
+          if (workOrderId != null && workOrderId.toInt() > 0) {
+            actions.add(RowAction(
+              label: '查看施工单',
+              icon: Icons.description_outlined,
+              onPressed: () => context.go('/workorders/${workOrderId.toInt()}'),
+            ));
+          }
+          return actions;
+        },
       ),
     );
   }

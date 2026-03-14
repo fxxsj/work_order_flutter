@@ -40,6 +40,7 @@ class GenericResourceConfig {
     this.titleBuilder,
     this.detailTitle,
     this.detailFields,
+    this.rowActionsBuilder,
   });
 
   final String id;
@@ -60,6 +61,11 @@ class GenericResourceConfig {
   final String Function(GenericRecord record)? titleBuilder;
   final String? detailTitle;
   final List<GenericDetailField>? detailFields;
+  final List<RowAction> Function(
+    BuildContext context,
+    GenericRecord record,
+    VoidCallback openDetails,
+  )? rowActionsBuilder;
 }
 
 class GenericColumn {
@@ -346,18 +352,20 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
   Widget _buildDesktopTable(BuildContext context, List<GenericRecord> records) {
     final theme = Theme.of(context);
     final textStyle = theme.textTheme.bodySmall;
+    final hasActions = widget.config.enableDetails || widget.config.rowActionsBuilder != null;
     final columns = [
       for (final column in widget.config.columns)
         DataColumn(
           label: Text(column.label),
           numeric: column.numeric,
         ),
-      if (widget.config.enableDetails) const DataColumn(label: Text('操作')),
+      if (hasActions) const DataColumn(label: Text('操作')),
     ];
 
     return AppDataTable(
       columns: columns,
       rows: records.map((record) {
+        final actions = _resolveRowActions(context, record);
         return DataRow(
           cells: [
             for (final column in widget.config.columns)
@@ -365,16 +373,11 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
                 column.value(record),
                 style: textStyle,
               )),
-            if (widget.config.enableDetails)
+            if (hasActions)
               DataCell(
-                RowActionGroup(
-                  actions: [
-                    RowAction(
-                      label: '查看',
-                      onPressed: () => _openDetails(context, record),
-                    ),
-                  ],
-                ),
+                actions.isEmpty
+                    ? const SizedBox.shrink()
+                    : RowActionGroup(actions: actions),
               ),
           ],
         );
@@ -399,6 +402,7 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
             ))
         .toList();
 
+    final actions = _resolveRowActions(context, record);
     return ExpandableSummaryCard(
       headerBuilder: (context, expanded) {
         return Column(
@@ -427,20 +431,34 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SummaryFieldWrap(isMobile: isMobile, children: summaryFields),
-          if (widget.config.enableDetails) ...[
+          if (actions.isNotEmpty) ...[
             const SizedBox(height: LayoutTokens.gapSm),
             Align(
               alignment: Alignment.centerLeft,
-              child: OutlinedButton.icon(
-                onPressed: () => _openDetails(context, record),
-                icon: const Icon(Icons.visibility_outlined, size: 16),
-                label: const Text('查看'),
-              ),
+              child: RowActionGroup(actions: actions),
             ),
           ],
         ],
       ),
     );
+  }
+
+  List<RowAction> _resolveRowActions(
+    BuildContext context,
+    GenericRecord record,
+  ) {
+    final defaultAction = widget.config.enableDetails
+        ? RowAction(
+            label: '查看',
+            onPressed: () => _openDetails(context, record),
+          )
+        : null;
+    final custom = widget.config.rowActionsBuilder
+        ?.call(context, record, () => _openDetails(context, record));
+    if (custom != null && custom.isNotEmpty) {
+      return custom;
+    }
+    return defaultAction == null ? const [] : [defaultAction];
   }
 
   Future<void> _openDetails(BuildContext context, GenericRecord record) async {
