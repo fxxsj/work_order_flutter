@@ -199,15 +199,15 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
         useSurface: false,
         showDivider: false,
         padding: EdgeInsets.zero,
-        actions: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+        actions: Wrap(
+          spacing: sectionSpacing,
+          runSpacing: 8,
           children: [
             PageActionButton.outlined(
               onPressed: () => context.pop(),
               icon: const Icon(Icons.arrow_back, size: 16),
               label: '返回',
             ),
-            SizedBox(width: sectionSpacing),
             PageActionButton.filled(
               onPressed: () => context.go('/sales-orders/${widget.orderId}/edit'),
               icon: const Icon(Icons.edit, size: 16),
