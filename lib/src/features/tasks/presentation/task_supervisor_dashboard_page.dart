@@ -11,6 +11,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
@@ -214,22 +215,23 @@ class _TaskSupervisorDashboardViewState
                     child: SafeArea(
                       child: _FilterDrawerContent(
                         title: '筛选',
-                        child:
-                            _buildFilterPanel(dialogContext, deptItems: deptItems),
+                        child: _buildFilterPanel(dialogContext,
+                            deptItems: deptItems),
                       ),
                     ),
                   ),
                 ),
               );
             },
-            transitionBuilder:
-                (context, animation, secondaryAnimation, child) {
+            transitionBuilder: (context, animation, secondaryAnimation, child) {
               final offsetTween =
                   Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero);
               return SlideTransition(
-                position: animation.drive(
-                  CurveTween(curve: Curves.easeOutCubic),
-                ).drive(offsetTween),
+                position: animation
+                    .drive(
+                      CurveTween(curve: Curves.easeOutCubic),
+                    )
+                    .drive(offsetTween),
                 child: child,
               );
             },
@@ -257,7 +259,8 @@ class _TaskSupervisorDashboardViewState
                   if (index == 2) _viewMode = 'dragdrop';
                 });
               },
-              constraints: BoxConstraints(minHeight: _controlHeight, minWidth: 88),
+              constraints:
+                  BoxConstraints(minHeight: _controlHeight, minWidth: 88),
               children: const [
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 12),
@@ -291,7 +294,7 @@ class _TaskSupervisorDashboardViewState
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
       children: [
-        DropdownButtonFormField<int?>(
+        SearchableDropdownFormField<int?>(
           key: ValueKey<int?>(_departmentId),
           initialValue: _departmentId,
           isExpanded: true,
@@ -411,8 +414,8 @@ class _TaskSupervisorDashboardViewState
                   ),
                   style: theme.textTheme.bodyMedium,
                 )),
-                DataCell(Text(_displayText(task.workOrderNumber),
-                    style: textStyle)),
+                DataCell(
+                    Text(_displayText(task.workOrderNumber), style: textStyle)),
                 DataCell(
                     Text(_displayText(task.processName), style: textStyle)),
                 DataCell(Text(_displayText(task.assignedDepartmentName),
@@ -1181,7 +1184,7 @@ class _AssignDialogState extends State<_AssignDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              DropdownButtonFormField<int>(
+              SearchableDropdownFormField<int>(
                 key: ValueKey<int>(_operatorId),
                 initialValue: _operatorId,
                 decoration: const InputDecoration(labelText: '操作员'),

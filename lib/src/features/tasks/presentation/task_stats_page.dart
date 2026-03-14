@@ -10,6 +10,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
 import 'package:work_order_app/src/features/departments/domain/department.dart';
@@ -245,14 +246,15 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
                 ),
               );
             },
-            transitionBuilder:
-                (context, animation, secondaryAnimation, child) {
+            transitionBuilder: (context, animation, secondaryAnimation, child) {
               final offsetTween =
                   Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero);
               return SlideTransition(
-                position: animation.drive(
-                  CurveTween(curve: Curves.easeOutCubic),
-                ).drive(offsetTween),
+                position: animation
+                    .drive(
+                      CurveTween(curve: Curves.easeOutCubic),
+                    )
+                    .drive(offsetTween),
                 child: child,
               );
             },
@@ -305,7 +307,7 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
           },
         ),
         const SizedBox(height: _spacingSm),
-        DropdownButtonFormField<int?>(
+        SearchableDropdownFormField<int?>(
           key: ValueKey<int?>(_departmentId),
           initialValue: _departmentId,
           isExpanded: true,
@@ -385,52 +387,47 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
         DataColumn(label: Text('不良品率')),
         DataColumn(label: Text('平均完成时长')),
       ],
-      rows: _stats
-          .map(
-            (item) {
-              final name = item['operator_name']?.toString() ??
-                  item['operator_username']?.toString() ??
-                  '-';
-              final departments = item['departments'] as List? ?? const [];
-              final deptText =
-                  departments.isEmpty ? '未分配部门' : departments.join('、');
-              final completionRate = _toNum(item['completion_rate']);
-              final defectiveRate = _toNum(item['defective_rate']);
-              final avgHours = item['avg_completion_hours'] == null
-                  ? '-'
-                  : '${_toNum(item['avg_completion_hours']).toStringAsFixed(1)} 小时';
+      rows: _stats.map(
+        (item) {
+          final name = item['operator_name']?.toString() ??
+              item['operator_username']?.toString() ??
+              '-';
+          final departments = item['departments'] as List? ?? const [];
+          final deptText =
+              departments.isEmpty ? '未分配部门' : departments.join('、');
+          final completionRate = _toNum(item['completion_rate']);
+          final defectiveRate = _toNum(item['defective_rate']);
+          final avgHours = item['avg_completion_hours'] == null
+              ? '-'
+              : '${_toNum(item['avg_completion_hours']).toStringAsFixed(1)} 小时';
 
-              return DataRow(
-                cells: [
-                  DataCell(
-                      Text(name, style: theme.textTheme.bodyMedium)),
-                  DataCell(Text(deptText, style: textStyle)),
-                  DataCell(Text('${completionRate.toStringAsFixed(1)}%',
-                      style: textStyle)),
-                  DataCell(Text('${_toInt(item['total_tasks'])}',
-                      style: textStyle)),
-                  DataCell(Text('${_toInt(item['completed_tasks'])}',
-                      style: textStyle)),
-                  DataCell(Text('${_toInt(item['in_progress_tasks'])}',
-                      style: textStyle)),
-                  DataCell(Text('${_toInt(item['pending_tasks'])}',
-                      style: textStyle)),
-                  DataCell(Text(
-                      _toNum(item['total_completed_quantity'])
-                          .toStringAsFixed(0),
-                      style: textStyle)),
-                  DataCell(Text(
-                      _toNum(item['total_defective_quantity'])
-                          .toStringAsFixed(0),
-                      style: textStyle)),
-                  DataCell(Text('${defectiveRate.toStringAsFixed(2)}%',
-                      style: textStyle)),
-                  DataCell(Text(avgHours, style: textStyle)),
-                ],
-              );
-            },
-          )
-          .toList(),
+          return DataRow(
+            cells: [
+              DataCell(Text(name, style: theme.textTheme.bodyMedium)),
+              DataCell(Text(deptText, style: textStyle)),
+              DataCell(Text('${completionRate.toStringAsFixed(1)}%',
+                  style: textStyle)),
+              DataCell(
+                  Text('${_toInt(item['total_tasks'])}', style: textStyle)),
+              DataCell(
+                  Text('${_toInt(item['completed_tasks'])}', style: textStyle)),
+              DataCell(Text('${_toInt(item['in_progress_tasks'])}',
+                  style: textStyle)),
+              DataCell(
+                  Text('${_toInt(item['pending_tasks'])}', style: textStyle)),
+              DataCell(Text(
+                  _toNum(item['total_completed_quantity']).toStringAsFixed(0),
+                  style: textStyle)),
+              DataCell(Text(
+                  _toNum(item['total_defective_quantity']).toStringAsFixed(0),
+                  style: textStyle)),
+              DataCell(Text('${defectiveRate.toStringAsFixed(2)}%',
+                  style: textStyle)),
+              DataCell(Text(avgHours, style: textStyle)),
+            ],
+          );
+        },
+      ).toList(),
     );
   }
 

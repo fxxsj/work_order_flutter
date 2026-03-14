@@ -9,6 +9,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dar
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/artworks/data/artwork_api_service.dart';
 import 'package:work_order_app/src/features/artworks/data/artwork_dto.dart';
@@ -510,10 +511,9 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        DropdownButtonFormField<int>(
+                        SearchableDropdownFormField<int>(
                           initialValue: _customerId,
-                          decoration: const InputDecoration(
-                              labelText: '客户'),
+                          decoration: const InputDecoration(labelText: '客户'),
                           items: _customers
                               .map(
                                 (item) => DropdownMenuItem(
@@ -540,11 +540,11 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                               children: [
                                 SizedBox(
                                   width: fieldWidth,
-                                  child: DropdownButtonFormField<String>(
+                                  child: SearchableDropdownFormField<String>(
                                     initialValue: _status,
                                     decoration: const InputDecoration(
-                                        labelText: '状态',
-                                        ),
+                                      labelText: '状态',
+                                    ),
                                     items: const [
                                       DropdownMenuItem(
                                           value: 'pending', child: Text('待开始')),
@@ -566,11 +566,11 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                                 ),
                                 SizedBox(
                                   width: fieldWidth,
-                                  child: DropdownButtonFormField<String>(
+                                  child: SearchableDropdownFormField<String>(
                                     initialValue: _priority,
                                     decoration: const InputDecoration(
-                                        labelText: '优先级',
-                                        ),
+                                      labelText: '优先级',
+                                    ),
                                     items: const [
                                       DropdownMenuItem(
                                           value: 'low', child: Text('低')),
@@ -590,8 +590,8 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                                   child: TextFormField(
                                     readOnly: true,
                                     decoration: const InputDecoration(
-                                        labelText: '下单日期',
-                                        ),
+                                      labelText: '下单日期',
+                                    ),
                                     controller: _orderDateController,
                                     onTap: () => _pickDate(isOrderDate: true),
                                   ),
@@ -601,8 +601,8 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                                   child: TextFormField(
                                     readOnly: true,
                                     decoration: const InputDecoration(
-                                        labelText: '交货日期',
-                                        ),
+                                      labelText: '交货日期',
+                                    ),
                                     controller: _deliveryDateController,
                                     onTap: () => _pickDate(isOrderDate: false),
                                     validator: (value) =>
@@ -616,8 +616,8 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                                   child: TextFormField(
                                     controller: _productionQuantityController,
                                     decoration: const InputDecoration(
-                                        labelText: '生产数量',
-                                        ),
+                                      labelText: '生产数量',
+                                    ),
                                     keyboardType: TextInputType.number,
                                     validator: (value) {
                                       final text = value?.trim() ?? '';
@@ -635,8 +635,8 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                                   child: TextFormField(
                                     controller: _defectiveQuantityController,
                                     decoration: const InputDecoration(
-                                        labelText: '预损数量',
-                                        ),
+                                      labelText: '预损数量',
+                                    ),
                                     keyboardType: TextInputType.number,
                                     validator: (value) {
                                       final text = value?.trim() ?? '';
@@ -655,8 +655,8 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                                     child: TextFormField(
                                       readOnly: true,
                                       decoration: const InputDecoration(
-                                          labelText: '实际交货日期',
-                                          ),
+                                        labelText: '实际交货日期',
+                                      ),
                                       controller: _actualDeliveryDateController,
                                       onTap: _pickActualDeliveryDate,
                                     ),
@@ -668,8 +668,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                         SizedBox(height: LayoutTokens.gapMd),
                         TextFormField(
                           controller: _notesController,
-                          decoration: const InputDecoration(
-                              labelText: '备注'),
+                          decoration: const InputDecoration(labelText: '备注'),
                           maxLines: 3,
                         ),
                       ],
@@ -753,10 +752,10 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                         final leftColumn = Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            DropdownButtonFormField<String>(
+                            SearchableDropdownFormField<String>(
                               initialValue: _printingType,
-                              decoration: const InputDecoration(
-                                  labelText: '印刷形式'),
+                              decoration:
+                                  const InputDecoration(labelText: '印刷形式'),
                               items: const [
                                 DropdownMenuItem(
                                     value: 'none', child: Text('不需要印刷')),
@@ -979,9 +978,8 @@ class _MultiSelectChipsState extends State<_MultiSelectChips> {
         .where((item) => widget.selected.contains(item.id))
         .toList();
     final hasSelected = selectedItems.isNotEmpty;
-    final summaryText = hasSelected
-        ? '已选 ${selectedItems.length} 项'
-        : widget.placeholder;
+    final summaryText =
+        hasSelected ? '已选 ${selectedItems.length} 项' : widget.placeholder;
 
     return InputDecorator(
       decoration: InputDecoration(
@@ -1007,8 +1005,7 @@ class _MultiSelectChipsState extends State<_MultiSelectChips> {
               if (hasSelected)
                 IconButton(
                   onPressed: () => setState(() => _expanded = !_expanded),
-                  icon: Icon(
-                      _expanded ? Icons.expand_less : Icons.expand_more),
+                  icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more),
                   tooltip: _expanded ? '收起' : '展开',
                   visualDensity: VisualDensity.compact,
                 ),
@@ -1074,7 +1071,6 @@ class _MultiSelectChipsState extends State<_MultiSelectChips> {
                       decoration: const InputDecoration(
                         hintText: '搜索名称或编码',
                         prefixIcon: Icon(Icons.search),
-                        
                       ),
                       onChanged: (value) =>
                           setDialogState(() => query = value.trim()),
@@ -1250,11 +1246,10 @@ class _ProductRowState extends State<_ProductRow> {
               children: [
                 SizedBox(
                   width: productWidth,
-                  child: DropdownButtonFormField<int>(
+                  child: SearchableDropdownFormField<int>(
                     initialValue: widget.draft.productId,
                     isExpanded: true,
-                    decoration: const InputDecoration(
-                        labelText: '产品'),
+                    decoration: const InputDecoration(labelText: '产品'),
                     items: widget.products
                         .map(
                           (item) => DropdownMenuItem(
@@ -1273,8 +1268,7 @@ class _ProductRowState extends State<_ProductRow> {
                   width: smallWidth,
                   child: TextFormField(
                     controller: widget.draft.quantityController,
-                    decoration: const InputDecoration(
-                        labelText: '数量'),
+                    decoration: const InputDecoration(labelText: '数量'),
                     keyboardType: TextInputType.number,
                   ),
                 ),
@@ -1282,24 +1276,21 @@ class _ProductRowState extends State<_ProductRow> {
                   width: smallWidth,
                   child: TextFormField(
                     controller: widget.draft.unitController,
-                    decoration: const InputDecoration(
-                        labelText: '单位'),
+                    decoration: const InputDecoration(labelText: '单位'),
                   ),
                 ),
                 SizedBox(
                   width: specWidth,
                   child: TextFormField(
                     controller: widget.draft.specController,
-                    decoration: const InputDecoration(
-                        labelText: '规格'),
+                    decoration: const InputDecoration(labelText: '规格'),
                   ),
                 ),
                 SizedBox(
                   width: smallWidth,
                   child: TextFormField(
                     controller: widget.draft.sortOrderController,
-                    decoration: const InputDecoration(
-                        labelText: '排序'),
+                    decoration: const InputDecoration(labelText: '排序'),
                     keyboardType: TextInputType.number,
                   ),
                 ),
@@ -1354,11 +1345,10 @@ class _MaterialRowState extends State<_MaterialRow> {
               children: [
                 SizedBox(
                   width: productWidth,
-                  child: DropdownButtonFormField<int>(
+                  child: SearchableDropdownFormField<int>(
                     initialValue: widget.draft.materialId,
                     isExpanded: true,
-                    decoration: const InputDecoration(
-                        labelText: '物料'),
+                    decoration: const InputDecoration(labelText: '物料'),
                     items: widget.materials
                         .map(
                           (item) => DropdownMenuItem(
@@ -1376,16 +1366,14 @@ class _MaterialRowState extends State<_MaterialRow> {
                   width: mediumWidth,
                   child: TextFormField(
                     controller: widget.draft.sizeController,
-                    decoration: const InputDecoration(
-                        labelText: '规格'),
+                    decoration: const InputDecoration(labelText: '规格'),
                   ),
                 ),
                 SizedBox(
                   width: mediumWidth,
                   child: TextFormField(
                     controller: widget.draft.usageController,
-                    decoration: const InputDecoration(
-                        labelText: '用量'),
+                    decoration: const InputDecoration(labelText: '用量'),
                   ),
                 ),
                 Row(
@@ -1403,8 +1391,7 @@ class _MaterialRowState extends State<_MaterialRow> {
                   width: notesWidth,
                   child: TextFormField(
                     controller: widget.draft.notesController,
-                    decoration: const InputDecoration(
-                        labelText: '备注'),
+                    decoration: const InputDecoration(labelText: '备注'),
                   ),
                 ),
                 IconButton(

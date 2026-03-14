@@ -13,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
@@ -572,7 +573,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (!isEdit)
-                          DropdownButtonFormField<int>(
+                          SearchableDropdownFormField<int>(
                             key: ValueKey<int?>(selectedSalesOrderId),
                             initialValue: selectedSalesOrderId,
                             decoration: const InputDecoration(
@@ -1354,7 +1355,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        DropdownButtonFormField<String>(
+        SearchableDropdownFormField<String>(
           key: ValueKey<String>(statusValue),
           initialValue: statusValue,
           isExpanded: true,
@@ -1370,7 +1371,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
           onChanged: (value) => viewModel.setStatusFilter(value ?? ''),
         ),
         const SizedBox(height: _spacingSm),
-        DropdownButtonFormField<int>(
+        SearchableDropdownFormField<int>(
           key: ValueKey<int>(customerValue),
           initialValue: customerValue,
           isExpanded: true,
@@ -1812,7 +1813,7 @@ class _DeliveryItemRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: DropdownButtonFormField<int>(
+            child: SearchableDropdownFormField<int>(
               key: ValueKey<int?>(item.productId),
               initialValue: item.productId == 0 ? null : item.productId,
               decoration: const InputDecoration(

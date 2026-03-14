@@ -11,6 +11,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/auth/data/auth_api.dart';
 import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
@@ -311,14 +312,15 @@ class _TaskAssignmentHistoryViewState
                 ),
               );
             },
-            transitionBuilder:
-                (context, animation, secondaryAnimation, child) {
+            transitionBuilder: (context, animation, secondaryAnimation, child) {
               final offsetTween =
                   Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero);
               return SlideTransition(
-                position: animation.drive(
-                  CurveTween(curve: Curves.easeOutCubic),
-                ).drive(offsetTween),
+                position: animation
+                    .drive(
+                      CurveTween(curve: Curves.easeOutCubic),
+                    )
+                    .drive(offsetTween),
                 child: child,
               );
             },
@@ -372,7 +374,7 @@ class _TaskAssignmentHistoryViewState
           },
         ),
         const SizedBox(height: _spacingSm),
-        DropdownButtonFormField<int?>(
+        SearchableDropdownFormField<int?>(
           key: ValueKey<int?>(_departmentId),
           initialValue: _departmentId,
           isExpanded: true,
@@ -384,7 +386,7 @@ class _TaskAssignmentHistoryViewState
           },
         ),
         const SizedBox(height: _spacingSm),
-        DropdownButtonFormField<int?>(
+        SearchableDropdownFormField<int?>(
           key: ValueKey<int?>(_operatorId),
           initialValue: _operatorId,
           isExpanded: true,
@@ -463,54 +465,51 @@ class _TaskAssignmentHistoryViewState
         DataColumn(label: Text('时间')),
         DataColumn(label: Text('施工单')),
       ],
-      rows: _items
-          .map(
-            (item) {
-              final createdAt = item['created_at']?.toString() ?? '-';
-              final content = item['content']?.toString() ?? '-';
-              final operatorName = item['operator_name']?.toString() ?? '-';
-              final taskInfo = item['task_info'];
-              final workOrderInfo = item['work_order_info'];
+      rows: _items.map(
+        (item) {
+          final createdAt = item['created_at']?.toString() ?? '-';
+          final content = item['content']?.toString() ?? '-';
+          final operatorName = item['operator_name']?.toString() ?? '-';
+          final taskInfo = item['task_info'];
+          final workOrderInfo = item['work_order_info'];
 
-              final taskTitle = taskInfo is Map
-                  ? taskInfo['work_content']?.toString() ??
-                      '任务 #${taskInfo['id'] ?? '-'}'
-                  : '-';
-              final department = taskInfo is Map
-                  ? taskInfo['assigned_department']?.toString() ?? '未分配部门'
-                  : '未分配部门';
-              final assignedOperator = taskInfo is Map
-                  ? taskInfo['assigned_operator']?.toString() ?? '未分配操作员'
-                  : '未分配操作员';
+          final taskTitle = taskInfo is Map
+              ? taskInfo['work_content']?.toString() ??
+                  '任务 #${taskInfo['id'] ?? '-'}'
+              : '-';
+          final department = taskInfo is Map
+              ? taskInfo['assigned_department']?.toString() ?? '未分配部门'
+              : '未分配部门';
+          final assignedOperator = taskInfo is Map
+              ? taskInfo['assigned_operator']?.toString() ?? '未分配操作员'
+              : '未分配操作员';
 
-              final workOrderId =
-                  _toInt(workOrderInfo is Map ? workOrderInfo['id'] : null);
-              final workOrderNumber = workOrderInfo is Map
-                  ? workOrderInfo['order_number']?.toString()
-                  : null;
+          final workOrderId =
+              _toInt(workOrderInfo is Map ? workOrderInfo['id'] : null);
+          final workOrderNumber = workOrderInfo is Map
+              ? workOrderInfo['order_number']?.toString()
+              : null;
 
-              return DataRow(
-                cells: [
-                  DataCell(Text(taskTitle, style: theme.textTheme.bodyMedium)),
-                  DataCell(Text(department, style: textStyle)),
-                  DataCell(Text(assignedOperator, style: textStyle)),
-                  DataCell(Text(operatorName, style: textStyle)),
-                  DataCell(Text(content, style: textStyle)),
-                  DataCell(Text(createdAt, style: textStyle)),
-                  DataCell(
-                    workOrderId > 0 && workOrderNumber != null
-                        ? TextButton(
-                            onPressed: () =>
-                                context.go('/workorders/$workOrderId'),
-                            child: Text('查看 $workOrderNumber'),
-                          )
-                        : Text('-', style: textStyle),
-                  ),
-                ],
-              );
-            },
-          )
-          .toList(),
+          return DataRow(
+            cells: [
+              DataCell(Text(taskTitle, style: theme.textTheme.bodyMedium)),
+              DataCell(Text(department, style: textStyle)),
+              DataCell(Text(assignedOperator, style: textStyle)),
+              DataCell(Text(operatorName, style: textStyle)),
+              DataCell(Text(content, style: textStyle)),
+              DataCell(Text(createdAt, style: textStyle)),
+              DataCell(
+                workOrderId > 0 && workOrderNumber != null
+                    ? TextButton(
+                        onPressed: () => context.go('/workorders/$workOrderId'),
+                        child: Text('查看 $workOrderNumber'),
+                      )
+                    : Text('-', style: textStyle),
+              ),
+            ],
+          );
+        },
+      ).toList(),
     );
   }
 

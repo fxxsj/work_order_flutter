@@ -14,6 +14,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
@@ -223,7 +224,8 @@ class _TaskListViewState extends State<_TaskListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, tasks, isMobile),
-          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1
+              ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,
@@ -300,74 +302,71 @@ class _TaskListViewState extends State<_TaskListView> {
         DataColumn(label: Text('状态')),
         DataColumn(label: Text('操作')),
       ],
-      rows: tasks
-          .map(
-            (task) {
-              final isCompleted = task.status == 'completed';
-              final isCancelled = task.status == 'cancelled';
-              final isDraft = task.status == 'draft';
-              final canUpdate = !(isCompleted || isCancelled || isDraft);
-              final canComplete = !(isCompleted || isCancelled || isDraft);
+      rows: tasks.map(
+        (task) {
+          final isCompleted = task.status == 'completed';
+          final isCancelled = task.status == 'cancelled';
+          final isDraft = task.status == 'draft';
+          final canUpdate = !(isCompleted || isCancelled || isDraft);
+          final canComplete = !(isCompleted || isCancelled || isDraft);
 
-              return DataRow(
-                cells: [
-                  DataCell(Text(
-                    _displayText(
-                      task.workContent?.trim().isNotEmpty == true
-                          ? task.workContent
-                          : (task.processName ?? '任务 #${task.id}'),
+          return DataRow(
+            cells: [
+              DataCell(Text(
+                _displayText(
+                  task.workContent?.trim().isNotEmpty == true
+                      ? task.workContent
+                      : (task.processName ?? '任务 #${task.id}'),
+                ),
+                style: theme.textTheme.bodyMedium,
+              )),
+              DataCell(
+                  Text(_displayText(task.workOrderNumber), style: textStyle)),
+              DataCell(Text(_displayText(task.processName), style: textStyle)),
+              DataCell(Text(_displayText(task.assignedDepartmentName),
+                  style: textStyle)),
+              DataCell(Text(_displayText(task.assignedOperatorName),
+                  style: textStyle)),
+              DataCell(Text(_formatNumber(task.productionQuantity),
+                  style: textStyle)),
+              DataCell(Text(_formatNumber(task.quantityCompleted),
+                  style: textStyle)),
+              DataCell(Text(_formatProgress(task), style: textStyle)),
+              DataCell(Text(
+                task.statusDisplay ?? task.status ?? _emptyCellText,
+                style: textStyle,
+              )),
+              DataCell(RowActionGroup(
+                actions: [
+                  if (task.workOrderId != null)
+                    RowAction(
+                      label: '查看施工单',
+                      onPressed: () =>
+                          context.go('/workorders/${task.workOrderId}'),
                     ),
-                    style: theme.textTheme.bodyMedium,
-                  )),
-                  DataCell(Text(_displayText(task.workOrderNumber),
-                      style: textStyle)),
-                  DataCell(
-                      Text(_displayText(task.processName), style: textStyle)),
-                  DataCell(Text(_displayText(task.assignedDepartmentName),
-                      style: textStyle)),
-                  DataCell(Text(_displayText(task.assignedOperatorName),
-                      style: textStyle)),
-                  DataCell(Text(_formatNumber(task.productionQuantity),
-                      style: textStyle)),
-                  DataCell(Text(_formatNumber(task.quantityCompleted),
-                      style: textStyle)),
-                  DataCell(Text(_formatProgress(task), style: textStyle)),
-                  DataCell(Text(
-                    task.statusDisplay ?? task.status ?? _emptyCellText,
-                    style: textStyle,
-                  )),
-                  DataCell(RowActionGroup(
-                    actions: [
-                      if (task.workOrderId != null)
-                        RowAction(
-                          label: '查看施工单',
-                          onPressed: () =>
-                              context.go('/workorders/${task.workOrderId}'),
-                        ),
-                      if (canUpdate)
-                        RowAction(
-                          label: _updateButtonText,
-                          onPressed: () =>
-                              _openUpdateDialog(context, viewModel, task),
-                        ),
-                      if (canComplete)
-                        RowAction(
-                          label: _completeButtonText,
-                          onPressed: () =>
-                              _openCompleteDialog(context, viewModel, task),
-                        ),
-                      RowAction(
-                        label: _assignButtonText,
-                        onPressed: () =>
-                            _openAssignDialog(context, viewModel, task),
-                      ),
-                    ],
-                  )),
+                  if (canUpdate)
+                    RowAction(
+                      label: _updateButtonText,
+                      onPressed: () =>
+                          _openUpdateDialog(context, viewModel, task),
+                    ),
+                  if (canComplete)
+                    RowAction(
+                      label: _completeButtonText,
+                      onPressed: () =>
+                          _openCompleteDialog(context, viewModel, task),
+                    ),
+                  RowAction(
+                    label: _assignButtonText,
+                    onPressed: () =>
+                        _openAssignDialog(context, viewModel, task),
+                  ),
                 ],
-              );
-            },
-          )
-          .toList(),
+              )),
+            ],
+          );
+        },
+      ).toList(),
     );
   }
 
@@ -497,9 +496,11 @@ class _TaskListViewState extends State<_TaskListView> {
                 final offsetTween =
                     Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero);
                 return SlideTransition(
-                  position: animation.drive(
-                    CurveTween(curve: Curves.easeOutCubic),
-                  ).drive(offsetTween),
+                  position: animation
+                      .drive(
+                        CurveTween(curve: Curves.easeOutCubic),
+                      )
+                      .drive(offsetTween),
                   child: child,
                 );
               },
@@ -542,7 +543,7 @@ class _TaskListViewState extends State<_TaskListView> {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
       children: [
         if (_loadingOptions) const LinearProgressIndicator(minHeight: 2),
-        DropdownButtonFormField<String>(
+        SearchableDropdownFormField<String>(
           initialValue: _statusFilter,
           isExpanded: true,
           decoration: const InputDecoration(labelText: '状态'),
@@ -553,7 +554,7 @@ class _TaskListViewState extends State<_TaskListView> {
           },
         ),
         const SizedBox(height: _spacingSm),
-        DropdownButtonFormField<String>(
+        SearchableDropdownFormField<String>(
           initialValue: _priorityFilter,
           isExpanded: true,
           decoration: const InputDecoration(labelText: '优先级'),
@@ -564,7 +565,7 @@ class _TaskListViewState extends State<_TaskListView> {
           },
         ),
         const SizedBox(height: _spacingSm),
-        DropdownButtonFormField<int?>(
+        SearchableDropdownFormField<int?>(
           initialValue: _departmentFilterId,
           isExpanded: true,
           decoration: const InputDecoration(labelText: '部门'),
@@ -575,7 +576,7 @@ class _TaskListViewState extends State<_TaskListView> {
           },
         ),
         const SizedBox(height: _spacingSm),
-        DropdownButtonFormField<int?>(
+        SearchableDropdownFormField<int?>(
           initialValue: _processFilterId,
           isExpanded: true,
           decoration: const InputDecoration(labelText: '工序'),
@@ -1106,7 +1107,7 @@ class _TaskAssignDialogState extends State<_TaskAssignDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            DropdownButtonFormField<int?>(
+            SearchableDropdownFormField<int?>(
               key: ValueKey<int?>(_departmentId),
               initialValue: _departmentId,
               decoration: const InputDecoration(labelText: '部门'),
@@ -1130,7 +1131,7 @@ class _TaskAssignDialogState extends State<_TaskAssignDialog> {
             ),
             const SizedBox(height: 12),
             if (_loadingOperators) const LinearProgressIndicator(minHeight: 2),
-            DropdownButtonFormField<int?>(
+            SearchableDropdownFormField<int?>(
               key: ValueKey<int?>(_operatorId),
               initialValue: _operatorId,
               decoration: const InputDecoration(labelText: '操作员'),

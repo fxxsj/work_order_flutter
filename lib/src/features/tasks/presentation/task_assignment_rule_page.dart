@@ -10,6 +10,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
@@ -315,7 +316,8 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
               useSafeArea: true,
               showDragHandle: true,
               backgroundColor: Theme.of(context).colorScheme.surface,
-              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+              shape:
+                  const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
               builder: (sheetContext) {
                 return _FilterDrawerContent(
                   title: activeCount > 0 ? '筛选 ($activeCount)' : '筛选',
@@ -343,7 +345,8 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
                 alignment: Alignment.centerRight,
                 child: Material(
                   color: Theme.of(dialogContext).colorScheme.surface,
-                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero),
                   child: SizedBox(
                     width: 360,
                     height: double.infinity,
@@ -367,9 +370,11 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
               final offsetTween =
                   Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero);
               return SlideTransition(
-                position: animation.drive(
-                  CurveTween(curve: Curves.easeOutCubic),
-                ).drive(offsetTween),
+                position: animation
+                    .drive(
+                      CurveTween(curve: Curves.easeOutCubic),
+                    )
+                    .drive(offsetTween),
                 child: child,
               );
             },
@@ -406,9 +411,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
             PageActionButton.outlined(
               onPressed: openFilterDrawer,
               icon: const Icon(Icons.filter_alt_outlined, size: 16),
-              label: activeCount > 0
-                  ? '筛选 $activeCount'
-                  : '筛选',
+              label: activeCount > 0 ? '筛选 $activeCount' : '筛选',
             ),
           ],
         );
@@ -426,7 +429,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
       children: [
-        DropdownButtonFormField<int?>(
+        SearchableDropdownFormField<int?>(
           key: ValueKey<int?>(viewModel.processId),
           initialValue: viewModel.processId,
           isExpanded: true,
@@ -438,7 +441,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
           },
         ),
         const SizedBox(height: _spacingSm),
-        DropdownButtonFormField<int?>(
+        SearchableDropdownFormField<int?>(
           key: ValueKey<int?>(viewModel.departmentId),
           initialValue: viewModel.departmentId,
           isExpanded: true,
@@ -450,7 +453,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
           },
         ),
         const SizedBox(height: _spacingSm),
-        DropdownButtonFormField<bool?>(
+        SearchableDropdownFormField<bool?>(
           key: ValueKey<bool?>(viewModel.isActive),
           initialValue: viewModel.isActive,
           isExpanded: true,
@@ -836,7 +839,7 @@ class _RuleDialogState extends State<_RuleDialog> {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                DropdownButtonFormField<int>(
+                SearchableDropdownFormField<int>(
                   key: ValueKey<int>(_processId),
                   initialValue: _processId,
                   decoration: const InputDecoration(labelText: '工序'),
@@ -852,7 +855,7 @@ class _RuleDialogState extends State<_RuleDialog> {
                           setState(() => _processId = value ?? _processId),
                 ),
                 const SizedBox(height: 12),
-                DropdownButtonFormField<int>(
+                SearchableDropdownFormField<int>(
                   key: ValueKey<int>(_departmentId),
                   initialValue: _departmentId,
                   decoration: const InputDecoration(labelText: '分派部门'),
@@ -883,7 +886,7 @@ class _RuleDialogState extends State<_RuleDialog> {
                       _priority = int.tryParse(value) ?? _priority,
                 ),
                 const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
+                SearchableDropdownFormField<String>(
                   key: ValueKey<String>(_strategy),
                   initialValue: _strategy,
                   decoration: const InputDecoration(labelText: '操作员选择策略'),

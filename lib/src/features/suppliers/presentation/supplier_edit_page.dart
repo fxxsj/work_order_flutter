@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/edit_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/suppliers/application/supplier_view_model.dart';
@@ -67,7 +68,8 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
     final supplier = widget.supplier;
     _codeController = TextEditingController(text: supplier?.code ?? '');
     _nameController = TextEditingController(text: supplier?.name ?? '');
-    _contactController = TextEditingController(text: supplier?.contactPerson ?? '');
+    _contactController =
+        TextEditingController(text: supplier?.contactPerson ?? '');
     _phoneController = TextEditingController(text: supplier?.phone ?? '');
     _emailController = TextEditingController(text: supplier?.email ?? '');
     _addressController = TextEditingController(text: supplier?.address ?? '');
@@ -211,7 +213,7 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
       },
     );
 
-    final statusField = DropdownButtonFormField<String>(
+    final statusField = SearchableDropdownFormField<String>(
       initialValue: _status,
       decoration: const InputDecoration(labelText: _statusLabel),
       items: const [
@@ -326,19 +328,23 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 PageActionButton.outlined(
-                  onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
+                  onPressed: _submitting
+                      ? null
+                      : () => Navigator.of(context).pop(false),
                   icon: const Icon(Icons.arrow_back, size: 16),
                   label: _cancelText,
                 ),
                 const SizedBox(width: _inlineSpacing),
                 PageActionButton.filled(
-                  onPressed: _submitting ? null : () => _handleSubmit(viewModel),
+                  onPressed:
+                      _submitting ? null : () => _handleSubmit(viewModel),
                   label: _submitText,
                   icon: _submitting
                       ? const SizedBox(
                           height: _submitIndicatorSize,
                           width: _submitIndicatorSize,
-                          child: CircularProgressIndicator(strokeWidth: _indicatorStrokeWidth),
+                          child: CircularProgressIndicator(
+                              strokeWidth: _indicatorStrokeWidth),
                         )
                       : const Icon(Icons.save, size: 16),
                 ),

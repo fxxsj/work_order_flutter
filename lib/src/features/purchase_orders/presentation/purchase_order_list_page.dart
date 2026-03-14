@@ -13,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -629,7 +630,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        DropdownButtonFormField<int>(
+                        SearchableDropdownFormField<int>(
                           key: ValueKey<int?>(supplierId),
                           initialValue: supplierId,
                           decoration: const InputDecoration(
@@ -655,7 +656,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
                           },
                         ),
                         const SizedBox(height: 12),
-                        DropdownButtonFormField<int>(
+                        SearchableDropdownFormField<int>(
                           key: ValueKey<int?>(workOrderId),
                           initialValue: workOrderId,
                           decoration: const InputDecoration(
@@ -1543,7 +1544,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
               viewModel.statusFilter.isEmpty ? '' : viewModel.statusFilter;
           final statusField = SizedBox(
             width: isMobile ? constraints.maxWidth : 150,
-            child: DropdownButtonFormField<String>(
+            child: SearchableDropdownFormField<String>(
               key: ValueKey<String>(statusValue),
               initialValue: statusValue,
               decoration: const InputDecoration(
@@ -1567,7 +1568,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
           final supplierValue = viewModel.supplierId;
           final supplierField = SizedBox(
             width: isMobile ? constraints.maxWidth : 180,
-            child: DropdownButtonFormField<int>(
+            child: SearchableDropdownFormField<int>(
               key: ValueKey<int>(supplierValue),
               initialValue: supplierValue,
               decoration: const InputDecoration(
@@ -1900,7 +1901,7 @@ class _PurchaseItemRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: DropdownButtonFormField<int>(
+            child: SearchableDropdownFormField<int>(
               key: ValueKey<int?>(selectedValue),
               initialValue: selectedValue,
               decoration: const InputDecoration(

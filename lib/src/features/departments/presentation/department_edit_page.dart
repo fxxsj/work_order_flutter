@@ -4,6 +4,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/edit_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/departments/application/department_view_model.dart';
@@ -60,7 +61,8 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
     final department = widget.department;
     _codeController = TextEditingController(text: department?.code ?? '');
     _nameController = TextEditingController(text: department?.name ?? '');
-    _sortController = TextEditingController(text: (department?.sortOrder ?? 0).toString());
+    _sortController =
+        TextEditingController(text: (department?.sortOrder ?? 0).toString());
     _parentId = department?.parentId;
     _isActive = department?.isActive ?? true;
     _processIds = List<int>.from(department?.processIds ?? const []);
@@ -143,7 +145,8 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
     final subtleText = colors?.subtleText ?? theme.hintColor;
     final isMobile = BreakpointsUtil.isMobile(context);
     final availableParents = _availableParents(viewModel.departmentOptions);
-    final disableParent = widget.department != null && (widget.department?.childrenCount ?? 0) > 0;
+    final disableParent = widget.department != null &&
+        (widget.department?.childrenCount ?? 0) > 0;
     final contentPadding = LayoutTokens.pagePadding(context);
     final sectionSpacing = LayoutTokens.formSectionSpacing(context);
     final actionSpacing = LayoutTokens.formActionSpacing(context);
@@ -178,13 +181,14 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
       },
     );
 
-    final parentField = DropdownButtonFormField<int?>(
+    final parentField = SearchableDropdownFormField<int?>(
       initialValue: _parentId,
       decoration: const InputDecoration(labelText: _parentLabel),
       items: [
         const DropdownMenuItem<int?>(value: null, child: Text('不设置')),
         ...availableParents.map(
-          (dept) => DropdownMenuItem<int?>(value: dept.id, child: Text(dept.name)),
+          (dept) =>
+              DropdownMenuItem<int?>(value: dept.id, child: Text(dept.name)),
         ),
       ],
       onChanged: disableParent
@@ -203,7 +207,9 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
     );
 
     final processField = InkWell(
-      onTap: viewModel.processOptions.isEmpty ? null : () => _openProcessDialog(viewModel),
+      onTap: viewModel.processOptions.isEmpty
+          ? null
+          : () => _openProcessDialog(viewModel),
       borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
       child: InputDecorator(
         decoration: const InputDecoration(
@@ -212,9 +218,12 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
           suffixIcon: Icon(Icons.arrow_drop_down),
         ),
         child: viewModel.processOptions.isEmpty
-            ? Text('暂无工序数据', style: theme.textTheme.bodySmall?.copyWith(color: subtleText))
+            ? Text('暂无工序数据',
+                style: theme.textTheme.bodySmall?.copyWith(color: subtleText))
             : _processIds.isEmpty
-                ? Text(_processPlaceholder, style: theme.textTheme.bodyMedium?.copyWith(color: subtleText))
+                ? Text(_processPlaceholder,
+                    style:
+                        theme.textTheme.bodyMedium?.copyWith(color: subtleText))
                 : Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -225,7 +234,9 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
                             label: Text(process.name),
                             onDeleted: () {
                               setState(() {
-                                _processIds = _processIds.where((id) => id != process.id).toList();
+                                _processIds = _processIds
+                                    .where((id) => id != process.id)
+                                    .toList();
                               });
                             },
                           ),
@@ -324,19 +335,23 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 PageActionButton.outlined(
-                  onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
+                  onPressed: _submitting
+                      ? null
+                      : () => Navigator.of(context).pop(false),
                   icon: const Icon(Icons.arrow_back, size: 16),
                   label: _cancelText,
                 ),
                 const SizedBox(width: _inlineSpacing),
                 PageActionButton.filled(
-                  onPressed: _submitting ? null : () => _handleSubmit(viewModel),
+                  onPressed:
+                      _submitting ? null : () => _handleSubmit(viewModel),
                   label: _submitText,
                   icon: _submitting
                       ? const SizedBox(
                           height: _submitIndicatorSize,
                           width: _submitIndicatorSize,
-                          child: CircularProgressIndicator(strokeWidth: _indicatorStrokeWidth),
+                          child: CircularProgressIndicator(
+                              strokeWidth: _indicatorStrokeWidth),
                         )
                       : const Icon(Icons.save, size: 16),
                 ),
@@ -360,7 +375,8 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             final filtered = viewModel.processOptions
-                .where((process) => process.name.toLowerCase().contains(query.toLowerCase()))
+                .where((process) =>
+                    process.name.toLowerCase().contains(query.toLowerCase()))
                 .toList();
             return AlertDialog(
               title: const Text(_processLabel),
@@ -375,31 +391,44 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
                         hintText: _processSearchHint,
                         prefixIcon: Icon(Icons.search),
                       ),
-                      onChanged: (value) => setDialogState(() => query = value.trim()),
+                      onChanged: (value) =>
+                          setDialogState(() => query = value.trim()),
                     ),
                     const SizedBox(height: 12),
                     Expanded(
                       child: filtered.isEmpty
-                          ? Center(child: Text(_emptyMatchText, style: Theme.of(context).textTheme.bodySmall))
+                          ? Center(
+                              child: Text(_emptyMatchText,
+                                  style: Theme.of(context).textTheme.bodySmall))
                           : Scrollbar(
                               child: ListView.builder(
                                 itemCount: filtered.length,
                                 itemBuilder: (context, index) {
                                   final process = filtered[index];
-                                  final selected = _processIds.contains(process.id);
+                                  final selected =
+                                      _processIds.contains(process.id);
                                   return CheckboxListTile(
                                     value: selected,
                                     dense: true,
-                                    controlAffinity: ListTileControlAffinity.leading,
+                                    controlAffinity:
+                                        ListTileControlAffinity.leading,
                                     title: Text(process.name),
-                                    subtitle: process.isActive ? null : const Text('已停用'),
+                                    subtitle: process.isActive
+                                        ? null
+                                        : const Text('已停用'),
                                     onChanged: process.isActive
                                         ? (value) {
                                             setDialogState(() {
                                               if (value == true) {
-                                                _processIds = [..._processIds, process.id];
+                                                _processIds = [
+                                                  ..._processIds,
+                                                  process.id
+                                                ];
                                               } else {
-                                                _processIds = _processIds.where((id) => id != process.id).toList();
+                                                _processIds = _processIds
+                                                    .where((id) =>
+                                                        id != process.id)
+                                                    .toList();
                                               }
                                             });
                                             setState(() {});

@@ -5,6 +5,7 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/edit_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/artworks/application/artwork_view_model.dart';
@@ -90,8 +91,10 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
     final artwork = widget.artwork;
     _baseCodeController = TextEditingController(text: artwork?.baseCode ?? '');
     _nameController = TextEditingController(text: artwork?.name ?? '');
-    _otherColorsController = TextEditingController(text: artwork?.otherColors.join('、') ?? '');
-    _impositionController = TextEditingController(text: artwork?.impositionSize ?? '');
+    _otherColorsController =
+        TextEditingController(text: artwork?.otherColors.join('、') ?? '');
+    _impositionController =
+        TextEditingController(text: artwork?.impositionSize ?? '');
     _notesController = TextEditingController(text: artwork?.notes ?? '');
     _selectedCmyk.addAll(artwork?.cmykColors ?? const []);
     _selectedDieIds.addAll(artwork?.dieIds ?? const []);
@@ -138,7 +141,8 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
       final products = await _productApi!.fetchProducts(isActive: true);
       final dies = await _dieApi!.fetchDies(pageSize: 100);
       final foiling = await _foilingApi!.fetchFoilingPlates(pageSize: 100);
-      final embossing = await _embossingApi!.fetchEmbossingPlates(pageSize: 100);
+      final embossing =
+          await _embossingApi!.fetchEmbossingPlates(pageSize: 100);
       if (!mounted) return;
       setState(() {
         _productOptions
@@ -217,7 +221,9 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
 
     final payload = Artwork(
       id: widget.artwork?.id ?? 0,
-      baseCode: _baseCodeController.text.trim().isEmpty ? null : _baseCodeController.text.trim(),
+      baseCode: _baseCodeController.text.trim().isEmpty
+          ? null
+          : _baseCodeController.text.trim(),
       version: widget.artwork?.version,
       name: _nameController.text.trim(),
       cmykColors: _selectedCmyk.toList(),
@@ -280,10 +286,12 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
   }) {
     final colors = theme.extension<AppColors>();
     final subtleText = colors?.subtleText ?? theme.hintColor;
-    final selectedItems = options.where((item) => selectedIds.contains(item.id)).toList();
+    final selectedItems =
+        options.where((item) => selectedIds.contains(item.id)).toList();
 
     final content = options.isEmpty
-        ? Text('暂无可选项', style: theme.textTheme.bodySmall?.copyWith(color: subtleText))
+        ? Text('暂无可选项',
+            style: theme.textTheme.bodySmall?.copyWith(color: subtleText))
         : InkWell(
             onTap: () => _openMultiSelectDialog(
               title: title,
@@ -297,7 +305,9 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                 suffixIcon: const Icon(Icons.arrow_drop_down),
               ),
               child: selectedItems.isEmpty
-                  ? Text(placeholder, style: theme.textTheme.bodyMedium?.copyWith(color: subtleText))
+                  ? Text(placeholder,
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(color: subtleText))
                   : Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -345,7 +355,8 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             final filtered = options
-                .where((item) => item.label.toLowerCase().contains(query.toLowerCase()))
+                .where((item) =>
+                    item.label.toLowerCase().contains(query.toLowerCase()))
                 .toList();
             return AlertDialog(
               title: Text(title),
@@ -360,22 +371,27 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                         hintText: _searchHint,
                         prefixIcon: Icon(Icons.search),
                       ),
-                      onChanged: (value) => setDialogState(() => query = value.trim()),
+                      onChanged: (value) =>
+                          setDialogState(() => query = value.trim()),
                     ),
                     const SizedBox(height: 12),
                     Expanded(
                       child: filtered.isEmpty
-                          ? Center(child: Text(_emptyMatchText, style: Theme.of(context).textTheme.bodySmall))
+                          ? Center(
+                              child: Text(_emptyMatchText,
+                                  style: Theme.of(context).textTheme.bodySmall))
                           : Scrollbar(
                               child: ListView.builder(
                                 itemCount: filtered.length,
                                 itemBuilder: (context, index) {
                                   final item = filtered[index];
-                                  final selected = selectedIds.contains(item.id);
+                                  final selected =
+                                      selectedIds.contains(item.id);
                                   return CheckboxListTile(
                                     value: selected,
                                     dense: true,
-                                    controlAffinity: ListTileControlAffinity.leading,
+                                    controlAffinity:
+                                        ListTileControlAffinity.leading,
                                     title: Text(item.label),
                                     onChanged: (value) {
                                       setDialogState(() {
@@ -430,7 +446,8 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
     final colors = theme.extension<AppColors>();
     final subtleText = colors?.subtleText ?? theme.hintColor;
     final content = _productItems.isEmpty
-        ? Text('暂无产品项', style: theme.textTheme.bodySmall?.copyWith(color: subtleText))
+        ? Text('暂无产品项',
+            style: theme.textTheme.bodySmall?.copyWith(color: subtleText))
         : Column(
             children: List.generate(_productItems.length, (index) {
               final item = _productItems[index];
@@ -440,10 +457,11 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                   children: [
                     Expanded(
                       flex: 3,
-                      child: DropdownButtonFormField<int>(
+                      child: SearchableDropdownFormField<int>(
                         initialValue: item.productId,
                         isExpanded: true,
-                        decoration: const InputDecoration(labelText: _productLabel),
+                        decoration:
+                            const InputDecoration(labelText: _productLabel),
                         items: _productOptions
                             .map(
                               (product) => DropdownMenuItem<int>(
@@ -463,14 +481,16 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                     Expanded(
                       child: TextFormField(
                         controller: item.quantityController,
-                        decoration: const InputDecoration(labelText: _quantityLabel),
+                        decoration:
+                            const InputDecoration(labelText: _quantityLabel),
                         keyboardType: TextInputType.number,
                       ),
                     ),
                     const SizedBox(width: 8),
                     IconButton(
                       tooltip: '移除',
-                      icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+                      icon: Icon(Icons.delete_outline,
+                          color: theme.colorScheme.error),
                       onPressed: () => _removeProductItem(index),
                     ),
                   ],
@@ -598,7 +618,8 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
       theme,
       title: _foilingLabel,
       options: _foilingOptions
-          .map((plate) => _OptionItem(plate.id, _optionLabel(plate.name, plate.code)))
+          .map((plate) =>
+              _OptionItem(plate.id, _optionLabel(plate.name, plate.code)))
           .toList(),
       selectedIds: _selectedFoilingIds,
       placeholder: _foilingPlaceholder,
@@ -608,7 +629,8 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
       theme,
       title: _embossingLabel,
       options: _embossingOptions
-          .map((plate) => _OptionItem(plate.id, _optionLabel(plate.name, plate.code)))
+          .map((plate) =>
+              _OptionItem(plate.id, _optionLabel(plate.name, plate.code)))
           .toList(),
       selectedIds: _selectedEmbossingIds,
       placeholder: _embossingPlaceholder,
@@ -714,19 +736,23 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 PageActionButton.outlined(
-                  onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
+                  onPressed: _submitting
+                      ? null
+                      : () => Navigator.of(context).pop(false),
                   icon: const Icon(Icons.arrow_back, size: 16),
                   label: _cancelText,
                 ),
                 const SizedBox(width: _inlineSpacing),
                 PageActionButton.filled(
-                  onPressed: _submitting ? null : () => _handleSubmit(viewModel),
+                  onPressed:
+                      _submitting ? null : () => _handleSubmit(viewModel),
                   label: _submitText,
                   icon: _submitting
                       ? const SizedBox(
                           height: _submitIndicatorSize,
                           width: _submitIndicatorSize,
-                          child: CircularProgressIndicator(strokeWidth: _indicatorStrokeWidth),
+                          child: CircularProgressIndicator(
+                              strokeWidth: _indicatorStrokeWidth),
                         )
                       : const Icon(Icons.save, size: 16),
                 ),

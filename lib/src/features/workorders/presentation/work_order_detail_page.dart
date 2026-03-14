@@ -8,6 +8,7 @@ import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/workorders/application/work_order_view_model.dart';
@@ -430,8 +431,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
           _InfoItem('实际交货', _formatDate(detail.actualDeliveryDate)),
           _InfoItem(
               '生产数量', detail.productionQuantity?.toString() ?? _emptyText),
-          _InfoItem(
-              '不良数量', detail.defectiveQuantity?.toString() ?? _emptyText),
+          _InfoItem('不良数量', detail.defectiveQuantity?.toString() ?? _emptyText),
           _InfoItem(
             '任务数',
             detail.totalTaskCount == null
@@ -456,11 +456,8 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                 ? _emptyText
                 : '${detail.progressPercentage}%',
           ),
-          _InfoItem(
-              '印刷形式',
-              detail.printingTypeDisplay ??
-                  detail.printingType ??
-                  _emptyText),
+          _InfoItem('印刷形式',
+              detail.printingTypeDisplay ?? detail.printingType ?? _emptyText),
           _InfoItem('印刷色数', detail.printingColorsDisplay ?? _emptyText),
         ]),
         SizedBox(height: sectionSpacing),
@@ -588,7 +585,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            DropdownButtonFormField<String>(
+            SearchableDropdownFormField<String>(
               initialValue: _statusSelection,
               isExpanded: true,
               decoration: const InputDecoration(labelText: '状态'),
@@ -753,7 +750,9 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                 ),
                 _DetailField(
                   '采购状态',
-                  item.purchaseStatusDisplay ?? item.purchaseStatus ?? _emptyText,
+                  item.purchaseStatusDisplay ??
+                      item.purchaseStatus ??
+                      _emptyText,
                 ),
               ],
             ),

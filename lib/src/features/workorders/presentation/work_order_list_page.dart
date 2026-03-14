@@ -14,6 +14,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
@@ -239,7 +240,8 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, workOrders, isMobile),
-          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1
+              ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,
@@ -330,16 +332,12 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
                       : workOrder.orderNumber,
                   style: theme.textTheme.bodyMedium,
                 )),
-                DataCell(Text(
-                    workOrder.customerName ?? _emptyCellText,
+                DataCell(Text(workOrder.customerName ?? _emptyCellText,
+                    style: textStyle)),
+                DataCell(Text(workOrder.productName ?? _emptyCellText,
                     style: textStyle)),
                 DataCell(Text(
-                    workOrder.productName ?? _emptyCellText,
-                    style: textStyle)),
-                DataCell(Text(
-                  workOrder.statusDisplay ??
-                      workOrder.status ??
-                      _emptyCellText,
+                  workOrder.statusDisplay ?? workOrder.status ?? _emptyCellText,
                   style: textStyle,
                 )),
                 DataCell(Text(
@@ -364,11 +362,9 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
                       : '${workOrder.progressPercentage}%',
                   style: textStyle,
                 )),
-                DataCell(Text(
-                    workOrder.managerName ?? _emptyCellText,
+                DataCell(Text(workOrder.managerName ?? _emptyCellText,
                     style: textStyle)),
-                DataCell(Text(
-                    workOrder.salespersonName ?? _emptyCellText,
+                DataCell(Text(workOrder.salespersonName ?? _emptyCellText,
                     style: textStyle)),
                 DataCell(Text(
                   _formatQuantity(workOrder.quantity, workOrder.unit),
@@ -410,7 +406,8 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
         : workOrder.orderNumber;
     final customer = workOrder.customerName ?? _emptyCellText;
     final product = workOrder.productName ?? _emptyCellText;
-    final status = workOrder.statusDisplay ?? workOrder.status ?? _emptyCellText;
+    final status =
+        workOrder.statusDisplay ?? workOrder.status ?? _emptyCellText;
     final approval = workOrder.approvalStatusDisplay ??
         workOrder.approvalStatus ??
         _emptyCellText;
@@ -495,9 +492,14 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
             children: [
               _SummaryField(label: '交货日期', value: deliveryDate),
               _SummaryField(label: '进度', value: progress),
-              _SummaryField(label: '负责人', value: workOrder.managerName ?? _emptyCellText),
-              _SummaryField(label: '业务员', value: workOrder.salespersonName ?? _emptyCellText),
-              _SummaryField(label: '数量', value: _formatQuantity(workOrder.quantity, workOrder.unit)),
+              _SummaryField(
+                  label: '负责人', value: workOrder.managerName ?? _emptyCellText),
+              _SummaryField(
+                  label: '业务员',
+                  value: workOrder.salespersonName ?? _emptyCellText),
+              _SummaryField(
+                  label: '数量',
+                  value: _formatQuantity(workOrder.quantity, workOrder.unit)),
             ],
           ),
           SizedBox(height: sectionSpacing),
@@ -624,7 +626,8 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
             alignment: Alignment.centerRight,
             child: Material(
               color: Theme.of(dialogContext).colorScheme.surface,
-              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+              shape:
+                  const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
               child: SizedBox(
                 width: 360,
                 height: double.infinity,
@@ -652,9 +655,11 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
           final offsetTween =
               Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero);
           return SlideTransition(
-            position: animation.drive(
-              CurveTween(curve: Curves.easeOutCubic),
-            ).drive(offsetTween),
+            position: animation
+                .drive(
+                  CurveTween(curve: Curves.easeOutCubic),
+                )
+                .drive(offsetTween),
             child: child,
           );
         },
@@ -726,7 +731,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (_loadingOptions) const LinearProgressIndicator(minHeight: 2),
-        DropdownButtonFormField<String>(
+        SearchableDropdownFormField<String>(
           initialValue: _statusFilter,
           isExpanded: true,
           decoration: const InputDecoration(labelText: '状态'),
@@ -737,7 +742,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
           },
         ),
         const SizedBox(height: _spacingSm),
-        DropdownButtonFormField<String>(
+        SearchableDropdownFormField<String>(
           initialValue: _priorityFilter,
           isExpanded: true,
           decoration: const InputDecoration(labelText: '优先级'),
@@ -748,7 +753,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
           },
         ),
         const SizedBox(height: _spacingSm),
-        DropdownButtonFormField<String>(
+        SearchableDropdownFormField<String>(
           initialValue: _approvalStatusFilter,
           isExpanded: true,
           decoration: const InputDecoration(labelText: '审核状态'),
@@ -759,7 +764,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
           },
         ),
         const SizedBox(height: _spacingSm),
-        DropdownButtonFormField<int?>(
+        SearchableDropdownFormField<int?>(
           initialValue: _customerFilterId,
           isExpanded: true,
           decoration: const InputDecoration(labelText: '客户'),
@@ -770,7 +775,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
           },
         ),
         const SizedBox(height: _spacingSm),
-        DropdownButtonFormField<int?>(
+        SearchableDropdownFormField<int?>(
           initialValue: _productFilterId,
           isExpanded: true,
           decoration: const InputDecoration(labelText: '产品'),
@@ -781,7 +786,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
           },
         ),
         const SizedBox(height: _spacingSm),
-        DropdownButtonFormField<int?>(
+        SearchableDropdownFormField<int?>(
           initialValue: _processFilterId,
           isExpanded: true,
           decoration: const InputDecoration(labelText: '工序'),

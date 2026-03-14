@@ -13,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/inventory_quality/application/quality_inspection_view_model.dart';
@@ -333,7 +334,7 @@ class _QualityInspectionListViewState
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        DropdownButtonFormField<String>(
+                        SearchableDropdownFormField<String>(
                           key: ValueKey<String>(result),
                           initialValue: result,
                           decoration: const InputDecoration(labelText: '检验结果'),
@@ -682,7 +683,7 @@ class _QualityInspectionListViewState
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        DropdownButtonFormField<String>(
+        SearchableDropdownFormField<String>(
           key: ValueKey<String>(typeValue),
           initialValue: typeValue,
           isExpanded: true,
@@ -697,7 +698,7 @@ class _QualityInspectionListViewState
           onChanged: (value) => viewModel.setTypeFilter(value ?? ''),
         ),
         const SizedBox(height: _spacingSm),
-        DropdownButtonFormField<String>(
+        SearchableDropdownFormField<String>(
           key: ValueKey<String>(resultValue),
           initialValue: resultValue,
           isExpanded: true,

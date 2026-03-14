@@ -13,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/inventory_stocks/application/product_stock_view_model.dart';
@@ -379,7 +380,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        DropdownButtonFormField<String>(
+                        SearchableDropdownFormField<String>(
                           key: ValueKey<String>(adjustType),
                           initialValue: adjustType,
                           decoration: const InputDecoration(labelText: '调整方式'),
@@ -738,7 +739,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        DropdownButtonFormField<String>(
+        SearchableDropdownFormField<String>(
           key: ValueKey<String>(statusValue),
           initialValue: statusValue,
           isExpanded: true,

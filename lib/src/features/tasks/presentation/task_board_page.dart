@@ -10,6 +10,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
@@ -424,7 +425,7 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
       children: [
         if (_loadingDepartments) const LinearProgressIndicator(minHeight: 2),
-        DropdownButtonFormField<int?>(
+        SearchableDropdownFormField<int?>(
           key: ValueKey<int?>(_departmentFilterId),
           initialValue: _departmentFilterId,
           isExpanded: true,
@@ -436,7 +437,7 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
           },
         ),
         const SizedBox(height: _spacingSm),
-        DropdownButtonFormField<String?>(
+        SearchableDropdownFormField<String?>(
           key: ValueKey<String?>(_statusFilter),
           initialValue: _statusFilter,
           isExpanded: true,
@@ -903,7 +904,6 @@ class _BoardColumn extends StatelessWidget {
     this.useLongPress = false,
     this.width,
     this.fullWidth = false,
-    this.cardFeedbackWidth,
   });
 
   final _BoardColumnData data;
@@ -917,15 +917,14 @@ class _BoardColumn extends StatelessWidget {
   final bool useLongPress;
   final double? width;
   final bool fullWidth;
-  final double? cardFeedbackWidth;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
     final resolvedWidth = fullWidth ? double.infinity : (width ?? 320);
-    double? resolvedFeedbackWidth = cardFeedbackWidth;
-    if (resolvedFeedbackWidth == null && resolvedWidth.isFinite) {
+    double? resolvedFeedbackWidth;
+    if (resolvedWidth.isFinite) {
       final value = (resolvedWidth - 24).clamp(220.0, 520.0);
       resolvedFeedbackWidth = value.toDouble();
     }

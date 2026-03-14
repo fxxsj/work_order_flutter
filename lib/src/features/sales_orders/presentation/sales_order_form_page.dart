@@ -6,6 +6,7 @@ import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
@@ -337,7 +338,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          DropdownButtonFormField<int>(
+          SearchableDropdownFormField<int>(
             initialValue: _customerId,
             decoration: const InputDecoration(labelText: '客户'),
             items: _customers
@@ -358,7 +359,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
             children: [
               SizedBox(
                 width: fieldWidth,
-                child: DropdownButtonFormField<String>(
+                child: SearchableDropdownFormField<String>(
                   initialValue: _status,
                   decoration: const InputDecoration(labelText: '状态'),
                   items: const [
@@ -377,7 +378,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               ),
               SizedBox(
                 width: fieldWidth,
-                child: DropdownButtonFormField<String>(
+                child: SearchableDropdownFormField<String>(
                   initialValue: _paymentStatus,
                   decoration: const InputDecoration(labelText: '付款状态'),
                   items: const [
@@ -659,23 +660,10 @@ class _ItemRowState extends State<_ItemRow> {
         children: [
           SizedBox(
             width: 220,
-            child: DropdownButtonFormField<int>(
+            child: SearchableDropdownFormField<int>(
               initialValue: widget.draft.productId,
               decoration: const InputDecoration(labelText: '产品'),
               isExpanded: true,
-              selectedItemBuilder: (context) {
-                return widget.products
-                    .map(
-                      (item) => Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          item.displayLabel,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    )
-                    .toList();
-              },
               items: widget.products
                   .map(
                     (item) => DropdownMenuItem(

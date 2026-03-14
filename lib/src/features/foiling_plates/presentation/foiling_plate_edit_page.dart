@@ -5,6 +5,7 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/edit_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/foiling_plates/application/foiling_plate_view_model.dart';
@@ -165,7 +166,9 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
 
     final payload = FoilingPlate(
       id: widget.plate?.id ?? 0,
-      code: _codeController.text.trim().isEmpty ? null : _codeController.text.trim(),
+      code: _codeController.text.trim().isEmpty
+          ? null
+          : _codeController.text.trim(),
       name: _nameController.text.trim(),
       foilingType: _foilingType,
       size: _sizeController.text.trim(),
@@ -208,7 +211,9 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
   Widget _buildProductSection(ThemeData theme, double sectionSpacing) {
     final colors = theme.extension<AppColors>();
     final content = _productItems.isEmpty
-        ? Text('暂无产品项', style: theme.textTheme.bodySmall?.copyWith(color: colors?.subtleText ?? theme.hintColor))
+        ? Text('暂无产品项',
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: colors?.subtleText ?? theme.hintColor))
         : Column(
             children: List.generate(_productItems.length, (index) {
               final item = _productItems[index];
@@ -218,10 +223,11 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
                   children: [
                     Expanded(
                       flex: 3,
-                      child: DropdownButtonFormField<int>(
+                      child: SearchableDropdownFormField<int>(
                         initialValue: item.productId,
                         isExpanded: true,
-                        decoration: const InputDecoration(labelText: _productLabel),
+                        decoration:
+                            const InputDecoration(labelText: _productLabel),
                         items: _productOptions
                             .map(
                               (product) => DropdownMenuItem<int>(
@@ -241,14 +247,16 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
                     Expanded(
                       child: TextFormField(
                         controller: item.quantityController,
-                        decoration: const InputDecoration(labelText: _quantityLabel),
+                        decoration:
+                            const InputDecoration(labelText: _quantityLabel),
                         keyboardType: TextInputType.number,
                       ),
                     ),
                     const SizedBox(width: 8),
                     IconButton(
                       tooltip: '移除',
-                      icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+                      icon: Icon(Icons.delete_outline,
+                          color: theme.colorScheme.error),
                       onPressed: () => _removeProductItem(index),
                     ),
                   ],
@@ -313,7 +321,7 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
       },
     );
 
-    final typeField = DropdownButtonFormField<String>(
+    final typeField = SearchableDropdownFormField<String>(
       initialValue: _foilingType,
       decoration: const InputDecoration(labelText: _typeLabel),
       items: const [
@@ -436,19 +444,23 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 PageActionButton.outlined(
-                  onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
+                  onPressed: _submitting
+                      ? null
+                      : () => Navigator.of(context).pop(false),
                   icon: const Icon(Icons.arrow_back, size: 16),
                   label: _cancelText,
                 ),
                 const SizedBox(width: _inlineSpacing),
                 PageActionButton.filled(
-                  onPressed: _submitting ? null : () => _handleSubmit(viewModel),
+                  onPressed:
+                      _submitting ? null : () => _handleSubmit(viewModel),
                   label: _submitText,
                   icon: _submitting
                       ? const SizedBox(
                           height: _submitIndicatorSize,
                           width: _submitIndicatorSize,
-                          child: CircularProgressIndicator(strokeWidth: _indicatorStrokeWidth),
+                          child: CircularProgressIndicator(
+                              strokeWidth: _indicatorStrokeWidth),
                         )
                       : const Icon(Icons.save, size: 16),
                 ),
