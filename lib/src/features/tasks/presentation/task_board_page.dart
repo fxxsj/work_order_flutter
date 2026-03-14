@@ -97,7 +97,7 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
   static const double _searchWidth = 320;
   static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
-  static const double _columnWidth = 320;
+  static const double _columnMinWidth = 260;
 
   static const String _searchHintText = '搜索任务内容/施工单号';
   static const String _refreshButtonText = '刷新';
@@ -350,9 +350,8 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
                       height: double.infinity,
                       child: SafeArea(
                         child: _FilterDrawerContent(
-                          title: activeFilters > 0
-                              ? '筛选 ($activeFilters)'
-                              : '筛选',
+                          title:
+                              activeFilters > 0 ? '筛选 ($activeFilters)' : '筛选',
                           child: _buildFilterPanel(
                             dialogContext,
                             viewModel,
@@ -370,9 +369,11 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
                 final offsetTween =
                     Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero);
                 return SlideTransition(
-                  position: animation.drive(
-                    CurveTween(curve: Curves.easeOutCubic),
-                  ).drive(offsetTween),
+                  position: animation
+                      .drive(
+                        CurveTween(curve: Curves.easeOutCubic),
+                      )
+                      .drive(offsetTween),
                   child: child,
                 );
               },
@@ -548,34 +549,41 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
     } else {
       boardContent = LayoutBuilder(
         builder: (context, constraints) {
+          const gap = 16.0;
+          final maxWidth = constraints.maxWidth;
+          var columnsPerRow =
+              ((maxWidth + gap) / (_columnMinWidth + gap)).floor();
+          if (columnsPerRow < 1) columnsPerRow = 1;
+          if (columnsPerRow > columns.length) {
+            columnsPerRow = columns.length;
+          }
+          final columnWidth =
+              (maxWidth - gap * (columnsPerRow - 1)) / columnsPerRow;
+
           return SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (var i = 0; i < columns.length; i++) ...[
-                      _BoardColumn(
-                        data: columns[i],
-                        onTapTask: (task) => _openTaskDetail(context, task),
-                        onDrop: (data) => _handleStatusDrop(
-                            context, viewModel, data.task, columns[i].key),
-                        canAccept: (data) =>
-                            _canAcceptDrop(data.task, columns[i].key),
-                        onDragStart: _handleDragStart,
-                        onDragEnd: _handleDragEnd,
-                        updatingTaskId: _updatingTaskId,
-                        draggingTaskId: _draggingTaskId,
-                        useLongPress: false,
-                        width: _columnWidth,
-                      ),
-                      if (i != columns.length - 1) const SizedBox(width: 16),
-                    ],
-                  ],
-                ),
-              ),
+            child: Wrap(
+              spacing: gap,
+              runSpacing: gap,
+              children: [
+                for (final column in columns)
+                  SizedBox(
+                    width: columnWidth,
+                    child: _BoardColumn(
+                      data: column,
+                      onTapTask: (task) => _openTaskDetail(context, task),
+                      onDrop: (data) => _handleStatusDrop(
+                          context, viewModel, data.task, column.key),
+                      canAccept: (data) =>
+                          _canAcceptDrop(data.task, column.key),
+                      onDragStart: _handleDragStart,
+                      onDragEnd: _handleDragEnd,
+                      updatingTaskId: _updatingTaskId,
+                      draggingTaskId: _draggingTaskId,
+                      useLongPress: false,
+                      width: columnWidth,
+                    ),
+                  ),
+              ],
             ),
           );
         },
@@ -895,6 +903,7 @@ class _BoardColumn extends StatelessWidget {
     this.useLongPress = false,
     this.width,
     this.fullWidth = false,
+    this.cardFeedbackWidth,
   });
 
   final _BoardColumnData data;
@@ -908,12 +917,18 @@ class _BoardColumn extends StatelessWidget {
   final bool useLongPress;
   final double? width;
   final bool fullWidth;
+  final double? cardFeedbackWidth;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
     final resolvedWidth = fullWidth ? double.infinity : (width ?? 320);
+    double? resolvedFeedbackWidth = cardFeedbackWidth;
+    if (resolvedFeedbackWidth == null && resolvedWidth.isFinite) {
+      final value = (resolvedWidth - 24).clamp(220.0, 520.0);
+      resolvedFeedbackWidth = value.toDouble();
+    }
     final share = data.totalCount == 0
         ? 0
         : (data.tasks.length / data.totalCount * 100).round();
@@ -927,6 +942,7 @@ class _BoardColumn extends StatelessWidget {
           context,
           colors,
           resolvedWidth,
+          resolvedFeedbackWidth,
           highlight,
           share,
         );
@@ -940,6 +956,7 @@ class _BoardColumn extends StatelessWidget {
     BuildContext context,
     AppColors colors,
     double resolvedWidth,
+    double? resolvedFeedbackWidth,
     bool highlight,
     int share,
   ) {
@@ -1003,6 +1020,7 @@ class _BoardColumn extends StatelessWidget {
                     isBusy: updatingTaskId == data.tasks[i].id,
                     isDragging: draggingTaskId == data.tasks[i].id,
                     useLongPress: useLongPress,
+                    feedbackWidth: resolvedFeedbackWidth,
                   ),
                   if (i != data.tasks.length - 1) const SizedBox(height: 8),
                 ],
@@ -1033,6 +1051,7 @@ class _DraggableTaskCard extends StatelessWidget {
     required this.isBusy,
     required this.isDragging,
     required this.useLongPress,
+    this.feedbackWidth,
   });
 
   final Task task;
@@ -1042,6 +1061,7 @@ class _DraggableTaskCard extends StatelessWidget {
   final bool isBusy;
   final bool isDragging;
   final bool useLongPress;
+  final double? feedbackWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -1069,7 +1089,7 @@ class _DraggableTaskCard extends StatelessWidget {
             onDragEnd: (_) => onDragEnd?.call(),
             feedback: Material(
               color: Colors.transparent,
-              child: SizedBox(width: 280, child: card),
+              child: SizedBox(width: feedbackWidth ?? 280, child: card),
             ),
             childWhenDragging: Opacity(opacity: 0.4, child: card),
             child: _buildContent(colors, card),
@@ -1080,7 +1100,7 @@ class _DraggableTaskCard extends StatelessWidget {
             onDragEnd: (_) => onDragEnd?.call(),
             feedback: Material(
               color: Colors.transparent,
-              child: SizedBox(width: 280, child: card),
+              child: SizedBox(width: feedbackWidth ?? 280, child: card),
             ),
             childWhenDragging: Opacity(opacity: 0.4, child: card),
             child: _buildContent(colors, card),
