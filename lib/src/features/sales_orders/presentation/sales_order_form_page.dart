@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
-import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
@@ -86,7 +85,6 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
   final _formKey = GlobalKey<FormState>();
   static const double _spacing = 12;
   static const double _sectionSpacing = 16;
-  static const String _breadcrumbSeparator = ' / ';
 
   final TextEditingController _orderDateController = TextEditingController();
   final TextEditingController _deliveryDateController = TextEditingController();
@@ -517,20 +515,10 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
     final isDesktop = BreakpointsUtil.isDesktop(context);
     final isTablet = BreakpointsUtil.isTablet(context);
     final fieldWidth = isDesktop ? 260.0 : (isTablet ? 220.0 : double.infinity);
-    final title =
-        widget.mode == SalesOrderFormMode.create ? '新建销售订单' : '编辑销售订单';
-    final breadcrumb = [
-      ...buildBreadcrumbForPathWith(
-        GoRouterState.of(context).uri.path,
-        buildPathToIdMap(),
-      ),
-      title,
-    ];
-
     return ListPageScaffold(
       spacing: _spacing,
       header: PageHeaderBar(
-        breadcrumb: breadcrumb.join(_breadcrumbSeparator),
+        breadcrumb: null,
         useSurface: false,
         showDivider: false,
         padding: EdgeInsets.zero,

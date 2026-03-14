@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
-import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -72,7 +71,6 @@ class SalesOrderDetailPage extends StatefulWidget {
 }
 
 class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
-  static const String _breadcrumbSeparator = ' / ';
   static const String _emptyText = '-';
 
   SalesOrderDetail? _detail;
@@ -188,14 +186,6 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final breadcrumb = [
-      ...buildBreadcrumbForPathWith(
-        GoRouterState.of(context).uri.path,
-        buildPathToIdMap(),
-      ),
-      '详情',
-    ];
-
     final detail = _detail;
     final title = detail?.orderNumber.isNotEmpty == true
         ? '销售订单 ${detail!.orderNumber}'
@@ -205,7 +195,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     return ListPageScaffold(
       spacing: sectionSpacing,
       header: PageHeaderBar(
-        breadcrumb: breadcrumb.join(_breadcrumbSeparator),
+        breadcrumb: null,
         useSurface: false,
         showDivider: false,
         padding: EdgeInsets.zero,

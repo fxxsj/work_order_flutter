@@ -10,6 +10,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
@@ -431,10 +432,10 @@ class _TaskSupervisorDashboardViewState
                   task.statusDisplay ?? task.status ?? '-',
                   style: textStyle,
                 )),
-                DataCell(Wrap(
-                  spacing: 8,
-                  children: [
-                    TextButton(
+                DataCell(RowActionGroup(
+                  actions: [
+                    RowAction(
+                      label: '查看施工单',
                       onPressed: () {
                         if (task.workOrderId != null) {
                           context.go('/workorders/${task.workOrderId}');
@@ -442,11 +443,10 @@ class _TaskSupervisorDashboardViewState
                           ToastUtil.showError('该任务暂无施工单详情');
                         }
                       },
-                      child: const Text('查看施工单'),
                     ),
-                    TextButton(
+                    RowAction(
+                      label: '分派操作员',
                       onPressed: () => _openAssignDialog(task),
-                      child: const Text('分派操作员'),
                     ),
                   ],
                 )),
