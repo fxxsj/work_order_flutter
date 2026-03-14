@@ -6,10 +6,12 @@ import 'package:work_order_app/src/core/constants/breakpoints.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/utils/store_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/workorders/application/work_order_view_model.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
@@ -85,6 +87,10 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   String? _errorMessage;
   bool _initialized = false;
   bool _actionLoading = false;
+  bool _approvalLoading = false;
+  bool _approvalActionLoading = false;
+  String? _approvalErrorMessage;
+  Map<String, dynamic>? _approvalStatus;
 
   String? _statusSelection;
 
@@ -93,6 +99,14 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   final TextEditingController _rejectionReasonController =
       TextEditingController();
   final TextEditingController _reapprovalReasonController =
+      TextEditingController();
+  final TextEditingController _approvalStepCommentController =
+      TextEditingController();
+  final TextEditingController _escalationReasonController =
+      TextEditingController();
+  final TextEditingController _escalationTargetController =
+      TextEditingController();
+  final TextEditingController _urgentReasonController =
       TextEditingController();
 
   @override
@@ -116,6 +130,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
         _detail = detail;
         _statusSelection = detail.status;
       });
+      await _loadApprovalStatus();
     } catch (err) {
       if (!mounted) return;
       setState(
@@ -125,11 +140,44 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     }
   }
 
+  Future<void> _loadApprovalStatus() async {
+    setState(() {
+      _approvalLoading = true;
+      _approvalErrorMessage = null;
+    });
+    try {
+      final apiClient = context.read<ApiClient>();
+      final response = await apiClient.get(
+        '/multi-level-approval/get_approval_status/',
+        queryParameters: {'order_id': widget.workOrderId},
+      );
+      if (!mounted) return;
+      setState(() {
+        final payload = response.data;
+        _approvalStatus = payload is Map<String, dynamic>
+            ? payload
+            : payload is Map
+                ? Map<String, dynamic>.from(payload)
+                : null;
+      });
+    } catch (err) {
+      if (!mounted) return;
+      setState(() => _approvalErrorMessage =
+          err.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _approvalLoading = false);
+    }
+  }
+
   @override
   void dispose() {
     _approvalCommentController.dispose();
     _rejectionReasonController.dispose();
     _reapprovalReasonController.dispose();
+    _approvalStepCommentController.dispose();
+    _escalationReasonController.dispose();
+    _escalationTargetController.dispose();
+    _urgentReasonController.dispose();
     super.dispose();
   }
 
@@ -340,6 +388,261 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     return '$year-$month-$day';
   }
 
+  String _formatDateTime(dynamic value) {
+    if (value == null) return _emptyText;
+    if (value is DateTime) {
+      final local = value.toLocal();
+      final date = _formatDate(local);
+      final hour = local.hour.toString().padLeft(2, '0');
+      final minute = local.minute.toString().padLeft(2, '0');
+      return '$date $hour:$minute';
+    }
+    if (value is String) {
+      final parsed = DateTime.tryParse(value);
+      return parsed == null ? value : _formatDateTime(parsed);
+    }
+    return value.toString();
+  }
+
+  bool get _hasMultiApproval {
+    final total = _approvalStatus?['total_steps'];
+    final value = total is int ? total : int.tryParse(total?.toString() ?? '');
+    return value != null && value > 0;
+  }
+
+  String _formatPercentage(dynamic value) {
+    if (value == null) return _emptyText;
+    if (value is num) return '${value.toStringAsFixed(0)}%';
+    final parsed = double.tryParse(value.toString());
+    if (parsed == null) return _emptyText;
+    return '${parsed.toStringAsFixed(0)}%';
+  }
+
+  Map<String, dynamic>? get _currentApprovalStep {
+    final data = _approvalStatus?['current_step'];
+    if (data is Map<String, dynamic>) return data;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    return null;
+  }
+
+  List<Map<String, dynamic>> get _allApprovalSteps {
+    final data = _approvalStatus?['all_steps'];
+    if (data is List) {
+      return data
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList();
+    }
+    return const [];
+  }
+
+  Future<void> _submitMultiApproval() async {
+    setState(() => _approvalActionLoading = true);
+    try {
+      final apiClient = context.read<ApiClient>();
+      await apiClient.post(
+        '/multi-level-approval/submit_for_approval/',
+        data: {'order_id': widget.workOrderId},
+      );
+      if (!mounted) return;
+      ToastUtil.showSuccess('已提交多级审批');
+      await _loadDetail();
+    } catch (err) {
+      ToastUtil.showError('提交失败: $err');
+    } finally {
+      if (mounted) setState(() => _approvalActionLoading = false);
+    }
+  }
+
+  Future<void> _startApprovalStep(int stepId) async {
+    setState(() => _approvalActionLoading = true);
+    try {
+      final apiClient = context.read<ApiClient>();
+      await apiClient.post('/approval-steps/$stepId/start_step/');
+      if (!mounted) return;
+      ToastUtil.showSuccess('步骤已开始');
+      await _loadApprovalStatus();
+    } catch (err) {
+      ToastUtil.showError('开始失败: $err');
+    } finally {
+      if (mounted) setState(() => _approvalActionLoading = false);
+    }
+  }
+
+  Future<void> _completeApprovalStep(
+    int stepId, {
+    required String decision,
+    String? comments,
+  }) async {
+    setState(() => _approvalActionLoading = true);
+    try {
+      final apiClient = context.read<ApiClient>();
+      await apiClient.post(
+        '/approval-steps/$stepId/complete_step/',
+        data: {
+          'decision': decision,
+          if (comments != null) 'comments': comments,
+        },
+      );
+      if (!mounted) return;
+      ToastUtil.showSuccess('步骤已完成');
+      await _loadDetail();
+    } catch (err) {
+      ToastUtil.showError('完成失败: $err');
+    } finally {
+      if (mounted) setState(() => _approvalActionLoading = false);
+    }
+  }
+
+  Future<void> _escalateApprovalStep(
+    int stepId, {
+    required String reason,
+    int? toStepId,
+  }) async {
+    setState(() => _approvalActionLoading = true);
+    try {
+      final apiClient = context.read<ApiClient>();
+      await apiClient.post(
+        '/approval-steps/$stepId/escalate_step/',
+        data: {
+          'escalation_reason': reason,
+          if (toStepId != null) 'to_step_id': toStepId,
+        },
+      );
+      if (!mounted) return;
+      ToastUtil.showSuccess('已上报审批步骤');
+      await _loadApprovalStatus();
+    } catch (err) {
+      ToastUtil.showError('上报失败: $err');
+    } finally {
+      if (mounted) setState(() => _approvalActionLoading = false);
+    }
+  }
+
+  Future<void> _markUrgent() async {
+    _urgentReasonController.clear();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('标记紧急订单'),
+        content: TextField(
+          controller: _urgentReasonController,
+          decoration: const InputDecoration(labelText: '紧急原因'),
+          maxLines: 3,
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('取消')),
+          FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('提交')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    final reason = _urgentReasonController.text.trim();
+    if (reason.isEmpty) {
+      ToastUtil.showError('请输入紧急原因');
+      return;
+    }
+    setState(() => _approvalActionLoading = true);
+    try {
+      final apiClient = context.read<ApiClient>();
+      await apiClient.post(
+        '/urgent-orders/mark_urgent/',
+        data: {
+          'order_id': widget.workOrderId,
+          'reason': reason,
+        },
+      );
+      if (!mounted) return;
+      ToastUtil.showSuccess('已标记为紧急订单');
+      await _loadDetail();
+    } catch (err) {
+      ToastUtil.showError('标记失败: $err');
+    } finally {
+      if (mounted) setState(() => _approvalActionLoading = false);
+    }
+  }
+
+  Future<void> _showCompleteStepDialog({
+    required int stepId,
+    required String decision,
+  }) async {
+    _approvalStepCommentController.clear();
+    final decisionLabel = decision == 'approve' ? '通过' : '拒绝';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('审批$decisionLabel'),
+        content: TextField(
+          controller: _approvalStepCommentController,
+          decoration: const InputDecoration(labelText: '备注说明'),
+          maxLines: 3,
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('取消')),
+          FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('确定')),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await _completeApprovalStep(
+        stepId,
+        decision: decision,
+        comments: _approvalStepCommentController.text.trim(),
+      );
+    }
+  }
+
+  Future<void> _showEscalateDialog(int stepId) async {
+    _escalationReasonController.clear();
+    _escalationTargetController.clear();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('上报审批步骤'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _escalationReasonController,
+              decoration: const InputDecoration(labelText: '上报原因'),
+              maxLines: 3,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _escalationTargetController,
+              decoration: const InputDecoration(labelText: '目标步骤ID（可选）'),
+              keyboardType: TextInputType.number,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('取消')),
+          FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('提交')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    final reason = _escalationReasonController.text.trim();
+    if (reason.isEmpty) {
+      ToastUtil.showError('请输入上报原因');
+      return;
+    }
+    final targetId = int.tryParse(_escalationTargetController.text.trim());
+    await _escalateApprovalStep(stepId, reason: reason, toStepId: targetId);
+  }
+
   Widget _buildInfoGrid(List<_InfoItem> items) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -522,7 +825,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
         final useColumnButtons = constraints.maxWidth < 320;
         final approvalActions = <Widget>[];
 
-        if (detail.approvalStatus == 'pending') {
+        if (!_hasMultiApproval && detail.approvalStatus == 'pending') {
           if (useColumnButtons) {
             approvalActions.addAll([
               FilledButton(
@@ -565,7 +868,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
             );
           }
         }
-        if (detail.approvalStatus == 'rejected') {
+        if (!_hasMultiApproval && detail.approvalStatus == 'rejected') {
           approvalActions.add(
             FilledButton(
               onPressed: _actionLoading ? null : _handleResubmit,
@@ -573,7 +876,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
             ),
           );
         }
-        if (detail.approvalStatus == 'approved') {
+        if (!_hasMultiApproval && detail.approvalStatus == 'approved') {
           approvalActions.add(
             OutlinedButton(
               onPressed: _actionLoading ? null : _showReapprovalDialog,
@@ -614,6 +917,215 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildMultiApprovalSection(WorkOrderDetail detail) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>();
+    final isMobile = BreakpointsUtil.isMobile(context);
+    final currentStep = _currentApprovalStep;
+    final steps = _allApprovalSteps;
+
+    if (_approvalLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_approvalErrorMessage != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(_approvalErrorMessage!, style: theme.textTheme.bodyMedium),
+          const SizedBox(height: 12),
+          FilledButton(
+            onPressed: _loadApprovalStatus,
+            child: const Text('重试'),
+          ),
+        ],
+      );
+    }
+
+    if (_approvalStatus == null || steps.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('尚未启动多级审批', style: theme.textTheme.bodyMedium),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: LayoutTokens.gapSm,
+            runSpacing: LayoutTokens.gapSm,
+            children: [
+              FilledButton.icon(
+                onPressed: _approvalActionLoading ? null : _submitMultiApproval,
+                icon: const Icon(Icons.fact_check_outlined, size: 18),
+                label: Text(_approvalActionLoading ? '提交中' : '提交审批'),
+              ),
+              if (detail.priority != 'urgent')
+                OutlinedButton.icon(
+                  onPressed: _approvalActionLoading ? null : _markUrgent,
+                  icon: const Icon(Icons.priority_high, size: 18),
+                  label: const Text('标记紧急'),
+                ),
+            ],
+          ),
+        ],
+      );
+    }
+
+    final totalSteps = _approvalStatus?['total_steps']?.toString() ?? _emptyText;
+    final completedSteps =
+        _approvalStatus?['completed_steps']?.toString() ?? _emptyText;
+    final progressText =
+        _formatPercentage(_approvalStatus?['progress_percentage']);
+    final approvalStatus =
+        _approvalStatus?['approval_status']?.toString() ??
+            detail.approvalStatusDisplay ??
+            _emptyText;
+
+    final assignedTo =
+        currentStep == null ? _emptyText : currentStep['assigned_to_name']?.toString() ?? _emptyText;
+    final stepStatus =
+        currentStep == null ? _emptyText : currentStep['status']?.toString() ?? _emptyText;
+    final stepName =
+        currentStep == null ? _emptyText : currentStep['step_name']?.toString() ?? _emptyText;
+    final stepRawId = currentStep == null ? null : currentStep['id'];
+    final stepId = stepRawId is int
+        ? stepRawId
+        : int.tryParse(stepRawId?.toString() ?? '');
+
+    final currentUser = StoreUtil.getCurrentUserInfo().userName;
+    final canAct =
+        currentUser == null || currentUser.isEmpty ? true : currentUser == assignedTo;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: LayoutTokens.gapLg,
+          runSpacing: LayoutTokens.gapSm,
+          children: [
+            _InfoRow(label: '审批状态', value: approvalStatus),
+            _InfoRow(label: '进度', value: '$completedSteps / $totalSteps ($progressText)'),
+            _InfoRow(label: '当前步骤', value: stepName),
+            _InfoRow(label: '负责人', value: assignedTo),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: LayoutTokens.gapSm,
+          runSpacing: LayoutTokens.gapSm,
+          children: [
+            if (stepId != null && stepStatus == 'pending')
+              FilledButton.icon(
+                onPressed: _approvalActionLoading || !canAct
+                    ? null
+                    : () => _startApprovalStep(stepId),
+                icon: const Icon(Icons.play_arrow, size: 18),
+                label: const Text('开始审核'),
+              ),
+            if (stepId != null &&
+                (stepStatus == 'pending' || stepStatus == 'in_progress')) ...[
+              FilledButton.icon(
+                onPressed: _approvalActionLoading || !canAct
+                    ? null
+                    : () => _showCompleteStepDialog(
+                          stepId: stepId,
+                          decision: 'approve',
+                        ),
+                icon: const Icon(Icons.check_circle_outline, size: 18),
+                label: const Text('通过'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _approvalActionLoading || !canAct
+                    ? null
+                    : () => _showCompleteStepDialog(
+                          stepId: stepId,
+                          decision: 'reject',
+                        ),
+                icon: const Icon(Icons.cancel_outlined, size: 18),
+                label: const Text('拒绝'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _approvalActionLoading || !canAct
+                    ? null
+                    : () => _showEscalateDialog(stepId),
+                icon: const Icon(Icons.trending_up, size: 18),
+                label: const Text('上报'),
+              ),
+            ],
+            FilledButton.icon(
+              onPressed: _approvalActionLoading ? null : _submitMultiApproval,
+              icon: const Icon(Icons.fact_check_outlined, size: 18),
+              label: Text(_approvalActionLoading ? '提交中' : '重新提交'),
+            ),
+            if (detail.priority != 'urgent')
+              OutlinedButton.icon(
+                onPressed: _approvalActionLoading ? null : _markUrgent,
+                icon: const Icon(Icons.priority_high, size: 18),
+                label: const Text('标记紧急'),
+              ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Text(
+          '审批步骤',
+          style: theme.textTheme.titleSmall?.copyWith(
+            color: colors?.sidebarText,
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (!isMobile)
+          AppDataTable(
+            columns: const [
+              DataColumn(label: Text('序号')),
+              DataColumn(label: Text('步骤')),
+              DataColumn(label: Text('状态')),
+              DataColumn(label: Text('负责人')),
+              DataColumn(label: Text('决定')),
+              DataColumn(label: Text('开始时间')),
+              DataColumn(label: Text('完成时间')),
+            ],
+            rows: steps
+                .map(
+                  (step) => DataRow(
+                    cells: [
+                      DataCell(Text(step['step_order']?.toString() ?? _emptyText)),
+                      DataCell(Text(step['step_name']?.toString() ?? _emptyText)),
+                      DataCell(Text(step['status']?.toString() ?? _emptyText)),
+                      DataCell(Text(step['assigned_to_name']?.toString() ?? _emptyText)),
+                      DataCell(Text(step['decision']?.toString() ?? _emptyText)),
+                      DataCell(Text(_formatDateTime(step['started_at']))),
+                      DataCell(Text(_formatDateTime(step['completed_at']))),
+                    ],
+                  ),
+                )
+                .toList(),
+          )
+        else
+          Column(
+            children: steps
+                .map(
+                  (step) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: DetailSectionCard(
+                      title: step['step_name']?.toString() ?? _emptyText,
+                      child: Wrap(
+                        spacing: LayoutTokens.gapLg,
+                        runSpacing: LayoutTokens.gapSm,
+                        children: [
+                          _InfoRow(label: '状态', value: step['status']?.toString() ?? _emptyText),
+                          _InfoRow(label: '负责人', value: step['assigned_to_name']?.toString() ?? _emptyText),
+                          _InfoRow(label: '决定', value: step['decision']?.toString() ?? _emptyText),
+                          _InfoRow(label: '开始时间', value: _formatDateTime(step['started_at'])),
+                          _InfoRow(label: '完成时间', value: _formatDateTime(step['completed_at'])),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+      ],
     );
   }
 
@@ -874,6 +1386,11 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                         _buildOverviewSection(
                           detail,
                           statusOptions: statusOptions,
+                        ),
+                        SizedBox(height: sectionSpacing),
+                        _buildSection(
+                          '多级审批',
+                          _buildMultiApprovalSection(detail),
                         ),
                         SizedBox(height: sectionSpacing),
                         _buildSection(
