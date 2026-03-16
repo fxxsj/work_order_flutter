@@ -878,10 +878,13 @@ class _ActionMenu extends StatelessWidget {
             ),
           ),
       ],
-      child: PageActionButton.outlined(
-        onPressed: isEnabled ? () {} : null,
-        icon: const Icon(Icons.more_horiz, size: 16),
-        label: '更多操作',
+      child: IgnorePointer(
+        ignoring: true,
+        child: PageActionButton.outlined(
+          onPressed: isEnabled ? () {} : null,
+          icon: const Icon(Icons.more_horiz, size: 16),
+          label: '更多操作',
+        ),
       ),
     );
   }
