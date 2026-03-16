@@ -15,11 +15,14 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/utils/parse_utils.dart';
+import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/sales_orders/application/sales_order_view_model.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_api_service.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_repository_impl.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order_repository.dart';
+import 'package:work_order_app/src/features/workorders/data/work_order_flow_api_service.dart';
 
 /// 销售订单列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
 class SalesOrderListEntry extends StatefulWidget {
@@ -137,6 +140,471 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         .replaceFirst('{count}', viewModel.total.toString());
   }
 
+  Future<void> _submitOrder(
+    SalesOrderViewModel viewModel,
+    SalesOrder order,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('提交订单'),
+        content: const Text('确认提交该销售订单吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('提交'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      final api = context.read<SalesOrderApiService>();
+      await api.submit(order.id);
+      ToastUtil.showSuccess('已提交');
+      await viewModel.loadSalesOrders(resetPage: false);
+    } catch (err) {
+      ToastUtil.showError('提交失败: $err');
+    }
+  }
+
+  Future<void> _approveOrder(
+    SalesOrderViewModel viewModel,
+    SalesOrder order,
+  ) async {
+    final commentController = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('审核通过'),
+        content: TextField(
+          controller: commentController,
+          decoration: const InputDecoration(labelText: '审核意见（可选）'),
+          maxLines: 3,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('通过'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) {
+      commentController.dispose();
+      return;
+    }
+    try {
+      final api = context.read<SalesOrderApiService>();
+      await api.approve(order.id, {
+        'approval_comment': commentController.text.trim(),
+      });
+      ToastUtil.showSuccess('已审核通过');
+      await viewModel.loadSalesOrders(resetPage: false);
+    } catch (err) {
+      ToastUtil.showError('审核失败: $err');
+    } finally {
+      commentController.dispose();
+    }
+  }
+
+  Future<void> _rejectOrder(
+    SalesOrderViewModel viewModel,
+    SalesOrder order,
+  ) async {
+    final reasonController = TextEditingController();
+    final commentController = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('审核拒绝'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(labelText: '拒绝原因'),
+              maxLines: 3,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: commentController,
+              decoration: const InputDecoration(labelText: '审核意见（可选）'),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('拒绝'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) {
+      reasonController.dispose();
+      commentController.dispose();
+      return;
+    }
+    final reason = reasonController.text.trim();
+    if (reason.isEmpty) {
+      ToastUtil.showError('请填写拒绝原因');
+      reasonController.dispose();
+      commentController.dispose();
+      return;
+    }
+    try {
+      final api = context.read<SalesOrderApiService>();
+      await api.reject(order.id, {
+        'reason': reason,
+        'approval_comment': commentController.text.trim(),
+      });
+      ToastUtil.showSuccess('已拒绝');
+      await viewModel.loadSalesOrders(resetPage: false);
+    } catch (err) {
+      ToastUtil.showError('拒绝失败: $err');
+    } finally {
+      reasonController.dispose();
+      commentController.dispose();
+    }
+  }
+
+  Future<void> _startProduction(
+    SalesOrderViewModel viewModel,
+    SalesOrder order,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('开始生产'),
+        content: const Text('确认将订单状态更新为生产中吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('确认'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      final api = context.read<SalesOrderApiService>();
+      await api.startProduction(order.id);
+      ToastUtil.showSuccess('已开始生产');
+      await viewModel.loadSalesOrders(resetPage: false);
+    } catch (err) {
+      ToastUtil.showError('操作失败: $err');
+    }
+  }
+
+  Future<void> _completeOrder(
+    SalesOrderViewModel viewModel,
+    SalesOrder order,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('完成订单'),
+        content: const Text('确认标记该订单为已完成吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('完成'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      final api = context.read<SalesOrderApiService>();
+      await api.complete(order.id);
+      ToastUtil.showSuccess('已完成');
+      await viewModel.loadSalesOrders(resetPage: false);
+    } catch (err) {
+      ToastUtil.showError('操作失败: $err');
+    }
+  }
+
+  Future<void> _cancelOrder(
+    SalesOrderViewModel viewModel,
+    SalesOrder order,
+  ) async {
+    final reasonController = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('取消订单'),
+        content: TextField(
+          controller: reasonController,
+          decoration: const InputDecoration(labelText: '取消原因（可选）'),
+          maxLines: 3,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('确认取消'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) {
+      reasonController.dispose();
+      return;
+    }
+    try {
+      final api = context.read<SalesOrderApiService>();
+      await api.cancel(order.id, {
+        'reason': reasonController.text.trim(),
+      });
+      ToastUtil.showSuccess('已取消');
+      await viewModel.loadSalesOrders(resetPage: false);
+    } catch (err) {
+      ToastUtil.showError('取消失败: $err');
+    } finally {
+      reasonController.dispose();
+    }
+  }
+
+  Future<void> _updatePayment(
+    SalesOrderViewModel viewModel,
+    SalesOrder order,
+  ) async {
+    final amountController = TextEditingController();
+    final dateController = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('更新付款信息'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: amountController,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(labelText: '已付金额'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: dateController,
+              decoration: const InputDecoration(
+                labelText: '付款日期（YYYY-MM-DD）',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('更新'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) {
+      amountController.dispose();
+      dateController.dispose();
+      return;
+    }
+    final amountText = amountController.text.trim();
+    final dateText = dateController.text.trim();
+    if (amountText.isEmpty && dateText.isEmpty) {
+      ToastUtil.showError('请至少填写一项');
+      amountController.dispose();
+      dateController.dispose();
+      return;
+    }
+    final payload = <String, dynamic>{};
+    if (amountText.isNotEmpty) {
+      final amount = double.tryParse(amountText);
+      if (amount == null || amount < 0) {
+        ToastUtil.showError('请输入正确的金额');
+        amountController.dispose();
+        dateController.dispose();
+        return;
+      }
+      payload['paid_amount'] = amount;
+    }
+    if (dateText.isNotEmpty) {
+      payload['payment_date'] = dateText;
+    }
+    try {
+      final api = context.read<SalesOrderApiService>();
+      await api.updatePayment(order.id, payload);
+      ToastUtil.showSuccess('已更新付款信息');
+      await viewModel.loadSalesOrders(resetPage: false);
+    } catch (err) {
+      ToastUtil.showError('更新失败: $err');
+    } finally {
+      amountController.dispose();
+      dateController.dispose();
+    }
+  }
+
+  Future<void> _createWorkOrder(
+    SalesOrderViewModel viewModel,
+    SalesOrder order,
+  ) async {
+    String priority = 'normal';
+    final quantityController = TextEditingController();
+    final deliveryController = TextEditingController(
+        text: order.deliveryDate == null ? '' : _formatDate(order.deliveryDate));
+    final notesController = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('生成施工单'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: quantityController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: '生产数量（可选）',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: deliveryController,
+                decoration: const InputDecoration(
+                  labelText: '交货日期（YYYY-MM-DD，可选）',
+                ),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: priority,
+                decoration: const InputDecoration(labelText: '优先级'),
+                items: const [
+                  DropdownMenuItem(value: 'low', child: Text('低')),
+                  DropdownMenuItem(value: 'normal', child: Text('普通')),
+                  DropdownMenuItem(value: 'high', child: Text('高')),
+                  DropdownMenuItem(value: 'urgent', child: Text('紧急')),
+                ],
+                onChanged: (value) =>
+                    setState(() => priority = value ?? 'normal'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: notesController,
+                decoration: const InputDecoration(labelText: '备注（可选）'),
+                maxLines: 3,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('取消'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('生成'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (confirmed != true) {
+      quantityController.dispose();
+      deliveryController.dispose();
+      notesController.dispose();
+      return;
+    }
+
+    final payload = <String, dynamic>{
+      'sales_order_id': order.id,
+      'priority': priority,
+      'notes': notesController.text.trim(),
+    };
+    final quantityText = quantityController.text.trim();
+    if (quantityText.isNotEmpty) {
+      final quantity = int.tryParse(quantityText);
+      if (quantity == null || quantity <= 0) {
+        ToastUtil.showError('请输入正确的生产数量');
+        quantityController.dispose();
+        deliveryController.dispose();
+        notesController.dispose();
+        return;
+      }
+      payload['production_quantity'] = quantity;
+    }
+    final deliveryDate = deliveryController.text.trim();
+    if (deliveryDate.isNotEmpty) {
+      payload['delivery_date'] = deliveryDate;
+    }
+
+    try {
+      final api = WorkOrderFlowApiService(context.read<ApiClient>());
+      final result = await api.createFromSalesOrder(payload);
+      final data = result['data'] is Map<String, dynamic>
+          ? Map<String, dynamic>.from(result['data'])
+          : result;
+      final workOrderId = toInt(data['id']);
+      ToastUtil.showSuccess('施工单已生成');
+      await viewModel.loadSalesOrders(resetPage: false);
+      if (workOrderId != null && mounted) {
+        final goToDetail = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('查看施工单'),
+            content: const Text('施工单已生成，是否立即查看？'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('稍后'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('查看'),
+              ),
+            ],
+          ),
+        );
+        if (goToDetail == true && mounted) {
+          context.go('/workorders/$workOrderId');
+        }
+      }
+    } catch (err) {
+      ToastUtil.showError('生成失败: $err');
+    } finally {
+      quantityController.dispose();
+      deliveryController.dispose();
+      notesController.dispose();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isMobile = BreakpointsUtil.isMobile(context);
@@ -204,8 +672,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         return _SalesOrderSummaryCard(
           order: order,
           isMobile: isMobile,
-          onView: () => context.go('/sales-orders/${order.id}'),
-          onEdit: () => context.go('/sales-orders/${order.id}/edit'),
+          actions: _buildActionsForOrder(context, order),
         );
       },
     );
@@ -252,24 +719,97 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
                     Text(_formatDate(order.deliveryDate), style: textStyle)),
                 DataCell(Text(_formatAmount(order.totalAmount),
                     style: theme.textTheme.bodyMedium)),
-                DataCell(RowActionGroup(
-                  actions: [
-                    RowAction(
-                      label: '查看',
-                      onPressed: () => context.go('/sales-orders/${order.id}'),
-                    ),
-                    RowAction(
-                      label: '编辑',
-                      onPressed: () =>
-                          context.go('/sales-orders/${order.id}/edit'),
-                    ),
-                  ],
-                )),
+                DataCell(
+                  RowActionGroup(
+                    actions: _buildActionsForOrder(context, order),
+                    primaryCount: 2,
+                  ),
+                ),
               ],
             ),
           )
           .toList(),
     );
+  }
+
+  List<RowAction> _buildActionsForOrder(
+    BuildContext context,
+    SalesOrder order,
+  ) {
+    final viewModel = context.read<SalesOrderViewModel>();
+    final actions = <RowAction>[
+      RowAction(
+        label: '查看',
+        icon: Icons.visibility_outlined,
+        onPressed: () => context.go('/sales-orders/${order.id}'),
+      ),
+      RowAction(
+        label: '编辑',
+        icon: Icons.edit_outlined,
+        onPressed: () => context.go('/sales-orders/${order.id}/edit'),
+      ),
+    ];
+
+    final status = order.status ?? '';
+    if (status == 'draft') {
+      actions.add(RowAction(
+        label: '提交',
+        icon: Icons.send_outlined,
+        onPressed: () => _submitOrder(viewModel, order),
+      ));
+    }
+    if (status == 'submitted') {
+      actions.add(RowAction(
+        label: '审核通过',
+        icon: Icons.check_circle_outline,
+        onPressed: () => _approveOrder(viewModel, order),
+      ));
+      actions.add(RowAction(
+        label: '审核拒绝',
+        icon: Icons.cancel_outlined,
+        destructive: true,
+        onPressed: () => _rejectOrder(viewModel, order),
+      ));
+    }
+    if (status == 'approved') {
+      actions.add(RowAction(
+        label: '开始生产',
+        icon: Icons.play_circle_outline,
+        onPressed: () => _startProduction(viewModel, order),
+      ));
+    }
+    if (status == 'approved' || status == 'in_production') {
+      actions.add(RowAction(
+        label: '完成订单',
+        icon: Icons.task_alt_outlined,
+        onPressed: () => _completeOrder(viewModel, order),
+      ));
+    }
+    if (status.isNotEmpty &&
+        status != 'completed' &&
+        status != 'cancelled' &&
+        status != 'rejected') {
+      actions.add(RowAction(
+        label: '取消订单',
+        icon: Icons.block_outlined,
+        destructive: true,
+        onPressed: () => _cancelOrder(viewModel, order),
+      ));
+    }
+    actions.add(RowAction(
+      label: '更新付款',
+      icon: Icons.payments_outlined,
+      onPressed: () => _updatePayment(viewModel, order),
+    ));
+    if (status == 'approved') {
+      actions.add(RowAction(
+        label: '生成施工单',
+        icon: Icons.assignment_outlined,
+        onPressed: () => _createWorkOrder(viewModel, order),
+      ));
+    }
+
+    return actions;
   }
 
   static String _displayText(String? value) {
@@ -345,16 +885,14 @@ class _SalesOrderSummaryCard extends StatelessWidget {
   const _SalesOrderSummaryCard({
     required this.order,
     required this.isMobile,
-    required this.onView,
-    required this.onEdit,
+    required this.actions,
   });
 
   static const String _emptyCellText = '-';
 
   final SalesOrder order;
   final bool isMobile;
-  final VoidCallback onView;
-  final VoidCallback onEdit;
+  final List<RowAction> actions;
 
   @override
   Widget build(BuildContext context) {
@@ -450,22 +988,8 @@ class _SalesOrderSummaryCard extends StatelessWidget {
             ],
           ),
           SizedBox(height: sectionSpacing),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              OutlinedButton.icon(
-                onPressed: onView,
-                icon: const Icon(Icons.open_in_new, size: 16),
-                label: const Text('查看'),
-              ),
-              OutlinedButton.icon(
-                onPressed: onEdit,
-                icon: const Icon(Icons.edit, size: 16),
-                label: const Text('编辑'),
-              ),
-            ],
-          ),
+          if (actions.isNotEmpty)
+            RowActionGroup(actions: actions, primaryCount: 2),
         ],
       ),
     );
