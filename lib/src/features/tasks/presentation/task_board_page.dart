@@ -22,6 +22,12 @@ import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_repository.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_list_tile.dart';
 
+enum _TaskBoardViewMode {
+  board,
+  list,
+  timeline,
+}
+
 /// 部门任务看板入口，负责创建并缓存依赖，避免页面重建时重复初始化。
 class TaskBoardEntry extends StatefulWidget {
   const TaskBoardEntry({super.key});
@@ -111,7 +117,7 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
-  bool _showListView = false;
+  _TaskBoardViewMode _viewMode = _TaskBoardViewMode.board;
   bool _hideEmptyColumns = false;
   bool _sortByDeliveryDate = false;
   int? _draggingTaskId;
@@ -257,8 +263,11 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
       );
     }
 
-    if (_showListView) {
+    if (_viewMode == _TaskBoardViewMode.list) {
       return _buildListView(context, tasks);
+    }
+    if (_viewMode == _TaskBoardViewMode.timeline) {
+      return _buildTimelineView(context, tasks);
     }
     return _buildBoardView(context, viewModel, tasks, isMobile);
   }
@@ -387,15 +396,37 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
               icon: const Icon(Icons.refresh, size: 16),
               label: _refreshButtonText,
             ),
-            PageActionButton.outlined(
-              onPressed: () => setState(() => _showListView = !_showListView),
-              icon: Icon(
-                _showListView
-                    ? Icons.view_kanban_outlined
-                    : Icons.view_list_outlined,
-                size: 16,
+            ToggleButtons(
+              isSelected: [
+                _viewMode == _TaskBoardViewMode.board,
+                _viewMode == _TaskBoardViewMode.list,
+                _viewMode == _TaskBoardViewMode.timeline,
+              ],
+              onPressed: (index) {
+                setState(() {
+                  if (index == 0) _viewMode = _TaskBoardViewMode.board;
+                  if (index == 1) _viewMode = _TaskBoardViewMode.list;
+                  if (index == 2) _viewMode = _TaskBoardViewMode.timeline;
+                });
+              },
+              constraints: BoxConstraints(
+                minHeight: _controlHeight,
+                minWidth: isMobile ? 72 : 88,
               ),
-              label: _showListView ? '看板视图' : '列表视图',
+              children: const [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: Text('看板'),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: Text('列表'),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: Text('时间轴'),
+                ),
+              ],
             ),
             PageActionButton.outlined(
               onPressed: openFilterDrawer,
@@ -479,6 +510,96 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
           task: task,
           onTap: () => _openTaskDetail(context, task),
           showDivider: false,
+        );
+      },
+    );
+  }
+
+  Widget _buildTimelineView(BuildContext context, List<Task> tasks) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>()!;
+    final sectionSpacing = LayoutTokens.sectionSpacing(context);
+    final groups = _groupTasksByDate(tasks);
+    final listPadding = EdgeInsets.only(bottom: sectionSpacing);
+
+    return ListView.separated(
+      padding: listPadding,
+      itemCount: groups.length,
+      separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
+      itemBuilder: (context, index) {
+        final group = groups[index];
+        final overdue = group.date != null && _isOverdue(group.date!) &&
+            group.tasks.any((task) => task.status != 'completed');
+
+        return Container(
+          decoration: BoxDecoration(
+            color: colors.surface,
+            border: Border.all(color: colors.borderColor),
+            borderRadius: BorderRadius.zero,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.05),
+                  border: Border(
+                    bottom: BorderSide(color: colors.borderColor),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        group.label,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: colors.sidebarText,
+                        ),
+                      ),
+                    ),
+                    if (overdue)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.error.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(
+                              LayoutTokens.radiusPill),
+                          border: Border.all(
+                            color: theme.colorScheme.error
+                                .withValues(alpha: 0.4),
+                          ),
+                        ),
+                        child: Text(
+                          '已逾期',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.error,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${group.tasks.length} 项',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colors.subtleText,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              for (var i = 0; i < group.tasks.length; i++)
+                TaskListTile(
+                  task: group.tasks[i],
+                  onTap: () => _openTaskDetail(context, group.tasks[i]),
+                  showDivider: i != group.tasks.length - 1,
+                  showAssignee: true,
+                ),
+            ],
+          ),
         );
       },
     );
@@ -634,6 +755,105 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
       }
     }
     return grouped;
+  }
+
+  List<_TimelineGroup> _groupTasksByDate(List<Task> tasks) {
+    final dated = <int, List<Task>>{};
+    final noDate = <Task>[];
+
+    for (final task in tasks) {
+      final date = task.deliveryDate;
+      if (date == null) {
+        noDate.add(task);
+        continue;
+      }
+      final normalized = DateTime(date.year, date.month, date.day);
+      final key = normalized.millisecondsSinceEpoch;
+      dated.putIfAbsent(key, () => []).add(task);
+    }
+
+    for (final entry in dated.entries) {
+      _sortTasksByStatus(entry.value);
+    }
+    if (noDate.isNotEmpty) {
+      _sortTasksByStatus(noDate);
+    }
+
+    final keys = dated.keys.toList()..sort();
+    final groups = <_TimelineGroup>[
+      for (final key in keys)
+        _TimelineGroup(
+          date: DateTime.fromMillisecondsSinceEpoch(key),
+          label: _formatTimelineLabel(
+              DateTime.fromMillisecondsSinceEpoch(key)),
+          tasks: dated[key] ?? const [],
+        ),
+    ];
+
+    if (noDate.isNotEmpty) {
+      groups.add(_TimelineGroup(
+        date: null,
+        label: '未设置交期',
+        tasks: noDate,
+      ));
+    }
+    return groups;
+  }
+
+  void _sortTasksByStatus(List<Task> items) {
+    items.sort((a, b) {
+      final aRank = _statusRank(a.status);
+      final bRank = _statusRank(b.status);
+      if (aRank != bRank) return aRank.compareTo(bRank);
+      return a.id.compareTo(b.id);
+    });
+  }
+
+  int _statusRank(String? status) {
+    switch (status) {
+      case 'in_progress':
+        return 0;
+      case 'pending':
+        return 1;
+      case 'completed':
+        return 2;
+      case 'cancelled':
+        return 3;
+      default:
+        return 4;
+    }
+  }
+
+  String _formatTimelineLabel(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final normalized = DateTime(date.year, date.month, date.day);
+    final diffDays = normalized.difference(today).inDays;
+    final weekday = _weekdayLabel(normalized.weekday);
+    final label = '${normalized.month}月${normalized.day}日 $weekday';
+    if (diffDays == 0) {
+      return '$label · 今天';
+    }
+    if (diffDays == 1) {
+      return '$label · 明天';
+    }
+    if (diffDays < 0) {
+      return '$label · 已逾期';
+    }
+    return label;
+  }
+
+  String _weekdayLabel(int weekday) {
+    const labels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+    if (weekday < 1 || weekday > 7) return '';
+    return labels[weekday - 1];
+  }
+
+  bool _isOverdue(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final target = DateTime(date.year, date.month, date.day);
+    return target.isBefore(today);
   }
 
   int _activeFilterCount() {
@@ -862,6 +1082,18 @@ class _FilterDrawerContent extends StatelessWidget {
       ],
     );
   }
+}
+
+class _TimelineGroup {
+  const _TimelineGroup({
+    required this.date,
+    required this.label,
+    required this.tasks,
+  });
+
+  final DateTime? date;
+  final String label;
+  final List<Task> tasks;
 }
 
 class _QuickFilterItem {
