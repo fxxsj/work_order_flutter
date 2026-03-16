@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -16,6 +17,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/utils/file_download.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
 import 'package:work_order_app/src/features/customer/data/customer_dto.dart';
@@ -135,6 +137,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
   List<Customer> _customers = [];
   List<ProductOption> _products = [];
   List<Process> _processes = [];
+  bool _exporting = false;
 
   @override
   void initState() {
@@ -183,6 +186,85 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     _processFilterId = null;
     viewModel.setSearchText('');
     _applyFilters(viewModel);
+  }
+
+  Future<void> _exportWorkOrders(WorkOrderViewModel viewModel) async {
+    if (_exporting) return;
+    setState(() => _exporting = true);
+    try {
+      final apiService = context.read<WorkOrderApiService>();
+      final params = <String, dynamic>{
+        if (_searchController.text.trim().isNotEmpty)
+          'search': _searchController.text.trim(),
+        if (viewModel.statusFilter != null &&
+            viewModel.statusFilter!.isNotEmpty)
+          'status': viewModel.statusFilter,
+        if (viewModel.priorityFilter != null &&
+            viewModel.priorityFilter!.isNotEmpty)
+          'priority': viewModel.priorityFilter,
+        if (viewModel.approvalStatusFilter != null &&
+            viewModel.approvalStatusFilter!.isNotEmpty)
+          'approval_status': viewModel.approvalStatusFilter,
+        if ((viewModel.customerFilterId ?? 0) > 0)
+          'customer': viewModel.customerFilterId,
+        if ((viewModel.productFilterId ?? 0) > 0)
+          'product': viewModel.productFilterId,
+        if ((viewModel.processFilterId ?? 0) > 0)
+          'process': viewModel.processFilterId,
+      };
+      final response = await apiService.export(params: params);
+      final data = response.data;
+      if (data == null) {
+        ToastUtil.showError('导出失败: 返回内容为空');
+        return;
+      }
+      final bytes = data is Uint8List
+          ? data
+          : data is List<int>
+              ? Uint8List.fromList(data)
+              : null;
+      if (bytes == null) {
+        ToastUtil.showError('导出失败: 返回格式不支持');
+        return;
+      }
+      final filename =
+          _resolveExportFilename(response, fallback: '施工单列表');
+      final savedPath = await saveBytes(bytes, filename,
+          mimeType:
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      if (savedPath == null) {
+        ToastUtil.showSuccess('导出已开始');
+      } else {
+        ToastUtil.showSuccess('已导出到 $savedPath');
+      }
+    } catch (err) {
+      ToastUtil.showError('导出失败: $err');
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  String _resolveExportFilename(
+    dynamic response, {
+    required String fallback,
+  }) {
+    final timestamp =
+        DateTime.now().toIso8601String().replaceAll(':', '').split('.').first;
+    try {
+      final headers = response.headers;
+      final contentDisposition =
+          headers.value('content-disposition') ?? headers.value('Content-Disposition');
+      if (contentDisposition != null) {
+        final match =
+            RegExp('filename=\"?([^\";]+)\"?').firstMatch(contentDisposition);
+        if (match != null) {
+          return match.group(1) ?? '$fallback_$timestamp.xlsx';
+        }
+      }
+    } catch (_) {
+      // ignore header parsing errors
+    }
+    return '$fallback_$timestamp.xlsx';
   }
 
   Future<void> _loadFilterOptions() async {
@@ -688,6 +770,11 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
           );
 
           final actions = <Widget>[
+            PageActionButton.outlined(
+              onPressed: _exporting ? null : () => _exportWorkOrders(viewModel),
+              icon: const Icon(Icons.download_outlined, size: 16),
+              label: _exporting ? '导出中' : '导出',
+            ),
             PageActionButton.outlined(
               onPressed: () => viewModel.loadWorkOrders(resetPage: true),
               icon: const Icon(Icons.refresh, size: 16),
