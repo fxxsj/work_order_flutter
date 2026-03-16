@@ -727,6 +727,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     required List<DropdownMenuItem<int?>> processItems,
     required double bottomSpacing,
   }) {
+    final spacing = LayoutTokens.formSectionSpacing(context);
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -741,7 +742,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
             _applyFilters(viewModel);
           },
         ),
-        const SizedBox(height: _spacingSm),
+        SizedBox(height: spacing),
         SearchableDropdownFormField<String>(
           initialValue: _priorityFilter,
           isExpanded: true,
@@ -752,7 +753,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
             _applyFilters(viewModel);
           },
         ),
-        const SizedBox(height: _spacingSm),
+        SizedBox(height: spacing),
         SearchableDropdownFormField<String>(
           initialValue: _approvalStatusFilter,
           isExpanded: true,
@@ -763,7 +764,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
             _applyFilters(viewModel);
           },
         ),
-        const SizedBox(height: _spacingSm),
+        SizedBox(height: spacing),
         SearchableDropdownFormField<int?>(
           initialValue: _customerFilterId,
           isExpanded: true,
@@ -774,7 +775,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
             _applyFilters(viewModel);
           },
         ),
-        const SizedBox(height: _spacingSm),
+        SizedBox(height: spacing),
         SearchableDropdownFormField<int?>(
           initialValue: _productFilterId,
           isExpanded: true,
@@ -785,7 +786,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
             _applyFilters(viewModel);
           },
         ),
-        const SizedBox(height: _spacingSm),
+        SizedBox(height: spacing),
         SearchableDropdownFormField<int?>(
           initialValue: _processFilterId,
           isExpanded: true,
@@ -799,15 +800,15 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
         SizedBox(height: bottomSpacing),
         Row(
           children: [
-            OutlinedButton.icon(
+            PageActionButton.outlined(
               onPressed: () => _resetFilters(viewModel),
-              icon: const Icon(Icons.restart_alt),
-              label: const Text(_resetButtonText),
+              icon: const Icon(Icons.restart_alt, size: 16),
+              label: _resetButtonText,
             ),
-            const SizedBox(width: 12),
-            FilledButton(
+            SizedBox(width: spacing),
+            PageActionButton.filled(
               onPressed: () => Navigator.of(context).maybePop(),
-              child: const Text('完成'),
+              label: '完成',
             ),
           ],
         ),

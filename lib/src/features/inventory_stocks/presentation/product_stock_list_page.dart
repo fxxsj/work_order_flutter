@@ -703,6 +703,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     ProductStockViewModel viewModel, {
     required double bottomSpacing,
   }) {
+    final spacing = LayoutTokens.formSectionSpacing(context);
     final statusValue =
         viewModel.statusFilter.isEmpty ? '' : viewModel.statusFilter;
     final content = Column(
@@ -722,18 +723,18 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
           ],
           onChanged: (value) => viewModel.setStatusFilter(value ?? ''),
         ),
-        SizedBox(height: bottomSpacing),
+        SizedBox(height: bottomSpacing < spacing ? spacing : bottomSpacing),
         Row(
           children: [
-            OutlinedButton.icon(
+            PageActionButton.outlined(
               onPressed: () => _resetFilters(viewModel),
-              icon: const Icon(Icons.restart_alt),
-              label: const Text(_resetButtonText),
+              icon: const Icon(Icons.restart_alt, size: 16),
+              label: _resetButtonText,
             ),
-            const SizedBox(width: 12),
-            FilledButton(
+            SizedBox(width: spacing),
+            PageActionButton.filled(
               onPressed: () => Navigator.of(context).maybePop(),
-              child: const Text('完成'),
+              label: '完成',
             ),
           ],
         ),

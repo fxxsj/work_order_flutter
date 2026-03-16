@@ -1318,6 +1318,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     DeliveryOrderViewModel viewModel, {
     required double bottomSpacing,
   }) {
+    final spacing = LayoutTokens.formSectionSpacing(context);
     final statusValue =
         viewModel.statusFilter.isEmpty ? '' : viewModel.statusFilter;
     final customerValue = viewModel.customerId;
@@ -1339,7 +1340,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
           ],
           onChanged: (value) => viewModel.setStatusFilter(value ?? ''),
         ),
-        const SizedBox(height: _spacingSm),
+        SizedBox(height: spacing),
         SearchableDropdownFormField<int>(
           key: ValueKey<int>(customerValue),
           initialValue: customerValue,
@@ -1361,18 +1362,18 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
               ? null
               : (value) => viewModel.setCustomerId(value ?? 0),
         ),
-        SizedBox(height: bottomSpacing),
+        SizedBox(height: bottomSpacing < spacing ? spacing : bottomSpacing),
         Row(
           children: [
-            OutlinedButton.icon(
+            PageActionButton.outlined(
               onPressed: () => _resetFilters(viewModel),
-              icon: const Icon(Icons.restart_alt),
-              label: const Text(_resetButtonText),
+              icon: const Icon(Icons.restart_alt, size: 16),
+              label: _resetButtonText,
             ),
-            const SizedBox(width: 12),
-            FilledButton(
+            SizedBox(width: spacing),
+            PageActionButton.filled(
               onPressed: () => Navigator.of(context).maybePop(),
-              child: const Text('完成'),
+              label: '完成',
             ),
           ],
         ),
