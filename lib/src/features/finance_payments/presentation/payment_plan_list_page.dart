@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/models/generic_record.dart';
+import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/generic_resource_list_page.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
+import 'package:work_order_app/src/core/utils/toast_util.dart';
+import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
 
 class PaymentPlanListEntry extends StatelessWidget {
   const PaymentPlanListEntry({super.key});
@@ -29,8 +34,37 @@ class PaymentPlanListEntry extends StatelessWidget {
           GenericSummaryField(label: '已收金额', value: _paidAmount),
         ],
         titleBuilder: _salesOrderNumber,
+        rowActionsBuilder: (context, record, openDetails) {
+          return [
+            RowAction(
+              label: '查看',
+              icon: Icons.visibility_outlined,
+              onPressed: openDetails,
+            ),
+            RowAction(
+              label: '更新状态',
+              icon: Icons.refresh_outlined,
+              onPressed: () => _updateStatus(context, record),
+            ),
+          ];
+        },
       ),
     );
+  }
+
+  static Future<void> _updateStatus(
+    BuildContext context,
+    GenericRecord record,
+  ) async {
+    try {
+      final apiClient = context.read<ApiClient>();
+      await apiClient.post('/payment-plans/${record.id}/update_status/');
+      ToastUtil.showSuccess('状态已更新');
+      final viewModel = context.read<GenericListViewModel>();
+      await viewModel.loadItems(resetPage: false);
+    } catch (err) {
+      ToastUtil.showError('更新失败: $err');
+    }
   }
 
   static String _salesOrderNumber(GenericRecord record) {
