@@ -138,8 +138,6 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
-  Map<String, dynamic> _summary = {};
-  bool _summaryLoading = false;
   List<CustomerDto> _customers = [];
   bool _customersLoading = false;
   List<SalesOrderDto> _salesOrders = [];
@@ -151,7 +149,6 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadSummary();
       _loadCustomers();
       _loadSalesOrders();
       _loadProducts();
@@ -177,22 +174,6 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadDeliveryOrders(resetPage: true);
     });
-  }
-
-  Future<void> _loadSummary() async {
-    final apiService = context.read<DeliveryOrderApiService>();
-    setState(() => _summaryLoading = true);
-    try {
-      final data = await apiService.fetchSummary();
-      if (!mounted) return;
-      setState(() => _summary = data);
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _summary = {});
-    } finally {
-      if (!mounted) return;
-      setState(() => _summaryLoading = false);
-    }
   }
 
   Future<void> _loadCustomers() async {
@@ -397,7 +378,6 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       if (!mounted) return;
       ToastUtil.showSuccess(_deleteSuccessText);
       await viewModel.loadDeliveryOrders(resetPage: false);
-      _loadSummary();
     } catch (err) {
       if (!mounted) return;
       ToastUtil.showError('$_deleteErrorText$err');
@@ -549,7 +529,6 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
         Navigator.of(context).pop();
         ToastUtil.showSuccess(isEdit ? '发货单已更新' : '发货单已创建');
         await viewModel.loadDeliveryOrders(resetPage: false);
-        _loadSummary();
       } catch (err) {
         if (!mounted) return;
         setState(() => submitting = false);
@@ -829,7 +808,6 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
         Navigator.of(context).pop();
         ToastUtil.showSuccess(_shipSuccessText);
         await viewModel.loadDeliveryOrders(resetPage: false);
-        _loadSummary();
       } catch (err) {
         if (!mounted) return;
         setState(() => submitting = false);
@@ -912,7 +890,6 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
         Navigator.of(context).pop();
         ToastUtil.showSuccess(_receiveSuccessText);
         await viewModel.loadDeliveryOrders(resetPage: false);
-        _loadSummary();
       } catch (err) {
         if (!mounted) return;
         setState(() => submitting = false);
@@ -981,7 +958,6 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
         Navigator.of(context).pop();
         ToastUtil.showSuccess(_rejectSuccessText);
         await viewModel.loadDeliveryOrders(resetPage: false);
-        _loadSummary();
       } catch (err) {
         if (!mounted) return;
         setState(() => submitting = false);
@@ -1110,14 +1086,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       }
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSummarySection(context),
-        SizedBox(height: sectionSpacing),
-        Expanded(child: listContent),
-      ],
-    );
+    return listContent;
   }
 
   Widget _buildDesktopTable(
@@ -1617,56 +1586,6 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     );
   }
 
-  Widget _buildSummarySection(BuildContext context) {
-    final spacing = LayoutTokens.sectionSpacing(context);
-    if (_summaryLoading && _summary.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    final summary = _summary['summary'] is Map
-        ? Map<String, dynamic>.from(_summary['summary'] as Map)
-        : <String, dynamic>{};
-
-    String formatValue(dynamic value) {
-      if (value == null) return _emptyCellText;
-      if (value is num) {
-        if (value % 1 == 0) return value.toInt().toString();
-        return value.toStringAsFixed(2);
-      }
-      return value.toString();
-    }
-
-    return Wrap(
-      spacing: spacing,
-      runSpacing: spacing,
-      children: [
-        _StatTile(
-          label: '发货总数',
-          value: formatValue(summary['total_count']),
-          icon: Icons.local_shipping_outlined,
-        ),
-        _StatTile(
-          label: '待发货',
-          value: formatValue(summary['pending_count']),
-          icon: Icons.pending_outlined,
-        ),
-        _StatTile(
-          label: '已发货',
-          value: formatValue(summary['shipped_count']),
-          icon: Icons.local_shipping,
-        ),
-        _StatTile(
-          label: '运输中',
-          value: formatValue(summary['in_transit_count']),
-          icon: Icons.route_outlined,
-        ),
-        _StatTile(
-          label: '已签收',
-          value: formatValue(summary['received_count']),
-          icon: Icons.fact_check_outlined,
-        ),
-      ],
-    );
-  }
 }
 
 typedef _SummaryField = SummaryField;
@@ -1698,54 +1617,6 @@ class _DetailRow extends StatelessWidget {
             child: Text(
               value,
               style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatTile extends StatelessWidget {
-  const _StatTile({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
-
-  final String label;
-  final String value;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>();
-    return Container(
-      width: 170,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colors?.surface ?? theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
-        border: Border.all(color: colors?.borderColor ?? theme.dividerColor),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: theme.colorScheme.primary),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: theme.textTheme.bodySmall),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
             ),
           ),
         ],

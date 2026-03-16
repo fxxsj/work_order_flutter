@@ -124,14 +124,6 @@ class _QualityInspectionListViewState
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
-  Map<String, dynamic> _summary = {};
-  bool _summaryLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadSummary());
-  }
 
   @override
   void dispose() {
@@ -152,22 +144,6 @@ class _QualityInspectionListViewState
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadInspections(resetPage: true);
     });
-  }
-
-  Future<void> _loadSummary() async {
-    final apiService = context.read<QualityInspectionApiService>();
-    setState(() => _summaryLoading = true);
-    try {
-      final data = await apiService.fetchSummary();
-      if (!mounted) return;
-      setState(() => _summary = data);
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _summary = {});
-    } finally {
-      if (!mounted) return;
-      setState(() => _summaryLoading = false);
-    }
   }
 
   Future<void> _openDetailDialog(QualityInspection inspection) async {
@@ -311,7 +287,6 @@ class _QualityInspectionListViewState
         Navigator.of(context).pop();
         ToastUtil.showSuccess(_completeSuccessText);
         await viewModel.loadInspections(resetPage: false);
-        _loadSummary();
       } catch (err) {
         if (!mounted) return;
         setState(() => submitting = false);
@@ -482,14 +457,7 @@ class _QualityInspectionListViewState
       }
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSummarySection(context),
-        SizedBox(height: sectionSpacing),
-        Expanded(child: listContent),
-      ],
-    );
+    return listContent;
   }
 
   Widget _buildDesktopTable(
@@ -901,51 +869,6 @@ class _QualityInspectionListViewState
     );
   }
 
-  Widget _buildSummarySection(BuildContext context) {
-    final spacing = LayoutTokens.sectionSpacing(context);
-    if (_summaryLoading && _summary.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    final summary = _summary['summary'] is Map
-        ? Map<String, dynamic>.from(_summary['summary'] as Map)
-        : <String, dynamic>{};
-
-    String formatValue(dynamic value) {
-      if (value == null) return _emptyCellText;
-      if (value is num) {
-        if (value % 1 == 0) return value.toInt().toString();
-        return value.toStringAsFixed(2);
-      }
-      return value.toString();
-    }
-
-    return Wrap(
-      spacing: spacing,
-      runSpacing: spacing,
-      children: [
-        _StatTile(
-          label: '检验总数',
-          value: formatValue(summary['total_count']),
-          icon: Icons.verified_outlined,
-        ),
-        _StatTile(
-          label: '检验数量',
-          value: formatValue(summary['total_quantity']),
-          icon: Icons.fact_check_outlined,
-        ),
-        _StatTile(
-          label: '合格数量',
-          value: formatValue(summary['total_passed']),
-          icon: Icons.check_circle_outline,
-        ),
-        _StatTile(
-          label: '不合格数量',
-          value: formatValue(summary['total_failed']),
-          icon: Icons.cancel_outlined,
-        ),
-      ],
-    );
-  }
 }
 
 typedef _SummaryField = SummaryField;
@@ -977,54 +900,6 @@ class _DetailRow extends StatelessWidget {
             child: Text(
               value,
               style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatTile extends StatelessWidget {
-  const _StatTile({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
-
-  final String label;
-  final String value;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>();
-    return Container(
-      width: 170,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colors?.surface ?? theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
-        border: Border.all(color: colors?.borderColor ?? theme.dividerColor),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: theme.colorScheme.primary),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: theme.textTheme.bodySmall),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
             ),
           ),
         ],
