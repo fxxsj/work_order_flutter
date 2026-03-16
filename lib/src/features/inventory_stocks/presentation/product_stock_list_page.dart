@@ -122,18 +122,10 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
-  Map<String, dynamic> _summary = {};
-  bool _summaryLoading = false;
   bool _lowStockLoading = false;
   bool _expiredLoading = false;
   List<ProductStock> _lowStockList = [];
   List<ProductStock> _expiredList = [];
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadSummary());
-  }
 
   @override
   void dispose() {
@@ -156,21 +148,6 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     });
   }
 
-  Future<void> _loadSummary() async {
-    final apiService = context.read<ProductStockApiService>();
-    setState(() => _summaryLoading = true);
-    try {
-      final summary = await apiService.fetchSummary();
-      if (!mounted) return;
-      setState(() => _summary = summary);
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _summary = {});
-    } finally {
-      if (!mounted) return;
-      setState(() => _summaryLoading = false);
-    }
-  }
 
   Future<void> _openLowStockDialog() async {
     final apiService = context.read<ProductStockApiService>();
@@ -357,7 +334,6 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
         Navigator.of(context).pop();
         ToastUtil.showSuccess(_adjustSuccessText);
         await viewModel.loadStocks(resetPage: false);
-        _loadSummary();
       } catch (err) {
         if (!mounted) return;
         setState(() => submitting = false);
@@ -529,14 +505,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
       }
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSummarySection(context),
-        SizedBox(height: sectionSpacing),
-        Expanded(child: listContent),
-      ],
-    );
+    return listContent;
   }
 
   Widget _buildDesktopTable(
@@ -918,49 +887,6 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     );
   }
 
-  Widget _buildSummarySection(BuildContext context) {
-    final spacing = LayoutTokens.sectionSpacing(context);
-    if (_summaryLoading && _summary.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    String formatValue(dynamic value) {
-      if (value == null) return _emptyCellText;
-      if (value is num) {
-        if (value % 1 == 0) return value.toInt().toString();
-        return value.toStringAsFixed(2);
-      }
-      return value.toString();
-    }
-
-    return Wrap(
-      spacing: spacing,
-      runSpacing: spacing,
-      children: [
-        _StatTile(
-          label: '总库存量',
-          value: formatValue(_summary['total_quantity']),
-          icon: Icons.inventory_2_outlined,
-        ),
-        _StatTile(
-          label: '产品数',
-          value: formatValue(_summary['total_products']),
-          icon: Icons.category_outlined,
-        ),
-        _StatTile(
-          label: '低库存',
-          value: formatValue(_summary['low_stock_count']),
-          icon: Icons.warning_amber_outlined,
-        ),
-        _StatTile(
-          label: '已过期',
-          value: formatValue(_summary['expired_count']),
-          icon: Icons.event_busy_outlined,
-        ),
-      ],
-    );
-  }
-
   Widget _buildStockDialogList(
     List<ProductStock> items, {
     bool highlightLowStock = false,
@@ -1065,54 +991,6 @@ class _DetailRow extends StatelessWidget {
             child: Text(
               value,
               style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatTile extends StatelessWidget {
-  const _StatTile({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
-
-  final String label;
-  final String value;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>();
-    return Container(
-      width: 170,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colors?.surface ?? theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
-        border: Border.all(color: colors?.borderColor ?? theme.dividerColor),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: theme.colorScheme.primary),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: theme.textTheme.bodySmall),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
             ),
           ),
         ],
