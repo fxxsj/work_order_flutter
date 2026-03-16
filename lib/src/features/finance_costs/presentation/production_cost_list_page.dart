@@ -9,10 +9,12 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_tab
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/finance_costs/application/production_cost_view_model.dart';
 import 'package:work_order_app/src/features/finance_costs/data/production_cost_api_service.dart';
 import 'package:work_order_app/src/features/finance_costs/data/production_cost_repository_impl.dart';
@@ -128,6 +130,34 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
     });
   }
 
+  Future<void> _calculateMaterial(
+    ProductionCostViewModel viewModel,
+    ProductionCost cost,
+  ) async {
+    try {
+      final apiService = context.read<ProductionCostApiService>();
+      await apiService.calculateMaterial(cost.id);
+      ToastUtil.showSuccess('材料成本已计算');
+      await viewModel.loadCosts(resetPage: false);
+    } catch (err) {
+      ToastUtil.showError('计算失败: $err');
+    }
+  }
+
+  Future<void> _calculateTotal(
+    ProductionCostViewModel viewModel,
+    ProductionCost cost,
+  ) async {
+    try {
+      final apiService = context.read<ProductionCostApiService>();
+      await apiService.calculateTotal(cost.id);
+      ToastUtil.showSuccess('总成本已更新');
+      await viewModel.loadCosts(resetPage: false);
+    } catch (err) {
+      ToastUtil.showError('计算失败: $err');
+    }
+  }
+
   static String _pageInfoText(ProductionCostViewModel viewModel) {
     return _pageInfoTemplate
         .replaceFirst('{page}', viewModel.page.toString())
@@ -216,6 +246,7 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
         DataColumn(label: Text('总成本')),
         DataColumn(label: Text('状态')),
         DataColumn(label: Text('计算时间')),
+        DataColumn(label: Text('操作')),
       ],
       rows: costs
           .map(
@@ -232,6 +263,7 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
                 )),
                 DataCell(
                     Text(_formatDate(cost.calculatedAt), style: textStyle)),
+                DataCell(_buildRowActions(viewModel, cost)),
               ],
             ),
           )
@@ -283,6 +315,25 @@ bool isMobile,
     );
   }
 
+  Widget _buildRowActions(
+    ProductionCostViewModel viewModel,
+    ProductionCost cost,
+  ) {
+    final actions = <RowAction>[
+      RowAction(
+        label: '计算材料',
+        icon: Icons.auto_fix_high_outlined,
+        onPressed: () => _calculateMaterial(viewModel, cost),
+      ),
+      RowAction(
+        label: '计算总成本',
+        icon: Icons.calculate_outlined,
+        onPressed: () => _calculateTotal(viewModel, cost),
+      ),
+    ];
+    return RowActionGroup(actions: actions, primaryCount: 2);
+  }
+
   static String _displayText(String? value) {
     final text = value?.trim() ?? '';
     return text.isEmpty ? _emptyCellText : text;
@@ -310,6 +361,20 @@ bool isMobile,
     final totalCost = _formatAmount(cost.totalCost);
     final status = cost.statusDisplay ?? cost.status ?? _emptyCellText;
     final calculatedAt = _formatDate(cost.calculatedAt);
+    final actions = <RowAction>[
+      RowAction(
+        label: '计算材料',
+        icon: Icons.auto_fix_high_outlined,
+        onPressed: () =>
+            _calculateMaterial(context.read<ProductionCostViewModel>(), cost),
+      ),
+      RowAction(
+        label: '计算总成本',
+        icon: Icons.calculate_outlined,
+        onPressed: () =>
+            _calculateTotal(context.read<ProductionCostViewModel>(), cost),
+      ),
+    ];
 
     return ExpandableSummaryCard(
       headerBuilder: (context, expanded) {
@@ -371,13 +436,20 @@ bool isMobile,
           ],
         );
       },
-      expandedChild: SummaryFieldWrap(
-        isMobile: isMobile,
+      expandedChild: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SummaryField(label: '施工单号', value: workOrder),
-          _SummaryField(label: '总成本', value: totalCost),
-          _SummaryField(label: '状态', value: status),
-          _SummaryField(label: '计算时间', value: calculatedAt),
+          SummaryFieldWrap(
+            isMobile: isMobile,
+            children: [
+              _SummaryField(label: '施工单号', value: workOrder),
+              _SummaryField(label: '总成本', value: totalCost),
+              _SummaryField(label: '状态', value: status),
+              _SummaryField(label: '计算时间', value: calculatedAt),
+            ],
+          ),
+          SizedBox(height: sectionSpacing),
+          RowActionGroup(actions: actions, primaryCount: 2),
         ],
       ),
     );

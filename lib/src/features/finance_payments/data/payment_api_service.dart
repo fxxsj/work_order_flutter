@@ -52,4 +52,22 @@ class PaymentApiService {
     }
     return {};
   }
+
+  Future<Map<String, dynamic>> createPayment(Map<String, dynamic> payload) async {
+    final response = await _client.post('/payments/', data: payload);
+    final data = response.data;
+    if (data is Map<String, dynamic>) {
+      return Map<String, dynamic>.from(data);
+    }
+    return {};
+  }
+
+  Future<Map<String, dynamic>> updatePayment(int id, Map<String, dynamic> payload) async {
+    final response = await _client.put('/payments/$id/', data: payload);
+    final data = response.data;
+    if (data is Map<String, dynamic>) {
+      return Map<String, dynamic>.from(data);
+    }
+    return {};
+  }
 }

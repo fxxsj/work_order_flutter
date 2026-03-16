@@ -49,6 +49,16 @@ class InvoiceApiService {
     return _mapFromResponse(response.data);
   }
 
+  Future<Map<String, dynamic>> createInvoice(Map<String, dynamic> payload) async {
+    final response = await _client.post('/invoices/', data: payload);
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> updateInvoice(int id, Map<String, dynamic> payload) async {
+    final response = await _client.put('/invoices/$id/', data: payload);
+    return _mapFromResponse(response.data);
+  }
+
   Future<Map<String, dynamic>> approve(int id, Map<String, dynamic> payload) async {
     final response = await _client.post('/invoices/$id/approve/', data: payload);
     return _mapFromResponse(response.data);

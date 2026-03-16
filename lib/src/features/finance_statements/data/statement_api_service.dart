@@ -49,6 +49,11 @@ class StatementApiService {
     return _mapFromResponse(response.data);
   }
 
+  Future<Map<String, dynamic>> createStatement(Map<String, dynamic> payload) async {
+    final response = await _client.post('/statements/', data: payload);
+    return _mapFromResponse(response.data);
+  }
+
   Future<Map<String, dynamic>> generate({Map<String, dynamic>? params}) async {
     final response = await _client.get('/statements/generate/', queryParameters: params);
     return _mapFromResponse(response.data);
