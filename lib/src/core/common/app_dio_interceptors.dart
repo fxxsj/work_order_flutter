@@ -57,6 +57,12 @@ class AppDioInterceptors extends InterceptorsWrapper {
             'hasRefresh=${(HttpClient.refreshToken ?? '').isNotEmpty} '
             'isRefreshing=${HttpClient.isRefreshing}');
       }
+      if (err.requestOptions.path.contains('/auth/refresh')) {
+        HttpClient.clearTokens();
+        AppEvents.emit(const AuthExpiredEvent());
+        handler.next(err);
+        return;
+      }
       // 登录接口的 401 错误不刷新，交给调用方处理
       if (err.requestOptions.path.contains('/auth/login') ||
           err.requestOptions.path.contains('/auth/refresh') ||
