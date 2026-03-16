@@ -504,7 +504,8 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: priority,
+                key: ValueKey(priority),
+                initialValue: priority,
                 decoration: const InputDecoration(labelText: '优先级'),
                 items: const [
                   DropdownMenuItem(value: 'low', child: Text('低')),

@@ -456,7 +456,8 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: _workOrderPriority,
+                key: ValueKey(_workOrderPriority),
+                initialValue: _workOrderPriority,
                 decoration: const InputDecoration(labelText: '优先级'),
                 items: const [
                   DropdownMenuItem(value: 'low', child: Text('低')),

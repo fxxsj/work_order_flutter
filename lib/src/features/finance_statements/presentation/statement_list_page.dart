@@ -247,7 +247,8 @@ class _StatementListViewState extends State<_StatementListView> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         DropdownButtonFormField<String>(
-                          value: statementType,
+                          key: ValueKey(statementType),
+                          initialValue: statementType,
                           decoration: const InputDecoration(
                             labelText: '对账单类型',
                             border: OutlineInputBorder(),
@@ -284,7 +285,7 @@ class _StatementListViewState extends State<_StatementListView> {
                               ..._customers.map(
                                 (customer) => DropdownMenuItem<int?>(
                                   value: customer.id,
-                                  child: Text(customer.name ?? '-'),
+                                  child: Text(customer.name),
                                 ),
                               ),
                             ],
@@ -310,7 +311,7 @@ class _StatementListViewState extends State<_StatementListView> {
                               ..._suppliers.map(
                                 (supplier) => DropdownMenuItem<int?>(
                                   value: supplier.id,
-                                  child: Text(supplier.name ?? '-'),
+                                  child: Text(supplier.name),
                                 ),
                               ),
                             ],
@@ -467,7 +468,8 @@ class _StatementListViewState extends State<_StatementListView> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         DropdownButtonFormField<String>(
-                          value: statementType,
+                          key: ValueKey(statementType),
+                          initialValue: statementType,
                           decoration: const InputDecoration(
                             labelText: '对账单类型',
                             border: OutlineInputBorder(),
@@ -504,7 +506,7 @@ class _StatementListViewState extends State<_StatementListView> {
                               ..._customers.map(
                                 (customer) => DropdownMenuItem<int?>(
                                   value: customer.id,
-                                  child: Text(customer.name ?? '-'),
+                                  child: Text(customer.name),
                                 ),
                               ),
                             ],
@@ -530,7 +532,7 @@ class _StatementListViewState extends State<_StatementListView> {
                               ..._suppliers.map(
                                 (supplier) => DropdownMenuItem<int?>(
                                   value: supplier.id,
-                                  child: Text(supplier.name ?? '-'),
+                                  child: Text(supplier.name),
                                 ),
                               ),
                             ],

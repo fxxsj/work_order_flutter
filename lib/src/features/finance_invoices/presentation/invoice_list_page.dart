@@ -264,7 +264,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                             ..._customers.map(
                               (customer) => DropdownMenuItem<int?>(
                                 value: customer.id,
-                                child: Text(customer.name ?? '-'),
+                                child: Text(customer.name),
                               ),
                             ),
                           ],
