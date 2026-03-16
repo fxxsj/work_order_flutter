@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/common/api_exception.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/constants/breakpoints.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
@@ -1238,6 +1239,287 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     );
   }
 
+  Future<void> _showSyncPreviewDialog(WorkOrderDetail detail) async {
+    final canSync = detail.approvalStatus != 'approved';
+    final processes = detail.processes;
+    final processMap = {
+      for (final item in processes) item.id: item,
+    };
+    final selectedIds = processes.map((item) => item.id).toSet();
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        Map<String, dynamic>? preview;
+        String? warningMessage;
+        bool loading = false;
+        bool executing = false;
+
+        Future<void> loadPreview(void Function(void Function()) setState) async {
+          if (!canSync) return;
+          setState(() {
+            loading = true;
+            warningMessage = null;
+          });
+          try {
+            final api = dialogContext.read<WorkOrderApiService>();
+            final result = await api.syncTasksPreview(
+              detail.id,
+              processIds: selectedIds.toList(),
+            );
+            preview = _extractPreview(result);
+          } catch (err) {
+            if (err is ApiException) {
+              final previewData = _extractPreview(err.data);
+              if (previewData != null) {
+                preview = previewData;
+                warningMessage = err.message;
+              } else {
+                ToastUtil.showError('获取预览失败: ${err.message}');
+              }
+            } else {
+              ToastUtil.showError('获取预览失败: $err');
+            }
+          } finally {
+            setState(() => loading = false);
+          }
+        }
+
+        Future<void> executeSync(void Function(void Function()) setState) async {
+          if (!canSync || preview == null) return;
+          setState(() => executing = true);
+          try {
+            final api = dialogContext.read<WorkOrderApiService>();
+            final result = await api.syncTasksExecute(
+              detail.id,
+              processIds: selectedIds.toList(),
+            );
+            final payload = _unwrapApiData(result);
+            final message = payload['message']?.toString() ??
+                (payload['result'] is Map
+                    ? payload['result']['message']?.toString()
+                    : null) ??
+                '任务同步完成';
+            ToastUtil.showSuccess(message);
+            if (mounted) {
+              Navigator.of(dialogContext).maybePop();
+              await _loadDetail();
+            }
+          } catch (err) {
+            if (err is ApiException) {
+              ToastUtil.showError('同步失败: ${err.message}');
+            } else {
+              ToastUtil.showError('同步失败: $err');
+            }
+          } finally {
+            setState(() => executing = false);
+          }
+        }
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            final theme = Theme.of(context);
+            final colors = theme.extension<AppColors>();
+            final previewData = preview;
+            final removedIds =
+                _readIdList(previewData?['removed_process_ids']);
+            final addedIds = _readIdList(previewData?['added_process_ids']);
+            final tasksToRemove = _readInt(previewData?['tasks_to_remove']);
+            final tasksToAdd = _readInt(previewData?['tasks_to_add']);
+            final affected = previewData?['affected'] == true;
+
+            return AlertDialog(
+              title: const Text('任务同步预览'),
+              content: SizedBox(
+                width: 540,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '选择要保留的工序，预览同步后将删除被移除工序的草稿任务，并为新增工序生成草稿任务。',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colors?.subtleText ?? theme.hintColor,
+                        ),
+                      ),
+                      if (!canSync) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          '已审核的施工单不能同步任务。',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.error,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          TextButton(
+                            onPressed: () => setState(() {
+                              selectedIds
+                                ..clear()
+                                ..addAll(processMap.keys);
+                            }),
+                            child: const Text('全选'),
+                          ),
+                          TextButton(
+                            onPressed: () => setState(selectedIds.clear),
+                            child: const Text('清空'),
+                          ),
+                        ],
+                      ),
+                      const Divider(height: 1),
+                      const SizedBox(height: 8),
+                      if (processes.isEmpty)
+                        Text('暂无工序可同步',
+                            style: theme.textTheme.bodyMedium)
+                      else
+                        Column(
+                          children: [
+                            for (final process in processes)
+                              CheckboxListTile(
+                                value: selectedIds.contains(process.id),
+                                onChanged: (value) {
+                                  setState(() {
+                                    if (value == true) {
+                                      selectedIds.add(process.id);
+                                    } else {
+                                      selectedIds.remove(process.id);
+                                    }
+                                  });
+                                },
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                                title: Text(
+                                  process.processName ?? _emptyText,
+                                  style: theme.textTheme.bodyMedium,
+                                ),
+                                subtitle: Text(
+                                  process.processCode ?? _emptyText,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: colors?.subtleText,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      if (loading) ...[
+                        const SizedBox(height: 12),
+                        const LinearProgressIndicator(minHeight: 2),
+                      ],
+                      if (warningMessage != null) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          warningMessage!,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.error,
+                          ),
+                        ),
+                      ],
+                      if (previewData != null) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          '预览结果',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: colors?.sidebarText,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        _InfoRow(label: '将删除草稿任务', value: '$tasksToRemove'),
+                        _InfoRow(label: '预计新增草稿任务', value: '$tasksToAdd'),
+                        _InfoRow(
+                          label: '移除工序',
+                          value: _formatProcessNames(removedIds, processMap),
+                        ),
+                        _InfoRow(
+                          label: '新增工序',
+                          value: _formatProcessNames(addedIds, processMap),
+                        ),
+                        _InfoRow(label: '是否有变更', value: affected ? '是' : '否'),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).maybePop(),
+                  child: const Text('关闭'),
+                ),
+                FilledButton(
+                  onPressed: (!canSync || loading)
+                      ? null
+                      : () => loadPreview(setState),
+                  child: const Text('预览变更'),
+                ),
+                FilledButton(
+                  onPressed: (!canSync ||
+                          loading ||
+                          executing ||
+                          preview == null ||
+                          previewData?['affected'] != true)
+                      ? null
+                      : () => executeSync(setState),
+                  child: Text(executing ? '同步中' : '执行同步'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Map<String, dynamic>? _extractPreview(dynamic payload) {
+    final data = _unwrapApiData(payload);
+    if (data.isEmpty) return null;
+    final preview = data['preview'];
+    if (preview is Map<String, dynamic>) {
+      return preview;
+    }
+    if (data.containsKey('tasks_to_remove') ||
+        data.containsKey('tasks_to_add')) {
+      return data;
+    }
+    return null;
+  }
+
+  Map<String, dynamic> _unwrapApiData(dynamic payload) {
+    if (payload is Map<String, dynamic>) {
+      final data = payload['data'];
+      if (data is Map<String, dynamic>) {
+        return Map<String, dynamic>.from(data);
+      }
+      return Map<String, dynamic>.from(payload);
+    }
+    return {};
+  }
+
+  List<int> _readIdList(dynamic value) {
+    if (value is List) {
+      return value.map((item) => int.tryParse(item.toString()) ?? 0).where((id) => id > 0).toList();
+    }
+    return const [];
+  }
+
+  int _readInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  String _formatProcessNames(
+    List<int> ids,
+    Map<int, WorkOrderProcessItem> processMap,
+  ) {
+    if (ids.isEmpty) return _emptyText;
+    final names = ids
+        .map((id) => processMap[id]?.processName ?? '工序#$id')
+        .toList();
+    return names.join(', ');
+  }
+
   Widget _buildMaterialTable(List<WorkOrderMaterialItem> items) {
     if (items.isEmpty) {
       return Text('暂无物料信息', style: Theme.of(context).textTheme.bodyMedium);
@@ -1396,8 +1678,17 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                         _buildSection(
                             '产品清单', _buildProductsTable(detail.products)),
                         SizedBox(height: sectionSpacing),
-                        _buildSection(
-                            '工序进度', _buildProcessTable(detail.processes)),
+                        DetailSectionCard(
+                          title: '工序进度',
+                          trailing: OutlinedButton.icon(
+                            onPressed: detail.processes.isEmpty
+                                ? null
+                                : () => _showSyncPreviewDialog(detail),
+                            icon: const Icon(Icons.sync_alt, size: 16),
+                            label: const Text('任务同步预览'),
+                          ),
+                          child: _buildProcessTable(detail.processes),
+                        ),
                         SizedBox(height: sectionSpacing),
                         _buildSection(
                             '物料需求', _buildMaterialTable(detail.materials)),
