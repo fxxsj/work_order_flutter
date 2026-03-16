@@ -1,7 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:work_order_app/src/core/common/app_config.dart';
+import 'package:work_order_app/src/core/common/http_client.dart';
 import 'package:work_order_app/src/features/notification/data/notification_api.dart';
+import 'package:work_order_app/src/features/notification/data/notification_socket.dart';
 import 'package:work_order_app/src/features/auth/application/auth_controller.dart';
 import 'package:work_order_app/src/features/notification/domain/notification_model.dart';
 
@@ -20,9 +24,12 @@ class NotificationViewModel extends ChangeNotifier {
   bool _showUnreadOnly = false;
 
   Timer? _poller;
+  Timer? _reconnectTimer;
   int _page = 1;
   final int _pageSize = 20;
   bool _disposed = false;
+  NotificationSocket? _socket;
+  bool _connectingSocket = false;
 
   int get unreadCount => _unreadCount;
   List<NotificationModel> get recentList => _recentList;
@@ -42,6 +49,8 @@ class NotificationViewModel extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _poller?.cancel();
+    _reconnectTimer?.cancel();
+    _disposeSocket();
     _authController.removeListener(_handleAuthChange);
     super.dispose();
   }
@@ -73,11 +82,99 @@ class NotificationViewModel extends ChangeNotifier {
     }
     refreshAll();
     _poller = Timer.periodic(const Duration(minutes: 1), (_) => _poll());
+    _connectSocket();
   }
 
   void stopPolling() {
     _poller?.cancel();
     _poller = null;
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
+    _disposeSocket();
+  }
+
+  Future<void> _connectSocket() async {
+    if (_connectingSocket || _socket != null || !_authController.isLoggedIn) {
+      return;
+    }
+    final token = HttpClient.accessToken;
+    if (token == null || token.isEmpty) {
+      return;
+    }
+    final wsUrl = _buildSocketUrl(token);
+    if (wsUrl == null) {
+      return;
+    }
+    _connectingSocket = true;
+    try {
+      final socket = createNotificationSocket(wsUrl);
+      _socket = socket;
+      await socket.connect(
+        onMessage: _handleSocketMessage,
+        onError: (_) => _handleSocketError(),
+        onDone: _handleSocketDone,
+      );
+    } catch (_) {
+      _disposeSocket();
+      _scheduleReconnect();
+    } finally {
+      _connectingSocket = false;
+    }
+  }
+
+  void _handleSocketMessage(String message) {
+    if (message.trim().isEmpty) return;
+    try {
+      final payload = jsonDecode(message);
+      if (payload is Map && payload['type'] == 'notification') {
+        _refreshUnreadCount();
+        _refreshRecent();
+      }
+    } catch (_) {
+      // ignore malformed payloads
+    }
+  }
+
+  void _handleSocketError() {
+    _disposeSocket();
+    _scheduleReconnect();
+  }
+
+  void _handleSocketDone() {
+    _disposeSocket();
+    _scheduleReconnect();
+  }
+
+  void _scheduleReconnect() {
+    if (!_authController.isLoggedIn || _disposed) return;
+    _reconnectTimer?.cancel();
+    _reconnectTimer = Timer(const Duration(seconds: 10), () {
+      _connectSocket();
+    });
+  }
+
+  void _disposeSocket() {
+    final socket = _socket;
+    _socket = null;
+    socket?.close();
+  }
+
+  String? _buildSocketUrl(String token) {
+    final base = AppConfig.apiBaseUrl;
+    if (base.isEmpty) return null;
+    try {
+      final apiUri = Uri.parse(base);
+      final scheme = apiUri.scheme == 'https' ? 'wss' : 'ws';
+      return Uri(
+        scheme: scheme,
+        host: apiUri.host,
+        port: apiUri.hasPort ? apiUri.port : null,
+        path: 'ws/notifications/',
+        queryParameters: {'token': token},
+      ).toString();
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> refreshAll() async {
