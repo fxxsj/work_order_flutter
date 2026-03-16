@@ -133,6 +133,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
   final List<_ProductDraft> _productDrafts = [];
   final List<_MaterialDraft> _materialDrafts = [];
   final Set<int> _processIds = {};
+  final Set<int> _initialProcessIds = {};
   final Set<int> _artworkIds = {};
   final Set<int> _dieIds = {};
   final Set<int> _foilingPlateIds = {};
@@ -292,6 +293,9 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     _processIds
       ..clear()
       ..addAll(detail.processes.map((e) => e.processId).whereType<int>());
+    _initialProcessIds
+      ..clear()
+      ..addAll(_processIds);
     _artworkIds
       ..clear()
       ..addAll(detail.artworkIds);
@@ -440,18 +444,62 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     final payload = _buildPayload();
     try {
       final viewModel = context.read<WorkOrderViewModel>();
+      WorkOrderDetail? updatedDetail;
       if (widget.mode == WorkOrderFormMode.create) {
-        await viewModel.createWorkOrder(payload);
+        updatedDetail = await viewModel.createWorkOrder(payload);
       } else if (widget.workOrderId != null) {
-        await viewModel.updateWorkOrder(widget.workOrderId!, payload);
+        updatedDetail = await viewModel.updateWorkOrder(widget.workOrderId!, payload);
       }
       if (!mounted) return;
+      if (widget.mode == WorkOrderFormMode.edit &&
+          updatedDetail != null &&
+          _hasProcessChanges()) {
+        final canSync = updatedDetail.approvalStatus != 'approved';
+        if (canSync) {
+          final goPreview = await _showSyncPrompt(updatedDetail.id);
+          if (!mounted) return;
+          if (goPreview == true) {
+            context.go('/workorders/${updatedDetail.id}');
+            return;
+          }
+        }
+      }
       Navigator.of(context).pop(true);
     } catch (err) {
       ToastUtil.showError('保存失败: $err');
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
+  }
+
+  bool _hasProcessChanges() {
+    if (_initialProcessIds.length != _processIds.length) return true;
+    for (final id in _processIds) {
+      if (!_initialProcessIds.contains(id)) return true;
+    }
+    return false;
+  }
+
+  Future<bool?> _showSyncPrompt(int workOrderId) {
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('工序已更新'),
+          content: const Text('检测到工序选择已变更，是否前往任务同步预览？'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('稍后处理'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('去预览'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildSection(String title, Widget child) {
