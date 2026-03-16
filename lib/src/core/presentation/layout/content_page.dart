@@ -821,7 +821,9 @@ class _ChartBarRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final percent = total > 0 ? (item.value / total).clamp(0, 1) : 0.0;
+    final percent = total > 0
+        ? (item.value / total).clamp(0.0, 1.0).toDouble()
+        : 0.0;
     final percentText = '${(percent * 100).toStringAsFixed(1)}%';
     final textTheme = Theme.of(context).textTheme;
 
