@@ -421,6 +421,7 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
     required List<DropdownMenuItem<int?>> departmentItems,
     required List<DropdownMenuItem<String?>> statusItems,
   }) {
+    final spacing = LayoutTokens.formSectionSpacing(context);
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
       children: [
@@ -436,7 +437,7 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
             _applyFilters(viewModel);
           },
         ),
-        const SizedBox(height: _spacingSm),
+        SizedBox(height: spacing),
         SearchableDropdownFormField<String?>(
           key: ValueKey<String?>(_statusFilter),
           initialValue: _statusFilter,
@@ -448,18 +449,18 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
             _applyFilters(viewModel);
           },
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: spacing),
         Row(
           children: [
-            OutlinedButton.icon(
+            PageActionButton.outlined(
               onPressed: () => _resetFilters(viewModel),
               icon: const Icon(Icons.restart_alt, size: 16),
-              label: const Text(_resetButtonText),
+              label: _resetButtonText,
             ),
-            const SizedBox(width: 12),
-            FilledButton(
+            SizedBox(width: spacing),
+            PageActionButton.filled(
               onPressed: () => Navigator.of(context).maybePop(),
-              child: const Text('完成'),
+              label: '完成',
             ),
           ],
         ),

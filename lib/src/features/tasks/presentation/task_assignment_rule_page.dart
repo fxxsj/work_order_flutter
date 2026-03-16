@@ -426,6 +426,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
     required List<DropdownMenuItem<int?>> departmentItems,
     required List<DropdownMenuItem<bool?>> activeItems,
   }) {
+    final spacing = LayoutTokens.formSectionSpacing(context);
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
       children: [
@@ -440,7 +441,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
             viewModel.loadRules(resetPage: true);
           },
         ),
-        const SizedBox(height: _spacingSm),
+        SizedBox(height: spacing),
         SearchableDropdownFormField<int?>(
           key: ValueKey<int?>(viewModel.departmentId),
           initialValue: viewModel.departmentId,
@@ -452,7 +453,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
             viewModel.loadRules(resetPage: true);
           },
         ),
-        const SizedBox(height: _spacingSm),
+        SizedBox(height: spacing),
         SearchableDropdownFormField<bool?>(
           key: ValueKey<bool?>(viewModel.isActive),
           initialValue: viewModel.isActive,
@@ -464,18 +465,18 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
             viewModel.loadRules(resetPage: true);
           },
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: spacing),
         Row(
           children: [
-            OutlinedButton.icon(
+            PageActionButton.outlined(
               onPressed: () => _resetFilters(viewModel),
               icon: const Icon(Icons.restart_alt, size: 16),
-              label: const Text(_resetButtonText),
+              label: _resetButtonText,
             ),
-            const SizedBox(width: 12),
-            FilledButton(
+            SizedBox(width: spacing),
+            PageActionButton.filled(
               onPressed: () => Navigator.of(context).maybePop(),
-              child: const Text('完成'),
+              label: '完成',
             ),
           ],
         ),

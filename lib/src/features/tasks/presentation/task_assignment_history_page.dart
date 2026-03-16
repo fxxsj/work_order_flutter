@@ -351,6 +351,7 @@ class _TaskAssignmentHistoryViewState
     required List<DropdownMenuItem<int?>> deptItems,
     required List<DropdownMenuItem<int?>> userItems,
   }) {
+    final spacing = LayoutTokens.formSectionSpacing(context);
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
       children: [
@@ -363,7 +364,7 @@ class _TaskAssignmentHistoryViewState
             _loadData(resetPage: true);
           },
         ),
-        const SizedBox(height: _spacingSm),
+        SizedBox(height: spacing),
         _DateField(
           label: '结束日期',
           value: _endDate,
@@ -373,7 +374,7 @@ class _TaskAssignmentHistoryViewState
             _loadData(resetPage: true);
           },
         ),
-        const SizedBox(height: _spacingSm),
+        SizedBox(height: spacing),
         SearchableDropdownFormField<int?>(
           key: ValueKey<int?>(_departmentId),
           initialValue: _departmentId,
@@ -385,7 +386,7 @@ class _TaskAssignmentHistoryViewState
             _loadData(resetPage: true);
           },
         ),
-        const SizedBox(height: _spacingSm),
+        SizedBox(height: spacing),
         SearchableDropdownFormField<int?>(
           key: ValueKey<int?>(_operatorId),
           initialValue: _operatorId,
@@ -397,18 +398,18 @@ class _TaskAssignmentHistoryViewState
             _loadData(resetPage: true);
           },
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: spacing),
         Row(
           children: [
-            OutlinedButton.icon(
+            PageActionButton.outlined(
               onPressed: _resetFilters,
               icon: const Icon(Icons.restart_alt, size: 16),
-              label: const Text(_resetButtonText),
+              label: _resetButtonText,
             ),
-            const SizedBox(width: 12),
-            FilledButton(
+            SizedBox(width: spacing),
+            PageActionButton.filled(
               onPressed: () => Navigator.of(context).maybePop(),
-              child: const Text('完成'),
+              label: '完成',
             ),
           ],
         ),

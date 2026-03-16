@@ -292,6 +292,7 @@ class _TaskSupervisorDashboardViewState
     BuildContext context, {
     required List<DropdownMenuItem<int?>> deptItems,
   }) {
+    final spacing = LayoutTokens.formSectionSpacing(context);
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
       children: [
@@ -306,10 +307,10 @@ class _TaskSupervisorDashboardViewState
             _loadWorkload();
           },
         ),
-        const SizedBox(height: 16),
-        FilledButton(
+        SizedBox(height: spacing),
+        PageActionButton.filled(
           onPressed: () => Navigator.of(context).maybePop(),
-          child: const Text('完成'),
+          label: '完成',
         ),
       ],
     );

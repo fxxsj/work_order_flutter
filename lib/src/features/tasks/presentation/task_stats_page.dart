@@ -284,6 +284,7 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
     BuildContext context, {
     required List<DropdownMenuItem<int?>> departmentItems,
   }) {
+    final spacing = LayoutTokens.formSectionSpacing(context);
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
       children: [
@@ -296,7 +297,7 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
             _loadStats();
           },
         ),
-        const SizedBox(height: _spacingSm),
+        SizedBox(height: spacing),
         _DateField(
           label: '结束日期',
           value: _endDate,
@@ -306,7 +307,7 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
             _loadStats();
           },
         ),
-        const SizedBox(height: _spacingSm),
+        SizedBox(height: spacing),
         SearchableDropdownFormField<int?>(
           key: ValueKey<int?>(_departmentId),
           initialValue: _departmentId,
@@ -318,18 +319,18 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
             _loadStats();
           },
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: spacing),
         Row(
           children: [
-            OutlinedButton.icon(
+            PageActionButton.outlined(
               onPressed: _resetFilters,
               icon: const Icon(Icons.restart_alt, size: 16),
-              label: const Text(_resetButtonText),
+              label: _resetButtonText,
             ),
-            const SizedBox(width: 12),
-            FilledButton(
+            SizedBox(width: spacing),
+            PageActionButton.filled(
               onPressed: () => Navigator.of(context).maybePop(),
-              child: const Text('完成'),
+              label: '完成',
             ),
           ],
         ),
