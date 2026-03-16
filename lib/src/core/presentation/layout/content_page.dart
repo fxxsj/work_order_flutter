@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
+import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/content_page_types.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/page_registry.dart';
+import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
 
 class ContentPage extends StatelessWidget {
   const ContentPage({super.key, required this.selectedId});
@@ -39,8 +42,19 @@ class ContentPage extends StatelessWidget {
   }
 }
 
-class _DashboardPage extends StatelessWidget {
+class _DashboardPage extends StatefulWidget {
   const _DashboardPage();
+
+  @override
+  State<_DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<_DashboardPage> {
+  ApiClient? _apiClient;
+  bool _loadingStats = false;
+  bool _initialized = false;
+  Map<String, dynamic>? _stats;
+  String? _errorMessage;
 
   static const List<String> _quickIds = [
     'workorders',
@@ -57,6 +71,35 @@ class _DashboardPage extends StatelessWidget {
     'purchase_orders',
     'statements',
   ];
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialized) return;
+    _initialized = true;
+    _apiClient ??= context.read<ApiClient>();
+    _loadStats();
+  }
+
+  Future<void> _loadStats() async {
+    final apiClient = _apiClient;
+    if (apiClient == null) return;
+    setState(() {
+      _loadingStats = true;
+      _errorMessage = null;
+    });
+    try {
+      final service = WorkOrderApiService(apiClient);
+      final result = await service.getStatistics();
+      if (!mounted) return;
+      setState(() => _stats = result);
+    } catch (err) {
+      if (!mounted) return;
+      setState(() => _errorMessage = '获取统计失败: $err');
+    } finally {
+      if (mounted) setState(() => _loadingStats = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,6 +143,18 @@ class _DashboardPage extends StatelessWidget {
                 accent: colors.sidebarText,
                 borderColor: colors.borderColor,
                 surface: colors.surface,
+              ),
+              const SizedBox(height: 12),
+              _DashboardStatsSection(
+                stats: _stats,
+                loading: _loadingStats,
+                errorMessage: _errorMessage,
+                onRetry: _loadStats,
+                surface: colors.surface,
+                borderColor: colors.borderColor,
+                subtleText: colors.subtleText,
+                accent: colors.sidebarText,
+                primary: scheme.primary,
               ),
               const SizedBox(height: 16),
               if (compact) ...[
@@ -169,6 +224,270 @@ class _DashboardPage extends StatelessWidget {
     final now = DateTime.now();
     const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
     return '${now.month} 月 ${now.day} 日 ${weekdays[now.weekday - 1]}';
+  }
+}
+
+class _DashboardStatsSection extends StatelessWidget {
+  const _DashboardStatsSection({
+    required this.stats,
+    required this.loading,
+    required this.errorMessage,
+    required this.onRetry,
+    required this.surface,
+    required this.borderColor,
+    required this.subtleText,
+    required this.accent,
+    required this.primary,
+  });
+
+  final Map<String, dynamic>? stats;
+  final bool loading;
+  final String? errorMessage;
+  final VoidCallback onRetry;
+  final Color surface;
+  final Color borderColor;
+  final Color subtleText;
+  final Color accent;
+  final Color primary;
+
+  @override
+  Widget build(BuildContext context) {
+    if (loading && stats == null) {
+      return const LinearProgressIndicator(minHeight: 2);
+    }
+    if (errorMessage != null && stats == null) {
+      return _DashboardErrorCard(message: errorMessage!, onRetry: onRetry);
+    }
+    if (stats == null) {
+      return const SizedBox.shrink();
+    }
+
+    final metrics = _buildMetrics(stats!);
+    if (metrics.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final columns = width < 640
+            ? 1
+            : width < 980
+                ? 2
+                : width < 1280
+                    ? 3
+                    : 4;
+        final spacing = 12.0;
+        final cardWidth =
+            (width - spacing * (columns - 1)) / columns.clamp(1, 6);
+
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: metrics
+              .map(
+                (metric) => SizedBox(
+                  width: cardWidth,
+                  child: _StatCard(
+                    title: metric.title,
+                    value: metric.value,
+                    subtitle: metric.subtitle,
+                    surface: surface,
+                    borderColor: borderColor,
+                    subtleText: subtleText,
+                    accent: accent,
+                    primary: primary,
+                  ),
+                ),
+              )
+              .toList(),
+        );
+      },
+    );
+  }
+
+  List<_StatMetric> _buildMetrics(Map<String, dynamic> stats) {
+    final totalCount = _asInt(stats['total_count']);
+    final upcoming = _asInt(stats['upcoming_deadline_count']);
+    final pendingApproval = _asInt(stats['pending_approval_count']);
+    final inProgress = _statusCount(stats, 'in_progress');
+    final taskTotal = _asInt(_readNested(stats, ['task_statistics', 'total_count']));
+    final taskCompletion =
+        _asDouble(_readNested(stats, ['task_statistics', 'completion_rate']));
+    final processCompletion =
+        _asDouble(_readNested(stats, ['efficiency_analysis', 'process_completion_rate']));
+    final defectiveRate =
+        _asDouble(_readNested(stats, ['efficiency_analysis', 'defective_rate']));
+
+    return [
+      _StatMetric(title: '施工单总数', value: _formatInt(totalCount)),
+      _StatMetric(title: '进行中施工单', value: _formatInt(inProgress)),
+      _StatMetric(title: '待审核施工单', value: _formatInt(pendingApproval)),
+      _StatMetric(title: '临期施工单', value: _formatInt(upcoming)),
+      _StatMetric(
+        title: '任务完成率',
+        value: _formatPercent(taskCompletion),
+        subtitle: taskTotal > 0 ? '任务总数 $taskTotal' : null,
+      ),
+      _StatMetric(
+        title: '工序完成率',
+        value: _formatPercent(processCompletion),
+      ),
+      _StatMetric(
+        title: '不良品率',
+        value: _formatPercent(defectiveRate),
+      ),
+    ];
+  }
+
+  int _statusCount(Map<String, dynamic> stats, String status) {
+    final list = stats['status_statistics'];
+    if (list is List) {
+      for (final item in list) {
+        if (item is Map && item['status'] == status) {
+          return _asInt(item['count']);
+        }
+      }
+    }
+    return 0;
+  }
+
+  Object? _readNested(Map<String, dynamic> source, List<String> keys) {
+    Object? current = source;
+    for (final key in keys) {
+      if (current is Map<String, dynamic>) {
+        current = current[key];
+      } else {
+        return null;
+      }
+    }
+    return current;
+  }
+
+  int _asInt(Object? value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
+  }
+
+  double? _asDouble(Object? value) {
+    if (value is double) return value;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+
+  String _formatInt(int value) => value.toString();
+
+  String _formatPercent(double? value) {
+    if (value == null) return '-';
+    return '${value.toStringAsFixed(1)}%';
+  }
+}
+
+class _DashboardErrorCard extends StatelessWidget {
+  const _DashboardErrorCard({
+    required this.message,
+    required this.onRetry,
+  });
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border.all(color: Theme.of(context).dividerColor),
+      ),
+      child: Row(
+        children: [
+          Expanded(child: Text(message)),
+          const SizedBox(width: 12),
+          FilledButton(
+            onPressed: onRetry,
+            child: const Text('重试'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatMetric {
+  const _StatMetric({
+    required this.title,
+    required this.value,
+    this.subtitle,
+  });
+
+  final String title;
+  final String value;
+  final String? subtitle;
+}
+
+class _StatCard extends StatelessWidget {
+  const _StatCard({
+    required this.title,
+    required this.value,
+    this.subtitle,
+    required this.surface,
+    required this.borderColor,
+    required this.subtleText,
+    required this.accent,
+    required this.primary,
+  });
+
+  final String title;
+  final String value;
+  final String? subtitle;
+  final Color surface;
+  final Color borderColor;
+  final Color subtleText;
+  final Color accent;
+  final Color primary;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        color: surface,
+        border: Border.all(color: borderColor.withValues(alpha: 0.6)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: subtleText,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: accent,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              subtitle!,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: subtleText,
+                  ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }
 
