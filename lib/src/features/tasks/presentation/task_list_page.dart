@@ -241,13 +241,13 @@ class _TaskListViewState extends State<_TaskListView> {
         final match =
             RegExp('filename=\"?([^\";]+)\"?').firstMatch(contentDisposition);
         if (match != null) {
-          return match.group(1) ?? '$fallback_$timestamp.xlsx';
+          return match.group(1) ?? '${fallback}_$timestamp.xlsx';
         }
       }
     } catch (_) {
       // ignore header parsing errors
     }
-    return '$fallback_$timestamp.xlsx';
+    return '${fallback}_$timestamp.xlsx';
   }
 
   Future<void> _loadFilterOptions() async {
