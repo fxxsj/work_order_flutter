@@ -1239,6 +1239,205 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     );
   }
 
+  Widget _buildProcessGantt(List<WorkOrderProcessItem> items) {
+    final rows = _buildGanttRows(items);
+    if (rows.isEmpty) {
+      return Text('暂无排程信息', style: Theme.of(context).textTheme.bodyMedium);
+    }
+
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>();
+    final semantic = theme.extension<AppSemanticColors>();
+    final borderColor = colors?.borderColor ?? theme.dividerColor;
+    final labelColor = colors?.sidebarText ?? theme.textTheme.bodyMedium?.color;
+
+    final start = rows.map((row) => row.start).reduce((a, b) => a.isBefore(b) ? a : b);
+    final end = rows.map((row) => row.end).reduce((a, b) => a.isAfter(b) ? a : b);
+    final totalMs = end.millisecondsSinceEpoch - start.millisecondsSinceEpoch;
+    final safeTotalMs = totalMs <= 0 ? 1 : totalMs;
+
+    const labelWidth = 140.0;
+    const rowHeight = 36.0;
+    const barHeight = 12.0;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final minChartWidth = 560.0;
+        final chartWidth =
+            (constraints.maxWidth - labelWidth - 12).clamp(320.0, double.infinity);
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '排程区间：${_formatDateTime(start)} ~ ${_formatDateTime(end)}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colors?.subtleText ?? theme.hintColor,
+              ),
+            ),
+            const SizedBox(height: 12),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minWidth: labelWidth + minChartWidth),
+                child: SizedBox(
+                  width: labelWidth + chartWidth,
+                  child: Column(
+                    children: [
+                      for (final row in rows)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              SizedBox(
+                                width: labelWidth,
+                                child: Text(
+                                  row.label,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: labelColor,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: SizedBox(
+                                  height: rowHeight,
+                                  child: Stack(
+                                    children: [
+                                      Positioned.fill(
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: borderColor.withValues(alpha: 0.12),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        left: _clampDouble(
+                                          (row.start.millisecondsSinceEpoch -
+                                                  start.millisecondsSinceEpoch) /
+                                              safeTotalMs,
+                                        ) *
+                                            chartWidth,
+                                        top: (rowHeight - barHeight) / 2,
+                                        child: Container(
+                                          width: _resolveBarWidth(
+                                            row,
+                                            start,
+                                            safeTotalMs,
+                                            chartWidth,
+                                          ),
+                                          height: barHeight,
+                                          decoration: BoxDecoration(
+                                            color: _statusColor(
+                                              row.status,
+                                              theme,
+                                              semantic,
+                                            ),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  List<_GanttRow> _buildGanttRows(List<WorkOrderProcessItem> items) {
+    final rows = <_GanttRow>[];
+    for (final item in items) {
+      var start = item.plannedStartTime ?? item.actualStartTime;
+      var end = item.plannedEndTime ?? item.actualEndTime;
+      if (start == null && end == null) continue;
+      if (start == null && end != null) {
+        start = end.subtract(const Duration(hours: 1));
+      }
+      if (end == null && start != null) {
+        end = start.add(const Duration(hours: 1));
+      }
+      if (start == null || end == null) continue;
+      if (end.isBefore(start)) {
+        final temp = start;
+        start = end;
+        end = temp;
+      }
+      rows.add(
+        _GanttRow(
+          label: item.processName ?? '工序 #${item.id}',
+          status: item.status,
+          start: start,
+          end: end,
+          sequence: item.sequence,
+        ),
+      );
+    }
+    rows.sort((a, b) {
+      final aSeq = a.sequence ?? 9999;
+      final bSeq = b.sequence ?? 9999;
+      if (aSeq != bSeq) return aSeq.compareTo(bSeq);
+      return a.start.compareTo(b.start);
+    });
+    return rows;
+  }
+
+  double _resolveBarWidth(
+    _GanttRow row,
+    DateTime start,
+    int totalMs,
+    double chartWidth,
+  ) {
+    final durationMs =
+        row.end.millisecondsSinceEpoch - row.start.millisecondsSinceEpoch;
+    final safeDuration = durationMs <= 0 ? 1 : durationMs;
+    final width = safeDuration / totalMs * chartWidth;
+    return width < 6 ? 6 : width;
+  }
+
+  double _clampDouble(double value) {
+    if (value.isNaN || value.isInfinite) return 0;
+    if (value < 0) return 0;
+    if (value > 1) return 1;
+    return value;
+  }
+
+  Color _statusColor(
+    String? status,
+    ThemeData theme,
+    AppSemanticColors? semantic,
+  ) {
+    switch (status) {
+      case 'completed':
+        return semantic?.success ?? theme.colorScheme.primary;
+      case 'in_progress':
+        return theme.colorScheme.primary;
+      case 'paused':
+        return semantic?.warning ?? theme.colorScheme.secondary;
+      case 'cancelled':
+        return semantic?.danger ?? theme.colorScheme.error;
+      case 'pending':
+        return semantic?.info ?? theme.colorScheme.secondary;
+      default:
+        return theme.colorScheme.primary.withValues(alpha: 0.7);
+    }
+  }
+
   Future<void> _showSyncPreviewDialog(WorkOrderDetail detail) async {
     final canSync = detail.approvalStatus != 'approved';
     final processes = detail.processes;
@@ -1691,6 +1890,11 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                         ),
                         SizedBox(height: sectionSpacing),
                         _buildSection(
+                          '工序排程',
+                          _buildProcessGantt(detail.processes),
+                        ),
+                        SizedBox(height: sectionSpacing),
+                        _buildSection(
                             '物料需求', _buildMaterialTable(detail.materials)),
                         SizedBox(height: sectionSpacing),
                         _buildSection(
@@ -1734,6 +1938,22 @@ class _InfoRow extends StatelessWidget {
       ],
     );
   }
+}
+
+class _GanttRow {
+  const _GanttRow({
+    required this.label,
+    required this.status,
+    required this.start,
+    required this.end,
+    this.sequence,
+  });
+
+  final String label;
+  final String? status;
+  final DateTime start;
+  final DateTime end;
+  final int? sequence;
 }
 
 class _DetailField {

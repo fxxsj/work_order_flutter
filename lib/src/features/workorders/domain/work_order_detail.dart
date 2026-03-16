@@ -313,6 +313,11 @@ class WorkOrderProcessItem {
     this.departmentName,
     this.canStart,
     this.tasksCount,
+    this.sequence,
+    this.plannedStartTime,
+    this.plannedEndTime,
+    this.actualStartTime,
+    this.actualEndTime,
   });
 
   final int id;
@@ -325,6 +330,11 @@ class WorkOrderProcessItem {
   final String? departmentName;
   final bool? canStart;
   final int? tasksCount;
+  final int? sequence;
+  final DateTime? plannedStartTime;
+  final DateTime? plannedEndTime;
+  final DateTime? actualStartTime;
+  final DateTime? actualEndTime;
 
   factory WorkOrderProcessItem.fromJson(Map<String, dynamic> json) {
     final tasks = json['tasks'];
@@ -340,6 +350,11 @@ class WorkOrderProcessItem {
       departmentName: toStringOrNull(json['department_name']),
       canStart: json['can_start'] == null ? null : json['can_start'] == true,
       tasksCount: count,
+      sequence: toInt(json['sequence']),
+      plannedStartTime: toDateTime(json['planned_start_time']),
+      plannedEndTime: toDateTime(json['planned_end_time']),
+      actualStartTime: toDateTime(json['actual_start_time']),
+      actualEndTime: toDateTime(json['actual_end_time']),
     );
   }
 }
