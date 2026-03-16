@@ -9,6 +9,8 @@ import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/page_registry.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
 
+const String _emptyText = '-';
+
 class ContentPage extends StatelessWidget {
   const ContentPage({super.key, required this.selectedId});
 
@@ -150,6 +152,15 @@ class _DashboardPageState extends State<_DashboardPage> {
                 loading: _loadingStats,
                 errorMessage: _errorMessage,
                 onRetry: _loadStats,
+                surface: colors.surface,
+                borderColor: colors.borderColor,
+                subtleText: colors.subtleText,
+                accent: colors.sidebarText,
+                primary: scheme.primary,
+              ),
+              const SizedBox(height: 16),
+              _DashboardChartsSection(
+                stats: _stats,
                 surface: colors.surface,
                 borderColor: colors.borderColor,
                 subtleText: colors.subtleText,
@@ -383,6 +394,501 @@ class _DashboardStatsSection extends StatelessWidget {
   String _formatPercent(double? value) {
     if (value == null) return '-';
     return '${value.toStringAsFixed(1)}%';
+  }
+}
+
+class _DashboardChartsSection extends StatelessWidget {
+  const _DashboardChartsSection({
+    required this.stats,
+    required this.surface,
+    required this.borderColor,
+    required this.subtleText,
+    required this.accent,
+    required this.primary,
+  });
+
+  final Map<String, dynamic>? stats;
+  final Color surface;
+  final Color borderColor;
+  final Color subtleText;
+  final Color accent;
+  final Color primary;
+
+  @override
+  Widget build(BuildContext context) {
+    final data = stats;
+    if (data == null) {
+      return const SizedBox.shrink();
+    }
+
+    final cards = <_ChartCardData>[
+      _ChartCardData(
+        title: '施工单状态分布',
+        items: _buildStatusItems(data['status_statistics'], _workOrderStatusLabel),
+      ),
+      _ChartCardData(
+        title: '优先级分布',
+        items: _buildStatusItems(data['priority_statistics'], _priorityLabel,
+            keyName: 'priority'),
+      ),
+      _ChartCardData(
+        title: '任务状态分布',
+        items: _buildStatusItems(
+          _readNested(data, ['task_statistics', 'status_statistics']),
+          _taskStatusLabel,
+        ),
+      ),
+      _ChartCardData(
+        title: '客户 TOP',
+        items: _buildTopItems(
+          _readNested(data, ['business_analysis', 'customer_statistics']),
+          labelKey: 'customer',
+          valueKey: 'total',
+          subtitleKey: 'completion_rate',
+          subtitleSuffix: '% 完成率',
+        ),
+      ),
+      _ChartCardData(
+        title: '产品 TOP',
+        items: _buildTopItems(
+          _readNested(data, ['business_analysis', 'product_statistics']),
+          labelKey: 'product_name',
+          valueKey: 'order_count',
+          subtitleKey: 'total_quantity',
+          subtitleSuffix: ' 订单量',
+          valueSuffix: '',
+        ),
+      ),
+      _ChartCardData(
+        title: '效率指标',
+        items: _buildEfficiencyItems(data),
+        totalOverride: 100,
+        showPercent: false,
+      ),
+    ];
+
+    final availableCards =
+        cards.where((card) => card.items.isNotEmpty).toList();
+    if (availableCards.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final columns = width < 700
+            ? 1
+            : width < 1080
+                ? 2
+                : 3;
+        final spacing = 12.0;
+        final cardWidth =
+            (width - spacing * (columns - 1)) / columns.clamp(1, 6);
+
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: availableCards
+              .map(
+                (card) => SizedBox(
+                  width: cardWidth,
+                  child: _ChartCard(
+                    title: card.title,
+                    items: card.items,
+                    surface: surface,
+                    borderColor: borderColor,
+                    subtleText: subtleText,
+                    accent: accent,
+                    primary: primary,
+                    totalOverride: card.totalOverride,
+                    showPercent: card.showPercent,
+                  ),
+                ),
+              )
+              .toList(),
+        );
+      },
+    );
+  }
+
+  List<_ChartBarItem> _buildStatusItems(
+    dynamic raw,
+    String Function(String) labelBuilder, {
+    String keyName = 'status',
+  }) {
+    final list = _asListOfMap(raw);
+    return list
+        .map((item) {
+          final key = item[keyName]?.toString() ?? '';
+          final value = _asDouble(item['count']) ?? 0;
+          return _ChartBarItem(
+            label: labelBuilder(key),
+            value: value,
+            valueText: value.toStringAsFixed(0),
+          );
+        })
+        .where((item) => item.value > 0)
+        .toList();
+  }
+
+  List<_ChartBarItem> _buildTopItems(
+    dynamic raw, {
+    required String labelKey,
+    required String valueKey,
+    String? subtitleKey,
+    String subtitleSuffix = '',
+    String valueSuffix = '',
+  }) {
+    final list = _asListOfMap(raw);
+    return list
+        .map((item) {
+          final value = _asDouble(item[valueKey]) ?? 0;
+          final subtitleRaw =
+              subtitleKey == null ? null : _asDouble(item[subtitleKey]);
+          final subtitle = subtitleRaw == null
+              ? null
+              : subtitleRaw.toStringAsFixed(1) + subtitleSuffix;
+          return _ChartBarItem(
+            label: item[labelKey]?.toString() ?? _emptyText,
+            value: value,
+            valueText: value.toStringAsFixed(0) + valueSuffix,
+            subtitle: subtitle,
+          );
+        })
+        .where((item) => item.value > 0)
+        .take(5)
+        .toList();
+  }
+
+  List<_ChartBarItem> _buildEfficiencyItems(Map<String, dynamic> stats) {
+    final processCompletion =
+        _asDouble(_readNested(stats, ['efficiency_analysis', 'process_completion_rate']));
+    final taskCompletion =
+        _asDouble(_readNested(stats, ['efficiency_analysis', 'task_completion_rate']));
+    final defectiveRate =
+        _asDouble(_readNested(stats, ['efficiency_analysis', 'defective_rate']));
+
+    final items = <_ChartBarItem>[
+      if (processCompletion != null)
+        _ChartBarItem(
+          label: '工序完成率',
+          value: processCompletion,
+          valueText: '${processCompletion.toStringAsFixed(1)}%',
+        ),
+      if (taskCompletion != null)
+        _ChartBarItem(
+          label: '任务完成率',
+          value: taskCompletion,
+          valueText: '${taskCompletion.toStringAsFixed(1)}%',
+        ),
+      if (defectiveRate != null)
+        _ChartBarItem(
+          label: '不良品率',
+          value: defectiveRate,
+          valueText: '${defectiveRate.toStringAsFixed(1)}%',
+        ),
+    ];
+    return items;
+  }
+
+  List<Map<String, dynamic>> _asListOfMap(dynamic raw) {
+    if (raw is List) {
+      return raw
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList();
+    }
+    return const [];
+  }
+
+  Object? _readNested(Map<String, dynamic> source, List<String> keys) {
+    Object? current = source;
+    for (final key in keys) {
+      if (current is Map<String, dynamic>) {
+        current = current[key];
+      } else {
+        return null;
+      }
+    }
+    return current;
+  }
+
+  double? _asDouble(Object? value) {
+    if (value is double) return value;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+
+  String _workOrderStatusLabel(String status) {
+    switch (status) {
+      case 'pending':
+        return '待开始';
+      case 'in_progress':
+        return '进行中';
+      case 'paused':
+        return '已暂停';
+      case 'completed':
+        return '已完成';
+      case 'cancelled':
+        return '已取消';
+      default:
+        return status.isEmpty ? _emptyText : status;
+    }
+  }
+
+  String _taskStatusLabel(String status) {
+    switch (status) {
+      case 'pending':
+        return '待开始';
+      case 'in_progress':
+        return '进行中';
+      case 'completed':
+        return '已完成';
+      case 'cancelled':
+        return '已取消';
+      default:
+        return status.isEmpty ? _emptyText : status;
+    }
+  }
+
+  String _priorityLabel(String priority) {
+    switch (priority) {
+      case 'low':
+        return '低';
+      case 'normal':
+        return '普通';
+      case 'high':
+        return '高';
+      case 'urgent':
+        return '紧急';
+      default:
+        return priority.isEmpty ? _emptyText : priority;
+    }
+  }
+}
+
+class _ChartCardData {
+  const _ChartCardData({
+    required this.title,
+    required this.items,
+    this.totalOverride,
+    this.showPercent = true,
+  });
+
+  final String title;
+  final List<_ChartBarItem> items;
+  final double? totalOverride;
+  final bool showPercent;
+}
+
+class _ChartCard extends StatelessWidget {
+  const _ChartCard({
+    required this.title,
+    required this.items,
+    required this.surface,
+    required this.borderColor,
+    required this.subtleText,
+    required this.accent,
+    required this.primary,
+    this.totalOverride,
+    this.showPercent = true,
+  });
+
+  final String title;
+  final List<_ChartBarItem> items;
+  final Color surface;
+  final Color borderColor;
+  final Color subtleText;
+  final Color accent;
+  final Color primary;
+  final double? totalOverride;
+  final bool showPercent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        color: surface,
+        border: Border.all(color: borderColor.withValues(alpha: 0.6)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: accent,
+                ),
+          ),
+          const SizedBox(height: 12),
+          _ChartBarList(
+            items: items,
+            totalOverride: totalOverride,
+            showPercent: showPercent,
+            primary: primary,
+            subtleText: subtleText,
+            accent: accent,
+            borderColor: borderColor,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChartBarItem {
+  const _ChartBarItem({
+    required this.label,
+    required this.value,
+    required this.valueText,
+    this.subtitle,
+  });
+
+  final String label;
+  final double value;
+  final String valueText;
+  final String? subtitle;
+}
+
+class _ChartBarList extends StatelessWidget {
+  const _ChartBarList({
+    required this.items,
+    required this.primary,
+    required this.subtleText,
+    required this.accent,
+    required this.borderColor,
+    this.totalOverride,
+    this.showPercent = true,
+  });
+
+  final List<_ChartBarItem> items;
+  final Color primary;
+  final Color subtleText;
+  final Color accent;
+  final Color borderColor;
+  final double? totalOverride;
+  final bool showPercent;
+
+  @override
+  Widget build(BuildContext context) {
+    if (items.isEmpty) {
+      return Text('暂无数据', style: Theme.of(context).textTheme.bodySmall);
+    }
+    final total = totalOverride ??
+        items.fold<double>(0, (sum, item) => sum + item.value);
+
+    return Column(
+      children: [
+        for (final item in items)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _ChartBarRow(
+              item: item,
+              total: total,
+              showPercent: showPercent,
+              primary: primary,
+              subtleText: subtleText,
+              accent: accent,
+              borderColor: borderColor,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _ChartBarRow extends StatelessWidget {
+  const _ChartBarRow({
+    required this.item,
+    required this.total,
+    required this.showPercent,
+    required this.primary,
+    required this.subtleText,
+    required this.accent,
+    required this.borderColor,
+  });
+
+  final _ChartBarItem item;
+  final double total;
+  final bool showPercent;
+  final Color primary;
+  final Color subtleText;
+  final Color accent;
+  final Color borderColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final percent = total > 0 ? (item.value / total).clamp(0, 1) : 0.0;
+    final percentText = '${(percent * 100).toStringAsFixed(1)}%';
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                item.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: textTheme.bodySmall?.copyWith(
+                  color: accent,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              item.valueText,
+              style: textTheme.bodySmall?.copyWith(
+                color: accent,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            if (showPercent) ...[
+              const SizedBox(width: 8),
+              Text(
+                percentText,
+                style: textTheme.bodySmall?.copyWith(
+                  color: subtleText,
+                ),
+              ),
+            ],
+          ],
+        ),
+        if (item.subtitle != null) ...[
+          const SizedBox(height: 2),
+          Text(
+            item.subtitle!,
+            style: textTheme.labelSmall?.copyWith(
+              color: subtleText,
+            ),
+          ),
+        ],
+        const SizedBox(height: 6),
+        Container(
+          height: 8,
+          decoration: BoxDecoration(
+            color: borderColor.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: FractionallySizedBox(
+            alignment: Alignment.centerLeft,
+            widthFactor: percent,
+            child: Container(
+              decoration: BoxDecoration(
+                color: primary.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 
