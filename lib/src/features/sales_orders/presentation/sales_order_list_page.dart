@@ -12,6 +12,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
@@ -503,8 +504,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
                 ),
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                key: ValueKey(priority),
+              SearchableDropdownFormField<String>(
                 initialValue: priority,
                 decoration: const InputDecoration(labelText: '优先级'),
                 items: const [

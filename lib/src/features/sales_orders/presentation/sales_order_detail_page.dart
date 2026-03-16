@@ -6,6 +6,7 @@ import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/sales_orders/application/sales_order_view_model.dart';
@@ -455,8 +456,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
                 ),
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                key: ValueKey(_workOrderPriority),
+              SearchableDropdownFormField<String>(
                 initialValue: _workOrderPriority,
                 decoration: const InputDecoration(labelText: '优先级'),
                 items: const [

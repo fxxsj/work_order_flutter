@@ -25,20 +25,30 @@ class ListToolbar extends StatelessWidget {
     final hasActions = actions.isNotEmpty;
 
     if (isMobile) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (hasSearch) searchField!,
-          if (hasActions) ...[
-            SizedBox(height: spacing),
-            Wrap(
-              spacing: spacing,
-              runSpacing: runSpacing,
-              alignment: mobileActionAlignment,
-              children: actions,
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final maxWidth = constraints.hasBoundedWidth
+              ? constraints.maxWidth
+              : MediaQuery.sizeOf(context).width;
+          return SizedBox(
+            width: maxWidth,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (hasSearch) searchField!,
+                if (hasActions) ...[
+                  SizedBox(height: spacing),
+                  Wrap(
+                    spacing: spacing,
+                    runSpacing: runSpacing,
+                    alignment: mobileActionAlignment,
+                    children: actions,
+                  ),
+                ],
+              ],
             ),
-          ],
-        ],
+          );
+        },
       );
     }
 

@@ -246,8 +246,7 @@ class _StatementListViewState extends State<_StatementListView> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        DropdownButtonFormField<String>(
-                          key: ValueKey(statementType),
+                        SearchableDropdownFormField<String>(
                           initialValue: statementType,
                           decoration: const InputDecoration(
                             labelText: '对账单类型',
@@ -467,8 +466,7 @@ class _StatementListViewState extends State<_StatementListView> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        DropdownButtonFormField<String>(
-                          key: ValueKey(statementType),
+                        SearchableDropdownFormField<String>(
                           initialValue: statementType,
                           decoration: const InputDecoration(
                             labelText: '对账单类型',

@@ -333,8 +333,7 @@ class _PaymentListViewState extends State<_PaymentListView> {
                                   ),
                         ),
                         const SizedBox(height: 12),
-                        DropdownButtonFormField<String>(
-                          key: ValueKey(paymentMethod),
+                        SearchableDropdownFormField<String>(
                           initialValue: paymentMethod,
                           decoration: const InputDecoration(
                             labelText: '收款方式',
