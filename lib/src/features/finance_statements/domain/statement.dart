@@ -25,7 +25,9 @@ class Statement {
     return Statement(
       id: toInt(json['id']) ?? 0,
       statementNumber: toStringOrNull(json['statement_number']) ?? toStringOrNull(json['number']),
-      customerName: toStringOrNull(json['customer_name']),
+      customerName: toStringOrNull(json['partner_name']) ??
+          toStringOrNull(json['customer_name']) ??
+          toStringOrNull(json['supplier_name']),
       periodStart: toDateTime(json['period_start'] ?? json['start_date']),
       periodEnd: toDateTime(json['period_end'] ?? json['end_date']),
       totalAmount: _toDouble(json['total_amount'] ?? json['amount']),

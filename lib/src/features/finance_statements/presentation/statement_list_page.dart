@@ -106,7 +106,7 @@ class _StatementListViewState extends State<_StatementListView> {
   static const double _controlHeight = PageActionStyle.height;
   static const String _emptyCellText = '-';
 
-  static const String _searchHintText = '搜索对账单号/客户';
+  static const String _searchHintText = '搜索对账单号/对方单位';
   static const String _refreshButtonText = '刷新';
   static const String _emptyText = '暂无对账单数据';
   static const String _errorFallbackText = '加载失败';
@@ -745,7 +745,7 @@ class _StatementListViewState extends State<_StatementListView> {
     return AppDataTable(
       columns: const [
         DataColumn(label: Text('对账单号')),
-        DataColumn(label: Text('客户')),
+        DataColumn(label: Text('对方单位')),
         DataColumn(label: Text('对账周期')),
         DataColumn(label: Text('金额')),
         DataColumn(label: Text('状态')),
@@ -983,7 +983,7 @@ bool isMobile,
             isMobile: isMobile,
             children: [
               _SummaryField(label: '对账单号', value: number),
-              _SummaryField(label: '客户', value: customer),
+              _SummaryField(label: '对方单位', value: customer),
               _SummaryField(label: '对账周期', value: period),
               _SummaryField(label: '金额', value: amount),
               _SummaryField(label: '状态', value: status),
