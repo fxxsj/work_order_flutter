@@ -109,6 +109,11 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
   String _status = 'draft';
   String _paymentStatus = 'unpaid';
 
+  int? _autoFilledCustomerId;
+  String _autoFilledContactPerson = '';
+  String _autoFilledContactPhone = '';
+  String _autoFilledShippingAddress = '';
+
   List<Customer> _customers = [];
   List<ProductOption> _products = [];
   final List<_ItemDraft> _itemDrafts = [];
@@ -220,7 +225,60 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
     if (_itemDrafts.isEmpty) {
       _itemDrafts.add(_ItemDraft());
     }
+    _autoFilledCustomerId = _customerId;
+    _autoFilledContactPerson = _contactPersonController.text.trim();
+    _autoFilledContactPhone = _contactPhoneController.text.trim();
+    _autoFilledShippingAddress = _shippingAddressController.text.trim();
     setState(() {});
+  }
+
+  bool _shouldOverwriteAutoField(String currentValue, String lastAutoValue) {
+    final trimmed = currentValue.trim();
+    if (trimmed.isEmpty) {
+      return true;
+    }
+    if (_autoFilledCustomerId != null && trimmed == lastAutoValue) {
+      return true;
+    }
+    return false;
+  }
+
+  void _applyCustomerContactInfo(Customer customer) {
+    final contactPerson = customer.contactPerson?.trim() ?? '';
+    final contactPhone = customer.phone?.trim() ?? '';
+    final shippingAddress = customer.address?.trim() ?? '';
+
+    if (_shouldOverwriteAutoField(
+        _contactPersonController.text, _autoFilledContactPerson)) {
+      _contactPersonController.text = contactPerson;
+    }
+    if (_shouldOverwriteAutoField(
+        _contactPhoneController.text, _autoFilledContactPhone)) {
+      _contactPhoneController.text = contactPhone;
+    }
+    if (_shouldOverwriteAutoField(
+        _shippingAddressController.text, _autoFilledShippingAddress)) {
+      _shippingAddressController.text = shippingAddress;
+    }
+
+    _autoFilledCustomerId = customer.id;
+    _autoFilledContactPerson = contactPerson;
+    _autoFilledContactPhone = contactPhone;
+    _autoFilledShippingAddress = shippingAddress;
+  }
+
+  void _handleCustomerChanged(int? customerId) {
+    setState(() => _customerId = customerId);
+    if (customerId == null) return;
+    if (widget.mode != SalesOrderFormMode.create &&
+        _autoFilledCustomerId == null) {
+      return;
+    }
+    final customer = _customers
+        .cast<Customer?>()
+        .firstWhere((item) => item?.id == customerId, orElse: () => null);
+    if (customer == null) return;
+    _applyCustomerContactInfo(customer);
   }
 
   String _formatDate(DateTime? value) {
@@ -347,7 +405,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                   ),
                 )
                 .toList(),
-            onChanged: (value) => setState(() => _customerId = value),
+            onChanged: _handleCustomerChanged,
             validator: (value) => value == null ? '请选择客户' : null,
           ),
           const SizedBox(height: 12),
