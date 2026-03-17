@@ -11,11 +11,15 @@ class ProductGroupApiService {
     int page = 1,
     int pageSize = 20,
     String? search,
+    bool? isActive,
   }) async {
     final params = <String, dynamic>{
       'page': page,
       'page_size': pageSize,
     };
+    if (isActive != null) {
+      params['is_active'] = isActive;
+    }
     final trimmed = search?.trim();
     if (trimmed != null && trimmed.isNotEmpty) {
       params['search'] = trimmed;

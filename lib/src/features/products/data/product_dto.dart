@@ -6,38 +6,74 @@ class ProductDto {
     required this.id,
     required this.code,
     required this.name,
+    this.productType,
     this.productTypeDisplay,
+    this.productGroupId,
     this.productGroupName,
+    this.productGroupCode,
     this.specification,
     this.unit,
     this.unitPrice,
     this.stockQuantity,
+    this.minStockQuantity,
+    this.description,
     this.isActive,
+    this.defaultProcessIds = const [],
+    this.defaultMaterials = const [],
   });
 
   final int id;
   final String code;
   final String name;
+  final String? productType;
   final String? productTypeDisplay;
+  final int? productGroupId;
   final String? productGroupName;
+  final String? productGroupCode;
   final String? specification;
   final String? unit;
   final double? unitPrice;
   final double? stockQuantity;
+  final double? minStockQuantity;
+  final String? description;
   final bool? isActive;
+  final List<int> defaultProcessIds;
+  final List<ProductMaterialItem> defaultMaterials;
 
   factory ProductDto.fromJson(Map<String, dynamic> json) {
+    final processes = json['default_processes'];
+    final processIds = processes is List
+        ? processes
+            .map((item) => toInt(item))
+            .whereType<int>()
+            .toList()
+        : const <int>[];
+    final materials = json['default_materials'];
+    final materialItems = materials is List
+        ? materials
+            .whereType<Map>()
+            .map((item) =>
+                ProductMaterialItem.fromJson(Map<String, dynamic>.from(item)))
+            .toList()
+        : const <ProductMaterialItem>[];
     return ProductDto(
       id: toInt(json['id']) ?? 0,
       code: json['code']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
+      productType: toStringOrNull(json['product_type']),
       productTypeDisplay: toStringOrNull(json['product_type_display']),
+      productGroupId: toInt(json['product_group']),
       productGroupName: toStringOrNull(json['product_group_name']),
+      productGroupCode: toStringOrNull(json['product_group_code']),
       specification: toStringOrNull(json['specification']),
       unit: toStringOrNull(json['unit']),
       unitPrice: _toDouble(json['unit_price']),
       stockQuantity: _toDouble(json['stock_quantity']),
+      minStockQuantity: _toDouble(json['min_stock_quantity']),
+      description: toStringOrNull(json['description']),
       isActive: json['is_active'] == null ? null : json['is_active'] == true,
+      defaultProcessIds: processIds,
+      defaultMaterials: materialItems,
     );
   }
 
@@ -45,11 +81,17 @@ class ProductDto {
     return {
       'code': code,
       'name': name,
+      if (productType != null) 'product_type': productType,
+      if (productGroupId != null || productType == 'single')
+        'product_group': productGroupId,
       if (specification != null) 'specification': specification,
       if (unit != null) 'unit': unit,
       if (unitPrice != null) 'unit_price': unitPrice,
       if (stockQuantity != null) 'stock_quantity': stockQuantity,
+      if (minStockQuantity != null) 'min_stock_quantity': minStockQuantity,
+      if (description != null) 'description': description,
       if (isActive != null) 'is_active': isActive,
+      'default_processes': defaultProcessIds,
     };
   }
 
@@ -58,13 +100,20 @@ class ProductDto {
       id: id,
       code: code,
       name: name,
+      productType: productType,
       productTypeDisplay: productTypeDisplay,
+      productGroupId: productGroupId,
       productGroupName: productGroupName,
+      productGroupCode: productGroupCode,
       specification: specification,
       unit: unit,
       unitPrice: unitPrice,
       stockQuantity: stockQuantity,
+      minStockQuantity: minStockQuantity,
+      description: description,
       isActive: isActive,
+      defaultProcessIds: defaultProcessIds,
+      defaultMaterials: defaultMaterials,
     );
   }
 
@@ -81,13 +130,20 @@ extension ProductMapper on Product {
       id: id,
       code: code,
       name: name,
+      productType: productType,
       productTypeDisplay: productTypeDisplay,
+      productGroupId: productGroupId,
       productGroupName: productGroupName,
+      productGroupCode: productGroupCode,
       specification: specification,
       unit: unit,
       unitPrice: unitPrice,
       stockQuantity: stockQuantity,
+      minStockQuantity: minStockQuantity,
+      description: description,
       isActive: isActive,
+      defaultProcessIds: defaultProcessIds,
+      defaultMaterials: defaultMaterials,
     );
   }
 }

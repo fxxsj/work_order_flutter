@@ -287,10 +287,12 @@ class _ProductListViewState extends State<_ProductListView> {
         DataColumn(label: Text('产品')),
         DataColumn(label: Text('编码')),
         DataColumn(label: Text('类型')),
+        DataColumn(label: Text('产品组')),
         DataColumn(label: Text('规格')),
         DataColumn(label: Text('单位')),
         DataColumn(label: Text('单价')),
         DataColumn(label: Text('库存')),
+        DataColumn(label: Text('最小库存')),
         DataColumn(label: Text('状态')),
         DataColumn(label: Text('操作')),
       ],
@@ -307,7 +309,11 @@ class _ProductListViewState extends State<_ProductListView> {
                   style: textStyle,
                 )),
                 DataCell(Text(
-                  product.productTypeDisplay ?? _emptyCellText,
+                  _formatProductType(product),
+                  style: textStyle,
+                )),
+                DataCell(Text(
+                  product.productGroupName ?? _emptyCellText,
                   style: textStyle,
                 )),
                 DataCell(Text(
@@ -319,6 +325,8 @@ class _ProductListViewState extends State<_ProductListView> {
                 DataCell(
                     Text(_formatAmount(product.unitPrice), style: textStyle)),
                 DataCell(Text(_formatAmount(product.stockQuantity),
+                    style: textStyle)),
+                DataCell(Text(_formatAmount(product.minStockQuantity),
                     style: textStyle)),
                 DataCell(
                     Text(_formatStatus(product.isActive), style: textStyle)),
@@ -403,6 +411,21 @@ class _ProductListViewState extends State<_ProductListView> {
     return isActive ? '启用' : '停用';
   }
 
+  String _formatProductType(Product product) {
+    final display = product.productTypeDisplay;
+    if (display != null && display.isNotEmpty) return display;
+    switch (product.productType) {
+      case 'group_main':
+        return '套装主产品';
+      case 'group_item':
+        return '套装子产品';
+      case 'single':
+        return '单品';
+      default:
+        return _emptyCellText;
+    }
+  }
+
   Widget _buildSummaryCard(
     BuildContext context,
     ProductViewModel viewModel,
@@ -414,13 +437,15 @@ class _ProductListViewState extends State<_ProductListView> {
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
     final title = product.name;
     final code = product.code.isEmpty ? _emptyCellText : product.code;
-    final type = product.productTypeDisplay ?? _emptyCellText;
+    final type = _formatProductType(product);
     final group = product.productGroupName ?? _emptyCellText;
     final spec = product.specification ?? _emptyCellText;
     final unit = product.unit ?? _emptyCellText;
     final price = _formatAmount(product.unitPrice);
     final stock = _formatAmount(product.stockQuantity);
+    final minStock = _formatAmount(product.minStockQuantity);
     final status = _formatStatus(product.isActive);
+    final description = product.description ?? _emptyCellText;
 
     return ExpandableSummaryCard(
       headerBuilder: (context, expanded) {
@@ -453,6 +478,7 @@ class _ProductListViewState extends State<_ProductListView> {
                       _SummaryChip(label: '状态', value: status),
                       _SummaryChip(label: '单价', value: price),
                       _SummaryChip(label: '库存', value: stock),
+                      _SummaryChip(label: '最小库存', value: minStock),
                     ],
                   ),
                 ],
@@ -484,7 +510,9 @@ class _ProductListViewState extends State<_ProductListView> {
               _SummaryField(label: '单位', value: unit),
               _SummaryField(label: '单价', value: price),
               _SummaryField(label: '库存', value: stock),
+              _SummaryField(label: '最小库存', value: minStock),
               _SummaryField(label: '状态', value: status),
+              _SummaryField(label: '描述', value: description),
             ],
           ),
           SizedBox(height: sectionSpacing),

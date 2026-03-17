@@ -100,6 +100,13 @@ class ProductApiService {
     return ProductDto.fromJson(map);
   }
 
+  Future<ProductDto> fetchProduct(int id) async {
+    final response = await _client.get('/products/$id/');
+    final payload = response.data;
+    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    return ProductDto.fromJson(map);
+  }
+
   Future<ProductDto> updateProduct(ProductDto dto) async {
     final response = await _client.put('/products/${dto.id}/', data: dto.toPayload());
     final payload = response.data;

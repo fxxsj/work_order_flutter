@@ -14,14 +14,16 @@ class ProductViewModel extends PaginatedViewModel<Product> {
 
   Future<void> loadProducts({bool resetPage = false}) => loadItems(resetPage: resetPage);
 
-  Future<void> createProduct(Product product) async {
-    await _repository.createProduct(product.toDto());
+  Future<Product> createProduct(Product product) async {
+    final dto = await _repository.createProduct(product.toDto());
     await loadItems(resetPage: true);
+    return dto.toEntity();
   }
 
-  Future<void> updateProduct(Product product) async {
-    await _repository.updateProduct(product.toDto());
+  Future<Product> updateProduct(Product product) async {
+    final dto = await _repository.updateProduct(product.toDto());
     await loadItems();
+    return dto.toEntity();
   }
 
   Future<void> deleteProduct(int id) async {
