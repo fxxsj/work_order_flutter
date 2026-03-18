@@ -31,6 +31,10 @@ class Utils {
       surface: resolvedBrightness == Brightness.dark
           ? const Color(0xFF111827)
           : const Color(0xFFFCFCFD),
+      surfaceTint: Colors.transparent,
+      shadow: resolvedBrightness == Brightness.dark
+          ? const Color(0xFF000000)
+          : const Color(0xFF0B1220),
     );
     final semantic = resolvedBrightness == Brightness.dark
         ? const AppSemanticColors(
@@ -38,16 +42,16 @@ class Utils {
             warning: Color(0xFFF59E0B),
             danger: Color(0xFFEF4444),
             info: Color(0xFF38BDF8),
-            surfaceAlt: Color(0xFF0F172A),
-            shadowStrong: Color(0xAA000000),
+            surfaceAlt: Color(0xFF0C1626),
+            shadowStrong: Color(0xFF000000),
           )
         : const AppSemanticColors(
             success: Color(0xFF16A34A),
             warning: Color(0xFFD97706),
             danger: Color(0xFFDC2626),
             info: Color(0xFF0284C7),
-            surfaceAlt: Color(0xFFF8FAFC),
-            shadowStrong: Color(0x22000000),
+            surfaceAlt: Color(0xFFEFF3F8),
+            shadowStrong: Color(0xFF0B1220),
           );
     Color mix(Color a, Color b, double t) => Color.lerp(a, b, t) ?? a;
 
@@ -65,20 +69,20 @@ class Utils {
 
     final appColors = resolvedBrightness == Brightness.dark
         ? AppColors(
-            background: mix(const Color(0xFF0B1220), seedDeep, 0.16),
-            surface: mix(const Color(0xFF111827), seedDeep, 0.12),
-            sidebar: mix(const Color(0xFF0F172A), seedDeep, 0.1),
+            background: mix(const Color(0xFF0B1220), seedDeep, 0.22),
+            surface: mix(const Color(0xFF111827), seedDeep, 0.18),
+            sidebar: mix(const Color(0xFF0F172A), seedDeep, 0.2),
             subtleText: const Color(0xFF9AA4B2),
             sidebarText: const Color(0xFFE2E8F0),
-            borderColor: mix(const Color(0xFF1F2937), seedDeep, 0.18),
+            borderColor: mix(const Color(0xFF1F2937), seedDeep, 0.24),
           )
         : AppColors(
-            background: mix(const Color(0xFFF5F7FB), seedSoft2, 0.1),
-            surface: mix(const Color(0xFFFFFFFF), seedSoft, 0.08),
-            sidebar: mix(const Color(0xFFF8FAFC), seedSoft, 0.06),
+            background: mix(const Color(0xFFF2F4F8), seedSoft2, 0.12),
+            surface: mix(const Color(0xFFFFFFFF), seedSoft, 0.04),
+            sidebar: mix(const Color(0xFFF6F8FB), seedSoft, 0.08),
             subtleText: const Color(0xFF64748B),
             sidebarText: const Color(0xFF334155),
-            borderColor: mix(const Color(0xFFE2E8F0), seedSoft, 0.16),
+            borderColor: mix(const Color(0xFFD8DEE8), seedSoft, 0.14),
           );
     final baseTextTheme = ThemeData(brightness: resolvedBrightness).textTheme;
     const headingFont = 'AGENCYR';
@@ -104,9 +108,9 @@ class Utils {
       titleSmall: baseTextTheme.titleSmall?.copyWith(
         fontWeight: FontWeight.w600,
       ),
-      bodyLarge: baseTextTheme.bodyLarge?.copyWith(height: 1.4),
-      bodyMedium: baseTextTheme.bodyMedium?.copyWith(height: 1.4),
-      bodySmall: baseTextTheme.bodySmall?.copyWith(height: 1.35),
+      bodyLarge: baseTextTheme.bodyLarge?.copyWith(height: 1.5),
+      bodyMedium: baseTextTheme.bodyMedium?.copyWith(height: 1.5),
+      bodySmall: baseTextTheme.bodySmall?.copyWith(height: 1.45),
     );
     final base = ThemeData(
       useMaterial3: true,
@@ -115,11 +119,12 @@ class Utils {
       textTheme: textTheme,
       primaryColor: scheme.primary,
       scaffoldBackgroundColor: appColors.background,
+      shadowColor: semantic.shadowStrong.withValues(alpha: 0.18),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: appColors.surface,
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
           borderSide: BorderSide(
@@ -143,18 +148,22 @@ class Utils {
             ? const Color(0xFFE5E7EB)
             : const Color(0xFF111827),
         elevation: 0,
+        scrolledUnderElevation: 1.5,
+        surfaceTintColor: Colors.transparent,
       ),
       iconTheme: IconThemeData(color: scheme.primary),
       dividerTheme: DividerThemeData(
         color: appColors.borderColor.withValues(alpha: 0.7),
-        thickness: 1,
+        thickness: 0.8,
       ),
       cardTheme: CardThemeData(
         color: appColors.surface,
-        elevation: 0,
+        elevation: 2,
+        shadowColor: semantic.shadowStrong.withValues(alpha: 0.16),
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
-          side: BorderSide(color: appColors.borderColor.withValues(alpha: 0.6)),
+          side: BorderSide(color: appColors.borderColor.withValues(alpha: 0.45)),
         ),
       ),
       scrollbarTheme: ScrollbarThemeData(

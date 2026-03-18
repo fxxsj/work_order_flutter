@@ -12,7 +12,7 @@ class AppCard extends StatelessWidget {
     this.borderAlpha,
     this.radius,
     this.showBorder = true,
-    this.showShadow = false,
+    this.showShadow = true,
   });
 
   final Widget child;
@@ -34,7 +34,8 @@ class AppCard extends StatelessWidget {
     final resolvedBackground =
         background ?? colors?.surface ?? theme.colorScheme.surface;
     final resolvedBorder = borderColor ?? colors?.borderColor ?? theme.dividerColor;
-    final resolvedBorderAlpha = borderAlpha ?? 0.7;
+    final resolvedBorderAlpha = borderAlpha ?? 0.55;
+    final shadowBase = semantic?.shadowStrong ?? theme.shadowColor;
 
     return Container(
       padding: resolvedPadding,
@@ -44,12 +45,17 @@ class AppCard extends StatelessWidget {
         border: showBorder
             ? Border.all(color: resolvedBorder.withValues(alpha: resolvedBorderAlpha))
             : null,
-        boxShadow: showShadow && semantic != null
+        boxShadow: showShadow
             ? [
                 BoxShadow(
-                  color: semantic.shadowStrong.withValues(alpha: 0.08),
+                  color: shadowBase.withValues(alpha: 0.12),
                   blurRadius: 18,
                   offset: const Offset(0, 8),
+                ),
+                BoxShadow(
+                  color: shadowBase.withValues(alpha: 0.08),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
                 ),
               ]
             : null,

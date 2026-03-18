@@ -63,38 +63,38 @@ class LayoutTokens {
     final isXs = BreakpointsUtil.isXs(context);
     final isSm = BreakpointsUtil.isSm(context);
     if (isXs) {
-      return const EdgeInsets.all(10);
-    }
-    if (isSm) {
       return const EdgeInsets.all(12);
     }
-    return const EdgeInsets.all(14);
+    if (isSm) {
+      return const EdgeInsets.all(14);
+    }
+    return const EdgeInsets.all(16);
   }
 
   static double sectionSpacing(BuildContext context) {
-    if (BreakpointsUtil.isXs(context)) return 12;
-    if (BreakpointsUtil.isSm(context)) return 12;
-    if (BreakpointsUtil.isMd(context)) return 14;
-    return 16;
+    if (BreakpointsUtil.isXs(context)) return 14;
+    if (BreakpointsUtil.isSm(context)) return 16;
+    if (BreakpointsUtil.isMd(context)) return 18;
+    return 20;
   }
 
   static double formSectionSpacing(BuildContext context) {
     final isXs = BreakpointsUtil.isXs(context);
     final isSm = BreakpointsUtil.isSm(context);
-    if (isXs) return 12;
-    if (isSm) return 14;
-    return 16;
+    if (isXs) return 14;
+    if (isSm) return 16;
+    return 18;
   }
 
   static double formColumnSpacing(BuildContext context) {
-    return BreakpointsUtil.isXs(context) ? 12 : 24;
+    return BreakpointsUtil.isXs(context) ? 14 : 28;
   }
 
   static double formActionSpacing(BuildContext context) {
-    return BreakpointsUtil.isXs(context) ? 12 : 18;
+    return BreakpointsUtil.isXs(context) ? 14 : 20;
   }
 
   static double formPageSpacing(BuildContext context) {
-    return BreakpointsUtil.isXs(context) ? 6 : 8;
+    return BreakpointsUtil.isXs(context) ? 8 : 10;
   }
 }
