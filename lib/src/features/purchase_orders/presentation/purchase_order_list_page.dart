@@ -631,7 +631,8 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         SearchableDropdownFormField<int>(
-                          key: ValueKey<int?>(supplierId),
+                          key: ValueKey<String>(
+                              'purchase_supplier_${supplierId ?? 'none'}'),
                           initialValue: supplierId,
                           decoration: const InputDecoration(
                             labelText: '供应商',
@@ -657,7 +658,8 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
                         ),
                         const SizedBox(height: 12),
                         SearchableDropdownFormField<int>(
-                          key: ValueKey<int?>(workOrderId),
+                          key: ValueKey<String>(
+                              'purchase_workorder_${workOrderId ?? 'none'}'),
                           initialValue: workOrderId,
                           decoration: const InputDecoration(
                             labelText: '关联施工单',
