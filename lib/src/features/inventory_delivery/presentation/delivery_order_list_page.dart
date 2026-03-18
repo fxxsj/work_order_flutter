@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
@@ -142,8 +143,12 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
   bool _customersLoading = false;
   List<SalesOrderDto> _salesOrders = [];
   bool _salesOrdersLoading = false;
+  bool _salesOrdersLoaded = false;
   List<ProductOption> _products = [];
   bool _productsLoading = false;
+  bool _prefillHandled = false;
+  bool _pendingPrefill = false;
+  int? _prefillSalesOrderId;
 
   @override
   void initState() {
@@ -153,6 +158,22 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       _loadSalesOrders();
       _loadProducts();
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_prefillHandled) return;
+    final uri = GoRouterState.of(context).uri;
+    final createFlag = uri.queryParameters['create'];
+    final salesOrderId =
+        int.tryParse(uri.queryParameters['sales_order_id'] ?? '');
+    if (salesOrderId != null &&
+        (createFlag == '1' || createFlag == 'true')) {
+      _prefillSalesOrderId = salesOrderId;
+      _pendingPrefill = true;
+    }
+    _prefillHandled = true;
   }
 
   @override
@@ -194,12 +215,14 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
 
   Future<void> _loadSalesOrders() async {
     final apiService = SalesOrderApiService(context.read<ApiClient>());
-    setState(() => _salesOrdersLoading = true);
+    setState(() {
+      _salesOrdersLoading = true;
+      _salesOrdersLoaded = false;
+    });
     try {
       final page = await apiService.fetchSalesOrders(pageSize: 200);
       final items = page.items
-          .where((order) =>
-              order.status == 'approved' || order.status == 'in_production')
+          .where((order) => order.status == 'completed')
           .toList();
       if (!mounted) return;
       setState(() => _salesOrders = items);
@@ -208,7 +231,10 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       setState(() => _salesOrders = []);
     } finally {
       if (!mounted) return;
-      setState(() => _salesOrdersLoading = false);
+      setState(() {
+        _salesOrdersLoading = false;
+        _salesOrdersLoaded = true;
+      });
     }
   }
 
@@ -387,6 +413,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
   Future<void> _openFormDialog(
     DeliveryOrderViewModel viewModel, {
     DeliveryOrder? order,
+    int? prefillSalesOrderId,
   }) async {
     final apiService = context.read<DeliveryOrderApiService>();
     final salesOrderService = SalesOrderApiService(context.read<ApiClient>());
@@ -399,7 +426,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       }
     }
 
-    int? selectedSalesOrderId = detail?.salesOrderId;
+    int? selectedSalesOrderId = detail?.salesOrderId ?? prefillSalesOrderId;
     int? selectedCustomerId = detail?.customerId;
     DateTime? deliveryDate = detail?.deliveryDate;
     final receiverNameController =
@@ -443,7 +470,10 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     final formKey = GlobalKey<FormState>();
     bool submitting = false;
 
-    Future<void> loadSalesOrderItems(int id, StateSetter setState) async {
+    Future<void> applySalesOrder(
+      int id, {
+      StateSetter? setState,
+    }) async {
       try {
         final detailDto = await salesOrderService.fetchSalesOrder(id);
         final salesDetail = detailDto.toEntity();
@@ -451,7 +481,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
         for (final item in items) {
           item.dispose();
         }
-        setState(() {
+        void update() {
           selectedSalesOrderId = id;
           selectedCustomerId = customerId == 0 ? null : customerId;
           receiverNameController.text =
@@ -475,10 +505,19 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
               unit: item.unit ?? '',
             );
           }).toList();
-        });
+        }
+        if (setState != null) {
+          setState(update);
+        } else {
+          update();
+        }
       } catch (err) {
         ToastUtil.showError('获取销售订单失败: $err');
       }
+    }
+
+    if (!isEdit && prefillSalesOrderId != null) {
+      await applySalesOrder(prefillSalesOrderId);
     }
 
     Future<void> submit(StateSetter setState) async {
@@ -571,7 +610,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
                                 ? null
                                 : (value) {
                                     if (value == null) return;
-                                    loadSalesOrderItems(value, setState);
+                                    applySalesOrder(value, setState: setState);
                                   },
                             validator: (value) {
                               if (!isEdit && (value == null || value == 0)) {
@@ -1019,12 +1058,25 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
         .replaceFirst('{count}', viewModel.total.toString());
   }
 
+  void _maybeOpenPrefillDialog(DeliveryOrderViewModel viewModel) {
+    if (!_pendingPrefill) return;
+    if (_salesOrdersLoading || !_salesOrdersLoaded) return;
+    final salesOrderId = _prefillSalesOrderId;
+    if (salesOrderId == null) return;
+    _pendingPrefill = false;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _openFormDialog(viewModel, prefillSalesOrderId: salesOrderId);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final isMobile = BreakpointsUtil.isMobile(context);
 
     return Consumer<DeliveryOrderViewModel>(
       builder: (context, viewModel, _) {
+        _maybeOpenPrefillDialog(viewModel);
         final orders = viewModel.deliveryOrders;
         return ListPageScaffold(
           spacing: _spacingSm,

@@ -274,32 +274,6 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     );
   }
 
-  Future<void> _showStartProductionDialog() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('开始生产'),
-        content: const Text('确认将订单状态更新为生产中吗？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('确认'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-    final api = context.read<SalesOrderApiService>();
-    await _runDetailAction(
-      () => api.startProduction(widget.orderId).then((dto) => dto.toEntity()),
-      successMessage: '已开始生产',
-    );
-  }
-
   Future<void> _showCompleteDialog() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -324,6 +298,10 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
       () => api.complete(widget.orderId).then((dto) => dto.toEntity()),
       successMessage: '已完成',
     );
+  }
+
+  void _goToCreateDeliveryOrder() {
+    context.go('/inventory/delivery?create=1&sales_order_id=${widget.orderId}');
   }
 
   Future<void> _showCancelDialog() async {
@@ -640,6 +618,12 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
           icon: Icons.send_outlined,
           onTap: _showSubmitDialog,
         ),
+      if (status == 'rejected')
+        _ActionItem(
+          label: '重新提交',
+          icon: Icons.send_outlined,
+          onTap: _showSubmitDialog,
+        ),
       if (status == 'submitted') ...[
         _ActionItem(
           label: '审核通过',
@@ -652,12 +636,6 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
           onTap: _showRejectDialog,
         ),
       ],
-      if (status == 'approved')
-        _ActionItem(
-          label: '开始生产',
-          icon: Icons.play_circle_outline,
-          onTap: _showStartProductionDialog,
-        ),
       if (status == 'approved' || status == 'in_production')
         _ActionItem(
           label: '完成订单',
@@ -666,13 +644,18 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
         ),
       if (status.isNotEmpty &&
           status != 'completed' &&
-          status != 'cancelled' &&
-          status != 'rejected')
+          status != 'cancelled')
         _ActionItem(
           label: '取消订单',
           icon: Icons.block_outlined,
           onTap: _showCancelDialog,
           destructive: true,
+        ),
+      if (status == 'completed')
+        _ActionItem(
+          label: '生成送货单',
+          icon: Icons.local_shipping_outlined,
+          onTap: _goToCreateDeliveryOrder,
         ),
       _ActionItem(
         label: '更新付款',

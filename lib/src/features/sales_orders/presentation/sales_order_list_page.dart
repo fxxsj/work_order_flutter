@@ -283,38 +283,6 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     }
   }
 
-  Future<void> _startProduction(
-    SalesOrderViewModel viewModel,
-    SalesOrder order,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('开始生产'),
-        content: const Text('确认将订单状态更新为生产中吗？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('确认'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-    try {
-      final api = context.read<SalesOrderApiService>();
-      await api.startProduction(order.id);
-      ToastUtil.showSuccess('已开始生产');
-      await viewModel.loadSalesOrders(resetPage: false);
-    } catch (err) {
-      ToastUtil.showError('操作失败: $err');
-    }
-  }
-
   Future<void> _completeOrder(
     SalesOrderViewModel viewModel,
     SalesOrder order,
@@ -345,6 +313,10 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     } catch (err) {
       ToastUtil.showError('操作失败: $err');
     }
+  }
+
+  void _goToCreateDeliveryOrder(SalesOrder order) {
+    context.go('/inventory/delivery?create=1&sales_order_id=${order.id}');
   }
 
   Future<void> _cancelOrder(
@@ -759,6 +731,13 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         onPressed: () => _submitOrder(viewModel, order),
       ));
     }
+    if (status == 'rejected') {
+      actions.add(RowAction(
+        label: '重新提交',
+        icon: Icons.send_outlined,
+        onPressed: () => _submitOrder(viewModel, order),
+      ));
+    }
     if (status == 'submitted') {
       actions.add(RowAction(
         label: '审核通过',
@@ -772,13 +751,6 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         onPressed: () => _rejectOrder(viewModel, order),
       ));
     }
-    if (status == 'approved') {
-      actions.add(RowAction(
-        label: '开始生产',
-        icon: Icons.play_circle_outline,
-        onPressed: () => _startProduction(viewModel, order),
-      ));
-    }
     if (status == 'approved' || status == 'in_production') {
       actions.add(RowAction(
         label: '完成订单',
@@ -788,13 +760,19 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     }
     if (status.isNotEmpty &&
         status != 'completed' &&
-        status != 'cancelled' &&
-        status != 'rejected') {
+        status != 'cancelled') {
       actions.add(RowAction(
         label: '取消订单',
         icon: Icons.block_outlined,
         destructive: true,
         onPressed: () => _cancelOrder(viewModel, order),
+      ));
+    }
+    if (status == 'completed') {
+      actions.add(RowAction(
+        label: '生成送货单',
+        icon: Icons.local_shipping_outlined,
+        onPressed: () => _goToCreateDeliveryOrder(order),
       ));
     }
     actions.add(RowAction(
