@@ -18,6 +18,7 @@ import 'package:work_order_app/src/features/workorders/data/work_order_repositor
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_data_sections.dart';
+import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_dialogs.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_sections.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_sync_preview_dialog.dart';
 
@@ -66,20 +67,6 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   Map<String, dynamic>? _approvalStatus;
 
   String? _statusSelection;
-
-  final TextEditingController _approvalCommentController =
-      TextEditingController();
-  final TextEditingController _rejectionReasonController =
-      TextEditingController();
-  final TextEditingController _reapprovalReasonController =
-      TextEditingController();
-  final TextEditingController _approvalStepCommentController =
-      TextEditingController();
-  final TextEditingController _escalationReasonController =
-      TextEditingController();
-  final TextEditingController _escalationTargetController =
-      TextEditingController();
-  final TextEditingController _urgentReasonController = TextEditingController();
 
   @override
   void didChangeDependencies() {
@@ -133,38 +120,15 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     }
   }
 
-  @override
-  void dispose() {
-    _approvalCommentController.dispose();
-    _rejectionReasonController.dispose();
-    _reapprovalReasonController.dispose();
-    _approvalStepCommentController.dispose();
-    _escalationReasonController.dispose();
-    _escalationTargetController.dispose();
-    _urgentReasonController.dispose();
-    super.dispose();
-  }
-
   Future<void> _confirmDelete() async {
     final detail = _detail;
     if (detail == null) return;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(_deleteDialogTitle),
-        content: Text(
-            _deleteDialogContent.replaceFirst('{name}', detail.orderNumber)),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('取消')),
-          FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('删除')),
-        ],
-      ),
+    final confirmed = await showWorkOrderDeleteConfirmDialog(
+      context,
+      title: _deleteDialogTitle,
+      content: _deleteDialogContent.replaceFirst('{name}', detail.orderNumber),
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     setState(() => _actionLoading = true);
     try {
       final viewModel = context.read<WorkOrderViewModel>();
@@ -202,9 +166,11 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     }
   }
 
-  Future<void> _handleApprove({required bool approved}) async {
-    final rejectionReason =
-        approved ? null : _rejectionReasonController.text.trim();
+  Future<void> _handleApprove({
+    required bool approved,
+    required String comment,
+    String? rejectionReason,
+  }) async {
     if (!approved && (rejectionReason == null || rejectionReason.isEmpty)) {
       ToastUtil.showError('请填写拒绝原因');
       return;
@@ -215,7 +181,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
       final detail = await viewModel.approve(
         id: widget.workOrderId,
         approvalStatus: approved ? 'approved' : 'rejected',
-        approvalComment: _approvalCommentController.text.trim(),
+        approvalComment: comment,
         rejectionReason: rejectionReason,
       );
       if (!mounted) return;
@@ -223,8 +189,6 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
         _detail = detail;
         _statusSelection = detail.status;
       });
-      _approvalCommentController.clear();
-      _rejectionReasonController.clear();
       ToastUtil.showSuccess(approved ? '审核已通过' : '审核已拒绝');
     } catch (err) {
       ToastUtil.showError('审核失败: $err');
@@ -251,8 +215,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     }
   }
 
-  Future<void> _handleRequestReapproval() async {
-    final reason = _reapprovalReasonController.text.trim();
+  Future<void> _handleRequestReapproval(String reason) async {
     if (reason.isEmpty) {
       ToastUtil.showError('请填写重新审核原因');
       return;
@@ -267,7 +230,6 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
         _detail = detail;
         _statusSelection = detail.status;
       });
-      _reapprovalReasonController.clear();
       ToastUtil.showSuccess('已请求重新审核');
     } catch (err) {
       ToastUtil.showError('请求失败: $err');
@@ -277,70 +239,26 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   }
 
   Future<void> _showApproveDialog({required bool approved}) async {
-    _approvalCommentController.clear();
-    _rejectionReasonController.clear();
-    final title = approved ? '审核通过' : '审核拒绝';
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _approvalCommentController,
-              decoration: const InputDecoration(labelText: '备注说明'),
-              maxLines: 3,
-            ),
-            if (!approved) ...[
-              const SizedBox(height: 12),
-              TextField(
-                controller: _rejectionReasonController,
-                decoration: const InputDecoration(labelText: '拒绝原因'),
-                maxLines: 3,
-              ),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('取消')),
-          FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('确定')),
-        ],
-      ),
+    final result = await showWorkOrderApprovalDialog(
+      context,
+      approved: approved,
     );
-    if (confirmed == true) {
-      await _handleApprove(approved: approved);
-    }
+    if (result == null) return;
+    await _handleApprove(
+      approved: approved,
+      comment: result.comment,
+      rejectionReason: result.rejectionReason,
+    );
   }
 
   Future<void> _showReapprovalDialog() async {
-    _reapprovalReasonController.clear();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('请求重新审核'),
-        content: TextField(
-          controller: _reapprovalReasonController,
-          decoration: const InputDecoration(labelText: '原因说明'),
-          maxLines: 3,
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('取消')),
-          FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('提交')),
-        ],
-      ),
+    final reason = await showWorkOrderReasonDialog(
+      context,
+      title: '请求重新审核',
+      label: '原因说明',
     );
-    if (confirmed == true) {
-      await _handleRequestReapproval();
-    }
+    if (reason == null) return;
+    await _handleRequestReapproval(reason);
   }
 
   String _formatDate(DateTime? value) {
@@ -459,28 +377,12 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   }
 
   Future<void> _markUrgent() async {
-    _urgentReasonController.clear();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('标记紧急订单'),
-        content: TextField(
-          controller: _urgentReasonController,
-          decoration: const InputDecoration(labelText: '紧急原因'),
-          maxLines: 3,
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('取消')),
-          FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('提交')),
-        ],
-      ),
+    final reason = await showWorkOrderReasonDialog(
+      context,
+      title: '标记紧急订单',
+      label: '紧急原因',
     );
-    if (confirmed != true) return;
-    final reason = _urgentReasonController.text.trim();
+    if (reason == null) return;
     if (reason.isEmpty) {
       ToastUtil.showError('请输入紧急原因');
       return;
@@ -503,77 +405,30 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     required int stepId,
     required String decision,
   }) async {
-    _approvalStepCommentController.clear();
-    final decisionLabel = decision == 'approve' ? '通过' : '拒绝';
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('审批$decisionLabel'),
-        content: TextField(
-          controller: _approvalStepCommentController,
-          decoration: const InputDecoration(labelText: '备注说明'),
-          maxLines: 3,
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('取消')),
-          FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('确定')),
-        ],
-      ),
+    final comments = await showWorkOrderApprovalStepDialog(
+      context,
+      decision: decision,
     );
-    if (confirmed == true) {
-      await _completeApprovalStep(
-        stepId,
-        decision: decision,
-        comments: _approvalStepCommentController.text.trim(),
-      );
-    }
+    if (comments == null) return;
+    await _completeApprovalStep(
+      stepId,
+      decision: decision,
+      comments: comments,
+    );
   }
 
   Future<void> _showEscalateDialog(int stepId) async {
-    _escalationReasonController.clear();
-    _escalationTargetController.clear();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('上报审批步骤'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _escalationReasonController,
-              decoration: const InputDecoration(labelText: '上报原因'),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _escalationTargetController,
-              decoration: const InputDecoration(labelText: '目标步骤ID（可选）'),
-              keyboardType: TextInputType.number,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('取消')),
-          FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('提交')),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-    final reason = _escalationReasonController.text.trim();
-    if (reason.isEmpty) {
+    final result = await showWorkOrderEscalateDialog(context);
+    if (result == null) return;
+    if (result.reason.isEmpty) {
       ToastUtil.showError('请输入上报原因');
       return;
     }
-    final targetId = int.tryParse(_escalationTargetController.text.trim());
-    await _escalateApprovalStep(stepId, reason: reason, toStepId: targetId);
+    await _escalateApprovalStep(
+      stepId,
+      reason: result.reason,
+      toStepId: result.targetStepId,
+    );
   }
 
   Widget _buildInfoGrid(List<WorkOrderInfoItem> items) {

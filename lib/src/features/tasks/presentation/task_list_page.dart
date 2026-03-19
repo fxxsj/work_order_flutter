@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -20,18 +19,16 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_d
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/file_download.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
-import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
-import 'package:work_order_app/src/features/departments/data/department_dto.dart';
 import 'package:work_order_app/src/features/departments/domain/department.dart';
-import 'package:work_order_app/src/features/processes/data/process_api_service.dart';
-import 'package:work_order_app/src/features/processes/data/process_dto.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/tasks/application/task_view_model.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
+import 'package:work_order_app/src/features/tasks/data/task_list_support_service.dart';
 import 'package:work_order_app/src/features/tasks/data/task_repository_impl.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_repository.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_action_dialogs.dart';
+import 'package:work_order_app/src/features/tasks/presentation/widgets/task_list_sections.dart';
 
 /// 任务列表入口。
 class TaskListEntry extends StatelessWidget {
@@ -96,10 +93,15 @@ class _TaskListViewState extends State<_TaskListView> {
   List<Department> _departments = [];
   List<Process> _processes = [];
   bool _exporting = false;
+  TaskListSupportService? _supportService;
+  bool _optionsRequested = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _supportService ??= TaskListSupportService(context.read<ApiClient>());
+    if (_optionsRequested) return;
+    _optionsRequested = true;
     _loadFilterOptions();
   }
 
@@ -146,7 +148,6 @@ class _TaskListViewState extends State<_TaskListView> {
     if (_exporting) return;
     setState(() => _exporting = true);
     try {
-      final apiService = context.read<TaskApiService>();
       final params = <String, dynamic>{
         if (_searchController.text.trim().isNotEmpty)
           'search': _searchController.text.trim(),
@@ -161,23 +162,8 @@ class _TaskListViewState extends State<_TaskListView> {
         if ((viewModel.processFilterId ?? 0) > 0)
           'work_order_process': viewModel.processFilterId,
       };
-      final response = await apiService.export(params: params);
-      final data = response.data;
-      if (data == null) {
-        ToastUtil.showError('导出失败: 返回内容为空');
-        return;
-      }
-      final bytes = data is Uint8List
-          ? data
-          : data is List<int>
-              ? Uint8List.fromList(data)
-              : null;
-      if (bytes == null) {
-        ToastUtil.showError('导出失败: 返回格式不支持');
-        return;
-      }
-      final filename = _resolveExportFilename(response, fallback: '任务列表');
-      final savedPath = await saveBytes(bytes, filename,
+      final result = await _supportService!.export(params);
+      final savedPath = await saveBytes(result.bytes, result.filename,
           mimeType:
               'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       if (savedPath == null) {
@@ -192,48 +178,14 @@ class _TaskListViewState extends State<_TaskListView> {
     }
   }
 
-  String _resolveExportFilename(
-    dynamic response, {
-    required String fallback,
-  }) {
-    final timestamp =
-        DateTime.now().toIso8601String().replaceAll(':', '').split('.').first;
-    try {
-      final headers = response.headers;
-      final contentDisposition = headers.value('content-disposition') ??
-          headers.value('Content-Disposition');
-      if (contentDisposition != null) {
-        final match =
-            RegExp('filename=\"?([^\";]+)\"?').firstMatch(contentDisposition);
-        if (match != null) {
-          return match.group(1) ?? '${fallback}_$timestamp.xlsx';
-        }
-      }
-    } catch (_) {
-      // ignore header parsing errors
-    }
-    return '${fallback}_$timestamp.xlsx';
-  }
-
   Future<void> _loadFilterOptions() async {
     setState(() => _loadingOptions = true);
     try {
-      final apiClient = context.read<ApiClient>();
-      final departmentApi = DepartmentApiService(apiClient);
-      final processApi = ProcessApiService(apiClient);
-      final results = await Future.wait([
-        departmentApi.fetchDepartments(page: 1, pageSize: 200),
-        processApi.fetchProcesses(page: 1, pageSize: 200),
-      ]);
-      final departmentPage = results[0] as DepartmentPageDto;
-      final processPage = results[1] as ProcessPageDto;
+      final options = await _supportService!.loadFilterOptions();
       if (!mounted) return;
       setState(() {
-        _departments = departmentPage.items
-            .map<Department>((item) => item.toEntity())
-            .toList();
-        _processes =
-            processPage.items.map<Process>((item) => item.toEntity()).toList();
+        _departments = options.departments;
+        _processes = options.processes;
       });
     } catch (err) {
       // 忽略筛选加载失败，避免影响列表主体
@@ -481,7 +433,7 @@ class _TaskListViewState extends State<_TaskListView> {
                 shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.zero),
                 builder: (sheetContext) {
-                  return _FilterDrawerContent(
+                  return TaskListFilterDrawerContent(
                     title: activeFilters > 0 ? '筛选 ($activeFilters)' : '筛选',
                     child: _buildFilterPanel(
                       sheetContext,
@@ -514,7 +466,7 @@ class _TaskListViewState extends State<_TaskListView> {
                       width: 360,
                       height: double.infinity,
                       child: SafeArea(
-                        child: _FilterDrawerContent(
+                        child: TaskListFilterDrawerContent(
                           title:
                               activeFilters > 0 ? '筛选 ($activeFilters)' : '筛选',
                           child: _buildFilterPanel(
@@ -845,10 +797,8 @@ class _TaskListViewState extends State<_TaskListView> {
       context,
       task: task,
       departments: _departments,
-      loadOperators: (departmentId) {
-        final api = context.read<TaskApiService>();
-        return api.fetchDepartmentOperators(departmentId);
-      },
+      loadOperators: (departmentId) =>
+          _supportService!.loadOperators(departmentId),
       onSubmit: (operatorId, notes) =>
           _submitAssign(viewModel, task, operatorId, notes),
     );
@@ -860,8 +810,7 @@ class _TaskListViewState extends State<_TaskListView> {
     Map<String, dynamic> payload,
   ) async {
     try {
-      final api = context.read<TaskApiService>();
-      await api.updateQuantity(task.id, payload);
+      await _supportService!.updateQuantity(task.id, payload);
       ToastUtil.showSuccess('已更新任务进度');
       await viewModel.loadTasks(resetPage: false);
     } catch (err) {
@@ -875,8 +824,7 @@ class _TaskListViewState extends State<_TaskListView> {
     Map<String, dynamic> payload,
   ) async {
     try {
-      final api = context.read<TaskApiService>();
-      await api.complete(task.id, payload);
+      await _supportService!.completeTask(task.id, payload);
       ToastUtil.showSuccess('任务已完成');
       await viewModel.loadTasks(resetPage: false);
     } catch (err) {
@@ -891,11 +839,11 @@ class _TaskListViewState extends State<_TaskListView> {
     String notes,
   ) async {
     try {
-      final api = context.read<TaskApiService>();
-      await api.assign(task.id, {
-        'operator_id': operatorId,
-        'notes': notes,
-      });
+      await _supportService!.assignTask(
+        task.id,
+        operatorId: operatorId,
+        notes: notes,
+      );
       ToastUtil.showSuccess('任务已分派');
       await viewModel.loadTasks(resetPage: false);
     } catch (err) {
@@ -906,45 +854,3 @@ class _TaskListViewState extends State<_TaskListView> {
 
 typedef _SummaryField = SummaryField;
 typedef _SummaryChip = SummaryChip;
-
-class _FilterDrawerContent extends StatelessWidget {
-  const _FilterDrawerContent({
-    required this.title,
-    required this.child,
-  });
-
-  final String title;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              IconButton(
-                tooltip: '关闭',
-                onPressed: () => Navigator.of(context).maybePop(),
-                icon: const Icon(Icons.close),
-              ),
-            ],
-          ),
-        ),
-        const Divider(height: 1),
-        Expanded(child: child),
-      ],
-    );
-  }
-}
