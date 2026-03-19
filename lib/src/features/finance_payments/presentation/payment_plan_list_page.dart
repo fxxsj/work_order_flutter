@@ -58,8 +58,8 @@ class PaymentPlanListEntry extends StatelessWidget {
     GenericRecord record,
   ) async {
     try {
-      final apiService = PaymentPlanApiService(context.read<ApiClient>());
-      await apiService.updateStatus(record.id);
+      final actionService = PaymentPlanActionService(context.read<ApiClient>());
+      await actionService.updateStatus(record.id);
       ToastUtil.showSuccess('状态已更新');
       final viewModel = context.read<GenericListViewModel>();
       await viewModel.loadItems(resetPage: false);

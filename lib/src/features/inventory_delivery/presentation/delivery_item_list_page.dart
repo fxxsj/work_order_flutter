@@ -9,7 +9,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_d
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
 import 'package:work_order_app/src/features/inventory_delivery/data/delivery_item_api_service.dart';
-import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_api_service.dart';
+import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_support_service.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_detail.dart';
 import 'package:work_order_app/src/features/products/data/product_api_service.dart';
 
@@ -348,8 +348,9 @@ class DeliveryItemListEntry extends StatelessWidget {
     );
     if (confirmed != true) return;
     try {
-      final itemApi = DeliveryItemApiService(context.read<ApiClient>());
-      await itemApi.deleteItem(id);
+      final supportService =
+          DeliveryOrderSupportService(context.read<ApiClient>());
+      await supportService.deleteItem(id);
       if (!context.mounted) return;
       context.read<GenericListViewModel>().reload(resetPage: true);
       ToastUtil.showSuccess('已删除');
@@ -362,13 +363,14 @@ class DeliveryItemListEntry extends StatelessWidget {
     BuildContext context,
     int orderId,
   ) async {
-    final apiService = DeliveryOrderApiService(context.read<ApiClient>());
+    final supportService =
+        DeliveryOrderSupportService(context.read<ApiClient>());
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('发货单详情'),
         content: FutureBuilder<DeliveryOrderDetail>(
-          future: apiService.fetchDetail(orderId),
+          future: supportService.fetchDeliveryOrderDetail(orderId),
           builder: (context, snapshot) {
             if (snapshot.connectionState != ConnectionState.done) {
               return const SizedBox(

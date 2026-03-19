@@ -21,15 +21,17 @@ import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/purchase_orders/application/purchase_order_view_model.dart';
 import 'package:work_order_app/src/features/purchase_orders/data/purchase_order_api_service.dart';
 import 'package:work_order_app/src/features/purchase_orders/data/purchase_order_repository_impl.dart';
-import 'package:work_order_app/src/features/purchase_orders/data/purchase_receive_record_api_service.dart';
+import 'package:work_order_app/src/features/purchase_orders/data/purchase_order_support_service.dart';
 import 'package:work_order_app/src/features/purchase_orders/domain/purchase_order.dart';
 import 'package:work_order_app/src/features/purchase_orders/domain/purchase_order_detail.dart';
 import 'package:work_order_app/src/features/purchase_orders/domain/purchase_order_repository.dart';
-import 'package:work_order_app/src/features/suppliers/data/supplier_api_service.dart';
+import 'package:work_order_app/src/features/purchase_orders/presentation/widgets/purchase_order_action_dialogs.dart';
+import 'package:work_order_app/src/features/purchase_orders/presentation/widgets/purchase_order_detail_dialog.dart';
+import 'package:work_order_app/src/features/purchase_orders/presentation/widgets/purchase_order_form_dialog.dart';
+import 'package:work_order_app/src/features/purchase_orders/presentation/widgets/purchase_order_inspection_dialogs.dart';
+import 'package:work_order_app/src/features/purchase_orders/presentation/widgets/purchase_low_stock_dialog.dart';
 import 'package:work_order_app/src/features/suppliers/data/supplier_dto.dart';
-import 'package:work_order_app/src/features/materials/data/material_api_service.dart';
 import 'package:work_order_app/src/features/materials/data/material_dto.dart';
-import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
 
 /// 采购单列表入口。
@@ -113,9 +115,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadSuppliers();
-      _loadMaterials();
-      _loadWorkOrders();
+      _loadFormOptions();
     });
   }
 
@@ -140,55 +140,33 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
     });
   }
 
-  Future<void> _loadSuppliers() async {
-    final apiService = SupplierApiService(context.read<ApiClient>());
-    setState(() => _suppliersLoading = true);
+  Future<void> _loadFormOptions() async {
+    setState(() {
+      _suppliersLoading = true;
+      _materialsLoading = true;
+    });
     try {
-      final page = await apiService.fetchSuppliers(pageSize: 200);
+      final data = await PurchaseOrderSupportService(context.read<ApiClient>())
+          .loadFormOptions();
       if (!mounted) return;
-      setState(() => _suppliers = page.items);
+      setState(() {
+        _suppliers = data.suppliers;
+        _materials = data.materials;
+        _workOrders = data.workOrders;
+      });
     } catch (_) {
       if (!mounted) return;
-      setState(() => _suppliers = []);
+      setState(() {
+        _suppliers = [];
+        _materials = [];
+        _workOrders = [];
+      });
     } finally {
       if (!mounted) return;
-      setState(() => _suppliersLoading = false);
-    }
-  }
-
-  Future<void> _loadMaterials() async {
-    final apiService = MaterialApiService(context.read<ApiClient>());
-    setState(() => _materialsLoading = true);
-    try {
-      final page = await apiService.fetchMaterials(pageSize: 400);
-      if (!mounted) return;
-      setState(() => _materials = page.items);
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _materials = []);
-    } finally {
-      if (!mounted) return;
-      setState(() => _materialsLoading = false);
-    }
-  }
-
-  Future<void> _loadWorkOrders() async {
-    final apiService = WorkOrderApiService(context.read<ApiClient>());
-    try {
-      final page = await apiService.fetchWorkOrders(
-        pageSize: 200,
-        approvalStatus: 'approved',
-        ordering: '-created_at',
-      );
-      final items = page.items
-          .where((order) =>
-              order.status != 'completed' && order.status != 'cancelled')
-          .toList();
-      if (!mounted) return;
-      setState(() => _workOrders = items);
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _workOrders = []);
+      setState(() {
+        _suppliersLoading = false;
+        _materialsLoading = false;
+      });
     }
   }
 
@@ -242,230 +220,35 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
           totalAmount: order.totalAmount,
           workOrderNumber: order.workOrderNumber,
         );
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text(_detailTitle),
-        content: SizedBox(
-          width: 700,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _DetailRow(label: '采购单号', value: resolved.orderNumber),
-                _DetailRow(
-                    label: '供应商', value: _displayText(resolved.supplierName)),
-                if ((resolved.supplierContact ?? '').trim().isNotEmpty)
-                  _DetailRow(
-                    label: '联系人',
-                    value: _displayText(resolved.supplierContact),
-                  ),
-                if ((resolved.supplierPhone ?? '').trim().isNotEmpty)
-                  _DetailRow(
-                    label: '联系电话',
-                    value: _displayText(resolved.supplierPhone),
-                  ),
-                _DetailRow(
-                  label: '状态',
-                  value:
-                      _displayText(resolved.statusDisplay ?? resolved.status),
-                ),
-                _DetailRow(
-                  label: '关联施工单',
-                  value: _displayText(resolved.workOrderNumber),
-                ),
-                _DetailRow(
-                  label: '预计到货',
-                  value: _formatDate(resolved.expectedDate),
-                ),
-                _DetailRow(
-                  label: '下单日期',
-                  value: _formatDate(resolved.orderedDate),
-                ),
-                _DetailRow(
-                  label: '实际到货',
-                  value: _formatDate(resolved.actualReceivedDate),
-                ),
-                _DetailRow(
-                  label: '总金额',
-                  value: _formatAmount(resolved.totalAmount),
-                ),
-                _DetailRow(
-                  label: '提交人',
-                  value: _displayText(resolved.submittedByName),
-                ),
-                _DetailRow(
-                  label: '提交时间',
-                  value: _formatDateTime(resolved.submittedAt),
-                ),
-                _DetailRow(
-                  label: '审核人',
-                  value: _displayText(resolved.approvedByName),
-                ),
-                _DetailRow(
-                  label: '审核时间',
-                  value: _formatDateTime(resolved.approvedAt),
-                ),
-                if ((resolved.notes ?? '').trim().isNotEmpty)
-                  _DetailRow(label: '备注', value: resolved.notes ?? ''),
-                if ((resolved.rejectionReason ?? '').trim().isNotEmpty)
-                  _DetailRow(
-                    label: '拒绝原因',
-                    value: resolved.rejectionReason ?? '',
-                  ),
-                if (resolved.items.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  Text('采购明细', style: Theme.of(context).textTheme.titleSmall),
-                  const SizedBox(height: 8),
-                  ...resolved.items.map((item) {
-                    final name = _displayText(item.materialName);
-                    final code = _displayText(item.materialCode);
-                    final quantity =
-                        '${_formatAmount(item.quantity)} ${_displayText(item.materialUnit)}';
-                    final received = _formatAmount(item.receivedQuantity);
-                    final unitPrice = _formatAmount(item.unitPrice);
-                    final subtotal = _formatAmount(item.subtotal);
-                    final status =
-                        _displayText(item.statusDisplay ?? item.status);
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '$code $name',
-                              style: Theme.of(context).textTheme.titleSmall,
-                            ),
-                            const SizedBox(height: 6),
-                            Wrap(
-                              spacing: 12,
-                              runSpacing: 4,
-                              children: [
-                                _InlineMeta(label: '采购数量', value: quantity),
-                                _InlineMeta(label: '已收货', value: received),
-                                _InlineMeta(label: '单价', value: unitPrice),
-                                _InlineMeta(label: '小计', value: subtotal),
-                                _InlineMeta(label: '状态', value: status),
-                              ],
-                            ),
-                            if ((item.notes ?? '').trim().isNotEmpty) ...[
-                              const SizedBox(height: 6),
-                              Text('备注: ${item.notes}'),
-                            ],
-                          ],
-                        ),
-                      ),
-                    );
-                  }),
-                ],
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text(_cancelText),
-          ),
-        ],
-      ),
+    await showPurchaseOrderDetailDialog(
+      context,
+      detail: resolved,
+      title: _detailTitle,
+      closeText: _cancelText,
     );
   }
 
   Future<void> _openLowStockDialog(
     PurchaseOrderViewModel viewModel,
   ) async {
-    final apiService = context.read<PurchaseOrderApiService>();
+    final supportService =
+        PurchaseOrderSupportService(context.read<ApiClient>());
     List<Map<String, dynamic>> materials = [];
     try {
-      final response = await apiService.getLowStockMaterials();
-      final list = response['materials'];
-      materials = list is List
-          ? list
-              .whereType<Map>()
-              .map((e) => Map<String, dynamic>.from(e))
-              .toList()
-          : <Map<String, dynamic>>[];
+      materials = await supportService.loadLowStockMaterials();
     } catch (err) {
       ToastUtil.showError('获取库存预警失败: $err');
     }
 
     if (!mounted) return;
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text(_lowStockTitle),
-        content: SizedBox(
-          width: 720,
-          child: materials.isEmpty
-              ? const EmptyStateCard(
-                  icon: Icons.inventory_outlined,
-                  text: '暂无库存不足的物料',
-                )
-              : SizedBox(
-                  height: 360,
-                  child: ListView.separated(
-                    itemCount: materials.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final item = materials[index];
-                      final name = item['name']?.toString() ?? '-';
-                      final code = item['code']?.toString() ?? '-';
-                      final stock = item['stock_quantity']?.toString() ?? '-';
-                      final minStock =
-                          item['min_stock_quantity']?.toString() ?? '-';
-                      final needed = item['needed_quantity']?.toString() ?? '-';
-                      final supplier =
-                          item['default_supplier__name']?.toString() ?? '-';
-                      return Card(
-                        margin: EdgeInsets.zero,
-                        child: Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('$code $name',
-                                  style:
-                                      Theme.of(context).textTheme.titleSmall),
-                              const SizedBox(height: 6),
-                              Wrap(
-                                spacing: 12,
-                                runSpacing: 4,
-                                children: [
-                                  _InlineMeta(label: '当前库存', value: stock),
-                                  _InlineMeta(label: '最小库存', value: minStock),
-                                  _InlineMeta(label: '建议采购', value: needed),
-                                  _InlineMeta(label: '默认供应商', value: supplier),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text(_cancelText),
-          ),
-          if (materials.isNotEmpty)
-            FilledButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                _openFormDialog(
-                  viewModel,
-                  prefillMaterials: materials,
-                );
-              },
-              child: const Text('创建采购单'),
-            ),
-        ],
+    await showPurchaseLowStockDialog(
+      context,
+      materials: materials,
+      title: _lowStockTitle,
+      closeText: _cancelText,
+      onCreateOrder: () => _openFormDialog(
+        viewModel,
+        prefillMaterials: materials,
       ),
     );
   }
@@ -486,11 +269,11 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
     int? supplierId = detail?.supplierId;
     int? workOrderId = detail?.workOrderId;
     final notesController = TextEditingController(text: detail?.notes ?? '');
-    List<_PurchaseItemDraft> items = [];
+    List<PurchaseItemDraft> items = [];
 
     if (detail != null && detail.items.isNotEmpty) {
       items = detail.items
-          .map((item) => _PurchaseItemDraft(
+          .map((item) => PurchaseItemDraft(
                 materialId: item.materialId ?? 0,
                 materialName: item.materialName ?? '-',
                 materialCode: item.materialCode ?? '',
@@ -510,7 +293,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
         final match = _materials
             .cast<MaterialDto?>()
             .firstWhere((m) => m?.id == materialId, orElse: () => null);
-        return _PurchaseItemDraft(
+        return PurchaseItemDraft(
           materialId: materialId,
           materialName: materialName,
           materialCode: materialCode,
@@ -522,7 +305,6 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
     }
 
     final formKey = GlobalKey<FormState>();
-    bool submitting = false;
 
     Future<void> submit(StateSetter setState) async {
       if (!(formKey.currentState?.validate() ?? false)) return;
@@ -534,7 +316,6 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
         ToastUtil.showError('请添加采购明细');
         return;
       }
-      setState(() => submitting = true);
       try {
         final payload = <String, dynamic>{
           'supplier': supplierId,
@@ -555,209 +336,33 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
           await apiService.createPurchaseOrder(payload);
         }
         if (!mounted) return;
-        Navigator.of(context).pop();
         ToastUtil.showSuccess(isEdit ? '采购单已更新' : '采购单已创建');
         await viewModel.loadPurchaseOrders(resetPage: false);
       } catch (err) {
         if (!mounted) return;
-        setState(() => submitting = false);
         ToastUtil.showError('提交失败: $err');
       }
     }
 
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            final totalAmount = items.fold<double>(
-              0,
-              (sum, item) => sum + item.quantity * item.unitPrice,
-            );
-            final workOrderOptions = List<WorkOrderDto>.from(_workOrders);
-            if (workOrderId != null &&
-                workOrderId != 0 &&
-                !workOrderOptions.any((order) => order.id == workOrderId)) {
-              workOrderOptions.add(
-                WorkOrderDto(
-                  id: workOrderId!,
-                  orderNumber: detail?.workOrderNumber ?? '施工单 #$workOrderId',
-                ),
-              );
-            }
-            return AlertDialog(
-              title: Text(isEdit ? _editTitle : _createTitle),
-              content: SizedBox(
-                width: 720,
-                child: SingleChildScrollView(
-                  child: Form(
-                    key: formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SearchableDropdownFormField<int>(
-                          key: ValueKey<String>(
-                              'purchase_supplier_${supplierId ?? 'none'}'),
-                          initialValue: supplierId,
-                          decoration: const InputDecoration(
-                            labelText: '供应商',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: _suppliers
-                              .map(
-                                (supplier) => DropdownMenuItem<int>(
-                                  value: supplier.id,
-                                  child: Text(supplier.name),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: submitting
-                              ? null
-                              : (value) => setState(() => supplierId = value),
-                          validator: (value) {
-                            if (value == null || value == 0) {
-                              return '请选择供应商';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        SearchableDropdownFormField<int>(
-                          key: ValueKey<String>(
-                              'purchase_workorder_${workOrderId ?? 'none'}'),
-                          initialValue: workOrderId,
-                          decoration: const InputDecoration(
-                            labelText: '关联施工单',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: [
-                            const DropdownMenuItem<int>(
-                              value: 0,
-                              child: Text('不关联'),
-                            ),
-                            ...workOrderOptions.map(
-                              (order) => DropdownMenuItem<int>(
-                                value: order.id,
-                                child: Text(order.orderNumber),
-                              ),
-                            ),
-                          ],
-                          onChanged: submitting
-                              ? null
-                              : (value) => setState(() {
-                                    if (value == 0) {
-                                      workOrderId = null;
-                                    } else {
-                                      workOrderId = value;
-                                    }
-                                  }),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: notesController,
-                          maxLines: 3,
-                          decoration: const InputDecoration(
-                            labelText: '备注',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text('采购明细',
-                                  style:
-                                      Theme.of(context).textTheme.titleSmall),
-                            ),
-                            TextButton.icon(
-                              onPressed: submitting || _materialsLoading
-                                  ? null
-                                  : () {
-                                      setState(() {
-                                        items.add(
-                                          _PurchaseItemDraft(
-                                            materialId: 0,
-                                            materialName: '-',
-                                            materialCode: '',
-                                            quantity: 1,
-                                            unitPrice: 0,
-                                            unit: '',
-                                          ),
-                                        );
-                                      });
-                                    },
-                              icon: const Icon(Icons.add, size: 16),
-                              label: const Text('添加明细'),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        if (items.isEmpty)
-                          const Text('暂无明细')
-                        else
-                          Column(
-                            children: items
-                                .map(
-                                  (item) => _PurchaseItemRow(
-                                    item: item,
-                                    enabled: !submitting,
-                                    materials: _materials,
-                                    onRemove: () {
-                                      setState(() {
-                                        items.remove(item);
-                                        item.dispose();
-                                      });
-                                    },
-                                    onMaterialChanged: (material) {
-                                      setState(() {
-                                        item.materialId = material.id;
-                                        item.materialName = material.name;
-                                        item.materialCode = material.code;
-                                        item.setUnit(
-                                            material.unit ?? item.unit);
-                                        item.setUnitPrice(material.unitPrice ??
-                                            item.unitPrice);
-                                      });
-                                    },
-                                    onChanged: () => setState(() {}),
-                                  ),
-                                )
-                                .toList(),
-                          ),
-                        if (items.isNotEmpty) ...[
-                          const SizedBox(height: 12),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: Text(
-                              '合计金额: ${totalAmount.toStringAsFixed(2)}',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall
-                                  ?.copyWith(fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: submitting
-                      ? null
-                      : () => Navigator.of(dialogContext).pop(),
-                  child: const Text(_cancelText),
-                ),
-                FilledButton(
-                  onPressed: submitting ? null : () => submit(setState),
-                  child: Text(submitting ? '提交中...' : _submitText),
-                ),
-              ],
-            );
-          },
-        );
-      },
+    await showPurchaseOrderFormDialog(
+      context,
+      isEdit: isEdit,
+      title: isEdit ? _editTitle : _createTitle,
+      cancelText: _cancelText,
+      submitText: _submitText,
+      materialsLoading: _materialsLoading,
+      formKey: formKey,
+      suppliers: _suppliers,
+      workOrders: _workOrders,
+      selectedSupplierId: supplierId,
+      selectedWorkOrderId: workOrderId,
+      fallbackWorkOrderNumber: detail?.workOrderNumber,
+      notesController: notesController,
+      materials: _materials,
+      items: items,
+      onSupplierChanged: (value) => supplierId = value,
+      onWorkOrderChanged: (value) => workOrderId = value == 0 ? null : value,
+      onSubmit: submit,
     );
 
     notesController.dispose();
@@ -924,325 +529,17 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
   }
 
   Future<void> _openInspectionDialog(PurchaseOrder order) async {
-    final apiService = context.read<PurchaseOrderApiService>();
-    final recordApi =
-        PurchaseReceiveRecordApiService(context.read<ApiClient>());
-    List<Map<String, dynamic>> records = [];
-    bool loading = true;
-
-    Future<void> loadRecords() async {
-      try {
-        final response = await apiService.getReceiveRecords(order.id);
-        final data = response['data'] ?? response['results'] ?? response;
-        if (data is List) {
-          records = data
-              .whereType<Map>()
-              .map((e) => Map<String, dynamic>.from(e))
-              .toList();
-        }
-      } catch (err) {
-        ToastUtil.showError('加载收货记录失败: $err');
-      } finally {
-        loading = false;
-      }
-    }
-
-    await loadRecords();
+    final supportService =
+        PurchaseOrderSupportService(context.read<ApiClient>());
     if (!mounted) return;
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            Future<void> reload() async {
-              loading = true;
-              setState(() {});
-              await loadRecords();
-              if (!mounted) return;
-              setState(() {});
-            }
-
-            return AlertDialog(
-              title: const Text(_inspectionTitle),
-              content: SizedBox(
-                width: 720,
-                child: loading
-                    ? const Center(child: CircularProgressIndicator())
-                    : records.isEmpty
-                        ? const EmptyStateCard(
-                            icon: Icons.verified_outlined,
-                            text: '暂无收货记录',
-                          )
-                        : SizedBox(
-                            height: 360,
-                            child: ListView.separated(
-                              itemCount: records.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(height: 8),
-                              itemBuilder: (context, index) {
-                                final record = records[index];
-                                final status =
-                                    record['inspection_status']?.toString() ??
-                                        '';
-                                final statusDisplay =
-                                    record['inspection_status_display']
-                                            ?.toString() ??
-                                        '-';
-                                final qualified =
-                                    _toDouble(record['qualified_quantity']) ??
-                                        0;
-                                final isStocked = record['is_stocked'] == true;
-                                final canInspect = status == 'pending';
-                                final canStockIn = (status == 'qualified' ||
-                                        status == 'partial_qualified') &&
-                                    !isStocked &&
-                                    qualified > 0;
-                                return Card(
-                                  margin: EdgeInsets.zero,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(10),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          '${record['material_code'] ?? '-'} ${record['material_name'] ?? '-'}',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleSmall,
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Wrap(
-                                          spacing: 12,
-                                          runSpacing: 4,
-                                          children: [
-                                            _InlineMeta(
-                                              label: '收货数量',
-                                              value: record['received_quantity']
-                                                      ?.toString() ??
-                                                  '-',
-                                            ),
-                                            _InlineMeta(
-                                              label: '状态',
-                                              value: statusDisplay,
-                                            ),
-                                            _InlineMeta(
-                                              label: '收货日期',
-                                              value: record['received_date']
-                                                      ?.toString() ??
-                                                  '-',
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Wrap(
-                                          spacing: 8,
-                                          children: [
-                                            if (canInspect)
-                                              OutlinedButton(
-                                                onPressed: () async {
-                                                  await _openInspectionForm(
-                                                    dialogContext,
-                                                    recordApi,
-                                                    record,
-                                                  );
-                                                  await reload();
-                                                },
-                                                child: const Text('质检'),
-                                              ),
-                                            if (canStockIn)
-                                              OutlinedButton(
-                                                onPressed: () async {
-                                                  final confirmed =
-                                                      await showDialog<bool>(
-                                                    context: dialogContext,
-                                                    builder: (confirmContext) =>
-                                                        AlertDialog(
-                                                      title: const Text('确认入库'),
-                                                      content: Text(
-                                                          '确定将 $qualified 件物料入库吗？'),
-                                                      actions: [
-                                                        TextButton(
-                                                          onPressed: () =>
-                                                              Navigator.of(
-                                                                      confirmContext)
-                                                                  .pop(false),
-                                                          child: const Text(
-                                                              _cancelText),
-                                                        ),
-                                                        TextButton(
-                                                          onPressed: () =>
-                                                              Navigator.of(
-                                                                      confirmContext)
-                                                                  .pop(true),
-                                                          child:
-                                                              const Text('确认'),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  );
-                                                  if (confirmed != true) return;
-                                                  try {
-                                                    await recordApi.stockIn(
-                                                        record['id'] as int);
-                                                    ToastUtil.showSuccess(
-                                                        '入库成功');
-                                                    await reload();
-                                                  } catch (err) {
-                                                    ToastUtil.showError(
-                                                        '入库失败: $err');
-                                                  }
-                                                },
-                                                child: const Text('入库'),
-                                              ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text(_cancelText),
-                ),
-              ],
-            );
-          },
-        );
-      },
+    await showPurchaseInspectionDialog(
+      context,
+      title: _inspectionTitle,
+      cancelText: _cancelText,
+      loadRecords: () => supportService.loadInspectionRecords(order.id),
+      confirmInspection: supportService.confirmInspection,
+      stockIn: supportService.stockIn,
     );
-  }
-
-  Future<void> _openInspectionForm(
-    BuildContext context,
-    PurchaseReceiveRecordApiService apiService,
-    Map<String, dynamic> record,
-  ) async {
-    final formKey = GlobalKey<FormState>();
-    final received = _toDouble(record['received_quantity']) ?? 0;
-    final qualifiedController =
-        TextEditingController(text: received.toStringAsFixed(2));
-    final unqualifiedController = TextEditingController(text: '0');
-    final reasonController = TextEditingController();
-    bool submitting = false;
-
-    Future<void> submit(StateSetter setState) async {
-      if (!(formKey.currentState?.validate() ?? false)) return;
-      final qualified = double.tryParse(qualifiedController.text.trim()) ?? 0;
-      final unqualified =
-          double.tryParse(unqualifiedController.text.trim()) ?? 0;
-      if ((qualified + unqualified - received).abs() > 0.01) {
-        ToastUtil.showError('合格数量 + 不合格数量 必须等于收货数量');
-        return;
-      }
-      setState(() => submitting = true);
-      try {
-        await apiService.confirmInspection(
-          record['id'] as int,
-          {
-            'qualified_quantity': qualified,
-            'unqualified_quantity': unqualified,
-            'unqualified_reason': reasonController.text.trim(),
-          },
-        );
-        if (!mounted) return;
-        Navigator.of(context).pop();
-        ToastUtil.showSuccess('质检确认成功');
-      } catch (err) {
-        if (!mounted) return;
-        setState(() => submitting = false);
-        ToastUtil.showError('质检确认失败: $err');
-      }
-    }
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('填写质检结果'),
-              content: SizedBox(
-                width: 420,
-                child: Form(
-                  key: formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _DetailRow(
-                        label: '收货数量',
-                        value: received.toStringAsFixed(2),
-                      ),
-                      TextFormField(
-                        controller: qualifiedController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
-                        decoration: const InputDecoration(labelText: '合格数量'),
-                        validator: (value) {
-                          final parsed = double.tryParse(value?.trim() ?? '');
-                          if (parsed == null || parsed < 0) return '请输入有效数量';
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: unqualifiedController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
-                        decoration: const InputDecoration(labelText: '不合格数量'),
-                        validator: (value) {
-                          final parsed = double.tryParse(value?.trim() ?? '');
-                          if (parsed == null || parsed < 0) return '请输入有效数量';
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: reasonController,
-                        maxLines: 3,
-                        decoration: const InputDecoration(labelText: '不合格原因'),
-                        validator: (value) {
-                          final unqualified = double.tryParse(
-                                  unqualifiedController.text.trim()) ??
-                              0;
-                          if (unqualified > 0 &&
-                              (value?.trim().isEmpty ?? true)) {
-                            return '请填写不合格原因';
-                          }
-                          return null;
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: submitting
-                      ? null
-                      : () => Navigator.of(dialogContext).pop(),
-                  child: const Text(_cancelText),
-                ),
-                FilledButton(
-                  onPressed: submitting ? null : () => submit(setState),
-                  child: Text(submitting ? '提交中...' : '确认'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-
-    qualifiedController.dispose();
-    unqualifiedController.dispose();
-    reasonController.dispose();
   }
 
   Future<void> _handleStatusAction(
@@ -1259,12 +556,19 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
         await apiService.approve(order.id);
         ToastUtil.showSuccess('批准成功');
       } else if (action == 'reject') {
-        final reason = await _openReasonDialog('拒绝原因');
+        final reason = await showPurchaseReasonDialog(
+          context,
+          title: '拒绝原因',
+          cancelText: _cancelText,
+        );
         if (reason == null) return;
         await apiService.reject(order.id, {'rejection_reason': reason});
         ToastUtil.showSuccess('已拒绝，采购单已退回草稿');
       } else if (action == 'place') {
-        final date = await _openDateDialog('下单日期');
+        final date = await showPurchaseDateDialog(
+          context,
+          title: '下单日期',
+        );
         final payload = <String, dynamic>{};
         if (date != null) {
           payload['ordered_date'] = _formatDate(date);
@@ -1297,46 +601,6 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
     } catch (err) {
       ToastUtil.showError('操作失败: $err');
     }
-  }
-
-  Future<String?> _openReasonDialog(String title) async {
-    final controller = TextEditingController();
-    final result = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(title),
-        content: TextFormField(
-          controller: controller,
-          maxLines: 3,
-          decoration: const InputDecoration(labelText: '原因'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text(_cancelText),
-          ),
-          TextButton(
-            onPressed: () =>
-                Navigator.of(dialogContext).pop(controller.text.trim()),
-            child: const Text('确认'),
-          ),
-        ],
-      ),
-    );
-    controller.dispose();
-    if (result == null || result.trim().isEmpty) return null;
-    return result.trim();
-  }
-
-  Future<DateTime?> _openDateDialog(String title) async {
-    final now = DateTime.now();
-    return showDatePicker(
-      context: context,
-      initialDate: now,
-      firstDate: DateTime(now.year - 5),
-      lastDate: DateTime(now.year + 5),
-      helpText: title,
-    );
   }
 
   static String _pageInfoText(PurchaseOrderViewModel viewModel) {
@@ -1786,188 +1050,6 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
 
 typedef _SummaryField = SummaryField;
 typedef _SummaryChip = SummaryChip;
-
-class _PurchaseItemDraft {
-  _PurchaseItemDraft({
-    required this.materialId,
-    required this.materialName,
-    required this.materialCode,
-    required double quantity,
-    required double unitPrice,
-    String unit = '',
-  })  : quantityController =
-            TextEditingController(text: quantity.toStringAsFixed(2)),
-        unitPriceController =
-            TextEditingController(text: unitPrice.toStringAsFixed(2)),
-        unitController = TextEditingController(text: unit);
-
-  int materialId;
-  String materialName;
-  String materialCode;
-  final TextEditingController quantityController;
-  final TextEditingController unitPriceController;
-  final TextEditingController unitController;
-
-  double get quantity => double.tryParse(quantityController.text.trim()) ?? 0;
-  double get unitPrice => double.tryParse(unitPriceController.text.trim()) ?? 0;
-  String get unit => unitController.text.trim();
-
-  void setUnit(String value) {
-    unitController.text = value;
-  }
-
-  void setUnitPrice(double value) {
-    unitPriceController.text = value.toStringAsFixed(2);
-  }
-
-  void dispose() {
-    quantityController.dispose();
-    unitPriceController.dispose();
-    unitController.dispose();
-  }
-}
-
-class _PurchaseItemRow extends StatelessWidget {
-  const _PurchaseItemRow({
-    required this.item,
-    required this.enabled,
-    required this.materials,
-    required this.onRemove,
-    required this.onMaterialChanged,
-    this.onChanged,
-  });
-
-  final _PurchaseItemDraft item;
-  final bool enabled;
-  final List<MaterialDto> materials;
-  final VoidCallback onRemove;
-  final ValueChanged<MaterialDto> onMaterialChanged;
-  final VoidCallback? onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final options = List<MaterialDto>.from(materials);
-    if (item.materialId != 0 &&
-        !options.any((material) => material.id == item.materialId)) {
-      options.add(
-        MaterialDto(
-          id: item.materialId,
-          code: item.materialCode,
-          name: item.materialName,
-          unit: item.unit,
-          unitPrice: item.unitPrice,
-        ),
-      );
-    }
-    final selectedValue =
-        options.any((material) => material.id == item.materialId)
-            ? item.materialId
-            : null;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: SearchableDropdownFormField<int>(
-              key: ValueKey<int?>(selectedValue),
-              initialValue: selectedValue,
-              decoration: const InputDecoration(
-                labelText: '物料',
-                isDense: true,
-                border: OutlineInputBorder(),
-              ),
-              items: options
-                  .map(
-                    (material) => DropdownMenuItem<int>(
-                      value: material.id,
-                      child: Text('${material.code} ${material.name}'),
-                    ),
-                  )
-                  .toList(),
-              onChanged: enabled
-                  ? (value) {
-                      if (value == null) return;
-                      final selected =
-                          materials.firstWhere((m) => m.id == value);
-                      onMaterialChanged(selected);
-                      onChanged?.call();
-                    }
-                  : null,
-              validator: (value) {
-                if (value == null || value == 0) return '请选择物料';
-                return null;
-              },
-            ),
-          ),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 90,
-            child: TextFormField(
-              controller: item.quantityController,
-              enabled: enabled,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: '数量',
-                isDense: true,
-                border: OutlineInputBorder(),
-              ),
-              onChanged: (_) => onChanged?.call(),
-              validator: (value) {
-                final parsed = double.tryParse(value?.trim() ?? '');
-                if (parsed == null || parsed <= 0) {
-                  return '无效';
-                }
-                return null;
-              },
-            ),
-          ),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 90,
-            child: TextFormField(
-              controller: item.unitController,
-              enabled: false,
-              decoration: const InputDecoration(
-                labelText: '单位',
-                isDense: true,
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 110,
-            child: TextFormField(
-              controller: item.unitPriceController,
-              enabled: enabled,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: '单价',
-                isDense: true,
-                border: OutlineInputBorder(),
-              ),
-              onChanged: (_) => onChanged?.call(),
-              validator: (value) {
-                final parsed = double.tryParse(value?.trim() ?? '');
-                if (parsed == null || parsed < 0) {
-                  return '无效';
-                }
-                return null;
-              },
-            ),
-          ),
-          const SizedBox(width: 8),
-          IconButton(
-            onPressed: enabled ? onRemove : null,
-            icon: const Icon(Icons.delete_outline),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _ReceiveItemDraft {
   _ReceiveItemDraft({

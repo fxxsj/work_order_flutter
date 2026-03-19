@@ -9,6 +9,8 @@ abstract class InvoiceRepository {
 
   Future<Map<String, dynamic>> submit(int id);
 
+  Future<Map<String, dynamic>> create(Map<String, dynamic> payload);
+
   Future<Map<String, dynamic>> approve(int id, Map<String, dynamic> payload);
 
   Future<Map<String, dynamic>> getSummary();

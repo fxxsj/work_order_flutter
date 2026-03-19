@@ -11,6 +11,7 @@ import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
 import 'package:work_order_app/src/features/products/data/product_api_service.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_item_api_service.dart';
+import 'package:work_order_app/src/features/sales_orders/data/sales_order_item_support_service.dart';
 
 class SalesOrderItemListEntry extends StatelessWidget {
   const SalesOrderItemListEntry({super.key});
@@ -356,8 +357,9 @@ class SalesOrderItemListEntry extends StatelessWidget {
     );
     if (confirmed != true) return;
     try {
-      final itemApi = SalesOrderItemApiService(context.read<ApiClient>());
-      await itemApi.deleteItem(id);
+      final supportService =
+          SalesOrderItemSupportService(context.read<ApiClient>());
+      await supportService.deleteItem(id);
       if (!context.mounted) return;
       context.read<GenericListViewModel>().reload(resetPage: true);
       ToastUtil.showSuccess('已删除');

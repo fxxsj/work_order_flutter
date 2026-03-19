@@ -10,7 +10,7 @@ import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
 import 'package:work_order_app/src/features/materials/data/material_api_service.dart';
 import 'package:work_order_app/src/features/purchase_orders/data/purchase_order_item_api_service.dart';
-import 'package:work_order_app/src/features/purchase_orders/data/purchase_order_api_service.dart';
+import 'package:work_order_app/src/features/purchase_orders/data/purchase_order_support_service.dart';
 import 'package:work_order_app/src/features/purchase_orders/domain/purchase_order_detail.dart';
 
 class PurchaseOrderItemListEntry extends StatelessWidget {
@@ -313,8 +313,9 @@ class PurchaseOrderItemListEntry extends StatelessWidget {
     );
     if (confirmed != true) return;
     try {
-      final itemApi = PurchaseOrderItemApiService(context.read<ApiClient>());
-      await itemApi.deleteItem(id);
+      final supportService =
+          PurchaseOrderSupportService(context.read<ApiClient>());
+      await supportService.deleteItem(id);
       if (!context.mounted) return;
       context.read<GenericListViewModel>().reload(resetPage: true);
       ToastUtil.showSuccess('已删除');
@@ -327,13 +328,14 @@ class PurchaseOrderItemListEntry extends StatelessWidget {
     BuildContext context,
     int orderId,
   ) async {
-    final apiService = PurchaseOrderApiService(context.read<ApiClient>());
+    final supportService =
+        PurchaseOrderSupportService(context.read<ApiClient>());
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('采购单详情'),
         content: FutureBuilder<PurchaseOrderDetail>(
-          future: apiService.fetchDetail(orderId),
+          future: supportService.fetchDetail(orderId),
           builder: (context, snapshot) {
             if (snapshot.connectionState != ConnectionState.done) {
               return const SizedBox(

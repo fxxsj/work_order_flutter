@@ -31,6 +31,7 @@ import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
 import 'package:work_order_app/src/features/tasks/data/task_repository_impl.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_repository.dart';
+import 'package:work_order_app/src/features/tasks/presentation/widgets/task_action_dialogs.dart';
 
 /// 任务列表入口。
 class TaskListEntry extends StatelessWidget {
@@ -816,12 +817,10 @@ class _TaskListViewState extends State<_TaskListView> {
     TaskViewModel viewModel,
     Task task,
   ) async {
-    await showDialog<void>(
-      context: context,
-      builder: (_) => _TaskQuantityDialog(
-        task: task,
-        onSubmit: (payload) => _submitQuantityUpdate(viewModel, task, payload),
-      ),
+    await showTaskQuantityDialog(
+      context,
+      task: task,
+      onSubmit: (payload) => _submitQuantityUpdate(viewModel, task, payload),
     );
   }
 
@@ -830,12 +829,10 @@ class _TaskListViewState extends State<_TaskListView> {
     TaskViewModel viewModel,
     Task task,
   ) async {
-    await showDialog<void>(
-      context: context,
-      builder: (_) => _TaskCompleteDialog(
-        task: task,
-        onSubmit: (payload) => _submitComplete(viewModel, task, payload),
-      ),
+    await showTaskCompleteDialog(
+      context,
+      task: task,
+      onSubmit: (payload) => _submitComplete(viewModel, task, payload),
     );
   }
 
@@ -844,14 +841,16 @@ class _TaskListViewState extends State<_TaskListView> {
     TaskViewModel viewModel,
     Task task,
   ) async {
-    await showDialog<void>(
-      context: context,
-      builder: (_) => _TaskAssignDialog(
-        task: task,
-        departments: _departments,
-        onSubmit: (operatorId, notes) =>
-            _submitAssign(viewModel, task, operatorId, notes),
-      ),
+    await showTaskAssignDialog(
+      context,
+      task: task,
+      departments: _departments,
+      loadOperators: (departmentId) {
+        final api = context.read<TaskApiService>();
+        return api.fetchDepartmentOperators(departmentId);
+      },
+      onSubmit: (operatorId, notes) =>
+          _submitAssign(viewModel, task, operatorId, notes),
     );
   }
 
@@ -908,353 +907,6 @@ class _TaskListViewState extends State<_TaskListView> {
 typedef _SummaryField = SummaryField;
 typedef _SummaryChip = SummaryChip;
 
-class _TaskQuantityDialog extends StatefulWidget {
-  const _TaskQuantityDialog({
-    required this.task,
-    required this.onSubmit,
-  });
-
-  final Task task;
-  final Future<void> Function(Map<String, dynamic> payload) onSubmit;
-
-  @override
-  State<_TaskQuantityDialog> createState() => _TaskQuantityDialogState();
-}
-
-class _TaskQuantityDialogState extends State<_TaskQuantityDialog> {
-  final _formKey = GlobalKey<FormState>();
-  int _quantityIncrement = 1;
-  int _quantityDefective = 0;
-  String _notes = '';
-  bool _submitting = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final task = widget.task;
-    final total = task.productionQuantity ?? 0;
-    final completed = task.quantityCompleted ?? 0;
-    final remaining = (total - completed).clamp(0, double.infinity).toInt();
-
-    return AlertDialog(
-      title: const Text('更新进度'),
-      content: SizedBox(
-        width: 420,
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(task.workContent ?? '任务 #${task.id}'),
-                const SizedBox(height: 8),
-                Text('已完成 $completed / $total · 剩余 $remaining'),
-                const SizedBox(height: 12),
-                TextFormField(
-                  initialValue: _quantityIncrement.toString(),
-                  decoration: const InputDecoration(labelText: '本次完成数量'),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    final parsed = int.tryParse(value ?? '');
-                    if (parsed == null || parsed <= 0) {
-                      return '请输入大于 0 的数量';
-                    }
-                    return null;
-                  },
-                  onChanged: (value) {
-                    _quantityIncrement = int.tryParse(value) ?? 0;
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  initialValue: _quantityDefective.toString(),
-                  decoration: const InputDecoration(labelText: '不良品数量'),
-                  keyboardType: TextInputType.number,
-                  onChanged: (value) {
-                    _quantityDefective = int.tryParse(value) ?? 0;
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  decoration: const InputDecoration(labelText: '备注（可选）'),
-                  onChanged: (value) => _notes = value,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _submitting ? null : () => Navigator.of(context).pop(),
-          child: const Text('取消'),
-        ),
-        FilledButton(
-          onPressed: _submitting ? null : _submit,
-          child: _submitting
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('确认更新'),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _submit() async {
-    if (!(_formKey.currentState?.validate() ?? false)) {
-      return;
-    }
-    setState(() => _submitting = true);
-    try {
-      await widget.onSubmit({
-        'quantity_increment': _quantityIncrement,
-        'quantity_defective': _quantityDefective,
-        'notes': _notes,
-      });
-      if (mounted) Navigator.of(context).pop();
-    } finally {
-      if (mounted) setState(() => _submitting = false);
-    }
-  }
-}
-
-class _TaskCompleteDialog extends StatefulWidget {
-  const _TaskCompleteDialog({
-    required this.task,
-    required this.onSubmit,
-  });
-
-  final Task task;
-  final Future<void> Function(Map<String, dynamic> payload) onSubmit;
-
-  @override
-  State<_TaskCompleteDialog> createState() => _TaskCompleteDialogState();
-}
-
-class _TaskCompleteDialogState extends State<_TaskCompleteDialog> {
-  int _quantityDefective = 0;
-  String _completionReason = '';
-  String _notes = '';
-  bool _submitting = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final task = widget.task;
-    return AlertDialog(
-      title: const Text('完成任务'),
-      content: SizedBox(
-        width: 420,
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(task.workContent ?? '任务 #${task.id}'),
-              const SizedBox(height: 12),
-              TextFormField(
-                initialValue: _quantityDefective.toString(),
-                decoration: const InputDecoration(labelText: '不良品数量'),
-                keyboardType: TextInputType.number,
-                onChanged: (value) {
-                  _quantityDefective = int.tryParse(value) ?? 0;
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                decoration: const InputDecoration(labelText: '完成理由（可选）'),
-                onChanged: (value) => _completionReason = value,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                decoration: const InputDecoration(labelText: '备注（可选）'),
-                onChanged: (value) => _notes = value,
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _submitting ? null : () => Navigator.of(context).pop(),
-          child: const Text('取消'),
-        ),
-        FilledButton(
-          onPressed: _submitting ? null : _submit,
-          child: _submitting
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('确认完成'),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _submit() async {
-    setState(() => _submitting = true);
-    try {
-      await widget.onSubmit({
-        'quantity_defective': _quantityDefective,
-        'completion_reason': _completionReason,
-        'notes': _notes,
-      });
-      if (mounted) Navigator.of(context).pop();
-    } finally {
-      if (mounted) setState(() => _submitting = false);
-    }
-  }
-}
-
-class _TaskAssignDialog extends StatefulWidget {
-  const _TaskAssignDialog({
-    required this.task,
-    required this.departments,
-    required this.onSubmit,
-  });
-
-  final Task task;
-  final List<Department> departments;
-  final Future<void> Function(int operatorId, String notes) onSubmit;
-
-  @override
-  State<_TaskAssignDialog> createState() => _TaskAssignDialogState();
-}
-
-class _TaskAssignDialogState extends State<_TaskAssignDialog> {
-  int? _departmentId;
-  List<_OperatorOption> _operators = [];
-  int? _operatorId;
-  bool _loadingOperators = false;
-  bool _submitting = false;
-  String _notes = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _departmentId = widget.task.assignedDepartmentId;
-    if (_departmentId == null && widget.departments.isNotEmpty) {
-      _departmentId = widget.departments.first.id;
-    }
-    if (_departmentId != null) {
-      _loadOperators(_departmentId!);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('分派操作员'),
-      content: SizedBox(
-        width: 420,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SearchableDropdownFormField<int?>(
-              key: ValueKey<int?>(_departmentId),
-              initialValue: _departmentId,
-              decoration: const InputDecoration(labelText: '部门'),
-              items: [
-                for (final dept in widget.departments)
-                  DropdownMenuItem<int?>(
-                    value: dept.id,
-                    child: Text(dept.name),
-                  ),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _departmentId = value;
-                  _operatorId = null;
-                  _operators = [];
-                });
-                if (value != null) {
-                  _loadOperators(value);
-                }
-              },
-            ),
-            const SizedBox(height: 12),
-            if (_loadingOperators) const LinearProgressIndicator(minHeight: 2),
-            SearchableDropdownFormField<int?>(
-              key: ValueKey<int?>(_operatorId),
-              initialValue: _operatorId,
-              decoration: const InputDecoration(labelText: '操作员'),
-              items: _operators
-                  .map((op) => DropdownMenuItem<int?>(
-                      value: op.id, child: Text(op.name)))
-                  .toList(),
-              onChanged: (value) => setState(() => _operatorId = value),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              decoration: const InputDecoration(labelText: '备注（可选）'),
-              onChanged: (value) => _notes = value,
-            ),
-            if (_operators.isEmpty && !_loadingOperators)
-              const Padding(
-                padding: EdgeInsets.only(top: 8),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text('当前部门暂无可分派操作员'),
-                ),
-              ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _submitting ? null : () => Navigator.of(context).pop(),
-          child: const Text('取消'),
-        ),
-        FilledButton(
-          onPressed: _submitting || _operatorId == null ? null : _submit,
-          child: _submitting
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('确认分派'),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _loadOperators(int departmentId) async {
-    setState(() => _loadingOperators = true);
-    try {
-      final api = context.read<TaskApiService>();
-      final payload = await api.fetchDepartmentOperators(departmentId);
-      final ops = payload
-          .map((item) => _OperatorOption.fromJson(item))
-          .where((item) => item.id > 0)
-          .toList();
-      setState(() {
-        _operators = ops;
-        if (_operators.isNotEmpty) {
-          _operatorId = _operators.first.id;
-        }
-      });
-    } catch (_) {
-      setState(() => _operators = []);
-    } finally {
-      if (mounted) setState(() => _loadingOperators = false);
-    }
-  }
-
-  Future<void> _submit() async {
-    if (_operatorId == null) return;
-    setState(() => _submitting = true);
-    try {
-      await widget.onSubmit(_operatorId!, _notes);
-      if (mounted) Navigator.of(context).pop();
-    } finally {
-      if (mounted) setState(() => _submitting = false);
-    }
-  }
-}
-
 class _FilterDrawerContent extends StatelessWidget {
   const _FilterDrawerContent({
     required this.title,
@@ -1294,29 +946,5 @@ class _FilterDrawerContent extends StatelessWidget {
         Expanded(child: child),
       ],
     );
-  }
-}
-
-class _OperatorOption {
-  const _OperatorOption({required this.id, required this.name});
-
-  final int id;
-  final String name;
-
-  factory _OperatorOption.fromJson(Map<String, dynamic> json) {
-    final id = _toInt(json['id']);
-    final first = json['first_name']?.toString() ?? '';
-    final last = json['last_name']?.toString() ?? '';
-    final username = json['username']?.toString() ?? '';
-    final fullName = '$first$last'.trim();
-    final name = fullName.isNotEmpty
-        ? fullName
-        : (username.isNotEmpty ? username : '操作员 $id');
-    return _OperatorOption(id: id, name: name);
-  }
-
-  static int _toInt(dynamic value) {
-    if (value is num) return value.toInt();
-    return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 }

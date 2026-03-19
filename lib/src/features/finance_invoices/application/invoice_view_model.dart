@@ -11,7 +11,20 @@ class InvoiceViewModel extends PaginatedViewModel<Invoice> {
 
   Future<void> initialize() => loadItems(resetPage: true);
 
-  Future<void> loadInvoices({bool resetPage = false}) => loadItems(resetPage: resetPage);
+  Future<void> loadInvoices({bool resetPage = false}) =>
+      loadItems(resetPage: resetPage);
+
+  Future<void> submitInvoice(int id) {
+    return _repository.submit(id);
+  }
+
+  Future<void> createInvoice(Map<String, dynamic> payload) {
+    return _repository.create(payload);
+  }
+
+  Future<void> approveInvoice(int id, Map<String, dynamic> payload) {
+    return _repository.approve(id, payload);
+  }
 
   @override
   Future<PageData<Invoice>> fetchPage({

@@ -18,17 +18,18 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_d
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
-import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
 import 'package:work_order_app/src/features/customer/data/customer_dto.dart';
 import 'package:work_order_app/src/features/inventory_delivery/application/delivery_order_view_model.dart';
 import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_api_service.dart';
 import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_repository_impl.dart';
+import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_support_service.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_detail.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_repository.dart';
-import 'package:work_order_app/src/features/products/data/product_api_service.dart';
+import 'package:work_order_app/src/features/inventory_delivery/presentation/widgets/delivery_order_action_dialogs.dart';
+import 'package:work_order_app/src/features/inventory_delivery/presentation/widgets/delivery_order_detail_dialog.dart';
+import 'package:work_order_app/src/features/inventory_delivery/presentation/widgets/delivery_order_form_dialog.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
-import 'package:work_order_app/src/features/sales_orders/data/sales_order_api_service.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_dto.dart';
 
 /// 发货单列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
@@ -119,9 +120,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadCustomers();
-      _loadSalesOrders();
-      _loadProducts();
+      _loadFormOptions();
     });
   }
 
@@ -161,59 +160,37 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     });
   }
 
-  Future<void> _loadCustomers() async {
-    final apiService = CustomerApiService(context.read<ApiClient>());
-    setState(() => _customersLoading = true);
-    try {
-      final page = await apiService.fetchCustomers(pageSize: 200);
-      if (!mounted) return;
-      setState(() => _customers = page.items);
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _customers = []);
-    } finally {
-      if (!mounted) return;
-      setState(() => _customersLoading = false);
-    }
-  }
-
-  Future<void> _loadSalesOrders() async {
-    final apiService = SalesOrderApiService(context.read<ApiClient>());
+  Future<void> _loadFormOptions() async {
     setState(() {
+      _customersLoading = true;
       _salesOrdersLoading = true;
       _salesOrdersLoaded = false;
+      _productsLoading = true;
     });
     try {
-      final page = await apiService.fetchSalesOrders(pageSize: 200);
-      final items =
-          page.items.where((order) => order.status == 'completed').toList();
+      final data = await DeliveryOrderSupportService(context.read<ApiClient>())
+          .loadFormOptions();
       if (!mounted) return;
-      setState(() => _salesOrders = items);
+      setState(() {
+        _customers = data.customers;
+        _salesOrders = data.salesOrders;
+        _products = data.products;
+      });
     } catch (_) {
       if (!mounted) return;
-      setState(() => _salesOrders = []);
+      setState(() {
+        _customers = [];
+        _salesOrders = [];
+        _products = [];
+      });
     } finally {
       if (!mounted) return;
       setState(() {
+        _customersLoading = false;
         _salesOrdersLoading = false;
         _salesOrdersLoaded = true;
+        _productsLoading = false;
       });
-    }
-  }
-
-  Future<void> _loadProducts() async {
-    final apiService = ProductApiService(context.read<ApiClient>());
-    setState(() => _productsLoading = true);
-    try {
-      final items = await apiService.fetchProducts(pageSize: 300);
-      if (!mounted) return;
-      setState(() => _products = items);
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _products = []);
-    } finally {
-      if (!mounted) return;
-      setState(() => _productsLoading = false);
     }
   }
 
@@ -242,100 +219,11 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     );
 
     if (!mounted) return;
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text(_detailTitle),
-          content: SizedBox(
-            width: 700,
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _DetailRow(label: '发货单号', value: detail!.orderNumber),
-                  _DetailRow(
-                    label: '客户',
-                    value: _displayText(detail.customerName),
-                  ),
-                  _DetailRow(
-                    label: '销售订单',
-                    value: _displayText(detail.salesOrderNumber),
-                  ),
-                  _DetailRow(
-                    label: '状态',
-                    value: _displayText(detail.statusDisplay ?? detail.status),
-                  ),
-                  _DetailRow(
-                    label: '发货日期',
-                    value: _formatDate(detail.deliveryDate),
-                  ),
-                  _DetailRow(
-                    label: '收货人',
-                    value: _displayText(detail.receiverName),
-                  ),
-                  _DetailRow(
-                    label: '联系电话',
-                    value: _displayText(detail.receiverPhone),
-                  ),
-                  _DetailRow(
-                    label: '送货地址',
-                    value: _displayText(detail.deliveryAddress),
-                  ),
-                  _DetailRow(
-                    label: '物流公司',
-                    value: _displayText(detail.logisticsCompany),
-                  ),
-                  _DetailRow(
-                    label: '物流单号',
-                    value: _displayText(detail.trackingNumber),
-                  ),
-                  _DetailRow(
-                    label: '运费',
-                    value: _formatAmount(detail.freight),
-                  ),
-                  _DetailRow(
-                    label: '包裹数',
-                    value: detail.packageCount?.toString() ?? _emptyCellText,
-                  ),
-                  _DetailRow(
-                    label: '总重量',
-                    value: _formatAmount(detail.packageWeight),
-                  ),
-                  if ((detail.receivedNotes ?? '').trim().isNotEmpty)
-                    _DetailRow(
-                      label: '签收备注',
-                      value: detail.receivedNotes ?? '',
-                    ),
-                  if (detail.items.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    Text('发货明细', style: Theme.of(context).textTheme.titleSmall),
-                    const SizedBox(height: 8),
-                    ...detail.items.map(
-                      (item) => _DetailRow(
-                        label: _displayText(item.productName),
-                        value:
-                            '${_formatAmount(item.quantity)} ${item.unit ?? ''}'
-                                .trim(),
-                      ),
-                    ),
-                  ],
-                  if ((detail.notes ?? '').trim().isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    _DetailRow(label: '备注', value: detail.notes ?? ''),
-                  ],
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text(_cancelText),
-            ),
-          ],
-        );
-      },
+    await showDeliveryOrderDetailDialog(
+      context,
+      detail: detail,
+      title: _detailTitle,
+      closeText: _cancelText,
     );
   }
 
@@ -379,7 +267,8 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     int? prefillSalesOrderId,
   }) async {
     final apiService = context.read<DeliveryOrderApiService>();
-    final salesOrderService = SalesOrderApiService(context.read<ApiClient>());
+    final supportService =
+        DeliveryOrderSupportService(context.read<ApiClient>());
     final isEdit = order != null;
     DeliveryOrderDetail? detail;
     if (isEdit) {
@@ -415,10 +304,10 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     );
     final notesController = TextEditingController(text: detail?.notes ?? '');
 
-    List<_DeliveryItemDraft> items = [];
+    List<DeliveryItemDraft> items = [];
     if (detail != null && detail.items.isNotEmpty) {
       items = detail.items
-          .map((item) => _DeliveryItemDraft(
+          .map((item) => DeliveryItemDraft(
                 productId: item.productId ?? 0,
                 productName: item.productName ?? '-',
                 maxQuantity: item.quantity ?? 0,
@@ -431,14 +320,13 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     }
 
     final formKey = GlobalKey<FormState>();
-    bool submitting = false;
 
     Future<void> applySalesOrder(
       int id, {
       StateSetter? setState,
     }) async {
       try {
-        final detailDto = await salesOrderService.fetchSalesOrder(id);
+        final detailDto = await supportService.fetchSalesOrderDetail(id);
         final salesDetail = detailDto.toEntity();
         final customerId = salesDetail.customerId ?? 0;
         for (final item in items) {
@@ -459,7 +347,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
             final delivered = (item.deliveredQuantity ?? 0).toDouble();
             final remaining =
                 (ordered - delivered).clamp(0, ordered).toDouble();
-            return _DeliveryItemDraft(
+            return DeliveryItemDraft(
               productId: item.productId ?? 0,
               productName: item.productName ?? '-',
               maxQuantity: remaining,
@@ -490,7 +378,6 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
         ToastUtil.showError('请添加发货明细');
         return;
       }
-      setState(() => submitting = true);
       try {
         final payload = <String, dynamic>{
           'delivery_date':
@@ -521,7 +408,6 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
         } else {
           if (selectedSalesOrderId == null || selectedCustomerId == null) {
             ToastUtil.showError('请选择销售订单');
-            setState(() => submitting = false);
             return;
           }
           payload['sales_order'] = selectedSalesOrderId;
@@ -534,236 +420,35 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
         await viewModel.loadDeliveryOrders(resetPage: false);
       } catch (err) {
         if (!mounted) return;
-        setState(() => submitting = false);
         ToastUtil.showError('提交失败: $err');
       }
     }
 
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: Text(isEdit ? _editTitle : _createTitle),
-              content: SizedBox(
-                width: 720,
-                child: SingleChildScrollView(
-                  child: Form(
-                    key: formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (!isEdit)
-                          SearchableDropdownFormField<int>(
-                            key: ValueKey<int?>(selectedSalesOrderId),
-                            initialValue: selectedSalesOrderId,
-                            decoration: const InputDecoration(
-                              labelText: '销售订单',
-                              border: OutlineInputBorder(),
-                            ),
-                            items: _salesOrders
-                                .map(
-                                  (order) => DropdownMenuItem(
-                                    value: order.id,
-                                    child: Text(order.orderNumber),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: submitting
-                                ? null
-                                : (value) {
-                                    if (value == null) return;
-                                    applySalesOrder(value, setState: setState);
-                                  },
-                            validator: (value) {
-                              if (!isEdit && (value == null || value == 0)) {
-                                return '请选择销售订单';
-                              }
-                              return null;
-                            },
-                          ),
-                        if (!isEdit) const SizedBox(height: 12),
-                        TextFormField(
-                          controller: receiverNameController,
-                          decoration: const InputDecoration(
-                            labelText: '收货人',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) =>
-                              (value?.trim().isEmpty ?? true) ? '请输入收货人' : null,
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: receiverPhoneController,
-                          decoration: const InputDecoration(
-                            labelText: '联系电话',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) => (value?.trim().isEmpty ?? true)
-                              ? '请输入联系电话'
-                              : null,
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: addressController,
-                          decoration: const InputDecoration(
-                            labelText: '送货地址',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) => (value?.trim().isEmpty ?? true)
-                              ? '请输入送货地址'
-                              : null,
-                        ),
-                        const SizedBox(height: 12),
-                        _DateField(
-                          label: '发货日期',
-                          value: deliveryDate,
-                          onPicked: (picked) =>
-                              setState(() => deliveryDate = picked),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: logisticsController,
-                          decoration: const InputDecoration(
-                            labelText: '物流公司',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: trackingController,
-                          decoration: const InputDecoration(
-                            labelText: '物流单号',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextFormField(
-                                controller: freightController,
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                        decimal: true),
-                                decoration: const InputDecoration(
-                                  labelText: '运费',
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: TextFormField(
-                                controller: packageCountController,
-                                keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(
-                                  labelText: '包裹数',
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: TextFormField(
-                                controller: packageWeightController,
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                        decimal: true),
-                                decoration: const InputDecoration(
-                                  labelText: '总重量(kg)',
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: notesController,
-                          maxLines: 3,
-                          decoration: const InputDecoration(
-                            labelText: '备注',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text('发货明细',
-                                  style:
-                                      Theme.of(context).textTheme.titleSmall),
-                            ),
-                            TextButton.icon(
-                              onPressed: submitting || _productsLoading
-                                  ? null
-                                  : () {
-                                      setState(() {
-                                        items.add(
-                                          _DeliveryItemDraft(
-                                            productId: 0,
-                                            productName: '-',
-                                            maxQuantity: 0,
-                                            initialQuantity: 1,
-                                          ),
-                                        );
-                                      });
-                                    },
-                              icon: const Icon(Icons.add, size: 16),
-                              label: const Text('添加明细'),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        if (items.isEmpty)
-                          const Text('暂无明细')
-                        else
-                          Column(
-                            children: items
-                                .map(
-                                  (item) => _DeliveryItemRow(
-                                    item: item,
-                                    enabled: !submitting,
-                                    products: _products,
-                                    onRemove: () {
-                                      setState(() {
-                                        items.remove(item);
-                                        item.dispose();
-                                      });
-                                    },
-                                    onProductChanged: (product) {
-                                      setState(() {
-                                        item.productId = product.id;
-                                        item.productName = product.displayLabel;
-                                      });
-                                    },
-                                  ),
-                                )
-                                .toList(),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: submitting
-                      ? null
-                      : () => Navigator.of(dialogContext).pop(),
-                  child: const Text(_cancelText),
-                ),
-                FilledButton(
-                  onPressed: submitting ? null : () => submit(setState),
-                  child: Text(submitting ? '提交中...' : _submitText),
-                ),
-              ],
-            );
-          },
-        );
-      },
+    await showDeliveryOrderFormDialog(
+      context,
+      isEdit: isEdit,
+      title: isEdit ? _editTitle : _createTitle,
+      cancelText: _cancelText,
+      submitText: _submitText,
+      productsLoading: _productsLoading,
+      formKey: formKey,
+      salesOrders: _salesOrders,
+      products: _products,
+      selectedSalesOrderId: selectedSalesOrderId,
+      deliveryDate: deliveryDate,
+      receiverNameController: receiverNameController,
+      receiverPhoneController: receiverPhoneController,
+      addressController: addressController,
+      logisticsController: logisticsController,
+      trackingController: trackingController,
+      freightController: freightController,
+      packageCountController: packageCountController,
+      packageWeightController: packageWeightController,
+      notesController: notesController,
+      items: items,
+      onSalesOrderChanged: applySalesOrder,
+      onDatePicked: (picked) => deliveryDate = picked,
+      onSubmit: submit,
     );
 
     receiverNameController.dispose();
@@ -786,87 +471,32 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     DeliveryOrder order,
   ) async {
     final apiService = context.read<DeliveryOrderApiService>();
-    final formKey = GlobalKey<FormState>();
-    final logisticsController =
-        TextEditingController(text: order.logisticsCompany ?? '');
-    final trackingController =
-        TextEditingController(text: order.trackingNumber ?? '');
-    bool submitting = false;
-
-    Future<void> submit(StateSetter setState) async {
-      if (!(formKey.currentState?.validate() ?? false)) return;
-      setState(() => submitting = true);
-      try {
-        final logistics = logisticsController.text.trim();
-        final tracking = trackingController.text.trim();
-        final payload = <String, dynamic>{};
-        if (logistics.isNotEmpty) {
-          payload['logistics_company'] = logistics;
+    await showDeliveryShipDialog(
+      context,
+      cancelText: _cancelText,
+      submitText: _submitText,
+      title: _shipTitle,
+      initialLogisticsCompany: order.logisticsCompany ?? '',
+      initialTrackingNumber: order.trackingNumber ?? '',
+      onSubmit: (logistics, tracking) async {
+        try {
+          final payload = <String, dynamic>{};
+          if (logistics.isNotEmpty) {
+            payload['logistics_company'] = logistics;
+          }
+          if (tracking.isNotEmpty) {
+            payload['tracking_number'] = tracking;
+          }
+          await apiService.ship(order.id, payload);
+          if (!mounted) return;
+          ToastUtil.showSuccess(_shipSuccessText);
+          await viewModel.loadDeliveryOrders(resetPage: false);
+        } catch (err) {
+          ToastUtil.showError('$_shipErrorText$err');
+          rethrow;
         }
-        if (tracking.isNotEmpty) {
-          payload['tracking_number'] = tracking;
-        }
-        await apiService.ship(order.id, payload);
-        if (!mounted) return;
-        Navigator.of(context).pop();
-        ToastUtil.showSuccess(_shipSuccessText);
-        await viewModel.loadDeliveryOrders(resetPage: false);
-      } catch (err) {
-        if (!mounted) return;
-        setState(() => submitting = false);
-        ToastUtil.showError('$_shipErrorText$err');
-      }
-    }
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text(_shipTitle),
-              content: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: SingleChildScrollView(
-                  child: Form(
-                    key: formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        TextFormField(
-                          controller: logisticsController,
-                          decoration: const InputDecoration(labelText: '物流公司'),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: trackingController,
-                          decoration: const InputDecoration(labelText: '运单号'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: submitting
-                      ? null
-                      : () => Navigator.of(dialogContext).pop(),
-                  child: const Text(_cancelText),
-                ),
-                FilledButton(
-                  onPressed: submitting ? null : () => submit(setState),
-                  child: Text(submitting ? '提交中...' : _submitText),
-                ),
-              ],
-            );
-          },
-        );
       },
     );
-
-    logisticsController.dispose();
-    trackingController.dispose();
   }
 
   Future<void> _openReceiveDialog(
@@ -875,70 +505,27 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     DeliveryOrder order,
   ) async {
     final apiService = context.read<DeliveryOrderApiService>();
-    final formKey = GlobalKey<FormState>();
-    final notesController = TextEditingController();
-    bool submitting = false;
-
-    Future<void> submit(StateSetter setState) async {
-      if (!(formKey.currentState?.validate() ?? false)) return;
-      setState(() => submitting = true);
-      try {
-        final notes = notesController.text.trim();
-        final payload = <String, dynamic>{};
-        if (notes.isNotEmpty) {
-          payload['received_notes'] = notes;
+    await showDeliveryReceiveDialog(
+      context,
+      cancelText: _cancelText,
+      submitText: _submitText,
+      title: _receiveTitle,
+      onSubmit: (notes) async {
+        try {
+          final payload = <String, dynamic>{};
+          if (notes.isNotEmpty) {
+            payload['received_notes'] = notes;
+          }
+          await apiService.receive(order.id, payload);
+          if (!mounted) return;
+          ToastUtil.showSuccess(_receiveSuccessText);
+          await viewModel.loadDeliveryOrders(resetPage: false);
+        } catch (err) {
+          ToastUtil.showError('$_receiveErrorText$err');
+          rethrow;
         }
-        await apiService.receive(order.id, payload);
-        if (!mounted) return;
-        Navigator.of(context).pop();
-        ToastUtil.showSuccess(_receiveSuccessText);
-        await viewModel.loadDeliveryOrders(resetPage: false);
-      } catch (err) {
-        if (!mounted) return;
-        setState(() => submitting = false);
-        ToastUtil.showError('$_receiveErrorText$err');
-      }
-    }
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text(_receiveTitle),
-              content: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: SingleChildScrollView(
-                  child: Form(
-                    key: formKey,
-                    child: TextFormField(
-                      controller: notesController,
-                      maxLines: 3,
-                      decoration: const InputDecoration(labelText: '签收备注'),
-                    ),
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: submitting
-                      ? null
-                      : () => Navigator.of(dialogContext).pop(),
-                  child: const Text(_cancelText),
-                ),
-                FilledButton(
-                  onPressed: submitting ? null : () => submit(setState),
-                  child: Text(submitting ? '提交中...' : _submitText),
-                ),
-              ],
-            );
-          },
-        );
       },
     );
-
-    notesController.dispose();
   }
 
   Future<void> _openRejectDialog(
@@ -947,72 +534,23 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     DeliveryOrder order,
   ) async {
     final apiService = context.read<DeliveryOrderApiService>();
-    final formKey = GlobalKey<FormState>();
-    final reasonController = TextEditingController();
-    bool submitting = false;
-
-    Future<void> submit(StateSetter setState) async {
-      if (!(formKey.currentState?.validate() ?? false)) return;
-      setState(() => submitting = true);
-      try {
-        final reason = reasonController.text.trim();
-        await apiService.reject(order.id, {'reject_reason': reason});
-        if (!mounted) return;
-        Navigator.of(context).pop();
-        ToastUtil.showSuccess(_rejectSuccessText);
-        await viewModel.loadDeliveryOrders(resetPage: false);
-      } catch (err) {
-        if (!mounted) return;
-        setState(() => submitting = false);
-        ToastUtil.showError('$_rejectErrorText$err');
-      }
-    }
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text(_rejectTitle),
-              content: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: SingleChildScrollView(
-                  child: Form(
-                    key: formKey,
-                    child: TextFormField(
-                      controller: reasonController,
-                      maxLines: 3,
-                      decoration: const InputDecoration(labelText: '拒收原因'),
-                      validator: (value) {
-                        if ((value?.trim() ?? '').isEmpty) {
-                          return '请输入拒收原因';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: submitting
-                      ? null
-                      : () => Navigator.of(dialogContext).pop(),
-                  child: const Text(_cancelText),
-                ),
-                FilledButton(
-                  onPressed: submitting ? null : () => submit(setState),
-                  child: Text(submitting ? '提交中...' : _submitText),
-                ),
-              ],
-            );
-          },
-        );
+    await showDeliveryRejectDialog(
+      context,
+      cancelText: _cancelText,
+      submitText: _submitText,
+      title: _rejectTitle,
+      onSubmit: (reason) async {
+        try {
+          await apiService.reject(order.id, {'reject_reason': reason});
+          if (!mounted) return;
+          ToastUtil.showSuccess(_rejectSuccessText);
+          await viewModel.loadDeliveryOrders(resetPage: false);
+        } catch (err) {
+          ToastUtil.showError('$_rejectErrorText$err');
+          rethrow;
+        }
       },
     );
-
-    reasonController.dispose();
   }
 
   static String _pageInfoText(DeliveryOrderViewModel viewModel) {
@@ -1606,252 +1144,6 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
 
 typedef _SummaryField = SummaryField;
 typedef _SummaryChip = SummaryChip;
-
-class _DetailRow extends StatelessWidget {
-  const _DetailRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 90,
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).hintColor,
-                  ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DeliveryItemDraft {
-  _DeliveryItemDraft({
-    required this.productId,
-    required this.productName,
-    required this.maxQuantity,
-    required double initialQuantity,
-    double unitPrice = 0,
-    String unit = '',
-    String stockBatch = '',
-  })  : quantityController =
-            TextEditingController(text: initialQuantity.toStringAsFixed(2)),
-        unitPriceController =
-            TextEditingController(text: unitPrice.toStringAsFixed(2)),
-        unitController = TextEditingController(text: unit),
-        stockBatchController = TextEditingController(text: stockBatch);
-
-  int productId;
-  String productName;
-  final double maxQuantity;
-  final TextEditingController quantityController;
-  final TextEditingController unitPriceController;
-  final TextEditingController unitController;
-  final TextEditingController stockBatchController;
-
-  double get quantity => double.tryParse(quantityController.text.trim()) ?? 0;
-  double get unitPrice => double.tryParse(unitPriceController.text.trim()) ?? 0;
-  String get unit => unitController.text.trim();
-  String get stockBatch => stockBatchController.text.trim();
-
-  void dispose() {
-    quantityController.dispose();
-    unitPriceController.dispose();
-    unitController.dispose();
-    stockBatchController.dispose();
-  }
-}
-
-class _DeliveryItemRow extends StatelessWidget {
-  const _DeliveryItemRow({
-    required this.item,
-    required this.enabled,
-    required this.products,
-    required this.onRemove,
-    required this.onProductChanged,
-  });
-
-  final _DeliveryItemDraft item;
-  final bool enabled;
-  final List<ProductOption> products;
-  final VoidCallback onRemove;
-  final ValueChanged<ProductOption> onProductChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: SearchableDropdownFormField<int>(
-              key: ValueKey<int?>(item.productId),
-              initialValue: item.productId == 0 ? null : item.productId,
-              decoration: const InputDecoration(
-                labelText: '产品',
-                isDense: true,
-                border: OutlineInputBorder(),
-              ),
-              items: products
-                  .map(
-                    (product) => DropdownMenuItem<int>(
-                      value: product.id,
-                      child: Text(product.displayLabel),
-                    ),
-                  )
-                  .toList(),
-              onChanged: enabled
-                  ? (value) {
-                      if (value == null) return;
-                      final selected =
-                          products.firstWhere((p) => p.id == value);
-                      onProductChanged(selected);
-                    }
-                  : null,
-              validator: (value) {
-                if (value == null || value == 0) return '请选择产品';
-                return null;
-              },
-            ),
-          ),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 90,
-            child: TextFormField(
-              controller: item.quantityController,
-              enabled: enabled,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: '数量',
-                isDense: true,
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) {
-                final parsed = double.tryParse(value?.trim() ?? '');
-                if (parsed == null || parsed <= 0) {
-                  return '无效';
-                }
-                if (item.maxQuantity > 0 && parsed > item.maxQuantity) {
-                  return '最多${item.maxQuantity.toStringAsFixed(2)}';
-                }
-                return null;
-              },
-            ),
-          ),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 90,
-            child: TextFormField(
-              controller: item.unitController,
-              enabled: enabled,
-              decoration: const InputDecoration(
-                labelText: '单位',
-                isDense: true,
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 110,
-            child: TextFormField(
-              controller: item.unitPriceController,
-              enabled: enabled,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: '单价',
-                isDense: true,
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 120,
-            child: TextFormField(
-              controller: item.stockBatchController,
-              enabled: enabled,
-              decoration: const InputDecoration(
-                labelText: '批次',
-                isDense: true,
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          IconButton(
-            onPressed: enabled ? onRemove : null,
-            icon: const Icon(Icons.delete_outline),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DateField extends StatelessWidget {
-  const _DateField({
-    required this.label,
-    required this.value,
-    required this.onPicked,
-  });
-
-  final String label;
-  final DateTime? value;
-  final ValueChanged<DateTime> onPicked;
-
-  String _formatDate(DateTime? date) {
-    if (date == null) return '';
-    final y = date.year.toString().padLeft(4, '0');
-    final m = date.month.toString().padLeft(2, '0');
-    final d = date.day.toString().padLeft(2, '0');
-    return '$y-$m-$d';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final controller = TextEditingController(text: _formatDate(value));
-    return TextFormField(
-      controller: controller,
-      readOnly: true,
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
-        suffixIcon: const Icon(Icons.date_range_outlined),
-      ),
-      onTap: () async {
-        final now = DateTime.now();
-        final picked = await showDatePicker(
-          context: context,
-          initialDate: value ?? now,
-          firstDate: DateTime(now.year - 5),
-          lastDate: DateTime(now.year + 5),
-        );
-        if (picked != null) {
-          onPicked(picked);
-        }
-      },
-    );
-  }
-}
 
 class _FilterDrawerContent extends StatelessWidget {
   const _FilterDrawerContent({

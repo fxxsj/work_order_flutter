@@ -8,7 +8,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
-import 'package:work_order_app/src/features/stock_in/data/stock_in_api_service.dart';
+import 'package:work_order_app/src/features/stock_in/data/stock_in_support_service.dart';
 
 class StockInListEntry extends StatelessWidget {
   const StockInListEntry({super.key});
@@ -112,7 +112,7 @@ class StockInListEntry extends StatelessWidget {
     BuildContext context, {
     GenericRecord? record,
   }) async {
-    final apiService = StockInApiService(context.read<ApiClient>());
+    final supportService = StockInSupportService(context.read<ApiClient>());
     final isEdit = record != null;
     final recordId = record?.id;
     final workOrderController = TextEditingController(
@@ -196,11 +196,10 @@ class StockInListEntry extends StatelessWidget {
                             'stock_in_date': dateController.text.trim(),
                             'notes': notesController.text.trim(),
                           };
-                          if (isEdit && recordId != null) {
-                            await apiService.updateStockIn(recordId, payload);
-                          } else {
-                            await apiService.createStockIn(payload);
-                          }
+                          await supportService.save(
+                            id: isEdit ? recordId : null,
+                            payload: payload,
+                          );
                           if (!context.mounted) return;
                           context
                               .read<GenericListViewModel>()
@@ -227,9 +226,9 @@ class StockInListEntry extends StatelessWidget {
   }
 
   static Future<void> _submitStockIn(BuildContext context, int id) async {
-    final apiService = StockInApiService(context.read<ApiClient>());
+    final supportService = StockInSupportService(context.read<ApiClient>());
     try {
-      await apiService.submit(id);
+      await supportService.submit(id);
       if (!context.mounted) return;
       context.read<GenericListViewModel>().reload(resetPage: true);
       ToastUtil.showSuccess('已提交');
@@ -239,9 +238,9 @@ class StockInListEntry extends StatelessWidget {
   }
 
   static Future<void> _approveStockIn(BuildContext context, int id) async {
-    final apiService = StockInApiService(context.read<ApiClient>());
+    final supportService = StockInSupportService(context.read<ApiClient>());
     try {
-      await apiService.approve(id);
+      await supportService.approve(id);
       if (!context.mounted) return;
       context.read<GenericListViewModel>().reload(resetPage: true);
       ToastUtil.showSuccess('已审核');

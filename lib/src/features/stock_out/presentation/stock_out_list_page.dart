@@ -8,9 +8,8 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
-import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_api_service.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_detail.dart';
-import 'package:work_order_app/src/features/stock_out/data/stock_out_api_service.dart';
+import 'package:work_order_app/src/features/stock_out/data/stock_out_support_service.dart';
 
 class StockOutListEntry extends StatelessWidget {
   const StockOutListEntry({super.key});
@@ -108,7 +107,7 @@ class StockOutListEntry extends StatelessWidget {
     BuildContext context, {
     GenericRecord? record,
   }) async {
-    final apiService = StockOutApiService(context.read<ApiClient>());
+    final supportService = StockOutSupportService(context.read<ApiClient>());
     final isEdit = record != null;
     final recordId = record?.id;
     final outTypeController = TextEditingController(
@@ -210,11 +209,10 @@ class StockOutListEntry extends StatelessWidget {
                           if (deliveryOrderId != null) {
                             payload['delivery_order'] = deliveryOrderId;
                           }
-                          if (isEdit && recordId != null) {
-                            await apiService.updateStockOut(recordId, payload);
-                          } else {
-                            await apiService.createStockOut(payload);
-                          }
+                          await supportService.save(
+                            id: isEdit ? recordId : null,
+                            payload: payload,
+                          );
                           if (!context.mounted) return;
                           context
                               .read<GenericListViewModel>()
@@ -245,13 +243,13 @@ class StockOutListEntry extends StatelessWidget {
     BuildContext context,
     int orderId,
   ) async {
-    final apiService = DeliveryOrderApiService(context.read<ApiClient>());
+    final supportService = StockOutSupportService(context.read<ApiClient>());
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('发货单详情'),
         content: FutureBuilder<DeliveryOrderDetail>(
-          future: apiService.fetchDetail(orderId),
+          future: supportService.fetchDeliveryOrderDetail(orderId),
           builder: (context, snapshot) {
             if (snapshot.connectionState != ConnectionState.done) {
               return const SizedBox(

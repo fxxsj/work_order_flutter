@@ -13,12 +13,18 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
     int pageSize = 20,
     String? search,
   }) {
-    return _apiService.fetchInvoices(page: page, pageSize: pageSize, search: search);
+    return _apiService.fetchInvoices(
+        page: page, pageSize: pageSize, search: search);
   }
 
   @override
   Future<Map<String, dynamic>> submit(int id) {
     return _apiService.submit(id);
+  }
+
+  @override
+  Future<Map<String, dynamic>> create(Map<String, dynamic> payload) {
+    return _apiService.createInvoice(payload);
   }
 
   @override

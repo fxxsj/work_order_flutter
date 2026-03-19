@@ -17,19 +17,14 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widg
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
-import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
-import 'package:work_order_app/src/features/customer/data/customer_dto.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/finance_invoices/application/invoice_view_model.dart';
 import 'package:work_order_app/src/features/finance_invoices/data/invoice_api_service.dart';
+import 'package:work_order_app/src/features/finance_invoices/data/invoice_form_options_loader.dart';
 import 'package:work_order_app/src/features/finance_invoices/data/invoice_repository_impl.dart';
 import 'package:work_order_app/src/features/finance_invoices/domain/invoice.dart';
 import 'package:work_order_app/src/features/finance_invoices/domain/invoice_repository.dart';
-import 'package:work_order_app/src/features/sales_orders/data/sales_order_api_service.dart';
-import 'package:work_order_app/src/features/sales_orders/data/sales_order_dto.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order.dart';
-import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
-import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order.dart';
 
 /// 发票列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
@@ -173,8 +168,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                   payload['work_order'] = selectedWorkOrderId;
                 }
 
-                final apiService = context.read<InvoiceApiService>();
-                await apiService.createInvoice(payload);
+                await viewModel.createInvoice(payload);
                 if (!mounted) return;
                 Navigator.of(dialogContext).pop();
                 ToastUtil.showSuccess('发票已创建');
@@ -383,8 +377,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     );
     if (confirmed != true) return;
     try {
-      final apiService = context.read<InvoiceApiService>();
-      await apiService.submit(invoice.id);
+      await viewModel.submitInvoice(invoice.id);
       ToastUtil.showSuccess('发票已提交');
       await viewModel.loadInvoices(resetPage: false);
     } catch (err) {
@@ -424,8 +417,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
       return;
     }
     try {
-      final apiService = context.read<InvoiceApiService>();
-      await apiService.approve(invoice.id, {
+      await viewModel.approveInvoice(invoice.id, {
         'approved': approved,
         'approval_comment': commentController.text.trim(),
       });
@@ -442,23 +434,13 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     if (_optionsLoaded || _optionsLoading) return;
     setState(() => _optionsLoading = true);
     try {
-      final apiClient = context.read<ApiClient>();
-      final customerApi = CustomerApiService(apiClient);
-      final salesApi = SalesOrderApiService(apiClient);
-      final workOrderApi = WorkOrderApiService(apiClient);
-      final results = await Future.wait([
-        customerApi.fetchCustomers(page: 1, pageSize: 200),
-        salesApi.fetchSalesOrders(page: 1, pageSize: 200),
-        workOrderApi.fetchWorkOrders(page: 1, pageSize: 200),
-      ]);
-      final customerPage = results[0] as CustomerPageDto;
-      final salesPage = results[1] as SalesOrderPageDto;
-      final workOrderPage = results[2] as WorkOrderPageDto;
+      final data =
+          await InvoiceFormOptionsLoader(context.read<ApiClient>()).load();
       if (!mounted) return;
       setState(() {
-        _customers = customerPage.items.map((dto) => dto.toEntity()).toList();
-        _salesOrders = salesPage.items.map((dto) => dto.toEntity()).toList();
-        _workOrders = workOrderPage.items.map((dto) => dto.toEntity()).toList();
+        _customers = data.customers;
+        _salesOrders = data.salesOrders;
+        _workOrders = data.workOrders;
         _optionsLoaded = true;
       });
     } catch (err) {
