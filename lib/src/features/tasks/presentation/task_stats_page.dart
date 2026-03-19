@@ -16,30 +16,13 @@ import 'package:work_order_app/src/features/departments/data/department_api_serv
 import 'package:work_order_app/src/features/departments/domain/department.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
 
-class TaskStatsEntry extends StatefulWidget {
+class TaskStatsEntry extends StatelessWidget {
   const TaskStatsEntry({super.key});
 
   @override
-  State<TaskStatsEntry> createState() => _TaskStatsEntryState();
-}
-
-class _TaskStatsEntryState extends State<TaskStatsEntry> {
-  TaskApiService? _taskApi;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_taskApi != null) return;
-    final apiClient = context.read<ApiClient>();
-    _taskApi = TaskApiService(apiClient);
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final api = _taskApi;
-    if (api == null) return const SizedBox.shrink();
-    return Provider<TaskApiService>.value(
-      value: api,
+    return Provider<TaskApiService>(
+      create: (context) => TaskApiService(context.read<ApiClient>()),
       child: const TaskStatsPage(),
     );
   }

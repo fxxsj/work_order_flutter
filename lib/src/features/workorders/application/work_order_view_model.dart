@@ -18,7 +18,8 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
 
   Future<void> initialize() => loadItems(resetPage: true);
 
-  Future<void> loadWorkOrders({bool resetPage = false}) => loadItems(resetPage: resetPage);
+  Future<void> loadWorkOrders({bool resetPage = false}) =>
+      loadItems(resetPage: resetPage);
 
   String? get statusFilter => _statusFilter;
   String? get priorityFilter => _priorityFilter;
@@ -61,7 +62,8 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
     return detail.toEntity();
   }
 
-  Future<WorkOrderDetail> updateWorkOrder(int id, Map<String, dynamic> payload) async {
+  Future<WorkOrderDetail> updateWorkOrder(
+      int id, Map<String, dynamic> payload) async {
     final detail = await _repository.updateWorkOrder(id, payload);
     return detail.toEntity();
   }
@@ -98,6 +100,46 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
   Future<WorkOrderDetail> requestReapproval(int id, String reason) async {
     final detail = await _repository.requestReapproval(id, reason);
     return detail.toEntity();
+  }
+
+  Future<Map<String, dynamic>> fetchApprovalStatus(int id) {
+    return _repository.fetchApprovalStatus(id);
+  }
+
+  Future<Map<String, dynamic>> submitMultiApproval(int id) {
+    return _repository.submitMultiApproval(id);
+  }
+
+  Future<Map<String, dynamic>> startApprovalStep(int stepId) {
+    return _repository.startApprovalStep(stepId);
+  }
+
+  Future<Map<String, dynamic>> completeApprovalStep(
+    int stepId, {
+    required String decision,
+    String? comments,
+  }) {
+    return _repository.completeApprovalStep(
+      stepId,
+      decision: decision,
+      comments: comments,
+    );
+  }
+
+  Future<Map<String, dynamic>> escalateApprovalStep(
+    int stepId, {
+    required String reason,
+    int? toStepId,
+  }) {
+    return _repository.escalateApprovalStep(
+      stepId,
+      reason: reason,
+      toStepId: toStepId,
+    );
+  }
+
+  Future<Map<String, dynamic>> markUrgent(int id, {required String reason}) {
+    return _repository.markUrgent(id, reason: reason);
   }
 
   @override

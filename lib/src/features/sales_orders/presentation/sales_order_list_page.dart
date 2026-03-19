@@ -12,11 +12,11 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
-import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/sales_orders/application/sales_order_view_model.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_api_service.dart';
@@ -25,57 +25,23 @@ import 'package:work_order_app/src/features/sales_orders/domain/sales_order.dart
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order_repository.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_flow_api_service.dart';
 
-/// 销售订单列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class SalesOrderListEntry extends StatefulWidget {
+/// 销售订单列表入口。
+class SalesOrderListEntry extends StatelessWidget {
   const SalesOrderListEntry({super.key});
 
   @override
-  State<SalesOrderListEntry> createState() => _SalesOrderListEntryState();
-}
-
-class _SalesOrderListEntryState extends State<SalesOrderListEntry> {
-  SalesOrderApiService? _apiService;
-  SalesOrderRepositoryImpl? _repository;
-  SalesOrderViewModel? _viewModel;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = SalesOrderApiService(apiClient);
-    _repository = SalesOrderRepositoryImpl(_apiService!);
-    _viewModel = SalesOrderViewModel(_repository!);
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _viewModel?.initialize();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<SalesOrderApiService>.value(value: apiService),
-        Provider<SalesOrderRepository>.value(value: repository),
-        ChangeNotifierProvider<SalesOrderViewModel>.value(value: viewModel),
-      ],
+    return FeatureEntry<SalesOrderApiService, SalesOrderRepository,
+        SalesOrderViewModel>(
+      createService: (context) =>
+          SalesOrderApiService(context.read<ApiClient>()),
+      createRepository: (context) => SalesOrderRepositoryImpl(
+        context.read<SalesOrderApiService>(),
+        WorkOrderFlowApiService(context.read<ApiClient>()),
+      ),
+      createViewModel: (context) =>
+          SalesOrderViewModel(context.read<SalesOrderRepository>()),
+      initialize: (viewModel) => viewModel.initialize(),
       child: const SalesOrderListPage(),
     );
   }
@@ -450,7 +416,8 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     String priority = 'normal';
     final quantityController = TextEditingController();
     final deliveryController = TextEditingController(
-        text: order.deliveryDate == null ? '' : _formatDate(order.deliveryDate));
+        text:
+            order.deliveryDate == null ? '' : _formatDate(order.deliveryDate));
     final notesController = TextEditingController();
 
     final confirmed = await showDialog<bool>(
@@ -539,12 +506,8 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     }
 
     try {
-      final api = WorkOrderFlowApiService(context.read<ApiClient>());
-      final result = await api.createFromSalesOrder(payload);
-      final data = result['data'] is Map<String, dynamic>
-          ? Map<String, dynamic>.from(result['data'])
-          : result;
-      final workOrderId = toInt(data['id']);
+      final workOrderId =
+          await viewModel.createWorkOrderFromSalesOrder(payload);
       ToastUtil.showSuccess('施工单已生成');
       await viewModel.loadSalesOrders(resetPage: false);
       if (workOrderId != null && mounted) {
@@ -758,9 +721,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         onPressed: () => _completeOrder(viewModel, order),
       ));
     }
-    if (status.isNotEmpty &&
-        status != 'completed' &&
-        status != 'cancelled') {
+    if (status.isNotEmpty && status != 'completed' && status != 'cancelled') {
       actions.add(RowAction(
         label: '取消订单',
         icon: Icons.block_outlined,

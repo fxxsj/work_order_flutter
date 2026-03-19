@@ -14,6 +14,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
@@ -33,57 +34,21 @@ import 'package:work_order_app/src/features/workorders/data/work_order_repositor
 import 'package:work_order_app/src/features/workorders/domain/work_order.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
 
-/// 施工单列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class WorkOrderListEntry extends StatefulWidget {
+/// 施工单列表入口。
+class WorkOrderListEntry extends StatelessWidget {
   const WorkOrderListEntry({super.key});
 
   @override
-  State<WorkOrderListEntry> createState() => _WorkOrderListEntryState();
-}
-
-class _WorkOrderListEntryState extends State<WorkOrderListEntry> {
-  WorkOrderApiService? _apiService;
-  WorkOrderRepositoryImpl? _repository;
-  WorkOrderViewModel? _viewModel;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = WorkOrderApiService(apiClient);
-    _repository = WorkOrderRepositoryImpl(_apiService!);
-    _viewModel = WorkOrderViewModel(_repository!);
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _viewModel?.initialize();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<WorkOrderApiService>.value(value: apiService),
-        Provider<WorkOrderRepository>.value(value: repository),
-        ChangeNotifierProvider<WorkOrderViewModel>.value(value: viewModel),
-      ],
+    return FeatureEntry<WorkOrderApiService, WorkOrderRepository,
+        WorkOrderViewModel>(
+      createService: (context) =>
+          WorkOrderApiService(context.read<ApiClient>()),
+      createRepository: (context) =>
+          WorkOrderRepositoryImpl(context.read<WorkOrderApiService>()),
+      createViewModel: (context) =>
+          WorkOrderViewModel(context.read<WorkOrderRepository>()),
+      initialize: (viewModel) => viewModel.initialize(),
       child: const WorkOrderListPage(),
     );
   }
@@ -227,8 +192,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
         ToastUtil.showError('导出失败: 返回格式不支持');
         return;
       }
-      final filename =
-          _resolveExportFilename(response, fallback: '施工单列表');
+      final filename = _resolveExportFilename(response, fallback: '施工单列表');
       final savedPath = await saveBytes(bytes, filename,
           mimeType:
               'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -252,8 +216,8 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
         DateTime.now().toIso8601String().replaceAll(':', '').split('.').first;
     try {
       final headers = response.headers;
-      final contentDisposition =
-          headers.value('content-disposition') ?? headers.value('Content-Disposition');
+      final contentDisposition = headers.value('content-disposition') ??
+          headers.value('Content-Disposition');
       if (contentDisposition != null) {
         final match =
             RegExp('filename=\"?([^\";]+)\"?').firstMatch(contentDisposition);

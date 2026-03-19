@@ -18,32 +18,13 @@ import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_list_tile.dart';
 
 /// 操作员任务中心入口。
-class TaskOperatorCenterEntry extends StatefulWidget {
+class TaskOperatorCenterEntry extends StatelessWidget {
   const TaskOperatorCenterEntry({super.key});
 
   @override
-  State<TaskOperatorCenterEntry> createState() => _TaskOperatorCenterEntryState();
-}
-
-class _TaskOperatorCenterEntryState extends State<TaskOperatorCenterEntry> {
-  TaskApiService? _apiService;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_apiService != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = TaskApiService(apiClient);
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    if (apiService == null) {
-      return const SizedBox.shrink();
-    }
-    return Provider<TaskApiService>.value(
-      value: apiService,
+    return Provider<TaskApiService>(
+      create: (context) => TaskApiService(context.read<ApiClient>()),
       child: const TaskOperatorCenterPage(),
     );
   }
@@ -60,7 +41,8 @@ class _TaskOperatorCenterView extends StatefulWidget {
   const _TaskOperatorCenterView();
 
   @override
-  State<_TaskOperatorCenterView> createState() => _TaskOperatorCenterViewState();
+  State<_TaskOperatorCenterView> createState() =>
+      _TaskOperatorCenterViewState();
 }
 
 class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
@@ -125,7 +107,8 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
       ToastUtil.showSuccess('任务已认领');
       await _loadData();
     } catch (err) {
-      ToastUtil.showError('认领失败: ${err.toString().replaceFirst('Exception: ', '')}');
+      ToastUtil.showError(
+          '认领失败: ${err.toString().replaceFirst('Exception: ', '')}');
     } finally {
       if (mounted) {
         setState(() => _claimingTaskId = null);
@@ -191,7 +174,11 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
           child: isNarrow
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [children[0], const SizedBox(height: 16), children[2]],
+                  children: [
+                    children[0],
+                    const SizedBox(height: 16),
+                    children[2]
+                  ],
                 )
               : Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,7 +220,9 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
                 children: tabs.map((tab) {
                   final list = tab.filter == null
                       ? _myTasks
-                      : _myTasks.where((task) => task.status == tab.filter).toList();
+                      : _myTasks
+                          .where((task) => task.status == tab.filter)
+                          .toList();
                   return _buildTaskList(
                     list,
                     isNarrow: isNarrow,
@@ -322,7 +311,8 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
           trailing: trailingBuilder?.call(task),
           onTap: () => _openTaskDetail(context, task),
           onUpdate: () => _openUpdateDialog(context, task, completeMode: false),
-          onComplete: () => _openUpdateDialog(context, task, completeMode: true),
+          onComplete: () =>
+              _openUpdateDialog(context, task, completeMode: true),
         );
       },
     );
@@ -358,8 +348,8 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
                   ),
                   style: theme.textTheme.bodyMedium,
                 )),
-                DataCell(Text(_displayText(task.workOrderNumber),
-                    style: textStyle)),
+                DataCell(
+                    Text(_displayText(task.workOrderNumber), style: textStyle)),
                 DataCell(
                     Text(_displayText(task.processName), style: textStyle)),
                 DataCell(Text(_formatNumber(task.productionQuantity),
@@ -559,7 +549,8 @@ class _TaskUpdateDialogState extends State<_TaskUpdateDialog> {
             (widget.task.quantityCompleted ?? 0))
         .clamp(0, double.infinity)
         .toInt();
-    _quantityIncrement = remaining == 0 ? 1 : remaining.clamp(1, remaining).toInt();
+    _quantityIncrement =
+        remaining == 0 ? 1 : remaining.clamp(1, remaining).toInt();
   }
 
   @override
@@ -581,7 +572,8 @@ class _TaskUpdateDialogState extends State<_TaskUpdateDialog> {
               children: [
                 Text(task.workContent ?? '任务 #${task.id}'),
                 const SizedBox(height: 8),
-                LinearProgressIndicator(value: total > 0 ? completed / total : 0),
+                LinearProgressIndicator(
+                    value: total > 0 ? completed / total : 0),
                 const SizedBox(height: 6),
                 Text('$completed / $total · $progress%'),
                 const SizedBox(height: 16),

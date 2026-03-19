@@ -12,21 +12,61 @@ class SalesOrderViewModel extends PaginatedViewModel<SalesOrder> {
 
   Future<void> initialize() => loadItems(resetPage: true);
 
-  Future<void> loadSalesOrders({bool resetPage = false}) => loadItems(resetPage: resetPage);
+  Future<void> loadSalesOrders({bool resetPage = false}) =>
+      loadItems(resetPage: resetPage);
 
   Future<SalesOrderDetail> fetchDetail(int id) async {
     final detail = await _repository.getSalesOrderDetail(id);
     return detail.toEntity();
   }
 
-  Future<SalesOrderDetail> createSalesOrder(Map<String, dynamic> payload) async {
+  Future<SalesOrderDetail> createSalesOrder(
+      Map<String, dynamic> payload) async {
     final detail = await _repository.createSalesOrder(payload);
     return detail.toEntity();
   }
 
-  Future<SalesOrderDetail> updateSalesOrder(int id, Map<String, dynamic> payload) async {
+  Future<SalesOrderDetail> updateSalesOrder(
+      int id, Map<String, dynamic> payload) async {
     final detail = await _repository.updateSalesOrder(id, payload);
     return detail.toEntity();
+  }
+
+  Future<SalesOrderDetail> submit(int id) async {
+    final detail = await _repository.submit(id);
+    return detail.toEntity();
+  }
+
+  Future<SalesOrderDetail> approve(int id, Map<String, dynamic> payload) async {
+    final detail = await _repository.approve(id, payload);
+    return detail.toEntity();
+  }
+
+  Future<SalesOrderDetail> reject(int id, Map<String, dynamic> payload) async {
+    final detail = await _repository.reject(id, payload);
+    return detail.toEntity();
+  }
+
+  Future<SalesOrderDetail> complete(int id) async {
+    final detail = await _repository.complete(id);
+    return detail.toEntity();
+  }
+
+  Future<SalesOrderDetail> cancel(int id, Map<String, dynamic> payload) async {
+    final detail = await _repository.cancel(id, payload);
+    return detail.toEntity();
+  }
+
+  Future<SalesOrderDetail> updatePayment(
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
+    final detail = await _repository.updatePayment(id, payload);
+    return detail.toEntity();
+  }
+
+  Future<int?> createWorkOrderFromSalesOrder(Map<String, dynamic> payload) {
+    return _repository.createWorkOrderFromSalesOrder(payload);
   }
 
   @override

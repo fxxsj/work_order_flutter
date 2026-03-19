@@ -14,6 +14,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_d
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
@@ -29,56 +30,20 @@ import 'package:work_order_app/src/features/suppliers/data/supplier_dto.dart';
 import 'package:work_order_app/src/features/suppliers/domain/supplier.dart';
 
 /// 对账单列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class StatementListEntry extends StatefulWidget {
+class StatementListEntry extends StatelessWidget {
   const StatementListEntry({super.key});
 
   @override
-  State<StatementListEntry> createState() => _StatementListEntryState();
-}
-
-class _StatementListEntryState extends State<StatementListEntry> {
-  StatementApiService? _apiService;
-  StatementRepositoryImpl? _repository;
-  StatementViewModel? _viewModel;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = StatementApiService(apiClient);
-    _repository = StatementRepositoryImpl(_apiService!);
-    _viewModel = StatementViewModel(_repository!);
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _viewModel?.initialize();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<StatementApiService>.value(value: apiService),
-        Provider<StatementRepository>.value(value: repository),
-        ChangeNotifierProvider<StatementViewModel>.value(value: viewModel),
-      ],
+    return FeatureEntry<StatementApiService, StatementRepository,
+        StatementViewModel>(
+      createService: (context) =>
+          StatementApiService(context.read<ApiClient>()),
+      createRepository: (context) =>
+          StatementRepositoryImpl(context.read<StatementApiService>()),
+      createViewModel: (context) =>
+          StatementViewModel(context.read<StatementRepository>()),
+      initialize: (viewModel) => viewModel.initialize(),
       child: const StatementListPage(),
     );
   }
@@ -212,7 +177,8 @@ class _StatementListViewState extends State<_StatementListView> {
                   'start_date': startDateController.text.trim(),
                   'end_date': endDateController.text.trim(),
                   'opening_balance':
-                      double.tryParse(openingBalanceController.text.trim()) ?? 0,
+                      double.tryParse(openingBalanceController.text.trim()) ??
+                          0,
                   'notes': notesController.text.trim(),
                 };
                 if (statementType == 'customer') {
@@ -359,8 +325,8 @@ class _StatementListViewState extends State<_StatementListView> {
                         const SizedBox(height: 12),
                         TextFormField(
                           controller: openingBalanceController,
-                          keyboardType:
-                              const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
                           decoration: const InputDecoration(
                             labelText: '期初余额',
                             border: OutlineInputBorder(),
@@ -678,7 +644,8 @@ class _StatementListViewState extends State<_StatementListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, statements, isMobile),
-          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1
+              ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,
@@ -760,16 +727,15 @@ class _StatementListViewState extends State<_StatementListView> {
                       statement.statementNumber ?? '对账单 #${statement.id}'),
                   style: theme.textTheme.bodyMedium,
                 )),
-                DataCell(
-                    Text(_displayText(statement.customerName), style: textStyle)),
-                DataCell(Text(_formatPeriod(statement.periodStart,
-                    statement.periodEnd), style: textStyle)),
+                DataCell(Text(_displayText(statement.customerName),
+                    style: textStyle)),
+                DataCell(Text(
+                    _formatPeriod(statement.periodStart, statement.periodEnd),
+                    style: textStyle)),
                 DataCell(Text(_formatAmount(statement.totalAmount),
                     style: theme.textTheme.bodyMedium)),
                 DataCell(Text(
-                  statement.statusDisplay ??
-                      statement.status ??
-                      _emptyCellText,
+                  statement.statusDisplay ?? statement.status ?? _emptyCellText,
                   style: textStyle,
                 )),
                 DataCell(_buildRowActions(viewModel, statement)),
@@ -783,7 +749,7 @@ class _StatementListViewState extends State<_StatementListView> {
   Widget _buildPageHeader(
     BuildContext context,
     StatementViewModel viewModel,
-bool isMobile,
+    bool isMobile,
   ) {
     return PageHeaderBar(
       breadcrumb: null,
@@ -841,13 +807,15 @@ bool isMobile,
       actions.add(RowAction(
         label: '确认',
         icon: Icons.verified_outlined,
-        onPressed: () => _confirmStatement(viewModel, statement, confirmed: true),
+        onPressed: () =>
+            _confirmStatement(viewModel, statement, confirmed: true),
       ));
       actions.add(RowAction(
         label: '有异议',
         icon: Icons.report_outlined,
         destructive: true,
-        onPressed: () => _confirmStatement(viewModel, statement, confirmed: false),
+        onPressed: () =>
+            _confirmStatement(viewModel, statement, confirmed: false),
       ));
     }
     if (actions.isEmpty) {
@@ -882,15 +850,18 @@ bool isMobile,
     return '$year-$month-$day';
   }
 
-  Widget _buildSummaryCard(BuildContext context, Statement statement, bool isMobile) {
+  Widget _buildSummaryCard(
+      BuildContext context, Statement statement, bool isMobile) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
-    final number = _displayText(statement.statementNumber ?? '对账单 #${statement.id}');
+    final number =
+        _displayText(statement.statementNumber ?? '对账单 #${statement.id}');
     final customer = _displayText(statement.customerName);
     final period = _formatPeriod(statement.periodStart, statement.periodEnd);
     final amount = _formatAmount(statement.totalAmount);
-    final status = statement.statusDisplay ?? statement.status ?? _emptyCellText;
+    final status =
+        statement.statusDisplay ?? statement.status ?? _emptyCellText;
 
     final actions = <RowAction>[];
     final statusCode = statement.status ?? '';

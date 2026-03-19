@@ -13,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_d
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
@@ -31,56 +32,18 @@ import 'package:work_order_app/src/features/sales_orders/data/sales_order_dto.da
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order.dart';
 
 /// 收款列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class PaymentListEntry extends StatefulWidget {
+class PaymentListEntry extends StatelessWidget {
   const PaymentListEntry({super.key});
 
   @override
-  State<PaymentListEntry> createState() => _PaymentListEntryState();
-}
-
-class _PaymentListEntryState extends State<PaymentListEntry> {
-  PaymentApiService? _apiService;
-  PaymentRepositoryImpl? _repository;
-  PaymentViewModel? _viewModel;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = PaymentApiService(apiClient);
-    _repository = PaymentRepositoryImpl(_apiService!);
-    _viewModel = PaymentViewModel(_repository!);
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _viewModel?.initialize();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<PaymentApiService>.value(value: apiService),
-        Provider<PaymentRepository>.value(value: repository),
-        ChangeNotifierProvider<PaymentViewModel>.value(value: viewModel),
-      ],
+    return FeatureEntry<PaymentApiService, PaymentRepository, PaymentViewModel>(
+      createService: (context) => PaymentApiService(context.read<ApiClient>()),
+      createRepository: (context) =>
+          PaymentRepositoryImpl(context.read<PaymentApiService>()),
+      createViewModel: (context) =>
+          PaymentViewModel(context.read<PaymentRepository>()),
+      initialize: (viewModel) => viewModel.initialize(),
       child: const PaymentListPage(),
     );
   }
@@ -279,8 +242,7 @@ class _PaymentListViewState extends State<_PaymentListView> {
                               : (value) => setState(
                                     () => selectedCustomerId = value,
                                   ),
-                          validator: (value) =>
-                              value == null ? '请选择客户' : null,
+                          validator: (value) => value == null ? '请选择客户' : null,
                         ),
                         const SizedBox(height: 12),
                         SearchableDropdownFormField<int?>(
@@ -322,7 +284,8 @@ class _PaymentListViewState extends State<_PaymentListView> {
                             ..._invoices.map(
                               (invoice) => DropdownMenuItem<int?>(
                                 value: invoice.id,
-                                child: Text(invoice.invoiceNumber ?? '发票 #${invoice.id}'),
+                                child: Text(invoice.invoiceNumber ??
+                                    '发票 #${invoice.id}'),
                               ),
                             ),
                           ],
@@ -341,9 +304,11 @@ class _PaymentListViewState extends State<_PaymentListView> {
                           ),
                           items: const [
                             DropdownMenuItem(value: 'cash', child: Text('现金')),
-                            DropdownMenuItem(value: 'transfer', child: Text('转账')),
+                            DropdownMenuItem(
+                                value: 'transfer', child: Text('转账')),
                             DropdownMenuItem(value: 'check', child: Text('支票')),
-                            DropdownMenuItem(value: 'acceptance', child: Text('承兑汇票')),
+                            DropdownMenuItem(
+                                value: 'acceptance', child: Text('承兑汇票')),
                           ],
                           onChanged: submitting
                               ? null
@@ -354,8 +319,8 @@ class _PaymentListViewState extends State<_PaymentListView> {
                         const SizedBox(height: 12),
                         TextFormField(
                           controller: amountController,
-                          keyboardType:
-                              const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
                           decoration: const InputDecoration(
                             labelText: '收款金额',
                             border: OutlineInputBorder(),
@@ -446,7 +411,8 @@ class _PaymentListViewState extends State<_PaymentListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, payments, isMobile),
-          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1
+              ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,
@@ -529,16 +495,15 @@ class _PaymentListViewState extends State<_PaymentListView> {
                 )),
                 DataCell(
                     Text(_displayText(payment.customerName), style: textStyle)),
-                DataCell(
-                    Text(_displayText(payment.workOrderNumber), style: textStyle)),
+                DataCell(Text(_displayText(payment.workOrderNumber),
+                    style: textStyle)),
                 DataCell(Text(_formatAmount(payment.amount), style: textStyle)),
                 DataCell(Text(
-                  payment.statusDisplay ??
-                      payment.status ??
-                      _emptyCellText,
+                  payment.statusDisplay ?? payment.status ?? _emptyCellText,
                   style: textStyle,
                 )),
-                DataCell(Text(_formatDate(payment.paymentDate), style: textStyle)),
+                DataCell(
+                    Text(_formatDate(payment.paymentDate), style: textStyle)),
               ],
             ),
           )
@@ -549,7 +514,7 @@ class _PaymentListViewState extends State<_PaymentListView> {
   Widget _buildPageHeader(
     BuildContext context,
     PaymentViewModel viewModel,
-bool isMobile,
+    bool isMobile,
   ) {
     return PageHeaderBar(
       breadcrumb: null,
@@ -614,7 +579,8 @@ bool isMobile,
     return '$year-$month-$day';
   }
 
-  Widget _buildSummaryCard(BuildContext context, Payment payment, bool isMobile) {
+  Widget _buildSummaryCard(
+      BuildContext context, Payment payment, bool isMobile) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final sectionSpacing = LayoutTokens.sectionSpacing(context);

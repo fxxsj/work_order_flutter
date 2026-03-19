@@ -11,6 +11,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
@@ -22,57 +23,19 @@ import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/processes/domain/process_repository.dart';
 import 'package:work_order_app/src/features/processes/presentation/process_edit_page.dart';
 
-/// 工序列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class ProcessListEntry extends StatefulWidget {
+/// 工序列表入口。
+class ProcessListEntry extends StatelessWidget {
   const ProcessListEntry({super.key});
 
   @override
-  State<ProcessListEntry> createState() => _ProcessListEntryState();
-}
-
-class _ProcessListEntryState extends State<ProcessListEntry> {
-  ProcessApiService? _apiService;
-  ProcessRepositoryImpl? _repository;
-  ProcessViewModel? _viewModel;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = ProcessApiService(apiClient);
-    _repository = ProcessRepositoryImpl(_apiService!);
-    _viewModel = ProcessViewModel(_repository!);
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _viewModel?.initialize();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<ProcessApiService>.value(value: apiService),
-        Provider<ProcessRepository>.value(value: repository),
-        ChangeNotifierProvider<ProcessViewModel>.value(value: viewModel),
-      ],
+    return FeatureEntry<ProcessApiService, ProcessRepository, ProcessViewModel>(
+      createService: (context) => ProcessApiService(context.read<ApiClient>()),
+      createRepository: (context) =>
+          ProcessRepositoryImpl(context.read<ProcessApiService>()),
+      createViewModel: (context) =>
+          ProcessViewModel(context.read<ProcessRepository>()),
+      initialize: (viewModel) => viewModel.initialize(),
       child: const ProcessListPage(),
     );
   }

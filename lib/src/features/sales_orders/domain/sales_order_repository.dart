@@ -14,7 +14,8 @@ abstract class SalesOrderRepository {
 
   Future<SalesOrderDetailDto> createSalesOrder(Map<String, dynamic> payload);
 
-  Future<SalesOrderDetailDto> updateSalesOrder(int id, Map<String, dynamic> payload);
+  Future<SalesOrderDetailDto> updateSalesOrder(
+      int id, Map<String, dynamic> payload);
 
   Future<SalesOrderDetailDto> submit(int id);
 
@@ -28,7 +29,10 @@ abstract class SalesOrderRepository {
 
   Future<SalesOrderDetailDto> cancel(int id, Map<String, dynamic> payload);
 
-  Future<SalesOrderDetailDto> updatePayment(int id, Map<String, dynamic> payload);
+  Future<SalesOrderDetailDto> updatePayment(
+      int id, Map<String, dynamic> payload);
+
+  Future<int?> createWorkOrderFromSalesOrder(Map<String, dynamic> payload);
 
   Future<void> deleteSalesOrder(int id);
 }

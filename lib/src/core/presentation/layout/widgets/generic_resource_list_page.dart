@@ -9,6 +9,7 @@ import 'package:work_order_app/src/core/data/generic_repository_impl.dart';
 import 'package:work_order_app/src/core/models/generic_record.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
@@ -138,59 +139,25 @@ class GenericValueFormatter {
   }
 }
 
-class GenericResourceListEntry extends StatefulWidget {
+class GenericResourceListEntry extends StatelessWidget {
   const GenericResourceListEntry({super.key, required this.config});
 
   final GenericResourceConfig config;
 
   @override
-  State<GenericResourceListEntry> createState() => _GenericResourceListEntryState();
-}
-
-class _GenericResourceListEntryState extends State<GenericResourceListEntry> {
-  GenericApiService? _apiService;
-  GenericRepositoryImpl? _repository;
-  GenericListViewModel? _viewModel;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = GenericApiService(apiClient, resourcePath: widget.config.endpoint);
-    _repository = GenericRepositoryImpl(_apiService!);
-    _viewModel = GenericListViewModel(_repository!);
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _viewModel?.initialize();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<GenericApiService>.value(value: apiService),
-        Provider<GenericRepository>.value(value: repository),
-        ChangeNotifierProvider<GenericListViewModel>.value(value: viewModel),
-      ],
-      child: GenericResourceListPage(config: widget.config),
+    return FeatureEntry<GenericApiService, GenericRepository,
+        GenericListViewModel>(
+      createService: (context) => GenericApiService(
+        context.read<ApiClient>(),
+        resourcePath: config.endpoint,
+      ),
+      createRepository: (context) =>
+          GenericRepositoryImpl(context.read<GenericApiService>()),
+      createViewModel: (context) =>
+          GenericListViewModel(context.read<GenericRepository>()),
+      initialize: (viewModel) => viewModel.initialize(),
+      child: GenericResourceListPage(config: config),
     );
   }
 }
@@ -201,7 +168,8 @@ class GenericResourceListPage extends StatefulWidget {
   final GenericResourceConfig config;
 
   @override
-  State<GenericResourceListPage> createState() => _GenericResourceListPageState();
+  State<GenericResourceListPage> createState() =>
+      _GenericResourceListPageState();
 }
 
 class _GenericResourceListPageState extends State<GenericResourceListPage> {
@@ -219,7 +187,8 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
     super.dispose();
   }
 
-  void _scheduleSearch(GenericListViewModel viewModel, {bool immediate = false}) {
+  void _scheduleSearch(GenericListViewModel viewModel,
+      {bool immediate = false}) {
     _searchDebounce?.cancel();
     if (immediate) {
       viewModel.setSearchText(_searchController.text.trim());
@@ -261,8 +230,8 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
                   onNext: () => viewModel.setPage(viewModel.page + 1),
                   hasPrev: viewModel.hasPrev,
                   hasNext: viewModel.hasNext,
-                  pageSizeLabelBuilder: (size) =>
-                      widget.config.pageSizeLabel.replaceFirst('{size}', size.toString()),
+                  pageSizeLabelBuilder: (size) => widget.config.pageSizeLabel
+                      .replaceFirst('{size}', size.toString()),
                 )
               : null,
         );
@@ -289,7 +258,8 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
                   height: PageActionStyle.height,
                   width: isMobile ? constraints.maxWidth : _searchWidth,
                   onChanged: (_) => _scheduleSearch(viewModel),
-                  onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
+                  onSubmitted: (_) =>
+                      _scheduleSearch(viewModel, immediate: true),
                   onClear: () {
                     _searchController.clear();
                     _scheduleSearch(viewModel, immediate: true);
@@ -358,7 +328,8 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
   Widget _buildDesktopTable(BuildContext context, List<GenericRecord> records) {
     final theme = Theme.of(context);
     final textStyle = theme.textTheme.bodySmall;
-    final hasActions = widget.config.enableDetails || widget.config.rowActionsBuilder != null;
+    final hasActions =
+        widget.config.enableDetails || widget.config.rowActionsBuilder != null;
     final columns = [
       for (final column in widget.config.columns)
         DataColumn(
@@ -400,7 +371,9 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
     final colors = theme.extension<AppColors>();
     final titleBuilder = widget.config.titleBuilder ??
         (GenericRecord record) =>
-            record.getString('name') ?? record.getString('title') ?? record.id.toString();
+            record.getString('name') ??
+            record.getString('title') ??
+            record.id.toString();
     final summaryFields = widget.config.summaryFields
         .map((field) => SummaryField(
               label: field.label,

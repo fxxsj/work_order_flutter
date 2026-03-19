@@ -6,6 +6,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/generic_reso
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
+import 'package:work_order_app/src/features/finance_payments/data/payment_plan_api_service.dart';
 
 class PaymentPlanListEntry extends StatelessWidget {
   const PaymentPlanListEntry({super.key});
@@ -57,8 +58,8 @@ class PaymentPlanListEntry extends StatelessWidget {
     GenericRecord record,
   ) async {
     try {
-      final apiClient = context.read<ApiClient>();
-      await apiClient.post('/payment-plans/${record.id}/update_status/');
+      final apiService = PaymentPlanApiService(context.read<ApiClient>());
+      await apiService.updateStatus(record.id);
       ToastUtil.showSuccess('状态已更新');
       final viewModel = context.read<GenericListViewModel>();
       await viewModel.loadItems(resetPage: false);

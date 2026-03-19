@@ -81,7 +81,8 @@ class StockOutListEntry extends StatelessWidget {
   }
 
   static String _deliveryOrderNumber(GenericRecord record) {
-    return GenericValueFormatter.text(record.getString('delivery_order_number'));
+    return GenericValueFormatter.text(
+        record.getString('delivery_order_number'));
   }
 
   static String _status(GenericRecord record) {
@@ -107,8 +108,7 @@ class StockOutListEntry extends StatelessWidget {
     BuildContext context, {
     GenericRecord? record,
   }) async {
-    final apiClient = context.read<ApiClient>();
-    final apiService = StockOutApiService(apiClient);
+    final apiService = StockOutApiService(context.read<ApiClient>());
     final isEdit = record != null;
     final recordId = record?.id;
     final outTypeController = TextEditingController(
@@ -190,7 +190,8 @@ class StockOutListEntry extends StatelessWidget {
             ),
             actions: [
               TextButton(
-                onPressed: loading ? null : () => Navigator.of(context).pop(false),
+                onPressed:
+                    loading ? null : () => Navigator.of(context).pop(false),
                 child: const Text('取消'),
               ),
               FilledButton(
@@ -215,7 +216,9 @@ class StockOutListEntry extends StatelessWidget {
                             await apiService.createStockOut(payload);
                           }
                           if (!context.mounted) return;
-                          context.read<GenericListViewModel>().reload(resetPage: true);
+                          context
+                              .read<GenericListViewModel>()
+                              .reload(resetPage: true);
                           Navigator.of(context).pop(true);
                           ToastUtil.showSuccess(isEdit ? '已更新' : '已创建');
                         } catch (err) {
@@ -242,8 +245,7 @@ class StockOutListEntry extends StatelessWidget {
     BuildContext context,
     int orderId,
   ) async {
-    final apiClient = context.read<ApiClient>();
-    final apiService = DeliveryOrderApiService(apiClient);
+    final apiService = DeliveryOrderApiService(context.read<ApiClient>());
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -277,16 +279,12 @@ class StockOutListEntry extends StatelessWidget {
                         label: '状态',
                         value: detail.statusDisplay ?? detail.status ?? '-'),
                     _DetailRow(
-                        label: '销售单号',
-                        value: detail.salesOrderNumber ?? '-'),
+                        label: '销售单号', value: detail.salesOrderNumber ?? '-'),
                     _DetailRow(
-                        label: '发货日期',
-                        value: _formatDate(detail.deliveryDate)),
+                        label: '发货日期', value: _formatDate(detail.deliveryDate)),
+                    _DetailRow(label: '收货人', value: detail.receiverName ?? '-'),
                     _DetailRow(
-                        label: '收货人', value: detail.receiverName ?? '-'),
-                    _DetailRow(
-                        label: '物流公司',
-                        value: detail.logisticsCompany ?? '-'),
+                        label: '物流公司', value: detail.logisticsCompany ?? '-'),
                     _DetailRow(
                         label: '运单号', value: detail.trackingNumber ?? '-'),
                     if ((detail.notes ?? '').trim().isNotEmpty)

@@ -15,6 +15,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
@@ -31,56 +32,20 @@ import 'package:work_order_app/src/features/sales_orders/data/sales_order_api_se
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_dto.dart';
 
 /// 发货单列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class DeliveryOrderListEntry extends StatefulWidget {
+class DeliveryOrderListEntry extends StatelessWidget {
   const DeliveryOrderListEntry({super.key});
 
   @override
-  State<DeliveryOrderListEntry> createState() => _DeliveryOrderListEntryState();
-}
-
-class _DeliveryOrderListEntryState extends State<DeliveryOrderListEntry> {
-  DeliveryOrderApiService? _apiService;
-  DeliveryOrderRepositoryImpl? _repository;
-  DeliveryOrderViewModel? _viewModel;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = DeliveryOrderApiService(apiClient);
-    _repository = DeliveryOrderRepositoryImpl(_apiService!);
-    _viewModel = DeliveryOrderViewModel(_repository!);
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _viewModel?.initialize();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<DeliveryOrderApiService>.value(value: apiService),
-        Provider<DeliveryOrderRepository>.value(value: repository),
-        ChangeNotifierProvider<DeliveryOrderViewModel>.value(value: viewModel),
-      ],
+    return FeatureEntry<DeliveryOrderApiService, DeliveryOrderRepository,
+        DeliveryOrderViewModel>(
+      createService: (context) =>
+          DeliveryOrderApiService(context.read<ApiClient>()),
+      createRepository: (context) =>
+          DeliveryOrderRepositoryImpl(context.read<DeliveryOrderApiService>()),
+      createViewModel: (context) =>
+          DeliveryOrderViewModel(context.read<DeliveryOrderRepository>()),
+      initialize: (viewModel) => viewModel.initialize(),
       child: const DeliveryOrderListPage(),
     );
   }
@@ -168,8 +133,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     final createFlag = uri.queryParameters['create'];
     final salesOrderId =
         int.tryParse(uri.queryParameters['sales_order_id'] ?? '');
-    if (salesOrderId != null &&
-        (createFlag == '1' || createFlag == 'true')) {
+    if (salesOrderId != null && (createFlag == '1' || createFlag == 'true')) {
       _prefillSalesOrderId = salesOrderId;
       _pendingPrefill = true;
     }
@@ -221,9 +185,8 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     });
     try {
       final page = await apiService.fetchSalesOrders(pageSize: 200);
-      final items = page.items
-          .where((order) => order.status == 'completed')
-          .toList();
+      final items =
+          page.items.where((order) => order.status == 'completed').toList();
       if (!mounted) return;
       setState(() => _salesOrders = items);
     } catch (_) {
@@ -506,6 +469,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
             );
           }).toList();
         }
+
         if (setState != null) {
           setState(update);
         } else {
@@ -1638,7 +1602,6 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       ),
     );
   }
-
 }
 
 typedef _SummaryField = SummaryField;

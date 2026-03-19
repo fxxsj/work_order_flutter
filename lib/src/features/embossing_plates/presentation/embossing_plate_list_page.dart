@@ -13,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/embossing_plates/application/embossing_plate_view_model.dart';
@@ -22,56 +23,20 @@ import 'package:work_order_app/src/features/embossing_plates/domain/embossing_pl
 import 'package:work_order_app/src/features/embossing_plates/domain/embossing_plate_repository.dart';
 import 'package:work_order_app/src/features/embossing_plates/presentation/embossing_plate_edit_page.dart';
 
-class EmbossingPlateListEntry extends StatefulWidget {
+class EmbossingPlateListEntry extends StatelessWidget {
   const EmbossingPlateListEntry({super.key});
 
   @override
-  State<EmbossingPlateListEntry> createState() => _EmbossingPlateListEntryState();
-}
-
-class _EmbossingPlateListEntryState extends State<EmbossingPlateListEntry> {
-  EmbossingPlateApiService? _apiService;
-  EmbossingPlateRepositoryImpl? _repository;
-  EmbossingPlateViewModel? _viewModel;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = EmbossingPlateApiService(apiClient);
-    _repository = EmbossingPlateRepositoryImpl(_apiService!);
-    _viewModel = EmbossingPlateViewModel(_repository!);
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _viewModel?.initialize();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<EmbossingPlateApiService>.value(value: apiService),
-        Provider<EmbossingPlateRepository>.value(value: repository),
-        ChangeNotifierProvider<EmbossingPlateViewModel>.value(value: viewModel),
-      ],
+    return FeatureEntry<EmbossingPlateApiService, EmbossingPlateRepository,
+        EmbossingPlateViewModel>(
+      createService: (context) =>
+          EmbossingPlateApiService(context.read<ApiClient>()),
+      createRepository: (context) => EmbossingPlateRepositoryImpl(
+          context.read<EmbossingPlateApiService>()),
+      createViewModel: (context) =>
+          EmbossingPlateViewModel(context.read<EmbossingPlateRepository>()),
+      initialize: (viewModel) => viewModel.initialize(),
       child: const EmbossingPlateListPage(),
     );
   }
@@ -88,7 +53,8 @@ class _EmbossingPlateListView extends StatefulWidget {
   const _EmbossingPlateListView();
 
   @override
-  State<_EmbossingPlateListView> createState() => _EmbossingPlateListViewState();
+  State<_EmbossingPlateListView> createState() =>
+      _EmbossingPlateListViewState();
 }
 
 class _EmbossingPlateListViewState extends State<_EmbossingPlateListView> {
@@ -128,7 +94,8 @@ class _EmbossingPlateListViewState extends State<_EmbossingPlateListView> {
     super.dispose();
   }
 
-  void _scheduleSearch(EmbossingPlateViewModel viewModel, {bool immediate = false}) {
+  void _scheduleSearch(EmbossingPlateViewModel viewModel,
+      {bool immediate = false}) {
     _searchDebounce?.cancel();
     if (immediate) {
       viewModel.setSearchText(_searchController.text.trim());
@@ -168,7 +135,8 @@ class _EmbossingPlateListViewState extends State<_EmbossingPlateListView> {
     );
     if (!mounted) return;
     if (result == true) {
-      ToastUtil.showSuccess(plate == null ? _createSuccessText : _updateSuccessText);
+      ToastUtil.showSuccess(
+          plate == null ? _createSuccessText : _updateSuccessText);
     }
   }
 
@@ -258,7 +226,8 @@ class _EmbossingPlateListViewState extends State<_EmbossingPlateListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, plates, isMobile),
-          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1
+              ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,
@@ -346,8 +315,8 @@ class _EmbossingPlateListViewState extends State<_EmbossingPlateListView> {
                 DataCell(Text(_displayText(plate.size), style: textStyle)),
                 DataCell(Text(_displayText(plate.material), style: textStyle)),
                 DataCell(Text(_displayText(plate.thickness), style: textStyle)),
-                DataCell(Text(plate.confirmed ? '已确认' : '待确认',
-                    style: textStyle)),
+                DataCell(
+                    Text(plate.confirmed ? '已确认' : '待确认', style: textStyle)),
                 DataCell(
                     Text(_productSummary(plate.products), style: textStyle)),
                 DataCell(
@@ -356,8 +325,7 @@ class _EmbossingPlateListViewState extends State<_EmbossingPlateListView> {
                   actions: [
                     RowAction(
                       label: '编辑',
-                      onPressed: () =>
-                          _openEditPage(context, viewModel, plate),
+                      onPressed: () => _openEditPage(context, viewModel, plate),
                     ),
                     if (!plate.confirmed)
                       RowAction(
@@ -383,7 +351,7 @@ class _EmbossingPlateListViewState extends State<_EmbossingPlateListView> {
   Widget _buildPageHeader(
     BuildContext context,
     EmbossingPlateViewModel viewModel,
-bool isMobile,
+    bool isMobile,
   ) {
     return PageHeaderBar(
       breadcrumb: null,
@@ -436,7 +404,9 @@ bool isMobile,
 
   static String _productSummary(List<EmbossingPlateProduct> products) {
     if (products.isEmpty) return _emptyCellText;
-    final display = products.map((item) => '${item.productName}(${item.quantity ?? 1}个)').toList();
+    final display = products
+        .map((item) => '${item.productName}(${item.quantity ?? 1}个)')
+        .toList();
     return display.join('、');
   }
 

@@ -1,0 +1,133 @@
+import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_form_sections.dart';
+
+class WorkOrderFormSubmissionInput {
+  const WorkOrderFormSubmissionInput({
+    required this.customerId,
+    required this.status,
+    required this.priority,
+    required this.orderDate,
+    required this.deliveryDate,
+    required this.actualDeliveryDate,
+    required this.productionQuantityText,
+    required this.defectiveQuantityText,
+    required this.notes,
+    required this.printingType,
+    required this.printingCmyk,
+    required this.printingOtherColorsText,
+    required this.productDrafts,
+    required this.materialDrafts,
+    required this.processIds,
+    required this.artworkIds,
+    required this.dieIds,
+    required this.foilingPlateIds,
+    required this.embossingPlateIds,
+  });
+
+  final int? customerId;
+  final String status;
+  final String priority;
+  final DateTime? orderDate;
+  final DateTime? deliveryDate;
+  final DateTime? actualDeliveryDate;
+  final String productionQuantityText;
+  final String defectiveQuantityText;
+  final String notes;
+  final String printingType;
+  final Set<String> printingCmyk;
+  final String printingOtherColorsText;
+  final List<WorkOrderProductDraft> productDrafts;
+  final List<WorkOrderMaterialDraft> materialDrafts;
+  final Set<int> processIds;
+  final Set<int> artworkIds;
+  final Set<int> dieIds;
+  final Set<int> foilingPlateIds;
+  final Set<int> embossingPlateIds;
+}
+
+class WorkOrderFormSubmission {
+  static String? validate(WorkOrderFormSubmissionInput input) {
+    if (input.customerId == null) {
+      return '请选择客户';
+    }
+    if (input.deliveryDate == null) {
+      return '请选择交货日期';
+    }
+    if (input.productDrafts.every((draft) => draft.productId == null)) {
+      return '请至少填写一个产品';
+    }
+    return null;
+  }
+
+  static Map<String, dynamic> buildPayload(WorkOrderFormSubmissionInput input) {
+    final products = input.productDrafts
+        .where((draft) => draft.productId != null)
+        .map(
+          (draft) => {
+            'product': draft.productId,
+            'quantity': draft.quantityValue,
+            'unit': draft.unitValue,
+            'specification': draft.specificationValue,
+            'sort_order': draft.sortOrderValue,
+          },
+        )
+        .toList();
+
+    final materials = input.materialDrafts
+        .where((draft) => draft.materialId != null)
+        .map(
+          (draft) => {
+            'material': draft.materialId,
+            'material_size': draft.sizeValue,
+            'material_usage': draft.usageValue,
+            'need_cutting': draft.needCutting,
+            'notes': draft.notesValue,
+          },
+        )
+        .toList();
+
+    final otherColors = input.printingOtherColorsText
+        .split(',')
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList();
+
+    final orderDate = _formatDate(input.orderDate);
+    final deliveryDate = _formatDate(input.deliveryDate);
+    final actualDeliveryDate = _formatDate(input.actualDeliveryDate);
+    final productionQuantity =
+        int.tryParse(input.productionQuantityText.trim());
+    final defectiveQuantity = int.tryParse(input.defectiveQuantityText.trim());
+
+    return {
+      'customer': input.customerId,
+      'status': input.status,
+      'priority': input.priority,
+      'order_date': orderDate.isEmpty ? null : orderDate,
+      'delivery_date': deliveryDate.isEmpty ? null : deliveryDate,
+      'actual_delivery_date':
+          actualDeliveryDate.isEmpty ? null : actualDeliveryDate,
+      'production_quantity': productionQuantity,
+      'defective_quantity': defectiveQuantity,
+      'notes': input.notes.trim(),
+      'printing_type': input.printingType,
+      'printing_cmyk_colors': input.printingCmyk.toList(),
+      'printing_other_colors': otherColors,
+      'products_data': products,
+      'materials_data': materials,
+      'processes': input.processIds.toList(),
+      'artworks': input.artworkIds.toList(),
+      'dies': input.dieIds.toList(),
+      'foiling_plates': input.foilingPlateIds.toList(),
+      'embossing_plates': input.embossingPlateIds.toList(),
+    };
+  }
+
+  static String _formatDate(DateTime? value) {
+    if (value == null) return '';
+    final local = value.toLocal();
+    final year = local.year.toString().padLeft(4, '0');
+    final month = local.month.toString().padLeft(2, '0');
+    final day = local.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
+  }
+}

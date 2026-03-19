@@ -112,8 +112,7 @@ class StockInListEntry extends StatelessWidget {
     BuildContext context, {
     GenericRecord? record,
   }) async {
-    final apiClient = context.read<ApiClient>();
-    final apiService = StockInApiService(apiClient);
+    final apiService = StockInApiService(context.read<ApiClient>());
     final isEdit = record != null;
     final recordId = record?.id;
     final workOrderController = TextEditingController(
@@ -176,7 +175,8 @@ class StockInListEntry extends StatelessWidget {
             ),
             actions: [
               TextButton(
-                onPressed: loading ? null : () => Navigator.of(context).pop(false),
+                onPressed:
+                    loading ? null : () => Navigator.of(context).pop(false),
                 child: const Text('取消'),
               ),
               FilledButton(
@@ -202,7 +202,9 @@ class StockInListEntry extends StatelessWidget {
                             await apiService.createStockIn(payload);
                           }
                           if (!context.mounted) return;
-                          context.read<GenericListViewModel>().reload(resetPage: true);
+                          context
+                              .read<GenericListViewModel>()
+                              .reload(resetPage: true);
                           Navigator.of(context).pop(true);
                           ToastUtil.showSuccess(isEdit ? '已更新' : '已创建');
                         } catch (err) {
@@ -225,8 +227,7 @@ class StockInListEntry extends StatelessWidget {
   }
 
   static Future<void> _submitStockIn(BuildContext context, int id) async {
-    final apiClient = context.read<ApiClient>();
-    final apiService = StockInApiService(apiClient);
+    final apiService = StockInApiService(context.read<ApiClient>());
     try {
       await apiService.submit(id);
       if (!context.mounted) return;
@@ -238,8 +239,7 @@ class StockInListEntry extends StatelessWidget {
   }
 
   static Future<void> _approveStockIn(BuildContext context, int id) async {
-    final apiClient = context.read<ApiClient>();
-    final apiService = StockInApiService(apiClient);
+    final apiService = StockInApiService(context.read<ApiClient>());
     try {
       await apiService.approve(id);
       if (!context.mounted) return;

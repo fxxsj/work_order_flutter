@@ -14,6 +14,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_d
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
@@ -32,56 +33,18 @@ import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart'
 import 'package:work_order_app/src/features/workorders/domain/work_order.dart';
 
 /// 发票列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class InvoiceListEntry extends StatefulWidget {
+class InvoiceListEntry extends StatelessWidget {
   const InvoiceListEntry({super.key});
 
   @override
-  State<InvoiceListEntry> createState() => _InvoiceListEntryState();
-}
-
-class _InvoiceListEntryState extends State<InvoiceListEntry> {
-  InvoiceApiService? _apiService;
-  InvoiceRepositoryImpl? _repository;
-  InvoiceViewModel? _viewModel;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = InvoiceApiService(apiClient);
-    _repository = InvoiceRepositoryImpl(_apiService!);
-    _viewModel = InvoiceViewModel(_repository!);
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _viewModel?.initialize();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<InvoiceApiService>.value(value: apiService),
-        Provider<InvoiceRepository>.value(value: repository),
-        ChangeNotifierProvider<InvoiceViewModel>.value(value: viewModel),
-      ],
+    return FeatureEntry<InvoiceApiService, InvoiceRepository, InvoiceViewModel>(
+      createService: (context) => InvoiceApiService(context.read<ApiClient>()),
+      createRepository: (context) =>
+          InvoiceRepositoryImpl(context.read<InvoiceApiService>()),
+      createViewModel: (context) =>
+          InvoiceViewModel(context.read<InvoiceRepository>()),
+      initialize: (viewModel) => viewModel.initialize(),
       child: const InvoiceListPage(),
     );
   }
@@ -179,7 +142,8 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                 ToastUtil.showError('请输入正确的金额');
                 return;
               }
-              final taxRate = double.tryParse(taxRateController.text.trim()) ?? 0;
+              final taxRate =
+                  double.tryParse(taxRateController.text.trim()) ?? 0;
               if (taxRate < 0 || taxRate > 100) {
                 ToastUtil.showError('税率应在 0-100 之间');
                 return;
@@ -239,9 +203,12 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                             border: OutlineInputBorder(),
                           ),
                           items: const [
-                            DropdownMenuItem(value: 'vat_special', child: Text('增值税专用发票')),
-                            DropdownMenuItem(value: 'vat_normal', child: Text('增值税普通发票')),
-                            DropdownMenuItem(value: 'electronic', child: Text('电子发票')),
+                            DropdownMenuItem(
+                                value: 'vat_special', child: Text('增值税专用发票')),
+                            DropdownMenuItem(
+                                value: 'vat_normal', child: Text('增值税普通发票')),
+                            DropdownMenuItem(
+                                value: 'electronic', child: Text('电子发票')),
                           ],
                           onChanged: submitting
                               ? null
@@ -273,8 +240,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                               : (value) => setState(
                                     () => selectedCustomerId = value,
                                   ),
-                          validator: (value) =>
-                              value == null ? '请选择客户' : null,
+                          validator: (value) => value == null ? '请选择客户' : null,
                         ),
                         const SizedBox(height: 12),
                         SearchableDropdownFormField<int?>(
@@ -329,8 +295,8 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                         const SizedBox(height: 12),
                         TextFormField(
                           controller: amountController,
-                          keyboardType:
-                              const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
                           decoration: const InputDecoration(
                             labelText: '金额（不含税）',
                             border: OutlineInputBorder(),
@@ -343,8 +309,8 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                         const SizedBox(height: 12),
                         TextFormField(
                           controller: taxRateController,
-                          keyboardType:
-                              const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
                           decoration: const InputDecoration(
                             labelText: '税率(%)',
                             border: OutlineInputBorder(),
@@ -396,7 +362,8 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     notesController.dispose();
   }
 
-  Future<void> _submitInvoice(InvoiceViewModel viewModel, Invoice invoice) async {
+  Future<void> _submitInvoice(
+      InvoiceViewModel viewModel, Invoice invoice) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -520,7 +487,8 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, invoices, isMobile),
-          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1
+              ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,
@@ -604,16 +572,15 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                 )),
                 DataCell(
                     Text(_displayText(invoice.customerName), style: textStyle)),
-                DataCell(
-                    Text(_displayText(invoice.workOrderNumber), style: textStyle)),
+                DataCell(Text(_displayText(invoice.workOrderNumber),
+                    style: textStyle)),
                 DataCell(Text(_formatAmount(invoice.amount), style: textStyle)),
                 DataCell(Text(
-                  invoice.statusDisplay ??
-                      invoice.status ??
-                      _emptyCellText,
+                  invoice.statusDisplay ?? invoice.status ?? _emptyCellText,
                   style: textStyle,
                 )),
-                DataCell(Text(_formatDate(invoice.issueDate), style: textStyle)),
+                DataCell(
+                    Text(_formatDate(invoice.issueDate), style: textStyle)),
                 DataCell(_buildRowActions(viewModel, invoice)),
               ],
             ),
@@ -625,7 +592,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
   Widget _buildPageHeader(
     BuildContext context,
     InvoiceViewModel viewModel,
-bool isMobile,
+    bool isMobile,
   ) {
     return PageHeaderBar(
       breadcrumb: null,
@@ -719,7 +686,8 @@ bool isMobile,
     return '$year-$month-$day';
   }
 
-  Widget _buildSummaryCard(BuildContext context, Invoice invoice, bool isMobile) {
+  Widget _buildSummaryCard(
+      BuildContext context, Invoice invoice, bool isMobile) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final sectionSpacing = LayoutTokens.sectionSpacing(context);

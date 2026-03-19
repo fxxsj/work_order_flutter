@@ -10,6 +10,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_d
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
 import 'package:work_order_app/src/features/products/data/product_api_service.dart';
+import 'package:work_order_app/src/features/sales_orders/data/sales_order_item_api_service.dart';
 
 class SalesOrderItemListEntry extends StatelessWidget {
   const SalesOrderItemListEntry({super.key});
@@ -81,7 +82,8 @@ class SalesOrderItemListEntry extends StatelessWidget {
   }
 
   static String _orderId(GenericRecord record) {
-    return GenericValueFormatter.text(record.getNumber('sales_order') ?? record.getString('sales_order'));
+    return GenericValueFormatter.text(
+        record.getNumber('sales_order') ?? record.getString('sales_order'));
   }
 
   static String _productName(GenericRecord record) {
@@ -110,6 +112,7 @@ class SalesOrderItemListEntry extends StatelessWidget {
   }) async {
     final apiClient = context.read<ApiClient>();
     final productApi = ProductApiService(apiClient);
+    final itemApi = SalesOrderItemApiService(apiClient);
     final isEdit = record != null;
     final recordId = record?.id;
     final orderController = TextEditingController(
@@ -166,7 +169,8 @@ class SalesOrderItemListEntry extends StatelessWidget {
                           controller: orderController,
                           keyboardType: TextInputType.number,
                           readOnly: isEdit,
-                          decoration: const InputDecoration(labelText: '销售订单ID'),
+                          decoration:
+                              const InputDecoration(labelText: '销售订单ID'),
                         ),
                         const SizedBox(height: 12),
                         SearchableDropdownFormField<int>(
@@ -201,23 +205,22 @@ class SalesOrderItemListEntry extends StatelessWidget {
                         const SizedBox(height: 12),
                         TextField(
                           controller: unitPriceController,
-                          keyboardType:
-                              const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
                           decoration: const InputDecoration(labelText: '单价'),
                         ),
                         const SizedBox(height: 12),
                         TextField(
                           controller: taxRateController,
-                          keyboardType:
-                              const TextInputType.numberWithOptions(decimal: true),
-                          decoration:
-                              const InputDecoration(labelText: '税率（%）'),
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
+                          decoration: const InputDecoration(labelText: '税率（%）'),
                         ),
                         const SizedBox(height: 12),
                         TextField(
                           controller: discountController,
-                          keyboardType:
-                              const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
                           decoration: const InputDecoration(labelText: '折扣金额'),
                         ),
                         const SizedBox(height: 12),
@@ -234,14 +237,16 @@ class SalesOrderItemListEntry extends StatelessWidget {
             ),
             actions: [
               TextButton(
-                onPressed: loading ? null : () => Navigator.of(context).pop(false),
+                onPressed:
+                    loading ? null : () => Navigator.of(context).pop(false),
                 child: const Text('取消'),
               ),
               FilledButton(
                 onPressed: loading
                     ? null
                     : () async {
-                        final orderId = int.tryParse(orderController.text.trim());
+                        final orderId =
+                            int.tryParse(orderController.text.trim());
                         if (!isEdit && orderId == null) {
                           ToastUtil.showError('请输入销售订单ID');
                           return;
@@ -295,15 +300,9 @@ class SalesOrderItemListEntry extends StatelessWidget {
                             payload['sales_order'] = orderId;
                           }
                           if (isEdit && recordId != null) {
-                            await apiClient.put(
-                              '/sales-order-items/$recordId/',
-                              data: payload,
-                            );
+                            await itemApi.updateItem(recordId, payload);
                           } else {
-                            await apiClient.post(
-                              '/sales-order-items/',
-                              data: payload,
-                            );
+                            await itemApi.createItem(payload);
                           }
                           if (!context.mounted) return;
                           context
@@ -357,8 +356,8 @@ class SalesOrderItemListEntry extends StatelessWidget {
     );
     if (confirmed != true) return;
     try {
-      final apiClient = context.read<ApiClient>();
-      await apiClient.delete('/sales-order-items/$id/');
+      final itemApi = SalesOrderItemApiService(context.read<ApiClient>());
+      await itemApi.deleteItem(id);
       if (!context.mounted) return;
       context.read<GenericListViewModel>().reload(resetPage: true);
       ToastUtil.showSuccess('已删除');

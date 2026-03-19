@@ -13,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
@@ -31,57 +32,21 @@ import 'package:work_order_app/src/features/materials/data/material_dto.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
 
-/// 采购单列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class PurchaseOrderListEntry extends StatefulWidget {
+/// 采购单列表入口。
+class PurchaseOrderListEntry extends StatelessWidget {
   const PurchaseOrderListEntry({super.key});
 
   @override
-  State<PurchaseOrderListEntry> createState() => _PurchaseOrderListEntryState();
-}
-
-class _PurchaseOrderListEntryState extends State<PurchaseOrderListEntry> {
-  PurchaseOrderApiService? _apiService;
-  PurchaseOrderRepositoryImpl? _repository;
-  PurchaseOrderViewModel? _viewModel;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = PurchaseOrderApiService(apiClient);
-    _repository = PurchaseOrderRepositoryImpl(_apiService!);
-    _viewModel = PurchaseOrderViewModel(_repository!);
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _viewModel?.initialize();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<PurchaseOrderApiService>.value(value: apiService),
-        Provider<PurchaseOrderRepository>.value(value: repository),
-        ChangeNotifierProvider<PurchaseOrderViewModel>.value(value: viewModel),
-      ],
+    return FeatureEntry<PurchaseOrderApiService, PurchaseOrderRepository,
+        PurchaseOrderViewModel>(
+      createService: (context) =>
+          PurchaseOrderApiService(context.read<ApiClient>()),
+      createRepository: (context) =>
+          PurchaseOrderRepositoryImpl(context.read<PurchaseOrderApiService>()),
+      createViewModel: (context) =>
+          PurchaseOrderViewModel(context.read<PurchaseOrderRepository>()),
+      initialize: (viewModel) => viewModel.initialize(),
       child: const PurchaseOrderListPage(),
     );
   }

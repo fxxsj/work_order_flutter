@@ -7,11 +7,9 @@ import 'package:work_order_app/src/core/constants/breakpoints.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/store_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/workorders/application/work_order_view_model.dart';
@@ -19,52 +17,25 @@ import 'package:work_order_app/src/features/workorders/data/work_order_api_servi
 import 'package:work_order_app/src/features/workorders/data/work_order_repository_impl.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
+import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_data_sections.dart';
+import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_sections.dart';
 
-class WorkOrderDetailEntry extends StatefulWidget {
+class WorkOrderDetailEntry extends StatelessWidget {
   const WorkOrderDetailEntry({super.key, required this.workOrderId});
 
   final int workOrderId;
 
   @override
-  State<WorkOrderDetailEntry> createState() => _WorkOrderDetailEntryState();
-}
-
-class _WorkOrderDetailEntryState extends State<WorkOrderDetailEntry> {
-  WorkOrderApiService? _apiService;
-  WorkOrderRepositoryImpl? _repository;
-  WorkOrderViewModel? _viewModel;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = WorkOrderApiService(apiClient);
-    _repository = WorkOrderRepositoryImpl(_apiService!);
-    _viewModel = WorkOrderViewModel(_repository!);
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<WorkOrderApiService>.value(value: apiService),
-        Provider<WorkOrderRepository>.value(value: repository),
-        ChangeNotifierProvider<WorkOrderViewModel>.value(value: viewModel),
-      ],
-      child: WorkOrderDetailPage(workOrderId: widget.workOrderId),
+    return FeatureEntry<WorkOrderApiService, WorkOrderRepository,
+        WorkOrderViewModel>(
+      createService: (context) =>
+          WorkOrderApiService(context.read<ApiClient>()),
+      createRepository: (context) =>
+          WorkOrderRepositoryImpl(context.read<WorkOrderApiService>()),
+      createViewModel: (context) =>
+          WorkOrderViewModel(context.read<WorkOrderRepository>()),
+      child: WorkOrderDetailPage(workOrderId: workOrderId),
     );
   }
 }
@@ -107,8 +78,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
       TextEditingController();
   final TextEditingController _escalationTargetController =
       TextEditingController();
-  final TextEditingController _urgentReasonController =
-      TextEditingController();
+  final TextEditingController _urgentReasonController = TextEditingController();
 
   @override
   void didChangeDependencies() {
@@ -147,19 +117,11 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
       _approvalErrorMessage = null;
     });
     try {
-      final apiClient = context.read<ApiClient>();
-      final response = await apiClient.get(
-        '/multi-level-approval/get_approval_status/',
-        queryParameters: {'order_id': widget.workOrderId},
-      );
+      final viewModel = context.read<WorkOrderViewModel>();
+      final payload = await viewModel.fetchApprovalStatus(widget.workOrderId);
       if (!mounted) return;
       setState(() {
-        final payload = response.data;
-        _approvalStatus = payload is Map<String, dynamic>
-            ? payload
-            : payload is Map
-                ? Map<String, dynamic>.from(payload)
-                : null;
+        _approvalStatus = payload;
       });
     } catch (err) {
       if (!mounted) return;
@@ -419,32 +381,11 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     return '${parsed.toStringAsFixed(0)}%';
   }
 
-  Map<String, dynamic>? get _currentApprovalStep {
-    final data = _approvalStatus?['current_step'];
-    if (data is Map<String, dynamic>) return data;
-    if (data is Map) return Map<String, dynamic>.from(data);
-    return null;
-  }
-
-  List<Map<String, dynamic>> get _allApprovalSteps {
-    final data = _approvalStatus?['all_steps'];
-    if (data is List) {
-      return data
-          .whereType<Map>()
-          .map((item) => Map<String, dynamic>.from(item))
-          .toList();
-    }
-    return const [];
-  }
-
   Future<void> _submitMultiApproval() async {
     setState(() => _approvalActionLoading = true);
     try {
-      final apiClient = context.read<ApiClient>();
-      await apiClient.post(
-        '/multi-level-approval/submit_for_approval/',
-        data: {'order_id': widget.workOrderId},
-      );
+      final viewModel = context.read<WorkOrderViewModel>();
+      await viewModel.submitMultiApproval(widget.workOrderId);
       if (!mounted) return;
       ToastUtil.showSuccess('已提交多级审批');
       await _loadDetail();
@@ -458,8 +399,8 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   Future<void> _startApprovalStep(int stepId) async {
     setState(() => _approvalActionLoading = true);
     try {
-      final apiClient = context.read<ApiClient>();
-      await apiClient.post('/approval-steps/$stepId/start_step/');
+      final viewModel = context.read<WorkOrderViewModel>();
+      await viewModel.startApprovalStep(stepId);
       if (!mounted) return;
       ToastUtil.showSuccess('步骤已开始');
       await _loadApprovalStatus();
@@ -477,13 +418,11 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   }) async {
     setState(() => _approvalActionLoading = true);
     try {
-      final apiClient = context.read<ApiClient>();
-      await apiClient.post(
-        '/approval-steps/$stepId/complete_step/',
-        data: {
-          'decision': decision,
-          if (comments != null) 'comments': comments,
-        },
+      final viewModel = context.read<WorkOrderViewModel>();
+      await viewModel.completeApprovalStep(
+        stepId,
+        decision: decision,
+        comments: comments,
       );
       if (!mounted) return;
       ToastUtil.showSuccess('步骤已完成');
@@ -502,13 +441,11 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   }) async {
     setState(() => _approvalActionLoading = true);
     try {
-      final apiClient = context.read<ApiClient>();
-      await apiClient.post(
-        '/approval-steps/$stepId/escalate_step/',
-        data: {
-          'escalation_reason': reason,
-          if (toStepId != null) 'to_step_id': toStepId,
-        },
+      final viewModel = context.read<WorkOrderViewModel>();
+      await viewModel.escalateApprovalStep(
+        stepId,
+        reason: reason,
+        toStepId: toStepId,
       );
       if (!mounted) return;
       ToastUtil.showSuccess('已上报审批步骤');
@@ -549,14 +486,8 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     }
     setState(() => _approvalActionLoading = true);
     try {
-      final apiClient = context.read<ApiClient>();
-      await apiClient.post(
-        '/urgent-orders/mark_urgent/',
-        data: {
-          'order_id': widget.workOrderId,
-          'reason': reason,
-        },
-      );
+      final viewModel = context.read<WorkOrderViewModel>();
+      await viewModel.markUrgent(widget.workOrderId, reason: reason);
       if (!mounted) return;
       ToastUtil.showSuccess('已标记为紧急订单');
       await _loadDetail();
@@ -644,7 +575,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     await _escalateApprovalStep(stepId, reason: reason, toStepId: targetId);
   }
 
-  Widget _buildInfoGrid(List<_InfoItem> items) {
+  Widget _buildInfoGrid(List<WorkOrderInfoItem> items) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxWidth = constraints.maxWidth;
@@ -666,467 +597,6 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
               .toList(),
         );
       },
-    );
-  }
-
-  Widget _buildOverviewSection(
-    WorkOrderDetail detail, {
-    required List<DropdownMenuItem<String>> statusOptions,
-  }) {
-    final sectionSpacing = LayoutTokens.sectionSpacing(context);
-    final summary = _buildSection(
-      '施工单信息',
-      _buildSummaryContent(detail),
-    );
-    final actions = _buildSection(
-      '流程操作',
-      _buildActionPanel(detail, statusOptions: statusOptions),
-    );
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < Breakpoints.lg;
-        if (isNarrow) {
-          return Column(
-            children: [
-              summary,
-              SizedBox(height: sectionSpacing),
-              actions,
-            ],
-          );
-        }
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: summary),
-            SizedBox(width: sectionSpacing),
-            SizedBox(width: 300, child: actions),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildSummaryContent(WorkOrderDetail detail) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>();
-    final sectionSpacing = LayoutTokens.sectionSpacing(context);
-    final dividerColor = colors?.borderColor.withValues(alpha: 0.6);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildInfoGrid([
-          _InfoItem('客户', detail.customerName ?? _emptyText),
-          _InfoItem('业务员', detail.salespersonName ?? _emptyText),
-          _InfoItem('负责人', detail.managerName ?? _emptyText),
-          _InfoItem('创建人', detail.createdByName ?? _emptyText),
-          _InfoItem('审核人', detail.approvedByName ?? _emptyText),
-          _InfoItem('状态', detail.statusDisplay ?? detail.status ?? _emptyText),
-          _InfoItem(
-              '优先级', detail.priorityDisplay ?? detail.priority ?? _emptyText),
-          _InfoItem(
-              '审批状态',
-              detail.approvalStatusDisplay ??
-                  detail.approvalStatus ??
-                  _emptyText),
-          _InfoItem('审批说明', detail.approvalComment ?? _emptyText),
-          _InfoItem('下单日期', _formatDate(detail.orderDate)),
-          _InfoItem('交货日期', _formatDate(detail.deliveryDate)),
-          _InfoItem('实际交货', _formatDate(detail.actualDeliveryDate)),
-          _InfoItem(
-              '生产数量', detail.productionQuantity?.toString() ?? _emptyText),
-          _InfoItem('不良数量', detail.defectiveQuantity?.toString() ?? _emptyText),
-          _InfoItem(
-            '任务数',
-            detail.totalTaskCount == null
-                ? _emptyText
-                : detail.totalTaskCount!.toString(),
-          ),
-          _InfoItem(
-            '草稿任务',
-            detail.draftTaskCount == null
-                ? _emptyText
-                : detail.draftTaskCount!.toString(),
-          ),
-          _InfoItem(
-            '总金额',
-            detail.totalAmount == null
-                ? _emptyText
-                : detail.totalAmount!.toStringAsFixed(2),
-          ),
-          _InfoItem(
-            '进度',
-            detail.progressPercentage == null
-                ? _emptyText
-                : '${detail.progressPercentage}%',
-          ),
-          _InfoItem('印刷形式',
-              detail.printingTypeDisplay ?? detail.printingType ?? _emptyText),
-          _InfoItem('印刷色数', detail.printingColorsDisplay ?? _emptyText),
-        ]),
-        SizedBox(height: sectionSpacing),
-        Divider(height: sectionSpacing, color: dividerColor),
-        SizedBox(height: sectionSpacing),
-        _buildInfoGrid([
-          _InfoItem('备注', detail.notes ?? _emptyText),
-          _InfoItem(
-            'CMYK 颜色',
-            detail.printingCmykColors.isEmpty
-                ? _emptyText
-                : detail.printingCmykColors.join(', '),
-          ),
-          _InfoItem(
-            '其他颜色',
-            detail.printingOtherColors.isEmpty
-                ? _emptyText
-                : detail.printingOtherColors.join(', '),
-          ),
-        ]),
-        SizedBox(height: sectionSpacing),
-        _buildResourceGroup(
-          '图稿',
-          detail.artworkNames.isNotEmpty
-              ? detail.artworkNames
-              : detail.artworkCodes,
-        ),
-        SizedBox(height: sectionSpacing),
-        _buildResourceGroup(
-          '刀模',
-          detail.dieNames.isNotEmpty ? detail.dieNames : detail.dieCodes,
-        ),
-        SizedBox(height: sectionSpacing),
-        _buildResourceGroup(
-          '烫金版',
-          detail.foilingPlateNames.isNotEmpty
-              ? detail.foilingPlateNames
-              : detail.foilingPlateCodes,
-        ),
-        SizedBox(height: sectionSpacing),
-        _buildResourceGroup(
-          '压凸版',
-          detail.embossingPlateNames.isNotEmpty
-              ? detail.embossingPlateNames
-              : detail.embossingPlateCodes,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionPanel(
-    WorkOrderDetail detail, {
-    required List<DropdownMenuItem<String>> statusOptions,
-  }) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>();
-    final spacing = LayoutTokens.gapSm;
-    final dividerColor = colors?.borderColor.withValues(alpha: 0.6);
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final useColumnButtons = constraints.maxWidth < 320;
-        final approvalActions = <Widget>[];
-
-        if (!_hasMultiApproval && detail.approvalStatus == 'pending') {
-          if (useColumnButtons) {
-            approvalActions.addAll([
-              FilledButton(
-                onPressed: _actionLoading
-                    ? null
-                    : () => _showApproveDialog(approved: true),
-                child: const Text('审核通过'),
-              ),
-              SizedBox(height: spacing),
-              OutlinedButton(
-                onPressed: _actionLoading
-                    ? null
-                    : () => _showApproveDialog(approved: false),
-                child: const Text('审核拒绝'),
-              ),
-            ]);
-          } else {
-            approvalActions.add(
-              Row(
-                children: [
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: _actionLoading
-                          ? null
-                          : () => _showApproveDialog(approved: true),
-                      child: const Text('审核通过'),
-                    ),
-                  ),
-                  SizedBox(width: spacing),
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _actionLoading
-                          ? null
-                          : () => _showApproveDialog(approved: false),
-                      child: const Text('审核拒绝'),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-        }
-        if (!_hasMultiApproval && detail.approvalStatus == 'rejected') {
-          approvalActions.add(
-            FilledButton(
-              onPressed: _actionLoading ? null : _handleResubmit,
-              child: const Text('重新提交审核'),
-            ),
-          );
-        }
-        if (!_hasMultiApproval && detail.approvalStatus == 'approved') {
-          approvalActions.add(
-            OutlinedButton(
-              onPressed: _actionLoading ? null : _showReapprovalDialog,
-              child: const Text('请求重新审核'),
-            ),
-          );
-        }
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SearchableDropdownFormField<String>(
-              initialValue: _statusSelection,
-              isExpanded: true,
-              decoration: const InputDecoration(labelText: '状态'),
-              items: statusOptions,
-              onChanged: _actionLoading
-                  ? null
-                  : (value) => setState(() => _statusSelection = value),
-            ),
-            SizedBox(height: spacing),
-            FilledButton(
-              onPressed: _actionLoading ? null : _handleUpdateStatus,
-              child: const Text('更新状态'),
-            ),
-            if (approvalActions.isNotEmpty) ...[
-              SizedBox(height: LayoutTokens.gapMd),
-              Divider(height: LayoutTokens.gapMd, color: dividerColor),
-              Text(
-                '审批操作',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: colors?.sidebarText,
-                ),
-              ),
-              SizedBox(height: spacing),
-              ...approvalActions,
-            ],
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildMultiApprovalSection(WorkOrderDetail detail) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>();
-    final isMobile = BreakpointsUtil.isMobile(context);
-    final currentStep = _currentApprovalStep;
-    final steps = _allApprovalSteps;
-
-    if (_approvalLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_approvalErrorMessage != null) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(_approvalErrorMessage!, style: theme.textTheme.bodyMedium),
-          const SizedBox(height: 12),
-          FilledButton(
-            onPressed: _loadApprovalStatus,
-            child: const Text('重试'),
-          ),
-        ],
-      );
-    }
-
-    if (_approvalStatus == null || steps.isEmpty) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('尚未启动多级审批', style: theme.textTheme.bodyMedium),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: LayoutTokens.gapSm,
-            runSpacing: LayoutTokens.gapSm,
-            children: [
-              FilledButton.icon(
-                onPressed: _approvalActionLoading ? null : _submitMultiApproval,
-                icon: const Icon(Icons.fact_check_outlined, size: 18),
-                label: Text(_approvalActionLoading ? '提交中' : '提交审批'),
-              ),
-              if (detail.priority != 'urgent')
-                OutlinedButton.icon(
-                  onPressed: _approvalActionLoading ? null : _markUrgent,
-                  icon: const Icon(Icons.priority_high, size: 18),
-                  label: const Text('标记紧急'),
-                ),
-            ],
-          ),
-        ],
-      );
-    }
-
-    final totalSteps = _approvalStatus?['total_steps']?.toString() ?? _emptyText;
-    final completedSteps =
-        _approvalStatus?['completed_steps']?.toString() ?? _emptyText;
-    final progressText =
-        _formatPercentage(_approvalStatus?['progress_percentage']);
-    final approvalStatus =
-        _approvalStatus?['approval_status']?.toString() ??
-            detail.approvalStatusDisplay ??
-            _emptyText;
-
-    final assignedTo =
-        currentStep == null ? _emptyText : currentStep['assigned_to_name']?.toString() ?? _emptyText;
-    final stepStatus =
-        currentStep == null ? _emptyText : currentStep['status']?.toString() ?? _emptyText;
-    final stepName =
-        currentStep == null ? _emptyText : currentStep['step_name']?.toString() ?? _emptyText;
-    final stepRawId = currentStep == null ? null : currentStep['id'];
-    final stepId = stepRawId is int
-        ? stepRawId
-        : int.tryParse(stepRawId?.toString() ?? '');
-
-    final currentUser = StoreUtil.getCurrentUserInfo().userName;
-    final canAct =
-        currentUser == null || currentUser.isEmpty ? true : currentUser == assignedTo;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Wrap(
-          spacing: LayoutTokens.gapLg,
-          runSpacing: LayoutTokens.gapSm,
-          children: [
-            _InfoRow(label: '审批状态', value: approvalStatus),
-            _InfoRow(label: '进度', value: '$completedSteps / $totalSteps ($progressText)'),
-            _InfoRow(label: '当前步骤', value: stepName),
-            _InfoRow(label: '负责人', value: assignedTo),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: LayoutTokens.gapSm,
-          runSpacing: LayoutTokens.gapSm,
-          children: [
-            if (stepId != null && stepStatus == 'pending')
-              FilledButton.icon(
-                onPressed: _approvalActionLoading || !canAct
-                    ? null
-                    : () => _startApprovalStep(stepId),
-                icon: const Icon(Icons.play_arrow, size: 18),
-                label: const Text('开始审核'),
-              ),
-            if (stepId != null &&
-                (stepStatus == 'pending' || stepStatus == 'in_progress')) ...[
-              FilledButton.icon(
-                onPressed: _approvalActionLoading || !canAct
-                    ? null
-                    : () => _showCompleteStepDialog(
-                          stepId: stepId,
-                          decision: 'approve',
-                        ),
-                icon: const Icon(Icons.check_circle_outline, size: 18),
-                label: const Text('通过'),
-              ),
-              OutlinedButton.icon(
-                onPressed: _approvalActionLoading || !canAct
-                    ? null
-                    : () => _showCompleteStepDialog(
-                          stepId: stepId,
-                          decision: 'reject',
-                        ),
-                icon: const Icon(Icons.cancel_outlined, size: 18),
-                label: const Text('拒绝'),
-              ),
-              OutlinedButton.icon(
-                onPressed: _approvalActionLoading || !canAct
-                    ? null
-                    : () => _showEscalateDialog(stepId),
-                icon: const Icon(Icons.trending_up, size: 18),
-                label: const Text('上报'),
-              ),
-            ],
-            FilledButton.icon(
-              onPressed: _approvalActionLoading ? null : _submitMultiApproval,
-              icon: const Icon(Icons.fact_check_outlined, size: 18),
-              label: Text(_approvalActionLoading ? '提交中' : '重新提交'),
-            ),
-            if (detail.priority != 'urgent')
-              OutlinedButton.icon(
-                onPressed: _approvalActionLoading ? null : _markUrgent,
-                icon: const Icon(Icons.priority_high, size: 18),
-                label: const Text('标记紧急'),
-              ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Text(
-          '审批步骤',
-          style: theme.textTheme.titleSmall?.copyWith(
-            color: colors?.sidebarText,
-          ),
-        ),
-        const SizedBox(height: 8),
-        if (!isMobile)
-          AppDataTable(
-            columns: const [
-              DataColumn(label: Text('序号')),
-              DataColumn(label: Text('步骤')),
-              DataColumn(label: Text('状态')),
-              DataColumn(label: Text('负责人')),
-              DataColumn(label: Text('决定')),
-              DataColumn(label: Text('开始时间')),
-              DataColumn(label: Text('完成时间')),
-            ],
-            rows: steps
-                .map(
-                  (step) => DataRow(
-                    cells: [
-                      DataCell(Text(step['step_order']?.toString() ?? _emptyText)),
-                      DataCell(Text(step['step_name']?.toString() ?? _emptyText)),
-                      DataCell(Text(step['status']?.toString() ?? _emptyText)),
-                      DataCell(Text(step['assigned_to_name']?.toString() ?? _emptyText)),
-                      DataCell(Text(step['decision']?.toString() ?? _emptyText)),
-                      DataCell(Text(_formatDateTime(step['started_at']))),
-                      DataCell(Text(_formatDateTime(step['completed_at']))),
-                    ],
-                  ),
-                )
-                .toList(),
-          )
-        else
-          Column(
-            children: steps
-                .map(
-                  (step) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: DetailSectionCard(
-                      title: step['step_name']?.toString() ?? _emptyText,
-                      child: Wrap(
-                        spacing: LayoutTokens.gapLg,
-                        runSpacing: LayoutTokens.gapSm,
-                        children: [
-                          _InfoRow(label: '状态', value: step['status']?.toString() ?? _emptyText),
-                          _InfoRow(label: '负责人', value: step['assigned_to_name']?.toString() ?? _emptyText),
-                          _InfoRow(label: '决定', value: step['decision']?.toString() ?? _emptyText),
-                          _InfoRow(label: '开始时间', value: _formatDateTime(step['started_at'])),
-                          _InfoRow(label: '完成时间', value: _formatDateTime(step['completed_at'])),
-                        ],
-                      ),
-                    ),
-                  ),
-                )
-                .toList(),
-          ),
-      ],
     );
   }
 
@@ -1170,274 +640,6 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     );
   }
 
-  Widget _buildProductsTable(List<WorkOrderProductItem> items) {
-    if (items.isEmpty) {
-      return Text('暂无产品信息', style: Theme.of(context).textTheme.bodyMedium);
-    }
-    return Column(
-      children: [
-        for (final item in items)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: _DetailListCard(
-              title: item.productName ?? _emptyText,
-              subtitle: item.productCode ?? _emptyText,
-              fields: [
-                _DetailField('数量', item.quantity?.toString() ?? _emptyText),
-                _DetailField('单位', item.unit ?? _emptyText),
-                _DetailField('规格', item.specification ?? _emptyText),
-                _DetailField(
-                  '拼版数',
-                  item.impositionQuantity?.toString() ?? _emptyText,
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildProcessTable(List<WorkOrderProcessItem> items) {
-    if (items.isEmpty) {
-      return Text('暂无工序信息', style: Theme.of(context).textTheme.bodyMedium);
-    }
-    return Column(
-      children: [
-        for (final item in items)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: _DetailListCard(
-              title: item.processName ?? _emptyText,
-              subtitle: item.processCode ?? _emptyText,
-              fields: [
-                _DetailField(
-                  '状态',
-                  item.statusDisplay ?? item.status ?? _emptyText,
-                ),
-                _DetailField(
-                  '操作员',
-                  item.operatorName ?? _emptyText,
-                ),
-                _DetailField(
-                  '部门',
-                  item.departmentName ?? _emptyText,
-                ),
-                _DetailField(
-                  '任务数',
-                  item.tasksCount?.toString() ?? _emptyText,
-                ),
-                _DetailField(
-                  '可开始',
-                  item.canStart == null
-                      ? _emptyText
-                      : (item.canStart! ? '可开始' : '不可开始'),
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildProcessGantt(List<WorkOrderProcessItem> items) {
-    final rows = _buildGanttRows(items);
-    if (rows.isEmpty) {
-      return Text('暂无排程信息', style: Theme.of(context).textTheme.bodyMedium);
-    }
-
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>();
-    final semantic = theme.extension<AppSemanticColors>();
-    final borderColor = colors?.borderColor ?? theme.dividerColor;
-    final labelColor = colors?.sidebarText ?? theme.textTheme.bodyMedium?.color;
-
-    final start = rows.map((row) => row.start).reduce((a, b) => a.isBefore(b) ? a : b);
-    final end = rows.map((row) => row.end).reduce((a, b) => a.isAfter(b) ? a : b);
-    final totalMs = end.millisecondsSinceEpoch - start.millisecondsSinceEpoch;
-    final safeTotalMs = totalMs <= 0 ? 1 : totalMs;
-
-    const labelWidth = 140.0;
-    const rowHeight = 36.0;
-    const barHeight = 12.0;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final minChartWidth = 560.0;
-        final chartWidth =
-            (constraints.maxWidth - labelWidth - 12).clamp(320.0, double.infinity);
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '排程区间：${_formatDateTime(start)} ~ ${_formatDateTime(end)}',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colors?.subtleText ?? theme.hintColor,
-              ),
-            ),
-            const SizedBox(height: 12),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minWidth: labelWidth + minChartWidth),
-                child: SizedBox(
-                  width: labelWidth + chartWidth,
-                  child: Column(
-                    children: [
-                      for (final row in rows)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              SizedBox(
-                                width: labelWidth,
-                                child: Text(
-                                  row.label,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: labelColor,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: SizedBox(
-                                  height: rowHeight,
-                                  child: Stack(
-                                    children: [
-                                      Positioned.fill(
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            color: borderColor.withValues(alpha: 0.12),
-                                            borderRadius: BorderRadius.circular(6),
-                                          ),
-                                        ),
-                                      ),
-                                      Positioned(
-                                        left: _clampDouble(
-                                          (row.start.millisecondsSinceEpoch -
-                                                  start.millisecondsSinceEpoch) /
-                                              safeTotalMs,
-                                        ) *
-                                            chartWidth,
-                                        top: (rowHeight - barHeight) / 2,
-                                        child: Container(
-                                          width: _resolveBarWidth(
-                                            row,
-                                            start,
-                                            safeTotalMs,
-                                            chartWidth,
-                                          ),
-                                          height: barHeight,
-                                          decoration: BoxDecoration(
-                                            color: _statusColor(
-                                              row.status,
-                                              theme,
-                                              semantic,
-                                            ),
-                                            borderRadius: BorderRadius.circular(6),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  List<_GanttRow> _buildGanttRows(List<WorkOrderProcessItem> items) {
-    final rows = <_GanttRow>[];
-    for (final item in items) {
-      var start = item.plannedStartTime ?? item.actualStartTime;
-      var end = item.plannedEndTime ?? item.actualEndTime;
-      if (start == null && end == null) continue;
-      if (start == null && end != null) {
-        start = end.subtract(const Duration(hours: 1));
-      }
-      if (end == null && start != null) {
-        end = start.add(const Duration(hours: 1));
-      }
-      if (start == null || end == null) continue;
-      if (end.isBefore(start)) {
-        final temp = start;
-        start = end;
-        end = temp;
-      }
-      rows.add(
-        _GanttRow(
-          label: item.processName ?? '工序 #${item.id}',
-          status: item.status,
-          start: start,
-          end: end,
-          sequence: item.sequence,
-        ),
-      );
-    }
-    rows.sort((a, b) {
-      final aSeq = a.sequence ?? 9999;
-      final bSeq = b.sequence ?? 9999;
-      if (aSeq != bSeq) return aSeq.compareTo(bSeq);
-      return a.start.compareTo(b.start);
-    });
-    return rows;
-  }
-
-  double _resolveBarWidth(
-    _GanttRow row,
-    DateTime start,
-    int totalMs,
-    double chartWidth,
-  ) {
-    final durationMs =
-        row.end.millisecondsSinceEpoch - row.start.millisecondsSinceEpoch;
-    final safeDuration = durationMs <= 0 ? 1 : durationMs;
-    final width = safeDuration / totalMs * chartWidth;
-    return width < 6 ? 6 : width;
-  }
-
-  double _clampDouble(double value) {
-    if (value.isNaN || value.isInfinite) return 0;
-    if (value < 0) return 0;
-    if (value > 1) return 1;
-    return value;
-  }
-
-  Color _statusColor(
-    String? status,
-    ThemeData theme,
-    AppSemanticColors? semantic,
-  ) {
-    switch (status) {
-      case 'completed':
-        return semantic?.success ?? theme.colorScheme.primary;
-      case 'in_progress':
-        return theme.colorScheme.primary;
-      case 'paused':
-        return semantic?.warning ?? theme.colorScheme.secondary;
-      case 'cancelled':
-        return semantic?.danger ?? theme.colorScheme.error;
-      case 'pending':
-        return semantic?.info ?? theme.colorScheme.secondary;
-      default:
-        return theme.colorScheme.primary.withValues(alpha: 0.7);
-    }
-  }
-
   Future<void> _showSyncPreviewDialog(WorkOrderDetail detail) async {
     final canSync = detail.approvalStatus != 'approved';
     final processes = detail.processes;
@@ -1454,7 +656,8 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
         bool loading = false;
         bool executing = false;
 
-        Future<void> loadPreview(void Function(void Function()) setState) async {
+        Future<void> loadPreview(
+            void Function(void Function()) setState) async {
           if (!canSync) return;
           setState(() {
             loading = true;
@@ -1484,7 +687,8 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
           }
         }
 
-        Future<void> executeSync(void Function(void Function()) setState) async {
+        Future<void> executeSync(
+            void Function(void Function()) setState) async {
           if (!canSync || preview == null) return;
           setState(() => executing = true);
           try {
@@ -1520,8 +724,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
             final theme = Theme.of(context);
             final colors = theme.extension<AppColors>();
             final previewData = preview;
-            final removedIds =
-                _readIdList(previewData?['removed_process_ids']);
+            final removedIds = _readIdList(previewData?['removed_process_ids']);
             final addedIds = _readIdList(previewData?['added_process_ids']);
             final tasksToRemove = _readInt(previewData?['tasks_to_remove']);
             final tasksToAdd = _readInt(previewData?['tasks_to_add']);
@@ -1570,8 +773,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                       const Divider(height: 1),
                       const SizedBox(height: 8),
                       if (processes.isEmpty)
-                        Text('暂无工序可同步',
-                            style: theme.textTheme.bodyMedium)
+                        Text('暂无工序可同步', style: theme.textTheme.bodyMedium)
                       else
                         Column(
                           children: [
@@ -1697,7 +899,10 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
 
   List<int> _readIdList(dynamic value) {
     if (value is List) {
-      return value.map((item) => int.tryParse(item.toString()) ?? 0).where((id) => id > 0).toList();
+      return value
+          .map((item) => int.tryParse(item.toString()) ?? 0)
+          .where((id) => id > 0)
+          .toList();
     }
     return const [];
   }
@@ -1713,83 +918,9 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     Map<int, WorkOrderProcessItem> processMap,
   ) {
     if (ids.isEmpty) return _emptyText;
-    final names = ids
-        .map((id) => processMap[id]?.processName ?? '工序#$id')
-        .toList();
+    final names =
+        ids.map((id) => processMap[id]?.processName ?? '工序#$id').toList();
     return names.join(', ');
-  }
-
-  Widget _buildMaterialTable(List<WorkOrderMaterialItem> items) {
-    if (items.isEmpty) {
-      return Text('暂无物料信息', style: Theme.of(context).textTheme.bodyMedium);
-    }
-    return Column(
-      children: [
-        for (final item in items)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: _DetailListCard(
-              title: item.materialName ?? _emptyText,
-              subtitle: item.materialCode ?? _emptyText,
-              fields: [
-                _DetailField('单位', item.materialUnit ?? _emptyText),
-                _DetailField('规格', item.materialSize ?? _emptyText),
-                _DetailField('用量', item.materialUsage ?? _emptyText),
-                _DetailField(
-                  '需裁切',
-                  item.needCutting == null
-                      ? _emptyText
-                      : (item.needCutting! ? '是' : '否'),
-                ),
-                _DetailField(
-                  '采购状态',
-                  item.purchaseStatusDisplay ??
-                      item.purchaseStatus ??
-                      _emptyText,
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildApprovalLogs(List<WorkOrderApprovalLog> logs) {
-    if (logs.isEmpty) {
-      return Text('暂无审批记录', style: Theme.of(context).textTheme.bodyMedium);
-    }
-    final theme = Theme.of(context);
-    return Column(
-      children: logs.map((log) {
-        return Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
-            border:
-                Border.all(color: theme.dividerColor.withValues(alpha: 0.4)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                  log.approvalStatusDisplay ?? log.approvalStatus ?? _emptyText,
-                  style: theme.textTheme.titleSmall),
-              const SizedBox(height: 6),
-              Text('审核人: ${log.approvedByName ?? _emptyText}'),
-              Text('时间: ${_formatDate(log.approvedAt)}'),
-              if (log.approvalComment != null &&
-                  log.approvalComment!.trim().isNotEmpty)
-                Text('说明: ${log.approvalComment}'),
-              if (log.rejectionReason != null &&
-                  log.rejectionReason!.trim().isNotEmpty)
-                Text('拒绝原因: ${log.rejectionReason}'),
-            ],
-          ),
-        );
-      }).toList(),
-    );
   }
 
   @override
@@ -1864,18 +995,61 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                     )
                   : ListView(
                       children: [
-                        _buildOverviewSection(
-                          detail,
+                        WorkOrderDetailOverviewSection(
+                          detail: detail,
                           statusOptions: statusOptions,
+                          statusSelection: _statusSelection,
+                          actionLoading: _actionLoading,
+                          hasMultiApproval: _hasMultiApproval,
+                          onStatusChanged: (value) =>
+                              setState(() => _statusSelection = value),
+                          onUpdateStatus: _handleUpdateStatus,
+                          onApprove: () => _showApproveDialog(approved: true),
+                          onReject: () => _showApproveDialog(approved: false),
+                          onResubmit: _handleResubmit,
+                          onRequestReapproval: _showReapprovalDialog,
+                          buildInfoGrid: _buildInfoGrid,
+                          buildSection: _buildSection,
+                          buildResourceGroup: _buildResourceGroup,
+                          emptyText: _emptyText,
                         ),
                         SizedBox(height: sectionSpacing),
                         _buildSection(
                           '多级审批',
-                          _buildMultiApprovalSection(detail),
+                          WorkOrderMultiApprovalSection(
+                            detail: detail,
+                            approvalLoading: _approvalLoading,
+                            approvalActionLoading: _approvalActionLoading,
+                            approvalErrorMessage: _approvalErrorMessage,
+                            approvalStatus: _approvalStatus,
+                            currentUserName:
+                                StoreUtil.getCurrentUserInfo().userName,
+                            formatPercentage: _formatPercentage,
+                            formatDateTime: _formatDateTime,
+                            onRetry: _loadApprovalStatus,
+                            onSubmitApproval: _submitMultiApproval,
+                            onMarkUrgent: _markUrgent,
+                            onStartStep: _startApprovalStep,
+                            onApproveStep: (stepId) => _showCompleteStepDialog(
+                              stepId: stepId,
+                              decision: 'approve',
+                            ),
+                            onRejectStep: (stepId) => _showCompleteStepDialog(
+                              stepId: stepId,
+                              decision: 'reject',
+                            ),
+                            onEscalateStep: _showEscalateDialog,
+                            emptyText: _emptyText,
+                          ),
                         ),
                         SizedBox(height: sectionSpacing),
                         _buildSection(
-                            '产品清单', _buildProductsTable(detail.products)),
+                          '产品清单',
+                          WorkOrderProductsSection(
+                            items: detail.products,
+                            emptyText: _emptyText,
+                          ),
+                        ),
                         SizedBox(height: sectionSpacing),
                         DetailSectionCard(
                           title: '工序进度',
@@ -1886,30 +1060,41 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                             icon: const Icon(Icons.sync_alt, size: 16),
                             label: const Text('任务同步预览'),
                           ),
-                          child: _buildProcessTable(detail.processes),
+                          child: WorkOrderProcessesSection(
+                            items: detail.processes,
+                            emptyText: _emptyText,
+                          ),
                         ),
                         SizedBox(height: sectionSpacing),
                         _buildSection(
                           '工序排程',
-                          _buildProcessGantt(detail.processes),
+                          WorkOrderProcessGanttSection(
+                            items: detail.processes,
+                            emptyText: _emptyText,
+                            formatDateTime: _formatDateTime,
+                          ),
                         ),
                         SizedBox(height: sectionSpacing),
                         _buildSection(
-                            '物料需求', _buildMaterialTable(detail.materials)),
+                          '物料需求',
+                          WorkOrderMaterialsSection(
+                            items: detail.materials,
+                            emptyText: _emptyText,
+                          ),
+                        ),
                         SizedBox(height: sectionSpacing),
                         _buildSection(
-                            '审批记录', _buildApprovalLogs(detail.approvalLogs)),
+                          '审批记录',
+                          WorkOrderApprovalLogsSection(
+                            logs: detail.approvalLogs,
+                            emptyText: _emptyText,
+                            formatDate: _formatDate,
+                          ),
+                        ),
                       ],
                     ),
     );
   }
-}
-
-class _InfoItem {
-  const _InfoItem(this.label, this.value);
-
-  final String label;
-  final String value;
 }
 
 class _InfoRow extends StatelessWidget {
@@ -1936,92 +1121,6 @@ class _InfoRow extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _GanttRow {
-  const _GanttRow({
-    required this.label,
-    required this.status,
-    required this.start,
-    required this.end,
-    this.sequence,
-  });
-
-  final String label;
-  final String? status;
-  final DateTime start;
-  final DateTime end;
-  final int? sequence;
-}
-
-class _DetailField {
-  const _DetailField(this.label, this.value);
-
-  final String label;
-  final String value;
-}
-
-class _DetailListCard extends StatelessWidget {
-  const _DetailListCard({
-    required this.title,
-    required this.subtitle,
-    required this.fields,
-  });
-
-  final String title;
-  final String subtitle;
-  final List<_DetailField> fields;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>()!;
-    final isXs = BreakpointsUtil.isXs(context);
-    final itemWidth = isXs ? double.infinity : 132.0;
-    final basePadding = LayoutTokens.cardPadding(context);
-    final radius = isXs ? LayoutTokens.radiusMd : LayoutTokens.radiusLg;
-
-    return Container(
-      width: double.infinity,
-      padding: basePadding,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: colors.borderColor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: colors.sidebarText,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style:
-                theme.textTheme.bodySmall?.copyWith(color: colors.subtleText),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: isXs ? 12 : 20,
-            runSpacing: 10,
-            children: fields
-                .map(
-                  (field) => SizedBox(
-                    width: itemWidth,
-                    child: _InfoRow(label: field.label, value: field.value),
-                  ),
-                )
-                .toList(),
-          ),
-        ],
-      ),
     );
   }
 }

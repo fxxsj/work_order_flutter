@@ -13,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/suppliers/application/supplier_view_model.dart';
@@ -23,56 +24,19 @@ import 'package:work_order_app/src/features/suppliers/domain/supplier_repository
 import 'package:work_order_app/src/features/suppliers/presentation/supplier_edit_page.dart';
 
 /// 供应商列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class SupplierListEntry extends StatefulWidget {
+class SupplierListEntry extends StatelessWidget {
   const SupplierListEntry({super.key});
 
   @override
-  State<SupplierListEntry> createState() => _SupplierListEntryState();
-}
-
-class _SupplierListEntryState extends State<SupplierListEntry> {
-  SupplierApiService? _apiService;
-  SupplierRepositoryImpl? _repository;
-  SupplierViewModel? _viewModel;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = SupplierApiService(apiClient);
-    _repository = SupplierRepositoryImpl(_apiService!);
-    _viewModel = SupplierViewModel(_repository!);
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _viewModel?.initialize();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<SupplierApiService>.value(value: apiService),
-        Provider<SupplierRepository>.value(value: repository),
-        ChangeNotifierProvider<SupplierViewModel>.value(value: viewModel),
-      ],
+    return FeatureEntry<SupplierApiService, SupplierRepository,
+        SupplierViewModel>(
+      createService: (context) => SupplierApiService(context.read<ApiClient>()),
+      createRepository: (context) =>
+          SupplierRepositoryImpl(context.read<SupplierApiService>()),
+      createViewModel: (context) =>
+          SupplierViewModel(context.read<SupplierRepository>()),
+      initialize: (viewModel) => viewModel.initialize(),
       child: const SupplierListPage(),
     );
   }

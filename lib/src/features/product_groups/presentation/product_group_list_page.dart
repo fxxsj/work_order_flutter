@@ -13,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/product_groups/application/product_group_view_model.dart';
@@ -23,56 +24,20 @@ import 'package:work_order_app/src/features/product_groups/domain/product_group_
 import 'package:work_order_app/src/features/product_groups/presentation/product_group_edit_page.dart';
 
 /// 产品组列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class ProductGroupListEntry extends StatefulWidget {
+class ProductGroupListEntry extends StatelessWidget {
   const ProductGroupListEntry({super.key});
 
   @override
-  State<ProductGroupListEntry> createState() => _ProductGroupListEntryState();
-}
-
-class _ProductGroupListEntryState extends State<ProductGroupListEntry> {
-  ProductGroupApiService? _apiService;
-  ProductGroupRepositoryImpl? _repository;
-  ProductGroupViewModel? _viewModel;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = ProductGroupApiService(apiClient);
-    _repository = ProductGroupRepositoryImpl(_apiService!);
-    _viewModel = ProductGroupViewModel(_repository!);
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _viewModel?.initialize();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<ProductGroupApiService>.value(value: apiService),
-        Provider<ProductGroupRepository>.value(value: repository),
-        ChangeNotifierProvider<ProductGroupViewModel>.value(value: viewModel),
-      ],
+    return FeatureEntry<ProductGroupApiService, ProductGroupRepository,
+        ProductGroupViewModel>(
+      createService: (context) =>
+          ProductGroupApiService(context.read<ApiClient>()),
+      createRepository: (context) =>
+          ProductGroupRepositoryImpl(context.read<ProductGroupApiService>()),
+      createViewModel: (context) =>
+          ProductGroupViewModel(context.read<ProductGroupRepository>()),
+      initialize: (viewModel) => viewModel.initialize(),
       child: const ProductGroupListPage(),
     );
   }

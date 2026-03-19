@@ -8,6 +8,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
+import 'package:work_order_app/src/features/inventory_delivery/data/delivery_item_api_service.dart';
 import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_api_service.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_detail.dart';
 import 'package:work_order_app/src/features/products/data/product_api_service.dart';
@@ -71,7 +72,8 @@ class DeliveryItemListEntry extends StatelessWidget {
             actions.add(RowAction(
               label: '查看发货单',
               icon: Icons.local_shipping_outlined,
-              onPressed: () => _openDeliveryOrderDialog(context, orderId.toInt()),
+              onPressed: () =>
+                  _openDeliveryOrderDialog(context, orderId.toInt()),
             ));
           }
           return actions;
@@ -81,7 +83,8 @@ class DeliveryItemListEntry extends StatelessWidget {
   }
 
   static String _orderId(GenericRecord record) {
-    return GenericValueFormatter.text(record.getNumber('delivery_order') ?? record.getString('delivery_order'));
+    return GenericValueFormatter.text(record.getNumber('delivery_order') ??
+        record.getString('delivery_order'));
   }
 
   static String _productName(GenericRecord record) {
@@ -106,6 +109,7 @@ class DeliveryItemListEntry extends StatelessWidget {
   }) async {
     final apiClient = context.read<ApiClient>();
     final productApi = ProductApiService(apiClient);
+    final itemApi = DeliveryItemApiService(apiClient);
     final isEdit = record != null;
     final recordId = record?.id;
     final orderController = TextEditingController(
@@ -195,8 +199,8 @@ class DeliveryItemListEntry extends StatelessWidget {
                         const SizedBox(height: 12),
                         TextField(
                           controller: quantityController,
-                          keyboardType:
-                              const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
                           decoration: const InputDecoration(labelText: '发货数量'),
                         ),
                         const SizedBox(height: 12),
@@ -207,8 +211,8 @@ class DeliveryItemListEntry extends StatelessWidget {
                         const SizedBox(height: 12),
                         TextField(
                           controller: unitPriceController,
-                          keyboardType:
-                              const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
                           decoration: const InputDecoration(labelText: '单价'),
                         ),
                         const SizedBox(height: 12),
@@ -230,14 +234,16 @@ class DeliveryItemListEntry extends StatelessWidget {
             ),
             actions: [
               TextButton(
-                onPressed: loading ? null : () => Navigator.of(context).pop(false),
+                onPressed:
+                    loading ? null : () => Navigator.of(context).pop(false),
                 child: const Text('取消'),
               ),
               FilledButton(
                 onPressed: loading
                     ? null
                     : () async {
-                        final orderId = int.tryParse(orderController.text.trim());
+                        final orderId =
+                            int.tryParse(orderController.text.trim());
                         if (!isEdit && orderId == null) {
                           ToastUtil.showError('请输入发货单ID');
                           return;
@@ -286,15 +292,9 @@ class DeliveryItemListEntry extends StatelessWidget {
                             payload['delivery_order'] = orderId;
                           }
                           if (isEdit && recordId != null) {
-                            await apiClient.put(
-                              '/delivery-items/$recordId/',
-                              data: payload,
-                            );
+                            await itemApi.updateItem(recordId, payload);
                           } else {
-                            await apiClient.post(
-                              '/delivery-items/',
-                              data: payload,
-                            );
+                            await itemApi.createItem(payload);
                           }
                           if (!context.mounted) return;
                           context
@@ -348,8 +348,8 @@ class DeliveryItemListEntry extends StatelessWidget {
     );
     if (confirmed != true) return;
     try {
-      final apiClient = context.read<ApiClient>();
-      await apiClient.delete('/delivery-items/$id/');
+      final itemApi = DeliveryItemApiService(context.read<ApiClient>());
+      await itemApi.deleteItem(id);
       if (!context.mounted) return;
       context.read<GenericListViewModel>().reload(resetPage: true);
       ToastUtil.showSuccess('已删除');
@@ -362,8 +362,7 @@ class DeliveryItemListEntry extends StatelessWidget {
     BuildContext context,
     int orderId,
   ) async {
-    final apiClient = context.read<ApiClient>();
-    final apiService = DeliveryOrderApiService(apiClient);
+    final apiService = DeliveryOrderApiService(context.read<ApiClient>());
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -392,22 +391,17 @@ class DeliveryItemListEntry extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _DetailRow(label: '发货单号', value: detail.orderNumber),
-                    _DetailRow(
-                        label: '客户', value: detail.customerName ?? '-'),
+                    _DetailRow(label: '客户', value: detail.customerName ?? '-'),
                     _DetailRow(
                         label: '状态',
                         value: detail.statusDisplay ?? detail.status ?? '-'),
                     _DetailRow(
-                        label: '销售单号',
-                        value: detail.salesOrderNumber ?? '-'),
+                        label: '销售单号', value: detail.salesOrderNumber ?? '-'),
                     _DetailRow(
-                        label: '发货日期',
-                        value: _formatDate(detail.deliveryDate)),
+                        label: '发货日期', value: _formatDate(detail.deliveryDate)),
+                    _DetailRow(label: '收货人', value: detail.receiverName ?? '-'),
                     _DetailRow(
-                        label: '收货人', value: detail.receiverName ?? '-'),
-                    _DetailRow(
-                        label: '物流公司',
-                        value: detail.logisticsCompany ?? '-'),
+                        label: '物流公司', value: detail.logisticsCompany ?? '-'),
                     _DetailRow(
                         label: '运单号', value: detail.trackingNumber ?? '-'),
                     if ((detail.notes ?? '').trim().isNotEmpty)

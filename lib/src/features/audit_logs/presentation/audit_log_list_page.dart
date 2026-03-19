@@ -12,6 +12,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/audit_logs/application/audit_log_view_model.dart';
 import 'package:work_order_app/src/features/audit_logs/data/audit_log_api_service.dart';
@@ -20,56 +21,19 @@ import 'package:work_order_app/src/features/audit_logs/domain/audit_log.dart';
 import 'package:work_order_app/src/features/audit_logs/domain/audit_log_repository.dart';
 
 /// 审计日志列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class AuditLogListEntry extends StatefulWidget {
+class AuditLogListEntry extends StatelessWidget {
   const AuditLogListEntry({super.key});
 
   @override
-  State<AuditLogListEntry> createState() => _AuditLogListEntryState();
-}
-
-class _AuditLogListEntryState extends State<AuditLogListEntry> {
-  AuditLogApiService? _apiService;
-  AuditLogRepositoryImpl? _repository;
-  AuditLogViewModel? _viewModel;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = AuditLogApiService(apiClient);
-    _repository = AuditLogRepositoryImpl(_apiService!);
-    _viewModel = AuditLogViewModel(_repository!);
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _viewModel?.initialize();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<AuditLogApiService>.value(value: apiService),
-        Provider<AuditLogRepository>.value(value: repository),
-        ChangeNotifierProvider<AuditLogViewModel>.value(value: viewModel),
-      ],
+    return FeatureEntry<AuditLogApiService, AuditLogRepository,
+        AuditLogViewModel>(
+      createService: (context) => AuditLogApiService(context.read<ApiClient>()),
+      createRepository: (context) =>
+          AuditLogRepositoryImpl(context.read<AuditLogApiService>()),
+      createViewModel: (context) =>
+          AuditLogViewModel(context.read<AuditLogRepository>()),
+      initialize: (viewModel) => viewModel.initialize(),
       child: const AuditLogListPage(),
     );
   }
@@ -146,7 +110,8 @@ class _AuditLogListViewState extends State<_AuditLogListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, logs, isMobile),
-          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1
+              ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,
@@ -225,16 +190,18 @@ class _AuditLogListViewState extends State<_AuditLogListView> {
           .map(
             (log) => DataRow(
               cells: [
-                DataCell(Text(log.id.toString(),
-                    style: theme.textTheme.bodyMedium)),
+                DataCell(
+                    Text(log.id.toString(), style: theme.textTheme.bodyMedium)),
                 DataCell(Text(_displayText(log.actionType), style: textStyle)),
                 DataCell(Text(_displayText(log.username), style: textStyle)),
                 DataCell(
                     Text(_displayText(log.contentTypeName), style: textStyle)),
                 DataCell(Text(_displayText(log.objectRepr), style: textStyle)),
-                DataCell(Text(_displayText(log.changedFields), style: textStyle)),
+                DataCell(
+                    Text(_displayText(log.changedFields), style: textStyle)),
                 DataCell(Text(_displayText(log.ipAddress), style: textStyle)),
-                DataCell(Text(_formatDateTime(log.createdAt), style: textStyle)),
+                DataCell(
+                    Text(_formatDateTime(log.createdAt), style: textStyle)),
               ],
             ),
           )
@@ -245,7 +212,7 @@ class _AuditLogListViewState extends State<_AuditLogListView> {
   Widget _buildPageHeader(
     BuildContext context,
     AuditLogViewModel viewModel,
-bool isMobile,
+    bool isMobile,
   ) {
     return PageHeaderBar(
       breadcrumb: null,
@@ -285,6 +252,7 @@ bool isMobile,
       ),
     );
   }
+
   static String _displayText(String? value) {
     final text = value?.trim() ?? '';
     return text.isEmpty ? _emptyCellText : text;
@@ -294,8 +262,9 @@ bool isMobile,
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
-    final objectRepr =
-        log.objectRepr?.trim().isNotEmpty == true ? log.objectRepr! : '日志 #${log.id}';
+    final objectRepr = log.objectRepr?.trim().isNotEmpty == true
+        ? log.objectRepr!
+        : '日志 #${log.id}';
     final actionType = _displayText(log.actionType);
     final username = _displayText(log.username);
     final contentType = _displayText(log.contentTypeName);

@@ -9,6 +9,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_d
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
 import 'package:work_order_app/src/features/materials/data/material_api_service.dart';
+import 'package:work_order_app/src/features/purchase_orders/data/purchase_order_item_api_service.dart';
 import 'package:work_order_app/src/features/purchase_orders/data/purchase_order_api_service.dart';
 import 'package:work_order_app/src/features/purchase_orders/domain/purchase_order_detail.dart';
 
@@ -58,7 +59,8 @@ class PurchaseOrderItemListEntry extends StatelessWidget {
             RowAction(
               label: '编辑',
               icon: Icons.edit_outlined,
-              onPressed: () => _openPurchaseOrderItemForm(context, record: record),
+              onPressed: () =>
+                  _openPurchaseOrderItemForm(context, record: record),
             ),
             RowAction(
               label: '删除',
@@ -73,7 +75,8 @@ class PurchaseOrderItemListEntry extends StatelessWidget {
             actions.add(RowAction(
               label: '查看采购单',
               icon: Icons.receipt_long_outlined,
-              onPressed: () => _openPurchaseOrderDialog(context, orderId.toInt()),
+              onPressed: () =>
+                  _openPurchaseOrderDialog(context, orderId.toInt()),
             ));
           }
           return actions;
@@ -83,7 +86,8 @@ class PurchaseOrderItemListEntry extends StatelessWidget {
   }
 
   static String _orderId(GenericRecord record) {
-    return GenericValueFormatter.text(record.getNumber('purchase_order') ?? record.getString('purchase_order'));
+    return GenericValueFormatter.text(record.getNumber('purchase_order') ??
+        record.getString('purchase_order'));
   }
 
   static String _materialName(GenericRecord record) {
@@ -116,6 +120,7 @@ class PurchaseOrderItemListEntry extends StatelessWidget {
   }) async {
     final apiClient = context.read<ApiClient>();
     final materialApi = MaterialApiService(apiClient);
+    final itemApi = PurchaseOrderItemApiService(apiClient);
     final isEdit = record != null;
     final recordId = record?.id;
     final orderController = TextEditingController(
@@ -182,21 +187,22 @@ class PurchaseOrderItemListEntry extends StatelessWidget {
                         const SizedBox(height: 12),
                         TextField(
                           controller: quantityController,
-                          keyboardType:
-                              const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
                           decoration: const InputDecoration(labelText: '采购数量'),
                         ),
                         const SizedBox(height: 12),
                         TextField(
                           controller: unitPriceController,
-                          keyboardType:
-                              const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
                           decoration: const InputDecoration(labelText: '单价'),
                         ),
                         const SizedBox(height: 12),
                         TextField(
                           controller: supplierCodeController,
-                          decoration: const InputDecoration(labelText: '供应商物料编码'),
+                          decoration:
+                              const InputDecoration(labelText: '供应商物料编码'),
                         ),
                         const SizedBox(height: 12),
                         TextField(
@@ -212,14 +218,16 @@ class PurchaseOrderItemListEntry extends StatelessWidget {
             ),
             actions: [
               TextButton(
-                onPressed: loading ? null : () => Navigator.of(context).pop(false),
+                onPressed:
+                    loading ? null : () => Navigator.of(context).pop(false),
                 child: const Text('取消'),
               ),
               FilledButton(
                 onPressed: loading
                     ? null
                     : () async {
-                        final orderId = int.tryParse(orderController.text.trim());
+                        final orderId =
+                            int.tryParse(orderController.text.trim());
                         if (orderId == null) {
                           ToastUtil.showError('请输入采购单ID');
                           return;
@@ -251,15 +259,9 @@ class PurchaseOrderItemListEntry extends StatelessWidget {
                             'notes': notesController.text.trim(),
                           };
                           if (isEdit && recordId != null) {
-                            await apiClient.put(
-                              '/purchase-order-items/$recordId/',
-                              data: payload,
-                            );
+                            await itemApi.updateItem(recordId, payload);
                           } else {
-                            await apiClient.post(
-                              '/purchase-order-items/',
-                              data: payload,
-                            );
+                            await itemApi.createItem(payload);
                           }
                           if (!context.mounted) return;
                           context
@@ -311,8 +313,8 @@ class PurchaseOrderItemListEntry extends StatelessWidget {
     );
     if (confirmed != true) return;
     try {
-      final apiClient = context.read<ApiClient>();
-      await apiClient.delete('/purchase-order-items/$id/');
+      final itemApi = PurchaseOrderItemApiService(context.read<ApiClient>());
+      await itemApi.deleteItem(id);
       if (!context.mounted) return;
       context.read<GenericListViewModel>().reload(resetPage: true);
       ToastUtil.showSuccess('已删除');
@@ -325,8 +327,7 @@ class PurchaseOrderItemListEntry extends StatelessWidget {
     BuildContext context,
     int orderId,
   ) async {
-    final apiClient = context.read<ApiClient>();
-    final apiService = PurchaseOrderApiService(apiClient);
+    final apiService = PurchaseOrderApiService(context.read<ApiClient>());
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -355,24 +356,18 @@ class PurchaseOrderItemListEntry extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _DetailRow(label: '采购单号', value: detail.orderNumber),
-                    _DetailRow(
-                        label: '供应商',
-                        value: detail.supplierName ?? '-'),
+                    _DetailRow(label: '供应商', value: detail.supplierName ?? '-'),
                     _DetailRow(
                         label: '状态',
                         value: detail.statusDisplay ?? detail.status ?? '-'),
                     _DetailRow(
-                        label: '关联施工单',
-                        value: detail.workOrderNumber ?? '-'),
+                        label: '关联施工单', value: detail.workOrderNumber ?? '-'),
                     _DetailRow(
-                        label: '预计到货',
-                        value: _formatDate(detail.expectedDate)),
+                        label: '预计到货', value: _formatDate(detail.expectedDate)),
                     _DetailRow(
-                        label: '下单日期',
-                        value: _formatDate(detail.orderedDate)),
+                        label: '下单日期', value: _formatDate(detail.orderedDate)),
                     _DetailRow(
-                        label: '总金额',
-                        value: _formatAmount(detail.totalAmount)),
+                        label: '总金额', value: _formatAmount(detail.totalAmount)),
                     if ((detail.notes ?? '').trim().isNotEmpty)
                       _DetailRow(label: '备注', value: detail.notes ?? ''),
                   ],

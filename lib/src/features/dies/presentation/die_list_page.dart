@@ -13,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/dies/application/die_view_model.dart';
@@ -22,56 +23,17 @@ import 'package:work_order_app/src/features/dies/domain/die.dart';
 import 'package:work_order_app/src/features/dies/domain/die_repository.dart';
 import 'package:work_order_app/src/features/dies/presentation/die_edit_page.dart';
 
-class DieListEntry extends StatefulWidget {
+class DieListEntry extends StatelessWidget {
   const DieListEntry({super.key});
 
   @override
-  State<DieListEntry> createState() => _DieListEntryState();
-}
-
-class _DieListEntryState extends State<DieListEntry> {
-  DieApiService? _apiService;
-  DieRepositoryImpl? _repository;
-  DieViewModel? _viewModel;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = DieApiService(apiClient);
-    _repository = DieRepositoryImpl(_apiService!);
-    _viewModel = DieViewModel(_repository!);
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _viewModel?.initialize();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<DieApiService>.value(value: apiService),
-        Provider<DieRepository>.value(value: repository),
-        ChangeNotifierProvider<DieViewModel>.value(value: viewModel),
-      ],
+    return FeatureEntry<DieApiService, DieRepository, DieViewModel>(
+      createService: (context) => DieApiService(context.read<ApiClient>()),
+      createRepository: (context) =>
+          DieRepositoryImpl(context.read<DieApiService>()),
+      createViewModel: (context) => DieViewModel(context.read<DieRepository>()),
+      initialize: (viewModel) => viewModel.initialize(),
       child: const DieListPage(),
     );
   }

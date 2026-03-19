@@ -15,6 +15,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/file_download.dart';
@@ -31,57 +32,19 @@ import 'package:work_order_app/src/features/tasks/data/task_repository_impl.dart
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_repository.dart';
 
-/// 任务列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class TaskListEntry extends StatefulWidget {
+/// 任务列表入口。
+class TaskListEntry extends StatelessWidget {
   const TaskListEntry({super.key});
 
   @override
-  State<TaskListEntry> createState() => _TaskListEntryState();
-}
-
-class _TaskListEntryState extends State<TaskListEntry> {
-  TaskApiService? _apiService;
-  TaskRepositoryImpl? _repository;
-  TaskViewModel? _viewModel;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = TaskApiService(apiClient);
-    _repository = TaskRepositoryImpl(_apiService!);
-    _viewModel = TaskViewModel(_repository!);
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _viewModel?.initialize();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<TaskApiService>.value(value: apiService),
-        Provider<TaskRepository>.value(value: repository),
-        ChangeNotifierProvider<TaskViewModel>.value(value: viewModel),
-      ],
+    return FeatureEntry<TaskApiService, TaskRepository, TaskViewModel>(
+      createService: (context) => TaskApiService(context.read<ApiClient>()),
+      createRepository: (context) =>
+          TaskRepositoryImpl(context.read<TaskApiService>()),
+      createViewModel: (context) =>
+          TaskViewModel(context.read<TaskRepository>()),
+      initialize: (viewModel) => viewModel.initialize(),
       child: const TaskListPage(),
     );
   }
@@ -186,7 +149,8 @@ class _TaskListViewState extends State<_TaskListView> {
       final params = <String, dynamic>{
         if (_searchController.text.trim().isNotEmpty)
           'search': _searchController.text.trim(),
-        if (viewModel.statusFilter != null && viewModel.statusFilter!.isNotEmpty)
+        if (viewModel.statusFilter != null &&
+            viewModel.statusFilter!.isNotEmpty)
           'status': viewModel.statusFilter,
         if (viewModel.priorityFilter != null &&
             viewModel.priorityFilter!.isNotEmpty)

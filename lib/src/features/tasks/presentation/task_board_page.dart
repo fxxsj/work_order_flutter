@@ -10,6 +10,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -28,57 +29,19 @@ enum _TaskBoardViewMode {
   timeline,
 }
 
-/// 部门任务看板入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class TaskBoardEntry extends StatefulWidget {
+/// 部门任务看板入口。
+class TaskBoardEntry extends StatelessWidget {
   const TaskBoardEntry({super.key});
 
   @override
-  State<TaskBoardEntry> createState() => _TaskBoardEntryState();
-}
-
-class _TaskBoardEntryState extends State<TaskBoardEntry> {
-  TaskApiService? _apiService;
-  TaskRepositoryImpl? _repository;
-  TaskViewModel? _viewModel;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = TaskApiService(apiClient);
-    _repository = TaskRepositoryImpl(_apiService!);
-    _viewModel = TaskViewModel(_repository!);
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _viewModel?.initialize();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<TaskApiService>.value(value: apiService),
-        Provider<TaskRepository>.value(value: repository),
-        ChangeNotifierProvider<TaskViewModel>.value(value: viewModel),
-      ],
+    return FeatureEntry<TaskApiService, TaskRepository, TaskViewModel>(
+      createService: (context) => TaskApiService(context.read<ApiClient>()),
+      createRepository: (context) =>
+          TaskRepositoryImpl(context.read<TaskApiService>()),
+      createViewModel: (context) =>
+          TaskViewModel(context.read<TaskRepository>()),
+      initialize: (viewModel) => viewModel.initialize(),
       child: const TaskBoardPage(),
     );
   }
@@ -528,7 +491,8 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
       separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
       itemBuilder: (context, index) {
         final group = groups[index];
-        final overdue = group.date != null && _isOverdue(group.date!) &&
+        final overdue = group.date != null &&
+            _isOverdue(group.date!) &&
             group.tasks.any((task) => task.status != 'completed');
 
         return Container(
@@ -565,11 +529,11 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
                             horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: theme.colorScheme.error.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(
-                              LayoutTokens.radiusPill),
+                          borderRadius:
+                              BorderRadius.circular(LayoutTokens.radiusPill),
                           border: Border.all(
-                            color: theme.colorScheme.error
-                                .withValues(alpha: 0.4),
+                            color:
+                                theme.colorScheme.error.withValues(alpha: 0.4),
                           ),
                         ),
                         child: Text(
@@ -784,8 +748,7 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
       for (final key in keys)
         _TimelineGroup(
           date: DateTime.fromMillisecondsSinceEpoch(key),
-          label: _formatTimelineLabel(
-              DateTime.fromMillisecondsSinceEpoch(key)),
+          label: _formatTimelineLabel(DateTime.fromMillisecondsSinceEpoch(key)),
           tasks: dated[key] ?? const [],
         ),
     ];

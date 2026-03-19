@@ -6,61 +6,35 @@ import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
-import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/sales_orders/application/sales_order_view_model.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_api_service.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_repository_impl.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order_detail.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order_repository.dart';
+import 'package:work_order_app/src/features/sales_orders/presentation/widgets/sales_order_detail_sections.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_flow_api_service.dart';
 
-class SalesOrderDetailEntry extends StatefulWidget {
+class SalesOrderDetailEntry extends StatelessWidget {
   const SalesOrderDetailEntry({super.key, required this.orderId});
 
   final int orderId;
 
   @override
-  State<SalesOrderDetailEntry> createState() => _SalesOrderDetailEntryState();
-}
-
-class _SalesOrderDetailEntryState extends State<SalesOrderDetailEntry> {
-  SalesOrderApiService? _apiService;
-  SalesOrderRepositoryImpl? _repository;
-  SalesOrderViewModel? _viewModel;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = SalesOrderApiService(apiClient);
-    _repository = SalesOrderRepositoryImpl(_apiService!);
-    _viewModel = SalesOrderViewModel(_repository!);
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<SalesOrderApiService>.value(value: apiService),
-        Provider<SalesOrderRepository>.value(value: repository),
-        ChangeNotifierProvider<SalesOrderViewModel>.value(value: viewModel),
-      ],
-      child: SalesOrderDetailPage(orderId: widget.orderId),
+    return FeatureEntry<SalesOrderApiService, SalesOrderRepository,
+        SalesOrderViewModel>(
+      createService: (context) =>
+          SalesOrderApiService(context.read<ApiClient>()),
+      createRepository: (context) => SalesOrderRepositoryImpl(
+        context.read<SalesOrderApiService>(),
+        WorkOrderFlowApiService(context.read<ApiClient>()),
+      ),
+      createViewModel: (context) =>
+          SalesOrderViewModel(context.read<SalesOrderRepository>()),
+      child: SalesOrderDetailPage(orderId: orderId),
     );
   }
 }
@@ -88,12 +62,10 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
       TextEditingController();
   final TextEditingController _rejectionReasonController =
       TextEditingController();
-  final TextEditingController _cancelReasonController =
-      TextEditingController();
+  final TextEditingController _cancelReasonController = TextEditingController();
   final TextEditingController _paymentAmountController =
       TextEditingController();
-  final TextEditingController _paymentDateController =
-      TextEditingController();
+  final TextEditingController _paymentDateController = TextEditingController();
   final TextEditingController _workOrderQuantityController =
       TextEditingController();
   final TextEditingController _workOrderDeliveryDateController =
@@ -134,7 +106,8 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
       setState(() => _detail = detail);
     } catch (err) {
       if (!mounted) return;
-      setState(() => _errorMessage = err.toString().replaceFirst('Exception: ', ''));
+      setState(
+          () => _errorMessage = err.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -179,9 +152,9 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
       ),
     );
     if (confirmed != true) return;
-    final api = context.read<SalesOrderApiService>();
+    final viewModel = context.read<SalesOrderViewModel>();
     await _runDetailAction(
-      () => api.submit(widget.orderId).then((dto) => dto.toEntity()),
+      () => viewModel.submit(widget.orderId),
       successMessage: '已提交',
     );
   }
@@ -210,13 +183,11 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
       ),
     );
     if (confirmed != true) return;
-    final api = context.read<SalesOrderApiService>();
+    final viewModel = context.read<SalesOrderViewModel>();
     await _runDetailAction(
-      () => api
-          .approve(widget.orderId, {
-            'approval_comment': _approvalCommentController.text.trim(),
-          })
-          .then((dto) => dto.toEntity()),
+      () => viewModel.approve(widget.orderId, {
+        'approval_comment': _approvalCommentController.text.trim(),
+      }),
       successMessage: '已审核通过',
     );
   }
@@ -262,14 +233,12 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
       ToastUtil.showError('请填写拒绝原因');
       return;
     }
-    final api = context.read<SalesOrderApiService>();
+    final viewModel = context.read<SalesOrderViewModel>();
     await _runDetailAction(
-      () => api
-          .reject(widget.orderId, {
-            'reason': reason,
-            'approval_comment': _approvalCommentController.text.trim(),
-          })
-          .then((dto) => dto.toEntity()),
+      () => viewModel.reject(widget.orderId, {
+        'reason': reason,
+        'approval_comment': _approvalCommentController.text.trim(),
+      }),
       successMessage: '已拒绝',
     );
   }
@@ -293,9 +262,9 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
       ),
     );
     if (confirmed != true) return;
-    final api = context.read<SalesOrderApiService>();
+    final viewModel = context.read<SalesOrderViewModel>();
     await _runDetailAction(
-      () => api.complete(widget.orderId).then((dto) => dto.toEntity()),
+      () => viewModel.complete(widget.orderId),
       successMessage: '已完成',
     );
   }
@@ -328,13 +297,11 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
       ),
     );
     if (confirmed != true) return;
-    final api = context.read<SalesOrderApiService>();
+    final viewModel = context.read<SalesOrderViewModel>();
     await _runDetailAction(
-      () => api
-          .cancel(widget.orderId, {
-            'reason': _cancelReasonController.text.trim(),
-          })
-          .then((dto) => dto.toEntity()),
+      () => viewModel.cancel(widget.orderId, {
+        'reason': _cancelReasonController.text.trim(),
+      }),
       successMessage: '已取消',
     );
   }
@@ -397,17 +364,16 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     if (dateText.isNotEmpty) {
       payload['payment_date'] = dateText;
     }
-    final api = context.read<SalesOrderApiService>();
+    final viewModel = context.read<SalesOrderViewModel>();
     await _runDetailAction(
-      () => api.updatePayment(widget.orderId, payload).then((dto) => dto.toEntity()),
+      () => viewModel.updatePayment(widget.orderId, payload),
       successMessage: '已更新付款信息',
     );
   }
 
   Future<void> _showCreateWorkOrderDialog() async {
     _workOrderQuantityController.text = '';
-    _workOrderDeliveryDateController.text =
-        _formatDate(_detail?.deliveryDate);
+    _workOrderDeliveryDateController.text = _formatDate(_detail?.deliveryDate);
     _workOrderNotesController.text = '';
     _workOrderPriority = 'normal';
 
@@ -491,12 +457,9 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     if (_actionLoading) return;
     setState(() => _actionLoading = true);
     try {
-      final api = WorkOrderFlowApiService(context.read<ApiClient>());
-      final result = await api.createFromSalesOrder(payload);
-      final data = result['data'] is Map<String, dynamic>
-          ? Map<String, dynamic>.from(result['data'])
-          : result;
-      final workOrderId = toInt(data['id']);
+      final viewModel = context.read<SalesOrderViewModel>();
+      final workOrderId =
+          await viewModel.createWorkOrderFromSalesOrder(payload);
       if (!mounted) return;
       ToastUtil.showSuccess('施工单已生成');
       await _loadDetail();
@@ -538,132 +501,59 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     return '$year-$month-$day';
   }
 
-  Widget _buildSection(String title, Widget child) {
-    return DetailSectionCard(title: title, child: child);
-  }
-
-  Widget _buildInfoGrid(List<_InfoItem> items) {
-    return Wrap(
-      spacing: 24,
-      runSpacing: 12,
-      children: items
-          .map(
-            (item) => SizedBox(
-              width: 240,
-              child: _InfoRow(label: item.label, value: item.value),
-            ),
-          )
-          .toList(),
-    );
-  }
-
-  Widget _buildItemsTable(List<SalesOrderItem> items) {
-    if (items.isEmpty) {
-      return Text('暂无订单明细', style: Theme.of(context).textTheme.bodyMedium);
-    }
-    return Column(
-      children: items.map((item) {
-        final name = item.productName ?? _emptyText;
-        final code = item.productCode ?? _emptyText;
-        final quantity = item.quantity?.toString() ?? _emptyText;
-        final unit = item.unit ?? _emptyText;
-        final price = item.unitPrice == null ? _emptyText : item.unitPrice!.toStringAsFixed(2);
-        final tax = item.taxRate == null ? _emptyText : item.taxRate!.toStringAsFixed(2);
-        final discount =
-            item.discountAmount == null ? _emptyText : item.discountAmount!.toStringAsFixed(2);
-        final subtotal = item.subtotal == null ? _emptyText : item.subtotal!.toStringAsFixed(2);
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: DetailSectionCard(
-            title: name,
-            child: Wrap(
-              spacing: 24,
-              runSpacing: 12,
-              children: [
-                _InfoRow(label: '编码', value: code),
-                _InfoRow(label: '数量', value: quantity),
-                _InfoRow(label: '单位', value: unit),
-                _InfoRow(label: '单价', value: price),
-                _InfoRow(label: '税率', value: tax),
-                _InfoRow(label: '折扣', value: discount),
-                _InfoRow(label: '小计', value: subtotal),
-              ]
-                  .map((row) => SizedBox(width: 220, child: row))
-                  .toList(),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildChipGroup(List<String> items) {
-    if (items.isEmpty) {
-      return Text(_emptyText, style: Theme.of(context).textTheme.bodyMedium);
-    }
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: items.map((text) => Chip(label: Text(text))).toList(),
-    );
-  }
-
-  List<_ActionItem> _buildActions(SalesOrderDetail? detail) {
+  List<SalesOrderActionItem> _buildActions(SalesOrderDetail? detail) {
     final status = detail?.status ?? '';
-    final actions = <_ActionItem>[
+    final actions = <SalesOrderActionItem>[
       if (status == 'draft')
-        _ActionItem(
+        SalesOrderActionItem(
           label: '提交',
           icon: Icons.send_outlined,
           onTap: _showSubmitDialog,
         ),
       if (status == 'rejected')
-        _ActionItem(
+        SalesOrderActionItem(
           label: '重新提交',
           icon: Icons.send_outlined,
           onTap: _showSubmitDialog,
         ),
       if (status == 'submitted') ...[
-        _ActionItem(
+        SalesOrderActionItem(
           label: '审核通过',
           icon: Icons.check_circle_outline,
           onTap: _showApproveDialog,
         ),
-        _ActionItem(
+        SalesOrderActionItem(
           label: '审核拒绝',
           icon: Icons.cancel_outlined,
           onTap: _showRejectDialog,
         ),
       ],
       if (status == 'approved' || status == 'in_production')
-        _ActionItem(
+        SalesOrderActionItem(
           label: '完成订单',
           icon: Icons.task_alt_outlined,
           onTap: _showCompleteDialog,
         ),
-      if (status.isNotEmpty &&
-          status != 'completed' &&
-          status != 'cancelled')
-        _ActionItem(
+      if (status.isNotEmpty && status != 'completed' && status != 'cancelled')
+        SalesOrderActionItem(
           label: '取消订单',
           icon: Icons.block_outlined,
           onTap: _showCancelDialog,
           destructive: true,
         ),
       if (status == 'completed')
-        _ActionItem(
+        SalesOrderActionItem(
           label: '生成送货单',
           icon: Icons.local_shipping_outlined,
           onTap: _goToCreateDeliveryOrder,
         ),
-      _ActionItem(
+      SalesOrderActionItem(
         label: '更新付款',
         icon: Icons.payments_outlined,
         onTap: _showUpdatePaymentDialog,
       ),
       if (status == 'approved')
-        _ActionItem(
+        SalesOrderActionItem(
           label: '生成施工单',
           icon: Icons.assignment_outlined,
           onTap: _showCreateWorkOrderDialog,
@@ -697,11 +587,12 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
               label: '返回',
             ),
             PageActionButton.filled(
-              onPressed: () => context.go('/sales-orders/${widget.orderId}/edit'),
+              onPressed: () =>
+                  context.go('/sales-orders/${widget.orderId}/edit'),
               icon: const Icon(Icons.edit, size: 16),
               label: '编辑',
             ),
-            _ActionMenu(
+            SalesOrderActionMenu(
               actions: _buildActions(detail),
               disabled: _actionLoading,
             ),
@@ -734,168 +625,114 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
                     )
                   : ListView(
                       children: [
-                        _buildSection(
-                          title,
-                          _buildInfoGrid([
-                            _InfoItem('客户', detail.customerName ?? _emptyText),
-                            _InfoItem('状态', detail.statusDisplay ?? detail.status ?? _emptyText),
-                            _InfoItem('付款状态', detail.paymentStatusDisplay ?? detail.paymentStatus ?? _emptyText),
-                            _InfoItem('下单日期', _formatDate(detail.orderDate)),
-                            _InfoItem('交货日期', _formatDate(detail.deliveryDate)),
-                            _InfoItem('实际交货', _formatDate(detail.actualDeliveryDate)),
-                            _InfoItem(
-                              '订单金额',
-                              detail.totalAmount == null ? _emptyText : detail.totalAmount!.toStringAsFixed(2),
+                        _buildOverviewSection(detail, title),
+                        SizedBox(height: sectionSpacing),
+                        SalesOrderInfoSection(
+                          title: '客户信息',
+                          items: [
+                            SalesOrderInfoItem(
+                              '联系人',
+                              detail.customerContact ??
+                                  detail.contactPerson ??
+                                  _emptyText,
                             ),
-                            _InfoItem(
-                              '税率',
-                              detail.taxRate == null ? _emptyText : '${detail.taxRate!.toStringAsFixed(2)}%',
+                            SalesOrderInfoItem(
+                              '电话',
+                              detail.customerPhone ??
+                                  detail.contactPhone ??
+                                  _emptyText,
                             ),
-                          ]),
+                            SalesOrderInfoItem(
+                              '地址',
+                              detail.customerAddress ??
+                                  detail.shippingAddress ??
+                                  _emptyText,
+                            ),
+                          ],
                         ),
                         SizedBox(height: sectionSpacing),
-                        _buildSection(
-                          '客户信息',
-                          _buildInfoGrid([
-                            _InfoItem('联系人', detail.customerContact ?? detail.contactPerson ?? _emptyText),
-                            _InfoItem('电话', detail.customerPhone ?? detail.contactPhone ?? _emptyText),
-                            _InfoItem('地址', detail.customerAddress ?? detail.shippingAddress ?? _emptyText),
-                          ]),
+                        SalesOrderItemsSection(
+                          items: detail.items,
+                          emptyText: _emptyText,
                         ),
                         SizedBox(height: sectionSpacing),
-                        _buildSection('订单明细', _buildItemsTable(detail.items)),
-                        SizedBox(height: sectionSpacing),
-                        _buildSection(
-                          '付款信息',
-                          _buildInfoGrid([
-                            _InfoItem(
+                        SalesOrderInfoSection(
+                          title: '付款信息',
+                          items: [
+                            SalesOrderInfoItem(
                               '小计',
-                              detail.subtotal == null ? _emptyText : detail.subtotal!.toStringAsFixed(2),
+                              detail.subtotal == null
+                                  ? _emptyText
+                                  : detail.subtotal!.toStringAsFixed(2),
                             ),
-                            _InfoItem(
+                            SalesOrderInfoItem(
                               '税额',
-                              detail.taxAmount == null ? _emptyText : detail.taxAmount!.toStringAsFixed(2),
+                              detail.taxAmount == null
+                                  ? _emptyText
+                                  : detail.taxAmount!.toStringAsFixed(2),
                             ),
-                            _InfoItem(
+                            SalesOrderInfoItem(
                               '折扣',
-                              detail.discountAmount == null ? _emptyText : detail.discountAmount!.toStringAsFixed(2),
+                              detail.discountAmount == null
+                                  ? _emptyText
+                                  : detail.discountAmount!.toStringAsFixed(2),
                             ),
-                            _InfoItem(
+                            SalesOrderInfoItem(
                               '定金',
-                              detail.depositAmount == null ? _emptyText : detail.depositAmount!.toStringAsFixed(2),
+                              detail.depositAmount == null
+                                  ? _emptyText
+                                  : detail.depositAmount!.toStringAsFixed(2),
                             ),
-                            _InfoItem(
+                            SalesOrderInfoItem(
                               '已付金额',
-                              detail.paidAmount == null ? _emptyText : detail.paidAmount!.toStringAsFixed(2),
+                              detail.paidAmount == null
+                                  ? _emptyText
+                                  : detail.paidAmount!.toStringAsFixed(2),
                             ),
-                            _InfoItem('付款日期', _formatDate(detail.paymentDate)),
-                          ]),
+                            SalesOrderInfoItem(
+                              '付款日期',
+                              _formatDate(detail.paymentDate),
+                            ),
+                          ],
                         ),
                         SizedBox(height: sectionSpacing),
-                        _buildSection('关联施工单', _buildChipGroup(detail.workOrderNumbers)),
+                        SalesOrderWorkOrdersSection(
+                          items: detail.workOrderNumbers,
+                          emptyText: _emptyText,
+                        ),
                       ],
                     ),
     );
   }
-}
 
-class _ActionItem {
-  const _ActionItem({
-    required this.label,
-    required this.icon,
-    required this.onTap,
-    this.destructive = false,
-  });
-
-  final String label;
-  final IconData icon;
-  final VoidCallback onTap;
-  final bool destructive;
-}
-
-class _ActionMenu extends StatelessWidget {
-  const _ActionMenu({
-    required this.actions,
-    this.disabled = false,
-  });
-
-  final List<_ActionItem> actions;
-  final bool disabled;
-
-  @override
-  Widget build(BuildContext context) {
-    final available = actions
-        .where((action) => action.label.trim().isNotEmpty)
-        .toList();
-    if (available.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    final theme = Theme.of(context);
-    final isEnabled = !disabled;
-
-    return PopupMenuButton<int>(
-      enabled: isEnabled,
-      tooltip: '更多操作',
-      onSelected: (index) => available[index].onTap(),
-      itemBuilder: (context) => [
-        for (var i = 0; i < available.length; i++)
-          PopupMenuItem<int>(
-            value: i,
-            child: Row(
-              children: [
-                Icon(
-                  available[i].icon,
-                  size: 16,
-                  color: available[i].destructive
-                      ? theme.colorScheme.error
-                      : theme.iconTheme.color,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  available[i].label,
-                  style: available[i].destructive
-                      ? TextStyle(color: theme.colorScheme.error)
-                      : null,
-                ),
-              ],
-            ),
-          ),
-      ],
-      child: IgnorePointer(
-        ignoring: true,
-        child: PageActionButton.outlined(
-          onPressed: isEnabled ? () {} : null,
-          icon: const Icon(Icons.more_horiz, size: 16),
-          label: '更多操作',
+  Widget _buildOverviewSection(SalesOrderDetail detail, String title) {
+    return SalesOrderOverviewSection(
+      title: title,
+      items: [
+        SalesOrderInfoItem('客户', detail.customerName ?? _emptyText),
+        SalesOrderInfoItem(
+          '状态',
+          detail.statusDisplay ?? detail.status ?? _emptyText,
         ),
-      ),
-    );
-  }
-}
-
-class _InfoItem {
-  const _InfoItem(this.label, this.value);
-
-  final String label;
-  final String value;
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
-        const SizedBox(height: 4),
-        Text(value, style: theme.textTheme.bodyMedium),
+        SalesOrderInfoItem(
+          '付款状态',
+          detail.paymentStatusDisplay ?? detail.paymentStatus ?? _emptyText,
+        ),
+        SalesOrderInfoItem('下单日期', _formatDate(detail.orderDate)),
+        SalesOrderInfoItem('交货日期', _formatDate(detail.deliveryDate)),
+        SalesOrderInfoItem('实际交货', _formatDate(detail.actualDeliveryDate)),
+        SalesOrderInfoItem(
+          '订单金额',
+          detail.totalAmount == null
+              ? _emptyText
+              : detail.totalAmount!.toStringAsFixed(2),
+        ),
+        SalesOrderInfoItem(
+          '税率',
+          detail.taxRate == null
+              ? _emptyText
+              : '${detail.taxRate!.toStringAsFixed(2)}%',
+        ),
       ],
     );
   }

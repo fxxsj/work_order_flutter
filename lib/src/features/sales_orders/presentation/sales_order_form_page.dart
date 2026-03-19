@@ -5,6 +5,7 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -18,55 +19,29 @@ import 'package:work_order_app/src/features/sales_orders/data/sales_order_api_se
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_repository_impl.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order_detail.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order_repository.dart';
+import 'package:work_order_app/src/features/workorders/data/work_order_flow_api_service.dart';
 
 enum SalesOrderFormMode { create, edit }
 
-class SalesOrderFormEntry extends StatefulWidget {
+class SalesOrderFormEntry extends StatelessWidget {
   const SalesOrderFormEntry({super.key, required this.mode, this.orderId});
 
   final SalesOrderFormMode mode;
   final int? orderId;
 
   @override
-  State<SalesOrderFormEntry> createState() => _SalesOrderFormEntryState();
-}
-
-class _SalesOrderFormEntryState extends State<SalesOrderFormEntry> {
-  SalesOrderApiService? _apiService;
-  SalesOrderRepositoryImpl? _repository;
-  SalesOrderViewModel? _viewModel;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = SalesOrderApiService(apiClient);
-    _repository = SalesOrderRepositoryImpl(_apiService!);
-    _viewModel = SalesOrderViewModel(_repository!);
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<SalesOrderApiService>.value(value: apiService),
-        Provider<SalesOrderRepository>.value(value: repository),
-        ChangeNotifierProvider<SalesOrderViewModel>.value(value: viewModel),
-      ],
-      child: SalesOrderFormPage(mode: widget.mode, orderId: widget.orderId),
+    return FeatureEntry<SalesOrderApiService, SalesOrderRepository,
+        SalesOrderViewModel>(
+      createService: (context) =>
+          SalesOrderApiService(context.read<ApiClient>()),
+      createRepository: (context) => SalesOrderRepositoryImpl(
+        context.read<SalesOrderApiService>(),
+        WorkOrderFlowApiService(context.read<ApiClient>()),
+      ),
+      createViewModel: (context) =>
+          SalesOrderViewModel(context.read<SalesOrderRepository>()),
+      child: SalesOrderFormPage(mode: mode, orderId: orderId),
     );
   }
 }

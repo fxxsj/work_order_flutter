@@ -9,6 +9,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
@@ -24,55 +25,22 @@ import 'package:work_order_app/src/features/tasks/data/task_assignment_rule_repo
 import 'package:work_order_app/src/features/tasks/domain/task_assignment_rule.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_assignment_rule_repository.dart';
 
-class TaskAssignmentRuleEntry extends StatefulWidget {
+class TaskAssignmentRuleEntry extends StatelessWidget {
   const TaskAssignmentRuleEntry({super.key});
 
   @override
-  State<TaskAssignmentRuleEntry> createState() =>
-      _TaskAssignmentRuleEntryState();
-}
-
-class _TaskAssignmentRuleEntryState extends State<TaskAssignmentRuleEntry> {
-  TaskAssignmentRuleApiService? _apiService;
-  TaskAssignmentRuleRepositoryImpl? _repository;
-  TaskAssignmentRuleViewModel? _viewModel;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = TaskAssignmentRuleApiService(apiClient);
-    _repository = TaskAssignmentRuleRepositoryImpl(_apiService!);
-    _viewModel = TaskAssignmentRuleViewModel(_repository!);
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _viewModel?.initialize();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (_apiService == null || _repository == null || _viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<TaskAssignmentRuleApiService>.value(value: _apiService!),
-        Provider<TaskAssignmentRuleRepository>.value(value: _repository!),
-        ChangeNotifierProvider<TaskAssignmentRuleViewModel>.value(
-            value: _viewModel!),
-      ],
+    return FeatureEntry<TaskAssignmentRuleApiService,
+        TaskAssignmentRuleRepository, TaskAssignmentRuleViewModel>(
+      createService: (context) =>
+          TaskAssignmentRuleApiService(context.read<ApiClient>()),
+      createRepository: (context) => TaskAssignmentRuleRepositoryImpl(
+        context.read<TaskAssignmentRuleApiService>(),
+      ),
+      createViewModel: (context) => TaskAssignmentRuleViewModel(
+        context.read<TaskAssignmentRuleRepository>(),
+      ),
+      initialize: (viewModel) => viewModel.initialize(),
       child: const TaskAssignmentRulePage(),
     );
   }

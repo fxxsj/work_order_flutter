@@ -14,6 +14,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
@@ -22,57 +23,20 @@ import 'package:work_order_app/src/features/customer/data/customer_api_service.d
 import 'package:work_order_app/src/features/customer/data/customer_repository_impl.dart';
 import 'package:work_order_app/src/features/customer/domain/customer_repository.dart';
 
-/// 客户列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class CustomerListEntry extends StatefulWidget {
+/// 客户列表入口。
+class CustomerListEntry extends StatelessWidget {
   const CustomerListEntry({super.key});
 
   @override
-  State<CustomerListEntry> createState() => _CustomerListEntryState();
-}
-
-class _CustomerListEntryState extends State<CustomerListEntry> {
-  CustomerApiService? _apiService;
-  CustomerRepositoryImpl? _repository;
-  CustomerViewModel? _viewModel;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = CustomerApiService(apiClient);
-    _repository = CustomerRepositoryImpl(_apiService!);
-    _viewModel = CustomerViewModel(_repository!);
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _viewModel?.initialize();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<CustomerApiService>.value(value: apiService),
-        Provider<CustomerRepository>.value(value: repository),
-        ChangeNotifierProvider<CustomerViewModel>.value(value: viewModel),
-      ],
+    return FeatureEntry<CustomerApiService, CustomerRepository,
+        CustomerViewModel>(
+      createService: (context) => CustomerApiService(context.read<ApiClient>()),
+      createRepository: (context) =>
+          CustomerRepositoryImpl(context.read<CustomerApiService>()),
+      createViewModel: (context) =>
+          CustomerViewModel(context.read<CustomerRepository>()),
+      initialize: (viewModel) => viewModel.initialize(),
       child: const CustomerListPage(),
     );
   }

@@ -18,35 +18,19 @@ import 'package:work_order_app/src/features/departments/data/department_api_serv
 import 'package:work_order_app/src/features/departments/domain/department.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
 
-class TaskAssignmentHistoryEntry extends StatefulWidget {
+class TaskAssignmentHistoryEntry extends StatelessWidget {
   const TaskAssignmentHistoryEntry({super.key});
 
   @override
-  State<TaskAssignmentHistoryEntry> createState() =>
-      _TaskAssignmentHistoryEntryState();
-}
-
-class _TaskAssignmentHistoryEntryState
-    extends State<TaskAssignmentHistoryEntry> {
-  TaskApiService? _taskApi;
-  AuthApi? _authApi;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_taskApi != null) return;
-    final apiClient = context.read<ApiClient>();
-    _taskApi = TaskApiService(apiClient);
-    _authApi = AuthApi(apiClient);
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (_taskApi == null || _authApi == null) return const SizedBox.shrink();
     return MultiProvider(
       providers: [
-        Provider<TaskApiService>.value(value: _taskApi!),
-        Provider<AuthApi>.value(value: _authApi!),
+        Provider<TaskApiService>(
+          create: (context) => TaskApiService(context.read<ApiClient>()),
+        ),
+        Provider<AuthApi>(
+          create: (context) => AuthApi(context.read<ApiClient>()),
+        ),
       ],
       child: const TaskAssignmentHistoryPage(),
     );

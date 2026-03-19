@@ -13,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/departments/application/department_view_model.dart';
@@ -23,56 +24,20 @@ import 'package:work_order_app/src/features/departments/domain/department_reposi
 import 'package:work_order_app/src/features/departments/presentation/department_edit_page.dart';
 
 /// 部门列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class DepartmentListEntry extends StatefulWidget {
+class DepartmentListEntry extends StatelessWidget {
   const DepartmentListEntry({super.key});
 
   @override
-  State<DepartmentListEntry> createState() => _DepartmentListEntryState();
-}
-
-class _DepartmentListEntryState extends State<DepartmentListEntry> {
-  DepartmentApiService? _apiService;
-  DepartmentRepositoryImpl? _repository;
-  DepartmentViewModel? _viewModel;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = DepartmentApiService(apiClient);
-    _repository = DepartmentRepositoryImpl(_apiService!);
-    _viewModel = DepartmentViewModel(_repository!);
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _viewModel?.initialize();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<DepartmentApiService>.value(value: apiService),
-        Provider<DepartmentRepository>.value(value: repository),
-        ChangeNotifierProvider<DepartmentViewModel>.value(value: viewModel),
-      ],
+    return FeatureEntry<DepartmentApiService, DepartmentRepository,
+        DepartmentViewModel>(
+      createService: (context) =>
+          DepartmentApiService(context.read<ApiClient>()),
+      createRepository: (context) =>
+          DepartmentRepositoryImpl(context.read<DepartmentApiService>()),
+      createViewModel: (context) =>
+          DepartmentViewModel(context.read<DepartmentRepository>()),
+      initialize: (viewModel) => viewModel.initialize(),
       child: const DepartmentListPage(),
     );
   }

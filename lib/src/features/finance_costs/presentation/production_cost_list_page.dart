@@ -13,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/finance_costs/application/production_cost_view_model.dart';
@@ -22,56 +23,20 @@ import 'package:work_order_app/src/features/finance_costs/domain/production_cost
 import 'package:work_order_app/src/features/finance_costs/domain/production_cost_repository.dart';
 
 /// 成本核算列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class ProductionCostListEntry extends StatefulWidget {
+class ProductionCostListEntry extends StatelessWidget {
   const ProductionCostListEntry({super.key});
 
   @override
-  State<ProductionCostListEntry> createState() => _ProductionCostListEntryState();
-}
-
-class _ProductionCostListEntryState extends State<ProductionCostListEntry> {
-  ProductionCostApiService? _apiService;
-  ProductionCostRepositoryImpl? _repository;
-  ProductionCostViewModel? _viewModel;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = ProductionCostApiService(apiClient);
-    _repository = ProductionCostRepositoryImpl(_apiService!);
-    _viewModel = ProductionCostViewModel(_repository!);
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _viewModel?.initialize();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<ProductionCostApiService>.value(value: apiService),
-        Provider<ProductionCostRepository>.value(value: repository),
-        ChangeNotifierProvider<ProductionCostViewModel>.value(value: viewModel),
-      ],
+    return FeatureEntry<ProductionCostApiService, ProductionCostRepository,
+        ProductionCostViewModel>(
+      createService: (context) =>
+          ProductionCostApiService(context.read<ApiClient>()),
+      createRepository: (context) => ProductionCostRepositoryImpl(
+          context.read<ProductionCostApiService>()),
+      createViewModel: (context) =>
+          ProductionCostViewModel(context.read<ProductionCostRepository>()),
+      initialize: (viewModel) => viewModel.initialize(),
       child: const ProductionCostListPage(),
     );
   }
@@ -89,7 +54,8 @@ class _ProductionCostListView extends StatefulWidget {
   const _ProductionCostListView();
 
   @override
-  State<_ProductionCostListView> createState() => _ProductionCostListViewState();
+  State<_ProductionCostListView> createState() =>
+      _ProductionCostListViewState();
 }
 
 class _ProductionCostListViewState extends State<_ProductionCostListView> {
@@ -117,7 +83,8 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
     super.dispose();
   }
 
-  void _scheduleSearch(ProductionCostViewModel viewModel, {bool immediate = false}) {
+  void _scheduleSearch(ProductionCostViewModel viewModel,
+      {bool immediate = false}) {
     _searchDebounce?.cancel();
     if (immediate) {
       viewModel.setSearchText(_searchController.text.trim());
@@ -176,7 +143,8 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, costs, isMobile),
-          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1
+              ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,
@@ -274,7 +242,7 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
   Widget _buildPageHeader(
     BuildContext context,
     ProductionCostViewModel viewModel,
-bool isMobile,
+    bool isMobile,
   ) {
     return PageHeaderBar(
       breadcrumb: null,
@@ -353,7 +321,8 @@ bool isMobile,
     return '$year-$month-$day';
   }
 
-  Widget _buildSummaryCard(BuildContext context, ProductionCost cost, bool isMobile) {
+  Widget _buildSummaryCard(
+      BuildContext context, ProductionCost cost, bool isMobile) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final sectionSpacing = LayoutTokens.sectionSpacing(context);

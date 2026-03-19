@@ -21,32 +21,13 @@ import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_list_tile.dart';
 
-class TaskSupervisorDashboardEntry extends StatefulWidget {
+class TaskSupervisorDashboardEntry extends StatelessWidget {
   const TaskSupervisorDashboardEntry({super.key});
 
   @override
-  State<TaskSupervisorDashboardEntry> createState() =>
-      _TaskSupervisorDashboardEntryState();
-}
-
-class _TaskSupervisorDashboardEntryState
-    extends State<TaskSupervisorDashboardEntry> {
-  TaskApiService? _taskApi;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_taskApi != null) return;
-    final apiClient = context.read<ApiClient>();
-    _taskApi = TaskApiService(apiClient);
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final api = _taskApi;
-    if (api == null) return const SizedBox.shrink();
-    return Provider<TaskApiService>.value(
-      value: api,
+    return Provider<TaskApiService>(
+      create: (context) => TaskApiService(context.read<ApiClient>()),
       child: const TaskSupervisorDashboardPage(),
     );
   }

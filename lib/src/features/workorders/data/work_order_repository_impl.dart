@@ -46,7 +46,8 @@ class WorkOrderRepositoryImpl implements WorkOrderRepository {
   }
 
   @override
-  Future<WorkOrderDetailDto> updateWorkOrder(int id, Map<String, dynamic> payload) {
+  Future<WorkOrderDetailDto> updateWorkOrder(
+      int id, Map<String, dynamic> payload) {
     return _apiService.updateWorkOrder(id, payload);
   }
 
@@ -86,6 +87,52 @@ class WorkOrderRepositoryImpl implements WorkOrderRepository {
   }
 
   @override
+  Future<Map<String, dynamic>> fetchApprovalStatus(int id) {
+    return _apiService.fetchApprovalStatus(id);
+  }
+
+  @override
+  Future<Map<String, dynamic>> submitMultiApproval(int id) {
+    return _apiService.submitMultiApproval(id);
+  }
+
+  @override
+  Future<Map<String, dynamic>> startApprovalStep(int stepId) {
+    return _apiService.startApprovalStep(stepId);
+  }
+
+  @override
+  Future<Map<String, dynamic>> completeApprovalStep(
+    int stepId, {
+    required String decision,
+    String? comments,
+  }) {
+    return _apiService.completeApprovalStep(
+      stepId,
+      decision: decision,
+      comments: comments,
+    );
+  }
+
+  @override
+  Future<Map<String, dynamic>> escalateApprovalStep(
+    int stepId, {
+    required String reason,
+    int? toStepId,
+  }) {
+    return _apiService.escalateApprovalStep(
+      stepId,
+      reason: reason,
+      toStepId: toStepId,
+    );
+  }
+
+  @override
+  Future<Map<String, dynamic>> markUrgent(int id, {required String reason}) {
+    return _apiService.markUrgent(id, reason: reason);
+  }
+
+  @override
   Future<WorkOrderDetailDto> addProcess(int id, Map<String, dynamic> payload) {
     return _apiService.addProcess(id, payload);
   }
@@ -106,17 +153,20 @@ class WorkOrderRepositoryImpl implements WorkOrderRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> checkSyncNeeded(int id, {List<int>? processIds}) {
+  Future<Map<String, dynamic>> checkSyncNeeded(int id,
+      {List<int>? processIds}) {
     return _apiService.checkSyncNeeded(id, processIds: processIds);
   }
 
   @override
-  Future<Map<String, dynamic>> syncTasksPreview(int id, {List<int>? processIds}) {
+  Future<Map<String, dynamic>> syncTasksPreview(int id,
+      {List<int>? processIds}) {
     return _apiService.syncTasksPreview(id, processIds: processIds);
   }
 
   @override
-  Future<Map<String, dynamic>> syncTasksExecute(int id, {List<int>? processIds}) {
+  Future<Map<String, dynamic>> syncTasksExecute(int id,
+      {List<int>? processIds}) {
     return _apiService.syncTasksExecute(id, processIds: processIds);
   }
 }

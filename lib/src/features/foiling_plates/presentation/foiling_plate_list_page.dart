@@ -13,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/foiling_plates/application/foiling_plate_view_model.dart';
@@ -22,56 +23,20 @@ import 'package:work_order_app/src/features/foiling_plates/domain/foiling_plate.
 import 'package:work_order_app/src/features/foiling_plates/domain/foiling_plate_repository.dart';
 import 'package:work_order_app/src/features/foiling_plates/presentation/foiling_plate_edit_page.dart';
 
-class FoilingPlateListEntry extends StatefulWidget {
+class FoilingPlateListEntry extends StatelessWidget {
   const FoilingPlateListEntry({super.key});
 
   @override
-  State<FoilingPlateListEntry> createState() => _FoilingPlateListEntryState();
-}
-
-class _FoilingPlateListEntryState extends State<FoilingPlateListEntry> {
-  FoilingPlateApiService? _apiService;
-  FoilingPlateRepositoryImpl? _repository;
-  FoilingPlateViewModel? _viewModel;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = FoilingPlateApiService(apiClient);
-    _repository = FoilingPlateRepositoryImpl(_apiService!);
-    _viewModel = FoilingPlateViewModel(_repository!);
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _viewModel?.initialize();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<FoilingPlateApiService>.value(value: apiService),
-        Provider<FoilingPlateRepository>.value(value: repository),
-        ChangeNotifierProvider<FoilingPlateViewModel>.value(value: viewModel),
-      ],
+    return FeatureEntry<FoilingPlateApiService, FoilingPlateRepository,
+        FoilingPlateViewModel>(
+      createService: (context) =>
+          FoilingPlateApiService(context.read<ApiClient>()),
+      createRepository: (context) =>
+          FoilingPlateRepositoryImpl(context.read<FoilingPlateApiService>()),
+      createViewModel: (context) =>
+          FoilingPlateViewModel(context.read<FoilingPlateRepository>()),
+      initialize: (viewModel) => viewModel.initialize(),
       child: const FoilingPlateListPage(),
     );
   }
@@ -128,7 +93,8 @@ class _FoilingPlateListViewState extends State<_FoilingPlateListView> {
     super.dispose();
   }
 
-  void _scheduleSearch(FoilingPlateViewModel viewModel, {bool immediate = false}) {
+  void _scheduleSearch(FoilingPlateViewModel viewModel,
+      {bool immediate = false}) {
     _searchDebounce?.cancel();
     if (immediate) {
       viewModel.setSearchText(_searchController.text.trim());
@@ -141,7 +107,8 @@ class _FoilingPlateListViewState extends State<_FoilingPlateListView> {
     });
   }
 
-  Future<void> _openEditPage(BuildContext context, FoilingPlateViewModel viewModel, FoilingPlate? plate) async {
+  Future<void> _openEditPage(BuildContext context,
+      FoilingPlateViewModel viewModel, FoilingPlate? plate) async {
     FoilingPlate? target = plate;
     if (plate != null) {
       try {
@@ -164,11 +131,13 @@ class _FoilingPlateListViewState extends State<_FoilingPlateListView> {
     );
     if (!mounted) return;
     if (result == true) {
-      ToastUtil.showSuccess(plate == null ? _createSuccessText : _updateSuccessText);
+      ToastUtil.showSuccess(
+          plate == null ? _createSuccessText : _updateSuccessText);
     }
   }
 
-  Future<void> _confirmDelete(BuildContext context, FoilingPlateViewModel viewModel, FoilingPlate plate) async {
+  Future<void> _confirmDelete(BuildContext context,
+      FoilingPlateViewModel viewModel, FoilingPlate plate) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -198,7 +167,8 @@ class _FoilingPlateListViewState extends State<_FoilingPlateListView> {
     }
   }
 
-  Future<void> _confirmPlate(BuildContext context, FoilingPlateViewModel viewModel, FoilingPlate plate) async {
+  Future<void> _confirmPlate(BuildContext context,
+      FoilingPlateViewModel viewModel, FoilingPlate plate) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -246,7 +216,8 @@ class _FoilingPlateListViewState extends State<_FoilingPlateListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, plates, isMobile),
-          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1
+              ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,
@@ -339,8 +310,8 @@ class _FoilingPlateListViewState extends State<_FoilingPlateListView> {
                 DataCell(Text(_displayText(plate.size), style: textStyle)),
                 DataCell(Text(_displayText(plate.material), style: textStyle)),
                 DataCell(Text(_displayText(plate.thickness), style: textStyle)),
-                DataCell(Text(plate.confirmed ? '已确认' : '待确认',
-                    style: textStyle)),
+                DataCell(
+                    Text(plate.confirmed ? '已确认' : '待确认', style: textStyle)),
                 DataCell(
                     Text(_productSummary(plate.products), style: textStyle)),
                 DataCell(
@@ -349,8 +320,7 @@ class _FoilingPlateListViewState extends State<_FoilingPlateListView> {
                   actions: [
                     RowAction(
                       label: '编辑',
-                      onPressed: () =>
-                          _openEditPage(context, viewModel, plate),
+                      onPressed: () => _openEditPage(context, viewModel, plate),
                     ),
                     if (!plate.confirmed)
                       RowAction(
@@ -376,7 +346,7 @@ class _FoilingPlateListViewState extends State<_FoilingPlateListView> {
   Widget _buildPageHeader(
     BuildContext context,
     FoilingPlateViewModel viewModel,
-bool isMobile,
+    bool isMobile,
   ) {
     return PageHeaderBar(
       breadcrumb: null,
@@ -448,10 +418,12 @@ bool isMobile,
     final minute = local.minute.toString().padLeft(2, '0');
     return '$year-$month-$day $hour:$minute';
   }
+
   static String _productSummary(List<FoilingPlateProduct> products) {
     if (products.isEmpty) return _emptyCellText;
-    final display =
-        products.map((item) => '${item.productName}(${item.quantity ?? 1}个)').toList();
+    final display = products
+        .map((item) => '${item.productName}(${item.quantity ?? 1}个)')
+        .toList();
     return display.join('、');
   }
 

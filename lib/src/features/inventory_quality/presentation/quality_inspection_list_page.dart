@@ -13,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -22,60 +23,22 @@ import 'package:work_order_app/src/features/inventory_quality/data/quality_inspe
 import 'package:work_order_app/src/features/inventory_quality/domain/quality_inspection.dart';
 import 'package:work_order_app/src/features/inventory_quality/domain/quality_inspection_repository.dart';
 
-/// 质检列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class QualityInspectionListEntry extends StatefulWidget {
+/// 质检列表入口。
+class QualityInspectionListEntry extends StatelessWidget {
   const QualityInspectionListEntry({super.key});
 
   @override
-  State<QualityInspectionListEntry> createState() =>
-      _QualityInspectionListEntryState();
-}
-
-class _QualityInspectionListEntryState
-    extends State<QualityInspectionListEntry> {
-  QualityInspectionApiService? _apiService;
-  QualityInspectionRepositoryImpl? _repository;
-  QualityInspectionViewModel? _viewModel;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = QualityInspectionApiService(apiClient);
-    _repository = QualityInspectionRepositoryImpl(_apiService!);
-    _viewModel = QualityInspectionViewModel(_repository!);
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _viewModel?.initialize();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<QualityInspectionApiService>.value(value: apiService),
-        Provider<QualityInspectionRepository>.value(value: repository),
-        ChangeNotifierProvider<QualityInspectionViewModel>.value(
-            value: viewModel),
-      ],
+    return FeatureEntry<QualityInspectionApiService,
+        QualityInspectionRepository, QualityInspectionViewModel>(
+      createService: (context) =>
+          QualityInspectionApiService(context.read<ApiClient>()),
+      createRepository: (context) => QualityInspectionRepositoryImpl(
+        context.read<QualityInspectionApiService>(),
+      ),
+      createViewModel: (context) => QualityInspectionViewModel(
+          context.read<QualityInspectionRepository>()),
+      initialize: (viewModel) => viewModel.initialize(),
       child: const QualityInspectionListPage(),
     );
   }
@@ -869,7 +832,6 @@ class _QualityInspectionListViewState
       ),
     );
   }
-
 }
 
 typedef _SummaryField = SummaryField;

@@ -14,6 +14,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/inventory_stocks/application/product_stock_view_model.dart';
@@ -23,56 +24,20 @@ import 'package:work_order_app/src/features/inventory_stocks/domain/product_stoc
 import 'package:work_order_app/src/features/inventory_stocks/domain/product_stock_repository.dart';
 
 /// 成品库存列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class ProductStockListEntry extends StatefulWidget {
+class ProductStockListEntry extends StatelessWidget {
   const ProductStockListEntry({super.key});
 
   @override
-  State<ProductStockListEntry> createState() => _ProductStockListEntryState();
-}
-
-class _ProductStockListEntryState extends State<ProductStockListEntry> {
-  ProductStockApiService? _apiService;
-  ProductStockRepositoryImpl? _repository;
-  ProductStockViewModel? _viewModel;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = ProductStockApiService(apiClient);
-    _repository = ProductStockRepositoryImpl(_apiService!);
-    _viewModel = ProductStockViewModel(_repository!);
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _viewModel?.initialize();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<ProductStockApiService>.value(value: apiService),
-        Provider<ProductStockRepository>.value(value: repository),
-        ChangeNotifierProvider<ProductStockViewModel>.value(value: viewModel),
-      ],
+    return FeatureEntry<ProductStockApiService, ProductStockRepository,
+        ProductStockViewModel>(
+      createService: (context) =>
+          ProductStockApiService(context.read<ApiClient>()),
+      createRepository: (context) =>
+          ProductStockRepositoryImpl(context.read<ProductStockApiService>()),
+      createViewModel: (context) =>
+          ProductStockViewModel(context.read<ProductStockRepository>()),
+      initialize: (viewModel) => viewModel.initialize(),
       child: const ProductStockListPage(),
     );
   }
@@ -147,7 +112,6 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
       viewModel.loadStocks(resetPage: true);
     });
   }
-
 
   Future<void> _openLowStockDialog() async {
     final apiService = context.read<ProductStockApiService>();

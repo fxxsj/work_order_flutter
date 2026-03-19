@@ -11,6 +11,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
@@ -22,56 +23,18 @@ import 'package:work_order_app/src/features/artworks/domain/artwork.dart';
 import 'package:work_order_app/src/features/artworks/domain/artwork_repository.dart';
 import 'package:work_order_app/src/features/artworks/presentation/artwork_edit_page.dart';
 
-class ArtworkListEntry extends StatefulWidget {
+class ArtworkListEntry extends StatelessWidget {
   const ArtworkListEntry({super.key});
 
   @override
-  State<ArtworkListEntry> createState() => _ArtworkListEntryState();
-}
-
-class _ArtworkListEntryState extends State<ArtworkListEntry> {
-  ArtworkApiService? _apiService;
-  ArtworkRepositoryImpl? _repository;
-  ArtworkViewModel? _viewModel;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = ArtworkApiService(apiClient);
-    _repository = ArtworkRepositoryImpl(_apiService!);
-    _viewModel = ArtworkViewModel(_repository!);
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _viewModel?.initialize();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<ArtworkApiService>.value(value: apiService),
-        Provider<ArtworkRepository>.value(value: repository),
-        ChangeNotifierProvider<ArtworkViewModel>.value(value: viewModel),
-      ],
+    return FeatureEntry<ArtworkApiService, ArtworkRepository, ArtworkViewModel>(
+      createService: (context) => ArtworkApiService(context.read<ApiClient>()),
+      createRepository: (context) =>
+          ArtworkRepositoryImpl(context.read<ArtworkApiService>()),
+      createViewModel: (context) =>
+          ArtworkViewModel(context.read<ArtworkRepository>()),
+      initialize: (viewModel) => viewModel.initialize(),
       child: const ArtworkListPage(),
     );
   }
@@ -145,7 +108,8 @@ class _ArtworkListViewState extends State<_ArtworkListView> {
     });
   }
 
-  Future<void> _openEditPage(BuildContext context, ArtworkViewModel viewModel, Artwork? artwork) async {
+  Future<void> _openEditPage(BuildContext context, ArtworkViewModel viewModel,
+      Artwork? artwork) async {
     Artwork? target = artwork;
     if (artwork != null) {
       try {
@@ -168,16 +132,19 @@ class _ArtworkListViewState extends State<_ArtworkListView> {
     );
     if (!mounted) return;
     if (result == true) {
-      ToastUtil.showSuccess(artwork == null ? _createSuccessText : _updateSuccessText);
+      ToastUtil.showSuccess(
+          artwork == null ? _createSuccessText : _updateSuccessText);
     }
   }
 
-  Future<void> _confirmDelete(BuildContext context, ArtworkViewModel viewModel, Artwork artwork) async {
+  Future<void> _confirmDelete(
+      BuildContext context, ArtworkViewModel viewModel, Artwork artwork) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text(_deleteDialogTitle),
-        content: Text(_deleteDialogContent.replaceFirst('{name}', artwork.name)),
+        content:
+            Text(_deleteDialogContent.replaceFirst('{name}', artwork.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -202,12 +169,14 @@ class _ArtworkListViewState extends State<_ArtworkListView> {
     }
   }
 
-  Future<void> _confirmArtwork(BuildContext context, ArtworkViewModel viewModel, Artwork artwork) async {
+  Future<void> _confirmArtwork(
+      BuildContext context, ArtworkViewModel viewModel, Artwork artwork) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text(_confirmDialogTitle),
-        content: Text(_confirmDialogContent.replaceFirst('{name}', artwork.name)),
+        content:
+            Text(_confirmDialogContent.replaceFirst('{name}', artwork.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -232,8 +201,10 @@ class _ArtworkListViewState extends State<_ArtworkListView> {
     }
   }
 
-  Future<void> _createVersion(BuildContext context, ArtworkViewModel viewModel, Artwork artwork) async {
-    final fullCode = artwork.fullCode.isNotEmpty ? artwork.fullCode : artwork.name;
+  Future<void> _createVersion(
+      BuildContext context, ArtworkViewModel viewModel, Artwork artwork) async {
+    final fullCode =
+        artwork.fullCode.isNotEmpty ? artwork.fullCode : artwork.name;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -281,7 +252,8 @@ class _ArtworkListViewState extends State<_ArtworkListView> {
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
           body: _buildListBody(context, viewModel, artworks, isMobile),
-          footer: viewModel.totalPages > 1 ? ResponsivePaginationBar(
+          footer: viewModel.totalPages > 1
+              ? ResponsivePaginationBar(
                   infoText: _pageInfoText(viewModel),
                   page: viewModel.page,
                   pageSize: viewModel.pageSize,
@@ -368,8 +340,9 @@ class _ArtworkListViewState extends State<_ArtworkListView> {
                   style: theme.textTheme.bodyMedium,
                 )),
                 DataCell(Text(
-                  _displayText(
-                      artwork.fullCode.isNotEmpty ? artwork.fullCode : artwork.code),
+                  _displayText(artwork.fullCode.isNotEmpty
+                      ? artwork.fullCode
+                      : artwork.code),
                   style: textStyle,
                 )),
                 DataCell(
@@ -377,8 +350,7 @@ class _ArtworkListViewState extends State<_ArtworkListView> {
                 DataCell(Text(_displayText(artwork.impositionSize),
                     style: textStyle)),
                 DataCell(
-                    Text(artwork.confirmed ? '已确认' : '未确认',
-                        style: textStyle)),
+                    Text(artwork.confirmed ? '已确认' : '未确认', style: textStyle)),
                 DataCell(Text(
                   _compactListText(artwork.dieCodes, artwork.dieNames),
                   style: textStyle,
@@ -433,7 +405,7 @@ class _ArtworkListViewState extends State<_ArtworkListView> {
   Widget _buildPageHeader(
     BuildContext context,
     ArtworkViewModel viewModel,
-bool isMobile,
+    bool isMobile,
   ) {
     return PageHeaderBar(
       breadcrumb: null,
@@ -478,6 +450,7 @@ bool isMobile,
       ),
     );
   }
+
   static String _displayText(String? value) {
     final text = value?.trim() ?? '';
     return text.isEmpty ? _emptyCellText : text;
@@ -522,14 +495,17 @@ bool isMobile,
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
-    final code = _displayText(artwork.fullCode.isNotEmpty ? artwork.fullCode : artwork.code);
+    final code = _displayText(
+        artwork.fullCode.isNotEmpty ? artwork.fullCode : artwork.code);
     final name = _displayText(artwork.name);
     final color = _displayText(artwork.colorDisplay);
     final size = _displayText(artwork.impositionSize);
     final status = artwork.confirmed ? '已确认' : '未确认';
     final dies = _compactListText(artwork.dieCodes, artwork.dieNames);
-    final foiling = _compactListText(artwork.foilingPlateCodes, artwork.foilingPlateNames);
-    final embossing = _compactListText(artwork.embossingPlateCodes, artwork.embossingPlateNames);
+    final foiling =
+        _compactListText(artwork.foilingPlateCodes, artwork.foilingPlateNames);
+    final embossing = _compactListText(
+        artwork.embossingPlateCodes, artwork.embossingPlateNames);
     final products = _productSummary(artwork.products);
     final notes = _displayText(artwork.notes);
     final createdAt = _formatDateTime(artwork.createdAt);
@@ -612,7 +588,8 @@ bool isMobile,
               ),
               OutlinedButton.icon(
                 onPressed: () => _createVersion(context, viewModel, artwork),
-                icon: const Icon(Icons.control_point_duplicate_outlined, size: 16),
+                icon: const Icon(Icons.control_point_duplicate_outlined,
+                    size: 16),
                 label: const Text('新版本'),
               ),
               if (!artwork.confirmed)

@@ -13,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/materials/application/material_view_model.dart';
@@ -23,56 +24,19 @@ import 'package:work_order_app/src/features/materials/domain/material_repository
 import 'package:work_order_app/src/features/materials/presentation/material_edit_page.dart';
 
 /// 物料列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class MaterialListEntry extends StatefulWidget {
+class MaterialListEntry extends StatelessWidget {
   const MaterialListEntry({super.key});
 
   @override
-  State<MaterialListEntry> createState() => _MaterialListEntryState();
-}
-
-class _MaterialListEntryState extends State<MaterialListEntry> {
-  MaterialApiService? _apiService;
-  MaterialRepositoryImpl? _repository;
-  MaterialViewModel? _viewModel;
-  bool _initialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_viewModel != null) return;
-    final apiClient = context.read<ApiClient>();
-    _apiService = MaterialApiService(apiClient);
-    _repository = MaterialRepositoryImpl(_apiService!);
-    _viewModel = MaterialViewModel(_repository!);
-    if (!_initialized) {
-      _initialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _viewModel?.initialize();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _viewModel?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final apiService = _apiService;
-    final repository = _repository;
-    final viewModel = _viewModel;
-    if (apiService == null || repository == null || viewModel == null) {
-      return const SizedBox.shrink();
-    }
-    return MultiProvider(
-      providers: [
-        Provider<MaterialApiService>.value(value: apiService),
-        Provider<MaterialRepository>.value(value: repository),
-        ChangeNotifierProvider<MaterialViewModel>.value(value: viewModel),
-      ],
+    return FeatureEntry<MaterialApiService, MaterialRepository,
+        MaterialViewModel>(
+      createService: (context) => MaterialApiService(context.read<ApiClient>()),
+      createRepository: (context) =>
+          MaterialRepositoryImpl(context.read<MaterialApiService>()),
+      createViewModel: (context) =>
+          MaterialViewModel(context.read<MaterialRepository>()),
+      initialize: (viewModel) => viewModel.initialize(),
       child: const MaterialListPage(),
     );
   }
