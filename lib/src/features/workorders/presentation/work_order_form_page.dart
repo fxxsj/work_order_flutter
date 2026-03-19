@@ -22,6 +22,8 @@ import 'package:work_order_app/src/features/workorders/data/work_order_form_subm
 import 'package:work_order_app/src/features/workorders/data/work_order_repository_impl.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
+import 'package:work_order_app/src/features/workorders/presentation/work_order_form_state.dart';
+import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_form_row_widgets.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_form_sections.dart';
 
 enum WorkOrderFormMode { create, edit }
@@ -59,39 +61,9 @@ class WorkOrderFormPage extends StatefulWidget {
 
 class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
   final _formKey = GlobalKey<FormState>();
+  final _draft = WorkOrderFormDraftState();
   static const double _spacing = 12;
   static const double _sectionSpacing = 16;
-
-  final TextEditingController _notesController = TextEditingController();
-  final TextEditingController _printingOtherColorsController =
-      TextEditingController();
-  final TextEditingController _orderDateController = TextEditingController();
-  final TextEditingController _deliveryDateController = TextEditingController();
-  final TextEditingController _productionQuantityController =
-      TextEditingController();
-  final TextEditingController _defectiveQuantityController =
-      TextEditingController();
-  final TextEditingController _actualDeliveryDateController =
-      TextEditingController();
-
-  DateTime? _orderDate;
-  DateTime? _deliveryDate;
-  DateTime? _actualDeliveryDate;
-
-  int? _customerId;
-  String _status = 'pending';
-  String _priority = 'normal';
-  String _printingType = 'none';
-  final Set<String> _printingCmyk = {};
-
-  final List<WorkOrderProductDraft> _productDrafts = [];
-  final List<WorkOrderMaterialDraft> _materialDrafts = [];
-  final Set<int> _processIds = {};
-  final Set<int> _initialProcessIds = {};
-  final Set<int> _artworkIds = {};
-  final Set<int> _dieIds = {};
-  final Set<int> _foilingPlateIds = {};
-  final Set<int> _embossingPlateIds = {};
 
   List<Customer> _customers = [];
   List<ProductOption> _products = [];
@@ -109,32 +81,15 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
   @override
   void initState() {
     super.initState();
-    _orderDate = DateTime.now();
-    _orderDateController.text = _formatDate(_orderDate);
-    _deliveryDateController.text = _formatDate(_deliveryDate);
     _loadOptions();
     if (widget.mode == WorkOrderFormMode.edit && widget.workOrderId != null) {
       _loadDetail(widget.workOrderId!);
-    } else {
-      _productDrafts.add(WorkOrderProductDraft());
     }
   }
 
   @override
   void dispose() {
-    _notesController.dispose();
-    _printingOtherColorsController.dispose();
-    _orderDateController.dispose();
-    _deliveryDateController.dispose();
-    _productionQuantityController.dispose();
-    _defectiveQuantityController.dispose();
-    _actualDeliveryDateController.dispose();
-    for (final draft in _productDrafts) {
-      draft.dispose();
-    }
-    for (final draft in _materialDrafts) {
-      draft.dispose();
-    }
+    _draft.dispose();
     super.dispose();
   }
 
@@ -166,7 +121,10 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     try {
       final viewModel = context.read<WorkOrderViewModel>();
       final detail = await viewModel.fetchDetail(id);
-      _applyDetail(detail);
+      _draft.applyDetail(detail);
+      if (mounted) {
+        setState(() {});
+      }
     } catch (err) {
       ToastUtil.showError('加载施工单失败: $err');
     } finally {
@@ -174,75 +132,10 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     }
   }
 
-  void _applyDetail(WorkOrderDetail detail) {
-    _customerId = detail.customerId;
-    _status = detail.status ?? _status;
-    _priority = detail.priority ?? _priority;
-    _orderDate = detail.orderDate;
-    _deliveryDate = detail.deliveryDate;
-    _actualDeliveryDate = detail.actualDeliveryDate;
-    _orderDateController.text = _formatDate(_orderDate);
-    _deliveryDateController.text = _formatDate(_deliveryDate);
-    _actualDeliveryDateController.text = _formatDate(_actualDeliveryDate);
-    _productionQuantityController.text =
-        detail.productionQuantity?.toString() ?? '';
-    _defectiveQuantityController.text =
-        detail.defectiveQuantity?.toString() ?? '';
-    _printingType = detail.printingType ?? _printingType;
-    _printingCmyk
-      ..clear()
-      ..addAll(detail.printingCmykColors);
-    _printingOtherColorsController.text = detail.printingOtherColors.join(', ');
-    _notesController.text = detail.notes ?? '';
-
-    _productDrafts.clear();
-    for (final item in detail.products) {
-      _productDrafts.add(WorkOrderProductDraft.fromDetail(item));
-    }
-    if (_productDrafts.isEmpty) {
-      _productDrafts.add(WorkOrderProductDraft());
-    }
-
-    _materialDrafts.clear();
-    for (final item in detail.materials) {
-      _materialDrafts.add(WorkOrderMaterialDraft.fromDetail(item));
-    }
-
-    _processIds
-      ..clear()
-      ..addAll(detail.processes.map((e) => e.processId).whereType<int>());
-    _initialProcessIds
-      ..clear()
-      ..addAll(_processIds);
-    _artworkIds
-      ..clear()
-      ..addAll(detail.artworkIds);
-    _dieIds
-      ..clear()
-      ..addAll(detail.dieIds);
-    _foilingPlateIds
-      ..clear()
-      ..addAll(detail.foilingPlateIds);
-    _embossingPlateIds
-      ..clear()
-      ..addAll(detail.embossingPlateIds);
-
-    setState(() {});
-  }
-
-  String _formatDate(DateTime? value) {
-    if (value == null) return '';
-    final local = value.toLocal();
-    final year = local.year.toString().padLeft(4, '0');
-    final month = local.month.toString().padLeft(2, '0');
-    final day = local.day.toString().padLeft(2, '0');
-    return '$year-$month-$day';
-  }
-
   Future<void> _pickDate({required bool isOrderDate}) async {
     final initial = isOrderDate
-        ? (_orderDate ?? DateTime.now())
-        : (_deliveryDate ?? DateTime.now());
+        ? (_draft.orderDate ?? DateTime.now())
+        : (_draft.deliveryDate ?? DateTime.now());
     final picked = await showDatePicker(
       context: context,
       initialDate: initial,
@@ -252,17 +145,15 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     if (picked == null) return;
     setState(() {
       if (isOrderDate) {
-        _orderDate = picked;
-        _orderDateController.text = _formatDate(picked);
+        _draft.setOrderDate(picked);
       } else {
-        _deliveryDate = picked;
-        _deliveryDateController.text = _formatDate(picked);
+        _draft.setDeliveryDate(picked);
       }
     });
   }
 
   Future<void> _pickActualDeliveryDate() async {
-    final initial = _actualDeliveryDate ?? DateTime.now();
+    final initial = _draft.actualDeliveryDate ?? DateTime.now();
     final picked = await showDatePicker(
       context: context,
       initialDate: initial,
@@ -271,33 +162,8 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     );
     if (picked == null) return;
     setState(() {
-      _actualDeliveryDate = picked;
-      _actualDeliveryDateController.text = _formatDate(picked);
+      _draft.setActualDeliveryDate(picked);
     });
-  }
-
-  WorkOrderFormSubmissionInput _submissionInput() {
-    return WorkOrderFormSubmissionInput(
-      customerId: _customerId,
-      status: _status,
-      priority: _priority,
-      orderDate: _orderDate,
-      deliveryDate: _deliveryDate,
-      actualDeliveryDate: _actualDeliveryDate,
-      productionQuantityText: _productionQuantityController.text,
-      defectiveQuantityText: _defectiveQuantityController.text,
-      notes: _notesController.text,
-      printingType: _printingType,
-      printingCmyk: _printingCmyk,
-      printingOtherColorsText: _printingOtherColorsController.text,
-      productDrafts: _productDrafts,
-      materialDrafts: _materialDrafts,
-      processIds: _processIds,
-      artworkIds: _artworkIds,
-      dieIds: _dieIds,
-      foilingPlateIds: _foilingPlateIds,
-      embossingPlateIds: _embossingPlateIds,
-    );
   }
 
   Future<void> _handleSubmit() async {
@@ -305,7 +171,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     if (form == null || !form.validate()) {
       return;
     }
-    final submissionInput = _submissionInput();
+    final submissionInput = _draft.submissionInput();
     final validationMessage = WorkOrderFormSubmission.validate(submissionInput);
     if (validationMessage != null) {
       ToastUtil.showError(validationMessage);
@@ -326,7 +192,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
       if (!mounted) return;
       if (widget.mode == WorkOrderFormMode.edit &&
           updatedDetail != null &&
-          _hasProcessChanges()) {
+          _draft.hasProcessChanges()) {
         final canSync = updatedDetail.approvalStatus != 'approved';
         if (canSync) {
           final goPreview = await _showSyncPrompt(updatedDetail.id);
@@ -343,14 +209,6 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
-  }
-
-  bool _hasProcessChanges() {
-    if (_initialProcessIds.length != _processIds.length) return true;
-    for (final id in _processIds) {
-      if (!_initialProcessIds.contains(id)) return true;
-    }
-    return false;
   }
 
   Future<bool?> _showSyncPrompt(int workOrderId) {
@@ -414,34 +272,36 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                 children: [
                   WorkOrderBasicInfoSection(
                     mode: widget.mode,
-                    customerId: _customerId,
+                    customerId: _draft.customerId,
                     customers: _customers,
-                    status: _status,
-                    priority: _priority,
-                    orderDateController: _orderDateController,
-                    deliveryDateController: _deliveryDateController,
-                    productionQuantityController: _productionQuantityController,
-                    defectiveQuantityController: _defectiveQuantityController,
-                    actualDeliveryDateController: _actualDeliveryDateController,
-                    notesController: _notesController,
+                    status: _draft.status,
+                    priority: _draft.priority,
+                    orderDateController: _draft.orderDateController,
+                    deliveryDateController: _draft.deliveryDateController,
+                    productionQuantityController:
+                        _draft.productionQuantityController,
+                    defectiveQuantityController:
+                        _draft.defectiveQuantityController,
+                    actualDeliveryDateController:
+                        _draft.actualDeliveryDateController,
+                    notesController: _draft.notesController,
                     onCustomerChanged: (value) =>
-                        setState(() => _customerId = value),
+                        setState(() => _draft.customerId = value),
                     onStatusChanged: (value) =>
-                        setState(() => _status = value ?? 'pending'),
+                        setState(() => _draft.status = value ?? 'pending'),
                     onPriorityChanged: (value) =>
-                        setState(() => _priority = value ?? 'normal'),
+                        setState(() => _draft.priority = value ?? 'normal'),
                     onPickOrderDate: () => _pickDate(isOrderDate: true),
                     onPickDeliveryDate: () => _pickDate(isOrderDate: false),
                     onPickActualDeliveryDate: _pickActualDeliveryDate,
                   ),
                   const SizedBox(height: _sectionSpacing),
                   WorkOrderProductListSection(
-                    drafts: _productDrafts,
+                    drafts: _draft.productDrafts,
                     products: _products,
-                    onAdd: () => setState(
-                        () => _productDrafts.add(WorkOrderProductDraft())),
+                    onAdd: () => setState(_draft.addProductDraft),
                     onRemove: (index) =>
-                        setState(() => _productDrafts.removeAt(index)),
+                        setState(() => _draft.removeProductDraftAt(index)),
                   ),
                   const SizedBox(height: _sectionSpacing),
                   WorkOrderFormSectionCard(
@@ -451,7 +311,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                           .map(
                               (item) => WorkOrderOptionItem(item.id, item.name))
                           .toList(),
-                      selected: _processIds,
+                      selected: _draft.processIds,
                       emptyText: '暂无工序数据',
                       title: '工序选择',
                       placeholder: '请选择工序（可多选）',
@@ -460,36 +320,35 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                   ),
                   const SizedBox(height: _sectionSpacing),
                   WorkOrderMaterialListSection(
-                    drafts: _materialDrafts,
+                    drafts: _draft.materialDrafts,
                     materials: _materials,
-                    onAdd: () => setState(
-                      () => _materialDrafts.add(WorkOrderMaterialDraft()),
-                    ),
+                    onAdd: () => setState(_draft.addMaterialDraft),
                     onRemove: (index) =>
-                        setState(() => _materialDrafts.removeAt(index)),
+                        setState(() => _draft.removeMaterialDraftAt(index)),
                   ),
                   const SizedBox(height: _sectionSpacing),
                   WorkOrderResourcesSection(
-                    printingType: _printingType,
-                    printingCmyk: _printingCmyk,
+                    printingType: _draft.printingType,
+                    printingCmyk: _draft.printingCmyk,
                     printingOtherColorsController:
-                        _printingOtherColorsController,
+                        _draft.printingOtherColorsController,
                     artworks: _artworks,
-                    artworkIds: _artworkIds,
+                    artworkIds: _draft.artworkIds,
                     dies: _dies,
-                    dieIds: _dieIds,
+                    dieIds: _draft.dieIds,
                     foilingPlates: _foilingPlates,
-                    foilingPlateIds: _foilingPlateIds,
+                    foilingPlateIds: _draft.foilingPlateIds,
                     embossingPlates: _embossingPlates,
-                    embossingPlateIds: _embossingPlateIds,
-                    onPrintingTypeChanged: (value) =>
-                        setState(() => _printingType = value ?? 'none'),
+                    embossingPlateIds: _draft.embossingPlateIds,
+                    onPrintingTypeChanged: (value) => setState(
+                      () => _draft.printingType = value ?? 'none',
+                    ),
                     onToggleCmyk: (color) {
                       setState(() {
-                        if (_printingCmyk.contains(color)) {
-                          _printingCmyk.remove(color);
+                        if (_draft.printingCmyk.contains(color)) {
+                          _draft.printingCmyk.remove(color);
                         } else {
-                          _printingCmyk.add(color);
+                          _draft.printingCmyk.add(color);
                         }
                       });
                     },
