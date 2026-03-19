@@ -13,16 +13,17 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/sales_orders/application/sales_order_view_model.dart';
+import 'package:work_order_app/src/features/sales_orders/data/sales_order_action_service.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_api_service.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_repository_impl.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order_repository.dart';
+import 'package:work_order_app/src/features/sales_orders/presentation/widgets/sales_order_list_dialogs.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_flow_api_service.dart';
 
 /// 销售订单列表入口。
@@ -78,6 +79,13 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
+  SalesOrderActionService? _actionService;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _actionService ??= SalesOrderActionService(context.read<ApiClient>());
+  }
 
   @override
   void dispose() {
@@ -111,27 +119,15 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     SalesOrderViewModel viewModel,
     SalesOrder order,
   ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('提交订单'),
-        content: const Text('确认提交该销售订单吗？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('提交'),
-          ),
-        ],
-      ),
+    final confirmed = await showSalesOrderConfirmDialog(
+      context,
+      title: '提交订单',
+      content: '确认提交该销售订单吗？',
+      confirmText: '提交',
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     try {
-      final api = context.read<SalesOrderApiService>();
-      await api.submit(order.id);
+      await _actionService!.submit(order.id);
       ToastUtil.showSuccess('已提交');
       await viewModel.loadSalesOrders(resetPage: false);
     } catch (err) {
@@ -143,43 +139,14 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     SalesOrderViewModel viewModel,
     SalesOrder order,
   ) async {
-    final commentController = TextEditingController();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('审核通过'),
-        content: TextField(
-          controller: commentController,
-          decoration: const InputDecoration(labelText: '审核意见（可选）'),
-          maxLines: 3,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('通过'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) {
-      commentController.dispose();
-      return;
-    }
+    final result = await showSalesOrderApproveDialog(context);
+    if (result == null) return;
     try {
-      final api = context.read<SalesOrderApiService>();
-      await api.approve(order.id, {
-        'approval_comment': commentController.text.trim(),
-      });
+      await _actionService!.approve(order.id, comment: result.comment);
       ToastUtil.showSuccess('已审核通过');
       await viewModel.loadSalesOrders(resetPage: false);
     } catch (err) {
       ToastUtil.showError('审核失败: $err');
-    } finally {
-      commentController.dispose();
     }
   }
 
@@ -187,65 +154,23 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     SalesOrderViewModel viewModel,
     SalesOrder order,
   ) async {
-    final reasonController = TextEditingController();
-    final commentController = TextEditingController();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('审核拒绝'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: reasonController,
-              decoration: const InputDecoration(labelText: '拒绝原因'),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: commentController,
-              decoration: const InputDecoration(labelText: '审核意见（可选）'),
-              maxLines: 3,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('拒绝'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) {
-      reasonController.dispose();
-      commentController.dispose();
-      return;
-    }
-    final reason = reasonController.text.trim();
+    final result = await showSalesOrderRejectDialog(context);
+    if (result == null) return;
+    final reason = result.reason ?? '';
     if (reason.isEmpty) {
       ToastUtil.showError('请填写拒绝原因');
-      reasonController.dispose();
-      commentController.dispose();
       return;
     }
     try {
-      final api = context.read<SalesOrderApiService>();
-      await api.reject(order.id, {
-        'reason': reason,
-        'approval_comment': commentController.text.trim(),
-      });
+      await _actionService!.reject(
+        order.id,
+        reason: reason,
+        comment: result.comment,
+      );
       ToastUtil.showSuccess('已拒绝');
       await viewModel.loadSalesOrders(resetPage: false);
     } catch (err) {
       ToastUtil.showError('拒绝失败: $err');
-    } finally {
-      reasonController.dispose();
-      commentController.dispose();
     }
   }
 
@@ -253,27 +178,15 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     SalesOrderViewModel viewModel,
     SalesOrder order,
   ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('完成订单'),
-        content: const Text('确认标记该订单为已完成吗？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('完成'),
-          ),
-        ],
-      ),
+    final confirmed = await showSalesOrderConfirmDialog(
+      context,
+      title: '完成订单',
+      content: '确认标记该订单为已完成吗？',
+      confirmText: '完成',
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     try {
-      final api = context.read<SalesOrderApiService>();
-      await api.complete(order.id);
+      await _actionService!.complete(order.id);
       ToastUtil.showSuccess('已完成');
       await viewModel.loadSalesOrders(resetPage: false);
     } catch (err) {
@@ -289,43 +202,14 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     SalesOrderViewModel viewModel,
     SalesOrder order,
   ) async {
-    final reasonController = TextEditingController();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('取消订单'),
-        content: TextField(
-          controller: reasonController,
-          decoration: const InputDecoration(labelText: '取消原因（可选）'),
-          maxLines: 3,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('确认取消'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) {
-      reasonController.dispose();
-      return;
-    }
+    final reason = await showSalesOrderCancelDialog(context);
+    if (reason == null) return;
     try {
-      final api = context.read<SalesOrderApiService>();
-      await api.cancel(order.id, {
-        'reason': reasonController.text.trim(),
-      });
+      await _actionService!.cancel(order.id, reason: reason);
       ToastUtil.showSuccess('已取消');
       await viewModel.loadSalesOrders(resetPage: false);
     } catch (err) {
       ToastUtil.showError('取消失败: $err');
-    } finally {
-      reasonController.dispose();
     }
   }
 
@@ -333,53 +217,12 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     SalesOrderViewModel viewModel,
     SalesOrder order,
   ) async {
-    final amountController = TextEditingController();
-    final dateController = TextEditingController();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('更新付款信息'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: amountController,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(labelText: '已付金额'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: dateController,
-              decoration: const InputDecoration(
-                labelText: '付款日期（YYYY-MM-DD）',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('更新'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) {
-      amountController.dispose();
-      dateController.dispose();
-      return;
-    }
-    final amountText = amountController.text.trim();
-    final dateText = dateController.text.trim();
+    final result = await showSalesOrderPaymentDialog(context);
+    if (result == null) return;
+    final amountText = result.amountText;
+    final dateText = result.dateText;
     if (amountText.isEmpty && dateText.isEmpty) {
       ToastUtil.showError('请至少填写一项');
-      amountController.dispose();
-      dateController.dispose();
       return;
     }
     final payload = <String, dynamic>{};
@@ -387,8 +230,6 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
       final amount = double.tryParse(amountText);
       if (amount == null || amount < 0) {
         ToastUtil.showError('请输入正确的金额');
-        amountController.dispose();
-        dateController.dispose();
         return;
       }
       payload['paid_amount'] = amount;
@@ -397,15 +238,11 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
       payload['payment_date'] = dateText;
     }
     try {
-      final api = context.read<SalesOrderApiService>();
-      await api.updatePayment(order.id, payload);
+      await _actionService!.updatePayment(order.id, payload);
       ToastUtil.showSuccess('已更新付款信息');
       await viewModel.loadSalesOrders(resetPage: false);
     } catch (err) {
       ToastUtil.showError('更新失败: $err');
-    } finally {
-      amountController.dispose();
-      dateController.dispose();
     }
   }
 
@@ -413,94 +250,28 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     SalesOrderViewModel viewModel,
     SalesOrder order,
   ) async {
-    String priority = 'normal';
-    final quantityController = TextEditingController();
-    final deliveryController = TextEditingController(
-        text:
-            order.deliveryDate == null ? '' : _formatDate(order.deliveryDate));
-    final notesController = TextEditingController();
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('生成施工单'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: quantityController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: '生产数量（可选）',
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: deliveryController,
-                decoration: const InputDecoration(
-                  labelText: '交货日期（YYYY-MM-DD，可选）',
-                ),
-              ),
-              const SizedBox(height: 12),
-              SearchableDropdownFormField<String>(
-                initialValue: priority,
-                decoration: const InputDecoration(labelText: '优先级'),
-                items: const [
-                  DropdownMenuItem(value: 'low', child: Text('低')),
-                  DropdownMenuItem(value: 'normal', child: Text('普通')),
-                  DropdownMenuItem(value: 'high', child: Text('高')),
-                  DropdownMenuItem(value: 'urgent', child: Text('紧急')),
-                ],
-                onChanged: (value) =>
-                    setState(() => priority = value ?? 'normal'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: notesController,
-                decoration: const InputDecoration(labelText: '备注（可选）'),
-                maxLines: 3,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('取消'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('生成'),
-            ),
-          ],
-        ),
-      ),
+    final result = await showSalesOrderCreateWorkOrderDialog(
+      context,
+      initialDeliveryDate:
+          order.deliveryDate == null ? '' : _formatDate(order.deliveryDate),
     );
-    if (confirmed != true) {
-      quantityController.dispose();
-      deliveryController.dispose();
-      notesController.dispose();
-      return;
-    }
+    if (result == null) return;
 
     final payload = <String, dynamic>{
       'sales_order_id': order.id,
-      'priority': priority,
-      'notes': notesController.text.trim(),
+      'priority': result.priority,
+      'notes': result.notes,
     };
-    final quantityText = quantityController.text.trim();
+    final quantityText = result.quantityText;
     if (quantityText.isNotEmpty) {
       final quantity = int.tryParse(quantityText);
       if (quantity == null || quantity <= 0) {
         ToastUtil.showError('请输入正确的生产数量');
-        quantityController.dispose();
-        deliveryController.dispose();
-        notesController.dispose();
         return;
       }
       payload['production_quantity'] = quantity;
     }
-    final deliveryDate = deliveryController.text.trim();
+    final deliveryDate = result.deliveryDateText;
     if (deliveryDate.isNotEmpty) {
       payload['delivery_date'] = deliveryDate;
     }
@@ -511,33 +282,15 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
       ToastUtil.showSuccess('施工单已生成');
       await viewModel.loadSalesOrders(resetPage: false);
       if (workOrderId != null && mounted) {
-        final goToDetail = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('查看施工单'),
-            content: const Text('施工单已生成，是否立即查看？'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('稍后'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('查看'),
-              ),
-            ],
-          ),
+        final goToDetail = await showSalesOrderNavigateToWorkOrderDialog(
+          context,
         );
-        if (goToDetail == true && mounted) {
+        if (goToDetail && mounted) {
           context.go('/workorders/$workOrderId');
         }
       }
     } catch (err) {
       ToastUtil.showError('生成失败: $err');
-    } finally {
-      quantityController.dispose();
-      deliveryController.dispose();
-      notesController.dispose();
     }
   }
 

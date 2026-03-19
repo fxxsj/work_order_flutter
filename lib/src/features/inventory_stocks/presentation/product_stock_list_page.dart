@@ -19,9 +19,11 @@ import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/inventory_stocks/application/product_stock_view_model.dart';
 import 'package:work_order_app/src/features/inventory_stocks/data/product_stock_api_service.dart';
+import 'package:work_order_app/src/features/inventory_stocks/data/product_stock_support_service.dart';
 import 'package:work_order_app/src/features/inventory_stocks/data/product_stock_repository_impl.dart';
 import 'package:work_order_app/src/features/inventory_stocks/domain/product_stock.dart';
 import 'package:work_order_app/src/features/inventory_stocks/domain/product_stock_repository.dart';
+import 'package:work_order_app/src/features/inventory_stocks/presentation/widgets/product_stock_dialogs.dart';
 
 /// 成品库存列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
 class ProductStockListEntry extends StatelessWidget {
@@ -91,6 +93,13 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
   bool _expiredLoading = false;
   List<ProductStock> _lowStockList = [];
   List<ProductStock> _expiredList = [];
+  ProductStockSupportService? _supportService;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _supportService ??= ProductStockSupportService(context.read<ApiClient>());
+  }
 
   @override
   void dispose() {
@@ -114,14 +123,12 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
   }
 
   Future<void> _openLowStockDialog() async {
-    final apiService = context.read<ProductStockApiService>();
     setState(() {
       _lowStockLoading = true;
       _lowStockList = [];
     });
     try {
-      final response = await apiService.fetchLowStock();
-      final list = _parseStockList(response);
+      final list = await _supportService!.fetchLowStock();
       if (!mounted) return;
       setState(() => _lowStockList = list);
     } catch (err) {
@@ -133,35 +140,23 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     }
 
     if (!mounted) return;
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text(_lowStockTitle),
-        content: SizedBox(
-          width: 640,
-          child: _lowStockLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _buildStockDialogList(_lowStockList, highlightLowStock: true),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text(_cancelText),
-          ),
-        ],
-      ),
+    await showProductStockListDialog(
+      context,
+      title: _lowStockTitle,
+      closeText: _cancelText,
+      child: _lowStockLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _buildStockDialogList(_lowStockList, highlightLowStock: true),
     );
   }
 
   Future<void> _openExpiredDialog() async {
-    final apiService = context.read<ProductStockApiService>();
     setState(() {
       _expiredLoading = true;
       _expiredList = [];
     });
     try {
-      final response = await apiService.fetchExpired();
-      final list = _parseStockList(response);
+      final list = await _supportService!.fetchExpired();
       if (!mounted) return;
       setState(() => _expiredList = list);
     } catch (err) {
@@ -173,96 +168,70 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     }
 
     if (!mounted) return;
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text(_expiredTitle),
-        content: SizedBox(
-          width: 640,
-          child: _expiredLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _buildStockDialogList(_expiredList, highlightExpired: true),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text(_cancelText),
-          ),
-        ],
-      ),
+    await showProductStockListDialog(
+      context,
+      title: _expiredTitle,
+      closeText: _cancelText,
+      child: _expiredLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _buildStockDialogList(_expiredList, highlightExpired: true),
     );
   }
 
-  List<ProductStock> _parseStockList(Map<String, dynamic> response) {
-    final results = response['results'];
-    if (results is List) {
-      return results
-          .whereType<Map>()
-          .map((item) => ProductStock.fromJson(Map<String, dynamic>.from(item)))
-          .toList();
-    }
-    return [];
-  }
-
   Future<void> _openDetailDialog(ProductStock stock) async {
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text(_detailTitle),
-          content: SizedBox(
-            width: 640,
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _DetailRow(
-                      label: '产品名称', value: _displayText(stock.productName)),
-                  _DetailRow(
-                      label: '产品编码', value: _displayText(stock.productCode)),
-                  _DetailRow(label: '批次号', value: _displayText(stock.batchNo)),
-                  _DetailRow(
-                      label: '库存数量', value: _formatAmount(stock.quantity)),
-                  _DetailRow(
-                      label: '预留数量',
-                      value: _formatAmount(stock.reservedQuantity)),
-                  _DetailRow(
-                      label: '可用数量',
-                      value: _formatAmount(stock.availableQuantity)),
-                  _DetailRow(
-                    label: '最小库存',
-                    value: stock.minStockLevel?.toString() ?? _emptyCellText,
-                  ),
-                  _DetailRow(label: '库位', value: _displayText(stock.location)),
-                  _DetailRow(
-                      label: '生产日期', value: _formatDate(stock.productionDate)),
-                  _DetailRow(
-                      label: '到期日期', value: _formatDate(stock.expiryDate)),
-                  _DetailRow(
-                    label: '状态',
-                    value: _displayText(stock.statusDisplay ?? stock.status),
-                  ),
-                  _DetailRow(
-                      label: '单位成本', value: _formatAmount(stock.unitCost)),
-                  _DetailRow(
-                      label: '总价值', value: _formatAmount(stock.totalValue)),
-                  _DetailRow(
-                      label: '创建时间', value: _formatDate(stock.createdAt)),
-                  if ((stock.notes ?? '').trim().isNotEmpty)
-                    _DetailRow(
-                        label: '备注', value: stock.notes ?? _emptyCellText),
-                ],
-              ),
-            ),
+    await showProductStockDetailDialog(
+      context,
+      title: _detailTitle,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ProductStockDetailRow(
+            label: '产品名称',
+            value: _displayText(stock.productName),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text(_cancelText),
+          ProductStockDetailRow(
+            label: '产品编码',
+            value: _displayText(stock.productCode),
+          ),
+          ProductStockDetailRow(
+              label: '批次号', value: _displayText(stock.batchNo)),
+          ProductStockDetailRow(
+              label: '库存数量', value: _formatAmount(stock.quantity)),
+          ProductStockDetailRow(
+            label: '预留数量',
+            value: _formatAmount(stock.reservedQuantity),
+          ),
+          ProductStockDetailRow(
+            label: '可用数量',
+            value: _formatAmount(stock.availableQuantity),
+          ),
+          ProductStockDetailRow(
+            label: '最小库存',
+            value: stock.minStockLevel?.toString() ?? _emptyCellText,
+          ),
+          ProductStockDetailRow(
+              label: '库位', value: _displayText(stock.location)),
+          ProductStockDetailRow(
+              label: '生产日期', value: _formatDate(stock.productionDate)),
+          ProductStockDetailRow(
+              label: '到期日期', value: _formatDate(stock.expiryDate)),
+          ProductStockDetailRow(
+            label: '状态',
+            value: _displayText(stock.statusDisplay ?? stock.status),
+          ),
+          ProductStockDetailRow(
+              label: '单位成本', value: _formatAmount(stock.unitCost)),
+          ProductStockDetailRow(
+              label: '总价值', value: _formatAmount(stock.totalValue)),
+          ProductStockDetailRow(
+              label: '创建时间', value: _formatDate(stock.createdAt)),
+          if ((stock.notes ?? '').trim().isNotEmpty)
+            ProductStockDetailRow(
+              label: '备注',
+              value: stock.notes ?? _emptyCellText,
             ),
-          ],
-        );
-      },
+        ],
+      ),
     );
   }
 
@@ -271,128 +240,27 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     ProductStockViewModel viewModel,
     ProductStock stock,
   ) async {
-    final apiService = context.read<ProductStockApiService>();
-    final formKey = GlobalKey<FormState>();
-    final quantityController = TextEditingController();
-    final reasonController = TextEditingController();
-    String adjustType = 'add';
-    bool submitting = false;
-
-    Future<void> submit(StateSetter setState) async {
-      if (!(formKey.currentState?.validate() ?? false)) return;
-      final quantityText = quantityController.text.trim();
-      final quantity = double.tryParse(quantityText);
-      if (quantity == null) {
-        ToastUtil.showError('请输入有效数量');
-        return;
-      }
-      final reason = reasonController.text.trim();
-      setState(() => submitting = true);
-      try {
-        await apiService.adjustStock(stock.id, {
-          'adjust_type': adjustType,
-          'quantity': quantity,
-          'reason': reason,
-        });
-        if (!mounted) return;
-        Navigator.of(context).pop();
-        ToastUtil.showSuccess(_adjustSuccessText);
-        await viewModel.loadStocks(resetPage: false);
-      } catch (err) {
-        if (!mounted) return;
-        setState(() => submitting = false);
-        ToastUtil.showError('$_adjustErrorText$err');
-      }
-    }
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text(_adjustTitle),
-              content: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: SingleChildScrollView(
-                  child: Form(
-                    key: formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SearchableDropdownFormField<String>(
-                          key: ValueKey<String>(adjustType),
-                          initialValue: adjustType,
-                          decoration: const InputDecoration(labelText: '调整方式'),
-                          items: const [
-                            DropdownMenuItem(value: 'add', child: Text('增加库存')),
-                            DropdownMenuItem(
-                                value: 'subtract', child: Text('减少库存')),
-                            DropdownMenuItem(value: 'set', child: Text('设定库存')),
-                          ],
-                          onChanged: submitting
-                              ? null
-                              : (value) {
-                                  if (value == null) return;
-                                  setState(() => adjustType = value);
-                                },
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: quantityController,
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
-                          decoration: const InputDecoration(labelText: '调整数量'),
-                          validator: (value) {
-                            final text = value?.trim() ?? '';
-                            final parsed = double.tryParse(text);
-                            if (parsed == null) return '请输入有效数量';
-                            if (adjustType == 'set' && parsed < 0) {
-                              return '数量不能小于 0';
-                            }
-                            if (adjustType != 'set' && parsed <= 0) {
-                              return '数量必须大于 0';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: reasonController,
-                          maxLines: 3,
-                          decoration: const InputDecoration(labelText: '调整原因'),
-                          validator: (value) {
-                            if ((value?.trim() ?? '').isEmpty) {
-                              return '请输入调整原因';
-                            }
-                            return null;
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: submitting
-                      ? null
-                      : () => Navigator.of(dialogContext).pop(),
-                  child: const Text(_cancelText),
-                ),
-                FilledButton(
-                  onPressed: submitting ? null : () => submit(setState),
-                  child: Text(submitting ? '提交中...' : _adjustSubmitText),
-                ),
-              ],
-            );
-          },
-        );
-      },
+    final result = await showProductStockAdjustDialog(
+      context,
+      title: _adjustTitle,
+      submitText: _adjustSubmitText,
+      cancelText: _cancelText,
     );
-
-    quantityController.dispose();
-    reasonController.dispose();
+    if (result == null) return;
+    try {
+      await _supportService!.adjustStock(
+        stock.id,
+        adjustType: result.adjustType,
+        quantity: result.quantity,
+        reason: result.reason,
+      );
+      if (!mounted) return;
+      ToastUtil.showSuccess(_adjustSuccessText);
+      await viewModel.loadStocks(resetPage: false);
+    } catch (err) {
+      if (!mounted) return;
+      ToastUtil.showError('$_adjustErrorText$err');
+    }
   }
 
   static String _pageInfoText(ProductStockViewModel viewModel) {
@@ -549,7 +417,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
           backgroundColor: Theme.of(context).colorScheme.surface,
           shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
           builder: (sheetContext) {
-            return _FilterDrawerContent(
+            return ProductStockFilterDrawerContent(
               title: '筛选',
               child: _buildFilterPanel(
                 sheetContext,
@@ -579,7 +447,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
                 width: 360,
                 height: double.infinity,
                 child: SafeArea(
-                  child: _FilterDrawerContent(
+                  child: ProductStockFilterDrawerContent(
                     title: '筛选',
                     child: _buildFilterPanel(
                       dialogContext,
@@ -910,11 +778,11 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
                     spacing: 12,
                     runSpacing: 6,
                     children: [
-                      _InlineMeta(
+                      ProductStockInlineMeta(
                           label: '库存', value: qty, valueColor: valueColor),
-                      _InlineMeta(label: '可用', value: available),
-                      _InlineMeta(label: '到期', value: expiry),
-                      _InlineMeta(label: '剩余', value: daysText),
+                      ProductStockInlineMeta(label: '可用', value: available),
+                      ProductStockInlineMeta(label: '到期', value: expiry),
+                      ProductStockInlineMeta(label: '剩余', value: daysText),
                     ],
                   ),
                 ],
@@ -929,109 +797,3 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
 
 typedef _SummaryField = SummaryField;
 typedef _SummaryChip = SummaryChip;
-
-class _DetailRow extends StatelessWidget {
-  const _DetailRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 90,
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).hintColor,
-                  ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InlineMeta extends StatelessWidget {
-  const _InlineMeta({
-    required this.label,
-    required this.value,
-    this.valueColor,
-  });
-
-  final String label;
-  final String value;
-  final Color? valueColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          '$label ',
-          style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
-        ),
-        Text(
-          value,
-          style: theme.textTheme.bodySmall?.copyWith(color: valueColor),
-        ),
-      ],
-    );
-  }
-}
-
-class _FilterDrawerContent extends StatelessWidget {
-  const _FilterDrawerContent({
-    required this.title,
-    required this.child,
-  });
-
-  final String title;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              IconButton(
-                tooltip: '关闭',
-                onPressed: () => Navigator.of(context).maybePop(),
-                icon: const Icon(Icons.close),
-              ),
-            ],
-          ),
-        ),
-        const Divider(height: 1),
-        Expanded(child: child),
-      ],
-    );
-  }
-}
