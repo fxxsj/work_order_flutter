@@ -10,23 +10,20 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_s
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
-import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
-import 'package:work_order_app/src/features/customer/data/customer_dto.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/finance_statements/application/statement_view_model.dart';
 import 'package:work_order_app/src/features/finance_statements/data/statement_api_service.dart';
 import 'package:work_order_app/src/features/finance_statements/data/statement_repository_impl.dart';
+import 'package:work_order_app/src/features/finance_statements/data/statement_support_service.dart';
 import 'package:work_order_app/src/features/finance_statements/domain/statement.dart';
 import 'package:work_order_app/src/features/finance_statements/domain/statement_repository.dart';
-import 'package:work_order_app/src/features/suppliers/data/supplier_api_service.dart';
-import 'package:work_order_app/src/features/suppliers/data/supplier_dto.dart';
+import 'package:work_order_app/src/features/finance_statements/presentation/widgets/statement_list_dialogs.dart';
 import 'package:work_order_app/src/features/suppliers/domain/supplier.dart';
 
 /// 对账单列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
@@ -85,6 +82,13 @@ class _StatementListViewState extends State<_StatementListView> {
   bool _optionsLoaded = false;
   List<Customer> _customers = [];
   List<Supplier> _suppliers = [];
+  StatementSupportService? _supportService;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _supportService ??= StatementSupportService(context.read<ApiClient>());
+  }
 
   @override
   void dispose() {
@@ -110,19 +114,11 @@ class _StatementListViewState extends State<_StatementListView> {
     if (_optionsLoaded || _optionsLoading) return;
     setState(() => _optionsLoading = true);
     try {
-      final apiClient = context.read<ApiClient>();
-      final customerApi = CustomerApiService(apiClient);
-      final supplierApi = SupplierApiService(apiClient);
-      final results = await Future.wait([
-        customerApi.fetchCustomers(page: 1, pageSize: 200),
-        supplierApi.fetchSuppliers(page: 1, pageSize: 200),
-      ]);
-      final customerPage = results[0] as CustomerPageDto;
-      final supplierPage = results[1] as SupplierPageDto;
+      final options = await _supportService!.loadOptions();
       if (!mounted) return;
       setState(() {
-        _customers = customerPage.items.map((dto) => dto.toEntity()).toList();
-        _suppliers = supplierPage.items.map((dto) => dto.toEntity()).toList();
+        _customers = options.customers;
+        _suppliers = options.suppliers;
         _optionsLoaded = true;
       });
     } catch (err) {
@@ -139,445 +135,36 @@ class _StatementListViewState extends State<_StatementListView> {
       ToastUtil.showError('请先配置客户或供应商信息');
       return;
     }
-
-    final formKey = GlobalKey<FormState>();
-    final periodController = TextEditingController();
-    final startDateController = TextEditingController();
-    final endDateController = TextEditingController();
-    final openingBalanceController = TextEditingController(text: '0');
-    final notesController = TextEditingController();
-    String statementType = 'customer';
-    int? selectedCustomerId;
-    int? selectedSupplierId;
-    bool submitting = false;
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            Future<void> submit() async {
-              if (submitting) return;
-              if (!(formKey.currentState?.validate() ?? false)) {
-                return;
-              }
-              if (statementType == 'customer' && selectedCustomerId == null) {
-                ToastUtil.showError('请选择客户');
-                return;
-              }
-              if (statementType == 'supplier' && selectedSupplierId == null) {
-                ToastUtil.showError('请选择供应商');
-                return;
-              }
-              setState(() => submitting = true);
-              try {
-                final payload = <String, dynamic>{
-                  'statement_type': statementType,
-                  'period': periodController.text.trim(),
-                  'start_date': startDateController.text.trim(),
-                  'end_date': endDateController.text.trim(),
-                  'opening_balance':
-                      double.tryParse(openingBalanceController.text.trim()) ??
-                          0,
-                  'notes': notesController.text.trim(),
-                };
-                if (statementType == 'customer') {
-                  payload['customer'] = selectedCustomerId;
-                } else {
-                  payload['supplier'] = selectedSupplierId;
-                }
-
-                final apiService = context.read<StatementApiService>();
-                await apiService.createStatement(payload);
-                if (!mounted) return;
-                Navigator.of(dialogContext).pop();
-                ToastUtil.showSuccess('对账单已创建');
-                await viewModel.loadStatements(resetPage: false);
-              } catch (err) {
-                if (!mounted) return;
-                setState(() => submitting = false);
-                ToastUtil.showError('提交失败: $err');
-              }
-            }
-
-            final showCustomer = statementType == 'customer';
-
-            return AlertDialog(
-              title: const Text('新建对账单'),
-              content: SizedBox(
-                width: 720,
-                child: SingleChildScrollView(
-                  child: Form(
-                    key: formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SearchableDropdownFormField<String>(
-                          initialValue: statementType,
-                          decoration: const InputDecoration(
-                            labelText: '对账单类型',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: const [
-                            DropdownMenuItem(
-                              value: 'customer',
-                              child: Text('客户对账单'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'supplier',
-                              child: Text('供应商对账单'),
-                            ),
-                          ],
-                          onChanged: submitting
-                              ? null
-                              : (value) => setState(
-                                    () => statementType = value ?? 'customer',
-                                  ),
-                        ),
-                        const SizedBox(height: 12),
-                        if (showCustomer)
-                          SearchableDropdownFormField<int?>(
-                            initialValue: selectedCustomerId,
-                            decoration: const InputDecoration(
-                              labelText: '客户',
-                              border: OutlineInputBorder(),
-                            ),
-                            items: [
-                              const DropdownMenuItem<int?>(
-                                value: null,
-                                child: Text('请选择客户'),
-                              ),
-                              ..._customers.map(
-                                (customer) => DropdownMenuItem<int?>(
-                                  value: customer.id,
-                                  child: Text(customer.name),
-                                ),
-                              ),
-                            ],
-                            onChanged: submitting
-                                ? null
-                                : (value) => setState(
-                                      () => selectedCustomerId = value,
-                                    ),
-                          ),
-                        if (showCustomer) const SizedBox(height: 12),
-                        if (!showCustomer)
-                          SearchableDropdownFormField<int?>(
-                            initialValue: selectedSupplierId,
-                            decoration: const InputDecoration(
-                              labelText: '供应商',
-                              border: OutlineInputBorder(),
-                            ),
-                            items: [
-                              const DropdownMenuItem<int?>(
-                                value: null,
-                                child: Text('请选择供应商'),
-                              ),
-                              ..._suppliers.map(
-                                (supplier) => DropdownMenuItem<int?>(
-                                  value: supplier.id,
-                                  child: Text(supplier.name),
-                                ),
-                              ),
-                            ],
-                            onChanged: submitting
-                                ? null
-                                : (value) => setState(
-                                      () => selectedSupplierId = value,
-                                    ),
-                          ),
-                        if (!showCustomer) const SizedBox(height: 12),
-                        TextFormField(
-                          controller: periodController,
-                          decoration: const InputDecoration(
-                            labelText: '对账周期（YYYY-MM）',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) =>
-                              (value == null || value.trim().isEmpty)
-                                  ? '请输入对账周期'
-                                  : null,
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: startDateController,
-                          decoration: const InputDecoration(
-                            labelText: '开始日期（YYYY-MM-DD）',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) =>
-                              (value == null || value.trim().isEmpty)
-                                  ? '请输入开始日期'
-                                  : null,
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: endDateController,
-                          decoration: const InputDecoration(
-                            labelText: '结束日期（YYYY-MM-DD）',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) =>
-                              (value == null || value.trim().isEmpty)
-                                  ? '请输入结束日期'
-                                  : null,
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: openingBalanceController,
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
-                          decoration: const InputDecoration(
-                            labelText: '期初余额',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: notesController,
-                          decoration: const InputDecoration(
-                            labelText: '备注（可选）',
-                            border: OutlineInputBorder(),
-                          ),
-                          maxLines: 3,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: submitting
-                      ? null
-                      : () => Navigator.of(dialogContext).pop(),
-                  child: const Text('取消'),
-                ),
-                FilledButton(
-                  onPressed: submitting ? null : submit,
-                  child: Text(submitting ? '提交中' : '创建'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+    final result = await showStatementCreateDialog(
+      context,
+      customers: _customers,
+      suppliers: _suppliers,
     );
-
-    periodController.dispose();
-    startDateController.dispose();
-    endDateController.dispose();
-    openingBalanceController.dispose();
-    notesController.dispose();
+    if (result == null) return;
+    try {
+      await _supportService!.createStatement(result.payload);
+      ToastUtil.showSuccess('对账单已创建');
+      await viewModel.loadStatements(resetPage: false);
+    } catch (err) {
+      ToastUtil.showError('提交失败: $err');
+    }
   }
 
   Future<void> _openGenerateDialog() async {
     await _loadOptions();
-    final formKey = GlobalKey<FormState>();
-    final periodController = TextEditingController();
-    String statementType = 'customer';
-    int? selectedCustomerId;
-    int? selectedSupplierId;
-    bool submitting = false;
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            Future<void> submit() async {
-              if (submitting) return;
-              if (!(formKey.currentState?.validate() ?? false)) {
-                return;
-              }
-              if (statementType == 'customer' && selectedCustomerId == null) {
-                ToastUtil.showError('请选择客户');
-                return;
-              }
-              if (statementType == 'supplier' && selectedSupplierId == null) {
-                ToastUtil.showError('请选择供应商');
-                return;
-              }
-              setState(() => submitting = true);
-              try {
-                final params = <String, dynamic>{
-                  'period': periodController.text.trim(),
-                };
-                if (statementType == 'customer') {
-                  params['customer'] = selectedCustomerId;
-                } else {
-                  params['supplier'] = selectedSupplierId;
-                }
-                final apiService = context.read<StatementApiService>();
-                final result = await apiService.generate(params: params);
-                if (!mounted) return;
-                Navigator.of(dialogContext).pop();
-                await _showGenerateResult(result);
-              } catch (err) {
-                if (!mounted) return;
-                setState(() => submitting = false);
-                ToastUtil.showError('生成失败: $err');
-              }
-            }
-
-            final showCustomer = statementType == 'customer';
-
-            return AlertDialog(
-              title: const Text('生成对账数据'),
-              content: SizedBox(
-                width: 640,
-                child: SingleChildScrollView(
-                  child: Form(
-                    key: formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SearchableDropdownFormField<String>(
-                          initialValue: statementType,
-                          decoration: const InputDecoration(
-                            labelText: '对账单类型',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: const [
-                            DropdownMenuItem(
-                              value: 'customer',
-                              child: Text('客户对账单'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'supplier',
-                              child: Text('供应商对账单'),
-                            ),
-                          ],
-                          onChanged: submitting
-                              ? null
-                              : (value) => setState(
-                                    () => statementType = value ?? 'customer',
-                                  ),
-                        ),
-                        const SizedBox(height: 12),
-                        if (showCustomer)
-                          SearchableDropdownFormField<int?>(
-                            initialValue: selectedCustomerId,
-                            decoration: const InputDecoration(
-                              labelText: '客户',
-                              border: OutlineInputBorder(),
-                            ),
-                            items: [
-                              const DropdownMenuItem<int?>(
-                                value: null,
-                                child: Text('请选择客户'),
-                              ),
-                              ..._customers.map(
-                                (customer) => DropdownMenuItem<int?>(
-                                  value: customer.id,
-                                  child: Text(customer.name),
-                                ),
-                              ),
-                            ],
-                            onChanged: submitting
-                                ? null
-                                : (value) => setState(
-                                      () => selectedCustomerId = value,
-                                    ),
-                          ),
-                        if (showCustomer) const SizedBox(height: 12),
-                        if (!showCustomer)
-                          SearchableDropdownFormField<int?>(
-                            initialValue: selectedSupplierId,
-                            decoration: const InputDecoration(
-                              labelText: '供应商',
-                              border: OutlineInputBorder(),
-                            ),
-                            items: [
-                              const DropdownMenuItem<int?>(
-                                value: null,
-                                child: Text('请选择供应商'),
-                              ),
-                              ..._suppliers.map(
-                                (supplier) => DropdownMenuItem<int?>(
-                                  value: supplier.id,
-                                  child: Text(supplier.name),
-                                ),
-                              ),
-                            ],
-                            onChanged: submitting
-                                ? null
-                                : (value) => setState(
-                                      () => selectedSupplierId = value,
-                                    ),
-                          ),
-                        if (!showCustomer) const SizedBox(height: 12),
-                        TextFormField(
-                          controller: periodController,
-                          decoration: const InputDecoration(
-                            labelText: '对账周期（YYYY-MM）',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) =>
-                              (value == null || value.trim().isEmpty)
-                                  ? '请输入对账周期'
-                                  : null,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: submitting
-                      ? null
-                      : () => Navigator.of(dialogContext).pop(),
-                  child: const Text('取消'),
-                ),
-                FilledButton(
-                  onPressed: submitting ? null : submit,
-                  child: Text(submitting ? '生成中' : '生成'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+    final result = await showStatementGenerateDialog(
+      context,
+      customers: _customers,
+      suppliers: _suppliers,
     );
-
-    periodController.dispose();
-  }
-
-  Future<void> _showGenerateResult(Map<String, dynamic> result) async {
-    if (!mounted) return;
-    final data = result['data'] is Map<String, dynamic>
-        ? Map<String, dynamic>.from(result['data'])
-        : result;
-    final opening = data['opening_balance'] ?? '-';
-    final debit = data['total_debit'] ?? '-';
-    final credit = data['total_credit'] ?? '-';
-    final closing = data['closing_balance'] ?? '-';
-    await showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('对账数据预览'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('期初余额: $opening'),
-            const SizedBox(height: 6),
-            Text('本期借方: $debit'),
-            const SizedBox(height: 6),
-            Text('本期贷方: $credit'),
-            const SizedBox(height: 6),
-            Text('期末余额: $closing'),
-          ],
-        ),
-        actions: [
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('知道了'),
-          ),
-        ],
-      ),
-    );
+    if (result == null) return;
+    try {
+      final preview = await _supportService!.generate(result.params);
+      if (!mounted) return;
+      await showStatementGeneratePreviewDialog(context, result: preview);
+    } catch (err) {
+      ToastUtil.showError('生成失败: $err');
+    }
   }
 
   Future<void> _confirmStatement(
@@ -585,44 +172,21 @@ class _StatementListViewState extends State<_StatementListView> {
     Statement statement, {
     required bool confirmed,
   }) async {
-    final notesController = TextEditingController();
-    final confirmedResult = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(confirmed ? '确认对账单' : '标记为有异议'),
-        content: TextField(
-          controller: notesController,
-          decoration: const InputDecoration(labelText: '备注（可选）'),
-          maxLines: 3,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(confirmed ? '确认' : '提交'),
-          ),
-        ],
-      ),
+    final notes = await showStatementConfirmDialog(
+      context,
+      confirmed: confirmed,
     );
-    if (confirmedResult != true) {
-      notesController.dispose();
-      return;
-    }
+    if (notes == null) return;
     try {
-      final apiService = context.read<StatementApiService>();
-      await apiService.confirm(statement.id, {
-        'confirmed': confirmed,
-        'confirmation_notes': notesController.text.trim(),
-      });
+      await _supportService!.confirmStatement(
+        statement.id,
+        confirmed: confirmed,
+        notes: notes,
+      );
       ToastUtil.showSuccess(confirmed ? '已确认' : '已标记为有异议');
       await viewModel.loadStatements(resetPage: false);
     } catch (err) {
       ToastUtil.showError('操作失败: $err');
-    } finally {
-      notesController.dispose();
     }
   }
 

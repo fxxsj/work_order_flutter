@@ -9,27 +9,22 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_tab
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
-import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
-import 'package:work_order_app/src/features/customer/data/customer_dto.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/finance_payments/application/payment_view_model.dart';
 import 'package:work_order_app/src/features/finance_payments/data/payment_api_service.dart';
 import 'package:work_order_app/src/features/finance_payments/data/payment_repository_impl.dart';
+import 'package:work_order_app/src/features/finance_payments/data/payment_support_service.dart';
 import 'package:work_order_app/src/features/finance_payments/domain/payment.dart';
 import 'package:work_order_app/src/features/finance_payments/domain/payment_repository.dart';
-import 'package:work_order_app/src/features/finance_invoices/data/invoice_api_service.dart';
-import 'package:work_order_app/src/features/finance_invoices/data/invoice_dto.dart';
 import 'package:work_order_app/src/features/finance_invoices/domain/invoice.dart';
-import 'package:work_order_app/src/features/sales_orders/data/sales_order_api_service.dart';
-import 'package:work_order_app/src/features/sales_orders/data/sales_order_dto.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order.dart';
+import 'package:work_order_app/src/features/finance_payments/presentation/widgets/payment_list_dialogs.dart';
 
 /// 收款列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
 class PaymentListEntry extends StatelessWidget {
@@ -86,6 +81,13 @@ class _PaymentListViewState extends State<_PaymentListView> {
   List<Customer> _customers = [];
   List<SalesOrder> _salesOrders = [];
   List<Invoice> _invoices = [];
+  PaymentSupportService? _supportService;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _supportService ??= PaymentSupportService(context.read<ApiClient>());
+  }
 
   @override
   void dispose() {
@@ -111,23 +113,12 @@ class _PaymentListViewState extends State<_PaymentListView> {
     if (_optionsLoaded || _optionsLoading) return;
     setState(() => _optionsLoading = true);
     try {
-      final apiClient = context.read<ApiClient>();
-      final customerApi = CustomerApiService(apiClient);
-      final salesApi = SalesOrderApiService(apiClient);
-      final invoiceApi = InvoiceApiService(apiClient);
-      final results = await Future.wait([
-        customerApi.fetchCustomers(page: 1, pageSize: 200),
-        salesApi.fetchSalesOrders(page: 1, pageSize: 200),
-        invoiceApi.fetchInvoices(page: 1, pageSize: 200),
-      ]);
-      final customerPage = results[0] as CustomerPageDto;
-      final salesPage = results[1] as SalesOrderPageDto;
-      final invoicePage = results[2] as InvoicePageDto;
+      final options = await _supportService!.loadOptions();
       if (!mounted) return;
       setState(() {
-        _customers = customerPage.items.map((dto) => dto.toEntity()).toList();
-        _salesOrders = salesPage.items.map((dto) => dto.toEntity()).toList();
-        _invoices = invoicePage.items.map((dto) => dto.toEntity()).toList();
+        _customers = options.customers;
+        _salesOrders = options.salesOrders;
+        _invoices = options.invoices;
         _optionsLoaded = true;
       });
     } catch (err) {
@@ -144,253 +135,20 @@ class _PaymentListViewState extends State<_PaymentListView> {
       ToastUtil.showError('请先配置客户信息');
       return;
     }
-
-    final formKey = GlobalKey<FormState>();
-    final amountController = TextEditingController();
-    final paymentDateController = TextEditingController();
-    final bankController = TextEditingController();
-    final transactionController = TextEditingController();
-    final notesController = TextEditingController();
-    String paymentMethod = 'transfer';
-    int? selectedCustomerId;
-    int? selectedSalesOrderId;
-    int? selectedInvoiceId;
-    bool submitting = false;
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            Future<void> submit() async {
-              if (submitting) return;
-              if (!(formKey.currentState?.validate() ?? false)) {
-                return;
-              }
-              final amountText = amountController.text.trim();
-              final amount = double.tryParse(amountText);
-              if (amount == null || amount <= 0) {
-                ToastUtil.showError('请输入正确的金额');
-                return;
-              }
-              if (selectedCustomerId == null) {
-                ToastUtil.showError('请选择客户');
-                return;
-              }
-
-              setState(() => submitting = true);
-              try {
-                final payload = <String, dynamic>{
-                  'customer': selectedCustomerId,
-                  'amount': amount,
-                  'payment_method': paymentMethod,
-                  'payment_date': paymentDateController.text.trim(),
-                  'bank_account': bankController.text.trim(),
-                  'transaction_number': transactionController.text.trim(),
-                  'notes': notesController.text.trim(),
-                };
-                if (selectedSalesOrderId != null) {
-                  payload['sales_order'] = selectedSalesOrderId;
-                }
-                if (selectedInvoiceId != null) {
-                  payload['invoice'] = selectedInvoiceId;
-                }
-
-                final apiService = context.read<PaymentApiService>();
-                await apiService.createPayment(payload);
-                if (!mounted) return;
-                Navigator.of(dialogContext).pop();
-                ToastUtil.showSuccess('收款已登记');
-                await viewModel.loadPayments(resetPage: false);
-              } catch (err) {
-                if (!mounted) return;
-                setState(() => submitting = false);
-                ToastUtil.showError('提交失败: $err');
-              }
-            }
-
-            return AlertDialog(
-              title: const Text('新建收款'),
-              content: SizedBox(
-                width: 720,
-                child: SingleChildScrollView(
-                  child: Form(
-                    key: formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SearchableDropdownFormField<int?>(
-                          initialValue: selectedCustomerId,
-                          decoration: const InputDecoration(
-                            labelText: '客户',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: [
-                            const DropdownMenuItem<int?>(
-                              value: null,
-                              child: Text('请选择客户'),
-                            ),
-                            ..._customers.map(
-                              (customer) => DropdownMenuItem<int?>(
-                                value: customer.id,
-                                child: Text(customer.name),
-                              ),
-                            ),
-                          ],
-                          onChanged: submitting
-                              ? null
-                              : (value) => setState(
-                                    () => selectedCustomerId = value,
-                                  ),
-                          validator: (value) => value == null ? '请选择客户' : null,
-                        ),
-                        const SizedBox(height: 12),
-                        SearchableDropdownFormField<int?>(
-                          initialValue: selectedSalesOrderId,
-                          decoration: const InputDecoration(
-                            labelText: '关联销售订单（可选）',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: [
-                            const DropdownMenuItem<int?>(
-                              value: null,
-                              child: Text('不关联销售订单'),
-                            ),
-                            ..._salesOrders.map(
-                              (order) => DropdownMenuItem<int?>(
-                                value: order.id,
-                                child: Text(order.orderNumber),
-                              ),
-                            ),
-                          ],
-                          onChanged: submitting
-                              ? null
-                              : (value) => setState(
-                                    () => selectedSalesOrderId = value,
-                                  ),
-                        ),
-                        const SizedBox(height: 12),
-                        SearchableDropdownFormField<int?>(
-                          initialValue: selectedInvoiceId,
-                          decoration: const InputDecoration(
-                            labelText: '关联发票（可选）',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: [
-                            const DropdownMenuItem<int?>(
-                              value: null,
-                              child: Text('不关联发票'),
-                            ),
-                            ..._invoices.map(
-                              (invoice) => DropdownMenuItem<int?>(
-                                value: invoice.id,
-                                child: Text(invoice.invoiceNumber ??
-                                    '发票 #${invoice.id}'),
-                              ),
-                            ),
-                          ],
-                          onChanged: submitting
-                              ? null
-                              : (value) => setState(
-                                    () => selectedInvoiceId = value,
-                                  ),
-                        ),
-                        const SizedBox(height: 12),
-                        SearchableDropdownFormField<String>(
-                          initialValue: paymentMethod,
-                          decoration: const InputDecoration(
-                            labelText: '收款方式',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: const [
-                            DropdownMenuItem(value: 'cash', child: Text('现金')),
-                            DropdownMenuItem(
-                                value: 'transfer', child: Text('转账')),
-                            DropdownMenuItem(value: 'check', child: Text('支票')),
-                            DropdownMenuItem(
-                                value: 'acceptance', child: Text('承兑汇票')),
-                          ],
-                          onChanged: submitting
-                              ? null
-                              : (value) => setState(
-                                    () => paymentMethod = value ?? 'transfer',
-                                  ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: amountController,
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
-                          decoration: const InputDecoration(
-                            labelText: '收款金额',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) =>
-                              (value == null || value.trim().isEmpty)
-                                  ? '请输入金额'
-                                  : null,
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: paymentDateController,
-                          decoration: const InputDecoration(
-                            labelText: '收款日期（YYYY-MM-DD）',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: bankController,
-                          decoration: const InputDecoration(
-                            labelText: '收款账户（可选）',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: transactionController,
-                          decoration: const InputDecoration(
-                            labelText: '交易流水号（可选）',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: notesController,
-                          decoration: const InputDecoration(
-                            labelText: '备注（可选）',
-                            border: OutlineInputBorder(),
-                          ),
-                          maxLines: 3,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: submitting
-                      ? null
-                      : () => Navigator.of(dialogContext).pop(),
-                  child: const Text('取消'),
-                ),
-                FilledButton(
-                  onPressed: submitting ? null : submit,
-                  child: Text(submitting ? '提交中' : '创建'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+    final result = await showPaymentCreateDialog(
+      context,
+      customers: _customers,
+      salesOrders: _salesOrders,
+      invoices: _invoices,
     );
-
-    amountController.dispose();
-    paymentDateController.dispose();
-    bankController.dispose();
-    transactionController.dispose();
-    notesController.dispose();
+    if (result == null) return;
+    try {
+      await _supportService!.createPayment(result.payload);
+      ToastUtil.showSuccess('收款已登记');
+      await viewModel.loadPayments(resetPage: false);
+    } catch (err) {
+      ToastUtil.showError('提交失败: $err');
+    }
   }
 
   static String _pageInfoText(PaymentViewModel viewModel) {
