@@ -14,16 +14,15 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widg
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
-import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
 import 'package:work_order_app/src/features/departments/domain/department.dart';
-import 'package:work_order_app/src/features/processes/data/process_api_service.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/tasks/application/task_assignment_rule_view_model.dart';
 import 'package:work_order_app/src/features/tasks/data/task_assignment_rule_api_service.dart';
-import 'package:work_order_app/src/features/tasks/data/task_assignment_rule_dto.dart';
+import 'package:work_order_app/src/features/tasks/data/task_assignment_rule_support_service.dart';
 import 'package:work_order_app/src/features/tasks/data/task_assignment_rule_repository_impl.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_assignment_rule.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_assignment_rule_repository.dart';
+import 'package:work_order_app/src/features/tasks/presentation/widgets/task_assignment_rule_sections.dart';
 
 class TaskAssignmentRuleEntry extends StatelessWidget {
   const TaskAssignmentRuleEntry({super.key});
@@ -83,10 +82,16 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
   bool _globalEnabled = true;
   List<TaskAssignmentRule>? _reorderPreview;
   bool _reordering = false;
+  TaskAssignmentRuleSupportService? _supportService;
+  bool _setupRequested = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _supportService ??=
+        TaskAssignmentRuleSupportService(context.read<ApiClient>());
+    if (_setupRequested) return;
+    _setupRequested = true;
     _loadLookup();
     _loadPreview();
     _loadGlobalState();
@@ -101,18 +106,11 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
 
   Future<void> _loadLookup() async {
     try {
-      final apiClient = context.read<ApiClient>();
-      final processApi = ProcessApiService(apiClient);
-      final deptApi = DepartmentApiService(apiClient);
-      final processPage =
-          await processApi.fetchProcesses(page: 1, pageSize: 200);
-      final departmentPage =
-          await deptApi.fetchDepartments(page: 1, pageSize: 200);
+      final lookup = await _supportService!.loadLookup();
       if (!mounted) return;
       setState(() {
-        _processes = processPage.items.map((dto) => dto.toEntity()).toList();
-        _departments =
-            departmentPage.items.map((dto) => dto.toEntity()).toList();
+        _processes = lookup.processes;
+        _departments = lookup.departments;
       });
     } catch (_) {
       // ignore
@@ -122,20 +120,12 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
   Future<void> _loadPreview() async {
     setState(() => _previewLoading = true);
     try {
-      final api = context.read<TaskAssignmentRuleApiService>();
-      final payload = await api.preview();
-      final preview = payload['preview'];
+      final previewData = await _supportService!.loadPreview();
       if (!mounted) return;
       setState(() {
-        _previewData = preview is List
-            ? preview
-                .whereType<Map>()
-                .map((item) => Map<String, dynamic>.from(item))
-                .toList()
-            : [];
-        final enabled = payload['global_enabled'];
-        if (enabled is bool) {
-          _globalEnabled = enabled;
+        _previewData = previewData.previewItems;
+        if (previewData.globalEnabled != null) {
+          _globalEnabled = previewData.globalEnabled!;
         }
       });
     } catch (err) {
@@ -148,12 +138,9 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
 
   Future<void> _loadGlobalState() async {
     try {
-      final api = context.read<TaskAssignmentRuleApiService>();
-      final payload = await api.getGlobalState();
+      final enabled = await _supportService!.getGlobalState();
       if (!mounted) return;
-      setState(() {
-        _globalEnabled = payload['enabled'] == true;
-      });
+      setState(() => _globalEnabled = enabled);
     } catch (_) {
       // ignore
     }
@@ -162,9 +149,8 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
   Future<void> _toggleGlobal(bool value) async {
     setState(() => _globalEnabled = value);
     try {
-      final api = context.read<TaskAssignmentRuleApiService>();
-      final payload = await api.setGlobalState(value);
-      setState(() => _globalEnabled = payload['enabled'] == true);
+      final enabled = await _supportService!.setGlobalState(value);
+      setState(() => _globalEnabled = enabled);
       ToastUtil.showSuccess(_globalEnabled ? '自动分派已启用' : '自动分派已禁用');
       _loadPreview();
     } catch (err) {
@@ -287,7 +273,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
               shape:
                   const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
               builder: (sheetContext) {
-                return _FilterDrawerContent(
+                return TaskAssignmentRuleFilterDrawerContent(
                   title: activeCount > 0 ? '筛选 ($activeCount)' : '筛选',
                   child: _buildFilterPanel(
                     sheetContext,
@@ -319,7 +305,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
                     width: 360,
                     height: double.infinity,
                     child: SafeArea(
-                      child: _FilterDrawerContent(
+                      child: TaskAssignmentRuleFilterDrawerContent(
                         title: activeCount > 0 ? '筛选 ($activeCount)' : '筛选',
                         child: _buildFilterPanel(
                           dialogContext,
@@ -506,7 +492,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
                     return Padding(
                       key: ValueKey(rule.id),
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: _RuleCard(
+                      child: TaskAssignmentRuleCard(
                         rule: rule,
                         onEdit: _reordering
                             ? null
@@ -541,7 +527,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
                     ...displayedRules.map(
                       (rule) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: _RuleCard(
+                        child: TaskAssignmentRuleCard(
                           rule: rule,
                           onEdit: () =>
                               _openRuleDialog(context, viewModel, rule),
@@ -618,21 +604,10 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
 
   Future<void> _deleteRule(
       TaskAssignmentRuleViewModel viewModel, TaskAssignmentRule rule) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('确认删除'),
-        content: Text(
-            '确定要删除 ${rule.processName ?? '工序'} - ${rule.departmentName ?? '部门'} 规则吗？'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('取消')),
-          TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('删除')),
-        ],
-      ),
+    final confirmed = await showTaskAssignmentRuleDeleteDialog(
+      context,
+      content:
+          '确定要删除 ${rule.processName ?? '工序'} - ${rule.departmentName ?? '部门'} 规则吗？',
     );
     if (confirmed != true) return;
     try {
@@ -671,7 +646,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
     }
     await showDialog<void>(
       context: context,
-      builder: (context) => _RuleDialog(
+      builder: (context) => TaskAssignmentRuleDialog(
         rule: rule,
         processes: _processes,
         departments: _departments,
@@ -754,275 +729,5 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
         .replaceFirst('{page}', viewModel.page.toString())
         .replaceFirst('{total}', viewModel.totalPages.toString())
         .replaceFirst('{count}', viewModel.total.toString());
-  }
-}
-
-class _RuleDialog extends StatefulWidget {
-  const _RuleDialog({
-    required this.rule,
-    required this.processes,
-    required this.departments,
-    required this.onSubmit,
-  });
-
-  final TaskAssignmentRule? rule;
-  final List<Process> processes;
-  final List<Department> departments;
-  final Future<void> Function(TaskAssignmentRuleDto payload) onSubmit;
-
-  @override
-  State<_RuleDialog> createState() => _RuleDialogState();
-}
-
-class _RuleDialogState extends State<_RuleDialog> {
-  final _formKey = GlobalKey<FormState>();
-  late int _processId;
-  late int _departmentId;
-  int _priority = 50;
-  bool _isActive = true;
-  String _strategy = 'least_tasks';
-  String _notes = '';
-  bool _submitting = false;
-
-  @override
-  void initState() {
-    super.initState();
-    final rule = widget.rule;
-    _processId = rule?.processId ?? widget.processes.first.id;
-    _departmentId = rule?.departmentId ?? widget.departments.first.id;
-    _priority = rule?.priority ?? 50;
-    _isActive = rule?.isActive ?? true;
-    _strategy = rule?.operatorSelectionStrategy ?? 'least_tasks';
-    _notes = rule?.notes ?? '';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isEdit = widget.rule != null;
-    return AlertDialog(
-      title: Text(isEdit ? '编辑分派规则' : '新建分派规则'),
-      content: SizedBox(
-        width: 420,
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                SearchableDropdownFormField<int>(
-                  key: ValueKey<int>(_processId),
-                  initialValue: _processId,
-                  decoration: const InputDecoration(labelText: '工序'),
-                  items: widget.processes
-                      .map((p) => DropdownMenuItem(
-                            value: p.id,
-                            child: Text('${p.code} ${p.name}'),
-                          ))
-                      .toList(),
-                  onChanged: isEdit
-                      ? null
-                      : (value) =>
-                          setState(() => _processId = value ?? _processId),
-                ),
-                const SizedBox(height: 12),
-                SearchableDropdownFormField<int>(
-                  key: ValueKey<int>(_departmentId),
-                  initialValue: _departmentId,
-                  decoration: const InputDecoration(labelText: '分派部门'),
-                  items: widget.departments
-                      .map((d) => DropdownMenuItem(
-                            value: d.id,
-                            child: Text(d.name),
-                          ))
-                      .toList(),
-                  onChanged: isEdit
-                      ? null
-                      : (value) => setState(
-                          () => _departmentId = value ?? _departmentId),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  initialValue: _priority.toString(),
-                  decoration: const InputDecoration(labelText: '优先级 (0-100)'),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    final parsed = int.tryParse(value ?? '');
-                    if (parsed == null || parsed < 0 || parsed > 100) {
-                      return '请输入 0-100 的整数';
-                    }
-                    return null;
-                  },
-                  onChanged: (value) =>
-                      _priority = int.tryParse(value) ?? _priority,
-                ),
-                const SizedBox(height: 12),
-                SearchableDropdownFormField<String>(
-                  key: ValueKey<String>(_strategy),
-                  initialValue: _strategy,
-                  decoration: const InputDecoration(labelText: '操作员选择策略'),
-                  items: const [
-                    DropdownMenuItem(value: 'least_tasks', child: Text('任务最少')),
-                    DropdownMenuItem(value: 'random', child: Text('随机选择')),
-                    DropdownMenuItem(value: 'round_robin', child: Text('轮询分配')),
-                    DropdownMenuItem(
-                        value: 'first_available', child: Text('第一个可用')),
-                  ],
-                  onChanged: (value) =>
-                      setState(() => _strategy = value ?? _strategy),
-                ),
-                const SizedBox(height: 12),
-                SwitchListTile(
-                  value: _isActive,
-                  onChanged: (value) => setState(() => _isActive = value),
-                  title: const Text('启用规则'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-                TextFormField(
-                  initialValue: _notes,
-                  decoration: const InputDecoration(labelText: '备注（可选）'),
-                  onChanged: (value) => _notes = value,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-            onPressed: _submitting ? null : () => Navigator.of(context).pop(),
-            child: const Text('取消')),
-        FilledButton(
-          onPressed: _submitting ? null : _submit,
-          child: _submitting
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2))
-              : const Text('保存'),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _submit() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
-    setState(() => _submitting = true);
-    final payload = TaskAssignmentRuleDto(
-      id: widget.rule?.id ?? 0,
-      processId: _processId,
-      departmentId: _departmentId,
-      priority: _priority,
-      operatorSelectionStrategy: _strategy,
-      isActive: _isActive,
-      notes: _notes,
-    );
-    try {
-      await widget.onSubmit(payload);
-      if (mounted) Navigator.of(context).pop();
-    } catch (_) {
-      // keep dialog open on failure
-    } finally {
-      if (mounted) setState(() => _submitting = false);
-    }
-  }
-}
-
-class _RuleCard extends StatelessWidget {
-  const _RuleCard({
-    required this.rule,
-    required this.onEdit,
-    required this.onDelete,
-    required this.onToggle,
-    this.dragHandle,
-  });
-
-  final TaskAssignmentRule rule;
-  final VoidCallback? onEdit;
-  final VoidCallback? onDelete;
-  final ValueChanged<bool>? onToggle;
-  final Widget? dragHandle;
-
-  @override
-  Widget build(BuildContext context) {
-    final subtitle = '${rule.processCode ?? ''} · ${rule.departmentName ?? ''}';
-    return DetailSectionCard(
-      title: rule.processName ?? '未命名工序',
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (dragHandle != null) ...[
-            dragHandle!,
-            const SizedBox(width: 4),
-          ],
-          Switch(value: rule.isActive, onChanged: onToggle),
-          IconButton(onPressed: onEdit, icon: const Icon(Icons.edit)),
-          IconButton(
-              onPressed: onDelete, icon: const Icon(Icons.delete_outline)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(subtitle),
-          const SizedBox(height: 8),
-          SummaryFieldWrap(
-            isMobile: BreakpointsUtil.isMobile(context),
-            children: [
-              SummaryField(label: '优先级', value: rule.priority.toString()),
-              SummaryField(
-                label: '操作员策略',
-                value: rule.operatorSelectionStrategyDisplay ??
-                    rule.operatorSelectionStrategy,
-              ),
-              SummaryField(label: '部门编码', value: rule.departmentCode ?? '-'),
-              SummaryField(
-                  label: '备注',
-                  value: rule.notes?.isNotEmpty == true ? rule.notes! : '-'),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FilterDrawerContent extends StatelessWidget {
-  const _FilterDrawerContent({
-    required this.title,
-    required this.child,
-  });
-
-  final String title;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              IconButton(
-                tooltip: '关闭',
-                onPressed: () => Navigator.of(context).maybePop(),
-                icon: const Icon(Icons.close),
-              ),
-            ],
-          ),
-        ),
-        const Divider(height: 1),
-        Expanded(child: child),
-      ],
-    );
   }
 }

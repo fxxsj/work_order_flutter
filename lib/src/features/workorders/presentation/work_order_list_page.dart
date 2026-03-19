@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -20,19 +19,16 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_d
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/file_download.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
-import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
-import 'package:work_order_app/src/features/customer/data/customer_dto.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
-import 'package:work_order_app/src/features/processes/data/process_api_service.dart';
-import 'package:work_order_app/src/features/processes/data/process_dto.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
-import 'package:work_order_app/src/features/products/data/product_api_service.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/workorders/application/work_order_view_model.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
+import 'package:work_order_app/src/features/workorders/data/work_order_list_support_service.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_repository_impl.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
+import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_list_sections.dart';
 
 /// 施工单列表入口。
 class WorkOrderListEntry extends StatelessWidget {
@@ -103,10 +99,15 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
   List<ProductOption> _products = [];
   List<Process> _processes = [];
   bool _exporting = false;
+  WorkOrderListSupportService? _supportService;
+  bool _optionsRequested = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _supportService ??= WorkOrderListSupportService(context.read<ApiClient>());
+    if (_optionsRequested) return;
+    _optionsRequested = true;
     _loadFilterOptions();
   }
 
@@ -157,7 +158,6 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     if (_exporting) return;
     setState(() => _exporting = true);
     try {
-      final apiService = context.read<WorkOrderApiService>();
       final params = <String, dynamic>{
         if (_searchController.text.trim().isNotEmpty)
           'search': _searchController.text.trim(),
@@ -177,23 +177,8 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
         if ((viewModel.processFilterId ?? 0) > 0)
           'process': viewModel.processFilterId,
       };
-      final response = await apiService.export(params: params);
-      final data = response.data;
-      if (data == null) {
-        ToastUtil.showError('导出失败: 返回内容为空');
-        return;
-      }
-      final bytes = data is Uint8List
-          ? data
-          : data is List<int>
-              ? Uint8List.fromList(data)
-              : null;
-      if (bytes == null) {
-        ToastUtil.showError('导出失败: 返回格式不支持');
-        return;
-      }
-      final filename = _resolveExportFilename(response, fallback: '施工单列表');
-      final savedPath = await saveBytes(bytes, filename,
+      final result = await _supportService!.export(params);
+      final savedPath = await saveBytes(result.bytes, result.filename,
           mimeType:
               'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       if (savedPath == null) {
@@ -208,52 +193,15 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     }
   }
 
-  String _resolveExportFilename(
-    dynamic response, {
-    required String fallback,
-  }) {
-    final timestamp =
-        DateTime.now().toIso8601String().replaceAll(':', '').split('.').first;
-    try {
-      final headers = response.headers;
-      final contentDisposition = headers.value('content-disposition') ??
-          headers.value('Content-Disposition');
-      if (contentDisposition != null) {
-        final match =
-            RegExp('filename=\"?([^\";]+)\"?').firstMatch(contentDisposition);
-        if (match != null) {
-          return match.group(1) ?? '${fallback}_$timestamp.xlsx';
-        }
-      }
-    } catch (_) {
-      // ignore header parsing errors
-    }
-    return '${fallback}_$timestamp.xlsx';
-  }
-
   Future<void> _loadFilterOptions() async {
     setState(() => _loadingOptions = true);
     try {
-      final apiClient = context.read<ApiClient>();
-      final customerApi = CustomerApiService(apiClient);
-      final productApi = ProductApiService(apiClient);
-      final processApi = ProcessApiService(apiClient);
-      final results = await Future.wait([
-        customerApi.fetchCustomers(page: 1, pageSize: 200),
-        productApi.fetchProducts(pageSize: 200, isActive: true),
-        processApi.fetchProcesses(page: 1, pageSize: 200),
-      ]);
-      final customerPage = results[0] as CustomerPageDto;
-      final productOptions = results[1] as List<ProductOption>;
-      final processPage = results[2] as ProcessPageDto;
+      final options = await _supportService!.loadFilterOptions();
       if (!mounted) return;
       setState(() {
-        _customers = customerPage.items
-            .map<Customer>((item) => item.toEntity())
-            .toList();
-        _products = productOptions;
-        _processes =
-            processPage.items.map<Process>((item) => item.toEntity()).toList();
+        _customers = options.customers;
+        _products = options.products;
+        _processes = options.processes;
       });
     } catch (err) {
       ToastUtil.showError('加载筛选项失败: $err');
@@ -642,7 +590,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
           backgroundColor: Theme.of(context).colorScheme.surface,
           shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
           builder: (sheetContext) {
-            return _FilterDrawerContent(
+            return WorkOrderListFilterDrawerContent(
               title: '筛选',
               child: _buildFilterPanel(
                 sheetContext,
@@ -678,7 +626,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
                 width: 360,
                 height: double.infinity,
                 child: SafeArea(
-                  child: _FilterDrawerContent(
+                  child: WorkOrderListFilterDrawerContent(
                     title: '筛选',
                     child: _buildFilterPanel(
                       dialogContext,
@@ -890,21 +838,11 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     WorkOrderViewModel viewModel,
     WorkOrder workOrder,
   ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(_deleteDialogTitle),
-        content: Text(
-            _deleteDialogContent.replaceFirst('{name}', workOrder.orderNumber)),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('取消')),
-          FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('删除')),
-        ],
-      ),
+    final confirmed = await showWorkOrderDeleteConfirmDialog(
+      context,
+      title: _deleteDialogTitle,
+      content:
+          _deleteDialogContent.replaceFirst('{name}', workOrder.orderNumber),
     );
     if (confirmed != true) return;
     await viewModel
@@ -935,45 +873,3 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
 
 typedef _SummaryField = SummaryField;
 typedef _SummaryChip = SummaryChip;
-
-class _FilterDrawerContent extends StatelessWidget {
-  const _FilterDrawerContent({
-    required this.title,
-    required this.child,
-  });
-
-  final String title;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              IconButton(
-                tooltip: '关闭',
-                onPressed: () => Navigator.of(context).maybePop(),
-                icon: const Icon(Icons.close),
-              ),
-            ],
-          ),
-        ),
-        const Divider(height: 1),
-        Expanded(child: child),
-      ],
-    );
-  }
-}

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
@@ -15,11 +14,11 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widg
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
-import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
 import 'package:work_order_app/src/features/departments/domain/department.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
+import 'package:work_order_app/src/features/tasks/data/task_supervisor_support_service.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
-import 'package:work_order_app/src/features/tasks/presentation/widgets/task_list_tile.dart';
+import 'package:work_order_app/src/features/tasks/presentation/widgets/task_supervisor_sections.dart';
 
 class TaskSupervisorDashboardEntry extends StatelessWidget {
   const TaskSupervisorDashboardEntry({super.key});
@@ -63,26 +62,29 @@ class _TaskSupervisorDashboardViewState
   int? _departmentId;
   Map<String, dynamic>? _workload;
   List<Task> _departmentTasks = [];
-  List<_OperatorOption> _operators = [];
+  List<TaskSupervisorOperatorOption> _operators = [];
   String _viewMode = 'dashboard';
   int? _assigningTaskId;
   String _taskStatusFilter = 'all';
+  TaskSupervisorSupportService? _supportService;
+  bool _departmentsRequested = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _supportService ??= TaskSupervisorSupportService(context.read<ApiClient>());
+    if (_departmentsRequested) return;
+    _departmentsRequested = true;
     _loadDepartments();
   }
 
   Future<void> _loadDepartments() async {
     setState(() => _loading = true);
     try {
-      final apiClient = context.read<ApiClient>();
-      final deptApi = DepartmentApiService(apiClient);
-      final page = await deptApi.fetchDepartments(page: 1, pageSize: 200);
+      final departments = await _supportService!.fetchDepartments();
       if (!mounted) return;
       setState(() {
-        _departments = page.items.map((dto) => dto.toEntity()).toList();
+        _departments = departments;
         if (_departments.isNotEmpty) {
           _departmentId = _departments.first.id;
         }
@@ -104,25 +106,14 @@ class _TaskSupervisorDashboardViewState
       _errorMessage = null;
     });
     try {
-      final api = context.read<TaskApiService>();
-      final payload = await api.fetchDepartmentWorkload(params: {
-        'department_id': _departmentId,
-      });
-      final tasksPage = await api.fetchTasks(
-        departmentId: _departmentId,
-        page: 1,
-        pageSize: 50,
-        ordering: '-created_at',
+      final data = await _supportService!.loadDepartmentDashboard(
+        _departmentId!,
       );
-      final operators = await api.fetchDepartmentOperators(_departmentId!);
+      if (!mounted) return;
       setState(() {
-        _workload = payload;
-        _departmentTasks =
-            tasksPage.items.map((dto) => dto.toEntity()).toList();
-        _operators = operators
-            .map((item) => _OperatorOption.fromJson(item))
-            .where((item) => item.id > 0)
-            .toList();
+        _workload = data.workload;
+        _departmentTasks = data.tasks;
+        _operators = data.operators;
       });
     } catch (err) {
       setState(() {
@@ -169,7 +160,7 @@ class _TaskSupervisorDashboardViewState
               shape:
                   const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
               builder: (sheetContext) {
-                return _FilterDrawerContent(
+                return TaskSupervisorFilterDrawerContent(
                   title: '筛选',
                   child: _buildFilterPanel(sheetContext, deptItems: deptItems),
                 );
@@ -195,7 +186,7 @@ class _TaskSupervisorDashboardViewState
                     width: 320,
                     height: double.infinity,
                     child: SafeArea(
-                      child: _FilterDrawerContent(
+                      child: TaskSupervisorFilterDrawerContent(
                         title: '筛选',
                         child: _buildFilterPanel(dialogContext,
                             deptItems: deptItems),
@@ -350,7 +341,7 @@ class _TaskSupervisorDashboardViewState
                       separatorBuilder: (_, __) => const SizedBox(height: 8),
                       itemBuilder: (context, index) {
                         final task = filteredTasks[index];
-                        return _SupervisorTaskCard(
+                        return TaskSupervisorTaskCard(
                           task: task,
                           onTap: () {
                             if (task.workOrderId != null) {
@@ -502,19 +493,19 @@ class _TaskSupervisorDashboardViewState
               spacing: 8,
               runSpacing: 8,
               children: [
-                _PriorityChip(
+                TaskSupervisorPriorityChip(
                     label: '紧急',
                     value: _toInt(priority['urgent']),
                     color: Colors.redAccent),
-                _PriorityChip(
+                TaskSupervisorPriorityChip(
                     label: '高',
                     value: _toInt(priority['high']),
                     color: Colors.orangeAccent),
-                _PriorityChip(
+                TaskSupervisorPriorityChip(
                     label: '普通',
                     value: _toInt(priority['normal']),
                     color: Colors.blueAccent),
-                _PriorityChip(
+                TaskSupervisorPriorityChip(
                     label: '低',
                     value: _toInt(priority['low']),
                     color: Colors.grey),
@@ -529,7 +520,7 @@ class _TaskSupervisorDashboardViewState
                 : Column(
                     children: operators
                         .whereType<Map>()
-                        .map((item) => _OperatorCard(
+                        .map((item) => TaskSupervisorOperatorCard(
                             item: Map<String, dynamic>.from(item)))
                         .toList(),
                   ),
@@ -565,7 +556,7 @@ class _TaskSupervisorDashboardViewState
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _DragColumn(
+              TaskSupervisorDragColumn(
                 title: '待分派',
                 subtitle: '未分配操作员',
                 height: height,
@@ -576,7 +567,7 @@ class _TaskSupervisorDashboardViewState
               ),
               const SizedBox(width: 16),
               for (final operator in _operators) ...[
-                _DragColumn(
+                TaskSupervisorDragColumn(
                   title: operator.name,
                   subtitle: '操作员任务',
                   height: height,
@@ -603,16 +594,16 @@ class _TaskSupervisorDashboardViewState
     }
     await showDialog<void>(
       context: context,
-      builder: (context) => _AssignDialog(
+      builder: (context) => TaskSupervisorAssignDialog(
         task: task,
         operators: _operators,
         onSubmit: (operatorId, notes) async {
           try {
-            final api = context.read<TaskApiService>();
-            await api.assign(task.id, {
-              'operator_id': operatorId,
-              'notes': notes,
-            });
+            await _supportService!.assignTask(
+              task.id,
+              operatorId: operatorId,
+              notes: notes,
+            );
             ToastUtil.showSuccess('任务已分派');
             await _loadWorkload();
           } catch (err) {
@@ -625,15 +616,18 @@ class _TaskSupervisorDashboardViewState
     );
   }
 
-  Future<void> _assignToOperator(Task task, _OperatorOption operator) async {
+  Future<void> _assignToOperator(
+    Task task,
+    TaskSupervisorOperatorOption operator,
+  ) async {
     if (task.assignedOperatorId == operator.id) return;
     setState(() => _assigningTaskId = task.id);
     try {
-      final api = context.read<TaskApiService>();
-      await api.assign(task.id, {
-        'operator_id': operator.id,
-        'notes': '',
-      });
+      await _supportService!.assignTask(
+        task.id,
+        operatorId: operator.id,
+        notes: '',
+      );
       ToastUtil.showSuccess('已分派给 ${operator.name}');
       await _loadWorkload();
     } catch (err) {
@@ -647,29 +641,23 @@ class _TaskSupervisorDashboardViewState
   Widget _buildTaskStatusFilters(List<Task> tasks) {
     final counts = _buildStatusCounts(tasks);
     final items = [
-      _StatusFilterItem(key: 'all', label: '全部', count: tasks.length),
-      _StatusFilterItem(
+      TaskSupervisorStatusFilterItem(
+          key: 'all', label: '全部', count: tasks.length),
+      TaskSupervisorStatusFilterItem(
           key: 'pending', label: '待处理', count: counts['pending'] ?? 0),
-      _StatusFilterItem(
+      TaskSupervisorStatusFilterItem(
           key: 'in_progress', label: '进行中', count: counts['in_progress'] ?? 0),
-      _StatusFilterItem(
+      TaskSupervisorStatusFilterItem(
           key: 'completed', label: '已完成', count: counts['completed'] ?? 0),
       if ((counts['other'] ?? 0) > 0)
-        _StatusFilterItem(
+        TaskSupervisorStatusFilterItem(
             key: 'other', label: '其他', count: counts['other'] ?? 0),
     ];
 
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: items.map((item) {
-        final selected = _taskStatusFilter == item.key;
-        return ChoiceChip(
-          label: Text('${item.label} ${item.count}'),
-          selected: selected,
-          onSelected: (_) => setState(() => _taskStatusFilter = item.key),
-        );
-      }).toList(),
+    return TaskSupervisorStatusFilters(
+      items: items,
+      selectedKey: _taskStatusFilter,
+      onSelected: (key) => setState(() => _taskStatusFilter = key),
     );
   }
 
@@ -712,507 +700,5 @@ class _TaskSupervisorDashboardViewState
   double _toNum(dynamic value) {
     if (value is num) return value.toDouble();
     return double.tryParse(value?.toString() ?? '') ?? 0;
-  }
-}
-
-class _OperatorOption {
-  const _OperatorOption({required this.id, required this.name});
-
-  final int id;
-  final String name;
-
-  factory _OperatorOption.fromJson(Map<String, dynamic> json) {
-    final id = _toInt(json['id']);
-    final first = json['first_name']?.toString() ?? '';
-    final last = json['last_name']?.toString() ?? '';
-    final username = json['username']?.toString() ?? '';
-    final fullName = '$first$last'.trim();
-    final name = fullName.isNotEmpty
-        ? fullName
-        : (username.isNotEmpty ? username : '操作员 $id');
-    return _OperatorOption(id: id, name: name);
-  }
-
-  static int _toInt(dynamic value) {
-    if (value is num) return value.toInt();
-    return int.tryParse(value?.toString() ?? '') ?? 0;
-  }
-}
-
-class _StatusFilterItem {
-  const _StatusFilterItem({
-    required this.key,
-    required this.label,
-    required this.count,
-  });
-
-  final String key;
-  final String label;
-  final int count;
-}
-
-class _PriorityChip extends StatelessWidget {
-  const _PriorityChip({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  final String label;
-  final int value;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Chip(
-      label: Text('$label $value'),
-      backgroundColor: color.withValues(alpha: 0.12),
-      labelStyle: TextStyle(color: color),
-    );
-  }
-}
-
-class _OperatorCard extends StatelessWidget {
-  const _OperatorCard({required this.item});
-
-  final Map<String, dynamic> item;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>()!;
-    final name = item['operator_name']?.toString() ?? '-';
-    final total = _toInt(item['total_count']);
-    final pending = _toInt(item['pending_count']);
-    final inProgress = _toInt(item['in_progress_count']);
-    final completed = _toInt(item['completed_count']);
-    final completionRate = _toNum(item['completion_rate']);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
-        border: Border.all(color: colors.borderColor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundColor:
-                    theme.colorScheme.primary.withValues(alpha: 0.15),
-                child: Icon(Icons.person, color: theme.colorScheme.primary),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(name,
-                        style: theme.textTheme.titleSmall
-                            ?.copyWith(fontWeight: FontWeight.w700)),
-                    Text('共 $total 个任务',
-                        style: theme.textTheme.bodySmall
-                            ?.copyWith(color: colors.subtleText)),
-                  ],
-                ),
-              ),
-              Text('${completionRate.toStringAsFixed(1)}%',
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(color: theme.colorScheme.primary)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 12,
-            runSpacing: 8,
-            children: [
-              _StatusBadge(label: '待处理', value: pending),
-              _StatusBadge(label: '进行中', value: inProgress),
-              _StatusBadge(label: '已完成', value: completed),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  int _toInt(dynamic value) {
-    if (value is num) return value.toInt();
-    return int.tryParse(value?.toString() ?? '') ?? 0;
-  }
-
-  double _toNum(dynamic value) {
-    if (value is num) return value.toDouble();
-    return double.tryParse(value?.toString() ?? '') ?? 0;
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.label, required this.value});
-
-  final String label;
-  final int value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Chip(label: Text('$label $value'));
-  }
-}
-
-class _DragColumn extends StatelessWidget {
-  const _DragColumn({
-    required this.title,
-    required this.subtitle,
-    required this.height,
-    required this.tasks,
-    required this.operatorId,
-    required this.onDrop,
-    required this.assigningTaskId,
-  });
-
-  final String title;
-  final String subtitle;
-  final double height;
-  final List<Task> tasks;
-  final int? operatorId;
-  final ValueChanged<Task>? onDrop;
-  final int? assigningTaskId;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>()!;
-    final canAccept = onDrop != null;
-
-    Widget content = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: colors.sidebarText,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          subtitle,
-          style: theme.textTheme.bodySmall?.copyWith(color: colors.subtleText),
-        ),
-        const SizedBox(height: 12),
-        Expanded(
-          child: tasks.isEmpty
-              ? Center(
-                  child: Text(
-                    '暂无任务',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colors.subtleText,
-                    ),
-                  ),
-                )
-              : ListView.separated(
-                  itemCount: tasks.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemBuilder: (context, index) {
-                    final task = tasks[index];
-                    return _DraggableTaskCard(
-                      task: task,
-                      isBusy: assigningTaskId == task.id,
-                    );
-                  },
-                ),
-        ),
-      ],
-    );
-
-    if (canAccept) {
-      return DragTarget<_TaskDragData>(
-        onWillAcceptWithDetails: (details) =>
-            operatorId != null &&
-            details.data.task.assignedOperatorId != operatorId,
-        onAcceptWithDetails: (details) => onDrop?.call(details.data.task),
-        builder: (context, candidates, rejected) {
-          final highlight = candidates.isNotEmpty;
-          return _columnShell(context, colors, highlight, content);
-        },
-      );
-    }
-    return _columnShell(context, colors, false, content);
-  }
-
-  Widget _columnShell(
-    BuildContext context,
-    AppColors colors,
-    bool highlight,
-    Widget child,
-  ) {
-    return Container(
-      width: 280,
-      height: height,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
-        border: Border.all(
-          color: highlight
-              ? Theme.of(context).colorScheme.primary
-              : colors.borderColor,
-          width: highlight ? 1.5 : 1,
-        ),
-      ),
-      child: child,
-    );
-  }
-}
-
-class _TaskDragData {
-  const _TaskDragData({
-    required this.task,
-  });
-
-  final Task task;
-}
-
-class _DraggableTaskCard extends StatelessWidget {
-  const _DraggableTaskCard({
-    required this.task,
-    required this.isBusy,
-  });
-
-  final Task task;
-  final bool isBusy;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>()!;
-
-    final card = Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
-        border: Border.all(color: colors.borderColor),
-      ),
-      child: TaskListTile(
-        task: task,
-        onTap: null,
-        showDivider: false,
-      ),
-    );
-
-    return LongPressDraggable<_TaskDragData>(
-      data: _TaskDragData(
-        task: task,
-      ),
-      feedback: Material(
-        color: Colors.transparent,
-        child: SizedBox(width: 260, child: card),
-      ),
-      childWhenDragging: Opacity(opacity: 0.4, child: card),
-      child: Stack(
-        children: [
-          card,
-          if (isBusy)
-            Positioned.fill(
-              child: Container(
-                color: colors.surface.withValues(alpha: 0.7),
-                child: const Center(
-                  child: SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SupervisorTaskCard extends StatelessWidget {
-  const _SupervisorTaskCard({
-    required this.task,
-    required this.onTap,
-    required this.onAssign,
-  });
-
-  final Task task;
-  final VoidCallback onTap;
-  final VoidCallback onAssign;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>()!;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
-        border: Border.all(color: colors.borderColor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TaskListTile(
-            task: task,
-            onTap: onTap,
-            showDivider: false,
-            showAssignee: true,
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              OutlinedButton.icon(
-                onPressed: onAssign,
-                icon: const Icon(Icons.person_add_alt_1, size: 16),
-                label: const Text('分派操作员'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FilterDrawerContent extends StatelessWidget {
-  const _FilterDrawerContent({
-    required this.title,
-    required this.child,
-  });
-
-  final String title;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              IconButton(
-                tooltip: '关闭',
-                onPressed: () => Navigator.of(context).maybePop(),
-                icon: const Icon(Icons.close),
-              ),
-            ],
-          ),
-        ),
-        const Divider(height: 1),
-        Expanded(child: child),
-      ],
-    );
-  }
-}
-
-class _AssignDialog extends StatefulWidget {
-  const _AssignDialog({
-    required this.task,
-    required this.operators,
-    required this.onSubmit,
-  });
-
-  final Task task;
-  final List<_OperatorOption> operators;
-  final Future<void> Function(int operatorId, String notes) onSubmit;
-
-  @override
-  State<_AssignDialog> createState() => _AssignDialogState();
-}
-
-class _AssignDialogState extends State<_AssignDialog> {
-  final _formKey = GlobalKey<FormState>();
-  late int _operatorId;
-  String _notes = '';
-  bool _submitting = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _operatorId = widget.operators.first.id;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('分派任务'),
-      content: SizedBox(
-        width: 420,
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SearchableDropdownFormField<int>(
-                key: ValueKey<int>(_operatorId),
-                initialValue: _operatorId,
-                decoration: const InputDecoration(labelText: '操作员'),
-                items: widget.operators
-                    .map((op) =>
-                        DropdownMenuItem(value: op.id, child: Text(op.name)))
-                    .toList(),
-                onChanged: (value) =>
-                    setState(() => _operatorId = value ?? _operatorId),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                decoration: const InputDecoration(labelText: '备注（可选）'),
-                onChanged: (value) => _notes = value,
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _submitting ? null : () => Navigator.of(context).pop(),
-          child: const Text('取消'),
-        ),
-        FilledButton(
-          onPressed: _submitting ? null : _submit,
-          child: _submitting
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2))
-              : const Text('确认分派'),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _submit() async {
-    setState(() => _submitting = true);
-    try {
-      await widget.onSubmit(_operatorId, _notes);
-      if (mounted) Navigator.of(context).pop();
-    } catch (_) {
-      // keep dialog open on failure
-    } finally {
-      if (mounted) setState(() => _submitting = false);
-    }
   }
 }
