@@ -33,13 +33,6 @@ import 'package:work_order_app/src/features/foiling_plates/presentation/foiling_
 import 'package:work_order_app/src/features/embossing_plates/presentation/embossing_plate_list_page.dart';
 import 'package:work_order_app/src/features/stock_in/presentation/stock_in_list_page.dart';
 import 'package:work_order_app/src/features/stock_out/presentation/stock_out_list_page.dart';
-import 'package:work_order_app/src/features/product_materials/presentation/product_material_list_page.dart';
-import 'package:work_order_app/src/features/materials/presentation/material_supplier_list_page.dart';
-import 'package:work_order_app/src/features/product_groups/presentation/product_group_item_list_page.dart';
-import 'package:work_order_app/src/features/artworks/presentation/artwork_product_list_page.dart';
-import 'package:work_order_app/src/features/dies/presentation/die_product_list_page.dart';
-import 'package:work_order_app/src/features/foiling_plates/presentation/foiling_plate_product_list_page.dart';
-import 'package:work_order_app/src/features/embossing_plates/presentation/embossing_plate_product_list_page.dart';
 import 'package:work_order_app/src/features/finance_costs/presentation/cost_center_list_page.dart';
 import 'package:work_order_app/src/features/finance_costs/presentation/cost_item_list_page.dart';
 import 'package:work_order_app/src/features/finance_payments/presentation/payment_plan_list_page.dart';
@@ -119,20 +112,6 @@ Widget? buildFullPage(String id) {
       return const StockInListEntry();
     case 'stock_outs':
       return const StockOutListEntry();
-    case 'product_materials':
-      return const ProductMaterialListEntry();
-    case 'material_suppliers':
-      return const MaterialSupplierListEntry();
-    case 'product_group_items':
-      return const ProductGroupItemListEntry();
-    case 'artwork_products':
-      return const ArtworkProductListEntry();
-    case 'die_products':
-      return const DieProductListEntry();
-    case 'foiling_plate_products':
-      return const FoilingPlateProductListEntry();
-    case 'embossing_plate_products':
-      return const EmbossingPlateProductListEntry();
     case 'cost_centers':
       return const CostCenterListEntry();
     case 'cost_items':
