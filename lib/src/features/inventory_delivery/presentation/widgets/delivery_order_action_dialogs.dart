@@ -185,16 +185,29 @@ Future<void> showDeliveryRejectDialog(
               child: SingleChildScrollView(
                 child: Form(
                   key: formKey,
-                  child: TextFormField(
-                    controller: reasonController,
-                    maxLines: 3,
-                    decoration: const InputDecoration(labelText: '拒收原因'),
-                    validator: (value) {
-                      if ((value?.trim() ?? '').isEmpty) {
-                        return '请输入拒收原因';
-                      }
-                      return null;
-                    },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '提交后会把发货数量回退到库存，并把发货单标记为拒收。',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: reasonController,
+                        maxLines: 3,
+                        decoration: const InputDecoration(
+                          labelText: '拒收原因',
+                          hintText: '例如：地址错误、包装破损、数量不符',
+                        ),
+                        validator: (value) {
+                          if ((value?.trim() ?? '').isEmpty) {
+                            return '请输入拒收原因';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -207,7 +220,7 @@ Future<void> showDeliveryRejectDialog(
               ),
               FilledButton(
                 onPressed: submitting ? null : () => submit(setState),
-                child: Text(submitting ? '提交中...' : submitText),
+                child: Text(submitting ? '提交中...' : '确认拒收并回退库存'),
               ),
             ],
           );

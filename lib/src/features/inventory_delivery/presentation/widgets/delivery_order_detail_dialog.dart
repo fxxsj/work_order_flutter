@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/approval_rejection_notice_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/attachment_open_button.dart';
 import 'package:work_order_app/src/core/utils/file_link_util.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_detail.dart';
@@ -19,6 +21,27 @@ Future<void> showDeliveryOrderDetailDialog(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (_isRejected(detail)) ...[
+                ApprovalRejectionNoticeCard(
+                  title: '发货已拒收，库存已回退',
+                  icon: Icons.assignment_late_outlined,
+                  reasonLabel: '拒收原因',
+                  reason: _rejectReason(detail),
+                  nextStepLabel: '下一步',
+                  nextStep: '请先核对拒收原因；如需继续交付，请回到客户订单重新安排补发，并补充备注说明。',
+                  primaryAction: detail.salesOrderId == null
+                      ? null
+                      : FilledButton.icon(
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop();
+                            context.go('/sales-orders/${detail.salesOrderId}');
+                          },
+                          icon: const Icon(Icons.open_in_new, size: 18),
+                          label: const Text('查看客户订单'),
+                        ),
+                ),
+                const SizedBox(height: 16),
+              ],
               _DetailRow(label: '发货单号', value: detail.orderNumber),
               _DetailRow(label: '客户', value: _displayText(detail.customerName)),
               _DetailRow(
@@ -92,6 +115,18 @@ Future<void> showDeliveryOrderDetailDialog(
 
 bool _hasReceiverSignature(DeliveryOrderDetail detail) {
   return FileLinkUtil.hasLink(detail.receiverSignatureUrl);
+}
+
+bool _isRejected(DeliveryOrderDetail detail) {
+  return (detail.status ?? '') == 'rejected';
+}
+
+String _rejectReason(DeliveryOrderDetail detail) {
+  final notes = (detail.receivedNotes ?? '').trim();
+  if (notes.startsWith('拒收原因:')) {
+    return notes.replaceFirst('拒收原因:', '').trim();
+  }
+  return notes.isEmpty ? '请查看发货备注' : notes;
 }
 
 class _DetailRow extends StatelessWidget {

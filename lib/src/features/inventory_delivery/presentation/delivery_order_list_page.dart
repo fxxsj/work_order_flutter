@@ -1074,6 +1074,8 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     final canReject = canReceive;
     final canEdit = statusCode == 'pending';
     final canDelete = statusCode == 'pending';
+    final followUp =
+        statusCode == 'rejected' ? '库存已回退，请回到客户订单处理补发或终止交付。' : null;
 
     return ExpandableSummaryCard(
       headerBuilder: (context, expanded) {
@@ -1150,6 +1152,8 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
               _SummaryField(label: '发货数量', value: totalQuantity),
               _SummaryField(label: '物流公司', value: logistics),
               _SummaryField(label: '运单号', value: trackingNumber),
+              if (followUp != null)
+                _SummaryField(label: '异常跟进', value: followUp),
             ],
           ),
           SizedBox(height: sectionSpacing),
