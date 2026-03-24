@@ -14,6 +14,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
@@ -668,6 +669,9 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
       actions: LayoutBuilder(
         builder: (context, constraints) {
           final activeFilters = _activeFilterCount();
+          final rejectedCount = viewModel.workOrders
+              .where((item) => (item.approvalStatus ?? '') == 'rejected')
+              .length;
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -682,6 +686,8 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
           );
 
           final actions = <Widget>[
+            if (rejectedCount > 0)
+              StatusHintChip(label: '待处理退回', count: rejectedCount),
             PageActionButton.outlined(
               onPressed: _exporting ? null : () => _exportWorkOrders(viewModel),
               icon: const Icon(Icons.download_outlined, size: 16),

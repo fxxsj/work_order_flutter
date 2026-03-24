@@ -16,6 +16,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/attachment_open_button.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
@@ -692,6 +693,9 @@ class _QualityInspectionListViewState
       actions: LayoutBuilder(
         builder: (context, constraints) {
           final activeFilters = _activeFilterCount(viewModel);
+          final pendingExceptions = viewModel.inspections
+              .where((item) => _needsExceptionFollowUp(item))
+              .length;
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -706,6 +710,8 @@ class _QualityInspectionListViewState
           );
 
           final actions = <Widget>[
+            if (pendingExceptions > 0)
+              StatusHintChip(label: '待跟进异常', count: pendingExceptions),
             PageActionButton.outlined(
               onPressed: () => viewModel.loadInspections(resetPage: true),
               icon: const Icon(Icons.refresh, size: 16),

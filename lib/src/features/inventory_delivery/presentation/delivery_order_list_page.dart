@@ -15,6 +15,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
@@ -888,6 +889,9 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       actions: LayoutBuilder(
         builder: (context, constraints) {
           final activeFilters = _activeFilterCount(viewModel);
+          final rejectedCount = viewModel.deliveryOrders
+              .where((item) => (item.status ?? '') == 'rejected')
+              .length;
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -902,6 +906,8 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
           );
 
           final actions = <Widget>[
+            if (rejectedCount > 0)
+              StatusHintChip(label: '待处理拒收', count: rejectedCount),
             PageActionButton.outlined(
               onPressed: () => viewModel.loadDeliveryOrders(resetPage: true),
               icon: const Icon(Icons.refresh, size: 16),
