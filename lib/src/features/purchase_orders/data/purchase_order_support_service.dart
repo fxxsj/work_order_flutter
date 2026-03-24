@@ -2,7 +2,6 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/features/materials/data/material_api_service.dart';
 import 'package:work_order_app/src/features/materials/data/material_dto.dart';
 import 'package:work_order_app/src/features/purchase_orders/data/purchase_order_api_service.dart';
-import 'package:work_order_app/src/features/purchase_orders/data/purchase_order_item_api_service.dart';
 import 'package:work_order_app/src/features/purchase_orders/data/purchase_receive_record_api_service.dart';
 import 'package:work_order_app/src/features/purchase_orders/domain/purchase_order_detail.dart';
 import 'package:work_order_app/src/features/suppliers/data/supplier_api_service.dart';
@@ -79,11 +78,6 @@ class PurchaseOrderSupportService {
   Future<void> stockIn(int recordId) async {
     final apiService = PurchaseReceiveRecordApiService(_client);
     await apiService.stockIn(recordId);
-  }
-
-  Future<void> deleteItem(int id) async {
-    final apiService = PurchaseOrderItemApiService(_client);
-    await apiService.deleteItem(id);
   }
 
   Future<PurchaseOrderDetail> fetchDetail(int id) async {

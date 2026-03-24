@@ -1,7 +1,6 @@
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
 import 'package:work_order_app/src/features/customer/data/customer_dto.dart';
-import 'package:work_order_app/src/features/inventory_delivery/data/delivery_item_api_service.dart';
 import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_api_service.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_detail.dart';
 import 'package:work_order_app/src/features/products/data/product_api_service.dart';
@@ -54,11 +53,6 @@ class DeliveryOrderSupportService {
   Future<SalesOrderDetailDto> fetchSalesOrderDetail(int id) async {
     final apiService = SalesOrderApiService(_client);
     return apiService.fetchSalesOrder(id);
-  }
-
-  Future<void> deleteItem(int id) async {
-    final apiService = DeliveryItemApiService(_client);
-    await apiService.deleteItem(id);
   }
 
   Future<DeliveryOrderDetail> fetchDeliveryOrderDetail(int id) async {
