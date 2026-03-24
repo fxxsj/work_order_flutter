@@ -161,7 +161,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
       final detail = await viewModel.fetchDetail(id);
       _applyDetail(detail);
     } catch (err) {
-      ToastUtil.showError('加载销售订单失败: $err');
+      ToastUtil.showError('加载客户订单失败: $err');
     } finally {
       if (mounted) setState(() => _loadingDetail = false);
     }

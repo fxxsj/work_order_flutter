@@ -26,7 +26,7 @@ import 'package:work_order_app/src/features/sales_orders/domain/sales_order_repo
 import 'package:work_order_app/src/features/sales_orders/presentation/widgets/sales_order_list_dialogs.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_flow_api_service.dart';
 
-/// 销售订单列表入口。
+/// 客户订单列表入口。
 class SalesOrderListEntry extends StatelessWidget {
   const SalesOrderListEntry({super.key});
 
@@ -48,7 +48,7 @@ class SalesOrderListEntry extends StatelessWidget {
   }
 }
 
-/// 销售订单列表页视图，只负责渲染。
+/// 客户订单列表页视图，只负责渲染。
 class SalesOrderListPage extends StatelessWidget {
   const SalesOrderListPage({super.key});
 
@@ -70,8 +70,8 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
   static const double _controlHeight = PageActionStyle.height;
   static const String _searchHintText = '搜索订单号/客户';
   static const String _refreshButtonText = '刷新';
-  static const String _createButtonText = '新建销售订单';
-  static const String _emptyText = '暂无销售订单数据';
+  static const String _createButtonText = '新建客户订单';
+  static const String _emptyText = '暂无客户订单数据';
   static const String _errorFallbackText = '加载失败';
   static const String _retryText = '重新加载';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
@@ -122,7 +122,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     final confirmed = await showSalesOrderConfirmDialog(
       context,
       title: '提交订单',
-      content: '确认提交该销售订单吗？',
+      content: '确认提交该客户订单吗？',
       confirmText: '提交',
     );
     if (!confirmed) return;
@@ -388,7 +388,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
               cells: [
                 DataCell(Text(
                   order.orderNumber.isEmpty
-                      ? '销售订单 #${order.id}'
+                      ? '客户订单 #${order.id}'
                       : order.orderNumber,
                   style: theme.textTheme.bodyMedium,
                 )),
@@ -592,7 +592,7 @@ class _SalesOrderSummaryCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final title =
-        order.orderNumber.isEmpty ? '销售订单 #${order.id}' : order.orderNumber;
+        order.orderNumber.isEmpty ? '客户订单 #${order.id}' : order.orderNumber;
     final customer = order.customerName ?? _emptyCellText;
     final status = order.statusDisplay ?? order.status ?? _emptyCellText;
     final payment =

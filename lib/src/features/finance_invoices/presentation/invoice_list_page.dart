@@ -240,13 +240,13 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                         SearchableDropdownFormField<int?>(
                           initialValue: selectedSalesOrderId,
                           decoration: const InputDecoration(
-                            labelText: '关联销售订单（可选）',
+                            labelText: '关联客户订单（可选）',
                             border: OutlineInputBorder(),
                           ),
                           items: [
                             const DropdownMenuItem<int?>(
                               value: null,
-                              child: Text('不关联销售订单'),
+                              child: Text('不关联客户订单'),
                             ),
                             ..._salesOrders.map(
                               (order) => DropdownMenuItem<int?>(

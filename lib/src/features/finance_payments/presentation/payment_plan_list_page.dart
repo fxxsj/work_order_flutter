@@ -18,11 +18,11 @@ class PaymentPlanListEntry extends StatelessWidget {
         id: 'payment_plans',
         title: '收款计划',
         endpoint: '/payment-plans/',
-        searchHintText: '搜索销售订单/计划日期',
+        searchHintText: '搜索客户订单/计划日期',
         emptyText: '暂无收款计划',
         emptyIcon: Icons.event_note_outlined,
         columns: const [
-          GenericColumn(label: '销售订单号', value: _salesOrderNumber),
+          GenericColumn(label: '客户订单号', value: _salesOrderNumber),
           GenericColumn(label: '计划金额', value: _planAmount, numeric: true),
           GenericColumn(label: '计划日期', value: _planDate),
           GenericColumn(label: '状态', value: _status),

@@ -37,7 +37,6 @@ import 'package:work_order_app/src/features/product_materials/presentation/produ
 import 'package:work_order_app/src/features/materials/presentation/material_supplier_list_page.dart';
 import 'package:work_order_app/src/features/product_groups/presentation/product_group_item_list_page.dart';
 import 'package:work_order_app/src/features/purchase_orders/presentation/purchase_order_item_list_page.dart';
-import 'package:work_order_app/src/features/sales_orders/presentation/sales_order_item_list_page.dart';
 import 'package:work_order_app/src/features/inventory_delivery/presentation/delivery_item_list_page.dart';
 import 'package:work_order_app/src/features/artworks/presentation/artwork_product_list_page.dart';
 import 'package:work_order_app/src/features/dies/presentation/die_product_list_page.dart';
@@ -130,8 +129,6 @@ Widget? buildFullPage(String id) {
       return const ProductGroupItemListEntry();
     case 'purchase_order_items':
       return const PurchaseOrderItemListEntry();
-    case 'sales_order_items':
-      return const SalesOrderItemListEntry();
     case 'delivery_items':
       return const DeliveryItemListEntry();
     case 'artwork_products':

@@ -194,7 +194,7 @@ class DeliveryItemListEntry extends StatelessWidget {
                           controller: salesItemController,
                           keyboardType: TextInputType.number,
                           decoration:
-                              const InputDecoration(labelText: '销售订单明细ID（可选）'),
+                              const InputDecoration(labelText: '客户订单明细ID（可选）'),
                         ),
                         const SizedBox(height: 12),
                         TextField(
@@ -272,7 +272,7 @@ class DeliveryItemListEntry extends StatelessWidget {
                             : int.tryParse(salesItemText);
                         if (salesItemText.isNotEmpty &&
                             salesOrderItemId == null) {
-                          ToastUtil.showError('请输入正确的销售订单明细ID');
+                          ToastUtil.showError('请输入正确的客户订单明细ID');
                           return;
                         }
                         setState(() => loading = true);
@@ -398,7 +398,7 @@ class DeliveryItemListEntry extends StatelessWidget {
                         label: '状态',
                         value: detail.statusDisplay ?? detail.status ?? '-'),
                     _DetailRow(
-                        label: '销售单号', value: detail.salesOrderNumber ?? '-'),
+                        label: '客户订单号', value: detail.salesOrderNumber ?? '-'),
                     _DetailRow(
                         label: '发货日期', value: _formatDate(detail.deliveryDate)),
                     _DetailRow(label: '收货人', value: detail.receiverName ?? '-'),

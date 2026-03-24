@@ -364,7 +364,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
           update();
         }
       } catch (err) {
-        ToastUtil.showError('获取销售订单失败: $err');
+        ToastUtil.showError('获取客户订单失败: $err');
       }
     }
 
@@ -407,7 +407,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
           await apiService.updateDeliveryOrder(order.id, payload);
         } else {
           if (selectedSalesOrderId == null || selectedCustomerId == null) {
-            ToastUtil.showError('请选择销售订单');
+            ToastUtil.showError('请选择客户订单');
             return;
           }
           payload['sales_order'] = selectedSalesOrderId;
@@ -654,7 +654,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       columns: const [
         DataColumn(label: Text('发货单号')),
         DataColumn(label: Text('客户')),
-        DataColumn(label: Text('销售订单')),
+        DataColumn(label: Text('客户订单')),
         DataColumn(label: Text('状态')),
         DataColumn(label: Text('发货日期')),
         DataColumn(label: Text('明细数')),
@@ -1078,7 +1078,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
             children: [
               _SummaryField(label: '发货单号', value: number),
               _SummaryField(label: '客户', value: customer),
-              _SummaryField(label: '销售订单', value: salesOrder),
+              _SummaryField(label: '客户订单', value: salesOrder),
               _SummaryField(label: '发货日期', value: deliveryDate),
               _SummaryField(label: '状态', value: status),
               _SummaryField(label: '明细数', value: itemsCount),

@@ -277,7 +277,7 @@ class StockOutListEntry extends StatelessWidget {
                         label: '状态',
                         value: detail.statusDisplay ?? detail.status ?? '-'),
                     _DetailRow(
-                        label: '销售单号', value: detail.salesOrderNumber ?? '-'),
+                        label: '客户订单号', value: detail.salesOrderNumber ?? '-'),
                     _DetailRow(
                         label: '发货日期', value: _formatDate(detail.deliveryDate)),
                     _DetailRow(label: '收货人', value: detail.receiverName ?? '-'),

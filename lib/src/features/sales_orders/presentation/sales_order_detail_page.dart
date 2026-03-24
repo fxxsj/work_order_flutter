@@ -138,7 +138,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('提交订单'),
-        content: const Text('确认提交该销售订单吗？'),
+        content: const Text('确认提交该客户订单吗？'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -566,8 +566,8 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
   Widget build(BuildContext context) {
     final detail = _detail;
     final title = detail?.orderNumber.isNotEmpty == true
-        ? '销售订单 ${detail!.orderNumber}'
-        : '销售订单 #${widget.orderId}';
+        ? '客户订单 ${detail!.orderNumber}'
+        : '客户订单 #${widget.orderId}';
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
 
     return ListPageScaffold(
@@ -621,7 +621,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
                 )
               : detail == null
                   ? const DetailSurfaceCard(
-                      child: Center(child: Text('未找到销售订单信息')),
+                      child: Center(child: Text('未找到客户订单信息')),
                     )
                   : ListView(
                       children: [

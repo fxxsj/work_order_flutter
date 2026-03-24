@@ -67,7 +67,7 @@ Future<void> showDeliveryOrderFormDialog(
                           key: ValueKey<int?>(selectedSalesOrderId),
                           initialValue: selectedSalesOrderId,
                           decoration: const InputDecoration(
-                            labelText: '销售订单',
+                            labelText: '客户订单',
                             border: OutlineInputBorder(),
                           ),
                           items: salesOrders
@@ -87,7 +87,7 @@ Future<void> showDeliveryOrderFormDialog(
                                 },
                           validator: (value) {
                             if (!isEdit && (value == null || value == 0)) {
-                              return '请选择销售订单';
+                              return '请选择客户订单';
                             }
                             return null;
                           },

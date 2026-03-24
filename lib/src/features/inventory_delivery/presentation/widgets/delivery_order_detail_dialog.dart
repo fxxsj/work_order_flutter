@@ -20,7 +20,7 @@ Future<void> showDeliveryOrderDetailDialog(
               _DetailRow(label: '发货单号', value: detail.orderNumber),
               _DetailRow(label: '客户', value: _displayText(detail.customerName)),
               _DetailRow(
-                  label: '销售订单', value: _displayText(detail.salesOrderNumber)),
+                  label: '客户订单', value: _displayText(detail.salesOrderNumber)),
               _DetailRow(
                 label: '状态',
                 value: _displayText(detail.statusDisplay ?? detail.status),

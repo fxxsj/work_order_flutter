@@ -81,7 +81,6 @@ const List<String> branchOrder = [
   'purchase_orders',
   'purchase_order_items',
   'sales_orders',
-  'sales_order_items',
   'stocks',
   'stock_ins',
   'stock_outs',
@@ -252,13 +251,7 @@ const List<NavItem> navItems = [
         icon: Icons.playlist_add_check_outlined,
         path: '/purchase-order-items',
       ),
-      NavItem(id: 'sales_orders', label: '销售订单', icon: Icons.point_of_sale_outlined, path: '/sales-orders'),
-      NavItem(
-        id: 'sales_order_items',
-        label: '销售明细',
-        icon: Icons.list_alt_outlined,
-        path: '/sales-order-items',
-      ),
+      NavItem(id: 'sales_orders', label: '客户订单', icon: Icons.point_of_sale_outlined, path: '/sales-orders'),
     ],
   ),
   NavItem(
