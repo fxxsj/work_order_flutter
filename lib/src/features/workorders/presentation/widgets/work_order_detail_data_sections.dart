@@ -355,6 +355,46 @@ class WorkOrderMaterialsSection extends StatelessWidget {
   }
 }
 
+class WorkOrderTraceabilitySection extends StatelessWidget {
+  const WorkOrderTraceabilitySection({
+    super.key,
+    required this.salesOrderNumbers,
+    required this.qualityInspectionNumbers,
+    required this.invoiceNumbers,
+    required this.emptyText,
+  });
+
+  final List<String> salesOrderNumbers;
+  final List<String> qualityInspectionNumbers;
+  final List<String> invoiceNumbers;
+  final String emptyText;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _TraceabilityGroupCard(
+          title: '来源客户订单',
+          items: salesOrderNumbers,
+          emptyText: emptyText,
+        ),
+        const SizedBox(height: 10),
+        _TraceabilityGroupCard(
+          title: '关联质检单',
+          items: qualityInspectionNumbers,
+          emptyText: emptyText,
+        ),
+        const SizedBox(height: 10),
+        _TraceabilityGroupCard(
+          title: '关联发票',
+          items: invoiceNumbers,
+          emptyText: emptyText,
+        ),
+      ],
+    );
+  }
+}
+
 class WorkOrderApprovalLogsSection extends StatelessWidget {
   const WorkOrderApprovalLogsSection({
     super.key,
@@ -429,6 +469,63 @@ class _DetailField {
 
   final String label;
   final String value;
+}
+
+class _TraceabilityGroupCard extends StatelessWidget {
+  const _TraceabilityGroupCard({
+    required this.title,
+    required this.items,
+    required this.emptyText,
+  });
+
+  final String title;
+  final List<String> items;
+  final String emptyText;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>()!;
+    final basePadding = LayoutTokens.cardPadding(context);
+
+    return Container(
+      width: double.infinity,
+      padding: basePadding,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
+        border: Border.all(color: colors.borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: colors.sidebarText,
+            ),
+          ),
+          const SizedBox(height: 10),
+          if (items.isEmpty)
+            Text(emptyText, style: theme.textTheme.bodyMedium)
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: items
+                  .map(
+                    (text) => Chip(
+                      label: Text(text),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  )
+                  .toList(),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 class _DetailListCard extends StatelessWidget {

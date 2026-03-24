@@ -794,6 +794,17 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                         ],
                         SizedBox(height: sectionSpacing),
                         _buildSection(
+                          '上下游关联',
+                          WorkOrderTraceabilitySection(
+                            salesOrderNumbers: detail.salesOrderNumbers,
+                            qualityInspectionNumbers:
+                                detail.qualityInspectionNumbers,
+                            invoiceNumbers: detail.invoiceNumbers,
+                            emptyText: _emptyText,
+                          ),
+                        ),
+                        SizedBox(height: sectionSpacing),
+                        _buildSection(
                           '多级审批',
                           WorkOrderMultiApprovalSection(
                             detail: detail,

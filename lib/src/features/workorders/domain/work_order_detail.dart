@@ -34,6 +34,9 @@ class WorkOrderDetail {
     this.progressPercentage,
     this.draftTaskCount,
     this.totalTaskCount,
+    this.salesOrderNumbers = const [],
+    this.qualityInspectionNumbers = const [],
+    this.invoiceNumbers = const [],
     this.products = const [],
     this.materials = const [],
     this.processes = const [],
@@ -84,6 +87,9 @@ class WorkOrderDetail {
   final int? progressPercentage;
   final int? draftTaskCount;
   final int? totalTaskCount;
+  final List<String> salesOrderNumbers;
+  final List<String> qualityInspectionNumbers;
+  final List<String> invoiceNumbers;
   final List<WorkOrderProductItem> products;
   final List<WorkOrderMaterialItem> materials;
   final List<WorkOrderProcessItem> processes;
@@ -135,6 +141,10 @@ class WorkOrderDetail {
       progressPercentage: toInt(json['progress_percentage']),
       draftTaskCount: toInt(json['draft_task_count']),
       totalTaskCount: toInt(json['total_task_count']),
+      salesOrderNumbers: _parseStringList(json['sales_order_numbers']),
+      qualityInspectionNumbers:
+          _parseStringList(json['quality_inspection_numbers']),
+      invoiceNumbers: _parseStringList(json['invoice_numbers']),
       products: _parseProducts(json['products']),
       materials: _parseMaterials(json['materials']),
       processes: _parseProcesses(json['order_processes']),

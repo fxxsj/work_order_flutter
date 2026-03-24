@@ -31,6 +31,8 @@ class SalesOrderDetail {
     this.shippingAddress,
     this.notes,
     this.workOrderNumbers = const [],
+    this.deliveryOrderNumbers = const [],
+    this.invoiceNumbers = const [],
     this.items = const [],
   });
 
@@ -63,6 +65,8 @@ class SalesOrderDetail {
   final String? shippingAddress;
   final String? notes;
   final List<String> workOrderNumbers;
+  final List<String> deliveryOrderNumbers;
+  final List<String> invoiceNumbers;
   final List<SalesOrderItem> items;
 
   factory SalesOrderDetail.fromJson(Map<String, dynamic> json) {
@@ -96,6 +100,8 @@ class SalesOrderDetail {
       shippingAddress: toStringOrNull(json['shipping_address']),
       notes: toStringOrNull(json['notes']),
       workOrderNumbers: _parseStringList(json['work_order_numbers']),
+      deliveryOrderNumbers: _parseStringList(json['delivery_order_numbers']),
+      invoiceNumbers: _parseStringList(json['invoice_numbers']),
       items: _parseItems(json['items']),
     );
   }
