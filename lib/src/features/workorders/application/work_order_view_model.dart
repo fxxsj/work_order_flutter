@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/core.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
@@ -65,6 +66,12 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
   Future<WorkOrderDetail> updateWorkOrder(
       int id, Map<String, dynamic> payload) async {
     final detail = await _repository.updateWorkOrder(id, payload);
+    return detail.toEntity();
+  }
+
+  Future<WorkOrderDetail> uploadDesignFile(
+      int id, MultipartFile designFile) async {
+    final detail = await _repository.uploadDesignFile(id, designFile);
     return detail.toEntity();
   }
 

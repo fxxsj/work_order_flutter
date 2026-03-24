@@ -104,6 +104,18 @@ class WorkOrderApiService {
     return WorkOrderDetailDto.fromJson(map);
   }
 
+  Future<WorkOrderDetailDto> uploadDesignFile(
+      int id, MultipartFile designFile) async {
+    final response = await _client.patch(
+      '/workorders/$id/',
+      data: FormData.fromMap({'design_file': designFile}),
+    );
+    final body = response.data;
+    final map =
+        body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
+    return WorkOrderDetailDto.fromJson(map);
+  }
+
   Future<void> deleteWorkOrder(int id) async {
     await _client.delete('/workorders/$id/');
   }

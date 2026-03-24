@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -55,6 +57,16 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   static const String _emptyText = '-';
   static const String _deleteDialogTitle = '确认删除';
   static const String _deleteDialogContent = '确定要删除施工单 "{name}" 吗？此操作不可恢复。';
+  static const List<String> _designFileExtensions = [
+    'pdf',
+    'png',
+    'jpg',
+    'jpeg',
+    'ai',
+    'psd',
+    'cdr',
+    'svg',
+  ];
 
   WorkOrderDetail? _detail;
   bool _loading = false;
@@ -161,6 +173,49 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
       ToastUtil.showSuccess('状态已更新');
     } catch (err) {
       ToastUtil.showError('更新状态失败: $err');
+    } finally {
+      if (mounted) setState(() => _actionLoading = false);
+    }
+  }
+
+  Future<void> _handleUploadDesignFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: _designFileExtensions,
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty) {
+      return;
+    }
+
+    final picked = result.files.single;
+    final fileName = picked.name.trim().isEmpty ? 'design-file' : picked.name;
+    MultipartFile designFile;
+    final bytes = picked.bytes;
+
+    if (bytes != null && bytes.isNotEmpty) {
+      designFile = MultipartFile.fromBytes(bytes, filename: fileName);
+    } else if ((picked.path ?? '').trim().isNotEmpty) {
+      designFile =
+          await MultipartFile.fromFile(picked.path!.trim(), filename: fileName);
+    } else {
+      ToastUtil.showError('无法读取所选文件');
+      return;
+    }
+
+    setState(() => _actionLoading = true);
+    try {
+      final viewModel = context.read<WorkOrderViewModel>();
+      final detail =
+          await viewModel.uploadDesignFile(widget.workOrderId, designFile);
+      if (!mounted) return;
+      setState(() {
+        _detail = detail;
+        _statusSelection = detail.status;
+      });
+      ToastUtil.showSuccess('设计文件已上传');
+    } catch (err) {
+      ToastUtil.showError('上传设计文件失败: $err');
     } finally {
       if (mounted) setState(() => _actionLoading = false);
     }
@@ -671,6 +726,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                           statusOptions: statusOptions,
                           statusSelection: _statusSelection,
                           actionLoading: _actionLoading,
+                          onUploadDesignFile: _handleUploadDesignFile,
                           hasMultiApproval: _hasMultiApproval,
                           onStatusChanged: (value) =>
                               setState(() => _statusSelection = value),

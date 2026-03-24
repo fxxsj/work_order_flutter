@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_detail_dto.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
@@ -49,6 +50,12 @@ class WorkOrderRepositoryImpl implements WorkOrderRepository {
   Future<WorkOrderDetailDto> updateWorkOrder(
       int id, Map<String, dynamic> payload) {
     return _apiService.updateWorkOrder(id, payload);
+  }
+
+  @override
+  Future<WorkOrderDetailDto> uploadDesignFile(
+      int id, MultipartFile designFile) {
+    return _apiService.uploadDesignFile(id, designFile);
   }
 
   @override

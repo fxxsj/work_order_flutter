@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_detail_dto.dart';
 
@@ -21,6 +22,8 @@ abstract class WorkOrderRepository {
 
   Future<WorkOrderDetailDto> updateWorkOrder(
       int id, Map<String, dynamic> payload);
+
+  Future<WorkOrderDetailDto> uploadDesignFile(int id, MultipartFile designFile);
 
   Future<void> deleteWorkOrder(int id);
 

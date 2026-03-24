@@ -24,6 +24,7 @@ class WorkOrderDetailOverviewSection extends StatelessWidget {
     required this.statusOptions,
     required this.statusSelection,
     required this.actionLoading,
+    required this.onUploadDesignFile,
     required this.hasMultiApproval,
     required this.onStatusChanged,
     required this.onUpdateStatus,
@@ -41,6 +42,7 @@ class WorkOrderDetailOverviewSection extends StatelessWidget {
   final List<DropdownMenuItem<String>> statusOptions;
   final String? statusSelection;
   final bool actionLoading;
+  final VoidCallback onUploadDesignFile;
   final bool hasMultiApproval;
   final ValueChanged<String?> onStatusChanged;
   final VoidCallback onUpdateStatus;
@@ -62,6 +64,8 @@ class WorkOrderDetailOverviewSection extends StatelessWidget {
           detail: detail,
           sectionSpacing: sectionSpacing,
           emptyText: emptyText,
+          actionLoading: actionLoading,
+          onUploadDesignFile: onUploadDesignFile,
           buildInfoGrid: buildInfoGrid,
           buildResourceGroup: buildResourceGroup,
         ));
@@ -516,6 +520,8 @@ class _SummaryContent extends StatelessWidget {
     required this.detail,
     required this.sectionSpacing,
     required this.emptyText,
+    required this.actionLoading,
+    required this.onUploadDesignFile,
     required this.buildInfoGrid,
     required this.buildResourceGroup,
   });
@@ -523,6 +529,8 @@ class _SummaryContent extends StatelessWidget {
   final WorkOrderDetail detail;
   final double sectionSpacing;
   final String emptyText;
+  final bool actionLoading;
+  final VoidCallback onUploadDesignFile;
   final Widget Function(List<WorkOrderInfoItem> items) buildInfoGrid;
   final Widget Function(String title, List<String> items) buildResourceGroup;
 
@@ -617,10 +625,31 @@ class _SummaryContent extends StatelessWidget {
           SizedBox(height: sectionSpacing),
           Align(
             alignment: Alignment.centerLeft,
-            child: AttachmentOpenButton(
-              fileUrl: detail.designFileUrl,
-              label: '查看设计文件',
-              errorPrefix: '打开设计文件失败',
+            child: Wrap(
+              spacing: LayoutTokens.gapSm,
+              runSpacing: LayoutTokens.gapSm,
+              children: [
+                AttachmentOpenButton(
+                  fileUrl: detail.designFileUrl,
+                  label: '查看设计文件',
+                  errorPrefix: '打开设计文件失败',
+                ),
+                OutlinedButton.icon(
+                  onPressed: actionLoading ? null : onUploadDesignFile,
+                  icon: const Icon(Icons.upload_file_outlined, size: 18),
+                  label: const Text('重新上传'),
+                ),
+              ],
+            ),
+          ),
+        ] else ...[
+          SizedBox(height: sectionSpacing),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              onPressed: actionLoading ? null : onUploadDesignFile,
+              icon: const Icon(Icons.upload_file_outlined, size: 18),
+              label: const Text('上传设计文件'),
             ),
           ),
         ],
