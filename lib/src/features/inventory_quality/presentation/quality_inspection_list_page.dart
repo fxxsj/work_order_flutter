@@ -13,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/attachment_open_button.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
@@ -207,10 +208,10 @@ class _QualityInspectionListViewState
           ),
           actions: [
             if (_hasAttachment(inspection))
-              TextButton.icon(
-                onPressed: () => _openAttachment(inspection),
-                icon: const Icon(Icons.attach_file_outlined, size: 18),
-                label: const Text('查看附件'),
+              AttachmentOpenButton(
+                fileUrl: inspection.attachmentUrl,
+                label: '查看附件',
+                errorPrefix: '打开检验附件失败',
               ),
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
@@ -840,10 +841,10 @@ class _QualityInspectionListViewState
                 label: const Text('查看'),
               ),
               if (_hasAttachment(inspection))
-                OutlinedButton.icon(
-                  onPressed: () => _openAttachment(inspection),
-                  icon: const Icon(Icons.attach_file_outlined, size: 16),
-                  label: const Text('查看附件'),
+                AttachmentOpenButton(
+                  fileUrl: inspection.attachmentUrl,
+                  label: '查看附件',
+                  errorPrefix: '打开检验附件失败',
                 ),
               if (canComplete)
                 OutlinedButton.icon(
@@ -860,7 +861,7 @@ class _QualityInspectionListViewState
   }
 
   bool _hasAttachment(QualityInspection inspection) {
-    return (inspection.attachmentUrl ?? '').trim().isNotEmpty;
+    return FileLinkUtil.hasLink(inspection.attachmentUrl);
   }
 
   Future<void> _openAttachment(QualityInspection inspection) async {

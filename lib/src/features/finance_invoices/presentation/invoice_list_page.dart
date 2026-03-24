@@ -818,7 +818,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
   }
 
   bool _hasAttachment(Invoice invoice) {
-    return (invoice.attachmentUrl ?? '').trim().isNotEmpty;
+    return FileLinkUtil.hasLink(invoice.attachmentUrl);
   }
 
   Future<void> _openAttachment(Invoice invoice) async {

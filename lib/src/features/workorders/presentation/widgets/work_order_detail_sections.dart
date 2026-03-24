@@ -3,11 +3,11 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/constants/breakpoints.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/attachment_open_button.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/file_link_util.dart';
-import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
 
 class WorkOrderInfoItem {
@@ -617,10 +617,10 @@ class _SummaryContent extends StatelessWidget {
           SizedBox(height: sectionSpacing),
           Align(
             alignment: Alignment.centerLeft,
-            child: OutlinedButton.icon(
-              onPressed: () => _openDesignFile(),
-              icon: const Icon(Icons.attach_file_outlined, size: 18),
-              label: const Text('查看设计文件'),
+            child: AttachmentOpenButton(
+              fileUrl: detail.designFileUrl,
+              label: '查看设计文件',
+              errorPrefix: '打开设计文件失败',
             ),
           ),
         ],
@@ -664,15 +664,7 @@ class _SummaryContent extends StatelessWidget {
   }
 
   bool get _hasDesignFile {
-    return (detail.designFileUrl ?? '').trim().isNotEmpty;
-  }
-
-  Future<void> _openDesignFile() async {
-    try {
-      await FileLinkUtil.open(detail.designFileUrl);
-    } catch (err) {
-      ToastUtil.showError('打开设计文件失败: $err');
-    }
+    return FileLinkUtil.hasLink(detail.designFileUrl);
   }
 }
 

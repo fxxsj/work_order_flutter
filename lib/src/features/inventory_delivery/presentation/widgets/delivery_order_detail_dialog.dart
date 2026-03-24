@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/attachment_open_button.dart';
 import 'package:work_order_app/src/core/utils/file_link_util.dart';
-import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_detail.dart';
 
 Future<void> showDeliveryOrderDetailDialog(
@@ -9,14 +9,6 @@ Future<void> showDeliveryOrderDetailDialog(
   String title = '发货单详情',
   String closeText = '取消',
 }) {
-  Future<void> openReceiverSignature() async {
-    try {
-      await FileLinkUtil.open(detail.receiverSignatureUrl);
-    } catch (err) {
-      ToastUtil.showError('打开签收附件失败: $err');
-    }
-  }
-
   return showDialog<void>(
     context: context,
     builder: (dialogContext) => AlertDialog(
@@ -62,10 +54,10 @@ Future<void> showDeliveryOrderDetailDialog(
                 _DetailRow(label: '签收备注', value: detail.receivedNotes ?? ''),
               if (_hasReceiverSignature(detail)) ...[
                 const SizedBox(height: 8),
-                OutlinedButton.icon(
-                  onPressed: openReceiverSignature,
-                  icon: const Icon(Icons.attach_file_outlined, size: 18),
-                  label: const Text('查看签收附件'),
+                AttachmentOpenButton(
+                  fileUrl: detail.receiverSignatureUrl,
+                  label: '查看签收附件',
+                  errorPrefix: '打开签收附件失败',
                 ),
               ],
               if (detail.items.isNotEmpty) ...[
@@ -99,7 +91,7 @@ Future<void> showDeliveryOrderDetailDialog(
 }
 
 bool _hasReceiverSignature(DeliveryOrderDetail detail) {
-  return (detail.receiverSignatureUrl ?? '').trim().isNotEmpty;
+  return FileLinkUtil.hasLink(detail.receiverSignatureUrl);
 }
 
 class _DetailRow extends StatelessWidget {

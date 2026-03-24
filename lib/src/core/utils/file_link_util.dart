@@ -4,6 +4,10 @@ import 'package:work_order_app/src/core/utils/utils.dart';
 class FileLinkUtil {
   FileLinkUtil._();
 
+  static bool hasLink(String? raw) {
+    return (raw?.trim() ?? '').isNotEmpty;
+  }
+
   static String? resolveUrl(String? raw) {
     final value = raw?.trim() ?? '';
     if (value.isEmpty) return null;
