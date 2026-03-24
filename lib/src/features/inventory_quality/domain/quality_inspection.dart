@@ -4,6 +4,7 @@ class QualityInspection {
   const QualityInspection({
     required this.id,
     required this.inspectionNumber,
+    this.workOrderId,
     this.inspectionType,
     this.inspectionTypeDisplay,
     this.result,
@@ -29,6 +30,7 @@ class QualityInspection {
 
   final int id;
   final String inspectionNumber;
+  final int? workOrderId;
   final String? inspectionType;
   final String? inspectionTypeDisplay;
   final String? result;
@@ -55,6 +57,7 @@ class QualityInspection {
     return QualityInspection(
       id: toInt(json['id']) ?? 0,
       inspectionNumber: json['inspection_number']?.toString() ?? '',
+      workOrderId: toInt(json['work_order']),
       inspectionType: toStringOrNull(json['inspection_type']),
       inspectionTypeDisplay: toStringOrNull(json['inspection_type_display']),
       result: toStringOrNull(json['result']),

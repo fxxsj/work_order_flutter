@@ -10,6 +10,10 @@ class ApprovalRejectionNoticeCard extends StatelessWidget {
     required this.nextStep,
     this.comment,
     this.title = '审批已退回',
+    this.icon = Icons.warning_amber_rounded,
+    this.reasonLabel = '驳回原因',
+    this.commentLabel = '审批说明',
+    this.nextStepLabel = '下一步',
     this.primaryAction,
     this.secondaryAction,
   });
@@ -18,6 +22,10 @@ class ApprovalRejectionNoticeCard extends StatelessWidget {
   final String reason;
   final String nextStep;
   final String? comment;
+  final IconData icon;
+  final String reasonLabel;
+  final String commentLabel;
+  final String nextStepLabel;
   final Widget? primaryAction;
   final Widget? secondaryAction;
 
@@ -38,7 +46,7 @@ class ApprovalRejectionNoticeCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.warning_amber_rounded, color: warning, size: 22),
+              Icon(icon, color: warning, size: 22),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -52,13 +60,13 @@ class ApprovalRejectionNoticeCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          _NoticeBlock(label: '驳回原因', value: reason),
+          _NoticeBlock(label: reasonLabel, value: reason),
           if ((comment ?? '').trim().isNotEmpty) ...[
             const SizedBox(height: 12),
-            _NoticeBlock(label: '审批说明', value: comment!.trim()),
+            _NoticeBlock(label: commentLabel, value: comment!.trim()),
           ],
           const SizedBox(height: 12),
-          _NoticeBlock(label: '下一步', value: nextStep),
+          _NoticeBlock(label: nextStepLabel, value: nextStep),
           if (primaryAction != null || secondaryAction != null) ...[
             const SizedBox(height: 16),
             Wrap(

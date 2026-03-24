@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/approval_rejection_notice_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -132,6 +134,42 @@ class _QualityInspectionListViewState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (_needsExceptionFollowUp(inspection)) ...[
+                    ApprovalRejectionNoticeCard(
+                      title: inspection.result == 'failed'
+                          ? '质检未通过，需要处理'
+                          : '质检为条件接收，需要跟进',
+                      icon: Icons.report_problem_outlined,
+                      reasonLabel: '问题摘要',
+                      reason: _qualityIssueSummary(inspection),
+                      commentLabel: '处理意见',
+                      comment: _qualityDispositionComment(inspection),
+                      nextStepLabel: '建议动作',
+                      nextStep: _qualityNextStep(inspection),
+                      primaryAction: OutlinedButton.icon(
+                        onPressed: () => _uploadAttachment(
+                          context.read<QualityInspectionViewModel>(),
+                          inspection,
+                        ),
+                        icon: const Icon(Icons.upload_file_outlined, size: 18),
+                        label: Text(
+                          _hasAttachment(inspection) ? '更新附件' : '上传附件',
+                        ),
+                      ),
+                      secondaryAction: inspection.workOrderId == null
+                          ? null
+                          : FilledButton.icon(
+                              onPressed: () {
+                                Navigator.of(dialogContext).pop();
+                                context.go(
+                                    '/workorders/${inspection.workOrderId}');
+                              },
+                              icon: const Icon(Icons.open_in_new, size: 18),
+                              label: const Text('查看施工单'),
+                            ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   _DetailRow(label: '质检单号', value: inspection.inspectionNumber),
                   _DetailRow(
                     label: '检验类型',
@@ -823,6 +861,7 @@ class _QualityInspectionListViewState
     final attachmentStatus =
         _hasAttachment(inspection) ? '已上传' : _emptyCellText;
     final canComplete = (inspection.result ?? 'pending') == 'pending';
+    final needsFollowUp = _needsExceptionFollowUp(inspection);
 
     return ExpandableSummaryCard(
       headerBuilder: (context, expanded) {
@@ -898,6 +937,9 @@ class _QualityInspectionListViewState
               _SummaryField(label: '结果', value: result),
               _SummaryField(label: '不良率', value: defectiveRate),
               _SummaryField(label: '附件', value: attachmentStatus),
+              if (needsFollowUp)
+                _SummaryField(
+                    label: '异常跟进', value: _qualityNextStep(inspection)),
             ],
           ),
           SizedBox(height: sectionSpacing),
@@ -937,6 +979,44 @@ class _QualityInspectionListViewState
 
   bool _hasAttachment(QualityInspection inspection) {
     return FileLinkUtil.hasLink(inspection.attachmentUrl);
+  }
+
+  bool _needsExceptionFollowUp(QualityInspection inspection) {
+    final result = inspection.result ?? '';
+    return result == 'failed' || result == 'conditional';
+  }
+
+  String _qualityIssueSummary(QualityInspection inspection) {
+    final defectDescription = (inspection.defectDescription ?? '').trim();
+    if (defectDescription.isNotEmpty) {
+      return defectDescription;
+    }
+    if (inspection.defects.isNotEmpty) {
+      return inspection.defects.join('、');
+    }
+    return inspection.resultDisplay ?? inspection.result ?? '存在待处理质检异常';
+  }
+
+  String? _qualityDispositionComment(QualityInspection inspection) {
+    final disposition = (inspection.disposition ?? '').trim();
+    final notes = (inspection.dispositionNotes ?? '').trim();
+    if (disposition.isEmpty && notes.isEmpty) {
+      return null;
+    }
+    if (disposition.isEmpty) {
+      return notes;
+    }
+    if (notes.isEmpty) {
+      return disposition;
+    }
+    return '$disposition\n$notes';
+  }
+
+  String _qualityNextStep(QualityInspection inspection) {
+    if ((inspection.result ?? '') == 'conditional') {
+      return '请按处理意见落实条件接收范围，并补充检验附件留痕。';
+    }
+    return '请根据处理意见安排返工、复检或判退，并同步更新施工单执行。';
   }
 
   Future<void> _openAttachment(QualityInspection inspection) async {
