@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
@@ -86,9 +88,16 @@ class _QualityInspectionListViewState
   static const String _resetButtonText = '重置筛选';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
   static const String _pageSizeLabel = '每页 {size}';
+  static const List<String> _attachmentExtensions = [
+    'pdf',
+    'png',
+    'jpg',
+    'jpeg',
+  ];
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
+  int? _uploadingInspectionId;
 
   @override
   void dispose() {
@@ -207,6 +216,14 @@ class _QualityInspectionListViewState
             ),
           ),
           actions: [
+            TextButton.icon(
+              onPressed: () => _uploadAttachment(
+                context.read<QualityInspectionViewModel>(),
+                inspection,
+              ),
+              icon: const Icon(Icons.upload_file_outlined, size: 18),
+              label: Text(_hasAttachment(inspection) ? '更新附件' : '上传附件'),
+            ),
             if (_hasAttachment(inspection))
               AttachmentOpenButton(
                 fileUrl: inspection.attachmentUrl,
@@ -358,6 +375,54 @@ class _QualityInspectionListViewState
     failedController.dispose();
   }
 
+  Future<void> _uploadAttachment(
+    QualityInspectionViewModel viewModel,
+    QualityInspection inspection,
+  ) async {
+    if (_uploadingInspectionId == inspection.id) {
+      return;
+    }
+
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: _attachmentExtensions,
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty) {
+      return;
+    }
+
+    final picked = result.files.single;
+    final fileName =
+        picked.name.trim().isEmpty ? 'quality-attachment' : picked.name;
+    MultipartFile attachment;
+    final bytes = picked.bytes;
+
+    if (bytes != null && bytes.isNotEmpty) {
+      attachment = MultipartFile.fromBytes(bytes, filename: fileName);
+    } else if ((picked.path ?? '').trim().isNotEmpty) {
+      attachment =
+          await MultipartFile.fromFile(picked.path!.trim(), filename: fileName);
+    } else {
+      ToastUtil.showError('无法读取所选文件');
+      return;
+    }
+
+    setState(() => _uploadingInspectionId = inspection.id);
+    try {
+      await viewModel.uploadAttachment(inspection.id, attachment);
+      if (!mounted) return;
+      ToastUtil.showSuccess('检验附件已上传');
+      await viewModel.loadInspections(resetPage: false);
+    } catch (err) {
+      ToastUtil.showError('上传检验附件失败: $err');
+    } finally {
+      if (mounted && _uploadingInspectionId == inspection.id) {
+        setState(() => _uploadingInspectionId = null);
+      }
+    }
+  }
+
   static String _pageInfoText(QualityInspectionViewModel viewModel) {
     return _pageInfoTemplate
         .replaceFirst('{page}', viewModel.page.toString())
@@ -478,6 +543,11 @@ class _QualityInspectionListViewState
                   style: textStyle)),
               DataCell(RowActionGroup(
                 actions: [
+                  RowAction(
+                    label: _hasAttachment(inspection) ? '更新附件' : '上传附件',
+                    icon: Icons.upload_file_outlined,
+                    onPressed: () => _uploadAttachment(viewModel, inspection),
+                  ),
                   RowAction(
                     label: '查看',
                     onPressed: () => _openDetailDialog(inspection),
@@ -835,6 +905,11 @@ class _QualityInspectionListViewState
             spacing: 8,
             runSpacing: 8,
             children: [
+              OutlinedButton.icon(
+                onPressed: () => _uploadAttachment(viewModel, inspection),
+                icon: const Icon(Icons.upload_file_outlined, size: 16),
+                label: Text(_hasAttachment(inspection) ? '更新附件' : '上传附件'),
+              ),
               OutlinedButton.icon(
                 onPressed: () => _openDetailDialog(inspection),
                 icon: const Icon(Icons.visibility_outlined, size: 16),

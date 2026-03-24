@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/features/inventory_quality/data/quality_inspection_api_service.dart';
 import 'package:work_order_app/src/features/inventory_quality/data/quality_inspection_dto.dart';
 import 'package:work_order_app/src/features/inventory_quality/domain/quality_inspection_repository.dart';
@@ -27,6 +28,12 @@ class QualityInspectionRepositoryImpl implements QualityInspectionRepository {
   @override
   Future<Map<String, dynamic>> complete(int id, Map<String, dynamic> payload) {
     return _apiService.complete(id, payload);
+  }
+
+  @override
+  Future<Map<String, dynamic>> uploadAttachment(
+      int id, MultipartFile attachment) {
+    return _apiService.uploadAttachment(id, attachment);
   }
 
   @override

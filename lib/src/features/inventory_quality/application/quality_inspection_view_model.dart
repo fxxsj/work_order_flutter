@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/core.dart';
 import 'package:work_order_app/src/features/inventory_quality/domain/quality_inspection.dart';
 import 'package:work_order_app/src/features/inventory_quality/domain/quality_inspection_repository.dart';
@@ -26,6 +27,10 @@ class QualityInspectionViewModel extends PaginatedViewModel<QualityInspection> {
   Future<void> setTypeFilter(String value) async {
     _typeFilter = value;
     await loadInspections(resetPage: true);
+  }
+
+  Future<void> uploadAttachment(int id, MultipartFile attachment) {
+    return _repository.uploadAttachment(id, attachment);
   }
 
   @override

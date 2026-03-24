@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/features/inventory_quality/data/quality_inspection_dto.dart';
 
 abstract class QualityInspectionRepository {
@@ -10,6 +11,9 @@ abstract class QualityInspectionRepository {
   });
 
   Future<Map<String, dynamic>> complete(int id, Map<String, dynamic> payload);
+
+  Future<Map<String, dynamic>> uploadAttachment(
+      int id, MultipartFile attachment);
 
   Future<Map<String, dynamic>> getSummary();
 }

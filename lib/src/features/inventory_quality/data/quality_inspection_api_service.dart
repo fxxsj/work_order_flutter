@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/inventory_quality/data/quality_inspection_dto.dart';
@@ -64,6 +65,17 @@ class QualityInspectionApiService {
       int id, Map<String, dynamic> payload) async {
     final response =
         await _client.post('/quality-inspections/$id/complete/', data: payload);
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> uploadAttachment(
+    int id,
+    MultipartFile attachment,
+  ) async {
+    final response = await _client.patch(
+      '/quality-inspections/$id/',
+      data: FormData.fromMap({'attachment': attachment}),
+    );
     return _mapFromResponse(response.data);
   }
 
