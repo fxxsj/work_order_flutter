@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/models/traceability_summary_item.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/traceability_summary_section.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order_detail.dart';
 
 class SalesOrderInfoItem {
@@ -190,73 +192,39 @@ class SalesOrderItemsSection extends StatelessWidget {
   }
 }
 
-class SalesOrderRelationSection extends StatelessWidget {
-  const SalesOrderRelationSection({
-    super.key,
-    required this.title,
-    required this.items,
-    required this.emptyText,
-  });
-
-  final String title;
-  final List<String> items;
-  final String emptyText;
-
-  @override
-  Widget build(BuildContext context) {
-    return DetailSectionCard(
-      title: title,
-      child: items.isEmpty
-          ? Text(emptyText, style: Theme.of(context).textTheme.bodyMedium)
-          : Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: items.map((text) => Chip(label: Text(text))).toList(),
-            ),
-    );
-  }
-}
-
 class SalesOrderTraceabilitySection extends StatelessWidget {
   const SalesOrderTraceabilitySection({
     super.key,
-    required this.workOrderNumbers,
-    required this.deliveryOrderNumbers,
-    required this.invoiceNumbers,
+    required this.workOrderSummaries,
+    required this.deliveryOrderSummaries,
+    required this.invoiceSummaries,
     required this.emptyText,
   });
 
-  final List<String> workOrderNumbers;
-  final List<String> deliveryOrderNumbers;
-  final List<String> invoiceNumbers;
+  final List<TraceabilitySummaryItem> workOrderSummaries;
+  final List<TraceabilitySummaryItem> deliveryOrderSummaries;
+  final List<TraceabilitySummaryItem> invoiceSummaries;
   final String emptyText;
 
   @override
   Widget build(BuildContext context) {
-    return DetailSectionCard(
+    return TraceabilitySummarySection(
       title: '上下游关联',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SalesOrderRelationGroup(
-            title: '关联施工单',
-            items: workOrderNumbers,
-            emptyText: emptyText,
-          ),
-          const SizedBox(height: 16),
-          _SalesOrderRelationGroup(
-            title: '关联发货单',
-            items: deliveryOrderNumbers,
-            emptyText: emptyText,
-          ),
-          const SizedBox(height: 16),
-          _SalesOrderRelationGroup(
-            title: '关联发票',
-            items: invoiceNumbers,
-            emptyText: emptyText,
-          ),
-        ],
-      ),
+      emptyText: emptyText,
+      groups: [
+        TraceabilitySummaryGroupData(
+          title: '关联施工单',
+          items: workOrderSummaries,
+        ),
+        TraceabilitySummaryGroupData(
+          title: '关联发货单',
+          items: deliveryOrderSummaries,
+        ),
+        TraceabilitySummaryGroupData(
+          title: '关联发票',
+          items: invoiceSummaries,
+        ),
+      ],
     );
   }
 }
@@ -284,45 +252,6 @@ class SalesOrderInfoGrid extends StatelessWidget {
             ),
           )
           .toList(),
-    );
-  }
-}
-
-class _SalesOrderRelationGroup extends StatelessWidget {
-  const _SalesOrderRelationGroup({
-    required this.title,
-    required this.items,
-    required this.emptyText,
-  });
-
-  final String title;
-  final List<String> items;
-  final String emptyText;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: theme.textTheme.titleSmall),
-        const SizedBox(height: 8),
-        if (items.isEmpty)
-          Text(emptyText, style: theme.textTheme.bodyMedium)
-        else
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: items
-                .map(
-                  (text) => Chip(
-                    label: Text(text),
-                    visualDensity: VisualDensity.compact,
-                  ),
-                )
-                .toList(),
-          ),
-      ],
     );
   }
 }

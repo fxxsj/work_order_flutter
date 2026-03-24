@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
+import 'package:work_order_app/src/core/models/traceability_summary_item.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/traceability_summary_section.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
 
@@ -358,37 +360,34 @@ class WorkOrderMaterialsSection extends StatelessWidget {
 class WorkOrderTraceabilitySection extends StatelessWidget {
   const WorkOrderTraceabilitySection({
     super.key,
-    required this.salesOrderNumbers,
-    required this.qualityInspectionNumbers,
-    required this.invoiceNumbers,
+    required this.salesOrderSummaries,
+    required this.qualityInspectionSummaries,
+    required this.invoiceSummaries,
     required this.emptyText,
   });
 
-  final List<String> salesOrderNumbers;
-  final List<String> qualityInspectionNumbers;
-  final List<String> invoiceNumbers;
+  final List<TraceabilitySummaryItem> salesOrderSummaries;
+  final List<TraceabilitySummaryItem> qualityInspectionSummaries;
+  final List<TraceabilitySummaryItem> invoiceSummaries;
   final String emptyText;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _TraceabilityGroupCard(
+    return TraceabilitySummarySection(
+      title: '上下游关联',
+      emptyText: emptyText,
+      groups: [
+        TraceabilitySummaryGroupData(
           title: '来源客户订单',
-          items: salesOrderNumbers,
-          emptyText: emptyText,
+          items: salesOrderSummaries,
         ),
-        const SizedBox(height: 10),
-        _TraceabilityGroupCard(
+        TraceabilitySummaryGroupData(
           title: '关联质检单',
-          items: qualityInspectionNumbers,
-          emptyText: emptyText,
+          items: qualityInspectionSummaries,
         ),
-        const SizedBox(height: 10),
-        _TraceabilityGroupCard(
+        TraceabilitySummaryGroupData(
           title: '关联发票',
-          items: invoiceNumbers,
-          emptyText: emptyText,
+          items: invoiceSummaries,
         ),
       ],
     );
@@ -469,63 +468,6 @@ class _DetailField {
 
   final String label;
   final String value;
-}
-
-class _TraceabilityGroupCard extends StatelessWidget {
-  const _TraceabilityGroupCard({
-    required this.title,
-    required this.items,
-    required this.emptyText,
-  });
-
-  final String title;
-  final List<String> items;
-  final String emptyText;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>()!;
-    final basePadding = LayoutTokens.cardPadding(context);
-
-    return Container(
-      width: double.infinity,
-      padding: basePadding,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
-        border: Border.all(color: colors.borderColor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: colors.sidebarText,
-            ),
-          ),
-          const SizedBox(height: 10),
-          if (items.isEmpty)
-            Text(emptyText, style: theme.textTheme.bodyMedium)
-          else
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: items
-                  .map(
-                    (text) => Chip(
-                      label: Text(text),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                  )
-                  .toList(),
-            ),
-        ],
-      ),
-    );
-  }
 }
 
 class _DetailListCard extends StatelessWidget {

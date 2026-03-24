@@ -734,9 +734,9 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
                         ),
                         SizedBox(height: sectionSpacing),
                         SalesOrderTraceabilitySection(
-                          workOrderNumbers: detail.workOrderNumbers,
-                          deliveryOrderNumbers: detail.deliveryOrderNumbers,
-                          invoiceNumbers: detail.invoiceNumbers,
+                          workOrderSummaries: detail.workOrderSummaries,
+                          deliveryOrderSummaries: detail.deliveryOrderSummaries,
+                          invoiceSummaries: detail.invoiceSummaries,
                           emptyText: _emptyText,
                         ),
                       ],

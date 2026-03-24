@@ -1,3 +1,4 @@
+import 'package:work_order_app/src/core/models/traceability_summary_item.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 
 class WorkOrderDetail {
@@ -37,6 +38,9 @@ class WorkOrderDetail {
     this.salesOrderNumbers = const [],
     this.qualityInspectionNumbers = const [],
     this.invoiceNumbers = const [],
+    this.salesOrderSummaries = const [],
+    this.qualityInspectionSummaries = const [],
+    this.invoiceSummaries = const [],
     this.products = const [],
     this.materials = const [],
     this.processes = const [],
@@ -90,6 +94,9 @@ class WorkOrderDetail {
   final List<String> salesOrderNumbers;
   final List<String> qualityInspectionNumbers;
   final List<String> invoiceNumbers;
+  final List<TraceabilitySummaryItem> salesOrderSummaries;
+  final List<TraceabilitySummaryItem> qualityInspectionSummaries;
+  final List<TraceabilitySummaryItem> invoiceSummaries;
   final List<WorkOrderProductItem> products;
   final List<WorkOrderMaterialItem> materials;
   final List<WorkOrderProcessItem> processes;
@@ -145,6 +152,18 @@ class WorkOrderDetail {
       qualityInspectionNumbers:
           _parseStringList(json['quality_inspection_numbers']),
       invoiceNumbers: _parseStringList(json['invoice_numbers']),
+      salesOrderSummaries: _parseSummaryList(
+        json['sales_order_summaries'],
+        fallbackNumbers: json['sales_order_numbers'],
+      ),
+      qualityInspectionSummaries: _parseSummaryList(
+        json['quality_inspection_summaries'],
+        fallbackNumbers: json['quality_inspection_numbers'],
+      ),
+      invoiceSummaries: _parseSummaryList(
+        json['invoice_summaries'],
+        fallbackNumbers: json['invoice_numbers'],
+      ),
       products: _parseProducts(json['products']),
       materials: _parseMaterials(json['materials']),
       processes: _parseProcesses(json['order_processes']),
@@ -188,6 +207,17 @@ class WorkOrderDetail {
   static List<String> _parseStringList(dynamic value) {
     if (value is! List) return const [];
     return value.map((item) => item.toString()).toList();
+  }
+
+  static List<TraceabilitySummaryItem> _parseSummaryList(
+    dynamic value, {
+    dynamic fallbackNumbers,
+  }) {
+    final items = TraceabilitySummaryItem.parseList(value);
+    if (items.isNotEmpty) return items;
+    return _parseStringList(fallbackNumbers)
+        .map((number) => TraceabilitySummaryItem(number: number))
+        .toList();
   }
 
   static List<WorkOrderProductItem> _parseProducts(dynamic value) {
