@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
@@ -67,6 +69,12 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
   static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
   static const String _emptyCellText = '-';
+  static const List<String> _attachmentExtensions = [
+    'pdf',
+    'png',
+    'jpg',
+    'jpeg',
+  ];
 
   static const String _searchHintText = '搜索发票号/客户';
   static const String _refreshButtonText = '刷新';
@@ -80,6 +88,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
   Timer? _searchDebounce;
   bool _optionsLoading = false;
   bool _optionsLoaded = false;
+  int? _uploadingInvoiceId;
   List<Customer> _customers = [];
   List<SalesOrder> _salesOrders = [];
   List<WorkOrder> _workOrders = [];
@@ -431,6 +440,54 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     }
   }
 
+  Future<void> _uploadAttachment(
+    InvoiceViewModel viewModel,
+    Invoice invoice,
+  ) async {
+    if (_uploadingInvoiceId == invoice.id) {
+      return;
+    }
+
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: _attachmentExtensions,
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty) {
+      return;
+    }
+
+    final picked = result.files.single;
+    final fileName =
+        picked.name.trim().isEmpty ? 'invoice-attachment' : picked.name;
+    MultipartFile attachment;
+    final bytes = picked.bytes;
+
+    if (bytes != null && bytes.isNotEmpty) {
+      attachment = MultipartFile.fromBytes(bytes, filename: fileName);
+    } else if ((picked.path ?? '').trim().isNotEmpty) {
+      attachment =
+          await MultipartFile.fromFile(picked.path!.trim(), filename: fileName);
+    } else {
+      ToastUtil.showError('无法读取所选文件');
+      return;
+    }
+
+    setState(() => _uploadingInvoiceId = invoice.id);
+    try {
+      await viewModel.uploadAttachment(invoice.id, attachment);
+      if (!mounted) return;
+      ToastUtil.showSuccess('发票附件已上传');
+      await viewModel.loadInvoices(resetPage: false);
+    } catch (err) {
+      ToastUtil.showError('上传发票附件失败: $err');
+    } finally {
+      if (mounted && _uploadingInvoiceId == invoice.id) {
+        setState(() => _uploadingInvoiceId = null);
+      }
+    }
+  }
+
   Future<void> _loadOptions() async {
     if (_optionsLoaded || _optionsLoading) return;
     setState(() => _optionsLoading = true);
@@ -629,6 +686,11 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
   Widget _buildRowActions(InvoiceViewModel viewModel, Invoice invoice) {
     final actions = <RowAction>[];
     final status = invoice.status ?? '';
+    actions.add(RowAction(
+      label: _hasAttachment(invoice) ? '更新附件' : '上传附件',
+      icon: Icons.upload_file_outlined,
+      onPressed: () => _uploadAttachment(viewModel, invoice),
+    ));
     if (_hasAttachment(invoice)) {
       actions.add(RowAction(
         label: '附件',
@@ -696,6 +758,12 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
 
     final actions = <RowAction>[];
     final statusCode = invoice.status ?? '';
+    actions.add(RowAction(
+      label: _hasAttachment(invoice) ? '更新附件' : '上传附件',
+      icon: Icons.upload_file_outlined,
+      onPressed: () =>
+          _uploadAttachment(context.read<InvoiceViewModel>(), invoice),
+    ));
     if (_hasAttachment(invoice)) {
       actions.add(RowAction(
         label: '附件',

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/features/finance_invoices/data/invoice_api_service.dart';
 import 'package:work_order_app/src/features/finance_invoices/data/invoice_dto.dart';
 import 'package:work_order_app/src/features/finance_invoices/domain/invoice_repository.dart';
@@ -25,6 +26,12 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
   @override
   Future<Map<String, dynamic>> create(Map<String, dynamic> payload) {
     return _apiService.createInvoice(payload);
+  }
+
+  @override
+  Future<Map<String, dynamic>> uploadAttachment(
+      int id, MultipartFile attachment) {
+    return _apiService.uploadAttachment(id, attachment);
   }
 
   @override

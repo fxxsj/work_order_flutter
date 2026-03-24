@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/core.dart';
 import 'package:work_order_app/src/features/finance_invoices/domain/invoice.dart';
 import 'package:work_order_app/src/features/finance_invoices/domain/invoice_repository.dart';
@@ -20,6 +21,10 @@ class InvoiceViewModel extends PaginatedViewModel<Invoice> {
 
   Future<void> createInvoice(Map<String, dynamic> payload) {
     return _repository.create(payload);
+  }
+
+  Future<void> uploadAttachment(int id, MultipartFile attachment) {
+    return _repository.uploadAttachment(id, attachment);
   }
 
   Future<void> approveInvoice(int id, Map<String, dynamic> payload) {

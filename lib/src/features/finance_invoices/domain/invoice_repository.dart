@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/features/finance_invoices/data/invoice_dto.dart';
 
 abstract class InvoiceRepository {
@@ -10,6 +11,9 @@ abstract class InvoiceRepository {
   Future<Map<String, dynamic>> submit(int id);
 
   Future<Map<String, dynamic>> create(Map<String, dynamic> payload);
+
+  Future<Map<String, dynamic>> uploadAttachment(
+      int id, MultipartFile attachment);
 
   Future<Map<String, dynamic>> approve(int id, Map<String, dynamic> payload);
 
