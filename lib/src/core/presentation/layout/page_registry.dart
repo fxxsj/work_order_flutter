@@ -39,7 +39,6 @@ import 'package:work_order_app/src/features/finance_payments/presentation/paymen
 import 'package:work_order_app/src/features/processes/presentation/process_log_list_page.dart';
 import 'package:work_order_app/src/features/approvals/presentation/approval_center_page.dart';
 import 'package:work_order_app/src/features/approvals/presentation/approval_workflow_list_page.dart';
-import 'package:work_order_app/src/features/approvals/presentation/approval_step_list_page.dart';
 import 'package:work_order_app/src/features/approvals/presentation/urgent_order_page.dart';
 import 'package:work_order_app/src/features/approvals/presentation/approval_report_page.dart';
 import 'package:work_order_app/src/features/notification_admin/presentation/system_notification_page.dart';
@@ -124,8 +123,6 @@ Widget? buildFullPage(String id) {
       return const ApprovalCenterPage();
     case 'approval_workflows':
       return const ApprovalWorkflowListEntry();
-    case 'approval_steps':
-      return const ApprovalStepListEntry();
     case 'urgent_orders':
       return const UrgentOrderPage();
     case 'approval_reports':

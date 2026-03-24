@@ -55,7 +55,6 @@ const List<String> branchOrder = [
   'workorders',
   'approval_center',
   'approval_workflows',
-  'approval_steps',
   'urgent_orders',
   'approval_reports',
   'tasks_list',
@@ -123,12 +122,6 @@ const List<NavItem> navItems = [
         label: '审批工作流',
         icon: Icons.route_outlined,
         path: '/approvals/workflows',
-      ),
-      NavItem(
-        id: 'approval_steps',
-        label: '审批步骤',
-        icon: Icons.list_alt_outlined,
-        path: '/approvals/steps',
       ),
       NavItem(
         id: 'urgent_orders',
@@ -262,6 +255,7 @@ const List<NavItem> navItems = [
         label: '工序日志',
         icon: Icons.article_outlined,
         path: '/process-logs',
+        showInSidebar: false,
       ),
       NavItem(id: 'tasks_rules', label: '分派规则配置', icon: Icons.rule_outlined, path: '/tasks/assignment-rules'),
       NavItem(
