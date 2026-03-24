@@ -23,6 +23,7 @@ class QualityInspection {
     this.defectDescription,
     this.disposition,
     this.dispositionNotes,
+    this.attachmentUrl,
     this.notes,
   });
 
@@ -47,6 +48,7 @@ class QualityInspection {
   final String? defectDescription;
   final String? disposition;
   final String? dispositionNotes;
+  final String? attachmentUrl;
   final String? notes;
 
   factory QualityInspection.fromJson(Map<String, dynamic> json) {
@@ -72,6 +74,7 @@ class QualityInspection {
       defectDescription: toStringOrNull(json['defect_description']),
       disposition: toStringOrNull(json['disposition']),
       dispositionNotes: toStringOrNull(json['disposition_notes']),
+      attachmentUrl: toStringOrNull(json['attachment']),
       notes: toStringOrNull(json['notes']),
     );
   }

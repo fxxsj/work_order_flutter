@@ -21,6 +21,7 @@ class DeliveryOrderDetail {
     this.packageWeight,
     this.receivedDate,
     this.receivedNotes,
+    this.receiverSignatureUrl,
     this.notes,
     this.items = const [],
   });
@@ -44,6 +45,7 @@ class DeliveryOrderDetail {
   final double? packageWeight;
   final DateTime? receivedDate;
   final String? receivedNotes;
+  final String? receiverSignatureUrl;
   final String? notes;
   final List<DeliveryOrderItem> items;
 
@@ -68,6 +70,7 @@ class DeliveryOrderDetail {
       packageWeight: _toDouble(json['package_weight']),
       receivedDate: toDateTime(json['received_date']),
       receivedNotes: toStringOrNull(json['received_notes']),
+      receiverSignatureUrl: toStringOrNull(json['receiver_signature']),
       notes: toStringOrNull(json['notes']),
       items: _parseItems(json['items']),
     );

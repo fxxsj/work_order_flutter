@@ -5,6 +5,7 @@ class WorkOrderDetail {
     required this.id,
     required this.orderNumber,
     this.customerId,
+    this.designFileUrl,
     this.customerName,
     this.salespersonName,
     this.managerName,
@@ -53,6 +54,7 @@ class WorkOrderDetail {
   final int id;
   final String orderNumber;
   final int? customerId;
+  final String? designFileUrl;
   final String? customerName;
   final String? salespersonName;
   final String? managerName;
@@ -102,6 +104,7 @@ class WorkOrderDetail {
       id: toInt(json['id']) ?? 0,
       orderNumber: json['order_number']?.toString() ?? '',
       customerId: toInt(json['customer']),
+      designFileUrl: toStringOrNull(json['design_file']),
       customerName: toStringOrNull(json['customer_name']),
       salespersonName: toStringOrNull(json['salesperson_name']),
       managerName: toStringOrNull(json['manager_name']),
@@ -179,7 +182,8 @@ class WorkOrderDetail {
     final items = <WorkOrderProductItem>[];
     for (final item in value) {
       if (item is Map) {
-        items.add(WorkOrderProductItem.fromJson(Map<String, dynamic>.from(item)));
+        items.add(
+            WorkOrderProductItem.fromJson(Map<String, dynamic>.from(item)));
       }
     }
     return items;
@@ -190,7 +194,8 @@ class WorkOrderDetail {
     final items = <WorkOrderMaterialItem>[];
     for (final item in value) {
       if (item is Map) {
-        items.add(WorkOrderMaterialItem.fromJson(Map<String, dynamic>.from(item)));
+        items.add(
+            WorkOrderMaterialItem.fromJson(Map<String, dynamic>.from(item)));
       }
     }
     return items;
@@ -201,7 +206,8 @@ class WorkOrderDetail {
     final items = <WorkOrderProcessItem>[];
     for (final item in value) {
       if (item is Map) {
-        items.add(WorkOrderProcessItem.fromJson(Map<String, dynamic>.from(item)));
+        items.add(
+            WorkOrderProcessItem.fromJson(Map<String, dynamic>.from(item)));
       }
     }
     return items;
@@ -212,7 +218,8 @@ class WorkOrderDetail {
     final items = <WorkOrderApprovalLog>[];
     for (final item in value) {
       if (item is Map) {
-        items.add(WorkOrderApprovalLog.fromJson(Map<String, dynamic>.from(item)));
+        items.add(
+            WorkOrderApprovalLog.fromJson(Map<String, dynamic>.from(item)));
       }
     }
     return items;
@@ -293,7 +300,8 @@ class WorkOrderMaterialItem {
       materialUnit: toStringOrNull(json['material_unit']),
       materialSize: toStringOrNull(json['material_size']),
       materialUsage: toStringOrNull(json['material_usage']),
-      needCutting: json['need_cutting'] == null ? null : json['need_cutting'] == true,
+      needCutting:
+          json['need_cutting'] == null ? null : json['need_cutting'] == true,
       notes: toStringOrNull(json['notes']),
       purchaseStatus: toStringOrNull(json['purchase_status']),
       purchaseStatusDisplay: toStringOrNull(json['purchase_status_display']),

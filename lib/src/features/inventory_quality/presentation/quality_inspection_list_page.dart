@@ -16,6 +16,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widg
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/utils/file_link_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/inventory_quality/application/quality_inspection_view_model.dart';
 import 'package:work_order_app/src/features/inventory_quality/data/quality_inspection_api_service.dart';
@@ -164,6 +165,10 @@ class _QualityInspectionListViewState
                     value: _displayText(
                         inspection.resultDisplay ?? inspection.result),
                   ),
+                  _DetailRow(
+                    label: '检验附件',
+                    value: _hasAttachment(inspection) ? '已上传' : _emptyCellText,
+                  ),
                   if ((inspection.inspectionStandard ?? '').trim().isNotEmpty)
                     _DetailRow(
                       label: '检验标准',
@@ -201,6 +206,12 @@ class _QualityInspectionListViewState
             ),
           ),
           actions: [
+            if (_hasAttachment(inspection))
+              TextButton.icon(
+                onPressed: () => _openAttachment(inspection),
+                icon: const Icon(Icons.attach_file_outlined, size: 18),
+                label: const Text('查看附件'),
+              ),
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text(_cancelText),
@@ -470,6 +481,12 @@ class _QualityInspectionListViewState
                     label: '查看',
                     onPressed: () => _openDetailDialog(inspection),
                   ),
+                  if (_hasAttachment(inspection))
+                    RowAction(
+                      label: '附件',
+                      icon: Icons.attach_file_outlined,
+                      onPressed: () => _openAttachment(inspection),
+                    ),
                   if (canComplete)
                     RowAction(
                       label: _completeTitle,
@@ -732,6 +749,8 @@ class _QualityInspectionListViewState
         inspection.resultDisplay ?? inspection.result ?? _emptyCellText;
     final defectiveRate = inspection.defectiveRateFormatted ?? _emptyCellText;
     final inspectionDate = _formatDate(inspection.inspectionDate);
+    final attachmentStatus =
+        _hasAttachment(inspection) ? '已上传' : _emptyCellText;
     final canComplete = (inspection.result ?? 'pending') == 'pending';
 
     return ExpandableSummaryCard(
@@ -807,6 +826,7 @@ class _QualityInspectionListViewState
               _SummaryField(label: '检验日期', value: inspectionDate),
               _SummaryField(label: '结果', value: result),
               _SummaryField(label: '不良率', value: defectiveRate),
+              _SummaryField(label: '附件', value: attachmentStatus),
             ],
           ),
           SizedBox(height: sectionSpacing),
@@ -819,6 +839,12 @@ class _QualityInspectionListViewState
                 icon: const Icon(Icons.visibility_outlined, size: 16),
                 label: const Text('查看'),
               ),
+              if (_hasAttachment(inspection))
+                OutlinedButton.icon(
+                  onPressed: () => _openAttachment(inspection),
+                  icon: const Icon(Icons.attach_file_outlined, size: 16),
+                  label: const Text('查看附件'),
+                ),
               if (canComplete)
                 OutlinedButton.icon(
                   onPressed: () =>
@@ -831,6 +857,18 @@ class _QualityInspectionListViewState
         ],
       ),
     );
+  }
+
+  bool _hasAttachment(QualityInspection inspection) {
+    return (inspection.attachmentUrl ?? '').trim().isNotEmpty;
+  }
+
+  Future<void> _openAttachment(QualityInspection inspection) async {
+    try {
+      await FileLinkUtil.open(inspection.attachmentUrl);
+    } catch (err) {
+      ToastUtil.showError('打开检验附件失败: $err');
+    }
   }
 }
 

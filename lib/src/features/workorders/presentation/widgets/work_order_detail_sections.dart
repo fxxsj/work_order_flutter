@@ -6,6 +6,8 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_tab
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/utils/file_link_util.dart';
+import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
 
 class WorkOrderInfoItem {
@@ -606,7 +608,22 @@ class _SummaryContent extends StatelessWidget {
                 ? emptyText
                 : detail.printingOtherColors.join(', '),
           ),
+          WorkOrderInfoItem(
+            '设计文件',
+            _hasDesignFile ? '已上传' : emptyText,
+          ),
         ]),
+        if (_hasDesignFile) ...[
+          SizedBox(height: sectionSpacing),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              onPressed: () => _openDesignFile(),
+              icon: const Icon(Icons.attach_file_outlined, size: 18),
+              label: const Text('查看设计文件'),
+            ),
+          ),
+        ],
         SizedBox(height: sectionSpacing),
         buildResourceGroup(
           '图稿',
@@ -644,6 +661,18 @@ class _SummaryContent extends StatelessWidget {
     final month = local.month.toString().padLeft(2, '0');
     final day = local.day.toString().padLeft(2, '0');
     return '$year-$month-$day';
+  }
+
+  bool get _hasDesignFile {
+    return (detail.designFileUrl ?? '').trim().isNotEmpty;
+  }
+
+  Future<void> _openDesignFile() async {
+    try {
+      await FileLinkUtil.open(detail.designFileUrl);
+    } catch (err) {
+      ToastUtil.showError('打开设计文件失败: $err');
+    }
   }
 }
 

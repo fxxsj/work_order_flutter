@@ -16,6 +16,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/utils/file_link_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/finance_invoices/application/invoice_view_model.dart';
@@ -542,6 +543,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
         DataColumn(label: Text('金额')),
         DataColumn(label: Text('状态')),
         DataColumn(label: Text('开票日期')),
+        DataColumn(label: Text('附件')),
         DataColumn(label: Text('操作')),
       ],
       rows: invoices
@@ -563,6 +565,10 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                 )),
                 DataCell(
                     Text(_formatDate(invoice.issueDate), style: textStyle)),
+                DataCell(Text(
+                  _hasAttachment(invoice) ? '已上传' : _emptyCellText,
+                  style: textStyle,
+                )),
                 DataCell(_buildRowActions(viewModel, invoice)),
               ],
             ),
@@ -623,6 +629,13 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
   Widget _buildRowActions(InvoiceViewModel viewModel, Invoice invoice) {
     final actions = <RowAction>[];
     final status = invoice.status ?? '';
+    if (_hasAttachment(invoice)) {
+      actions.add(RowAction(
+        label: '附件',
+        icon: Icons.attach_file_outlined,
+        onPressed: () => _openAttachment(invoice),
+      ));
+    }
     if (status == 'draft') {
       actions.add(RowAction(
         label: '提交',
@@ -679,9 +692,17 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     final amount = _formatAmount(invoice.amount);
     final status = invoice.statusDisplay ?? invoice.status ?? _emptyCellText;
     final issueDate = _formatDate(invoice.issueDate);
+    final attachmentStatus = _hasAttachment(invoice) ? '已上传' : _emptyCellText;
 
     final actions = <RowAction>[];
     final statusCode = invoice.status ?? '';
+    if (_hasAttachment(invoice)) {
+      actions.add(RowAction(
+        label: '附件',
+        icon: Icons.attach_file_outlined,
+        onPressed: () => _openAttachment(invoice),
+      ));
+    }
     if (statusCode == 'draft') {
       actions.add(RowAction(
         label: '提交',
@@ -784,6 +805,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
               _SummaryField(label: '金额', value: amount),
               _SummaryField(label: '状态', value: status),
               _SummaryField(label: '开票日期', value: issueDate),
+              _SummaryField(label: '附件', value: attachmentStatus),
             ],
           ),
           if (actions.isNotEmpty) ...[
@@ -793,6 +815,18 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
         ],
       ),
     );
+  }
+
+  bool _hasAttachment(Invoice invoice) {
+    return (invoice.attachmentUrl ?? '').trim().isNotEmpty;
+  }
+
+  Future<void> _openAttachment(Invoice invoice) async {
+    try {
+      await FileLinkUtil.open(invoice.attachmentUrl);
+    } catch (err) {
+      ToastUtil.showError('打开附件失败: $err');
+    }
   }
 }
 
