@@ -3,12 +3,14 @@ import 'package:work_order_app/src/core/utils/parse_utils.dart';
 class TraceabilitySummaryItem {
   const TraceabilitySummaryItem({
     required this.number,
+    this.id,
     this.statusDisplay,
     this.sourceLabel,
     this.batchNo,
   });
 
   final String number;
+  final int? id;
   final String? statusDisplay;
   final String? sourceLabel;
   final String? batchNo;
@@ -16,6 +18,7 @@ class TraceabilitySummaryItem {
   factory TraceabilitySummaryItem.fromJson(Map<String, dynamic> json) {
     return TraceabilitySummaryItem(
       number: toStringOrNull(json['number']) ?? '',
+      id: toInt(json['id']),
       statusDisplay: toStringOrNull(json['status_display']),
       sourceLabel: toStringOrNull(json['source_label']),
       batchNo: toStringOrNull(json['batch_no']),

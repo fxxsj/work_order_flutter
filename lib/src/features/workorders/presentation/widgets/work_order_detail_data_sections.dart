@@ -363,12 +363,20 @@ class WorkOrderTraceabilitySection extends StatelessWidget {
     required this.salesOrderSummaries,
     required this.qualityInspectionSummaries,
     required this.invoiceSummaries,
+    required this.onOpenSalesOrder,
+    required this.onOpenSalesOrderPage,
+    required this.onOpenQualityPage,
+    required this.onOpenInvoicePage,
     required this.emptyText,
   });
 
   final List<TraceabilitySummaryItem> salesOrderSummaries;
   final List<TraceabilitySummaryItem> qualityInspectionSummaries;
   final List<TraceabilitySummaryItem> invoiceSummaries;
+  final ValueChanged<TraceabilitySummaryItem> onOpenSalesOrder;
+  final VoidCallback onOpenSalesOrderPage;
+  final VoidCallback onOpenQualityPage;
+  final VoidCallback onOpenInvoicePage;
   final String emptyText;
 
   @override
@@ -380,14 +388,21 @@ class WorkOrderTraceabilitySection extends StatelessWidget {
         TraceabilitySummaryGroupData(
           title: '来源客户订单',
           items: salesOrderSummaries,
+          actionLabel: '客户订单列表',
+          onActionTap: onOpenSalesOrderPage,
+          onItemTap: onOpenSalesOrder,
         ),
         TraceabilitySummaryGroupData(
           title: '关联质检单',
           items: qualityInspectionSummaries,
+          actionLabel: '质检列表',
+          onActionTap: onOpenQualityPage,
         ),
         TraceabilitySummaryGroupData(
           title: '关联发票',
           items: invoiceSummaries,
+          actionLabel: '发票列表',
+          onActionTap: onOpenInvoicePage,
         ),
       ],
     );

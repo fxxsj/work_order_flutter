@@ -737,6 +737,17 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
                           workOrderSummaries: detail.workOrderSummaries,
                           deliveryOrderSummaries: detail.deliveryOrderSummaries,
                           invoiceSummaries: detail.invoiceSummaries,
+                          onOpenWorkOrder: (item) {
+                            final id = item.id;
+                            if (id != null && id > 0) {
+                              context.go('/workorders/$id');
+                            }
+                          },
+                          onOpenWorkOrderPage: () => context.go('/workorders'),
+                          onOpenDeliveryPage: () =>
+                              context.go('/inventory/delivery'),
+                          onOpenInvoicePage: () =>
+                              context.go('/finance/invoices'),
                           emptyText: _emptyText,
                         ),
                       ],

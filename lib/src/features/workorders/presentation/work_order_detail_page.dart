@@ -798,6 +798,18 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                           qualityInspectionSummaries:
                               detail.qualityInspectionSummaries,
                           invoiceSummaries: detail.invoiceSummaries,
+                          onOpenSalesOrder: (item) {
+                            final id = item.id;
+                            if (id != null && id > 0) {
+                              context.go('/sales-orders/$id');
+                            }
+                          },
+                          onOpenSalesOrderPage: () =>
+                              context.go('/sales-orders'),
+                          onOpenQualityPage: () =>
+                              context.go('/inventory/quality'),
+                          onOpenInvoicePage: () =>
+                              context.go('/finance/invoices'),
                           emptyText: _emptyText,
                         ),
                         SizedBox(height: sectionSpacing),
