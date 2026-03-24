@@ -11,6 +11,8 @@ class SalesOrderDetail {
     this.customerAddress,
     this.status,
     this.statusDisplay,
+    this.approvalComment,
+    this.rejectionReason,
     this.paymentStatus,
     this.paymentStatusDisplay,
     this.orderDate,
@@ -41,6 +43,8 @@ class SalesOrderDetail {
   final String? customerAddress;
   final String? status;
   final String? statusDisplay;
+  final String? approvalComment;
+  final String? rejectionReason;
   final String? paymentStatus;
   final String? paymentStatusDisplay;
   final DateTime? orderDate;
@@ -72,6 +76,8 @@ class SalesOrderDetail {
       customerAddress: toStringOrNull(json['customer_address']),
       status: toStringOrNull(json['status']),
       statusDisplay: toStringOrNull(json['status_display']),
+      approvalComment: toStringOrNull(json['approval_comment']),
+      rejectionReason: toStringOrNull(json['rejection_reason']),
       paymentStatus: toStringOrNull(json['payment_status']),
       paymentStatusDisplay: toStringOrNull(json['payment_status_display']),
       orderDate: toDateTime(json['order_date']),

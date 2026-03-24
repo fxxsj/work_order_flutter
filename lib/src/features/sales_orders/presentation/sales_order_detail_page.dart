@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/approval_rejection_notice_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
@@ -133,12 +134,14 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     }
   }
 
-  Future<void> _showSubmitDialog() async {
+  Future<void> _showSubmitDialog({bool resubmitting = false}) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('提交订单'),
-        content: const Text('确认提交该客户订单吗？'),
+        title: Text(resubmitting ? '重新提交客户订单' : '提交客户订单'),
+        content: Text(
+          resubmitting ? '确认按退回意见修改后重新提交该客户订单吗？' : '确认提交该客户订单吗？',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -146,7 +149,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('提交'),
+            child: Text(resubmitting ? '重新提交' : '提交'),
           ),
         ],
       ),
@@ -155,7 +158,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     final viewModel = context.read<SalesOrderViewModel>();
     await _runDetailAction(
       () => viewModel.submit(widget.orderId),
-      successMessage: '已提交',
+      successMessage: resubmitting ? '已重新提交审核' : '已提交',
     );
   }
 
@@ -198,19 +201,25 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('审核拒绝'),
+        title: const Text('退回客户订单'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: _rejectionReasonController,
-              decoration: const InputDecoration(labelText: '拒绝原因'),
+              decoration: const InputDecoration(
+                labelText: '退回原因',
+                hintText: '请明确写清需要补充或修改的内容',
+              ),
               maxLines: 3,
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _approvalCommentController,
-              decoration: const InputDecoration(labelText: '审核意见（可选）'),
+              decoration: const InputDecoration(
+                labelText: '补充说明（可选）',
+                hintText: '例如：客户信息不完整，需补充联系人和交期',
+              ),
               maxLines: 3,
             ),
           ],
@@ -222,7 +231,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('拒绝'),
+            child: const Text('确认退回'),
           ),
         ],
       ),
@@ -514,7 +523,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
         SalesOrderActionItem(
           label: '重新提交',
           icon: Icons.send_outlined,
-          onTap: _showSubmitDialog,
+          onTap: () => _showSubmitDialog(resubmitting: true),
         ),
       if (status == 'submitted') ...[
         SalesOrderActionItem(
@@ -626,6 +635,34 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
                   : ListView(
                       children: [
                         _buildOverviewSection(detail, title),
+                        if ((detail.status ?? '') == 'rejected' &&
+                            ((detail.rejectionReason ?? '').trim().isNotEmpty ||
+                                (detail.approvalComment ?? '')
+                                    .trim()
+                                    .isNotEmpty)) ...[
+                          SizedBox(height: sectionSpacing),
+                          ApprovalRejectionNoticeCard(
+                            reason:
+                                (detail.rejectionReason ?? '').trim().isEmpty
+                                    ? '请先查看审批说明'
+                                    : detail.rejectionReason!.trim(),
+                            comment: detail.approvalComment,
+                            nextStep: '根据退回原因补充订单信息后，直接重新提交审核。',
+                            primaryAction: FilledButton.icon(
+                              onPressed: _actionLoading
+                                  ? null
+                                  : () => _showSubmitDialog(resubmitting: true),
+                              icon: const Icon(Icons.send_outlined, size: 18),
+                              label: const Text('重新提交'),
+                            ),
+                            secondaryAction: OutlinedButton.icon(
+                              onPressed: () => context
+                                  .go('/sales-orders/${widget.orderId}/edit'),
+                              icon: const Icon(Icons.edit_outlined, size: 18),
+                              label: const Text('先去修改'),
+                            ),
+                          ),
+                        ],
                         SizedBox(height: sectionSpacing),
                         SalesOrderInfoSection(
                           title: '客户信息',
@@ -713,6 +750,12 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
         SalesOrderInfoItem(
           '状态',
           detail.statusDisplay ?? detail.status ?? _emptyText,
+        ),
+        SalesOrderInfoItem(
+          '审批说明',
+          (detail.approvalComment ?? '').trim().isEmpty
+              ? _emptyText
+              : detail.approvalComment!.trim(),
         ),
         SalesOrderInfoItem(
           '付款状态',

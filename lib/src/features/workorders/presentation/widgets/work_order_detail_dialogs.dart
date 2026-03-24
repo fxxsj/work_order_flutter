@@ -55,20 +55,26 @@ Future<WorkOrderApprovalDialogResult?> showWorkOrderApprovalDialog(
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(approved ? '审核通过' : '审核拒绝'),
+        title: Text(approved ? '通过施工单审核' : '退回施工单审核'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: commentController,
-              decoration: const InputDecoration(labelText: '备注说明'),
+              decoration: InputDecoration(
+                labelText: approved ? '审批说明（可选）' : '补充说明（可选）',
+                hintText: approved ? '例如：资料齐全，可进入下一步' : '例如：请补充说明或备注修改要求',
+              ),
               maxLines: 3,
             ),
             if (!approved) ...[
               const SizedBox(height: 12),
               TextField(
                 controller: rejectionController,
-                decoration: const InputDecoration(labelText: '拒绝原因'),
+                decoration: const InputDecoration(
+                  labelText: '退回原因',
+                  hintText: '请明确写清需要补充或修改的内容',
+                ),
                 maxLines: 3,
               ),
             ],
@@ -81,7 +87,7 @@ Future<WorkOrderApprovalDialogResult?> showWorkOrderApprovalDialog(
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('确定'),
+            child: Text(approved ? '确认通过' : '确认退回'),
           ),
         ],
       ),

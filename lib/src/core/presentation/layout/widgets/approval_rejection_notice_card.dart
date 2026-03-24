@@ -1,0 +1,110 @@
+import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/common/theme_ext.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
+
+class ApprovalRejectionNoticeCard extends StatelessWidget {
+  const ApprovalRejectionNoticeCard({
+    super.key,
+    required this.reason,
+    required this.nextStep,
+    this.comment,
+    this.title = '审批已退回',
+    this.primaryAction,
+    this.secondaryAction,
+  });
+
+  final String title;
+  final String reason;
+  final String nextStep;
+  final String? comment;
+  final Widget? primaryAction;
+  final Widget? secondaryAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final semantic = theme.extension<AppSemanticColors>();
+    final colors = theme.extension<AppColors>();
+    final warning = semantic?.warning ?? theme.colorScheme.error;
+
+    return DetailSurfaceCard(
+      padding: LayoutTokens.cardPadding(context),
+      backgroundColor: warning.withValues(alpha: 0.08),
+      borderColor: warning.withValues(alpha: 0.35),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.warning_amber_rounded, color: warning, size: 22),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: colors?.sidebarText,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _NoticeBlock(label: '驳回原因', value: reason),
+          if ((comment ?? '').trim().isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _NoticeBlock(label: '审批说明', value: comment!.trim()),
+          ],
+          const SizedBox(height: 12),
+          _NoticeBlock(label: '下一步', value: nextStep),
+          if (primaryAction != null || secondaryAction != null) ...[
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: LayoutTokens.gapSm,
+              runSpacing: LayoutTokens.gapSm,
+              children: [
+                if (primaryAction != null) primaryAction!,
+                if (secondaryAction != null) secondaryAction!,
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _NoticeBlock extends StatelessWidget {
+  const _NoticeBlock({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: colors?.subtleText,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
+        ),
+      ],
+    );
+  }
+}

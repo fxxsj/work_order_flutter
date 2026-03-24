@@ -8,6 +8,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/constants/breakpoints.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/approval_rejection_notice_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
@@ -262,7 +263,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
         _detail = detail;
         _statusSelection = detail.status;
       });
-      ToastUtil.showSuccess('已重新提交审核');
+      ToastUtil.showSuccess('已按退回意见重新提交审核');
     } catch (err) {
       ToastUtil.showError('提交失败: $err');
     } finally {
@@ -353,6 +354,34 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     final parsed = double.tryParse(value.toString());
     if (parsed == null) return _emptyText;
     return '${parsed.toStringAsFixed(0)}%';
+  }
+
+  String? get _workOrderRejectionReason {
+    final direct = _detail?.rejectionReason?.trim() ?? '';
+    if (direct.isNotEmpty) {
+      return direct;
+    }
+    for (final log in _detail?.approvalLogs ?? const <WorkOrderApprovalLog>[]) {
+      final reason = log.rejectionReason?.trim() ?? '';
+      if (reason.isNotEmpty) {
+        return reason;
+      }
+    }
+    return null;
+  }
+
+  String? get _workOrderRejectionComment {
+    final direct = _detail?.approvalComment?.trim() ?? '';
+    if (direct.isNotEmpty) {
+      return direct;
+    }
+    for (final log in _detail?.approvalLogs ?? const <WorkOrderApprovalLog>[]) {
+      final comment = log.approvalComment?.trim() ?? '';
+      if (comment.isNotEmpty) {
+        return comment;
+      }
+    }
+    return null;
   }
 
   Future<void> _submitMultiApproval() async {
@@ -740,6 +769,29 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                           buildResourceGroup: _buildResourceGroup,
                           emptyText: _emptyText,
                         ),
+                        if ((detail.approvalStatus ?? '') == 'rejected' &&
+                            ((_workOrderRejectionReason ?? '').isNotEmpty ||
+                                (_workOrderRejectionComment ?? '')
+                                    .isNotEmpty)) ...[
+                          SizedBox(height: sectionSpacing),
+                          ApprovalRejectionNoticeCard(
+                            reason: _workOrderRejectionReason ?? '请先查看审批说明',
+                            comment: _workOrderRejectionComment,
+                            nextStep: '根据退回原因补充资料或修改内容后，直接点击“重新提交审核”。',
+                            primaryAction: FilledButton.icon(
+                              onPressed:
+                                  _actionLoading ? null : _handleResubmit,
+                              icon: const Icon(Icons.send_outlined, size: 18),
+                              label: const Text('重新提交审核'),
+                            ),
+                            secondaryAction: OutlinedButton.icon(
+                              onPressed: () => context
+                                  .go('/workorders/${widget.workOrderId}/edit'),
+                              icon: const Icon(Icons.edit_outlined, size: 18),
+                              label: const Text('先去修改'),
+                            ),
+                          ),
+                        ],
                         SizedBox(height: sectionSpacing),
                         _buildSection(
                           '多级审批',

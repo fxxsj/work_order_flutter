@@ -18,6 +18,7 @@ class WorkOrderDetail {
     this.approvalStatus,
     this.approvalStatusDisplay,
     this.approvalComment,
+    this.rejectionReason,
     this.orderDate,
     this.deliveryDate,
     this.actualDeliveryDate,
@@ -67,6 +68,7 @@ class WorkOrderDetail {
   final String? approvalStatus;
   final String? approvalStatusDisplay;
   final String? approvalComment;
+  final String? rejectionReason;
   final DateTime? orderDate;
   final DateTime? deliveryDate;
   final DateTime? actualDeliveryDate;
@@ -117,6 +119,7 @@ class WorkOrderDetail {
       approvalStatus: toStringOrNull(json['approval_status']),
       approvalStatusDisplay: toStringOrNull(json['approval_status_display']),
       approvalComment: toStringOrNull(json['approval_comment']),
+      rejectionReason: toStringOrNull(json['rejection_reason']),
       orderDate: toDateTime(json['order_date']),
       deliveryDate: toDateTime(json['delivery_date']),
       actualDeliveryDate: toDateTime(json['actual_delivery_date']),
