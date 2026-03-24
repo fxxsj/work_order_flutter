@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_dto.dart';
@@ -107,6 +108,20 @@ class DeliveryOrderApiService {
   Future<DeliveryOrderDetail> updateDeliveryOrder(
       int id, Map<String, dynamic> payload) async {
     final response = await _client.put('/delivery-orders/$id/', data: payload);
+    final map = response.data is Map
+        ? Map<String, dynamic>.from(response.data)
+        : <String, dynamic>{};
+    return DeliveryOrderDetail.fromJson(map);
+  }
+
+  Future<DeliveryOrderDetail> uploadReceiverSignature(
+    int id,
+    MultipartFile receiverSignature,
+  ) async {
+    final response = await _client.patch(
+      '/delivery-orders/$id/',
+      data: FormData.fromMap({'receiver_signature': receiverSignature}),
+    );
     final map = response.data is Map
         ? Map<String, dynamic>.from(response.data)
         : <String, dynamic>{};

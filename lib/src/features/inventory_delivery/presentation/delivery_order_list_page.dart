@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -102,6 +104,12 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
   static const String _cancelText = '取消';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
   static const String _pageSizeLabel = '每页 {size}';
+  static const List<String> _signatureExtensions = [
+    'pdf',
+    'png',
+    'jpg',
+    'jpeg',
+  ];
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
@@ -115,6 +123,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
   bool _prefillHandled = false;
   bool _pendingPrefill = false;
   int? _prefillSalesOrderId;
+  int? _uploadingDeliveryId;
 
   @override
   void initState() {
@@ -225,6 +234,57 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       title: _detailTitle,
       closeText: _cancelText,
     );
+  }
+
+  Future<void> _uploadReceiverSignature(
+    DeliveryOrderViewModel viewModel,
+    DeliveryOrder order,
+  ) async {
+    if (_uploadingDeliveryId == order.id) {
+      return;
+    }
+
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: _signatureExtensions,
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty) {
+      return;
+    }
+
+    final picked = result.files.single;
+    final fileName =
+        picked.name.trim().isEmpty ? 'receiver-signature' : picked.name;
+    MultipartFile receiverSignature;
+    final bytes = picked.bytes;
+
+    if (bytes != null && bytes.isNotEmpty) {
+      receiverSignature = MultipartFile.fromBytes(bytes, filename: fileName);
+    } else if ((picked.path ?? '').trim().isNotEmpty) {
+      receiverSignature = await MultipartFile.fromFile(
+        picked.path!.trim(),
+        filename: fileName,
+      );
+    } else {
+      ToastUtil.showError('无法读取所选文件');
+      return;
+    }
+
+    setState(() => _uploadingDeliveryId = order.id);
+    try {
+      final apiService = context.read<DeliveryOrderApiService>();
+      await apiService.uploadReceiverSignature(order.id, receiverSignature);
+      if (!mounted) return;
+      ToastUtil.showSuccess('签收附件已上传');
+      await viewModel.loadDeliveryOrders(resetPage: false);
+    } catch (err) {
+      ToastUtil.showError('上传签收附件失败: $err');
+    } finally {
+      if (mounted && _uploadingDeliveryId == order.id) {
+        setState(() => _uploadingDeliveryId = null);
+      }
+    }
   }
 
   Future<void> _confirmDelete(
@@ -701,6 +761,11 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
               DataCell(RowActionGroup(
                 actions: [
                   RowAction(
+                    label: '上传签收附件',
+                    icon: Icons.upload_file_outlined,
+                    onPressed: () => _uploadReceiverSignature(viewModel, order),
+                  ),
+                  RowAction(
                     label: '查看',
                     onPressed: () => _openDetailDialog(order),
                   ),
@@ -1092,6 +1157,11 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
             spacing: 8,
             runSpacing: 8,
             children: [
+              OutlinedButton.icon(
+                onPressed: () => _uploadReceiverSignature(viewModel, order),
+                icon: const Icon(Icons.upload_file_outlined, size: 16),
+                label: const Text('上传签收附件'),
+              ),
               OutlinedButton.icon(
                 onPressed: () => _openDetailDialog(order),
                 icon: const Icon(Icons.visibility_outlined, size: 16),
