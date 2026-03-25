@@ -593,9 +593,9 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
       case 'rejected':
         return '待修改后重提';
       case 'approved':
-        return workOrderCount > 0 ? '已转施工单，跟进生产' : '待生成施工单';
+        return workOrderCount > 0 ? '已转施工单，跟进生产进度' : '待生成施工单';
       case 'in_production':
-        return workOrderCount > 0 ? '生产中，跟进入库/发货' : '待补施工单';
+        return workOrderCount > 0 ? '跟进生产进度' : '待补施工单';
       case 'completed':
         return '可生成送货单';
       case 'cancelled':

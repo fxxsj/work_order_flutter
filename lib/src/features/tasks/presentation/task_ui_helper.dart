@@ -45,15 +45,15 @@ class TaskUiHelper {
     final hasOperator = (task.assignedOperatorName ?? '').trim().isNotEmpty;
     switch (status) {
       case 'draft':
-        return '等待施工单确认';
+        return '待审批后下发';
       case 'pending':
-        return hasOperator ? '待开工' : '待分派/认领';
+        return hasOperator ? '待开工生产' : '待分派/开工';
       case 'in_progress':
-        return '继续报工';
+        return '跟进生产进度';
       case 'completed':
-        return '等待下游接续';
+        return '推进质检/入库';
       case 'cancelled':
-        return '已取消';
+        return '任务已取消';
       default:
         return '-';
     }
