@@ -244,6 +244,56 @@ class SalesOrderTraceabilitySection extends StatelessWidget {
   }
 }
 
+class SalesOrderFinanceSummarySection extends StatelessWidget {
+  const SalesOrderFinanceSummarySection({
+    super.key,
+    required this.items,
+    required this.onOpenInvoicePage,
+    required this.onOpenPaymentPage,
+    required this.onOpenStatementPage,
+  });
+
+  final List<SalesOrderInfoItem> items;
+  final VoidCallback onOpenInvoicePage;
+  final VoidCallback onOpenPaymentPage;
+  final VoidCallback onOpenStatementPage;
+
+  @override
+  Widget build(BuildContext context) {
+    return DetailSectionCard(
+      title: '财务闭环',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SalesOrderInfoGrid(items: items),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: onOpenInvoicePage,
+                icon: const Icon(Icons.receipt_long_outlined, size: 16),
+                label: const Text('发票列表'),
+              ),
+              OutlinedButton.icon(
+                onPressed: onOpenPaymentPage,
+                icon: const Icon(Icons.payments_outlined, size: 16),
+                label: const Text('收款列表'),
+              ),
+              OutlinedButton.icon(
+                onPressed: onOpenStatementPage,
+                icon: const Icon(Icons.summarize_outlined, size: 16),
+                label: const Text('对账列表'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class SalesOrderInfoGrid extends StatelessWidget {
   const SalesOrderInfoGrid({
     super.key,

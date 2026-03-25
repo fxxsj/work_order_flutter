@@ -326,6 +326,11 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     return '$year-$month-$day';
   }
 
+  String _formatAmount(double? value) {
+    if (value == null) return _emptyText;
+    return value.toStringAsFixed(2);
+  }
+
   String _formatDateTime(dynamic value) {
     if (value == null) return _emptyText;
     if (value is DateTime) {
@@ -811,6 +816,43 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                           onOpenInvoicePage: () =>
                               context.go('/finance/invoices'),
                           emptyText: _emptyText,
+                        ),
+                        SizedBox(height: sectionSpacing),
+                        WorkOrderFinanceSummarySection(
+                          items: [
+                            WorkOrderDetailInfoItem(
+                              '来源订单金额合计',
+                              _formatAmount(detail.salesOrderTotalAmount),
+                            ),
+                            WorkOrderDetailInfoItem(
+                              '已回款合计',
+                              _formatAmount(detail.salesOrderPaidAmount),
+                            ),
+                            WorkOrderDetailInfoItem(
+                              '未回款合计',
+                              _formatAmount(detail.salesOrderUnpaidAmount),
+                            ),
+                            WorkOrderDetailInfoItem(
+                              '已结清订单',
+                              detail.settledSalesOrderCount?.toString() ??
+                                  _emptyText,
+                            ),
+                            WorkOrderDetailInfoItem(
+                              '未结清订单',
+                              detail.unsettledSalesOrderCount?.toString() ??
+                                  _emptyText,
+                            ),
+                            WorkOrderDetailInfoItem(
+                              '关联发票',
+                              detail.invoiceCount?.toString() ?? _emptyText,
+                            ),
+                          ],
+                          onOpenSalesOrderPage: () =>
+                              context.go('/sales-orders'),
+                          onOpenInvoicePage: () =>
+                              context.go('/finance/invoices'),
+                          onOpenPaymentPage: () =>
+                              context.go('/finance/payments'),
                         ),
                         SizedBox(height: sectionSpacing),
                         _buildSection(

@@ -2,9 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/models/traceability_summary_item.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/traceability_summary_section.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
+
+class WorkOrderDetailInfoItem {
+  const WorkOrderDetailInfoItem(this.label, this.value);
+
+  final String label;
+  final String value;
+}
 
 class WorkOrderProductsSection extends StatelessWidget {
   const WorkOrderProductsSection({
@@ -405,6 +413,68 @@ class WorkOrderTraceabilitySection extends StatelessWidget {
           onActionTap: onOpenInvoicePage,
         ),
       ],
+    );
+  }
+}
+
+class WorkOrderFinanceSummarySection extends StatelessWidget {
+  const WorkOrderFinanceSummarySection({
+    super.key,
+    required this.items,
+    required this.onOpenSalesOrderPage,
+    required this.onOpenInvoicePage,
+    required this.onOpenPaymentPage,
+  });
+
+  final List<WorkOrderDetailInfoItem> items;
+  final VoidCallback onOpenSalesOrderPage;
+  final VoidCallback onOpenInvoicePage;
+  final VoidCallback onOpenPaymentPage;
+
+  @override
+  Widget build(BuildContext context) {
+    return DetailSectionCard(
+      title: '财务闭环',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 20,
+            runSpacing: 12,
+            children: items
+                .map(
+                  (item) => SizedBox(
+                    width:
+                        BreakpointsUtil.isXs(context) ? double.infinity : 180,
+                    child: _InfoRow(label: item.label, value: item.value),
+                  ),
+                )
+                .toList(),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: onOpenSalesOrderPage,
+                icon: const Icon(Icons.point_of_sale_outlined, size: 16),
+                label: const Text('客户订单列表'),
+              ),
+              OutlinedButton.icon(
+                onPressed: onOpenInvoicePage,
+                icon: const Icon(Icons.receipt_long_outlined, size: 16),
+                label: const Text('发票列表'),
+              ),
+              OutlinedButton.icon(
+                onPressed: onOpenPaymentPage,
+                icon: const Icon(Icons.payments_outlined, size: 16),
+                label: const Text('收款列表'),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

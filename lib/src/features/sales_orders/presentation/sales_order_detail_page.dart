@@ -510,6 +510,11 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     return '$year-$month-$day';
   }
 
+  String _formatAmount(double? value) {
+    if (value == null) return _emptyText;
+    return value.toStringAsFixed(2);
+  }
+
   List<SalesOrderActionItem> _buildActions(SalesOrderDetail? detail) {
     final status = detail?.status ?? '';
     final actions = <SalesOrderActionItem>[
@@ -698,39 +703,76 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
                           items: [
                             SalesOrderInfoItem(
                               '小计',
-                              detail.subtotal == null
-                                  ? _emptyText
-                                  : detail.subtotal!.toStringAsFixed(2),
+                              _formatAmount(detail.subtotal),
                             ),
                             SalesOrderInfoItem(
                               '税额',
-                              detail.taxAmount == null
-                                  ? _emptyText
-                                  : detail.taxAmount!.toStringAsFixed(2),
+                              _formatAmount(detail.taxAmount),
                             ),
                             SalesOrderInfoItem(
                               '折扣',
-                              detail.discountAmount == null
-                                  ? _emptyText
-                                  : detail.discountAmount!.toStringAsFixed(2),
+                              _formatAmount(detail.discountAmount),
                             ),
                             SalesOrderInfoItem(
                               '定金',
-                              detail.depositAmount == null
-                                  ? _emptyText
-                                  : detail.depositAmount!.toStringAsFixed(2),
+                              _formatAmount(detail.depositAmount),
                             ),
                             SalesOrderInfoItem(
                               '已付金额',
-                              detail.paidAmount == null
-                                  ? _emptyText
-                                  : detail.paidAmount!.toStringAsFixed(2),
+                              _formatAmount(detail.paidAmount),
                             ),
                             SalesOrderInfoItem(
                               '付款日期',
                               _formatDate(detail.paymentDate),
                             ),
                           ],
+                        ),
+                        SizedBox(height: sectionSpacing),
+                        SalesOrderFinanceSummarySection(
+                          items: [
+                            SalesOrderInfoItem(
+                              '订单金额',
+                              _formatAmount(detail.totalAmount),
+                            ),
+                            SalesOrderInfoItem(
+                              '已回款',
+                              _formatAmount(detail.paidAmount),
+                            ),
+                            SalesOrderInfoItem(
+                              '未回款',
+                              _formatAmount(detail.unpaidAmount),
+                            ),
+                            SalesOrderInfoItem(
+                              '付款状态',
+                              detail.paymentStatusDisplay ??
+                                  detail.paymentStatus ??
+                                  _emptyText,
+                            ),
+                            SalesOrderInfoItem(
+                              '关联发票',
+                              detail.invoiceSummaries.length.toString(),
+                            ),
+                            SalesOrderInfoItem(
+                              '收款记录',
+                              detail.paymentCount?.toString() ?? _emptyText,
+                            ),
+                            SalesOrderInfoItem(
+                              '待收款计划',
+                              detail.pendingPaymentPlanCount == null
+                                  ? _emptyText
+                                  : '${detail.pendingPaymentPlanCount} 笔',
+                            ),
+                            SalesOrderInfoItem(
+                              '待收金额',
+                              _formatAmount(detail.pendingPaymentPlanAmount),
+                            ),
+                          ],
+                          onOpenInvoicePage: () =>
+                              context.go('/finance/invoices'),
+                          onOpenPaymentPage: () =>
+                              context.go('/finance/payments'),
+                          onOpenStatementPage: () =>
+                              context.go('/finance/statements'),
                         ),
                         SizedBox(height: sectionSpacing),
                         SalesOrderTraceabilitySection(

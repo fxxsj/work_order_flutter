@@ -38,6 +38,12 @@ class WorkOrderDetail {
     this.salesOrderNumbers = const [],
     this.qualityInspectionNumbers = const [],
     this.invoiceNumbers = const [],
+    this.salesOrderTotalAmount,
+    this.salesOrderPaidAmount,
+    this.salesOrderUnpaidAmount,
+    this.settledSalesOrderCount,
+    this.unsettledSalesOrderCount,
+    this.invoiceCount,
     this.salesOrderSummaries = const [],
     this.qualityInspectionSummaries = const [],
     this.invoiceSummaries = const [],
@@ -94,6 +100,12 @@ class WorkOrderDetail {
   final List<String> salesOrderNumbers;
   final List<String> qualityInspectionNumbers;
   final List<String> invoiceNumbers;
+  final double? salesOrderTotalAmount;
+  final double? salesOrderPaidAmount;
+  final double? salesOrderUnpaidAmount;
+  final int? settledSalesOrderCount;
+  final int? unsettledSalesOrderCount;
+  final int? invoiceCount;
   final List<TraceabilitySummaryItem> salesOrderSummaries;
   final List<TraceabilitySummaryItem> qualityInspectionSummaries;
   final List<TraceabilitySummaryItem> invoiceSummaries;
@@ -152,6 +164,12 @@ class WorkOrderDetail {
       qualityInspectionNumbers:
           _parseStringList(json['quality_inspection_numbers']),
       invoiceNumbers: _parseStringList(json['invoice_numbers']),
+      salesOrderTotalAmount: _toDouble(json['sales_order_total_amount']),
+      salesOrderPaidAmount: _toDouble(json['sales_order_paid_amount']),
+      salesOrderUnpaidAmount: _toDouble(json['sales_order_unpaid_amount']),
+      settledSalesOrderCount: toInt(json['settled_sales_order_count']),
+      unsettledSalesOrderCount: toInt(json['unsettled_sales_order_count']),
+      invoiceCount: toInt(json['invoice_count']),
       salesOrderSummaries: _parseSummaryList(
         json['sales_order_summaries'],
         fallbackNumbers: json['sales_order_numbers'],

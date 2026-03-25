@@ -31,6 +31,10 @@ class SalesOrderDetail {
     this.contactPhone,
     this.shippingAddress,
     this.notes,
+    this.paymentCount,
+    this.pendingPaymentPlanCount,
+    this.pendingPaymentPlanAmount,
+    this.unpaidAmount,
     this.workOrderNumbers = const [],
     this.deliveryOrderNumbers = const [],
     this.invoiceNumbers = const [],
@@ -68,6 +72,10 @@ class SalesOrderDetail {
   final String? contactPhone;
   final String? shippingAddress;
   final String? notes;
+  final int? paymentCount;
+  final int? pendingPaymentPlanCount;
+  final double? pendingPaymentPlanAmount;
+  final double? unpaidAmount;
   final List<String> workOrderNumbers;
   final List<String> deliveryOrderNumbers;
   final List<String> invoiceNumbers;
@@ -106,6 +114,10 @@ class SalesOrderDetail {
       contactPhone: toStringOrNull(json['contact_phone']),
       shippingAddress: toStringOrNull(json['shipping_address']),
       notes: toStringOrNull(json['notes']),
+      paymentCount: toInt(json['payment_count']),
+      pendingPaymentPlanCount: toInt(json['pending_payment_plan_count']),
+      pendingPaymentPlanAmount: _toDouble(json['pending_payment_plan_amount']),
+      unpaidAmount: _toDouble(json['unpaid_amount']),
       workOrderNumbers: _parseStringList(json['work_order_numbers']),
       deliveryOrderNumbers: _parseStringList(json['delivery_order_numbers']),
       invoiceNumbers: _parseStringList(json['invoice_numbers']),
