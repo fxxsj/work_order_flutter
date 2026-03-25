@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
@@ -89,9 +90,40 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
   bool _optionsLoading = false;
   bool _optionsLoaded = false;
   int? _uploadingInvoiceId;
+  bool _prefillHandled = false;
+  bool _pendingPrefill = false;
+  int? _prefillSalesOrderId;
+  int? _prefillCustomerId;
   List<Customer> _customers = [];
   List<SalesOrder> _salesOrders = [];
   List<WorkOrder> _workOrders = [];
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_prefillHandled) return;
+    final uri = GoRouterState.of(context).uri;
+    final createFlag = uri.queryParameters['create'];
+    final salesOrderId =
+        int.tryParse(uri.queryParameters['sales_order_id'] ?? '');
+    final customerId = int.tryParse(uri.queryParameters['customer_id'] ?? '');
+    if (salesOrderId != null && (createFlag == '1' || createFlag == 'true')) {
+      _prefillSalesOrderId = salesOrderId;
+      _prefillCustomerId = customerId;
+      _pendingPrefill = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_pendingPrefill) return;
+        _pendingPrefill = false;
+        final viewModel = context.read<InvoiceViewModel>();
+        _openCreateDialog(
+          viewModel,
+          prefillSalesOrderId: _prefillSalesOrderId,
+          prefillCustomerId: _prefillCustomerId,
+        );
+      });
+    }
+    _prefillHandled = true;
+  }
 
   @override
   void dispose() {
@@ -113,12 +145,24 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     });
   }
 
-  Future<void> _openCreateDialog(InvoiceViewModel viewModel) async {
+  Future<void> _openCreateDialog(
+    InvoiceViewModel viewModel, {
+    int? prefillSalesOrderId,
+    int? prefillCustomerId,
+  }) async {
     await _loadOptions();
     if (_customers.isEmpty) {
       ToastUtil.showError('请先配置客户信息');
       return;
     }
+
+    final prefillSalesOrder =
+        prefillSalesOrderId != null && prefillSalesOrderId > 0
+            ? prefillSalesOrderId
+            : null;
+    final prefillCustomer = prefillCustomerId != null && prefillCustomerId > 0
+        ? prefillCustomerId
+        : null;
 
     final formKey = GlobalKey<FormState>();
     final amountController = TextEditingController();
@@ -126,8 +170,8 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     final issueDateController = TextEditingController();
     final notesController = TextEditingController();
     String invoiceType = 'vat_normal';
-    int? selectedCustomerId;
-    int? selectedSalesOrderId;
+    int? selectedCustomerId = prefillCustomer;
+    int? selectedSalesOrderId = prefillSalesOrder;
     int? selectedWorkOrderId;
     bool submitting = false;
 

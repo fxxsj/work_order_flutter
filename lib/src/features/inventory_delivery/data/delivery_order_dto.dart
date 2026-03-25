@@ -4,26 +4,32 @@ class DeliveryOrderDto {
   const DeliveryOrderDto({
     required this.id,
     required this.orderNumber,
+    this.customerId,
     this.customerName,
+    this.salesOrderId,
     this.salesOrderNumber,
     this.deliveryDate,
     this.status,
     this.statusDisplay,
     this.itemsCount,
     this.totalQuantity,
+    this.invoiceCount,
     this.logisticsCompany,
     this.trackingNumber,
   });
 
   final int id;
   final String orderNumber;
+  final int? customerId;
   final String? customerName;
+  final int? salesOrderId;
   final String? salesOrderNumber;
   final DateTime? deliveryDate;
   final String? status;
   final String? statusDisplay;
   final int? itemsCount;
   final double? totalQuantity;
+  final int? invoiceCount;
   final String? logisticsCompany;
   final String? trackingNumber;
 
@@ -35,13 +41,16 @@ class DeliveryOrderDto {
     return DeliveryOrder(
       id: id,
       orderNumber: orderNumber,
+      customerId: customerId,
       customerName: customerName,
+      salesOrderId: salesOrderId,
       salesOrderNumber: salesOrderNumber,
       deliveryDate: deliveryDate,
       status: status,
       statusDisplay: statusDisplay,
       itemsCount: itemsCount,
       totalQuantity: totalQuantity,
+      invoiceCount: invoiceCount,
       logisticsCompany: logisticsCompany,
       trackingNumber: trackingNumber,
     );
@@ -53,13 +62,16 @@ extension DeliveryOrderMapper on DeliveryOrder {
     return DeliveryOrderDto(
       id: id,
       orderNumber: orderNumber,
+      customerId: customerId,
       customerName: customerName,
+      salesOrderId: salesOrderId,
       salesOrderNumber: salesOrderNumber,
       deliveryDate: deliveryDate,
       status: status,
       statusDisplay: statusDisplay,
       itemsCount: itemsCount,
       totalQuantity: totalQuantity,
+      invoiceCount: invoiceCount,
       logisticsCompany: logisticsCompany,
       trackingNumber: trackingNumber,
     );

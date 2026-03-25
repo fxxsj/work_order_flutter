@@ -23,6 +23,8 @@ class DeliveryOrderDetail {
     this.receivedNotes,
     this.receiverSignatureUrl,
     this.notes,
+    this.invoiceCount,
+    this.invoiceNumbers = const [],
     this.items = const [],
   });
 
@@ -47,6 +49,8 @@ class DeliveryOrderDetail {
   final String? receivedNotes;
   final String? receiverSignatureUrl;
   final String? notes;
+  final int? invoiceCount;
+  final List<String> invoiceNumbers;
   final List<DeliveryOrderItem> items;
 
   factory DeliveryOrderDetail.fromJson(Map<String, dynamic> json) {
@@ -72,6 +76,8 @@ class DeliveryOrderDetail {
       receivedNotes: toStringOrNull(json['received_notes']),
       receiverSignatureUrl: toStringOrNull(json['receiver_signature']),
       notes: toStringOrNull(json['notes']),
+      invoiceCount: toInt(json['invoice_count']),
+      invoiceNumbers: _parseStrings(json['invoice_numbers']),
       items: _parseItems(json['items']),
     );
   }
@@ -89,6 +95,11 @@ class DeliveryOrderDetail {
         .map((item) =>
             DeliveryOrderItem.fromJson(Map<String, dynamic>.from(item)))
         .toList();
+  }
+
+  static List<String> _parseStrings(dynamic value) {
+    if (value is! List) return const [];
+    return value.map((item) => item.toString()).toList();
   }
 }
 

@@ -237,6 +237,20 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     );
   }
 
+  void _openCreateInvoiceForDelivery(DeliveryOrder order) {
+    final salesOrderId = order.salesOrderId;
+    if (salesOrderId == null || salesOrderId <= 0) {
+      ToastUtil.showError('当前发货单缺少客户订单，无法预填开票');
+      return;
+    }
+    final customerQuery = order.customerId != null && order.customerId! > 0
+        ? '&customer_id=${order.customerId}'
+        : '';
+    context.go(
+      '/finance/invoices?create=1&sales_order_id=$salesOrderId$customerQuery',
+    );
+  }
+
   Future<void> _uploadReceiverSignature(
     DeliveryOrderViewModel viewModel,
     DeliveryOrder order,
@@ -722,6 +736,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
         DataColumn(label: Text('发货数量')),
         DataColumn(label: Text('物流公司')),
         DataColumn(label: Text('运单号')),
+        DataColumn(label: Text('开票')),
         DataColumn(label: Text('操作')),
       ],
       rows: orders.map(
@@ -759,8 +774,15 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
                   Text(_displayText(order.logisticsCompany), style: textStyle)),
               DataCell(
                   Text(_displayText(order.trackingNumber), style: textStyle)),
+              DataCell(Text(_invoiceFollowUpText(order), style: textStyle)),
               DataCell(RowActionGroup(
                 actions: [
+                  if (_shouldPromptInvoice(order))
+                    RowAction(
+                      label: '去开票',
+                      icon: Icons.receipt_long_outlined,
+                      onPressed: () => _openCreateInvoiceForDelivery(order),
+                    ),
                   RowAction(
                     label: '上传签收附件',
                     icon: Icons.upload_file_outlined,
@@ -892,6 +914,8 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
           final rejectedCount = viewModel.deliveryOrders
               .where((item) => (item.status ?? '') == 'rejected')
               .length;
+          final pendingInvoiceCount =
+              viewModel.deliveryOrders.where(_shouldPromptInvoice).length;
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -908,6 +932,12 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
           final actions = <Widget>[
             if (rejectedCount > 0)
               StatusHintChip(label: '待处理拒收', count: rejectedCount),
+            if (pendingInvoiceCount > 0)
+              StatusHintChip(
+                label: '待开票交付',
+                count: pendingInvoiceCount,
+                icon: Icons.receipt_long_outlined,
+              ),
             PageActionButton.outlined(
               onPressed: () => viewModel.loadDeliveryOrders(resetPage: true),
               icon: const Icon(Icons.refresh, size: 16),
@@ -1074,6 +1104,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     final totalQuantity = _formatAmount(order.totalQuantity);
     final logistics = _displayText(order.logisticsCompany);
     final trackingNumber = _displayText(order.trackingNumber);
+    final invoiceFollowUp = _invoiceFollowUpText(order);
     final statusCode = order.status ?? '';
     final canShip = statusCode == 'pending';
     final canReceive = statusCode == 'shipped' || statusCode == 'in_transit';
@@ -1158,6 +1189,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
               _SummaryField(label: '发货数量', value: totalQuantity),
               _SummaryField(label: '物流公司', value: logistics),
               _SummaryField(label: '运单号', value: trackingNumber),
+              _SummaryField(label: '开票跟进', value: invoiceFollowUp),
               if (followUp != null)
                 _SummaryField(label: '异常跟进', value: followUp),
             ],
@@ -1167,6 +1199,12 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
             spacing: 8,
             runSpacing: 8,
             children: [
+              if (_shouldPromptInvoice(order))
+                FilledButton.icon(
+                  onPressed: () => _openCreateInvoiceForDelivery(order),
+                  icon: const Icon(Icons.receipt_long_outlined, size: 16),
+                  label: const Text('去开票'),
+                ),
               OutlinedButton.icon(
                 onPressed: () => _uploadReceiverSignature(viewModel, order),
                 icon: const Icon(Icons.upload_file_outlined, size: 16),
@@ -1219,6 +1257,24 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
         ],
       ),
     );
+  }
+
+  bool _shouldPromptInvoice(DeliveryOrder order) {
+    final status = order.status ?? '';
+    final readyForInvoice =
+        status == 'shipped' || status == 'in_transit' || status == 'received';
+    final invoiceCount = order.invoiceCount ?? 0;
+    return readyForInvoice &&
+        invoiceCount <= 0 &&
+        (order.salesOrderId ?? 0) > 0;
+  }
+
+  String _invoiceFollowUpText(DeliveryOrder order) {
+    final count = order.invoiceCount ?? 0;
+    if (count > 0) {
+      return '已关联 $count 张发票';
+    }
+    return _shouldPromptInvoice(order) ? '待开票' : _emptyCellText;
   }
 }
 

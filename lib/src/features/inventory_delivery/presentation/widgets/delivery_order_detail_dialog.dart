@@ -21,6 +21,43 @@ Future<void> showDeliveryOrderDetailDialog(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (_shouldPromptInvoice(detail)) ...[
+                ApprovalRejectionNoticeCard(
+                  title: '该发货已进入开票阶段',
+                  icon: Icons.receipt_long_outlined,
+                  reasonLabel: '当前状态',
+                  reason: '当前发货单尚未关联发票，请尽快补齐开票凭证。',
+                  nextStepLabel: '建议动作',
+                  nextStep: '先核对发货信息与客户订单，再进入发票列表按当前客户订单预填创建发票。',
+                  primaryAction: detail.salesOrderId == null
+                      ? null
+                      : FilledButton.icon(
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop();
+                            final customerId = detail.customerId == null ||
+                                    detail.customerId! <= 0
+                                ? ''
+                                : '&customer_id=${detail.customerId}';
+                            context.go(
+                              '/finance/invoices?create=1&sales_order_id=${detail.salesOrderId}$customerId',
+                            );
+                          },
+                          icon: const Icon(Icons.add_card_outlined, size: 18),
+                          label: const Text('去开票'),
+                        ),
+                  secondaryAction: detail.salesOrderId == null
+                      ? null
+                      : OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop();
+                            context.go('/sales-orders/${detail.salesOrderId}');
+                          },
+                          icon: const Icon(Icons.open_in_new, size: 18),
+                          label: const Text('查看客户订单'),
+                        ),
+                ),
+                const SizedBox(height: 16),
+              ],
               if (_isRejected(detail)) ...[
                 ApprovalRejectionNoticeCard(
                   title: '发货已拒收，库存已回退',
@@ -73,6 +110,10 @@ Future<void> showDeliveryOrderDetailDialog(
                 label: '签收附件',
                 value: _hasReceiverSignature(detail) ? '已上传' : '-',
               ),
+              _DetailRow(
+                label: '关联发票',
+                value: _formatInvoiceSummary(detail),
+              ),
               if ((detail.receivedNotes ?? '').trim().isNotEmpty)
                 _DetailRow(label: '签收备注', value: detail.receivedNotes ?? ''),
               if (_hasReceiverSignature(detail)) ...[
@@ -119,6 +160,25 @@ bool _hasReceiverSignature(DeliveryOrderDetail detail) {
 
 bool _isRejected(DeliveryOrderDetail detail) {
   return (detail.status ?? '') == 'rejected';
+}
+
+bool _shouldPromptInvoice(DeliveryOrderDetail detail) {
+  final status = detail.status ?? '';
+  final readyForInvoice =
+      status == 'shipped' || status == 'in_transit' || status == 'received';
+  final invoiceCount = detail.invoiceCount ?? 0;
+  return readyForInvoice && invoiceCount <= 0 && detail.salesOrderId != null;
+}
+
+String _formatInvoiceSummary(DeliveryOrderDetail detail) {
+  final count = detail.invoiceCount ?? detail.invoiceNumbers.length;
+  if (count <= 0) {
+    return '待开票';
+  }
+  if (detail.invoiceNumbers.isEmpty) {
+    return '已关联 $count 张';
+  }
+  return detail.invoiceNumbers.join('、');
 }
 
 String _rejectReason(DeliveryOrderDetail detail) {
