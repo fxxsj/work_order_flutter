@@ -61,6 +61,8 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
 
   @override
   Widget build(BuildContext context) {
+    final storage = context.read<AppStorage>();
+    final currentUser = _readCurrentUser(storage);
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
     final size = MediaQuery.sizeOf(context);
@@ -77,7 +79,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     final headerMuted = headerForeground.withValues(alpha: 0.78);
     final sidebar = colors.sidebar;
     final sidebarText = colors.sidebarText;
-    final sidebarItems = sidebarNavItems();
+    final sidebarItems = sidebarNavItems(currentUser: currentUser);
     final borderColor = colors.borderColor;
     final headerBorderColor = Colors.transparent;
     final appBarHeight = isXs ? 52.0 : 54.0;
@@ -130,14 +132,14 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
                   expandedIds: _expandedIds,
                   currentId: currentId,
                   onToggleExpand: _setExpanded,
-                onSelectId: _handleSelectId,
-                primary: primary,
-                sidebarText: sidebarText,
-                badgeTextForItem: _badgeTextForItem,
-                headerHeight: appBarHeight,
+                  onSelectId: _handleSelectId,
+                  primary: primary,
+                  sidebarText: sidebarText,
+                  badgeTextForItem: _badgeTextForItem,
+                  headerHeight: appBarHeight,
+                ),
               ),
-            ),
-          )
+            )
           : null,
       endDrawer: LayoutSetting(),
       appBar: isMobile ? appHeader : null,
@@ -189,6 +191,14 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
         ],
       ),
     );
+  }
+
+  Map<String, dynamic>? _readCurrentUser(AppStorage storage) {
+    final raw = storage.read(Constant.KEY_CURRENT_USER_INFO);
+    if (raw is Map) {
+      return Map<String, dynamic>.from(raw);
+    }
+    return null;
   }
 
   void _handleSelectId(String id) {

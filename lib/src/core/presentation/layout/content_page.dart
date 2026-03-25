@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
+import 'package:work_order_app/src/core/constants/constant.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/content_page_types.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/page_registry.dart';
+import 'package:work_order_app/src/core/storage/app_storage.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
 
 const String _emptyText = '-';
@@ -108,7 +110,8 @@ class _DashboardPageState extends State<_DashboardPage> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final colors = theme.extension<AppColors>()!;
-    final leaves = leafNavItemsByBranch();
+    final currentUser = _readCurrentUser(context);
+    final leaves = leafNavItemsByBranch(currentUser: currentUser);
     final quickEntries = _quickIds
         .map((id) => leaves.where((item) => item.id == id).firstOrNull)
         .whereType<NavItem>()
@@ -117,8 +120,7 @@ class _DashboardPageState extends State<_DashboardPage> {
         .map((id) => leaves.where((item) => item.id == id).firstOrNull)
         .whereType<NavItem>()
         .toList();
-    final groups = navItems
-        .where((item) => item.showInSidebar)
+    final groups = sidebarNavItems(currentUser: currentUser)
         .where((item) => item.children.isNotEmpty)
         .take(4)
         .toList();
@@ -236,6 +238,14 @@ class _DashboardPageState extends State<_DashboardPage> {
     const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
     return '${now.month} 月 ${now.day} 日 ${weekdays[now.weekday - 1]}';
   }
+
+  Map<String, dynamic>? _readCurrentUser(BuildContext context) {
+    final raw = context.read<AppStorage>().read(Constant.KEY_CURRENT_USER_INFO);
+    if (raw is Map) {
+      return Map<String, dynamic>.from(raw);
+    }
+    return null;
+  }
 }
 
 class _DashboardStatsSection extends StatelessWidget {
@@ -322,13 +332,14 @@ class _DashboardStatsSection extends StatelessWidget {
     final upcoming = _asInt(stats['upcoming_deadline_count']);
     final pendingApproval = _asInt(stats['pending_approval_count']);
     final inProgress = _statusCount(stats, 'in_progress');
-    final taskTotal = _asInt(_readNested(stats, ['task_statistics', 'total_count']));
+    final taskTotal =
+        _asInt(_readNested(stats, ['task_statistics', 'total_count']));
     final taskCompletion =
         _asDouble(_readNested(stats, ['task_statistics', 'completion_rate']));
-    final processCompletion =
-        _asDouble(_readNested(stats, ['efficiency_analysis', 'process_completion_rate']));
-    final defectiveRate =
-        _asDouble(_readNested(stats, ['efficiency_analysis', 'defective_rate']));
+    final processCompletion = _asDouble(
+        _readNested(stats, ['efficiency_analysis', 'process_completion_rate']));
+    final defectiveRate = _asDouble(
+        _readNested(stats, ['efficiency_analysis', 'defective_rate']));
 
     return [
       _StatMetric(title: '施工单总数', value: _formatInt(totalCount)),
@@ -424,7 +435,8 @@ class _DashboardChartsSection extends StatelessWidget {
     final cards = <_ChartCardData>[
       _ChartCardData(
         title: '施工单状态分布',
-        items: _buildStatusItems(data['status_statistics'], _workOrderStatusLabel),
+        items:
+            _buildStatusItems(data['status_statistics'], _workOrderStatusLabel),
       ),
       _ChartCardData(
         title: '优先级分布',
@@ -561,12 +573,12 @@ class _DashboardChartsSection extends StatelessWidget {
   }
 
   List<_ChartBarItem> _buildEfficiencyItems(Map<String, dynamic> stats) {
-    final processCompletion =
-        _asDouble(_readNested(stats, ['efficiency_analysis', 'process_completion_rate']));
-    final taskCompletion =
-        _asDouble(_readNested(stats, ['efficiency_analysis', 'task_completion_rate']));
-    final defectiveRate =
-        _asDouble(_readNested(stats, ['efficiency_analysis', 'defective_rate']));
+    final processCompletion = _asDouble(
+        _readNested(stats, ['efficiency_analysis', 'process_completion_rate']));
+    final taskCompletion = _asDouble(
+        _readNested(stats, ['efficiency_analysis', 'task_completion_rate']));
+    final defectiveRate = _asDouble(
+        _readNested(stats, ['efficiency_analysis', 'defective_rate']));
 
     final items = <_ChartBarItem>[
       if (processCompletion != null)
@@ -777,8 +789,8 @@ class _ChartBarList extends StatelessWidget {
     if (items.isEmpty) {
       return Text('暂无数据', style: Theme.of(context).textTheme.bodySmall);
     }
-    final total = totalOverride ??
-        items.fold<double>(0, (sum, item) => sum + item.value);
+    final total =
+        totalOverride ?? items.fold<double>(0, (sum, item) => sum + item.value);
 
     return Column(
       children: [
@@ -821,9 +833,8 @@ class _ChartBarRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final percent = total > 0
-        ? (item.value / total).clamp(0.0, 1.0).toDouble()
-        : 0.0;
+    final percent =
+        total > 0 ? (item.value / total).clamp(0.0, 1.0).toDouble() : 0.0;
     final percentText = '${(percent * 100).toStringAsFixed(1)}%';
     final textTheme = Theme.of(context).textTheme;
 
@@ -1302,8 +1313,7 @@ class _ModulePlaceholder extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             '当前模块入口已接入统一布局。',
-            style:
-                theme.textTheme.bodySmall?.copyWith(color: style.subtleText),
+            style: theme.textTheme.bodySmall?.copyWith(color: style.subtleText),
           ),
         ],
       ),

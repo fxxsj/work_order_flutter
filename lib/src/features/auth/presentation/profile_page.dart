@@ -70,7 +70,8 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   String _username() {
-    return (_currentUser['username'] ?? _currentUser['userName'] ?? '').toString();
+    return (_currentUser['username'] ?? _currentUser['userName'] ?? '')
+        .toString();
   }
 
   List<String> _groups() {
@@ -79,6 +80,22 @@ class _ProfilePageState extends State<ProfilePage> {
       return groups.map((e) => e.toString()).toList();
     }
     return [];
+  }
+
+  List<String> _departments() {
+    final departments = _currentUser['departments'];
+    if (departments is List) {
+      return departments.map((e) => e.toString()).toList();
+    }
+    return [];
+  }
+
+  int _permissionCount() {
+    final permissions = _currentUser['permissions'];
+    if (permissions is List) {
+      return permissions.length;
+    }
+    return 0;
   }
 
   bool _isSuperUser() {
@@ -177,7 +194,9 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('个人信息', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+            Text('个人信息',
+                style: theme.textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w700)),
             const SizedBox(height: 16),
             Wrap(
               spacing: 8,
@@ -251,6 +270,16 @@ class _ProfilePageState extends State<ProfilePage> {
               if (_isSuperUser()) const Chip(label: Text('超级管理员')),
             ],
           ),
+          const SizedBox(height: 12),
+          Text(
+            '所属部门：${_departments().isEmpty ? '未配置' : _departments().join('、')}',
+          ),
+          const SizedBox(height: 6),
+          Text(
+            _isSuperUser()
+                ? '权限范围：超级管理员，默认可见全部菜单'
+                : '权限范围：已同步 ${_permissionCount()} 项权限，侧边栏会按当前账号能力收敛显示',
+          ),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -266,7 +295,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         height: 16,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.onPrimary),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              theme.colorScheme.onPrimary),
                         ),
                       )
                     : const Text('保存修改'),
@@ -291,7 +321,8 @@ class _ProfilePageState extends State<ProfilePage> {
             controller: _oldPasswordController,
             obscureText: true,
             decoration: const InputDecoration(labelText: '旧密码'),
-            validator: (value) => value == null || value.isEmpty ? '请输入旧密码' : null,
+            validator: (value) =>
+                value == null || value.isEmpty ? '请输入旧密码' : null,
           ),
           const SizedBox(height: 12),
           TextFormField(
@@ -328,7 +359,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     height: 16,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.onPrimary),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                          theme.colorScheme.onPrimary),
                     ),
                   )
                 : const Text('修改密码'),
@@ -337,5 +369,4 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
-
 }
