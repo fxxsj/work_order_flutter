@@ -1,19 +1,37 @@
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
 import 'package:work_order_app/src/features/departments/domain/department.dart';
+import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_api_service.dart';
+import 'package:work_order_app/src/features/inventory_quality/data/quality_inspection_api_service.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
+
+class TaskSupervisorFlowSummary {
+  const TaskSupervisorFlowSummary({
+    this.pendingInspections = 0,
+    this.exceptionInspections = 0,
+    this.pendingReceipts = 0,
+    this.rejectedDeliveries = 0,
+  });
+
+  final int pendingInspections;
+  final int exceptionInspections;
+  final int pendingReceipts;
+  final int rejectedDeliveries;
+}
 
 class TaskSupervisorDashboardData {
   const TaskSupervisorDashboardData({
     required this.workload,
     required this.tasks,
     required this.operators,
+    required this.flowSummary,
   });
 
   final Map<String, dynamic> workload;
   final List<Task> tasks;
   final List<TaskSupervisorOperatorOption> operators;
+  final TaskSupervisorFlowSummary flowSummary;
 }
 
 class TaskSupervisorOperatorOption {
@@ -59,16 +77,22 @@ class TaskSupervisorSupportService {
     int departmentId,
   ) async {
     final api = TaskApiService(_client);
-    final workload = await api.fetchDepartmentWorkload(params: {
+    final workloadFuture = api.fetchDepartmentWorkload(params: {
       'department_id': departmentId,
     });
-    final tasksPage = await api.fetchTasks(
+    final tasksPageFuture = api.fetchTasks(
       departmentId: departmentId,
       page: 1,
       pageSize: 50,
       ordering: '-created_at',
     );
-    final operators = await api.fetchDepartmentOperators(departmentId);
+    final operatorsFuture = api.fetchDepartmentOperators(departmentId);
+    final flowSummaryFuture = _loadFlowSummary();
+
+    final workload = await workloadFuture;
+    final tasksPage = await tasksPageFuture;
+    final operators = await operatorsFuture;
+    final flowSummary = await flowSummaryFuture;
     return TaskSupervisorDashboardData(
       workload: workload,
       tasks: tasksPage.items.map((dto) => dto.toEntity()).toList(),
@@ -76,6 +100,7 @@ class TaskSupervisorSupportService {
           .map((item) => TaskSupervisorOperatorOption.fromJson(item))
           .where((item) => item.id > 0)
           .toList(),
+      flowSummary: flowSummary,
     );
   }
 
@@ -88,5 +113,69 @@ class TaskSupervisorSupportService {
       'operator_id': operatorId,
       'notes': notes,
     });
+  }
+
+  Future<TaskSupervisorFlowSummary> _loadFlowSummary() async {
+    try {
+      final qualityApi = QualityInspectionApiService(_client);
+      final deliveryApi = DeliveryOrderApiService(_client);
+      final qualitySummaryFuture = qualityApi.fetchSummary();
+      final deliverySummaryFuture = deliveryApi.fetchSummary();
+
+      final qualitySummary = await qualitySummaryFuture;
+      final deliverySummary = await deliverySummaryFuture;
+      final qualityByResult = qualitySummary['by_result'] as List? ?? const [];
+      final deliveryByStatus =
+          deliverySummary['by_status'] as List? ?? const [];
+
+      return TaskSupervisorFlowSummary(
+        pendingInspections: _countByKey(
+          qualityByResult,
+          keyName: 'result',
+          keyValue: 'pending',
+        ),
+        exceptionInspections: _countByKey(
+              qualityByResult,
+              keyName: 'result',
+              keyValue: 'failed',
+            ) +
+            _countByKey(
+              qualityByResult,
+              keyName: 'result',
+              keyValue: 'conditional',
+            ),
+        pendingReceipts: _countByKey(
+              deliveryByStatus,
+              keyName: 'status',
+              keyValue: 'shipped',
+            ) +
+            _countByKey(
+              deliveryByStatus,
+              keyName: 'status',
+              keyValue: 'in_transit',
+            ),
+        rejectedDeliveries: _countByKey(
+          deliveryByStatus,
+          keyName: 'status',
+          keyValue: 'rejected',
+        ),
+      );
+    } catch (_) {
+      return const TaskSupervisorFlowSummary();
+    }
+  }
+
+  int _countByKey(
+    List<dynamic> items, {
+    required String keyName,
+    required String keyValue,
+  }) {
+    for (final item in items) {
+      if (item is! Map) continue;
+      final map = Map<String, dynamic>.from(item);
+      if (map[keyName]?.toString() != keyValue) continue;
+      return TaskSupervisorOperatorOption._toInt(map['count']);
+    }
+    return 0;
   }
 }

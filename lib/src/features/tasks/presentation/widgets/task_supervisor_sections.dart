@@ -99,6 +99,92 @@ class TaskSupervisorStatusBadge extends StatelessWidget {
   }
 }
 
+class TaskSupervisorFocusCard extends StatelessWidget {
+  const TaskSupervisorFocusCard({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.hint,
+    required this.icon,
+    required this.color,
+    this.actionLabel,
+    this.onPressed,
+  });
+
+  final String label;
+  final int value;
+  final String hint;
+  final IconData icon;
+  final Color color;
+  final String? actionLabel;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>()!;
+
+    return Container(
+      constraints: const BoxConstraints(minWidth: 220, maxWidth: 320),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+        border: Border.all(color: color.withValues(alpha: 0.28)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+                ),
+                child: Icon(icon, size: 18, color: color),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  label,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Text(
+                '$value',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            hint,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colors.subtleText,
+            ),
+          ),
+          if (onPressed != null && actionLabel != null) ...[
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: onPressed,
+              icon: const Icon(Icons.arrow_forward_outlined, size: 16),
+              label: Text(actionLabel!),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class TaskSupervisorOperatorCard extends StatelessWidget {
   const TaskSupervisorOperatorCard({
     super.key,

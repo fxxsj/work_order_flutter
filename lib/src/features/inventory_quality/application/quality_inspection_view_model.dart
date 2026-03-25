@@ -29,6 +29,17 @@ class QualityInspectionViewModel extends PaginatedViewModel<QualityInspection> {
     await loadInspections(resetPage: true);
   }
 
+  Future<void> applyRoutePrefill({
+    String? search,
+    String? result,
+    String? inspectionType,
+  }) async {
+    setSearchText(search?.trim() ?? '');
+    _resultFilter = result?.trim() ?? '';
+    _typeFilter = inspectionType?.trim() ?? '';
+    await loadInspections(resetPage: true);
+  }
+
   Future<void> uploadAttachment(int id, MultipartFile attachment) {
     return _repository.uploadAttachment(id, attachment);
   }

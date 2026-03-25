@@ -28,6 +28,17 @@ class DeliveryOrderViewModel extends PaginatedViewModel<DeliveryOrder> {
     await loadDeliveryOrders(resetPage: true);
   }
 
+  Future<void> applyRoutePrefill({
+    String? search,
+    String? status,
+    int? customerId,
+  }) async {
+    setSearchText(search?.trim() ?? '');
+    _statusFilter = status?.trim() ?? '';
+    _customerId = customerId != null && customerId > 0 ? customerId : 0;
+    await loadDeliveryOrders(resetPage: true);
+  }
+
   @override
   Future<PageData<DeliveryOrder>> fetchPage({
     required int page,

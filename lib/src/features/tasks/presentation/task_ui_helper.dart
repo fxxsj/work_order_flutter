@@ -85,6 +85,17 @@ class TaskUiHelper {
     return text != null && text != '已逾期';
   }
 
+  static bool needsAssignment(Task task) {
+    final status = task.status ?? '';
+    return task.assignedOperatorId == null &&
+        status != 'completed' &&
+        status != 'cancelled';
+  }
+
+  static bool isCompletedWaitingHandoff(Task task) {
+    return (task.status ?? '') == 'completed';
+  }
+
   static DateTime _dateOnly(DateTime value) =>
       DateTime(value.year, value.month, value.day);
 

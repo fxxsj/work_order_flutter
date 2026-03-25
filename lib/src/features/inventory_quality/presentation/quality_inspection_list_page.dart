@@ -101,6 +101,32 @@ class _QualityInspectionListViewState
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
   int? _uploadingInspectionId;
+  bool _routePrefillHandled = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_routePrefillHandled) return;
+    _routePrefillHandled = true;
+
+    final uri = GoRouterState.of(context).uri;
+    final search = uri.queryParameters['search']?.trim() ?? '';
+    final result = uri.queryParameters['result']?.trim() ?? '';
+    final inspectionType = uri.queryParameters['type']?.trim() ?? '';
+    if (search.isEmpty && result.isEmpty && inspectionType.isEmpty) {
+      return;
+    }
+
+    _searchController.text = search;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<QualityInspectionViewModel>().applyRoutePrefill(
+            search: search,
+            result: result,
+            inspectionType: inspectionType,
+          );
+    });
+  }
 
   @override
   void dispose() {

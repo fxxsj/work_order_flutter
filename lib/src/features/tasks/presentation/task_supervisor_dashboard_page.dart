@@ -18,6 +18,7 @@ import 'package:work_order_app/src/features/departments/domain/department.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
 import 'package:work_order_app/src/features/tasks/data/task_supervisor_support_service.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
+import 'package:work_order_app/src/features/tasks/presentation/task_ui_helper.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_supervisor_sections.dart';
 
 class TaskSupervisorDashboardEntry extends StatelessWidget {
@@ -63,6 +64,7 @@ class _TaskSupervisorDashboardViewState
   Map<String, dynamic>? _workload;
   List<Task> _departmentTasks = [];
   List<TaskSupervisorOperatorOption> _operators = [];
+  TaskSupervisorFlowSummary _flowSummary = const TaskSupervisorFlowSummary();
   String _viewMode = 'dashboard';
   int? _assigningTaskId;
   String _taskStatusFilter = 'all';
@@ -114,6 +116,7 @@ class _TaskSupervisorDashboardViewState
         _workload = data.workload;
         _departmentTasks = data.tasks;
         _operators = data.operators;
+        _flowSummary = data.flowSummary;
       });
     } catch (err) {
       setState(() {
@@ -455,6 +458,12 @@ class _TaskSupervisorDashboardViewState
         _workload?['priority_distribution'] as Map<String, dynamic>? ??
             const {};
     final operators = _workload?['operators'] as List? ?? const [];
+    final overdueCount = _departmentTasks.where(TaskUiHelper.isOverdue).length;
+    final dueSoonCount = _departmentTasks.where(TaskUiHelper.isDueSoon).length;
+    final unassignedCount =
+        _departmentTasks.where(TaskUiHelper.needsAssignment).length;
+    final handoffCount =
+        _departmentTasks.where(TaskUiHelper.isCompletedWaitingHandoff).length;
 
     return SingleChildScrollView(
       child: Column(
@@ -482,6 +491,108 @@ class _TaskSupervisorDashboardViewState
                   label: '完成率',
                   value:
                       '${_toNum(summary['completion_rate']).toStringAsFixed(1)}%',
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          DetailSectionCard(
+            title: '主管待办',
+            child: Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                TaskSupervisorFocusCard(
+                  label: '逾期任务',
+                  value: overdueCount,
+                  hint: overdueCount > 0 ? '优先排查超期工序与堵点' : '当前部门暂无逾期任务',
+                  icon: Icons.warning_amber_rounded,
+                  color: Colors.redAccent,
+                  actionLabel: '查看任务',
+                  onPressed: () => _openTaskFocus('overdue'),
+                ),
+                TaskSupervisorFocusCard(
+                  label: '临近交期',
+                  value: dueSoonCount,
+                  hint: dueSoonCount > 0 ? '2 天内到期，建议主管提前协调' : '当前没有临近交期任务',
+                  icon: Icons.schedule_outlined,
+                  color: Colors.orangeAccent,
+                  actionLabel: '查看任务',
+                  onPressed: () => _openTaskFocus('due_soon'),
+                ),
+                TaskSupervisorFocusCard(
+                  label: '待分派',
+                  value: unassignedCount,
+                  hint: unassignedCount > 0 ? '仍未落到操作员的生产任务' : '当前部门没有待分派任务',
+                  icon: Icons.person_add_alt_1_outlined,
+                  color: Colors.blueAccent,
+                  actionLabel: '进入分派',
+                  onPressed: () => _openTaskFocus('unassigned'),
+                ),
+                TaskSupervisorFocusCard(
+                  label: '待交接下游',
+                  value: handoffCount,
+                  hint: handoffCount > 0 ? '已完工，建议尽快推进质检或入库' : '暂无待交接下游任务',
+                  icon: Icons.compare_arrows_outlined,
+                  color: Colors.teal,
+                  actionLabel: '看已完工',
+                  onPressed: () => _openTaskFocus('completed'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          DetailSectionCard(
+            title: '跨环节提醒',
+            child: Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                TaskSupervisorFocusCard(
+                  label: '待完成检验',
+                  value: _flowSummary.pendingInspections,
+                  hint: _flowSummary.pendingInspections > 0
+                      ? '质检未收口时，下游仓库与交付会继续等待'
+                      : '当前没有待完成检验单',
+                  icon: Icons.fact_check_outlined,
+                  color: Colors.indigo,
+                  actionLabel: '查看质检',
+                  onPressed: () =>
+                      context.go('/inventory/quality?result=pending'),
+                ),
+                TaskSupervisorFocusCard(
+                  label: '待跟进质检异常',
+                  value: _flowSummary.exceptionInspections,
+                  hint: _flowSummary.exceptionInspections > 0
+                      ? '包含不合格与条件接收，需尽快决定返工或放行'
+                      : '当前没有质检异常待跟进',
+                  icon: Icons.report_problem_outlined,
+                  color: Colors.deepOrange,
+                  actionLabel: '查看质检',
+                  onPressed: () => context.go('/inventory/quality'),
+                ),
+                TaskSupervisorFocusCard(
+                  label: '待签收交付',
+                  value: _flowSummary.pendingReceipts,
+                  hint: _flowSummary.pendingReceipts > 0
+                      ? '已发货但尚未签收，建议同步交付风险'
+                      : '当前没有待签收交付',
+                  icon: Icons.local_shipping_outlined,
+                  color: Colors.lightBlue,
+                  actionLabel: '查看发货',
+                  onPressed: () => context.go('/inventory/delivery'),
+                ),
+                TaskSupervisorFocusCard(
+                  label: '拒收待处理',
+                  value: _flowSummary.rejectedDeliveries,
+                  hint: _flowSummary.rejectedDeliveries > 0
+                      ? '已发生拒收，建议尽快确认补发或终止交付'
+                      : '当前没有拒收单待处理',
+                  icon: Icons.assignment_late_outlined,
+                  color: Colors.pinkAccent,
+                  actionLabel: '查看拒收',
+                  onPressed: () =>
+                      context.go('/inventory/delivery?status=rejected'),
                 ),
               ],
             ),
@@ -643,6 +754,15 @@ class _TaskSupervisorDashboardViewState
     final items = [
       TaskSupervisorStatusFilterItem(
           key: 'all', label: '全部', count: tasks.length),
+      if ((counts['overdue'] ?? 0) > 0)
+        TaskSupervisorStatusFilterItem(
+            key: 'overdue', label: '已逾期', count: counts['overdue'] ?? 0),
+      if ((counts['due_soon'] ?? 0) > 0)
+        TaskSupervisorStatusFilterItem(
+            key: 'due_soon', label: '临近交期', count: counts['due_soon'] ?? 0),
+      if ((counts['unassigned'] ?? 0) > 0)
+        TaskSupervisorStatusFilterItem(
+            key: 'unassigned', label: '待分派', count: counts['unassigned'] ?? 0),
       TaskSupervisorStatusFilterItem(
           key: 'pending', label: '待处理', count: counts['pending'] ?? 0),
       TaskSupervisorStatusFilterItem(
@@ -663,6 +783,15 @@ class _TaskSupervisorDashboardViewState
 
   List<Task> _filterTasks(List<Task> tasks) {
     if (_taskStatusFilter == 'all') return tasks;
+    if (_taskStatusFilter == 'overdue') {
+      return tasks.where(TaskUiHelper.isOverdue).toList();
+    }
+    if (_taskStatusFilter == 'due_soon') {
+      return tasks.where(TaskUiHelper.isDueSoon).toList();
+    }
+    if (_taskStatusFilter == 'unassigned') {
+      return tasks.where(TaskUiHelper.needsAssignment).toList();
+    }
     if (_taskStatusFilter == 'other') {
       return tasks
           .where((task) =>
@@ -676,12 +805,23 @@ class _TaskSupervisorDashboardViewState
 
   Map<String, int> _buildStatusCounts(List<Task> tasks) {
     final counts = <String, int>{
+      'overdue': 0,
+      'due_soon': 0,
+      'unassigned': 0,
       'pending': 0,
       'in_progress': 0,
       'completed': 0,
       'other': 0,
     };
     for (final task in tasks) {
+      if (TaskUiHelper.isOverdue(task)) {
+        counts['overdue'] = (counts['overdue'] ?? 0) + 1;
+      } else if (TaskUiHelper.isDueSoon(task)) {
+        counts['due_soon'] = (counts['due_soon'] ?? 0) + 1;
+      }
+      if (TaskUiHelper.needsAssignment(task)) {
+        counts['unassigned'] = (counts['unassigned'] ?? 0) + 1;
+      }
       final status = task.status ?? '';
       if (counts.containsKey(status)) {
         counts[status] = (counts[status] ?? 0) + 1;
@@ -690,6 +830,13 @@ class _TaskSupervisorDashboardViewState
       }
     }
     return counts;
+  }
+
+  void _openTaskFocus(String filterKey) {
+    setState(() {
+      _viewMode = 'tasks';
+      _taskStatusFilter = filterKey;
+    });
   }
 
   int _toInt(dynamic value) {

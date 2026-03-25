@@ -140,13 +140,34 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     if (_prefillHandled) return;
     final uri = GoRouterState.of(context).uri;
     final createFlag = uri.queryParameters['create'];
+    final routeSearch = uri.queryParameters['search']?.trim() ?? '';
+    final routeStatus = uri.queryParameters['status']?.trim() ?? '';
+    final routeCustomerId =
+        int.tryParse(uri.queryParameters['customer_id'] ?? '');
     final salesOrderId =
         int.tryParse(uri.queryParameters['sales_order_id'] ?? '');
     if (salesOrderId != null && (createFlag == '1' || createFlag == 'true')) {
       _prefillSalesOrderId = salesOrderId;
       _pendingPrefill = true;
     }
+    if (routeSearch.isNotEmpty) {
+      _searchController.text = routeSearch;
+    }
     _prefillHandled = true;
+    if (routeSearch.isEmpty &&
+        routeStatus.isEmpty &&
+        (routeCustomerId == null || routeCustomerId <= 0)) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<DeliveryOrderViewModel>().applyRoutePrefill(
+            search: routeSearch,
+            status: routeStatus,
+            customerId: routeCustomerId,
+          );
+    });
   }
 
   @override
