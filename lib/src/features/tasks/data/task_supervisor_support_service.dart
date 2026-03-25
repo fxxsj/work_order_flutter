@@ -80,17 +80,19 @@ class TaskSupervisorSupportService {
     final workloadFuture = api.fetchDepartmentWorkload(params: {
       'department_id': departmentId,
     });
-    final tasksPageFuture = api.fetchTasks(
-      departmentId: departmentId,
-      page: 1,
-      pageSize: 50,
-      ordering: '-created_at',
-    );
     final operatorsFuture = api.fetchDepartmentOperators(departmentId);
-    final flowSummaryFuture = _loadFlowSummary();
+    final flowSummaryFuture = _loadFlowSummary(departmentId: departmentId);
 
     final workload = await workloadFuture;
-    final tasksPage = await tasksPageFuture;
+    final totalTasks = TaskSupervisorOperatorOption._toInt(
+      (workload['summary'] as Map<String, dynamic>? ?? const {})['total_tasks'],
+    );
+    final tasksPage = await api.fetchTasks(
+      departmentId: departmentId,
+      page: 1,
+      pageSize: totalTasks <= 0 ? 50 : totalTasks,
+      ordering: '-created_at',
+    );
     final operators = await operatorsFuture;
     final flowSummary = await flowSummaryFuture;
     return TaskSupervisorDashboardData(
@@ -115,12 +117,15 @@ class TaskSupervisorSupportService {
     });
   }
 
-  Future<TaskSupervisorFlowSummary> _loadFlowSummary() async {
+  Future<TaskSupervisorFlowSummary> _loadFlowSummary(
+      {int? departmentId}) async {
     try {
       final qualityApi = QualityInspectionApiService(_client);
       final deliveryApi = DeliveryOrderApiService(_client);
-      final qualitySummaryFuture = qualityApi.fetchSummary();
-      final deliverySummaryFuture = deliveryApi.fetchSummary();
+      final qualitySummaryFuture =
+          qualityApi.fetchSummary(departmentId: departmentId);
+      final deliverySummaryFuture =
+          deliveryApi.fetchSummary(departmentId: departmentId);
 
       final qualitySummary = await qualitySummaryFuture;
       final deliverySummary = await deliverySummaryFuture;

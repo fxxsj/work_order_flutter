@@ -144,6 +144,8 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     final routeStatus = uri.queryParameters['status']?.trim() ?? '';
     final routeCustomerId =
         int.tryParse(uri.queryParameters['customer_id'] ?? '');
+    final routeDepartmentId =
+        int.tryParse(uri.queryParameters['department_id'] ?? '');
     final salesOrderId =
         int.tryParse(uri.queryParameters['sales_order_id'] ?? '');
     if (salesOrderId != null && (createFlag == '1' || createFlag == 'true')) {
@@ -156,7 +158,8 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     _prefillHandled = true;
     if (routeSearch.isEmpty &&
         routeStatus.isEmpty &&
-        (routeCustomerId == null || routeCustomerId <= 0)) {
+        (routeCustomerId == null || routeCustomerId <= 0) &&
+        (routeDepartmentId == null || routeDepartmentId <= 0)) {
       return;
     }
 
@@ -166,6 +169,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
             search: routeSearch,
             status: routeStatus,
             customerId: routeCustomerId,
+            departmentId: routeDepartmentId,
           );
     });
   }

@@ -8,6 +8,7 @@ abstract class QualityInspectionRepository {
     String? search,
     String? result,
     String? inspectionType,
+    int? departmentId,
   });
 
   Future<Map<String, dynamic>> complete(int id, Map<String, dynamic> payload);

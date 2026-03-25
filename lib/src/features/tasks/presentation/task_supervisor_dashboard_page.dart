@@ -458,12 +458,10 @@ class _TaskSupervisorDashboardViewState
         _workload?['priority_distribution'] as Map<String, dynamic>? ??
             const {};
     final operators = _workload?['operators'] as List? ?? const [];
-    final overdueCount = _departmentTasks.where(TaskUiHelper.isOverdue).length;
-    final dueSoonCount = _departmentTasks.where(TaskUiHelper.isDueSoon).length;
-    final unassignedCount =
-        _departmentTasks.where(TaskUiHelper.needsAssignment).length;
-    final handoffCount =
-        _departmentTasks.where(TaskUiHelper.isCompletedWaitingHandoff).length;
+    final overdueCount = _toInt(summary['overdue_tasks']);
+    final dueSoonCount = _toInt(summary['due_soon_tasks']);
+    final unassignedCount = _toInt(summary['unassigned_tasks']);
+    final handoffCount = _toInt(summary['handoff_tasks']);
 
     return SingleChildScrollView(
       child: Column(
@@ -557,8 +555,9 @@ class _TaskSupervisorDashboardViewState
                   icon: Icons.fact_check_outlined,
                   color: Colors.indigo,
                   actionLabel: '查看质检',
-                  onPressed: () =>
-                      context.go('/inventory/quality?result=pending'),
+                  onPressed: () => context.go(
+                    '/inventory/quality?result=pending&department_id=${_departmentId ?? 0}',
+                  ),
                 ),
                 TaskSupervisorFocusCard(
                   label: '待跟进质检异常',
@@ -569,7 +568,9 @@ class _TaskSupervisorDashboardViewState
                   icon: Icons.report_problem_outlined,
                   color: Colors.deepOrange,
                   actionLabel: '查看质检',
-                  onPressed: () => context.go('/inventory/quality'),
+                  onPressed: () => context.go(
+                    '/inventory/quality?department_id=${_departmentId ?? 0}',
+                  ),
                 ),
                 TaskSupervisorFocusCard(
                   label: '待签收交付',
@@ -580,7 +581,9 @@ class _TaskSupervisorDashboardViewState
                   icon: Icons.local_shipping_outlined,
                   color: Colors.lightBlue,
                   actionLabel: '查看发货',
-                  onPressed: () => context.go('/inventory/delivery'),
+                  onPressed: () => context.go(
+                    '/inventory/delivery?department_id=${_departmentId ?? 0}',
+                  ),
                 ),
                 TaskSupervisorFocusCard(
                   label: '拒收待处理',
@@ -591,8 +594,9 @@ class _TaskSupervisorDashboardViewState
                   icon: Icons.assignment_late_outlined,
                   color: Colors.pinkAccent,
                   actionLabel: '查看拒收',
-                  onPressed: () =>
-                      context.go('/inventory/delivery?status=rejected'),
+                  onPressed: () => context.go(
+                    '/inventory/delivery?status=rejected&department_id=${_departmentId ?? 0}',
+                  ),
                 ),
               ],
             ),

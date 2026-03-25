@@ -7,6 +7,7 @@ abstract class DeliveryOrderRepository {
     String? search,
     String? status,
     int? customerId,
+    int? departmentId,
   });
 
   Future<Map<String, dynamic>> ship(int id, Map<String, dynamic> payload);

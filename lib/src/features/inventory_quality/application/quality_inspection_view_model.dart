@@ -9,10 +9,12 @@ class QualityInspectionViewModel extends PaginatedViewModel<QualityInspection> {
   final QualityInspectionRepository _repository;
   String _resultFilter = '';
   String _typeFilter = '';
+  int _departmentId = 0;
 
   List<QualityInspection> get inspections => items;
   String get resultFilter => _resultFilter;
   String get typeFilter => _typeFilter;
+  int get departmentId => _departmentId;
 
   Future<void> initialize() => loadItems(resetPage: true);
 
@@ -33,10 +35,12 @@ class QualityInspectionViewModel extends PaginatedViewModel<QualityInspection> {
     String? search,
     String? result,
     String? inspectionType,
+    int? departmentId,
   }) async {
     setSearchText(search?.trim() ?? '');
     _resultFilter = result?.trim() ?? '';
     _typeFilter = inspectionType?.trim() ?? '';
+    _departmentId = departmentId != null && departmentId > 0 ? departmentId : 0;
     await loadInspections(resetPage: true);
   }
 
@@ -56,6 +60,7 @@ class QualityInspectionViewModel extends PaginatedViewModel<QualityInspection> {
       search: search,
       result: _resultFilter.isEmpty ? null : _resultFilter,
       inspectionType: _typeFilter.isEmpty ? null : _typeFilter,
+      departmentId: _departmentId > 0 ? _departmentId : null,
     );
     return PageData(
       items: result.items.map((dto) => dto.toEntity()).toList(),

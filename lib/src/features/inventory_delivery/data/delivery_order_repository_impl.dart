@@ -14,6 +14,7 @@ class DeliveryOrderRepositoryImpl implements DeliveryOrderRepository {
     String? search,
     String? status,
     int? customerId,
+    int? departmentId,
   }) {
     return _apiService.fetchDeliveryOrders(
       page: page,
@@ -21,6 +22,7 @@ class DeliveryOrderRepositoryImpl implements DeliveryOrderRepository {
       search: search,
       status: status,
       customerId: customerId,
+      departmentId: departmentId,
     );
   }
 

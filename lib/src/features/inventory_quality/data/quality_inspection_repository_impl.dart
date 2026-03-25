@@ -15,6 +15,7 @@ class QualityInspectionRepositoryImpl implements QualityInspectionRepository {
     String? search,
     String? result,
     String? inspectionType,
+    int? departmentId,
   }) {
     return _apiService.fetchQualityInspections(
       page: page,
@@ -22,6 +23,7 @@ class QualityInspectionRepositoryImpl implements QualityInspectionRepository {
       search: search,
       result: result,
       inspectionType: inspectionType,
+      departmentId: departmentId,
     );
   }
 

@@ -113,7 +113,12 @@ class _QualityInspectionListViewState
     final search = uri.queryParameters['search']?.trim() ?? '';
     final result = uri.queryParameters['result']?.trim() ?? '';
     final inspectionType = uri.queryParameters['type']?.trim() ?? '';
-    if (search.isEmpty && result.isEmpty && inspectionType.isEmpty) {
+    final departmentId =
+        int.tryParse(uri.queryParameters['department_id'] ?? '');
+    if (search.isEmpty &&
+        result.isEmpty &&
+        inspectionType.isEmpty &&
+        (departmentId == null || departmentId <= 0)) {
       return;
     }
 
@@ -124,6 +129,7 @@ class _QualityInspectionListViewState
             search: search,
             result: result,
             inspectionType: inspectionType,
+            departmentId: departmentId,
           );
     });
   }
