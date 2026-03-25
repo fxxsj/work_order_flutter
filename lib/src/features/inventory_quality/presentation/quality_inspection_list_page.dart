@@ -75,7 +75,7 @@ class _QualityInspectionListViewState
   static const double _controlHeight = PageActionStyle.height;
   static const String _emptyCellText = '-';
 
-  static const String _searchHintText = '搜索检验单号/施工单号';
+  static const String _searchHintText = '搜索检验单号/施工单号/客户';
   static const String _refreshButtonText = '刷新';
   static const String _emptyText = '暂无质检数据';
   static const String _errorFallbackText = '加载失败';
@@ -171,6 +171,10 @@ class _QualityInspectionListViewState
                     ),
                     const SizedBox(height: 16),
                   ],
+                  _DetailRow(
+                    label: '客户',
+                    value: _displayText(inspection.customerName),
+                  ),
                   _DetailRow(label: '质检单号', value: inspection.inspectionNumber),
                   _DetailRow(
                     label: '检验类型',
@@ -213,6 +217,10 @@ class _QualityInspectionListViewState
                     label: '检验结果',
                     value: _displayText(
                         inspection.resultDisplay ?? inspection.result),
+                  ),
+                  _DetailRow(
+                    label: '下一步',
+                    value: _qualityFollowUpText(inspection),
                   ),
                   _DetailRow(
                     label: '检验附件',
@@ -549,12 +557,13 @@ class _QualityInspectionListViewState
     return AppDataTable(
       columns: const [
         DataColumn(label: Text('质检单号')),
-        DataColumn(label: Text('施工单号')),
+        DataColumn(label: Text('来源')),
         DataColumn(label: Text('产品')),
         DataColumn(label: Text('检验员')),
         DataColumn(label: Text('检验日期')),
         DataColumn(label: Text('结果')),
-        DataColumn(label: Text('不良率')),
+        DataColumn(label: Text('数量')),
+        DataColumn(label: Text('待办')),
         DataColumn(label: Text('操作')),
       ],
       rows: inspections.map(
@@ -566,8 +575,8 @@ class _QualityInspectionListViewState
                 _displayText(inspection.inspectionNumber),
                 style: theme.textTheme.bodyMedium,
               )),
-              DataCell(Text(_displayText(inspection.workOrderNumber),
-                  style: textStyle)),
+              DataCell(
+                  Text(_qualitySourceSummary(inspection), style: textStyle)),
               DataCell(
                   Text(_displayText(inspection.productName), style: textStyle)),
               DataCell(Text(_displayText(inspection.inspectorName),
@@ -578,8 +587,10 @@ class _QualityInspectionListViewState
                 inspection.resultDisplay ?? inspection.result ?? _emptyCellText,
                 style: textStyle,
               )),
-              DataCell(Text(inspection.defectiveRateFormatted ?? _emptyCellText,
-                  style: textStyle)),
+              DataCell(
+                  Text(_qualityQuantitySummary(inspection), style: textStyle)),
+              DataCell(
+                  Text(_qualityFollowUpText(inspection), style: textStyle)),
               DataCell(RowActionGroup(
                 actions: [
                   RowAction(
@@ -591,6 +602,14 @@ class _QualityInspectionListViewState
                     label: '查看',
                     onPressed: () => _openDetailDialog(inspection),
                   ),
+                  if ((inspection.workOrderNumber ?? '').trim().isNotEmpty &&
+                      (inspection.result ?? '') != 'pending')
+                    RowAction(
+                      label: '查看入库',
+                      icon: Icons.inventory_2_outlined,
+                      onPressed: () =>
+                          _openStockInList(inspection.workOrderNumber!),
+                    ),
                   if (_hasAttachment(inspection))
                     RowAction(
                       label: '附件',
@@ -693,6 +712,9 @@ class _QualityInspectionListViewState
       actions: LayoutBuilder(
         builder: (context, constraints) {
           final activeFilters = _activeFilterCount(viewModel);
+          final pendingCount = viewModel.inspections
+              .where((item) => (item.result ?? 'pending') == 'pending')
+              .length;
           final pendingExceptions = viewModel.inspections
               .where((item) => _needsExceptionFollowUp(item))
               .length;
@@ -710,6 +732,12 @@ class _QualityInspectionListViewState
           );
 
           final actions = <Widget>[
+            if (pendingCount > 0)
+              StatusHintChip(
+                label: '待完成检验',
+                count: pendingCount,
+                icon: Icons.fact_check_outlined,
+              ),
             if (pendingExceptions > 0)
               StatusHintChip(label: '待跟进异常', count: pendingExceptions),
             PageActionButton.outlined(
@@ -857,6 +885,7 @@ class _QualityInspectionListViewState
     final number = inspection.inspectionNumber.isEmpty
         ? '质检 #${inspection.id}'
         : inspection.inspectionNumber;
+    final customer = _displayText(inspection.customerName);
     final workOrder = _displayText(inspection.workOrderNumber);
     final product = _displayText(inspection.productName);
     final inspector = _displayText(inspection.inspectorName);
@@ -868,6 +897,7 @@ class _QualityInspectionListViewState
         _hasAttachment(inspection) ? '已上传' : _emptyCellText;
     final canComplete = (inspection.result ?? 'pending') == 'pending';
     final needsFollowUp = _needsExceptionFollowUp(inspection);
+    final followUp = _qualityFollowUpText(inspection);
 
     return ExpandableSummaryCard(
       headerBuilder: (context, expanded) {
@@ -887,7 +917,7 @@ class _QualityInspectionListViewState
                   ),
                   SizedBox(height: sectionSpacing),
                   Text(
-                    '$workOrder · $product',
+                    _qualitySourceSummary(inspection),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colors?.subtleText ?? theme.hintColor,
                     ),
@@ -899,6 +929,7 @@ class _QualityInspectionListViewState
                     children: [
                       _SummaryChip(label: '结果', value: result),
                       _SummaryChip(label: '不良率', value: defectiveRate),
+                      _SummaryChip(label: '待办', value: followUp),
                     ],
                   ),
                 ],
@@ -936,13 +967,17 @@ class _QualityInspectionListViewState
             isMobile: isMobile,
             children: [
               _SummaryField(label: '质检单号', value: number),
+              _SummaryField(label: '客户', value: customer),
               _SummaryField(label: '施工单号', value: workOrder),
               _SummaryField(label: '产品', value: product),
               _SummaryField(label: '检验员', value: inspector),
               _SummaryField(label: '检验日期', value: inspectionDate),
               _SummaryField(label: '结果', value: result),
               _SummaryField(label: '不良率', value: defectiveRate),
+              _SummaryField(
+                  label: '数量', value: _qualityQuantitySummary(inspection)),
               _SummaryField(label: '附件', value: attachmentStatus),
+              _SummaryField(label: '下一步', value: followUp),
               if (needsFollowUp)
                 _SummaryField(
                     label: '异常跟进', value: _qualityNextStep(inspection)),
@@ -963,6 +998,14 @@ class _QualityInspectionListViewState
                 icon: const Icon(Icons.visibility_outlined, size: 16),
                 label: const Text('查看'),
               ),
+              if ((inspection.workOrderNumber ?? '').trim().isNotEmpty &&
+                  (inspection.result ?? '') != 'pending')
+                OutlinedButton.icon(
+                  onPressed: () =>
+                      _openStockInList(inspection.workOrderNumber!),
+                  icon: const Icon(Icons.inventory_2_outlined, size: 16),
+                  label: const Text('查看入库'),
+                ),
               if (_hasAttachment(inspection))
                 AttachmentOpenButton(
                   fileUrl: inspection.attachmentUrl,
@@ -1023,6 +1066,46 @@ class _QualityInspectionListViewState
       return '请按处理意见落实条件接收范围，并补充检验附件留痕。';
     }
     return '请根据处理意见安排返工、复检或判退，并同步更新施工单执行。';
+  }
+
+  String _qualitySourceSummary(QualityInspection inspection) {
+    final customer = (inspection.customerName ?? '').trim();
+    final workOrder = (inspection.workOrderNumber ?? '').trim();
+    if (customer.isNotEmpty && workOrder.isNotEmpty) {
+      return '$customer · $workOrder';
+    }
+    if (customer.isNotEmpty) return customer;
+    if (workOrder.isNotEmpty) return workOrder;
+    return _emptyCellText;
+  }
+
+  String _qualityQuantitySummary(QualityInspection inspection) {
+    final passed = _formatAmount(inspection.passedQuantity);
+    final failed = _formatAmount(inspection.failedQuantity);
+    return '合格 $passed / 不合格 $failed';
+  }
+
+  String _qualityFollowUpText(QualityInspection inspection) {
+    switch (inspection.result ?? 'pending') {
+      case 'pending':
+        return '待完成检验';
+      case 'passed':
+        return '可安排入库/发货准备';
+      case 'conditional':
+        return '按处理意见继续跟进';
+      case 'failed':
+        return '待返工/复检';
+      default:
+        return _emptyCellText;
+    }
+  }
+
+  void _openStockInList(String workOrderNumber) {
+    final uri = Uri(
+      path: '/stock-ins',
+      queryParameters: {'search': workOrderNumber},
+    );
+    context.go(uri.toString());
   }
 
   Future<void> _openAttachment(QualityInspection inspection) async {

@@ -9,6 +9,7 @@ class QualityInspection {
     this.inspectionTypeDisplay,
     this.result,
     this.resultDisplay,
+    this.customerName,
     this.workOrderNumber,
     this.productName,
     this.batchNo,
@@ -35,6 +36,7 @@ class QualityInspection {
   final String? inspectionTypeDisplay;
   final String? result;
   final String? resultDisplay;
+  final String? customerName;
   final String? workOrderNumber;
   final String? productName;
   final String? batchNo;
@@ -62,6 +64,7 @@ class QualityInspection {
       inspectionTypeDisplay: toStringOrNull(json['inspection_type_display']),
       result: toStringOrNull(json['result']),
       resultDisplay: toStringOrNull(json['result_display']),
+      customerName: toStringOrNull(json['customer_name']),
       workOrderNumber: toStringOrNull(json['work_order_number']),
       productName: toStringOrNull(json['product_name']),
       batchNo: toStringOrNull(json['batch_no']),

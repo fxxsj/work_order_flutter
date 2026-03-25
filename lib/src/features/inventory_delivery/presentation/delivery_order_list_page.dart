@@ -737,6 +737,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
         DataColumn(label: Text('物流公司')),
         DataColumn(label: Text('运单号')),
         DataColumn(label: Text('开票')),
+        DataColumn(label: Text('下一步')),
         DataColumn(label: Text('操作')),
       ],
       rows: orders.map(
@@ -775,6 +776,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
               DataCell(
                   Text(_displayText(order.trackingNumber), style: textStyle)),
               DataCell(Text(_invoiceFollowUpText(order), style: textStyle)),
+              DataCell(Text(_deliveryFollowUpText(order), style: textStyle)),
               DataCell(RowActionGroup(
                 actions: [
                   if (_shouldPromptInvoice(order))
@@ -914,6 +916,10 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
           final rejectedCount = viewModel.deliveryOrders
               .where((item) => (item.status ?? '') == 'rejected')
               .length;
+          final pendingReceiveCount = viewModel.deliveryOrders.where((item) {
+            final status = item.status ?? '';
+            return status == 'shipped' || status == 'in_transit';
+          }).length;
           final pendingInvoiceCount =
               viewModel.deliveryOrders.where(_shouldPromptInvoice).length;
           final searchField = ListSearchField(
@@ -932,6 +938,12 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
           final actions = <Widget>[
             if (rejectedCount > 0)
               StatusHintChip(label: '待处理拒收', count: rejectedCount),
+            if (pendingReceiveCount > 0)
+              StatusHintChip(
+                label: '待签收交付',
+                count: pendingReceiveCount,
+                icon: Icons.local_shipping_outlined,
+              ),
             if (pendingInvoiceCount > 0)
               StatusHintChip(
                 label: '待开票交付',
@@ -1111,8 +1123,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     final canReject = canReceive;
     final canEdit = statusCode == 'pending';
     final canDelete = statusCode == 'pending';
-    final followUp =
-        statusCode == 'rejected' ? '库存已回退，请回到客户订单处理补发或终止交付。' : null;
+    final followUp = _deliveryFollowUpText(order);
 
     return ExpandableSummaryCard(
       headerBuilder: (context, expanded) {
@@ -1144,6 +1155,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
                     children: [
                       _SummaryChip(label: '状态', value: status),
                       _SummaryChip(label: '发货数量', value: totalQuantity),
+                      _SummaryChip(label: '下一步', value: followUp),
                     ],
                   ),
                 ],
@@ -1190,8 +1202,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
               _SummaryField(label: '物流公司', value: logistics),
               _SummaryField(label: '运单号', value: trackingNumber),
               _SummaryField(label: '开票跟进', value: invoiceFollowUp),
-              if (followUp != null)
-                _SummaryField(label: '异常跟进', value: followUp),
+              _SummaryField(label: '下一步', value: followUp),
             ],
           ),
           SizedBox(height: sectionSpacing),
@@ -1275,6 +1286,22 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       return '已关联 $count 张发票';
     }
     return _shouldPromptInvoice(order) ? '待开票' : _emptyCellText;
+  }
+
+  String _deliveryFollowUpText(DeliveryOrder order) {
+    switch (order.status ?? '') {
+      case 'pending':
+        return '待发货出库';
+      case 'shipped':
+      case 'in_transit':
+        return '待签收确认';
+      case 'received':
+        return _shouldPromptInvoice(order) ? '已签收，待开票' : '已完成交付';
+      case 'rejected':
+        return '库存已回退，待补发或终止';
+      default:
+        return _emptyCellText;
+    }
   }
 }
 

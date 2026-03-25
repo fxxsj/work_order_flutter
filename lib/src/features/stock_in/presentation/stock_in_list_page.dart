@@ -6,6 +6,7 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/generic_resource_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
 import 'package:work_order_app/src/features/stock_in/data/stock_in_support_service.dart';
@@ -20,25 +21,41 @@ class StockInListEntry extends StatelessWidget {
         id: 'stock_ins',
         title: '入库单',
         endpoint: '/stock-ins/',
-        searchHintText: '搜索入库单号/施工单',
+        searchHintText: '搜索入库单号/施工单/客户',
         emptyText: '暂无入库单',
         emptyIcon: Icons.inventory_2_outlined,
         columns: const [
           GenericColumn(label: '入库单号', value: _orderNumber),
+          GenericColumn(label: '客户', value: _customerName),
           GenericColumn(label: '施工单号', value: _workOrderNumber),
           GenericColumn(label: '入库日期', value: _stockInDate),
           GenericColumn(label: '状态', value: _status),
+          GenericColumn(label: '下一步', value: _followUpText),
           GenericColumn(label: '操作员', value: _operator),
           GenericColumn(label: '创建时间', value: _createdAt),
         ],
         summaryFields: const [
+          GenericSummaryField(label: '客户', value: _customerName),
           GenericSummaryField(label: '施工单号', value: _workOrderNumber),
           GenericSummaryField(label: '入库日期', value: _stockInDate),
           GenericSummaryField(label: '状态', value: _status),
+          GenericSummaryField(label: '下一步', value: _followUpText),
           GenericSummaryField(label: '操作员', value: _operator),
         ],
-        titleBuilder: _orderNumber,
+        titleBuilder: _title,
         headerActionsBuilder: (context, viewModel) => [
+          if (_submittedCount(viewModel) > 0)
+            StatusHintChip(
+              label: '待审核入库',
+              count: _submittedCount(viewModel),
+              icon: Icons.fact_check_outlined,
+            ),
+          if (_completedCount(viewModel) > 0)
+            StatusHintChip(
+              label: '已完成入库',
+              count: _completedCount(viewModel),
+              icon: Icons.inventory_2_outlined,
+            ),
           PageActionButton.filled(
             onPressed: () => _openStockInForm(context),
             icon: const Icon(Icons.add),
@@ -88,6 +105,17 @@ class StockInListEntry extends StatelessWidget {
     return GenericValueFormatter.text(record.getString('order_number'));
   }
 
+  static String _title(GenericRecord record) {
+    final order = _orderNumber(record);
+    final customer = _customerName(record);
+    if (customer == GenericValueFormatter.empty) return order;
+    return '$order · $customer';
+  }
+
+  static String _customerName(GenericRecord record) {
+    return GenericValueFormatter.text(record.getString('customer_name'));
+  }
+
   static String _workOrderNumber(GenericRecord record) {
     return GenericValueFormatter.text(record.getString('work_order_number'));
   }
@@ -100,12 +128,38 @@ class StockInListEntry extends StatelessWidget {
     return GenericValueFormatter.text(record.getString('status_display'));
   }
 
+  static String _followUpText(GenericRecord record) {
+    final status = record.getString('status') ?? '';
+    switch (status) {
+      case 'draft':
+        return '待提交入库';
+      case 'submitted':
+        return '待审核入库';
+      case 'completed':
+        return '已入库，可继续备货/发货';
+      default:
+        return GenericValueFormatter.empty;
+    }
+  }
+
   static String _operator(GenericRecord record) {
     return GenericValueFormatter.text(record.getString('operator_name'));
   }
 
   static String _createdAt(GenericRecord record) {
     return GenericValueFormatter.date(record.getString('created_at'));
+  }
+
+  static int _submittedCount(GenericListViewModel viewModel) {
+    return viewModel.records
+        .where((record) => (record.getString('status') ?? '') == 'submitted')
+        .length;
+  }
+
+  static int _completedCount(GenericListViewModel viewModel) {
+    return viewModel.records
+        .where((record) => (record.getString('status') ?? '') == 'completed')
+        .length;
   }
 
   static Future<void> _openStockInForm(

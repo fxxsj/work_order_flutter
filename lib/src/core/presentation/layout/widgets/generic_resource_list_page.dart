@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/data/generic_api_service.dart';
@@ -179,6 +180,27 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
+  String? _prefillKeyword;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final keyword = GoRouterState.of(context).uri.queryParameters['search'];
+    final trimmed = keyword?.trim() ?? '';
+    if (_prefillKeyword == null && trimmed.isEmpty) {
+      _prefillKeyword = '';
+      return;
+    }
+    if (trimmed == _prefillKeyword) return;
+    _prefillKeyword = trimmed;
+    _searchController.text = trimmed;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final viewModel = context.read<GenericListViewModel>();
+      viewModel.setSearchText(trimmed);
+      viewModel.reload(resetPage: true);
+    });
+  }
 
   @override
   void dispose() {
