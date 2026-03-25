@@ -13,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_s
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
@@ -640,7 +641,8 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
       columns: const [
         DataColumn(label: Text('发票号')),
         DataColumn(label: Text('客户')),
-        DataColumn(label: Text('施工单号')),
+        DataColumn(label: Text('来源')),
+        DataColumn(label: Text('类型')),
         DataColumn(label: Text('金额')),
         DataColumn(label: Text('状态')),
         DataColumn(label: Text('开票日期')),
@@ -657,8 +659,18 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                 )),
                 DataCell(
                     Text(_displayText(invoice.customerName), style: textStyle)),
-                DataCell(Text(_displayText(invoice.workOrderNumber),
-                    style: textStyle)),
+                DataCell(
+                  SizedBox(
+                    width: 180,
+                    child: Text(
+                      _sourceSummary(invoice),
+                      style: textStyle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+                DataCell(Text(_invoiceTypeText(invoice), style: textStyle)),
                 DataCell(Text(_formatAmount(invoice.amount), style: textStyle)),
                 DataCell(Text(
                   invoice.statusDisplay ?? invoice.status ?? _emptyCellText,
@@ -667,7 +679,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                 DataCell(
                     Text(_formatDate(invoice.issueDate), style: textStyle)),
                 DataCell(Text(
-                  _hasAttachment(invoice) ? '已上传' : _emptyCellText,
+                  _attachmentStatusText(invoice),
                   style: textStyle,
                 )),
                 DataCell(_buildRowActions(viewModel, invoice)),
@@ -690,6 +702,13 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
       padding: EdgeInsets.zero,
       actions: LayoutBuilder(
         builder: (context, constraints) {
+          final missingAttachmentCount = viewModel.invoices
+              .where((invoice) =>
+                  _shouldHaveAttachment(invoice) && !_hasAttachment(invoice))
+              .length;
+          final pendingReceiptCount = viewModel.invoices
+              .where((invoice) => (invoice.status ?? '') == 'issued')
+              .length;
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -704,6 +723,18 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
           );
 
           final actions = <Widget>[
+            if (missingAttachmentCount > 0)
+              StatusHintChip(
+                label: '待补附件',
+                count: missingAttachmentCount,
+                icon: Icons.attach_file_outlined,
+              ),
+            if (pendingReceiptCount > 0)
+              StatusHintChip(
+                label: '待确认收到',
+                count: pendingReceiptCount,
+                icon: Icons.verified_outlined,
+              ),
             PageActionButton.filled(
               onPressed: () => _openCreateDialog(viewModel),
               icon: const Icon(Icons.add, size: 16),
@@ -740,6 +771,20 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
         label: '附件',
         icon: Icons.attach_file_outlined,
         onPressed: () => _openAttachment(invoice),
+      ));
+    }
+    if ((invoice.salesOrderId ?? 0) > 0) {
+      actions.add(RowAction(
+        label: '客户订单',
+        icon: Icons.point_of_sale_outlined,
+        onPressed: () => _openSalesOrder(invoice),
+      ));
+    }
+    if ((invoice.workOrderId ?? 0) > 0) {
+      actions.add(RowAction(
+        label: '施工单',
+        icon: Icons.assignment_outlined,
+        onPressed: () => _openWorkOrder(invoice),
       ));
     }
     if (status == 'draft') {
@@ -794,11 +839,12 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
     final number = _displayText(invoice.invoiceNumber ?? '发票 #${invoice.id}');
     final customer = _displayText(invoice.customerName);
-    final workOrder = _displayText(invoice.workOrderNumber);
+    final source = _sourceSummary(invoice);
+    final invoiceType = _invoiceTypeText(invoice);
     final amount = _formatAmount(invoice.amount);
     final status = invoice.statusDisplay ?? invoice.status ?? _emptyCellText;
     final issueDate = _formatDate(invoice.issueDate);
-    final attachmentStatus = _hasAttachment(invoice) ? '已上传' : _emptyCellText;
+    final attachmentStatus = _attachmentStatusText(invoice);
 
     final actions = <RowAction>[];
     final statusCode = invoice.status ?? '';
@@ -813,6 +859,20 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
         label: '附件',
         icon: Icons.attach_file_outlined,
         onPressed: () => _openAttachment(invoice),
+      ));
+    }
+    if ((invoice.salesOrderId ?? 0) > 0) {
+      actions.add(RowAction(
+        label: '客户订单',
+        icon: Icons.point_of_sale_outlined,
+        onPressed: () => _openSalesOrder(invoice),
+      ));
+    }
+    if ((invoice.workOrderId ?? 0) > 0) {
+      actions.add(RowAction(
+        label: '施工单',
+        icon: Icons.assignment_outlined,
+        onPressed: () => _openWorkOrder(invoice),
       ));
     }
     if (statusCode == 'draft') {
@@ -875,6 +935,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                     children: [
                       _SummaryChip(label: '金额', value: amount),
                       _SummaryChip(label: '状态', value: status),
+                      _SummaryChip(label: '附件', value: attachmentStatus),
                     ],
                   ),
                 ],
@@ -913,7 +974,8 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
             children: [
               _SummaryField(label: '发票号', value: number),
               _SummaryField(label: '客户', value: customer),
-              _SummaryField(label: '施工单号', value: workOrder),
+              _SummaryField(label: '来源', value: source),
+              _SummaryField(label: '发票类型', value: invoiceType),
               _SummaryField(label: '金额', value: amount),
               _SummaryField(label: '状态', value: status),
               _SummaryField(label: '开票日期', value: issueDate),
@@ -931,6 +993,50 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
 
   bool _hasAttachment(Invoice invoice) {
     return FileLinkUtil.hasLink(invoice.attachmentUrl);
+  }
+
+  bool _shouldHaveAttachment(Invoice invoice) {
+    const statuses = {'issued', 'sent', 'received'};
+    return statuses.contains(invoice.status ?? '');
+  }
+
+  String _attachmentStatusText(Invoice invoice) {
+    if (_hasAttachment(invoice)) return '已上传';
+    return _shouldHaveAttachment(invoice) ? '待补附件' : _emptyCellText;
+  }
+
+  String _invoiceTypeText(Invoice invoice) {
+    return _displayText(invoice.invoiceTypeDisplay ?? invoice.invoiceType);
+  }
+
+  String _sourceSummary(Invoice invoice) {
+    final parts = <String>[];
+    if ((invoice.salesOrderNumber ?? '').trim().isNotEmpty) {
+      parts.add('客户订单 ${invoice.salesOrderNumber!.trim()}');
+    }
+    if ((invoice.workOrderNumber ?? '').trim().isNotEmpty) {
+      parts.add('施工单 ${invoice.workOrderNumber!.trim()}');
+    }
+    if (parts.isEmpty) return _emptyCellText;
+    return parts.join(' / ');
+  }
+
+  void _openSalesOrder(Invoice invoice) {
+    final id = invoice.salesOrderId;
+    if (id == null || id <= 0) {
+      ToastUtil.showError('当前发票未关联客户订单');
+      return;
+    }
+    context.go('/sales-orders/$id');
+  }
+
+  void _openWorkOrder(Invoice invoice) {
+    final id = invoice.workOrderId;
+    if (id == null || id <= 0) {
+      ToastUtil.showError('当前发票未关联施工单');
+      return;
+    }
+    context.go('/workorders/$id');
   }
 
   Future<void> _openAttachment(Invoice invoice) async {
