@@ -14,6 +14,7 @@ class SalesOrderDto {
     this.orderDate,
     this.deliveryDate,
     this.itemsCount,
+    this.workOrderCount,
   });
 
   final int id;
@@ -28,6 +29,7 @@ class SalesOrderDto {
   final DateTime? orderDate;
   final DateTime? deliveryDate;
   final int? itemsCount;
+  final int? workOrderCount;
 
   factory SalesOrderDto.fromJson(Map<String, dynamic> json) {
     return SalesOrder.fromJson(json).toDto();
@@ -47,6 +49,7 @@ class SalesOrderDto {
       orderDate: orderDate,
       deliveryDate: deliveryDate,
       itemsCount: itemsCount,
+      workOrderCount: workOrderCount,
     );
   }
 }
@@ -66,6 +69,7 @@ extension SalesOrderMapper on SalesOrder {
       orderDate: orderDate,
       deliveryDate: deliveryDate,
       itemsCount: itemsCount,
+      workOrderCount: workOrderCount,
     );
   }
 }

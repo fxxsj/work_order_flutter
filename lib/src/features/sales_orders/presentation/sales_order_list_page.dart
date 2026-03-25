@@ -422,6 +422,8 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         DataColumn(label: Text('订单号')),
         DataColumn(label: Text('客户')),
         DataColumn(label: Text('状态')),
+        DataColumn(label: Text('施工单')),
+        DataColumn(label: Text('下一步')),
         DataColumn(label: Text('付款')),
         DataColumn(label: Text('下单日期')),
         DataColumn(label: Text('交货日期')),
@@ -444,6 +446,8 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
                   _displayText(order.statusDisplay ?? order.status),
                   style: textStyle?.copyWith(color: colors?.sidebarText),
                 )),
+                DataCell(Text(_workOrderText(order), style: textStyle)),
+                DataCell(Text(_followUpText(order), style: textStyle)),
                 DataCell(Text(
                   _displayText(
                       order.paymentStatusDisplay ?? order.paymentStatus),
@@ -570,6 +574,35 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
   static String _displayText(String? value) {
     final text = value?.trim() ?? '';
     return text.isEmpty ? _SalesOrderSummaryCard._emptyCellText : text;
+  }
+
+  static String _workOrderText(SalesOrder order) {
+    final count = order.workOrderCount ?? 0;
+    if (count <= 0) return '未生成';
+    return '$count 张';
+  }
+
+  static String _followUpText(SalesOrder order) {
+    final status = order.status ?? '';
+    final workOrderCount = order.workOrderCount ?? 0;
+    switch (status) {
+      case 'draft':
+        return '待提交确认';
+      case 'submitted':
+        return '待业务审核';
+      case 'rejected':
+        return '待修改后重提';
+      case 'approved':
+        return workOrderCount > 0 ? '已转施工单，跟进生产' : '待生成施工单';
+      case 'in_production':
+        return workOrderCount > 0 ? '生产中，跟进入库/发货' : '待补施工单';
+      case 'completed':
+        return '可生成送货单';
+      case 'cancelled':
+        return '订单已取消';
+      default:
+        return _SalesOrderSummaryCard._emptyCellText;
+    }
   }
 
   String _formatDate(DateTime? value) {
@@ -733,6 +766,8 @@ class _SalesOrderSummaryCard extends StatelessWidget {
     final deliveryDate = _formatDate(order.deliveryDate);
     final orderDate = _formatDate(order.orderDate);
     final itemsCount = order.itemsCount?.toString() ?? _emptyCellText;
+    final workOrderText = _SalesOrderListViewState._workOrderText(order);
+    final followUpText = _SalesOrderListViewState._followUpText(order);
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
 
     return ExpandableSummaryCard(
@@ -763,9 +798,9 @@ class _SalesOrderSummaryCard extends StatelessWidget {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
+                      _SummaryChip(label: '施工单', value: workOrderText),
                       _SummaryChip(label: '付款', value: payment),
-                      _SummaryChip(label: '交货', value: deliveryDate),
-                      _SummaryChip(label: '明细', value: itemsCount),
+                      _SummaryChip(label: '下一步', value: followUpText),
                     ],
                   ),
                 ],
@@ -806,6 +841,8 @@ class _SalesOrderSummaryCard extends StatelessWidget {
             children: [
               _SummaryField(label: '下单日期', value: orderDate),
               _SummaryField(label: '交货日期', value: deliveryDate),
+              _SummaryField(label: '施工单', value: workOrderText),
+              _SummaryField(label: '下一步', value: followUpText),
               _SummaryField(label: '付款状态', value: payment),
               _SummaryField(label: '明细数量', value: itemsCount),
               _SummaryField(

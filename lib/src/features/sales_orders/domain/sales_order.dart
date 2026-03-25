@@ -14,6 +14,7 @@ class SalesOrder {
     this.orderDate,
     this.deliveryDate,
     this.itemsCount,
+    this.workOrderCount,
   });
 
   final int id;
@@ -28,6 +29,7 @@ class SalesOrder {
   final DateTime? orderDate;
   final DateTime? deliveryDate;
   final int? itemsCount;
+  final int? workOrderCount;
 
   factory SalesOrder.fromJson(Map<String, dynamic> json) {
     return SalesOrder(
@@ -43,6 +45,7 @@ class SalesOrder {
       orderDate: toDateTime(json['order_date']),
       deliveryDate: toDateTime(json['delivery_date']),
       itemsCount: toInt(json['items_count']),
+      workOrderCount: toInt(json['work_order_count']),
     );
   }
 
