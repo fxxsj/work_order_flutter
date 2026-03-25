@@ -24,6 +24,7 @@ class StockInListEntry extends StatelessWidget {
         searchHintText: '搜索入库单号/施工单/客户',
         emptyText: '暂无入库单',
         emptyIcon: Icons.inventory_2_outlined,
+        enableSummary: true,
         columns: const [
           GenericColumn(label: '入库单号', value: _orderNumber),
           GenericColumn(label: '客户', value: _customerName),
@@ -43,25 +44,8 @@ class StockInListEntry extends StatelessWidget {
           GenericSummaryField(label: '操作员', value: _operator),
         ],
         titleBuilder: _title,
-        headerActionsBuilder: (context, viewModel) => [
-          if (_submittedCount(viewModel) > 0)
-            StatusHintChip(
-              label: '待审核入库',
-              count: _submittedCount(viewModel),
-              icon: Icons.fact_check_outlined,
-            ),
-          if (_completedCount(viewModel) > 0)
-            StatusHintChip(
-              label: '已完成入库',
-              count: _completedCount(viewModel),
-              icon: Icons.inventory_2_outlined,
-            ),
-          PageActionButton.filled(
-            onPressed: () => _openStockInForm(context),
-            icon: const Icon(Icons.add),
-            label: '新建入库单',
-          ),
-        ],
+        extraParamsBuilder: _extraParamsBuilder,
+        headerActionsBuilder: _buildHeaderActions,
         rowActionsBuilder: (context, record, openDetails) {
           final actions = <RowAction>[
             RowAction(label: '查看', onPressed: openDetails),
@@ -151,15 +135,99 @@ class StockInListEntry extends StatelessWidget {
   }
 
   static int _submittedCount(GenericListViewModel viewModel) {
+    final summaryCount = _summaryCount(viewModel, 'submitted_count');
+    if (summaryCount > 0) return summaryCount;
     return viewModel.records
         .where((record) => (record.getString('status') ?? '') == 'submitted')
         .length;
   }
 
   static int _completedCount(GenericListViewModel viewModel) {
+    final summaryCount = _summaryCount(viewModel, 'completed_count');
+    if (summaryCount > 0) return summaryCount;
     return viewModel.records
         .where((record) => (record.getString('status') ?? '') == 'completed')
         .length;
+  }
+
+  static List<Widget> _buildHeaderActions(
+    BuildContext context,
+    GenericListViewModel viewModel,
+  ) {
+    final currentStatus = _currentStatus(viewModel);
+    return [
+      if (_submittedCount(viewModel) > 0)
+        StatusHintChip(
+          label: '待审核入库',
+          count: _submittedCount(viewModel),
+          icon: Icons.fact_check_outlined,
+          selected: currentStatus == 'submitted',
+          onTap: () => _openQuickFilter(context, status: 'submitted'),
+        ),
+      if (_completedCount(viewModel) > 0)
+        StatusHintChip(
+          label: '已完成入库',
+          count: _completedCount(viewModel),
+          icon: Icons.inventory_2_outlined,
+          selected: currentStatus == 'completed',
+          onTap: () => _openQuickFilter(context, status: 'completed'),
+        ),
+      if (_hasActiveFilter(viewModel))
+        OutlinedButton.icon(
+          onPressed: () => context.go('/inventory/stock-ins'),
+          icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
+          label: const Text('清除筛选'),
+        ),
+      PageActionButton.filled(
+        onPressed: () => _openStockInForm(context),
+        icon: const Icon(Icons.add),
+        label: '新建入库单',
+      ),
+    ];
+  }
+
+  static Map<String, dynamic> _extraParamsBuilder(Uri uri) {
+    final extraParams = <String, dynamic>{};
+    final status = uri.queryParameters['status']?.trim() ?? '';
+    if (status.isNotEmpty) {
+      extraParams['status'] = status;
+    }
+    return extraParams;
+  }
+
+  static int _summaryCount(GenericListViewModel viewModel, String key) {
+    final summary = viewModel.summary['summary'];
+    if (summary is Map<String, dynamic>) {
+      final value = summary[key];
+      if (value is int) return value;
+      return int.tryParse(value?.toString() ?? '') ?? 0;
+    }
+    if (summary is Map) {
+      final value = summary[key];
+      if (value is int) return value;
+      return int.tryParse(value?.toString() ?? '') ?? 0;
+    }
+    return 0;
+  }
+
+  static String _currentStatus(GenericListViewModel viewModel) {
+    return viewModel.extraParams['status']?.toString().trim() ?? '';
+  }
+
+  static bool _hasActiveFilter(GenericListViewModel viewModel) {
+    return _currentStatus(viewModel).isNotEmpty;
+  }
+
+  static void _openQuickFilter(
+    BuildContext context, {
+    required String status,
+  }) {
+    context.go(
+      Uri(
+        path: '/inventory/stock-ins',
+        queryParameters: {'status': status},
+      ).toString(),
+    );
   }
 
   static Future<void> _openStockInForm(

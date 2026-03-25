@@ -14,7 +14,8 @@ abstract class ProductStockRepository {
 
   Future<Map<String, dynamic>> getExpiringSoon({Map<String, dynamic>? params});
 
-  Future<Map<String, dynamic>> getSummary();
+  Future<Map<String, dynamic>> getSummary({Map<String, dynamic>? params});
 
-  Future<Map<String, dynamic>> adjustStock(int id, Map<String, dynamic> payload);
+  Future<Map<String, dynamic>> adjustStock(
+      int id, Map<String, dynamic> payload);
 }

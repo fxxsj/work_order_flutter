@@ -38,8 +38,8 @@ class ProductStockRepositoryImpl implements ProductStockRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> getSummary() {
-    return _apiService.fetchSummary();
+  Future<Map<String, dynamic>> getSummary({Map<String, dynamic>? params}) {
+    return _apiService.fetchSummary(params: params);
   }
 
   @override

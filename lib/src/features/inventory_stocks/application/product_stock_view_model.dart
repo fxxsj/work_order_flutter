@@ -7,17 +7,31 @@ class ProductStockViewModel extends PaginatedViewModel<ProductStock> {
 
   final ProductStockRepository _repository;
   String _statusFilter = '';
+  Map<String, dynamic> _summary = const {};
+  int _summaryRequestToken = 0;
 
   List<ProductStock> get stocks => items;
   String get statusFilter => _statusFilter;
+  Map<String, dynamic> get summary => _summary;
 
-  Future<void> initialize() => loadItems(resetPage: true);
+  Future<void> initialize() => loadStocks(resetPage: true);
 
-  Future<void> loadStocks({bool resetPage = false}) =>
-      loadItems(resetPage: resetPage);
+  Future<void> loadStocks({bool resetPage = false}) async {
+    await loadItems(resetPage: resetPage);
+    await _loadSummary();
+  }
 
   Future<void> setStatusFilter(String value) async {
     _statusFilter = value;
+    await loadStocks(resetPage: true);
+  }
+
+  Future<void> applyRoutePrefill({
+    String? search,
+    String? status,
+  }) async {
+    setSearchText(search?.trim() ?? '');
+    _statusFilter = status?.trim() ?? '';
     await loadStocks(resetPage: true);
   }
 
@@ -39,5 +53,29 @@ class ProductStockViewModel extends PaginatedViewModel<ProductStock> {
       page: result.page,
       pageSize: result.pageSize,
     );
+  }
+
+  Future<void> _loadSummary() async {
+    final token = ++_summaryRequestToken;
+    try {
+      final params = <String, dynamic>{};
+      final trimmedSearch = searchText.trim();
+      if (trimmedSearch.isNotEmpty) {
+        params['search'] = trimmedSearch;
+      }
+      if (_statusFilter.isNotEmpty) {
+        params['status'] = _statusFilter;
+      }
+      final summary = await _repository.getSummary(
+        params: params.isEmpty ? null : params,
+      );
+      if (token != _summaryRequestToken) return;
+      _summary = summary;
+      safeNotify();
+    } catch (_) {
+      if (token != _summaryRequestToken) return;
+      _summary = const {};
+      safeNotify();
+    }
   }
 }

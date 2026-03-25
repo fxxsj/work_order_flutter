@@ -96,11 +96,31 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
   List<ProductStock> _lowStockList = [];
   List<ProductStock> _expiredList = [];
   ProductStockSupportService? _supportService;
+  String? _routeSignature;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _supportService ??= ProductStockSupportService(context.read<ApiClient>());
+    final uri = GoRouterState.of(context).uri;
+    final routeSearch = uri.queryParameters['search']?.trim() ?? '';
+    final routeStatus = uri.queryParameters['status']?.trim() ?? '';
+    final signature = '$routeSearch|$routeStatus';
+    final hadRouteState = _routeSignature != null;
+    if (_routeSignature == signature) return;
+    _routeSignature = signature;
+    _searchController.text = routeSearch;
+    final hasRouteFilter = routeSearch.isNotEmpty || routeStatus.isNotEmpty;
+    if (!hasRouteFilter && !hadRouteState) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<ProductStockViewModel>().applyRoutePrefill(
+            search: routeSearch,
+            status: routeStatus,
+          );
+    });
   }
 
   @override
@@ -495,12 +515,20 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
       actions: LayoutBuilder(
         builder: (context, constraints) {
           final activeFilters = _activeFilterCount(viewModel);
-          final reservedCount = viewModel.stocks
-              .where((stock) => (stock.status ?? '') == 'reserved')
-              .length;
-          final qualityCount = viewModel.stocks
-              .where((stock) => (stock.status ?? '') == 'quality_check')
-              .length;
+          final reservedCount = _summaryCount(
+            viewModel,
+            'reserved_count',
+            fallback: viewModel.stocks
+                .where((stock) => (stock.status ?? '') == 'reserved')
+                .length,
+          );
+          final qualityCount = _summaryCount(
+            viewModel,
+            'quality_check_count',
+            fallback: viewModel.stocks
+                .where((stock) => (stock.status ?? '') == 'quality_check')
+                .length,
+          );
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -520,12 +548,22 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
                 label: '待发货库存',
                 count: reservedCount,
                 icon: Icons.local_shipping_outlined,
+                selected: viewModel.statusFilter == 'reserved',
+                onTap: () => _openQuickFilter(status: 'reserved'),
               ),
             if (qualityCount > 0)
               StatusHintChip(
                 label: '待质检库存',
                 count: qualityCount,
                 icon: Icons.fact_check_outlined,
+                selected: viewModel.statusFilter == 'quality_check',
+                onTap: () => _openQuickFilter(status: 'quality_check'),
+              ),
+            if (_hasRouteQuickFilter(viewModel))
+              OutlinedButton.icon(
+                onPressed: () => context.go('/inventory/stocks'),
+                icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
+                label: const Text('清除筛选'),
               ),
             PageActionButton.outlined(
               onPressed: () => viewModel.loadStocks(resetPage: true),
@@ -589,7 +627,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
         Row(
           children: [
             PageActionButton.outlined(
-              onPressed: () => _resetFilters(viewModel),
+              onPressed: () => _resetFilters(context, viewModel),
               icon: const Icon(Icons.restart_alt, size: 16),
               label: _resetButtonText,
             ),
@@ -616,7 +654,15 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     return count;
   }
 
-  void _resetFilters(ProductStockViewModel viewModel) {
+  void _resetFilters(
+    BuildContext context,
+    ProductStockViewModel viewModel,
+  ) {
+    if (_hasRouteQuickFilter(viewModel) ||
+        _searchController.text.trim().isNotEmpty) {
+      context.go('/inventory/stocks');
+      return;
+    }
     _searchController.clear();
     viewModel.setSearchText('');
     if (viewModel.statusFilter.isNotEmpty) {
@@ -624,6 +670,30 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     } else {
       viewModel.loadStocks(resetPage: true);
     }
+  }
+
+  bool _hasRouteQuickFilter(ProductStockViewModel viewModel) {
+    return viewModel.statusFilter.isNotEmpty;
+  }
+
+  int _summaryCount(
+    ProductStockViewModel viewModel,
+    String key, {
+    required int fallback,
+  }) {
+    final value = viewModel.summary[key];
+    if (value is int) return value;
+    final parsed = int.tryParse(value?.toString() ?? '');
+    return parsed ?? fallback;
+  }
+
+  void _openQuickFilter({required String status}) {
+    context.go(
+      Uri(
+        path: '/inventory/stocks',
+        queryParameters: {'status': status},
+      ).toString(),
+    );
   }
 
   static String _displayText(String? value) {

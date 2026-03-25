@@ -76,8 +76,11 @@ class ProductStockApiService {
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> fetchSummary() async {
-    final response = await _client.get('/product-stocks/summary/');
+  Future<Map<String, dynamic>> fetchSummary({
+    Map<String, dynamic>? params,
+  }) async {
+    final response =
+        await _client.get('/product-stocks/summary/', queryParameters: params);
     return _mapFromResponse(response.data);
   }
 
