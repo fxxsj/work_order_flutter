@@ -16,6 +16,7 @@ class Task {
     this.quantityCompleted,
     this.workOrderId,
     this.workOrderNumber,
+    this.customerName,
     this.processName,
     this.priorityDisplay,
     this.deliveryDate,
@@ -35,14 +36,17 @@ class Task {
   final double? quantityCompleted;
   final int? workOrderId;
   final String? workOrderNumber;
+  final String? customerName;
   final String? processName;
   final String? priorityDisplay;
   final DateTime? deliveryDate;
 
   factory Task.fromJson(Map<String, dynamic> json) {
     final workOrderProcessInfo = json['work_order_process_info'];
-    final workOrderInfo = workOrderProcessInfo is Map ? workOrderProcessInfo['work_order'] : null;
-    final processInfo = workOrderProcessInfo is Map ? workOrderProcessInfo['process'] : null;
+    final workOrderInfo =
+        workOrderProcessInfo is Map ? workOrderProcessInfo['work_order'] : null;
+    final processInfo =
+        workOrderProcessInfo is Map ? workOrderProcessInfo['process'] : null;
 
     return Task(
       id: toInt(json['id']) ?? 0,
@@ -58,10 +62,20 @@ class Task {
       productionQuantity: _toDouble(json['production_quantity']),
       quantityCompleted: _toDouble(json['quantity_completed']),
       workOrderId: workOrderInfo is Map ? toInt(workOrderInfo['id']) : null,
-      workOrderNumber: workOrderInfo is Map ? toStringOrNull(workOrderInfo['order_number']) : null,
-      priorityDisplay: workOrderInfo is Map ? toStringOrNull(workOrderInfo['priority_display']) : null,
-      deliveryDate: workOrderInfo is Map ? toDateTime(workOrderInfo['delivery_date']) : null,
-      processName: processInfo is Map ? toStringOrNull(processInfo['name']) : null,
+      workOrderNumber: workOrderInfo is Map
+          ? toStringOrNull(workOrderInfo['order_number'])
+          : null,
+      customerName: workOrderInfo is Map
+          ? toStringOrNull(workOrderInfo['customer_name'])
+          : null,
+      priorityDisplay: workOrderInfo is Map
+          ? toStringOrNull(workOrderInfo['priority_display'])
+          : null,
+      deliveryDate: workOrderInfo is Map
+          ? toDateTime(workOrderInfo['delivery_date'])
+          : null,
+      processName:
+          processInfo is Map ? toStringOrNull(processInfo['name']) : null,
     );
   }
 

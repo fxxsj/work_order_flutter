@@ -11,10 +11,12 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
+import 'package:work_order_app/src/features/tasks/presentation/task_ui_helper.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_list_tile.dart';
 
 /// 操作员任务中心入口。
@@ -119,6 +121,10 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
   @override
   Widget build(BuildContext context) {
     final isMobile = BreakpointsUtil.isMobile(context);
+    final overdueCount =
+        [..._myTasks, ..._claimableTasks].where(TaskUiHelper.isOverdue).length;
+    final dueSoonCount =
+        [..._myTasks, ..._claimableTasks].where(TaskUiHelper.isDueSoon).length;
     return ListPageScaffold(
       spacing: _spacingSm,
       header: PageHeaderBar(
@@ -129,6 +135,24 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
         actions: ListToolbar(
           isMobile: isMobile,
           actions: [
+            if (_claimableTasks.isNotEmpty)
+              StatusHintChip(
+                label: '待认领',
+                count: _claimableTasks.length,
+                icon: Icons.assignment_turned_in_outlined,
+              ),
+            if (overdueCount > 0)
+              StatusHintChip(
+                label: '已逾期',
+                count: overdueCount,
+                icon: Icons.warning_amber_rounded,
+              ),
+            if (dueSoonCount > 0)
+              StatusHintChip(
+                label: '临近交付',
+                count: dueSoonCount,
+                icon: Icons.event_busy_outlined,
+              ),
             PageActionButton.outlined(
               onPressed: _loadData,
               icon: const Icon(Icons.refresh, size: 16),
@@ -328,12 +352,13 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
     return AppDataTable(
       columns: const [
         DataColumn(label: Text('任务')),
-        DataColumn(label: Text('施工单号')),
+        DataColumn(label: Text('来源')),
         DataColumn(label: Text('工序')),
-        DataColumn(label: Text('生产数量')),
-        DataColumn(label: Text('完成数量')),
+        DataColumn(label: Text('数量')),
         DataColumn(label: Text('进度')),
+        DataColumn(label: Text('交期')),
         DataColumn(label: Text('状态')),
+        DataColumn(label: Text('待办')),
         DataColumn(label: Text('操作')),
       ],
       rows: tasks
@@ -341,26 +366,31 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
             (task) => DataRow(
               cells: [
                 DataCell(Text(
-                  _displayText(
-                    task.workContent?.trim().isNotEmpty == true
-                        ? task.workContent
-                        : (task.processName ?? '任务 #${task.id}'),
-                  ),
+                  _displayText(TaskUiHelper.title(task)),
                   style: theme.textTheme.bodyMedium,
                 )),
-                DataCell(
-                    Text(_displayText(task.workOrderNumber), style: textStyle)),
+                DataCell(Text(
+                  _displayText(TaskUiHelper.sourceSummary(task)),
+                  style: textStyle,
+                )),
                 DataCell(
                     Text(_displayText(task.processName), style: textStyle)),
-                DataCell(Text(_formatNumber(task.productionQuantity),
-                    style: textStyle)),
-                DataCell(Text(_formatNumber(task.quantityCompleted),
-                    style: textStyle)),
-                DataCell(Text(_formatProgress(task), style: textStyle)),
+                DataCell(
+                    Text(TaskUiHelper.quantitySummary(task), style: textStyle)),
+                DataCell(
+                    Text(TaskUiHelper.progressText(task), style: textStyle)),
+                DataCell(Text(
+                  TaskUiHelper.deadlineRiskText(task) == null
+                      ? _formatDate(task.deliveryDate)
+                      : '${_formatDate(task.deliveryDate)} · ${TaskUiHelper.deadlineRiskText(task)!}',
+                  style: textStyle,
+                )),
                 DataCell(Text(
                   task.statusDisplay ?? task.status ?? '-',
                   style: textStyle,
                 )),
+                DataCell(
+                    Text(TaskUiHelper.followUpText(task), style: textStyle)),
                 DataCell(Wrap(
                   spacing: 8,
                   runSpacing: 4,
@@ -406,18 +436,13 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
     return text.isEmpty ? '-' : text;
   }
 
-  String _formatNumber(double? value) {
+  String _formatDate(DateTime? value) {
     if (value == null) return '-';
-    return value.toStringAsFixed(0);
-  }
-
-  String _formatProgress(Task task) {
-    final total = task.productionQuantity ?? 0;
-    final completed = task.quantityCompleted ?? 0;
-    if (total <= 0) return '-';
-    final percentage =
-        (completed / total * 100).clamp(0, 100).toStringAsFixed(0);
-    return '$percentage%';
+    final local = value.toLocal();
+    final year = local.year.toString().padLeft(4, '0');
+    final month = local.month.toString().padLeft(2, '0');
+    final day = local.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
   }
 
   void _openTaskDetail(BuildContext context, Task task) {

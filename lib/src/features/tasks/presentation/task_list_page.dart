@@ -13,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
@@ -26,6 +27,7 @@ import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
 import 'package:work_order_app/src/features/tasks/data/task_list_support_service.dart';
 import 'package:work_order_app/src/features/tasks/data/task_repository_impl.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
+import 'package:work_order_app/src/features/tasks/presentation/task_ui_helper.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_repository.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_action_dialogs.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_list_sections.dart';
@@ -284,14 +286,15 @@ class _TaskListViewState extends State<_TaskListView> {
     return AppDataTable(
       columns: const [
         DataColumn(label: Text('任务')),
-        DataColumn(label: Text('施工单号')),
+        DataColumn(label: Text('来源')),
         DataColumn(label: Text('工序')),
         DataColumn(label: Text('分派部门')),
         DataColumn(label: Text('分派操作员')),
-        DataColumn(label: Text('生产数量')),
-        DataColumn(label: Text('完成数量')),
+        DataColumn(label: Text('数量')),
         DataColumn(label: Text('进度')),
+        DataColumn(label: Text('交期')),
         DataColumn(label: Text('状态')),
+        DataColumn(label: Text('待办')),
         DataColumn(label: Text('操作')),
       ],
       rows: tasks.map(
@@ -301,33 +304,37 @@ class _TaskListViewState extends State<_TaskListView> {
           final isDraft = task.status == 'draft';
           final canUpdate = !(isCompleted || isCancelled || isDraft);
           final canComplete = !(isCompleted || isCancelled || isDraft);
+          final source = TaskUiHelper.sourceSummary(task);
+          final quantity = TaskUiHelper.quantitySummary(task);
+          final deliveryDate = _formatDate(task.deliveryDate);
+          final deadlineRisk = TaskUiHelper.deadlineRiskText(task);
+          final followUp = TaskUiHelper.followUpText(task);
 
           return DataRow(
             cells: [
               DataCell(Text(
-                _displayText(
-                  task.workContent?.trim().isNotEmpty == true
-                      ? task.workContent
-                      : (task.processName ?? '任务 #${task.id}'),
-                ),
+                _displayText(TaskUiHelper.title(task)),
                 style: theme.textTheme.bodyMedium,
               )),
-              DataCell(
-                  Text(_displayText(task.workOrderNumber), style: textStyle)),
+              DataCell(Text(_displayText(source), style: textStyle)),
               DataCell(Text(_displayText(task.processName), style: textStyle)),
               DataCell(Text(_displayText(task.assignedDepartmentName),
                   style: textStyle)),
               DataCell(Text(_displayText(task.assignedOperatorName),
                   style: textStyle)),
-              DataCell(Text(_formatNumber(task.productionQuantity),
-                  style: textStyle)),
-              DataCell(Text(_formatNumber(task.quantityCompleted),
-                  style: textStyle)),
-              DataCell(Text(_formatProgress(task), style: textStyle)),
+              DataCell(Text(quantity, style: textStyle)),
+              DataCell(Text(TaskUiHelper.progressText(task), style: textStyle)),
+              DataCell(Text(
+                deadlineRisk == null
+                    ? deliveryDate
+                    : '$deliveryDate · $deadlineRisk',
+                style: textStyle,
+              )),
               DataCell(Text(
                 task.statusDisplay ?? task.status ?? _emptyCellText,
                 style: textStyle,
               )),
+              DataCell(Text(followUp, style: textStyle)),
               DataCell(RowActionGroup(
                 actions: [
                   if (task.workOrderId != null)
@@ -409,6 +416,17 @@ class _TaskListViewState extends State<_TaskListView> {
       actions: LayoutBuilder(
         builder: (context, constraints) {
           final activeFilters = _activeFilterCount();
+          final overdueCount = viewModel.tasks
+              .where((task) => TaskUiHelper.isOverdue(task))
+              .length;
+          final dueSoonCount = viewModel.tasks
+              .where((task) => TaskUiHelper.isDueSoon(task))
+              .length;
+          final unassignedCount = viewModel.tasks
+              .where((task) =>
+                  (task.status ?? '') == 'pending' &&
+                  (task.assignedOperatorName ?? '').trim().isEmpty)
+              .length;
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -500,6 +518,24 @@ class _TaskListViewState extends State<_TaskListView> {
           }
 
           final actions = <Widget>[
+            if (overdueCount > 0)
+              StatusHintChip(
+                label: '已逾期任务',
+                count: overdueCount,
+                icon: Icons.warning_amber_rounded,
+              ),
+            if (dueSoonCount > 0)
+              StatusHintChip(
+                label: '临近交付',
+                count: dueSoonCount,
+                icon: Icons.event_busy_outlined,
+              ),
+            if (unassignedCount > 0)
+              StatusHintChip(
+                label: '待分派任务',
+                count: unassignedCount,
+                icon: Icons.person_search_outlined,
+              ),
             PageActionButton.outlined(
               onPressed: () => viewModel.loadTasks(resetPage: true),
               icon: const Icon(Icons.refresh, size: 16),
@@ -618,18 +654,13 @@ class _TaskListViewState extends State<_TaskListView> {
     return text.isEmpty ? _emptyCellText : text;
   }
 
-  String _formatNumber(double? value) {
+  String _formatDate(DateTime? value) {
     if (value == null) return _emptyCellText;
-    return value.toStringAsFixed(0);
-  }
-
-  String _formatProgress(Task task) {
-    final total = task.productionQuantity ?? 0;
-    final completed = task.quantityCompleted ?? 0;
-    if (total <= 0) return _emptyCellText;
-    final percentage =
-        (completed / total * 100).clamp(0, 100).toStringAsFixed(0);
-    return '$percentage%';
+    final local = value.toLocal();
+    final year = local.year.toString().padLeft(4, '0');
+    final month = local.month.toString().padLeft(2, '0');
+    final day = local.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
   }
 
   Widget _buildSummaryCard(
@@ -641,19 +672,18 @@ class _TaskListViewState extends State<_TaskListView> {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
-    final title = _displayText(
-      task.workContent?.trim().isNotEmpty == true
-          ? task.workContent
-          : (task.processName ?? '任务 #${task.id}'),
-    );
+    final title = _displayText(TaskUiHelper.title(task));
+    final customer = _displayText(task.customerName);
     final workOrder = _displayText(task.workOrderNumber);
     final process = _displayText(task.processName);
     final department = _displayText(task.assignedDepartmentName);
     final operator = _displayText(task.assignedOperatorName);
-    final production = _formatNumber(task.productionQuantity);
-    final completed = _formatNumber(task.quantityCompleted);
-    final progress = _formatProgress(task);
+    final quantity = TaskUiHelper.quantitySummary(task);
+    final progress = TaskUiHelper.progressText(task);
     final status = task.statusDisplay ?? task.status ?? _emptyCellText;
+    final followUp = TaskUiHelper.followUpText(task);
+    final deadlineRisk = TaskUiHelper.deadlineRiskText(task) ?? _emptyCellText;
+    final deliveryDate = _formatDate(task.deliveryDate);
     final isCompleted = task.status == 'completed';
     final isCancelled = task.status == 'cancelled';
     final isDraft = task.status == 'draft';
@@ -678,7 +708,9 @@ class _TaskListViewState extends State<_TaskListView> {
                   ),
                   SizedBox(height: sectionSpacing),
                   Text(
-                    '$workOrder · $process',
+                    [customer, workOrder, process]
+                        .where((item) => item != _emptyCellText)
+                        .join(' · '),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colors?.subtleText ?? theme.hintColor,
                     ),
@@ -690,6 +722,7 @@ class _TaskListViewState extends State<_TaskListView> {
                     children: [
                       _SummaryChip(label: '状态', value: status),
                       _SummaryChip(label: '进度', value: progress),
+                      _SummaryChip(label: '待办', value: followUp),
                     ],
                   ),
                 ],
@@ -714,15 +747,18 @@ class _TaskListViewState extends State<_TaskListView> {
           SummaryFieldWrap(
             isMobile: isMobile,
             children: [
+              _SummaryField(label: '客户', value: customer),
               _SummaryField(label: '施工单号', value: workOrder),
               _SummaryField(label: '工序', value: process),
               _SummaryField(label: '任务内容', value: title),
               _SummaryField(label: '分派部门', value: department),
               _SummaryField(label: '分派操作员', value: operator),
-              _SummaryField(label: '生产数量', value: production),
-              _SummaryField(label: '完成数量', value: completed),
+              _SummaryField(label: '数量', value: quantity),
               _SummaryField(label: '进度', value: progress),
+              _SummaryField(label: '交付日期', value: deliveryDate),
+              _SummaryField(label: '交期风险', value: deadlineRisk),
               _SummaryField(label: '状态', value: status),
+              _SummaryField(label: '下一步', value: followUp),
             ],
           ),
           if (task.workOrderId != null) ...[

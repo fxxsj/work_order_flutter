@@ -3,6 +3,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
+import 'package:work_order_app/src/features/tasks/presentation/task_ui_helper.dart';
 
 class TaskListTile extends StatelessWidget {
   const TaskListTile({
@@ -23,11 +24,11 @@ class TaskListTile extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
     final isXs = BreakpointsUtil.isXs(context);
-    final title = task.workContent?.trim().isNotEmpty == true
-        ? task.workContent!
-        : '任务 #${task.id}';
-    final progressText = _buildProgressText();
+    final title = TaskUiHelper.title(task);
+    final progressText = TaskUiHelper.quantitySummary(task);
     final deliveryDate = task.deliveryDate;
+    final deadlineRisk = TaskUiHelper.deadlineRiskText(task);
+    final followUp = TaskUiHelper.followUpText(task);
 
     return Material(
       color: Colors.transparent,
@@ -60,7 +61,7 @@ class TaskListTile extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (progressText != null) ...[
+                  if (progressText != '-') ...[
                     SizedBox(width: isXs ? 8 : 12),
                     Flexible(
                       child: Text(
@@ -82,6 +83,8 @@ class TaskListTile extends StatelessWidget {
                 spacing: isXs ? 6 : 8,
                 runSpacing: isXs ? 6 : 8,
                 children: [
+                  if (task.customerName?.isNotEmpty == true)
+                    _MetaChip(label: '客户', value: task.customerName!),
                   if (task.workOrderNumber?.isNotEmpty == true)
                     _MetaChip(label: '施工单', value: task.workOrderNumber!),
                   if (task.processName?.isNotEmpty == true)
@@ -92,7 +95,12 @@ class TaskListTile extends StatelessWidget {
                     _MetaChip(label: '优先级', value: task.priorityDisplay!),
                   if (deliveryDate != null)
                     _MetaChip(label: '交付', value: _formatDate(deliveryDate)),
-                  if (showAssignee && task.assignedOperatorName?.isNotEmpty == true)
+                  if (deadlineRisk != null)
+                    _MetaChip(label: '风险', value: deadlineRisk),
+                  if (followUp.isNotEmpty && followUp != '-')
+                    _MetaChip(label: '下一步', value: followUp),
+                  if (showAssignee &&
+                      task.assignedOperatorName?.isNotEmpty == true)
                     _MetaChip(label: '执行人', value: task.assignedOperatorName!),
                 ],
               ),
@@ -101,16 +109,6 @@ class TaskListTile extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String? _buildProgressText() {
-    if (task.productionQuantity == null && task.quantityCompleted == null) {
-      return null;
-    }
-    final total = task.productionQuantity ?? 0;
-    final completed = task.quantityCompleted ?? 0;
-    if (total <= 0) return null;
-    return '${completed.toStringAsFixed(0)}/${total.toStringAsFixed(0)}';
   }
 
   String _formatDate(DateTime date) {
