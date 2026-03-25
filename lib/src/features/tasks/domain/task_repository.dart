@@ -17,5 +17,15 @@ abstract class TaskRepository {
     String? operatorName,
     bool? isDraft,
     String? ordering,
+    String? todo,
+  });
+
+  Future<Map<String, dynamic>> getSummary({
+    String? search,
+    String? status,
+    String? priority,
+    int? departmentId,
+    int? processId,
+    String? todo,
   });
 }

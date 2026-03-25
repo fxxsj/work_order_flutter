@@ -97,14 +97,58 @@ class _TaskListViewState extends State<_TaskListView> {
   bool _exporting = false;
   TaskListSupportService? _supportService;
   bool _optionsRequested = false;
+  String? _routeSignature;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _supportService ??= TaskListSupportService(context.read<ApiClient>());
-    if (_optionsRequested) return;
-    _optionsRequested = true;
-    _loadFilterOptions();
+    if (!_optionsRequested) {
+      _optionsRequested = true;
+      _loadFilterOptions();
+    }
+
+    final uri = GoRouterState.of(context).uri;
+    final routeSearch = uri.queryParameters['search']?.trim() ?? '';
+    final routeStatus = uri.queryParameters['status']?.trim() ?? '';
+    final routePriority = uri.queryParameters['priority']?.trim() ?? '';
+    final routeTodo = uri.queryParameters['todo']?.trim() ?? '';
+    final routeDepartmentId =
+        int.tryParse(uri.queryParameters['assigned_department'] ?? '');
+    final routeProcessId =
+        int.tryParse(uri.queryParameters['work_order_process'] ?? '');
+    final signature = [
+      routeSearch,
+      routeStatus,
+      routePriority,
+      routeTodo,
+      routeDepartmentId?.toString() ?? '',
+      routeProcessId?.toString() ?? '',
+    ].join('|');
+    final hadRouteState = _routeSignature != null;
+    if (_routeSignature == signature) return;
+    _routeSignature = signature;
+    _searchController.text = routeSearch;
+    final hasRouteFilter = routeSearch.isNotEmpty ||
+        routeStatus.isNotEmpty ||
+        routePriority.isNotEmpty ||
+        routeTodo.isNotEmpty ||
+        (routeDepartmentId != null && routeDepartmentId > 0) ||
+        (routeProcessId != null && routeProcessId > 0);
+    if (!hasRouteFilter && !hadRouteState) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<TaskViewModel>().applyRoutePrefill(
+            search: routeSearch,
+            status: routeStatus,
+            priority: routePriority,
+            departmentId: routeDepartmentId,
+            processId: routeProcessId,
+            todo: routeTodo,
+          );
+    });
   }
 
   @override
@@ -138,12 +182,7 @@ class _TaskListViewState extends State<_TaskListView> {
 
   void _resetFilters(TaskViewModel viewModel) {
     _searchController.clear();
-    _statusFilter = null;
-    _priorityFilter = null;
-    _departmentFilterId = null;
-    _processFilterId = null;
-    viewModel.setSearchText('');
-    _applyFilters(viewModel);
+    context.go('/tasks');
   }
 
   Future<void> _exportTasks(TaskViewModel viewModel) async {
@@ -163,6 +202,8 @@ class _TaskListViewState extends State<_TaskListView> {
           'assigned_department': viewModel.departmentFilterId,
         if ((viewModel.processFilterId ?? 0) > 0)
           'work_order_process': viewModel.processFilterId,
+        if ((viewModel.todoFilter ?? '').isNotEmpty)
+          'todo': viewModel.todoFilter,
       };
       final result = await _supportService!.export(params);
       final savedPath = await saveBytes(result.bytes, result.filename,
@@ -416,17 +457,12 @@ class _TaskListViewState extends State<_TaskListView> {
       actions: LayoutBuilder(
         builder: (context, constraints) {
           final activeFilters = _activeFilterCount();
-          final overdueCount = viewModel.tasks
-              .where((task) => TaskUiHelper.isOverdue(task))
-              .length;
-          final dueSoonCount = viewModel.tasks
-              .where((task) => TaskUiHelper.isDueSoon(task))
-              .length;
-          final unassignedCount = viewModel.tasks
-              .where((task) =>
-                  (task.status ?? '') == 'pending' &&
-                  (task.assignedOperatorName ?? '').trim().isEmpty)
-              .length;
+          final overdueCount =
+              _summaryCount(viewModel.summary, 'overdue_count');
+          final dueSoonCount =
+              _summaryCount(viewModel.summary, 'due_soon_count');
+          final unassignedCount =
+              _summaryCount(viewModel.summary, 'unassigned_count');
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -523,24 +559,36 @@ class _TaskListViewState extends State<_TaskListView> {
                 label: '已逾期任务',
                 count: overdueCount,
                 icon: Icons.warning_amber_rounded,
+                selected: viewModel.todoFilter == 'overdue',
+                onTap: () => _openQuickFilter(viewModel, todo: 'overdue'),
               ),
             if (dueSoonCount > 0)
               StatusHintChip(
                 label: '临近交付',
                 count: dueSoonCount,
                 icon: Icons.event_busy_outlined,
+                selected: viewModel.todoFilter == 'due_soon',
+                onTap: () => _openQuickFilter(viewModel, todo: 'due_soon'),
               ),
             if (unassignedCount > 0)
               StatusHintChip(
                 label: '待分派任务',
                 count: unassignedCount,
                 icon: Icons.person_search_outlined,
+                selected: viewModel.todoFilter == 'unassigned',
+                onTap: () => _openQuickFilter(viewModel, todo: 'unassigned'),
               ),
             PageActionButton.outlined(
               onPressed: () => viewModel.loadTasks(resetPage: true),
               icon: const Icon(Icons.refresh, size: 16),
               label: _refreshButtonText,
             ),
+            if ((viewModel.todoFilter ?? '').isNotEmpty)
+              PageActionButton.outlined(
+                onPressed: () => _clearQuickFilter(viewModel),
+                icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
+                label: '清除待办',
+              ),
             PageActionButton.outlined(
               onPressed: openFilterDrawer,
               icon: const Icon(Icons.filter_alt_outlined, size: 16),
@@ -646,7 +694,69 @@ class _TaskListViewState extends State<_TaskListView> {
     if (_priorityFilter != null && _priorityFilter!.isNotEmpty) count += 1;
     if (_departmentFilterId != null) count += 1;
     if (_processFilterId != null) count += 1;
+    final todo = context.read<TaskViewModel>().todoFilter;
+    if (todo != null && todo.isNotEmpty) count += 1;
     return count;
+  }
+
+  void _clearQuickFilter(TaskViewModel viewModel) {
+    _openQuickFilter(
+      viewModel,
+      status: viewModel.statusFilter,
+      priority: viewModel.priorityFilter,
+      departmentId: viewModel.departmentFilterId,
+      processId: viewModel.processFilterId,
+    );
+  }
+
+  void _openQuickFilter(
+    TaskViewModel viewModel, {
+    String? status,
+    String? priority,
+    int? departmentId,
+    int? processId,
+    String? todo,
+  }) {
+    final query = <String, String>{};
+    final search = _searchController.text.trim();
+    if (search.isNotEmpty) {
+      query['search'] = search;
+    }
+    final statusValue = status ?? viewModel.statusFilter;
+    if ((statusValue ?? '').trim().isNotEmpty) {
+      query['status'] = statusValue!.trim();
+    }
+    final priorityValue = priority ?? viewModel.priorityFilter;
+    if ((priorityValue ?? '').trim().isNotEmpty) {
+      query['priority'] = priorityValue!.trim();
+    }
+    final departmentValue = departmentId ?? viewModel.departmentFilterId;
+    if ((departmentValue ?? 0) > 0) {
+      query['assigned_department'] = departmentValue!.toString();
+    }
+    final processValue = processId ?? viewModel.processFilterId;
+    if ((processValue ?? 0) > 0) {
+      query['work_order_process'] = processValue!.toString();
+    }
+    if ((todo ?? '').trim().isNotEmpty) {
+      query['todo'] = todo!.trim();
+    }
+    context.go(Uri(path: '/tasks', queryParameters: query).toString());
+  }
+
+  int _summaryCount(Map<String, dynamic> payload, String key) {
+    final summary = payload['summary'];
+    if (summary is Map<String, dynamic>) {
+      final value = summary[key];
+      if (value is int) return value;
+      return int.tryParse(value?.toString() ?? '') ?? 0;
+    }
+    if (summary is Map) {
+      final value = summary[key];
+      if (value is int) return value;
+      return int.tryParse(value?.toString() ?? '') ?? 0;
+    }
+    return 0;
   }
 
   static String _displayText(String? value) {

@@ -24,6 +24,7 @@ class TaskApiService {
     String? operatorName,
     bool? isDraft,
     String? ordering,
+    String? todo,
   }) async {
     final params = <String, dynamic>{
       'page': page,
@@ -73,8 +74,12 @@ class TaskApiService {
     if (ordering != null && ordering.trim().isNotEmpty) {
       params['ordering'] = ordering.trim();
     }
+    if (todo != null && todo.trim().isNotEmpty) {
+      params['todo'] = todo.trim();
+    }
 
-    final response = await _client.get('/workorder-tasks/', queryParameters: params);
+    final response =
+        await _client.get('/workorder-tasks/', queryParameters: params);
     final payload = response.data;
     if (payload is Map<String, dynamic>) {
       final results = payload['results'];
@@ -85,34 +90,76 @@ class TaskApiService {
               .toList()
           : <TaskDto>[];
       final total = toInt(payload['count']) ?? list.length;
-      return TaskPageDto(items: list, total: total, page: page, pageSize: pageSize);
+      return TaskPageDto(
+          items: list, total: total, page: page, pageSize: pageSize);
     }
     if (payload is List) {
       final list = payload
           .whereType<Map>()
           .map((item) => TaskDto.fromJson(Map<String, dynamic>.from(item)))
           .toList();
-      return TaskPageDto(items: list, total: list.length, page: 1, pageSize: list.length);
+      return TaskPageDto(
+          items: list, total: list.length, page: 1, pageSize: list.length);
     }
     return const TaskPageDto(items: [], total: 0, page: 1, pageSize: 20);
   }
 
-  Future<Map<String, dynamic>> complete(int id, Map<String, dynamic> payload) async {
-    final response = await _client.post('/workorder-tasks/$id/complete/', data: payload);
+  Future<Map<String, dynamic>> fetchSummary({
+    String? search,
+    String? status,
+    String? priority,
+    int? departmentId,
+    int? processId,
+    String? todo,
+  }) async {
+    final params = <String, dynamic>{};
+    final trimmed = search?.trim();
+    if (trimmed != null && trimmed.isNotEmpty) {
+      params['search'] = trimmed;
+    }
+    if (status != null && status.trim().isNotEmpty) {
+      params['status'] = status.trim();
+    }
+    if (priority != null && priority.trim().isNotEmpty) {
+      params['priority'] = priority.trim();
+    }
+    if (departmentId != null && departmentId > 0) {
+      params['assigned_department'] = departmentId;
+    }
+    if (processId != null && processId > 0) {
+      params['work_order_process'] = processId;
+    }
+    if (todo != null && todo.trim().isNotEmpty) {
+      params['todo'] = todo.trim();
+    }
+    final response =
+        await _client.get('/workorder-tasks/summary/', queryParameters: params);
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> updateQuantity(int id, Map<String, dynamic> payload) async {
-    final response = await _client.post('/workorder-tasks/$id/update_quantity/', data: payload);
+  Future<Map<String, dynamic>> complete(
+      int id, Map<String, dynamic> payload) async {
+    final response =
+        await _client.post('/workorder-tasks/$id/complete/', data: payload);
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> assign(int id, Map<String, dynamic> payload) async {
-    final response = await _client.post('/workorder-tasks/$id/assign/', data: payload);
+  Future<Map<String, dynamic>> updateQuantity(
+      int id, Map<String, dynamic> payload) async {
+    final response = await _client.post('/workorder-tasks/$id/update_quantity/',
+        data: payload);
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> assignToOperator(int id, {required int operatorId, String? notes}) async {
+  Future<Map<String, dynamic>> assign(
+      int id, Map<String, dynamic> payload) async {
+    final response =
+        await _client.post('/workorder-tasks/$id/assign/', data: payload);
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> assignToOperator(int id,
+      {required int operatorId, String? notes}) async {
     final response = await _client.post(
       '/workorder-tasks/$id/assign/',
       data: {
@@ -123,7 +170,8 @@ class TaskApiService {
     return _mapFromResponse(response.data);
   }
 
-  Future<List<Map<String, dynamic>>> fetchDepartmentOperators(int departmentId) async {
+  Future<List<Map<String, dynamic>>> fetchDepartmentOperators(
+      int departmentId) async {
     final response = await _client.get(
       '/workorder-tasks/department-operators/',
       queryParameters: {'department_id': departmentId},
@@ -139,33 +187,45 @@ class TaskApiService {
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> fetchClaimableTasks({Map<String, dynamic>? params}) async {
-    final response = await _client.get('/workorder-tasks/claimable/', queryParameters: params);
+  Future<Map<String, dynamic>> fetchClaimableTasks(
+      {Map<String, dynamic>? params}) async {
+    final response = await _client.get('/workorder-tasks/claimable/',
+        queryParameters: params);
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> fetchOperatorCenterData({Map<String, dynamic>? params}) async {
-    final response = await _client.get('/workorder-tasks/operator_center/', queryParameters: params);
+  Future<Map<String, dynamic>> fetchOperatorCenterData(
+      {Map<String, dynamic>? params}) async {
+    final response = await _client.get('/workorder-tasks/operator_center/',
+        queryParameters: params);
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> splitTask(int id, Map<String, dynamic> payload) async {
-    final response = await _client.post('/workorder-tasks/$id/split/', data: payload);
+  Future<Map<String, dynamic>> splitTask(
+      int id, Map<String, dynamic> payload) async {
+    final response =
+        await _client.post('/workorder-tasks/$id/split/', data: payload);
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> fetchCollaborationStats({Map<String, dynamic>? params}) async {
-    final response = await _client.get('/workorder-tasks/collaboration_stats/', queryParameters: params);
+  Future<Map<String, dynamic>> fetchCollaborationStats(
+      {Map<String, dynamic>? params}) async {
+    final response = await _client.get('/workorder-tasks/collaboration_stats/',
+        queryParameters: params);
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> fetchDepartmentWorkload({Map<String, dynamic>? params}) async {
-    final response = await _client.get('/workorder-tasks/department_workload/', queryParameters: params);
+  Future<Map<String, dynamic>> fetchDepartmentWorkload(
+      {Map<String, dynamic>? params}) async {
+    final response = await _client.get('/workorder-tasks/department_workload/',
+        queryParameters: params);
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> fetchAssignmentHistory({Map<String, dynamic>? params}) async {
-    final response = await _client.get('/workorder-tasks/assignment_history/', queryParameters: params);
+  Future<Map<String, dynamic>> fetchAssignmentHistory(
+      {Map<String, dynamic>? params}) async {
+    final response = await _client.get('/workorder-tasks/assignment_history/',
+        queryParameters: params);
     return _mapFromResponse(response.data);
   }
 
@@ -253,7 +313,8 @@ class TaskApiService {
   }
 
   Future<Map<String, dynamic>> batchAssign(Map<String, dynamic> payload) async {
-    final response = await _client.post('/workorder-tasks/batch_assign/', data: payload);
+    final response =
+        await _client.post('/workorder-tasks/batch_assign/', data: payload);
     return _mapFromResponse(response.data);
   }
 
@@ -266,11 +327,17 @@ class TaskApiService {
 
   List<Map<String, dynamic>> _listFromResponse(dynamic data) {
     if (data is List) {
-      return data.whereType<Map>().map((item) => Map<String, dynamic>.from(item)).toList();
+      return data
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList();
     }
     if (data is Map && data['results'] is List) {
       final results = data['results'] as List;
-      return results.whereType<Map>().map((item) => Map<String, dynamic>.from(item)).toList();
+      return results
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList();
     }
     return [];
   }

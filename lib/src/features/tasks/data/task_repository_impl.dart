@@ -24,6 +24,7 @@ class TaskRepositoryImpl implements TaskRepository {
     String? operatorName,
     bool? isDraft,
     String? ordering,
+    String? todo,
   }) {
     return _apiService.fetchTasks(
       page: page,
@@ -41,6 +42,26 @@ class TaskRepositoryImpl implements TaskRepository {
       operatorName: operatorName,
       isDraft: isDraft,
       ordering: ordering,
+      todo: todo,
+    );
+  }
+
+  @override
+  Future<Map<String, dynamic>> getSummary({
+    String? search,
+    String? status,
+    String? priority,
+    int? departmentId,
+    int? processId,
+    String? todo,
+  }) {
+    return _apiService.fetchSummary(
+      search: search,
+      status: status,
+      priority: priority,
+      departmentId: departmentId,
+      processId: processId,
+      todo: todo,
     );
   }
 }
