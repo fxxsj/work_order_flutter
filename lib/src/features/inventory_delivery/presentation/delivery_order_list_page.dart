@@ -121,10 +121,10 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
   bool _salesOrdersLoaded = false;
   List<ProductOption> _products = [];
   bool _productsLoading = false;
-  bool _prefillHandled = false;
   bool _pendingPrefill = false;
   int? _prefillSalesOrderId;
   int? _uploadingDeliveryId;
+  String? _routeSignature;
 
   @override
   void initState() {
@@ -137,32 +137,34 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_prefillHandled) return;
     final uri = GoRouterState.of(context).uri;
     final createFlag = uri.queryParameters['create'];
     final routeSearch = uri.queryParameters['search']?.trim() ?? '';
     final routeStatus = uri.queryParameters['status']?.trim() ?? '';
+    final routeTodo = uri.queryParameters['todo']?.trim() ?? '';
     final routeCustomerId =
         int.tryParse(uri.queryParameters['customer_id'] ?? '');
     final routeDepartmentId =
         int.tryParse(uri.queryParameters['department_id'] ?? '');
     final salesOrderId =
         int.tryParse(uri.queryParameters['sales_order_id'] ?? '');
+    final signature = [
+      createFlag ?? '',
+      routeSearch,
+      routeStatus,
+      routeTodo,
+      routeCustomerId?.toString() ?? '',
+      routeDepartmentId?.toString() ?? '',
+      salesOrderId?.toString() ?? '',
+    ].join('|');
+    if (_routeSignature == signature) return;
+    _routeSignature = signature;
+
     if (salesOrderId != null && (createFlag == '1' || createFlag == 'true')) {
       _prefillSalesOrderId = salesOrderId;
       _pendingPrefill = true;
     }
-    if (routeSearch.isNotEmpty) {
-      _searchController.text = routeSearch;
-    }
-    _prefillHandled = true;
-    if (routeSearch.isEmpty &&
-        routeStatus.isEmpty &&
-        (routeCustomerId == null || routeCustomerId <= 0) &&
-        (routeDepartmentId == null || routeDepartmentId <= 0)) {
-      return;
-    }
-
+    _searchController.text = routeSearch;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<DeliveryOrderViewModel>().applyRoutePrefill(
@@ -170,6 +172,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
             status: routeStatus,
             customerId: routeCustomerId,
             departmentId: routeDepartmentId,
+            todo: routeTodo,
           );
     });
   }
@@ -1047,13 +1050,11 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
         builder: (context, constraints) {
           final activeFilters = _activeFilterCount(viewModel);
           final rejectedCount =
-              viewModel.deliveryOrders.where(_needsRejectedFollowUp).length;
-          final pendingReceiveCount = viewModel.deliveryOrders.where((item) {
-            final status = item.status ?? '';
-            return status == 'shipped' || status == 'in_transit';
-          }).length;
+              _summaryCount(viewModel.summary, 'rejected_followup_count');
+          final pendingReceiveCount =
+              _summaryCount(viewModel.summary, 'pending_receive_count');
           final pendingInvoiceCount =
-              viewModel.deliveryOrders.where(_shouldPromptInvoice).length;
+              _summaryCount(viewModel.summary, 'pending_invoice_count');
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -1069,24 +1070,42 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
 
           final actions = <Widget>[
             if (rejectedCount > 0)
-              StatusHintChip(label: '待处理拒收', count: rejectedCount),
+              StatusHintChip(
+                label: '待处理拒收',
+                count: rejectedCount,
+                selected: viewModel.todoFilter == 'rejected_followup',
+                onTap: () =>
+                    _openQuickFilter(viewModel, todo: 'rejected_followup'),
+              ),
             if (pendingReceiveCount > 0)
               StatusHintChip(
                 label: '待签收交付',
                 count: pendingReceiveCount,
                 icon: Icons.local_shipping_outlined,
+                selected: viewModel.todoFilter == 'pending_receive',
+                onTap: () =>
+                    _openQuickFilter(viewModel, todo: 'pending_receive'),
               ),
             if (pendingInvoiceCount > 0)
               StatusHintChip(
                 label: '待开票交付',
                 count: pendingInvoiceCount,
                 icon: Icons.receipt_long_outlined,
+                selected: viewModel.todoFilter == 'pending_invoice',
+                onTap: () =>
+                    _openQuickFilter(viewModel, todo: 'pending_invoice'),
               ),
             PageActionButton.outlined(
               onPressed: () => viewModel.loadDeliveryOrders(resetPage: true),
               icon: const Icon(Icons.refresh, size: 16),
               label: _refreshButtonText,
             ),
+            if (viewModel.todoFilter.isNotEmpty)
+              PageActionButton.outlined(
+                onPressed: () => _clearQuickFilter(viewModel),
+                icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
+                label: '清除待办',
+              ),
             PageActionButton.filled(
               onPressed: _salesOrdersLoading || _salesOrders.isEmpty
                   ? null
@@ -1190,24 +1209,66 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     if (_searchController.text.trim().isNotEmpty) count += 1;
     if (viewModel.statusFilter.isNotEmpty) count += 1;
     if (viewModel.customerId > 0) count += 1;
+    if (viewModel.todoFilter.isNotEmpty) count += 1;
+    if (viewModel.departmentId > 0) count += 1;
     return count;
   }
 
   void _resetFilters(DeliveryOrderViewModel viewModel) {
     _searchController.clear();
-    viewModel.setSearchText('');
-    var needsReload = false;
-    if (viewModel.statusFilter.isNotEmpty) {
-      needsReload = true;
-      viewModel.setStatusFilter('');
+    context.go('/delivery-orders');
+  }
+
+  void _clearQuickFilter(DeliveryOrderViewModel viewModel) {
+    _openQuickFilter(
+      viewModel,
+      status: viewModel.statusFilter,
+      customerId: viewModel.customerId > 0 ? viewModel.customerId : null,
+      departmentId: viewModel.departmentId > 0 ? viewModel.departmentId : null,
+    );
+  }
+
+  void _openQuickFilter(
+    DeliveryOrderViewModel viewModel, {
+    String? status,
+    int? customerId,
+    int? departmentId,
+    String? todo,
+  }) {
+    final query = <String, String>{};
+    final search = _searchController.text.trim();
+    if (search.isNotEmpty) {
+      query['search'] = search;
     }
-    if (viewModel.customerId > 0) {
-      needsReload = true;
-      viewModel.setCustomerId(0);
+    if ((status ?? '').trim().isNotEmpty) {
+      query['status'] = status!.trim();
     }
-    if (!needsReload) {
-      viewModel.loadDeliveryOrders(resetPage: true);
+    if ((customerId ?? 0) > 0) {
+      query['customer_id'] = customerId!.toString();
     }
+    if ((departmentId ?? 0) > 0) {
+      query['department_id'] = departmentId!.toString();
+    }
+    if ((todo ?? '').trim().isNotEmpty) {
+      query['todo'] = todo!.trim();
+    }
+    context
+        .go(Uri(path: '/delivery-orders', queryParameters: query).toString());
+  }
+
+  int _summaryCount(Map<String, dynamic> payload, String key) {
+    final summary = payload['summary'];
+    if (summary is Map<String, dynamic>) {
+      final value = summary[key];
+      if (value is int) return value;
+      return int.tryParse(value?.toString() ?? '') ?? 0;
+    }
+    if (summary is Map) {
+      final value = summary[key];
+      if (value is int) return value;
+      return int.tryParse(value?.toString() ?? '') ?? 0;
+    }
+    return 0;
   }
 
   static String _displayText(String? value) {
@@ -1452,11 +1513,6 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       default:
         return _emptyCellText;
     }
-  }
-
-  bool _needsRejectedFollowUp(DeliveryOrder order) {
-    return (order.status ?? '') == 'rejected' &&
-        !_hasResolvedRejectedException(order);
   }
 
   bool _hasResolvedRejectedException(DeliveryOrder order) {

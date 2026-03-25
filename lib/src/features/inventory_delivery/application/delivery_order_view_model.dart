@@ -9,16 +9,22 @@ class DeliveryOrderViewModel extends PaginatedViewModel<DeliveryOrder> {
   String _statusFilter = '';
   int _customerId = 0;
   int _departmentId = 0;
+  String _todoFilter = '';
+  Map<String, dynamic> _summary = const {};
 
   List<DeliveryOrder> get deliveryOrders => items;
   String get statusFilter => _statusFilter;
   int get customerId => _customerId;
   int get departmentId => _departmentId;
+  String get todoFilter => _todoFilter;
+  Map<String, dynamic> get summary => _summary;
 
-  Future<void> initialize() => loadItems(resetPage: true);
+  Future<void> initialize() => loadDeliveryOrders(resetPage: true);
 
-  Future<void> loadDeliveryOrders({bool resetPage = false}) =>
-      loadItems(resetPage: resetPage);
+  Future<void> loadDeliveryOrders({bool resetPage = false}) async {
+    await loadItems(resetPage: resetPage);
+    await _loadSummary();
+  }
 
   Future<void> setStatusFilter(String value) async {
     _statusFilter = value;
@@ -35,12 +41,28 @@ class DeliveryOrderViewModel extends PaginatedViewModel<DeliveryOrder> {
     String? status,
     int? customerId,
     int? departmentId,
+    String? todo,
   }) async {
     setSearchText(search?.trim() ?? '');
     _statusFilter = status?.trim() ?? '';
     _customerId = customerId != null && customerId > 0 ? customerId : 0;
     _departmentId = departmentId != null && departmentId > 0 ? departmentId : 0;
+    _todoFilter = todo?.trim() ?? '';
     await loadDeliveryOrders(resetPage: true);
+  }
+
+  Future<void> _loadSummary() async {
+    try {
+      _summary = await _repository.getSummary(
+        departmentId: _departmentId > 0 ? _departmentId : null,
+        status: _statusFilter.isEmpty ? null : _statusFilter,
+        customerId: _customerId > 0 ? _customerId : null,
+        todo: _todoFilter.isEmpty ? null : _todoFilter,
+      );
+      safeNotify();
+    } catch (_) {
+      // Keep the list usable even if summary loading fails.
+    }
   }
 
   @override
@@ -56,6 +78,7 @@ class DeliveryOrderViewModel extends PaginatedViewModel<DeliveryOrder> {
       status: _statusFilter.isEmpty ? null : _statusFilter,
       customerId: _customerId > 0 ? _customerId : null,
       departmentId: _departmentId > 0 ? _departmentId : null,
+      todo: _todoFilter.isEmpty ? null : _todoFilter,
     );
     return PageData(
       items: result.items.map((dto) => dto.toEntity()).toList(),

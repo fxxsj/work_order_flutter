@@ -16,6 +16,7 @@ class DeliveryOrderApiService {
     String? status,
     int? customerId,
     int? departmentId,
+    String? todo,
   }) async {
     final params = <String, dynamic>{
       'page': page,
@@ -34,6 +35,10 @@ class DeliveryOrderApiService {
     }
     if (departmentId != null && departmentId > 0) {
       params['department_id'] = departmentId;
+    }
+    final todoTrimmed = todo?.trim();
+    if (todoTrimmed != null && todoTrimmed.isNotEmpty) {
+      params['todo'] = todoTrimmed;
     }
 
     final response =
@@ -95,10 +100,26 @@ class DeliveryOrderApiService {
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> fetchSummary({int? departmentId}) async {
+  Future<Map<String, dynamic>> fetchSummary({
+    int? departmentId,
+    String? status,
+    int? customerId,
+    String? todo,
+  }) async {
     final params = <String, dynamic>{};
     if (departmentId != null && departmentId > 0) {
       params['department_id'] = departmentId;
+    }
+    final statusTrimmed = status?.trim();
+    if (statusTrimmed != null && statusTrimmed.isNotEmpty) {
+      params['status'] = statusTrimmed;
+    }
+    if (customerId != null && customerId > 0) {
+      params['customer'] = customerId;
+    }
+    final todoTrimmed = todo?.trim();
+    if (todoTrimmed != null && todoTrimmed.isNotEmpty) {
+      params['todo'] = todoTrimmed;
     }
     final response =
         await _client.get('/delivery-orders/summary/', queryParameters: params);

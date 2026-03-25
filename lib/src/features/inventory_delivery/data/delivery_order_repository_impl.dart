@@ -15,6 +15,7 @@ class DeliveryOrderRepositoryImpl implements DeliveryOrderRepository {
     String? status,
     int? customerId,
     int? departmentId,
+    String? todo,
   }) {
     return _apiService.fetchDeliveryOrders(
       page: page,
@@ -23,6 +24,7 @@ class DeliveryOrderRepositoryImpl implements DeliveryOrderRepository {
       status: status,
       customerId: customerId,
       departmentId: departmentId,
+      todo: todo,
     );
   }
 
@@ -42,7 +44,17 @@ class DeliveryOrderRepositoryImpl implements DeliveryOrderRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> getSummary() {
-    return _apiService.fetchSummary();
+  Future<Map<String, dynamic>> getSummary({
+    int? departmentId,
+    String? status,
+    int? customerId,
+    String? todo,
+  }) {
+    return _apiService.fetchSummary(
+      departmentId: departmentId,
+      status: status,
+      customerId: customerId,
+      todo: todo,
+    );
   }
 }

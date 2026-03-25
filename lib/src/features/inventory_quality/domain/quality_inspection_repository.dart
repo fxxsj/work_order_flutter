@@ -9,6 +9,7 @@ abstract class QualityInspectionRepository {
     String? result,
     String? inspectionType,
     int? departmentId,
+    String? todo,
   });
 
   Future<Map<String, dynamic>> complete(int id, Map<String, dynamic> payload);
@@ -16,5 +17,10 @@ abstract class QualityInspectionRepository {
   Future<Map<String, dynamic>> uploadAttachment(
       int id, MultipartFile attachment);
 
-  Future<Map<String, dynamic>> getSummary();
+  Future<Map<String, dynamic>> getSummary({
+    int? departmentId,
+    String? result,
+    String? inspectionType,
+    String? todo,
+  });
 }

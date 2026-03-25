@@ -16,6 +16,7 @@ class QualityInspectionRepositoryImpl implements QualityInspectionRepository {
     String? result,
     String? inspectionType,
     int? departmentId,
+    String? todo,
   }) {
     return _apiService.fetchQualityInspections(
       page: page,
@@ -24,6 +25,7 @@ class QualityInspectionRepositoryImpl implements QualityInspectionRepository {
       result: result,
       inspectionType: inspectionType,
       departmentId: departmentId,
+      todo: todo,
     );
   }
 
@@ -39,7 +41,17 @@ class QualityInspectionRepositoryImpl implements QualityInspectionRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> getSummary() {
-    return _apiService.fetchSummary();
+  Future<Map<String, dynamic>> getSummary({
+    int? departmentId,
+    String? result,
+    String? inspectionType,
+    String? todo,
+  }) {
+    return _apiService.fetchSummary(
+      departmentId: departmentId,
+      result: result,
+      inspectionType: inspectionType,
+      todo: todo,
+    );
   }
 }

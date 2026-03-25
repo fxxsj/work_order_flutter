@@ -8,6 +8,7 @@ abstract class DeliveryOrderRepository {
     String? status,
     int? customerId,
     int? departmentId,
+    String? todo,
   });
 
   Future<Map<String, dynamic>> ship(int id, Map<String, dynamic> payload);
@@ -16,5 +17,10 @@ abstract class DeliveryOrderRepository {
 
   Future<Map<String, dynamic>> reject(int id, Map<String, dynamic> payload);
 
-  Future<Map<String, dynamic>> getSummary();
+  Future<Map<String, dynamic>> getSummary({
+    int? departmentId,
+    String? status,
+    int? customerId,
+    String? todo,
+  });
 }

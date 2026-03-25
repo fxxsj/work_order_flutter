@@ -15,6 +15,7 @@ class QualityInspectionApiService {
     String? result,
     String? inspectionType,
     int? departmentId,
+    String? todo,
   }) async {
     final params = <String, dynamic>{
       'page': page,
@@ -34,6 +35,10 @@ class QualityInspectionApiService {
     }
     if (departmentId != null && departmentId > 0) {
       params['department_id'] = departmentId;
+    }
+    final todoTrimmed = todo?.trim();
+    if (todoTrimmed != null && todoTrimmed.isNotEmpty) {
+      params['todo'] = todoTrimmed;
     }
 
     final response =
@@ -92,10 +97,27 @@ class QualityInspectionApiService {
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> fetchSummary({int? departmentId}) async {
+  Future<Map<String, dynamic>> fetchSummary({
+    int? departmentId,
+    String? result,
+    String? inspectionType,
+    String? todo,
+  }) async {
     final params = <String, dynamic>{};
     if (departmentId != null && departmentId > 0) {
       params['department_id'] = departmentId;
+    }
+    final resultTrimmed = result?.trim();
+    if (resultTrimmed != null && resultTrimmed.isNotEmpty) {
+      params['result'] = resultTrimmed;
+    }
+    final typeTrimmed = inspectionType?.trim();
+    if (typeTrimmed != null && typeTrimmed.isNotEmpty) {
+      params['type'] = typeTrimmed;
+    }
+    final todoTrimmed = todo?.trim();
+    if (todoTrimmed != null && todoTrimmed.isNotEmpty) {
+      params['todo'] = todoTrimmed;
     }
     final response = await _client.get('/quality-inspections/summary/',
         queryParameters: params);

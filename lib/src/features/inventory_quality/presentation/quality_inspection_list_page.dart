@@ -103,26 +103,27 @@ class _QualityInspectionListViewState
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
   int? _uploadingInspectionId;
-  bool _routePrefillHandled = false;
+  String? _routeSignature;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_routePrefillHandled) return;
-    _routePrefillHandled = true;
-
     final uri = GoRouterState.of(context).uri;
     final search = uri.queryParameters['search']?.trim() ?? '';
     final result = uri.queryParameters['result']?.trim() ?? '';
     final inspectionType = uri.queryParameters['type']?.trim() ?? '';
+    final todo = uri.queryParameters['todo']?.trim() ?? '';
     final departmentId =
         int.tryParse(uri.queryParameters['department_id'] ?? '');
-    if (search.isEmpty &&
-        result.isEmpty &&
-        inspectionType.isEmpty &&
-        (departmentId == null || departmentId <= 0)) {
-      return;
-    }
+    final signature = [
+      search,
+      result,
+      inspectionType,
+      todo,
+      departmentId?.toString() ?? '',
+    ].join('|');
+    if (_routeSignature == signature) return;
+    _routeSignature = signature;
 
     _searchController.text = search;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -132,6 +133,7 @@ class _QualityInspectionListViewState
             result: result,
             inspectionType: inspectionType,
             departmentId: departmentId,
+            todo: todo,
           );
     });
   }
@@ -865,12 +867,10 @@ class _QualityInspectionListViewState
       actions: LayoutBuilder(
         builder: (context, constraints) {
           final activeFilters = _activeFilterCount(viewModel);
-          final pendingCount = viewModel.inspections
-              .where((item) => (item.result ?? 'pending') == 'pending')
-              .length;
-          final pendingExceptions = viewModel.inspections
-              .where((item) => _needsExceptionFollowUp(item))
-              .length;
+          final pendingCount =
+              _summaryCount(viewModel.summary, 'pending_count');
+          final pendingExceptions =
+              _summaryCount(viewModel.summary, 'unresolved_exception_count');
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -890,14 +890,29 @@ class _QualityInspectionListViewState
                 label: '待完成检验',
                 count: pendingCount,
                 icon: Icons.fact_check_outlined,
+                selected: viewModel.resultFilter == 'pending' &&
+                    viewModel.todoFilter.isEmpty,
+                onTap: () => _openQuickFilter(viewModel, result: 'pending'),
               ),
             if (pendingExceptions > 0)
-              StatusHintChip(label: '待跟进异常', count: pendingExceptions),
+              StatusHintChip(
+                label: '待跟进异常',
+                count: pendingExceptions,
+                selected: viewModel.todoFilter == 'exception_followup',
+                onTap: () =>
+                    _openQuickFilter(viewModel, todo: 'exception_followup'),
+              ),
             PageActionButton.outlined(
               onPressed: () => viewModel.loadInspections(resetPage: true),
               icon: const Icon(Icons.refresh, size: 16),
               label: _refreshButtonText,
             ),
+            if (viewModel.todoFilter.isNotEmpty)
+              PageActionButton.outlined(
+                onPressed: () => _clearQuickFilter(viewModel),
+                icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
+                label: '清除待办',
+              ),
             PageActionButton.outlined(
               onPressed: openFilterDrawer,
               icon: const Icon(Icons.filter_alt_outlined, size: 16),
@@ -986,24 +1001,66 @@ class _QualityInspectionListViewState
     if (_searchController.text.trim().isNotEmpty) count += 1;
     if (viewModel.typeFilter.isNotEmpty) count += 1;
     if (viewModel.resultFilter.isNotEmpty) count += 1;
+    if (viewModel.todoFilter.isNotEmpty) count += 1;
+    if (viewModel.departmentId > 0) count += 1;
     return count;
   }
 
   void _resetFilters(QualityInspectionViewModel viewModel) {
     _searchController.clear();
-    viewModel.setSearchText('');
-    var needsReload = false;
-    if (viewModel.typeFilter.isNotEmpty) {
-      needsReload = true;
-      viewModel.setTypeFilter('');
+    context.go('/quality-inspections');
+  }
+
+  void _clearQuickFilter(QualityInspectionViewModel viewModel) {
+    _openQuickFilter(
+      viewModel,
+      result: viewModel.resultFilter,
+      inspectionType: viewModel.typeFilter,
+      departmentId: viewModel.departmentId > 0 ? viewModel.departmentId : null,
+    );
+  }
+
+  void _openQuickFilter(
+    QualityInspectionViewModel viewModel, {
+    String? result,
+    String? inspectionType,
+    int? departmentId,
+    String? todo,
+  }) {
+    final query = <String, String>{};
+    final search = _searchController.text.trim();
+    if (search.isNotEmpty) {
+      query['search'] = search;
     }
-    if (viewModel.resultFilter.isNotEmpty) {
-      needsReload = true;
-      viewModel.setResultFilter('');
+    if ((result ?? '').trim().isNotEmpty) {
+      query['result'] = result!.trim();
     }
-    if (!needsReload) {
-      viewModel.loadInspections(resetPage: true);
+    if ((inspectionType ?? '').trim().isNotEmpty) {
+      query['type'] = inspectionType!.trim();
     }
+    if ((todo ?? '').trim().isNotEmpty) {
+      query['todo'] = todo!.trim();
+    }
+    if ((departmentId ?? 0) > 0) {
+      query['department_id'] = departmentId!.toString();
+    }
+    context.go(
+        Uri(path: '/quality-inspections', queryParameters: query).toString());
+  }
+
+  int _summaryCount(Map<String, dynamic> payload, String key) {
+    final summary = payload['summary'];
+    if (summary is Map<String, dynamic>) {
+      final value = summary[key];
+      if (value is int) return value;
+      return int.tryParse(value?.toString() ?? '') ?? 0;
+    }
+    if (summary is Map) {
+      final value = summary[key];
+      if (value is int) return value;
+      return int.tryParse(value?.toString() ?? '') ?? 0;
+    }
+    return 0;
   }
 
   static String _displayText(String? value) {
