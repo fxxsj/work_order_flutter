@@ -16,6 +16,10 @@ class DeliveryOrder {
     this.invoiceCount,
     this.logisticsCompany,
     this.trackingNumber,
+    this.exceptionResolution,
+    this.exceptionResolutionDisplay,
+    this.exceptionResolutionNotes,
+    this.exceptionClosed,
   });
 
   final int id;
@@ -32,6 +36,10 @@ class DeliveryOrder {
   final int? invoiceCount;
   final String? logisticsCompany;
   final String? trackingNumber;
+  final String? exceptionResolution;
+  final String? exceptionResolutionDisplay;
+  final String? exceptionResolutionNotes;
+  final bool? exceptionClosed;
 
   factory DeliveryOrder.fromJson(Map<String, dynamic> json) {
     return DeliveryOrder(
@@ -49,6 +57,12 @@ class DeliveryOrder {
       invoiceCount: toInt(json['invoice_count']),
       logisticsCompany: toStringOrNull(json['logistics_company']),
       trackingNumber: toStringOrNull(json['tracking_number']),
+      exceptionResolution: toStringOrNull(json['exception_resolution']),
+      exceptionResolutionDisplay:
+          toStringOrNull(json['exception_resolution_display']),
+      exceptionResolutionNotes:
+          toStringOrNull(json['exception_resolution_notes']),
+      exceptionClosed: _toBool(json['exception_closed']),
     );
   }
 
@@ -56,5 +70,13 @@ class DeliveryOrder {
     if (value == null) return null;
     if (value is num) return value.toDouble();
     return double.tryParse(value.toString());
+  }
+
+  static bool? _toBool(dynamic value) {
+    if (value is bool) return value;
+    final text = value?.toString().trim().toLowerCase();
+    if (text == 'true' || text == '1') return true;
+    if (text == 'false' || text == '0') return false;
+    return null;
   }
 }

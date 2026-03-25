@@ -16,6 +16,10 @@ class DeliveryOrderDto {
     this.invoiceCount,
     this.logisticsCompany,
     this.trackingNumber,
+    this.exceptionResolution,
+    this.exceptionResolutionDisplay,
+    this.exceptionResolutionNotes,
+    this.exceptionClosed,
   });
 
   final int id;
@@ -32,6 +36,10 @@ class DeliveryOrderDto {
   final int? invoiceCount;
   final String? logisticsCompany;
   final String? trackingNumber;
+  final String? exceptionResolution;
+  final String? exceptionResolutionDisplay;
+  final String? exceptionResolutionNotes;
+  final bool? exceptionClosed;
 
   factory DeliveryOrderDto.fromJson(Map<String, dynamic> json) {
     return DeliveryOrder.fromJson(json).toDto();
@@ -53,6 +61,10 @@ class DeliveryOrderDto {
       invoiceCount: invoiceCount,
       logisticsCompany: logisticsCompany,
       trackingNumber: trackingNumber,
+      exceptionResolution: exceptionResolution,
+      exceptionResolutionDisplay: exceptionResolutionDisplay,
+      exceptionResolutionNotes: exceptionResolutionNotes,
+      exceptionClosed: exceptionClosed,
     );
   }
 }
@@ -74,6 +86,10 @@ extension DeliveryOrderMapper on DeliveryOrder {
       invoiceCount: invoiceCount,
       logisticsCompany: logisticsCompany,
       trackingNumber: trackingNumber,
+      exceptionResolution: exceptionResolution,
+      exceptionResolutionDisplay: exceptionResolutionDisplay,
+      exceptionResolutionNotes: exceptionResolutionNotes,
+      exceptionClosed: exceptionClosed,
     );
   }
 }

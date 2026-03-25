@@ -86,6 +86,15 @@ class DeliveryOrderApiService {
     return _mapFromResponse(response.data);
   }
 
+  Future<Map<String, dynamic>> resolveException(
+      int id, Map<String, dynamic> payload) async {
+    final response = await _client.post(
+      '/delivery-orders/$id/resolve_exception/',
+      data: payload,
+    );
+    return _mapFromResponse(response.data);
+  }
+
   Future<Map<String, dynamic>> fetchSummary({int? departmentId}) async {
     final params = <String, dynamic>{};
     if (departmentId != null && departmentId > 0) {

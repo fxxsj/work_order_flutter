@@ -653,6 +653,105 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     );
   }
 
+  Future<void> _openResolveExceptionDialog(
+    DeliveryOrderViewModel viewModel,
+    DeliveryOrder order,
+  ) async {
+    final apiService = context.read<DeliveryOrderApiService>();
+    String resolution = (order.exceptionResolution ?? '').trim();
+    final notesController = TextEditingController(
+      text: order.exceptionResolutionNotes ?? '',
+    );
+    bool submitting = false;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            Future<void> submit() async {
+              final trimmedNotes = notesController.text.trim();
+              if (resolution.isEmpty) {
+                ToastUtil.showError('请选择处理结论');
+                return;
+              }
+              if (trimmedNotes.isEmpty) {
+                ToastUtil.showError('请填写处理说明');
+                return;
+              }
+              setState(() => submitting = true);
+              try {
+                await apiService.resolveException(order.id, {
+                  'resolution': resolution,
+                  'resolution_notes': trimmedNotes,
+                });
+                if (!mounted) return;
+                Navigator.of(dialogContext).pop();
+                ToastUtil.showSuccess('拒收处理已登记');
+                await viewModel.loadDeliveryOrders(resetPage: false);
+              } catch (err) {
+                if (!mounted) return;
+                setState(() => submitting = false);
+                ToastUtil.showError('登记拒收处理失败: $err');
+              }
+            }
+
+            return AlertDialog(
+              title: Text(
+                _hasResolvedRejectedException(order) ? '更新拒收处理' : '登记拒收处理',
+              ),
+              content: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SearchableDropdownFormField<String>(
+                      key: ValueKey<String>(resolution),
+                      initialValue: resolution,
+                      decoration: const InputDecoration(labelText: '处理结论'),
+                      items: const [
+                        DropdownMenuItem(value: 'reship', child: Text('安排补发')),
+                        DropdownMenuItem(
+                            value: 'terminate', child: Text('终止交付')),
+                      ],
+                      onChanged: submitting
+                          ? null
+                          : (value) => setState(() => resolution = value ?? ''),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: notesController,
+                      enabled: !submitting,
+                      maxLines: 4,
+                      decoration: const InputDecoration(
+                        labelText: '处理说明',
+                        hintText: '填写补发计划、终止原因、客户沟通结果等',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: submitting
+                      ? null
+                      : () => Navigator.of(dialogContext).pop(),
+                  child: const Text(_cancelText),
+                ),
+                FilledButton(
+                  onPressed: submitting ? null : submit,
+                  child: Text(submitting ? '提交中...' : '保存处理'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    notesController.dispose();
+  }
+
   static String _pageInfoText(DeliveryOrderViewModel viewModel) {
     return _pageInfoTemplate
         .replaceFirst('{page}', viewModel.page.toString())
@@ -810,6 +909,15 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
                       icon: Icons.receipt_long_outlined,
                       onPressed: () => _openCreateInvoiceForDelivery(order),
                     ),
+                  if ((order.status ?? '') == 'rejected')
+                    RowAction(
+                      label: _hasResolvedRejectedException(order)
+                          ? '更新处理'
+                          : '处理拒收',
+                      icon: Icons.assignment_turned_in_outlined,
+                      onPressed: () =>
+                          _openResolveExceptionDialog(viewModel, order),
+                    ),
                   RowAction(
                     label: '上传签收附件',
                     icon: Icons.upload_file_outlined,
@@ -938,9 +1046,8 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       actions: LayoutBuilder(
         builder: (context, constraints) {
           final activeFilters = _activeFilterCount(viewModel);
-          final rejectedCount = viewModel.deliveryOrders
-              .where((item) => (item.status ?? '') == 'rejected')
-              .length;
+          final rejectedCount =
+              viewModel.deliveryOrders.where(_needsRejectedFollowUp).length;
           final pendingReceiveCount = viewModel.deliveryOrders.where((item) {
             final status = item.status ?? '';
             return status == 'shipped' || status == 'in_transit';
@@ -1228,6 +1335,11 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
               _SummaryField(label: '运单号', value: trackingNumber),
               _SummaryField(label: '开票跟进', value: invoiceFollowUp),
               _SummaryField(label: '下一步', value: followUp),
+              if (_hasResolvedRejectedException(order))
+                _SummaryField(
+                  label: '拒收处理',
+                  value: _displayText(order.exceptionResolutionDisplay),
+                ),
             ],
           ),
           SizedBox(height: sectionSpacing),
@@ -1240,6 +1352,16 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
                   onPressed: () => _openCreateInvoiceForDelivery(order),
                   icon: const Icon(Icons.receipt_long_outlined, size: 16),
                   label: const Text('去开票'),
+                ),
+              if ((order.status ?? '') == 'rejected')
+                OutlinedButton.icon(
+                  onPressed: () =>
+                      _openResolveExceptionDialog(viewModel, order),
+                  icon:
+                      const Icon(Icons.assignment_turned_in_outlined, size: 16),
+                  label: Text(
+                    _hasResolvedRejectedException(order) ? '更新处理' : '处理拒收',
+                  ),
                 ),
               OutlinedButton.icon(
                 onPressed: () => _uploadReceiverSignature(viewModel, order),
@@ -1323,10 +1445,24 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       case 'received':
         return _shouldPromptInvoice(order) ? '已签收，待开票' : '已完成交付';
       case 'rejected':
+        if (_hasResolvedRejectedException(order)) {
+          return order.exceptionResolutionDisplay ?? '已登记拒收处理';
+        }
         return '库存已回退，待补发或终止';
       default:
         return _emptyCellText;
     }
+  }
+
+  bool _needsRejectedFollowUp(DeliveryOrder order) {
+    return (order.status ?? '') == 'rejected' &&
+        !_hasResolvedRejectedException(order);
+  }
+
+  bool _hasResolvedRejectedException(DeliveryOrder order) {
+    return order.exceptionClosed == true ||
+        (order.exceptionResolution ?? '').trim().isNotEmpty ||
+        (order.exceptionResolutionNotes ?? '').trim().isNotEmpty;
   }
 }
 

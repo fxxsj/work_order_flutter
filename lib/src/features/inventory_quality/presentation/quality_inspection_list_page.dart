@@ -44,7 +44,9 @@ class QualityInspectionListEntry extends StatelessWidget {
         context.read<QualityInspectionApiService>(),
       ),
       createViewModel: (context) => QualityInspectionViewModel(
-          context.read<QualityInspectionRepository>()),
+        context.read<QualityInspectionRepository>(),
+        context.read<QualityInspectionApiService>(),
+      ),
       initialize: (viewModel) => viewModel.initialize(),
       child: const QualityInspectionListPage(),
     );
@@ -167,7 +169,8 @@ class _QualityInspectionListViewState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (_needsExceptionFollowUp(inspection)) ...[
+                  if (_needsExceptionFollowUp(inspection) ||
+                      _hasRecordedExceptionAction(inspection)) ...[
                     ApprovalRejectionNoticeCard(
                       title: inspection.result == 'failed'
                           ? '质检未通过，需要处理'
@@ -179,19 +182,23 @@ class _QualityInspectionListViewState
                       comment: _qualityDispositionComment(inspection),
                       nextStepLabel: '建议动作',
                       nextStep: _qualityNextStep(inspection),
-                      primaryAction: OutlinedButton.icon(
-                        onPressed: () => _uploadAttachment(
+                      primaryAction: FilledButton.icon(
+                        onPressed: () => _openExceptionFollowUpDialog(
+                          context,
                           context.read<QualityInspectionViewModel>(),
                           inspection,
                         ),
-                        icon: const Icon(Icons.upload_file_outlined, size: 18),
+                        icon: const Icon(Icons.assignment_turned_in_outlined,
+                            size: 18),
                         label: Text(
-                          _hasAttachment(inspection) ? '更新附件' : '上传附件',
+                          _hasRecordedExceptionAction(inspection)
+                              ? '更新处理'
+                              : '处理异常',
                         ),
                       ),
                       secondaryAction: inspection.workOrderId == null
                           ? null
-                          : FilledButton.icon(
+                          : OutlinedButton.icon(
                               onPressed: () {
                                 Navigator.of(dialogContext).pop();
                                 context.go(
@@ -540,6 +547,107 @@ class _QualityInspectionListViewState
     );
   }
 
+  Future<void> _openExceptionFollowUpDialog(
+    BuildContext context,
+    QualityInspectionViewModel viewModel,
+    QualityInspection inspection,
+  ) async {
+    String disposition = (inspection.disposition ?? '').trim();
+    final notesController = TextEditingController(
+      text: inspection.dispositionNotes ?? '',
+    );
+    bool submitting = false;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            Future<void> submit() async {
+              final trimmedNotes = notesController.text.trim();
+              if (disposition.isEmpty) {
+                ToastUtil.showError('请选择处理结论');
+                return;
+              }
+              if (trimmedNotes.isEmpty) {
+                ToastUtil.showError('请填写处理说明');
+                return;
+              }
+              setState(() => submitting = true);
+              try {
+                await viewModel.updateInspection(inspection.id, {
+                  'disposition': disposition,
+                  'disposition_notes': trimmedNotes,
+                });
+                if (!mounted) return;
+                Navigator.of(dialogContext).pop();
+                ToastUtil.showSuccess('异常处理已登记');
+                await viewModel.loadInspections(resetPage: false);
+              } catch (err) {
+                if (!mounted) return;
+                setState(() => submitting = false);
+                ToastUtil.showError('登记异常处理失败: $err');
+              }
+            }
+
+            return AlertDialog(
+              title: Text(_hasRecordedExceptionAction(inspection)
+                  ? '更新异常处理'
+                  : '登记异常处理'),
+              content: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SearchableDropdownFormField<String>(
+                      key: ValueKey<String>(disposition),
+                      initialValue: disposition,
+                      decoration: const InputDecoration(labelText: '处理结论'),
+                      items: const [
+                        DropdownMenuItem(value: 'accept', child: Text('接收放行')),
+                        DropdownMenuItem(value: 'rework', child: Text('安排返工')),
+                        DropdownMenuItem(value: 'scrap', child: Text('判定报废')),
+                        DropdownMenuItem(value: 'return', child: Text('退货处理')),
+                      ],
+                      onChanged: submitting
+                          ? null
+                          : (value) =>
+                              setState(() => disposition = value ?? ''),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: notesController,
+                      enabled: !submitting,
+                      maxLines: 4,
+                      decoration: const InputDecoration(
+                        labelText: '处理说明',
+                        hintText: '填写返工安排、责任人、复检要求或放行范围',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: submitting
+                      ? null
+                      : () => Navigator.of(dialogContext).pop(),
+                  child: const Text(_cancelText),
+                ),
+                FilledButton(
+                  onPressed: submitting ? null : submit,
+                  child: Text(submitting ? '提交中...' : '保存处理'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    notesController.dispose();
+  }
+
   Widget _buildListBody(
     BuildContext context,
     QualityInspectionViewModel viewModel,
@@ -625,6 +733,19 @@ class _QualityInspectionListViewState
                   Text(_qualityFollowUpText(inspection), style: textStyle)),
               DataCell(RowActionGroup(
                 actions: [
+                  if (_needsExceptionFollowUp(inspection) ||
+                      _hasRecordedExceptionAction(inspection))
+                    RowAction(
+                      label: _hasRecordedExceptionAction(inspection)
+                          ? '更新处理'
+                          : '处理异常',
+                      icon: Icons.assignment_turned_in_outlined,
+                      onPressed: () => _openExceptionFollowUpDialog(
+                        context,
+                        viewModel,
+                        inspection,
+                      ),
+                    ),
                   RowAction(
                     label: _hasAttachment(inspection) ? '更新附件' : '上传附件',
                     icon: Icons.upload_file_outlined,
@@ -1010,6 +1131,11 @@ class _QualityInspectionListViewState
                   label: '数量', value: _qualityQuantitySummary(inspection)),
               _SummaryField(label: '附件', value: attachmentStatus),
               _SummaryField(label: '下一步', value: followUp),
+              if (_hasRecordedExceptionAction(inspection))
+                _SummaryField(
+                  label: '处理结论',
+                  value: _displayText(_qualityDispositionLabel(inspection)),
+                ),
               if (needsFollowUp)
                 _SummaryField(
                     label: '异常跟进', value: _qualityNextStep(inspection)),
@@ -1020,6 +1146,17 @@ class _QualityInspectionListViewState
             spacing: 8,
             runSpacing: 8,
             children: [
+              if (_needsExceptionFollowUp(inspection) ||
+                  _hasRecordedExceptionAction(inspection))
+                OutlinedButton.icon(
+                  onPressed: () => _openExceptionFollowUpDialog(
+                      context, viewModel, inspection),
+                  icon:
+                      const Icon(Icons.assignment_turned_in_outlined, size: 16),
+                  label: Text(
+                    _hasRecordedExceptionAction(inspection) ? '更新处理' : '处理异常',
+                  ),
+                ),
               OutlinedButton.icon(
                 onPressed: () => _uploadAttachment(viewModel, inspection),
                 icon: const Icon(Icons.upload_file_outlined, size: 16),
@@ -1064,7 +1201,13 @@ class _QualityInspectionListViewState
 
   bool _needsExceptionFollowUp(QualityInspection inspection) {
     final result = inspection.result ?? '';
-    return result == 'failed' || result == 'conditional';
+    return (result == 'failed' || result == 'conditional') &&
+        !_hasRecordedExceptionAction(inspection);
+  }
+
+  bool _hasRecordedExceptionAction(QualityInspection inspection) {
+    return (inspection.disposition ?? '').trim().isNotEmpty ||
+        (inspection.dispositionNotes ?? '').trim().isNotEmpty;
   }
 
   String _qualityIssueSummary(QualityInspection inspection) {
@@ -1079,7 +1222,7 @@ class _QualityInspectionListViewState
   }
 
   String? _qualityDispositionComment(QualityInspection inspection) {
-    final disposition = (inspection.disposition ?? '').trim();
+    final disposition = _qualityDispositionLabel(inspection);
     final notes = (inspection.dispositionNotes ?? '').trim();
     if (disposition.isEmpty && notes.isEmpty) {
       return null;
@@ -1093,7 +1236,25 @@ class _QualityInspectionListViewState
     return '$disposition\n$notes';
   }
 
+  String _qualityDispositionLabel(QualityInspection inspection) {
+    switch ((inspection.disposition ?? '').trim()) {
+      case 'accept':
+        return '接收放行';
+      case 'rework':
+        return '安排返工';
+      case 'scrap':
+        return '判定报废';
+      case 'return':
+        return '退货处理';
+      default:
+        return (inspection.disposition ?? '').trim();
+    }
+  }
+
   String _qualityNextStep(QualityInspection inspection) {
+    if (_hasRecordedExceptionAction(inspection)) {
+      return '已登记处理意见，按说明执行并在完成后补充附件或复检结果。';
+    }
     if ((inspection.result ?? '') == 'conditional') {
       return '请按处理意见落实条件接收范围，并补充检验附件留痕。';
     }
@@ -1124,9 +1285,13 @@ class _QualityInspectionListViewState
       case 'passed':
         return '可安排入库/发货准备';
       case 'conditional':
-        return '按处理意见继续跟进';
+        return _hasRecordedExceptionAction(inspection)
+            ? '已登记条件接收处理'
+            : '按处理意见继续跟进';
       case 'failed':
-        return '待返工/复检';
+        return _hasRecordedExceptionAction(inspection)
+            ? '已登记返工/判退处理'
+            : '待返工/复检';
       default:
         return _emptyCellText;
     }

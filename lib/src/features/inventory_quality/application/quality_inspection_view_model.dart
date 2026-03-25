@@ -1,12 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/core.dart';
+import 'package:work_order_app/src/features/inventory_quality/data/quality_inspection_api_service.dart';
 import 'package:work_order_app/src/features/inventory_quality/domain/quality_inspection.dart';
 import 'package:work_order_app/src/features/inventory_quality/domain/quality_inspection_repository.dart';
 
 class QualityInspectionViewModel extends PaginatedViewModel<QualityInspection> {
-  QualityInspectionViewModel(this._repository);
+  QualityInspectionViewModel(this._repository, this._apiService);
 
   final QualityInspectionRepository _repository;
+  final QualityInspectionApiService _apiService;
   String _resultFilter = '';
   String _typeFilter = '';
   int _departmentId = 0;
@@ -46,6 +48,13 @@ class QualityInspectionViewModel extends PaginatedViewModel<QualityInspection> {
 
   Future<void> uploadAttachment(int id, MultipartFile attachment) {
     return _repository.uploadAttachment(id, attachment);
+  }
+
+  Future<void> updateInspection(
+    int id,
+    Map<String, dynamic> payload,
+  ) {
+    return _apiService.updateInspection(id, payload);
   }
 
   @override

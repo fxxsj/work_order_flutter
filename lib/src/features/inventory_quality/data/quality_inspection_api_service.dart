@@ -72,6 +72,15 @@ class QualityInspectionApiService {
     return _mapFromResponse(response.data);
   }
 
+  Future<Map<String, dynamic>> updateInspection(
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
+    final response =
+        await _client.patch('/quality-inspections/$id/', data: payload);
+    return _mapFromResponse(response.data);
+  }
+
   Future<Map<String, dynamic>> uploadAttachment(
     int id,
     MultipartFile attachment,

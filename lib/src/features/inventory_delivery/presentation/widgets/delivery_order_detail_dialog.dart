@@ -65,7 +65,7 @@ Future<void> showDeliveryOrderDetailDialog(
                   reasonLabel: '拒收原因',
                   reason: _rejectReason(detail),
                   nextStepLabel: '下一步',
-                  nextStep: '请先核对拒收原因；如需继续交付，请回到客户订单重新安排补发，并补充备注说明。',
+                  nextStep: _rejectFollowUpText(detail),
                   primaryAction: detail.salesOrderId == null
                       ? null
                       : FilledButton.icon(
@@ -116,6 +116,16 @@ Future<void> showDeliveryOrderDetailDialog(
               ),
               if ((detail.receivedNotes ?? '').trim().isNotEmpty)
                 _DetailRow(label: '签收备注', value: detail.receivedNotes ?? ''),
+              if ((detail.exceptionResolutionDisplay ?? '').trim().isNotEmpty)
+                _DetailRow(
+                  label: '拒收处理',
+                  value: detail.exceptionResolutionDisplay ?? '',
+                ),
+              if ((detail.exceptionResolutionNotes ?? '').trim().isNotEmpty)
+                _DetailRow(
+                  label: '处理说明',
+                  value: detail.exceptionResolutionNotes ?? '',
+                ),
               if (_hasReceiverSignature(detail)) ...[
                 const SizedBox(height: 8),
                 AttachmentOpenButton(
@@ -187,6 +197,15 @@ String _rejectReason(DeliveryOrderDetail detail) {
     return notes.replaceFirst('拒收原因:', '').trim();
   }
   return notes.isEmpty ? '请查看发货备注' : notes;
+}
+
+String _rejectFollowUpText(DeliveryOrderDetail detail) {
+  if ((detail.exceptionResolutionDisplay ?? '').trim().isNotEmpty) {
+    final resolution = detail.exceptionResolutionDisplay ?? '';
+    final notes = (detail.exceptionResolutionNotes ?? '').trim();
+    return notes.isEmpty ? '已登记处理：$resolution。' : '已登记处理：$resolution；$notes';
+  }
+  return '请先核对拒收原因；如需继续交付，请回到客户订单重新安排补发，并补充备注说明。';
 }
 
 class _DetailRow extends StatelessWidget {

@@ -4,10 +4,12 @@ class QualityInspectionDto {
   const QualityInspectionDto({
     required this.id,
     required this.inspectionNumber,
+    this.workOrderId,
     this.inspectionType,
     this.inspectionTypeDisplay,
     this.result,
     this.resultDisplay,
+    this.customerName,
     this.workOrderNumber,
     this.productName,
     this.batchNo,
@@ -23,15 +25,18 @@ class QualityInspectionDto {
     this.defectDescription,
     this.disposition,
     this.dispositionNotes,
+    this.attachmentUrl,
     this.notes,
   });
 
   final int id;
   final String inspectionNumber;
+  final int? workOrderId;
   final String? inspectionType;
   final String? inspectionTypeDisplay;
   final String? result;
   final String? resultDisplay;
+  final String? customerName;
   final String? workOrderNumber;
   final String? productName;
   final String? batchNo;
@@ -47,6 +52,7 @@ class QualityInspectionDto {
   final String? defectDescription;
   final String? disposition;
   final String? dispositionNotes;
+  final String? attachmentUrl;
   final String? notes;
 
   factory QualityInspectionDto.fromJson(Map<String, dynamic> json) {
@@ -57,10 +63,12 @@ class QualityInspectionDto {
     return QualityInspection(
       id: id,
       inspectionNumber: inspectionNumber,
+      workOrderId: workOrderId,
       inspectionType: inspectionType,
       inspectionTypeDisplay: inspectionTypeDisplay,
       result: result,
       resultDisplay: resultDisplay,
+      customerName: customerName,
       workOrderNumber: workOrderNumber,
       productName: productName,
       batchNo: batchNo,
@@ -76,6 +84,7 @@ class QualityInspectionDto {
       defectDescription: defectDescription,
       disposition: disposition,
       dispositionNotes: dispositionNotes,
+      attachmentUrl: attachmentUrl,
       notes: notes,
     );
   }
@@ -86,10 +95,12 @@ extension QualityInspectionMapper on QualityInspection {
     return QualityInspectionDto(
       id: id,
       inspectionNumber: inspectionNumber,
+      workOrderId: workOrderId,
       inspectionType: inspectionType,
       inspectionTypeDisplay: inspectionTypeDisplay,
       result: result,
       resultDisplay: resultDisplay,
+      customerName: customerName,
       workOrderNumber: workOrderNumber,
       productName: productName,
       batchNo: batchNo,
@@ -105,6 +116,7 @@ extension QualityInspectionMapper on QualityInspection {
       defectDescription: defectDescription,
       disposition: disposition,
       dispositionNotes: dispositionNotes,
+      attachmentUrl: attachmentUrl,
       notes: notes,
     );
   }
