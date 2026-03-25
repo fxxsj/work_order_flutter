@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
@@ -11,6 +12,8 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
@@ -23,8 +26,8 @@ import 'package:work_order_app/src/features/finance_payments/data/payment_suppor
 import 'package:work_order_app/src/features/finance_payments/domain/payment.dart';
 import 'package:work_order_app/src/features/finance_payments/domain/payment_repository.dart';
 import 'package:work_order_app/src/features/finance_invoices/domain/invoice.dart';
-import 'package:work_order_app/src/features/sales_orders/domain/sales_order.dart';
 import 'package:work_order_app/src/features/finance_payments/presentation/widgets/payment_list_dialogs.dart';
+import 'package:work_order_app/src/features/sales_orders/domain/sales_order.dart';
 
 /// 收款列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
 class PaymentListEntry extends StatelessWidget {
@@ -238,10 +241,12 @@ class _PaymentListViewState extends State<_PaymentListView> {
       columns: const [
         DataColumn(label: Text('收款单号')),
         DataColumn(label: Text('客户')),
-        DataColumn(label: Text('施工单号')),
+        DataColumn(label: Text('来源单据')),
+        DataColumn(label: Text('收款方式')),
         DataColumn(label: Text('金额')),
-        DataColumn(label: Text('状态')),
+        DataColumn(label: Text('待办')),
         DataColumn(label: Text('收款日期')),
+        DataColumn(label: Text('操作')),
       ],
       rows: payments
           .map(
@@ -253,15 +258,23 @@ class _PaymentListViewState extends State<_PaymentListView> {
                 )),
                 DataCell(
                     Text(_displayText(payment.customerName), style: textStyle)),
-                DataCell(Text(_displayText(payment.workOrderNumber),
-                    style: textStyle)),
+                DataCell(
+                  SizedBox(
+                    width: 200,
+                    child: Text(
+                      _sourceSummary(payment),
+                      style: textStyle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+                DataCell(Text(_paymentMethodText(payment), style: textStyle)),
                 DataCell(Text(_formatAmount(payment.amount), style: textStyle)),
-                DataCell(Text(
-                  payment.statusDisplay ?? payment.status ?? _emptyCellText,
-                  style: textStyle,
-                )),
+                DataCell(Text(_followUpText(payment), style: textStyle)),
                 DataCell(
                     Text(_formatDate(payment.paymentDate), style: textStyle)),
+                DataCell(_buildRowActions(payment)),
               ],
             ),
           )
@@ -281,6 +294,14 @@ class _PaymentListViewState extends State<_PaymentListView> {
       padding: EdgeInsets.zero,
       actions: LayoutBuilder(
         builder: (context, constraints) {
+          final pendingWriteOffCount = viewModel.payments
+              .where((payment) => (payment.remainingAmount ?? 0) > 0)
+              .length;
+          final missingInvoiceLinkCount = viewModel.payments
+              .where((payment) =>
+                  (payment.invoiceId ?? 0) <= 0 &&
+                  (payment.salesOrderId ?? 0) > 0)
+              .length;
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -295,6 +316,18 @@ class _PaymentListViewState extends State<_PaymentListView> {
           );
 
           final actions = <Widget>[
+            if (pendingWriteOffCount > 0)
+              StatusHintChip(
+                label: '待核销收款',
+                count: pendingWriteOffCount,
+                icon: Icons.rule_folder_outlined,
+              ),
+            if (missingInvoiceLinkCount > 0)
+              StatusHintChip(
+                label: '待关联发票',
+                count: missingInvoiceLinkCount,
+                icon: Icons.receipt_long_outlined,
+              ),
             PageActionButton.filled(
               onPressed: () => _openCreateDialog(viewModel),
               icon: const Icon(Icons.add, size: 16),
@@ -344,10 +377,12 @@ class _PaymentListViewState extends State<_PaymentListView> {
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
     final number = _displayText(payment.paymentNumber ?? '收款 #${payment.id}');
     final customer = _displayText(payment.customerName);
-    final workOrder = _displayText(payment.workOrderNumber);
+    final source = _sourceSummary(payment);
     final amount = _formatAmount(payment.amount);
-    final status = payment.statusDisplay ?? payment.status ?? _emptyCellText;
+    final paymentMethod = _paymentMethodText(payment);
     final paymentDate = _formatDate(payment.paymentDate);
+    final followUp = _followUpText(payment);
+    final actions = _buildActions(payment);
 
     return ExpandableSummaryCard(
       headerBuilder: (context, expanded) {
@@ -378,7 +413,8 @@ class _PaymentListViewState extends State<_PaymentListView> {
                     runSpacing: 8,
                     children: [
                       _SummaryChip(label: '金额', value: amount),
-                      _SummaryChip(label: '状态', value: status),
+                      _SummaryChip(label: '收款方式', value: paymentMethod),
+                      _SummaryChip(label: '待办', value: followUp),
                     ],
                   ),
                 ],
@@ -409,18 +445,89 @@ class _PaymentListViewState extends State<_PaymentListView> {
           ],
         );
       },
-      expandedChild: SummaryFieldWrap(
-        isMobile: isMobile,
+      expandedChild: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SummaryField(label: '收款单号', value: number),
-          _SummaryField(label: '客户', value: customer),
-          _SummaryField(label: '施工单号', value: workOrder),
-          _SummaryField(label: '金额', value: amount),
-          _SummaryField(label: '状态', value: status),
-          _SummaryField(label: '收款日期', value: paymentDate),
+          SummaryFieldWrap(
+            isMobile: isMobile,
+            children: [
+              _SummaryField(label: '收款单号', value: number),
+              _SummaryField(label: '客户', value: customer),
+              _SummaryField(label: '来源单据', value: source),
+              _SummaryField(label: '收款方式', value: paymentMethod),
+              _SummaryField(label: '金额', value: amount),
+              _SummaryField(
+                label: '已核销 / 待核销',
+                value:
+                    '${_formatAmount(payment.appliedAmount)} / ${_formatAmount(payment.remainingAmount)}',
+              ),
+              _SummaryField(label: '收款日期', value: paymentDate),
+              _SummaryField(label: '待办', value: followUp),
+            ],
+          ),
+          if (actions.isNotEmpty) ...[
+            SizedBox(height: sectionSpacing),
+            RowActionGroup(actions: actions, primaryCount: 2),
+          ],
         ],
       ),
     );
+  }
+
+  Widget _buildRowActions(Payment payment) {
+    final actions = _buildActions(payment);
+    if (actions.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return RowActionGroup(actions: actions, primaryCount: 2);
+  }
+
+  List<RowAction> _buildActions(Payment payment) {
+    final actions = <RowAction>[];
+    if ((payment.invoiceId ?? 0) > 0) {
+      actions.add(RowAction(
+        label: '发票',
+        icon: Icons.receipt_long_outlined,
+        onPressed: () => context.go('/finance/invoices'),
+      ));
+    }
+    if ((payment.salesOrderId ?? 0) > 0) {
+      actions.add(RowAction(
+        label: '客户订单',
+        icon: Icons.point_of_sale_outlined,
+        onPressed: () => context.go('/sales-orders/${payment.salesOrderId}'),
+      ));
+    }
+    return actions;
+  }
+
+  String _sourceSummary(Payment payment) {
+    final parts = <String>[];
+    if ((payment.salesOrderNumber ?? '').trim().isNotEmpty) {
+      parts.add('客户订单 ${payment.salesOrderNumber!.trim()}');
+    }
+    if ((payment.invoiceNumber ?? '').trim().isNotEmpty) {
+      parts.add('发票 ${payment.invoiceNumber!.trim()}');
+    }
+    if ((payment.workOrderNumber ?? '').trim().isNotEmpty) {
+      parts.add('施工单 ${payment.workOrderNumber!.trim()}');
+    }
+    return parts.isEmpty ? _emptyCellText : parts.join(' / ');
+  }
+
+  String _paymentMethodText(Payment payment) {
+    return _displayText(payment.paymentMethodDisplay ?? payment.paymentMethod);
+  }
+
+  String _followUpText(Payment payment) {
+    final remaining = payment.remainingAmount ?? 0;
+    if (remaining > 0) {
+      return '待核销 ${_formatAmount(remaining)}';
+    }
+    if ((payment.invoiceId ?? 0) <= 0 && (payment.salesOrderId ?? 0) > 0) {
+      return '待关联发票';
+    }
+    return '已完成';
   }
 }
 

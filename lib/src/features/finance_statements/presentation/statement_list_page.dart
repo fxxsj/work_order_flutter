@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
@@ -12,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
@@ -277,9 +279,11 @@ class _StatementListViewState extends State<_StatementListView> {
       columns: const [
         DataColumn(label: Text('对账单号')),
         DataColumn(label: Text('对方单位')),
+        DataColumn(label: Text('类型')),
         DataColumn(label: Text('对账周期')),
-        DataColumn(label: Text('金额')),
+        DataColumn(label: Text('期末余额')),
         DataColumn(label: Text('状态')),
+        DataColumn(label: Text('待办')),
         DataColumn(label: Text('操作')),
       ],
       rows: statements
@@ -293,15 +297,17 @@ class _StatementListViewState extends State<_StatementListView> {
                 )),
                 DataCell(Text(_displayText(statement.customerName),
                     style: textStyle)),
+                DataCell(Text(_statementTypeText(statement), style: textStyle)),
                 DataCell(Text(
                     _formatPeriod(statement.periodStart, statement.periodEnd),
                     style: textStyle)),
-                DataCell(Text(_formatAmount(statement.totalAmount),
+                DataCell(Text(_formatAmount(statement.closingBalance),
                     style: theme.textTheme.bodyMedium)),
                 DataCell(Text(
                   statement.statusDisplay ?? statement.status ?? _emptyCellText,
                   style: textStyle,
                 )),
+                DataCell(Text(_followUpText(statement), style: textStyle)),
                 DataCell(_buildRowActions(viewModel, statement)),
               ],
             ),
@@ -322,6 +328,14 @@ class _StatementListViewState extends State<_StatementListView> {
       padding: EdgeInsets.zero,
       actions: LayoutBuilder(
         builder: (context, constraints) {
+          final pendingConfirmCount = viewModel.statements
+              .where((statement) =>
+                  (statement.status ?? '') == 'draft' ||
+                  (statement.status ?? '') == 'sent')
+              .length;
+          final disputedCount = viewModel.statements
+              .where((statement) => (statement.status ?? '') == 'disputed')
+              .length;
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -336,6 +350,18 @@ class _StatementListViewState extends State<_StatementListView> {
           );
 
           final actions = <Widget>[
+            if (pendingConfirmCount > 0)
+              StatusHintChip(
+                label: '待确认对账',
+                count: pendingConfirmCount,
+                icon: Icons.fact_check_outlined,
+              ),
+            if (disputedCount > 0)
+              StatusHintChip(
+                label: '异议待处理',
+                count: disputedCount,
+                icon: Icons.report_problem_outlined,
+              ),
             PageActionButton.filled(
               onPressed: () => _openCreateDialog(viewModel),
               icon: const Icon(Icons.add, size: 16),
@@ -422,10 +448,13 @@ class _StatementListViewState extends State<_StatementListView> {
     final number =
         _displayText(statement.statementNumber ?? '对账单 #${statement.id}');
     final customer = _displayText(statement.customerName);
+    final statementType = _statementTypeText(statement);
     final period = _formatPeriod(statement.periodStart, statement.periodEnd);
     final amount = _formatAmount(statement.totalAmount);
+    final closingBalance = _formatAmount(statement.closingBalance);
     final status =
         statement.statusDisplay ?? statement.status ?? _emptyCellText;
+    final followUp = _followUpText(statement);
 
     final actions = <RowAction>[];
     final statusCode = statement.status ?? '';
@@ -448,6 +477,13 @@ class _StatementListViewState extends State<_StatementListView> {
           statement,
           confirmed: false,
         ),
+      ));
+    }
+    if ((statement.statementType ?? '') == 'customer') {
+      actions.add(RowAction(
+        label: '客户订单',
+        icon: Icons.point_of_sale_outlined,
+        onPressed: () => context.go('/sales-orders'),
       ));
     }
 
@@ -481,6 +517,7 @@ class _StatementListViewState extends State<_StatementListView> {
                     children: [
                       _SummaryChip(label: '金额', value: amount),
                       _SummaryChip(label: '状态', value: status),
+                      _SummaryChip(label: '待办', value: followUp),
                     ],
                   ),
                 ],
@@ -519,9 +556,27 @@ class _StatementListViewState extends State<_StatementListView> {
             children: [
               _SummaryField(label: '对账单号', value: number),
               _SummaryField(label: '对方单位', value: customer),
+              _SummaryField(label: '对账类型', value: statementType),
               _SummaryField(label: '对账周期', value: period),
-              _SummaryField(label: '金额', value: amount),
+              _SummaryField(label: '本期金额', value: amount),
+              _SummaryField(label: '期末余额', value: closingBalance),
               _SummaryField(label: '状态', value: status),
+              _SummaryField(label: '待办', value: followUp),
+              if ((statement.confirmedByName ?? '').trim().isNotEmpty)
+                _SummaryField(
+                  label: '确认人',
+                  value: _displayText(statement.confirmedByName),
+                ),
+              if (statement.confirmedAt != null)
+                _SummaryField(
+                  label: '确认时间',
+                  value: _formatDate(statement.confirmedAt),
+                ),
+              if ((statement.confirmationNotes ?? '').trim().isNotEmpty)
+                _SummaryField(
+                  label: '确认备注',
+                  value: _displayText(statement.confirmationNotes),
+                ),
             ],
           ),
           if (actions.isNotEmpty) ...[
@@ -531,6 +586,23 @@ class _StatementListViewState extends State<_StatementListView> {
         ],
       ),
     );
+  }
+
+  String _statementTypeText(Statement statement) {
+    return _displayText(
+      statement.statementTypeDisplay ?? statement.statementType,
+    );
+  }
+
+  String _followUpText(Statement statement) {
+    final status = statement.status ?? '';
+    if (status == 'draft' || status == 'sent') {
+      return '待对方确认';
+    }
+    if (status == 'disputed') {
+      return '待财务处理异议';
+    }
+    return '已闭环';
   }
 }
 
