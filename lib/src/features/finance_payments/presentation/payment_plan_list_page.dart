@@ -23,6 +23,7 @@ class PaymentPlanListEntry extends StatelessWidget {
         searchHintText: '搜索客户订单/客户/计划日期',
         emptyText: '暂无收款计划',
         emptyIcon: Icons.event_note_outlined,
+        enableSummary: true,
         columns: const [
           GenericColumn(label: '客户订单号', value: _salesOrderNumber),
           GenericColumn(label: '客户', value: _customerName),
@@ -131,17 +132,9 @@ class PaymentPlanListEntry extends StatelessWidget {
     BuildContext context,
     GenericListViewModel viewModel,
   ) {
-    final records = viewModel.records;
-    final overdueCount =
-        records.where((record) => record.getBool('is_overdue') == true).length;
-    final dueTodayCount = records
-        .where((record) =>
-            record.getBool('is_overdue') != true &&
-            _isToday(record.getString('plan_date')))
-        .length;
-    final partialCount = records
-        .where((record) => record.getString('status') == 'partial')
-        .length;
+    final overdueCount = _summaryCount(viewModel, 'overdue_count');
+    final dueTodayCount = _summaryCount(viewModel, 'due_today_count');
+    final partialCount = _summaryCount(viewModel, 'partial_count');
 
     return [
       if (overdueCount > 0)
@@ -190,14 +183,19 @@ class PaymentPlanListEntry extends StatelessWidget {
     return extraParams;
   }
 
-  static bool _isToday(String? value) {
-    if ((value ?? '').trim().isEmpty) return false;
-    final parsed = DateTime.tryParse(value!.trim());
-    if (parsed == null) return false;
-    final now = DateTime.now();
-    return parsed.year == now.year &&
-        parsed.month == now.month &&
-        parsed.day == now.day;
+  static int _summaryCount(GenericListViewModel viewModel, String key) {
+    final summary = viewModel.summary['summary'];
+    if (summary is Map<String, dynamic>) {
+      final value = summary[key];
+      if (value is int) return value;
+      return int.tryParse(value?.toString() ?? '') ?? 0;
+    }
+    if (summary is Map) {
+      final value = summary[key];
+      if (value is int) return value;
+      return int.tryParse(value?.toString() ?? '') ?? 0;
+    }
+    return 0;
   }
 
   static bool _hasActiveFilter(GenericListViewModel viewModel) {

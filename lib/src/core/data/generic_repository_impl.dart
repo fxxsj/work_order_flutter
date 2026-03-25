@@ -24,6 +24,13 @@ class GenericRepositoryImpl implements GenericRepository {
   }
 
   @override
+  Future<Map<String, dynamic>> fetchSummary({
+    Map<String, dynamic>? extraParams,
+  }) {
+    return _api.fetchSummary(extraParams: extraParams);
+  }
+
+  @override
   Future<GenericRecord> createRecord(Map<String, dynamic> payload) {
     return _api.create(payload);
   }

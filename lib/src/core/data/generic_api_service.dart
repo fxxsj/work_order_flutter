@@ -39,16 +39,35 @@ class GenericApiService {
               .toList()
           : <GenericRecord>[];
       final total = toInt(payload['count']) ?? list.length;
-      return PageData(items: list, total: total, page: page, pageSize: pageSize);
+      return PageData(
+          items: list, total: total, page: page, pageSize: pageSize);
     }
     if (payload is List) {
       final list = payload
           .whereType<Map>()
           .map((item) => _mapRecord(Map<String, dynamic>.from(item)))
           .toList();
-      return PageData(items: list, total: list.length, page: 1, pageSize: list.length);
+      return PageData(
+          items: list, total: list.length, page: 1, pageSize: list.length);
     }
     return PageData(items: const [], total: 0, page: page, pageSize: pageSize);
+  }
+
+  Future<Map<String, dynamic>> fetchSummary({
+    Map<String, dynamic>? extraParams,
+  }) async {
+    final response = await _client.get(
+      '${resourcePath}summary/',
+      queryParameters: extraParams,
+    );
+    final payload = response.data;
+    if (payload is Map<String, dynamic>) {
+      return Map<String, dynamic>.from(payload);
+    }
+    if (payload is Map) {
+      return Map<String, dynamic>.from(payload);
+    }
+    return const {};
   }
 
   Future<GenericRecord> create(Map<String, dynamic> payload) async {
@@ -74,7 +93,8 @@ class GenericApiService {
 
   GenericRecord _mapRecord(Map<String, dynamic> json) {
     final idValue = json['id'];
-    final id = idValue is int ? idValue : int.tryParse(idValue?.toString() ?? '') ?? 0;
+    final id =
+        idValue is int ? idValue : int.tryParse(idValue?.toString() ?? '') ?? 0;
     return GenericRecord(id: id, data: json);
   }
 }

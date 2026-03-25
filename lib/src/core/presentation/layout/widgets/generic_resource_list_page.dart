@@ -46,6 +46,7 @@ class GenericResourceConfig {
     this.rowActionsBuilder,
     this.headerActionsBuilder,
     this.extraParamsBuilder,
+    this.enableSummary = false,
   });
 
   final String id;
@@ -76,6 +77,7 @@ class GenericResourceConfig {
     GenericListViewModel viewModel,
   )? headerActionsBuilder;
   final Map<String, dynamic> Function(Uri uri)? extraParamsBuilder;
+  final bool enableSummary;
 }
 
 class GenericColumn {
@@ -158,8 +160,10 @@ class GenericResourceListEntry extends StatelessWidget {
       ),
       createRepository: (context) =>
           GenericRepositoryImpl(context.read<GenericApiService>()),
-      createViewModel: (context) =>
-          GenericListViewModel(context.read<GenericRepository>()),
+      createViewModel: (context) => GenericListViewModel(
+        context.read<GenericRepository>(),
+        enableSummary: config.enableSummary,
+      ),
       initialize: (viewModel) => viewModel.initialize(),
       child: GenericResourceListPage(config: config),
     );

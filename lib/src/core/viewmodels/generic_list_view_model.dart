@@ -4,18 +4,23 @@ import 'package:work_order_app/src/core/models/generic_record.dart';
 import 'package:work_order_app/src/core/viewmodels/paginated_view_model.dart';
 
 class GenericListViewModel extends PaginatedViewModel<GenericRecord> {
-  GenericListViewModel(this._repository);
+  GenericListViewModel(this._repository, {this.enableSummary = false});
 
   final GenericRepository _repository;
+  final bool enableSummary;
   Map<String, dynamic> _extraParams = const {};
+  Map<String, dynamic> _summary = const {};
 
   List<GenericRecord> get records => items;
   Map<String, dynamic> get extraParams => _extraParams;
+  Map<String, dynamic> get summary => _summary;
 
-  Future<void> initialize() => loadItems(resetPage: true);
+  Future<void> initialize() => reload(resetPage: true);
 
-  Future<void> reload({bool resetPage = false}) =>
-      loadItems(resetPage: resetPage);
+  Future<void> reload({bool resetPage = false}) async {
+    await loadItems(resetPage: resetPage);
+    await _loadSummary();
+  }
 
   Future<void> applyRoutePrefill({
     String? search,
@@ -28,6 +33,18 @@ class GenericListViewModel extends PaginatedViewModel<GenericRecord> {
 
   Future<void> deleteRecord(int id) async {
     await deleteAndReload(() => _repository.deleteRecord(id));
+  }
+
+  Future<void> _loadSummary() async {
+    if (!enableSummary) return;
+    try {
+      _summary = await _repository.fetchSummary(
+        extraParams: _extraParams.isEmpty ? null : _extraParams,
+      );
+      safeNotify();
+    } catch (_) {
+      // Summary is supplemental; ignore failures to keep the list available.
+    }
   }
 
   @override

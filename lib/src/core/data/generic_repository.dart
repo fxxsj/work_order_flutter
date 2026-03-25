@@ -9,6 +9,10 @@ abstract class GenericRepository {
     Map<String, dynamic>? extraParams,
   });
 
+  Future<Map<String, dynamic>> fetchSummary({
+    Map<String, dynamic>? extraParams,
+  });
+
   Future<GenericRecord> createRecord(Map<String, dynamic> payload);
 
   Future<GenericRecord> updateRecord(int id, Map<String, dynamic> payload);
