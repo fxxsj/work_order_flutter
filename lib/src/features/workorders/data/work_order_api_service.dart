@@ -77,6 +77,14 @@ class WorkOrderApiService {
     return const WorkOrderPageDto(items: [], total: 0, page: 1, pageSize: 20);
   }
 
+  Future<Map<String, dynamic>> fetchSummary({
+    Map<String, dynamic>? params,
+  }) async {
+    final response =
+        await _client.get('/workorders/summary/', queryParameters: params);
+    return _mapFromResponse(response.data);
+  }
+
   Future<WorkOrderDetailDto> fetchWorkOrder(int id) async {
     final response = await _client.get('/workorders/$id/');
     final payload = response.data;

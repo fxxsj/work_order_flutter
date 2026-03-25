@@ -59,6 +59,7 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
   List<Task> _myTasks = [];
   List<Task> _claimableTasks = [];
   int? _claimingTaskId;
+  String? _quickFilter;
 
   @override
   void initState() {
@@ -125,6 +126,8 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
         [..._myTasks, ..._claimableTasks].where(TaskUiHelper.isOverdue).length;
     final dueSoonCount =
         [..._myTasks, ..._claimableTasks].where(TaskUiHelper.isDueSoon).length;
+    final filteredMyTasks = _filterTasks(_myTasks);
+    final filteredClaimableTasks = _filterTasks(_claimableTasks);
     return ListPageScaffold(
       spacing: _spacingSm,
       header: PageHeaderBar(
@@ -140,18 +143,30 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
                 label: '待认领',
                 count: _claimableTasks.length,
                 icon: Icons.assignment_turned_in_outlined,
+                selected: _quickFilter == 'claimable',
+                onTap: () => _toggleQuickFilter('claimable'),
               ),
             if (overdueCount > 0)
               StatusHintChip(
                 label: '已逾期',
                 count: overdueCount,
                 icon: Icons.warning_amber_rounded,
+                selected: _quickFilter == 'overdue',
+                onTap: () => _toggleQuickFilter('overdue'),
               ),
             if (dueSoonCount > 0)
               StatusHintChip(
                 label: '临近交付',
                 count: dueSoonCount,
                 icon: Icons.event_busy_outlined,
+                selected: _quickFilter == 'due_soon',
+                onTap: () => _toggleQuickFilter('due_soon'),
+              ),
+            if (_quickFilter != null)
+              OutlinedButton.icon(
+                onPressed: () => setState(() => _quickFilter = null),
+                icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
+                label: const Text('清除筛选'),
               ),
             PageActionButton.outlined(
               onPressed: _loadData,
@@ -161,11 +176,21 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
           ],
         ),
       ),
-      body: _buildBody(context, isMobile),
+      body: _buildBody(
+        context,
+        isMobile,
+        filteredMyTasks: filteredMyTasks,
+        filteredClaimableTasks: filteredClaimableTasks,
+      ),
     );
   }
 
-  Widget _buildBody(BuildContext context, bool isMobile) {
+  Widget _buildBody(
+    BuildContext context,
+    bool isMobile, {
+    required List<Task> filteredMyTasks,
+    required List<Task> filteredClaimableTasks,
+  }) {
     if (_loading && _myTasks.isEmpty && _claimableTasks.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -177,11 +202,12 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
       );
     }
 
-    final hasData = _myTasks.isNotEmpty || _claimableTasks.isNotEmpty;
+    final hasData =
+        filteredMyTasks.isNotEmpty || filteredClaimableTasks.isNotEmpty;
     if (!hasData && !_loading) {
-      return const EmptyStateCard(
+      return EmptyStateCard(
         icon: Icons.assignment_turned_in_outlined,
-        text: _emptyText,
+        text: _quickFilter == null ? _emptyText : '当前筛选下暂无任务',
       );
     }
 
@@ -189,9 +215,9 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
       builder: (context, constraints) {
         final isNarrow = isMobile || constraints.maxWidth < 960;
         final children = [
-          _buildMyTasksSection(isNarrow),
+          _buildMyTasksSection(isNarrow, filteredMyTasks),
           const SizedBox(height: 16, width: 16),
-          _buildClaimableSection(isNarrow),
+          _buildClaimableSection(isNarrow, filteredClaimableTasks),
         ];
         return SingleChildScrollView(
           padding: EdgeInsets.zero,
@@ -217,7 +243,7 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
     );
   }
 
-  Widget _buildMyTasksSection(bool isNarrow) {
+  Widget _buildMyTasksSection(bool isNarrow, List<Task> tasks) {
     final tabs = [
       _TaskTab(label: '全部', filter: null),
       _TaskTab(label: '待开始', filter: 'pending'),
@@ -243,8 +269,8 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
               child: TabBarView(
                 children: tabs.map((tab) {
                   final list = tab.filter == null
-                      ? _myTasks
-                      : _myTasks
+                      ? tasks
+                      : tasks
                           .where((task) => task.status == tab.filter)
                           .toList();
                   return _buildTaskList(
@@ -262,13 +288,13 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
     );
   }
 
-  Widget _buildClaimableSection(bool isNarrow) {
+  Widget _buildClaimableSection(bool isNarrow, List<Task> tasks) {
     return DetailSectionCard(
       title: '可认领任务',
       child: SizedBox(
         height: 420,
         child: _buildTaskList(
-          _claimableTasks,
+          tasks,
           isNarrow: isNarrow,
           emptyText: '暂无可认领任务',
           trailingBuilder: (task) {
@@ -443,6 +469,25 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
     final month = local.month.toString().padLeft(2, '0');
     final day = local.day.toString().padLeft(2, '0');
     return '$year-$month-$day';
+  }
+
+  List<Task> _filterTasks(List<Task> source) {
+    switch (_quickFilter) {
+      case 'claimable':
+        return identical(source, _claimableTasks) ? source : const [];
+      case 'overdue':
+        return source.where(TaskUiHelper.isOverdue).toList();
+      case 'due_soon':
+        return source.where(TaskUiHelper.isDueSoon).toList();
+      default:
+        return source;
+    }
+  }
+
+  void _toggleQuickFilter(String key) {
+    setState(() {
+      _quickFilter = _quickFilter == key ? null : key;
+    });
   }
 
   void _openTaskDetail(BuildContext context, Task task) {

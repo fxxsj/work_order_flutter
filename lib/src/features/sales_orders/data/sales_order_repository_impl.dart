@@ -31,6 +31,11 @@ class SalesOrderRepositoryImpl implements SalesOrderRepository {
   }
 
   @override
+  Future<Map<String, dynamic>> getSummary({Map<String, dynamic>? params}) {
+    return _apiService.fetchSummary(params: params);
+  }
+
+  @override
   Future<SalesOrderDetailDto> getSalesOrderDetail(int id) {
     return _apiService.fetchSalesOrder(id);
   }

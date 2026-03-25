@@ -155,6 +155,11 @@ class WorkOrderRepositoryImpl implements WorkOrderRepository {
   }
 
   @override
+  Future<Map<String, dynamic>> getSummary({Map<String, dynamic>? params}) {
+    return _apiService.fetchSummary(params: params);
+  }
+
+  @override
   Future<dynamic> export({Map<String, dynamic>? params}) {
     return _apiService.export(params: params);
   }

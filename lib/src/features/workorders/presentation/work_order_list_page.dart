@@ -102,14 +102,39 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
   bool _exporting = false;
   WorkOrderListSupportService? _supportService;
   bool _optionsRequested = false;
+  String? _routeSignature;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _supportService ??= WorkOrderListSupportService(context.read<ApiClient>());
-    if (_optionsRequested) return;
-    _optionsRequested = true;
-    _loadFilterOptions();
+    if (!_optionsRequested) {
+      _optionsRequested = true;
+      _loadFilterOptions();
+    }
+    final uri = GoRouterState.of(context).uri;
+    final routeSearch = uri.queryParameters['search']?.trim() ?? '';
+    final routeApprovalStatus =
+        uri.queryParameters['approval_status']?.trim() ?? '';
+    final signature = '$routeSearch|$routeApprovalStatus';
+    final hadRouteState = _routeSignature != null;
+    if (_routeSignature == signature) return;
+    _routeSignature = signature;
+    _searchController.text = routeSearch;
+    _approvalStatusFilter =
+        routeApprovalStatus.isEmpty ? null : routeApprovalStatus;
+    final hasRouteFilter =
+        routeSearch.isNotEmpty || routeApprovalStatus.isNotEmpty;
+    if (!hasRouteFilter && !hadRouteState) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<WorkOrderViewModel>().applyRoutePrefill(
+            search: routeSearch,
+            approvalStatus: routeApprovalStatus,
+          );
+    });
   }
 
   @override
@@ -699,9 +724,13 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
       actions: LayoutBuilder(
         builder: (context, constraints) {
           final activeFilters = _activeFilterCount();
-          final rejectedCount = viewModel.workOrders
-              .where((item) => (item.approvalStatus ?? '') == 'rejected')
-              .length;
+          final rejectedCount = _summaryCount(
+            viewModel,
+            'rejected_approval_count',
+            fallback: viewModel.workOrders
+                .where((item) => (item.approvalStatus ?? '') == 'rejected')
+                .length,
+          );
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -717,7 +746,18 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
 
           final actions = <Widget>[
             if (rejectedCount > 0)
-              StatusHintChip(label: '待处理退回', count: rejectedCount),
+              StatusHintChip(
+                label: '待处理退回',
+                count: rejectedCount,
+                selected: viewModel.approvalStatusFilter == 'rejected',
+                onTap: () => _openQuickFilter(),
+              ),
+            if (_hasQuickFilter(viewModel))
+              OutlinedButton.icon(
+                onPressed: () => context.go('/workorders'),
+                icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
+                label: const Text('清除筛选'),
+              ),
             PageActionButton.outlined(
               onPressed: _exporting ? null : () => _exportWorkOrders(viewModel),
               icon: const Icon(Icons.download_outlined, size: 16),
@@ -868,6 +908,38 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     if (_productFilterId != null) count += 1;
     if (_processFilterId != null) count += 1;
     return count;
+  }
+
+  int _summaryCount(
+    WorkOrderViewModel viewModel,
+    String key, {
+    required int fallback,
+  }) {
+    final summary = viewModel.summary['summary'];
+    if (summary is Map<String, dynamic>) {
+      final value = summary[key];
+      if (value is int) return value;
+      return int.tryParse(value?.toString() ?? '') ?? fallback;
+    }
+    if (summary is Map) {
+      final value = summary[key];
+      if (value is int) return value;
+      return int.tryParse(value?.toString() ?? '') ?? fallback;
+    }
+    return fallback;
+  }
+
+  bool _hasQuickFilter(WorkOrderViewModel viewModel) {
+    return (viewModel.approvalStatusFilter ?? '') == 'rejected';
+  }
+
+  void _openQuickFilter() {
+    context.go(
+      Uri(
+        path: '/workorders',
+        queryParameters: {'approval_status': 'rejected'},
+      ).toString(),
+    );
   }
 
   Future<void> _confirmDelete(

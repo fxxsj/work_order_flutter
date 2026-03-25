@@ -14,13 +14,18 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
   int? _customerFilterId;
   int? _productFilterId;
   int? _processFilterId;
+  Map<String, dynamic> _summary = const {};
+  int _summaryRequestToken = 0;
 
   List<WorkOrder> get workOrders => items;
+  Map<String, dynamic> get summary => _summary;
 
-  Future<void> initialize() => loadItems(resetPage: true);
+  Future<void> initialize() => loadWorkOrders(resetPage: true);
 
-  Future<void> loadWorkOrders({bool resetPage = false}) =>
-      loadItems(resetPage: resetPage);
+  Future<void> loadWorkOrders({bool resetPage = false}) async {
+    await loadItems(resetPage: resetPage);
+    await _loadSummary();
+  }
 
   String? get statusFilter => _statusFilter;
   String? get priorityFilter => _priorityFilter;
@@ -51,6 +56,16 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
 
   void setProcessFilterId(int? value) {
     _processFilterId = value;
+  }
+
+  Future<void> applyRoutePrefill({
+    String? search,
+    String? approvalStatus,
+  }) async {
+    setSearchText(search?.trim() ?? '');
+    _approvalStatusFilter =
+        approvalStatus?.trim().isEmpty == true ? null : approvalStatus?.trim();
+    await loadWorkOrders(resetPage: true);
   }
 
   Future<WorkOrderDetail> fetchDetail(int id) async {
@@ -172,5 +187,44 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
       page: result.page,
       pageSize: result.pageSize,
     );
+  }
+
+  Future<void> _loadSummary() async {
+    final token = ++_summaryRequestToken;
+    try {
+      final params = <String, dynamic>{};
+      final trimmedSearch = searchText.trim();
+      if (trimmedSearch.isNotEmpty) {
+        params['search'] = trimmedSearch;
+      }
+      if (_statusFilter != null && _statusFilter!.isNotEmpty) {
+        params['status'] = _statusFilter;
+      }
+      if (_priorityFilter != null && _priorityFilter!.isNotEmpty) {
+        params['priority'] = _priorityFilter;
+      }
+      if (_approvalStatusFilter != null && _approvalStatusFilter!.isNotEmpty) {
+        params['approval_status'] = _approvalStatusFilter;
+      }
+      if ((_customerFilterId ?? 0) > 0) {
+        params['customer'] = _customerFilterId;
+      }
+      if ((_productFilterId ?? 0) > 0) {
+        params['product'] = _productFilterId;
+      }
+      if ((_processFilterId ?? 0) > 0) {
+        params['process'] = _processFilterId;
+      }
+      final summary = await _repository.getSummary(
+        params: params.isEmpty ? null : params,
+      );
+      if (token != _summaryRequestToken) return;
+      _summary = summary;
+      safeNotify();
+    } catch (_) {
+      if (token != _summaryRequestToken) return;
+      _summary = const {};
+      safeNotify();
+    }
   }
 }

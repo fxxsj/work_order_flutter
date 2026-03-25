@@ -66,6 +66,8 @@ abstract class WorkOrderRepository {
 
   Future<Map<String, dynamic>> getStatistics({Map<String, dynamic>? params});
 
+  Future<Map<String, dynamic>> getSummary({Map<String, dynamic>? params});
+
   Future<dynamic> export({Map<String, dynamic>? params});
 
   Future<Map<String, dynamic>> checkSyncNeeded(int id, {List<int>? processIds});

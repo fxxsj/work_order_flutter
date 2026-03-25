@@ -7,13 +7,29 @@ class SalesOrderViewModel extends PaginatedViewModel<SalesOrder> {
   SalesOrderViewModel(this._repository);
 
   final SalesOrderRepository _repository;
+  String _statusFilter = '';
+  Map<String, dynamic> _summary = const {};
+  int _summaryRequestToken = 0;
 
   List<SalesOrder> get salesOrders => items;
+  String get statusFilter => _statusFilter;
+  Map<String, dynamic> get summary => _summary;
 
-  Future<void> initialize() => loadItems(resetPage: true);
+  Future<void> initialize() => loadSalesOrders(resetPage: true);
 
-  Future<void> loadSalesOrders({bool resetPage = false}) =>
-      loadItems(resetPage: resetPage);
+  Future<void> loadSalesOrders({bool resetPage = false}) async {
+    await loadItems(resetPage: resetPage);
+    await _loadSummary();
+  }
+
+  Future<void> applyRoutePrefill({
+    String? search,
+    String? status,
+  }) async {
+    setSearchText(search?.trim() ?? '');
+    _statusFilter = status?.trim() ?? '';
+    await loadSalesOrders(resetPage: true);
+  }
 
   Future<SalesOrderDetail> fetchDetail(int id) async {
     final detail = await _repository.getSalesOrderDetail(id);
@@ -79,6 +95,7 @@ class SalesOrderViewModel extends PaginatedViewModel<SalesOrder> {
       page: page,
       pageSize: pageSize,
       search: search,
+      status: _statusFilter.isEmpty ? null : _statusFilter,
     );
     return PageData(
       items: result.items.map((dto) => dto.toEntity()).toList(),
@@ -86,5 +103,29 @@ class SalesOrderViewModel extends PaginatedViewModel<SalesOrder> {
       page: result.page,
       pageSize: result.pageSize,
     );
+  }
+
+  Future<void> _loadSummary() async {
+    final token = ++_summaryRequestToken;
+    try {
+      final params = <String, dynamic>{};
+      final trimmedSearch = searchText.trim();
+      if (trimmedSearch.isNotEmpty) {
+        params['search'] = trimmedSearch;
+      }
+      if (_statusFilter.isNotEmpty) {
+        params['status'] = _statusFilter;
+      }
+      final summary = await _repository.getSummary(
+        params: params.isEmpty ? null : params,
+      );
+      if (token != _summaryRequestToken) return;
+      _summary = summary;
+      safeNotify();
+    } catch (_) {
+      if (token != _summaryRequestToken) return;
+      _summary = const {};
+      safeNotify();
+    }
   }
 }

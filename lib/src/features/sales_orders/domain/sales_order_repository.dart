@@ -10,6 +10,8 @@ abstract class SalesOrderRepository {
     String? paymentStatus,
   });
 
+  Future<Map<String, dynamic>> getSummary({Map<String, dynamic>? params});
+
   Future<SalesOrderDetailDto> getSalesOrderDetail(int id);
 
   Future<SalesOrderDetailDto> createSalesOrder(Map<String, dynamic> payload);

@@ -82,11 +82,31 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
   SalesOrderActionService? _actionService;
+  String? _routeSignature;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _actionService ??= SalesOrderActionService(context.read<ApiClient>());
+    final uri = GoRouterState.of(context).uri;
+    final routeSearch = uri.queryParameters['search']?.trim() ?? '';
+    final routeStatus = uri.queryParameters['status']?.trim() ?? '';
+    final signature = '$routeSearch|$routeStatus';
+    final hadRouteState = _routeSignature != null;
+    if (_routeSignature == signature) return;
+    _routeSignature = signature;
+    _searchController.text = routeSearch;
+    final hasRouteFilter = routeSearch.isNotEmpty || routeStatus.isNotEmpty;
+    if (!hasRouteFilter && !hadRouteState) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<SalesOrderViewModel>().applyRoutePrefill(
+            search: routeSearch,
+            status: routeStatus,
+          );
+    });
   }
 
   @override
@@ -580,9 +600,13 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
       padding: EdgeInsets.zero,
       actions: LayoutBuilder(
         builder: (context, constraints) {
-          final rejectedCount = viewModel.salesOrders
-              .where((item) => (item.status ?? '') == 'rejected')
-              .length;
+          final rejectedCount = _summaryCount(
+            viewModel,
+            'rejected_count',
+            fallback: viewModel.salesOrders
+                .where((item) => (item.status ?? '') == 'rejected')
+                .length,
+          );
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -598,7 +622,18 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
 
           final actions = <Widget>[
             if (rejectedCount > 0)
-              StatusHintChip(label: '待处理退回', count: rejectedCount),
+              StatusHintChip(
+                label: '待处理退回',
+                count: rejectedCount,
+                selected: viewModel.statusFilter == 'rejected',
+                onTap: () => _openQuickFilter(status: 'rejected'),
+              ),
+            if (_hasQuickFilter(viewModel))
+              OutlinedButton.icon(
+                onPressed: () => context.go('/sales-orders'),
+                icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
+                label: const Text('清除筛选'),
+              ),
             PageActionButton.outlined(
               onPressed: () => viewModel.loadSalesOrders(resetPage: true),
               icon: const Icon(Icons.refresh, size: 16),
@@ -620,6 +655,38 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
           );
         },
       ),
+    );
+  }
+
+  int _summaryCount(
+    SalesOrderViewModel viewModel,
+    String key, {
+    required int fallback,
+  }) {
+    final summary = viewModel.summary['summary'];
+    if (summary is Map<String, dynamic>) {
+      final value = summary[key];
+      if (value is int) return value;
+      return int.tryParse(value?.toString() ?? '') ?? fallback;
+    }
+    if (summary is Map) {
+      final value = summary[key];
+      if (value is int) return value;
+      return int.tryParse(value?.toString() ?? '') ?? fallback;
+    }
+    return fallback;
+  }
+
+  bool _hasQuickFilter(SalesOrderViewModel viewModel) {
+    return viewModel.statusFilter.isNotEmpty;
+  }
+
+  void _openQuickFilter({required String status}) {
+    context.go(
+      Uri(
+        path: '/sales-orders',
+        queryParameters: {'status': status},
+      ).toString(),
     );
   }
 }
