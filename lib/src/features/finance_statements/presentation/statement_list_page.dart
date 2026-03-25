@@ -87,11 +87,28 @@ class _StatementListViewState extends State<_StatementListView> {
   List<Customer> _customers = [];
   List<Supplier> _suppliers = [];
   StatementSupportService? _supportService;
+  String? _lastRouteSignature;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _supportService ??= StatementSupportService(context.read<ApiClient>());
+    final uri = GoRouterState.of(context).uri;
+    final routeSearch = uri.queryParameters['search']?.trim() ?? '';
+    final routeStatus = uri.queryParameters['status']?.trim() ?? '';
+    final routeTodo = uri.queryParameters['todo']?.trim() ?? '';
+    final signature = '$routeSearch|$routeStatus|$routeTodo';
+    if (_lastRouteSignature == signature) return;
+    _lastRouteSignature = signature;
+    _searchController.text = routeSearch;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<StatementViewModel>().applyRoutePrefill(
+            search: routeSearch,
+            status: routeStatus,
+            todo: routeTodo,
+          );
+    });
   }
 
   @override
@@ -365,12 +382,24 @@ class _StatementListViewState extends State<_StatementListView> {
                 label: '待确认对账',
                 count: pendingConfirmCount,
                 icon: Icons.fact_check_outlined,
+                selected: viewModel.todoFilter == 'pending_confirm',
+                onTap: () => _openQuickFilter(todo: 'pending_confirm'),
               ),
             if (disputedCount > 0)
               StatusHintChip(
                 label: '异议待处理',
                 count: disputedCount,
                 icon: Icons.report_problem_outlined,
+                selected: viewModel.statusFilter == 'disputed' ||
+                    viewModel.todoFilter == 'disputed',
+                onTap: () => _openQuickFilter(status: 'disputed'),
+              ),
+            if (viewModel.statusFilter.isNotEmpty ||
+                viewModel.todoFilter.isNotEmpty)
+              PageActionButton.outlined(
+                onPressed: _clearFilters,
+                icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
+                label: '清除筛选',
               ),
             if (PermissionUtil.hasPermission(
                 context, 'workorder.add_statement'))
@@ -645,6 +674,35 @@ class _StatementListViewState extends State<_StatementListView> {
       return '待财务处理异议';
     }
     return '已闭环';
+  }
+
+  void _clearFilters() {
+    final search = _searchController.text.trim();
+    final query = <String, String>{};
+    if (search.isNotEmpty) {
+      query['search'] = search;
+    }
+    context.go(
+        Uri(path: '/finance/statements', queryParameters: query).toString());
+  }
+
+  void _openQuickFilter({
+    String? status,
+    String? todo,
+  }) {
+    final query = <String, String>{};
+    final search = _searchController.text.trim();
+    if (search.isNotEmpty) {
+      query['search'] = search;
+    }
+    if ((status ?? '').trim().isNotEmpty) {
+      query['status'] = status!.trim();
+    }
+    if ((todo ?? '').trim().isNotEmpty) {
+      query['todo'] = todo!.trim();
+    }
+    context.go(
+        Uri(path: '/finance/statements', queryParameters: query).toString());
   }
 
   int _summaryCount(Map<String, dynamic> payload, String key) {

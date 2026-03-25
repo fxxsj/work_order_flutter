@@ -12,9 +12,16 @@ class StatementRepositoryImpl implements StatementRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? status,
+    String? todo,
   }) {
     return _apiService.fetchStatements(
-        page: page, pageSize: pageSize, search: search);
+      page: page,
+      pageSize: pageSize,
+      search: search,
+      status: status,
+      todo: todo,
+    );
   }
 
   @override

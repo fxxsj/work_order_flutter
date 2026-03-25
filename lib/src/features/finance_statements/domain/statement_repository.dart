@@ -5,6 +5,8 @@ abstract class StatementRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? status,
+    String? todo,
   });
 
   Future<Map<String, dynamic>> confirm(int id, Map<String, dynamic> payload);

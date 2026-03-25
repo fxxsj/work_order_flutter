@@ -8,9 +8,13 @@ class InvoiceViewModel extends PaginatedViewModel<Invoice> {
 
   final InvoiceRepository _repository;
   Map<String, dynamic> _summary = const {};
+  String _statusFilter = '';
+  String _todoFilter = '';
 
   List<Invoice> get invoices => items;
   Map<String, dynamic> get summary => _summary;
+  String get statusFilter => _statusFilter;
+  String get todoFilter => _todoFilter;
 
   Future<void> initialize() => loadInvoices(resetPage: true);
 
@@ -35,6 +39,17 @@ class InvoiceViewModel extends PaginatedViewModel<Invoice> {
     return _repository.approve(id, payload);
   }
 
+  Future<void> applyRoutePrefill({
+    String? search,
+    String? status,
+    String? todo,
+  }) async {
+    setSearchText(search?.trim() ?? '');
+    _statusFilter = status?.trim() ?? '';
+    _todoFilter = todo?.trim() ?? '';
+    await loadInvoices(resetPage: true);
+  }
+
   Future<void> _loadSummary() async {
     try {
       _summary = await _repository.getSummary();
@@ -54,6 +69,8 @@ class InvoiceViewModel extends PaginatedViewModel<Invoice> {
       page: page,
       pageSize: pageSize,
       search: search,
+      status: _statusFilter.isEmpty ? null : _statusFilter,
+      todo: _todoFilter.isEmpty ? null : _todoFilter,
     );
     return PageData(
       items: result.items.map((dto) => dto.toEntity()).toList(),

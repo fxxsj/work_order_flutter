@@ -11,6 +11,8 @@ class StatementApiService {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? status,
+    String? todo,
   }) async {
     final params = <String, dynamic>{
       'page': page,
@@ -19,6 +21,14 @@ class StatementApiService {
     final trimmed = search?.trim();
     if (trimmed != null && trimmed.isNotEmpty) {
       params['search'] = trimmed;
+    }
+    final statusValue = status?.trim();
+    if (statusValue != null && statusValue.isNotEmpty) {
+      params['status'] = statusValue;
+    }
+    final todoValue = todo?.trim();
+    if (todoValue != null && todoValue.isNotEmpty) {
+      params['todo'] = todoValue;
     }
 
     final response = await _client.get('/statements/', queryParameters: params);

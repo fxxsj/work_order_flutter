@@ -7,12 +7,24 @@ class GenericListViewModel extends PaginatedViewModel<GenericRecord> {
   GenericListViewModel(this._repository);
 
   final GenericRepository _repository;
+  Map<String, dynamic> _extraParams = const {};
 
   List<GenericRecord> get records => items;
+  Map<String, dynamic> get extraParams => _extraParams;
 
   Future<void> initialize() => loadItems(resetPage: true);
 
-  Future<void> reload({bool resetPage = false}) => loadItems(resetPage: resetPage);
+  Future<void> reload({bool resetPage = false}) =>
+      loadItems(resetPage: resetPage);
+
+  Future<void> applyRoutePrefill({
+    String? search,
+    Map<String, dynamic>? extraParams,
+  }) async {
+    setSearchText(search?.trim() ?? '');
+    _extraParams = Map<String, dynamic>.from(extraParams ?? const {});
+    await reload(resetPage: true);
+  }
 
   Future<void> deleteRecord(int id) async {
     await deleteAndReload(() => _repository.deleteRecord(id));
@@ -28,6 +40,7 @@ class GenericListViewModel extends PaginatedViewModel<GenericRecord> {
       page: page,
       pageSize: pageSize,
       search: search,
+      extraParams: _extraParams.isEmpty ? null : _extraParams,
     );
   }
 }

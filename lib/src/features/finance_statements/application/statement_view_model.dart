@@ -7,15 +7,30 @@ class StatementViewModel extends PaginatedViewModel<Statement> {
 
   final StatementRepository _repository;
   Map<String, dynamic> _summary = const {};
+  String _statusFilter = '';
+  String _todoFilter = '';
 
   List<Statement> get statements => items;
   Map<String, dynamic> get summary => _summary;
+  String get statusFilter => _statusFilter;
+  String get todoFilter => _todoFilter;
 
   Future<void> initialize() => loadStatements(resetPage: true);
 
   Future<void> loadStatements({bool resetPage = false}) async {
     await loadItems(resetPage: resetPage);
     await _loadSummary();
+  }
+
+  Future<void> applyRoutePrefill({
+    String? search,
+    String? status,
+    String? todo,
+  }) async {
+    setSearchText(search?.trim() ?? '');
+    _statusFilter = status?.trim() ?? '';
+    _todoFilter = todo?.trim() ?? '';
+    await loadStatements(resetPage: true);
   }
 
   Future<void> _loadSummary() async {
@@ -37,6 +52,8 @@ class StatementViewModel extends PaginatedViewModel<Statement> {
       page: page,
       pageSize: pageSize,
       search: search,
+      status: _statusFilter.isEmpty ? null : _statusFilter,
+      todo: _todoFilter.isEmpty ? null : _todoFilter,
     );
     return PageData(
       items: result.items.map((dto) => dto.toEntity()).toList(),

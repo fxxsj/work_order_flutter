@@ -7,11 +7,15 @@ class StatusHintChip extends StatelessWidget {
     required this.label,
     required this.count,
     this.icon = Icons.warning_amber_rounded,
+    this.onTap,
+    this.selected = false,
   });
 
   final String label;
   final int count;
   final IconData icon;
+  final VoidCallback? onTap;
+  final bool selected;
 
   @override
   Widget build(BuildContext context) {
@@ -19,13 +23,14 @@ class StatusHintChip extends StatelessWidget {
     final semantic = theme.extension<AppSemanticColors>();
     final warning = semantic?.warning ?? theme.colorScheme.primary;
 
-    return Container(
+    final chip = Container(
       height: 36,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: warning.withValues(alpha: 0.08),
+        color: warning.withValues(alpha: selected ? 0.16 : 0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: warning.withValues(alpha: 0.28)),
+        border: Border.all(
+            color: warning.withValues(alpha: selected ? 0.45 : 0.28)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -40,6 +45,18 @@ class StatusHintChip extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+
+    if (onTap == null) {
+      return chip;
+    }
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: chip,
       ),
     );
   }

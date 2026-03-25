@@ -13,9 +13,16 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? status,
+    String? todo,
   }) {
     return _apiService.fetchInvoices(
-        page: page, pageSize: pageSize, search: search);
+      page: page,
+      pageSize: pageSize,
+      search: search,
+      status: status,
+      todo: todo,
+    );
   }
 
   @override

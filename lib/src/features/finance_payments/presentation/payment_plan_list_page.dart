@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/models/generic_record.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
@@ -42,6 +43,7 @@ class PaymentPlanListEntry extends StatelessWidget {
           GenericSummaryField(label: '已收金额', value: _paidAmount),
         ],
         titleBuilder: _title,
+        extraParamsBuilder: _extraParamsBuilder,
         headerActionsBuilder: _buildHeaderActions,
         rowActionsBuilder: (context, record, openDetails) {
           return [
@@ -147,20 +149,45 @@ class PaymentPlanListEntry extends StatelessWidget {
           label: '逾期计划',
           count: overdueCount,
           icon: Icons.warning_amber_outlined,
+          selected: _currentTodo(viewModel) == 'overdue',
+          onTap: () => _openQuickFilter(context, todo: 'overdue'),
         ),
       if (dueTodayCount > 0)
         StatusHintChip(
           label: '今日到期',
           count: dueTodayCount,
           icon: Icons.today_outlined,
+          selected: _currentTodo(viewModel) == 'due_today',
+          onTap: () => _openQuickFilter(context, todo: 'due_today'),
         ),
       if (partialCount > 0)
         StatusHintChip(
           label: '部分收款',
           count: partialCount,
           icon: Icons.pie_chart_outline,
+          selected: _currentStatus(viewModel) == 'partial',
+          onTap: () => _openQuickFilter(context, status: 'partial'),
+        ),
+      if (_hasActiveFilter(viewModel))
+        OutlinedButton.icon(
+          onPressed: () => context.go('/finance/payment-plans'),
+          icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
+          label: const Text('清除筛选'),
         ),
     ];
+  }
+
+  static Map<String, dynamic> _extraParamsBuilder(Uri uri) {
+    final extraParams = <String, dynamic>{};
+    final status = uri.queryParameters['status']?.trim() ?? '';
+    final todo = uri.queryParameters['todo']?.trim() ?? '';
+    if (status.isNotEmpty) {
+      extraParams['status'] = status;
+    }
+    if (todo.isNotEmpty) {
+      extraParams['todo'] = todo;
+    }
+    return extraParams;
   }
 
   static bool _isToday(String? value) {
@@ -171,5 +198,35 @@ class PaymentPlanListEntry extends StatelessWidget {
     return parsed.year == now.year &&
         parsed.month == now.month &&
         parsed.day == now.day;
+  }
+
+  static bool _hasActiveFilter(GenericListViewModel viewModel) {
+    final params = viewModel.extraParams;
+    return (params['status']?.toString().trim() ?? '').isNotEmpty ||
+        (params['todo']?.toString().trim() ?? '').isNotEmpty;
+  }
+
+  static String _currentStatus(GenericListViewModel viewModel) {
+    return viewModel.extraParams['status']?.toString().trim() ?? '';
+  }
+
+  static String _currentTodo(GenericListViewModel viewModel) {
+    return viewModel.extraParams['todo']?.toString().trim() ?? '';
+  }
+
+  static void _openQuickFilter(
+    BuildContext context, {
+    String? status,
+    String? todo,
+  }) {
+    final query = <String, String>{};
+    if ((status ?? '').trim().isNotEmpty) {
+      query['status'] = status!.trim();
+    }
+    if ((todo ?? '').trim().isNotEmpty) {
+      query['todo'] = todo!.trim();
+    }
+    context.go(
+        Uri(path: '/finance/payment-plans', queryParameters: query).toString());
   }
 }

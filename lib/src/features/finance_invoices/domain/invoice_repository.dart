@@ -6,6 +6,8 @@ abstract class InvoiceRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? status,
+    String? todo,
   });
 
   Future<Map<String, dynamic>> submit(int id);

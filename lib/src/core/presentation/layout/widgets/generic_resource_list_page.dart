@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -44,6 +45,7 @@ class GenericResourceConfig {
     this.detailFields,
     this.rowActionsBuilder,
     this.headerActionsBuilder,
+    this.extraParamsBuilder,
   });
 
   final String id;
@@ -73,6 +75,7 @@ class GenericResourceConfig {
     BuildContext context,
     GenericListViewModel viewModel,
   )? headerActionsBuilder;
+  final Map<String, dynamic> Function(Uri uri)? extraParamsBuilder;
 }
 
 class GenericColumn {
@@ -181,24 +184,37 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
   String? _prefillKeyword;
+  Map<String, dynamic> _prefillExtraParams = const {};
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final keyword = GoRouterState.of(context).uri.queryParameters['search'];
+    final uri = GoRouterState.of(context).uri;
+    final keyword = uri.queryParameters['search'];
+    final extraParams = Map<String, dynamic>.from(
+      widget.config.extraParamsBuilder?.call(uri) ?? const {},
+    );
     final trimmed = keyword?.trim() ?? '';
-    if (_prefillKeyword == null && trimmed.isEmpty) {
+    if (_prefillKeyword == null &&
+        trimmed.isEmpty &&
+        _prefillExtraParams.isEmpty &&
+        extraParams.isEmpty) {
       _prefillKeyword = '';
       return;
     }
-    if (trimmed == _prefillKeyword) return;
+    if (trimmed == _prefillKeyword &&
+        mapEquals(extraParams, _prefillExtraParams)) {
+      return;
+    }
     _prefillKeyword = trimmed;
+    _prefillExtraParams = extraParams;
     _searchController.text = trimmed;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final viewModel = context.read<GenericListViewModel>();
-      viewModel.setSearchText(trimmed);
-      viewModel.reload(resetPage: true);
+      context.read<GenericListViewModel>().applyRoutePrefill(
+            search: trimmed,
+            extraParams: extraParams,
+          );
     });
   }
 

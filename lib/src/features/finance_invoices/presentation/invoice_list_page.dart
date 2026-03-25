@@ -94,10 +94,10 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
   bool _optionsLoading = false;
   bool _optionsLoaded = false;
   int? _uploadingInvoiceId;
-  bool _prefillHandled = false;
   bool _pendingPrefill = false;
   int? _prefillSalesOrderId;
   int? _prefillCustomerId;
+  String? _lastRouteSignature;
   List<Customer> _customers = [];
   List<SalesOrder> _salesOrders = [];
   List<WorkOrder> _workOrders = [];
@@ -105,15 +105,36 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_prefillHandled) return;
     final uri = GoRouterState.of(context).uri;
+    final routeSearch = uri.queryParameters['search']?.trim() ?? '';
+    final routeStatus = uri.queryParameters['status']?.trim() ?? '';
+    final routeTodo = uri.queryParameters['todo']?.trim() ?? '';
     final createFlag = uri.queryParameters['create'];
     final salesOrderId =
         int.tryParse(uri.queryParameters['sales_order_id'] ?? '');
     final customerId = int.tryParse(uri.queryParameters['customer_id'] ?? '');
+    final signature = [
+      routeSearch,
+      routeStatus,
+      routeTodo,
+      createFlag ?? '',
+      salesOrderId?.toString() ?? '',
+      customerId?.toString() ?? '',
+    ].join('|');
+    if (_lastRouteSignature == signature) return;
+    _lastRouteSignature = signature;
+    _searchController.text = routeSearch;
+
     if (salesOrderId != null && (createFlag == '1' || createFlag == 'true')) {
       if (!PermissionUtil.hasPermission(context, 'workorder.add_invoice')) {
-        _prefillHandled = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          context.read<InvoiceViewModel>().applyRoutePrefill(
+                search: routeSearch,
+                status: routeStatus,
+                todo: routeTodo,
+              );
+        });
         return;
       }
       _prefillSalesOrderId = salesOrderId;
@@ -130,7 +151,14 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
         );
       });
     }
-    _prefillHandled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<InvoiceViewModel>().applyRoutePrefill(
+            search: routeSearch,
+            status: routeStatus,
+            todo: routeTodo,
+          );
+    });
   }
 
   @override
@@ -771,24 +799,38 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                 label: '待开票',
                 count: pendingIssueCount,
                 icon: Icons.edit_note_outlined,
+                selected: viewModel.statusFilter == 'draft',
+                onTap: () => _openQuickFilter(status: 'draft'),
               ),
             if (missingAttachmentCount > 0)
               StatusHintChip(
                 label: '待补附件',
                 count: missingAttachmentCount,
                 icon: Icons.attach_file_outlined,
+                selected: viewModel.todoFilter == 'pending_attachment',
+                onTap: () => _openQuickFilter(todo: 'pending_attachment'),
               ),
             if (pendingReceiptCount > 0)
               StatusHintChip(
                 label: '待确认收到',
                 count: pendingReceiptCount,
                 icon: Icons.verified_outlined,
+                selected: viewModel.todoFilter == 'pending_receipt',
+                onTap: () => _openQuickFilter(todo: 'pending_receipt'),
               ),
             if (pendingPaymentCount > 0)
               StatusHintChip(
                 label: '待催收款',
                 count: pendingPaymentCount,
                 icon: Icons.payments_outlined,
+                selected: viewModel.todoFilter == 'pending_payment',
+                onTap: () => _openQuickFilter(todo: 'pending_payment'),
+              ),
+            if (_hasActiveFilter(viewModel))
+              PageActionButton.outlined(
+                onPressed: _clearFilters,
+                icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
+                label: '清除筛选',
               ),
             if (PermissionUtil.hasPermission(context, 'workorder.add_invoice'))
               PageActionButton.filled(
@@ -1148,6 +1190,39 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     } catch (err) {
       ToastUtil.showError('打开附件失败: $err');
     }
+  }
+
+  bool _hasActiveFilter(InvoiceViewModel viewModel) {
+    return viewModel.statusFilter.isNotEmpty || viewModel.todoFilter.isNotEmpty;
+  }
+
+  void _clearFilters() {
+    final search = _searchController.text.trim();
+    final query = <String, String>{};
+    if (search.isNotEmpty) {
+      query['search'] = search;
+    }
+    context
+        .go(Uri(path: '/finance/invoices', queryParameters: query).toString());
+  }
+
+  void _openQuickFilter({
+    String? status,
+    String? todo,
+  }) {
+    final query = <String, String>{};
+    final search = _searchController.text.trim();
+    if (search.isNotEmpty) {
+      query['search'] = search;
+    }
+    if ((status ?? '').trim().isNotEmpty) {
+      query['status'] = status!.trim();
+    }
+    if ((todo ?? '').trim().isNotEmpty) {
+      query['todo'] = todo!.trim();
+    }
+    context
+        .go(Uri(path: '/finance/invoices', queryParameters: query).toString());
   }
 
   int _summaryCount(Map<String, dynamic> payload, String key) {

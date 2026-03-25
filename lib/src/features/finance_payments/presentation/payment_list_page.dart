@@ -86,11 +86,26 @@ class _PaymentListViewState extends State<_PaymentListView> {
   List<SalesOrder> _salesOrders = [];
   List<Invoice> _invoices = [];
   PaymentSupportService? _supportService;
+  String? _lastRouteSignature;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _supportService ??= PaymentSupportService(context.read<ApiClient>());
+    final uri = GoRouterState.of(context).uri;
+    final routeSearch = uri.queryParameters['search']?.trim() ?? '';
+    final routeTodo = uri.queryParameters['todo']?.trim() ?? '';
+    final signature = '$routeSearch|$routeTodo';
+    if (_lastRouteSignature == signature) return;
+    _lastRouteSignature = signature;
+    _searchController.text = routeSearch;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<PaymentViewModel>().applyRoutePrefill(
+            search: routeSearch,
+            todo: routeTodo,
+          );
+    });
   }
 
   @override
@@ -322,12 +337,22 @@ class _PaymentListViewState extends State<_PaymentListView> {
                 label: '待核销收款',
                 count: pendingWriteOffCount,
                 icon: Icons.rule_folder_outlined,
+                selected: viewModel.todoFilter == 'pending_writeoff',
+                onTap: () => _openQuickFilter(todo: 'pending_writeoff'),
               ),
             if (missingInvoiceLinkCount > 0)
               StatusHintChip(
                 label: '待关联发票',
                 count: missingInvoiceLinkCount,
                 icon: Icons.receipt_long_outlined,
+                selected: viewModel.todoFilter == 'missing_invoice_link',
+                onTap: () => _openQuickFilter(todo: 'missing_invoice_link'),
+              ),
+            if (viewModel.todoFilter.isNotEmpty)
+              PageActionButton.outlined(
+                onPressed: _clearFilters,
+                icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
+                label: '清除筛选',
               ),
             if (PermissionUtil.hasPermission(context, 'workorder.add_payment'))
               PageActionButton.filled(
@@ -534,6 +559,29 @@ class _PaymentListViewState extends State<_PaymentListView> {
       return '待关联发票';
     }
     return '已完成';
+  }
+
+  void _clearFilters() {
+    final search = _searchController.text.trim();
+    final query = <String, String>{};
+    if (search.isNotEmpty) {
+      query['search'] = search;
+    }
+    context
+        .go(Uri(path: '/finance/payments', queryParameters: query).toString());
+  }
+
+  void _openQuickFilter({String? todo}) {
+    final query = <String, String>{};
+    final search = _searchController.text.trim();
+    if (search.isNotEmpty) {
+      query['search'] = search;
+    }
+    if ((todo ?? '').trim().isNotEmpty) {
+      query['todo'] = todo!.trim();
+    }
+    context
+        .go(Uri(path: '/finance/payments', queryParameters: query).toString());
   }
 
   int _summaryCount(Map<String, dynamic> payload, String key) {

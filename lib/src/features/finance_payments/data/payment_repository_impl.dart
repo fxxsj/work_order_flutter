@@ -12,8 +12,14 @@ class PaymentRepositoryImpl implements PaymentRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? todo,
   }) {
-    return _apiService.fetchPayments(page: page, pageSize: pageSize, search: search);
+    return _apiService.fetchPayments(
+      page: page,
+      pageSize: pageSize,
+      search: search,
+      todo: todo,
+    );
   }
 
   @override
