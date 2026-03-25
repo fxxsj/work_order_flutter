@@ -724,6 +724,13 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
       actions: LayoutBuilder(
         builder: (context, constraints) {
           final activeFilters = _activeFilterCount();
+          final pendingApprovalCount = _summaryCount(
+            viewModel,
+            'pending_approval_count',
+            fallback: viewModel.workOrders
+                .where((item) => (item.approvalStatus ?? '') == 'pending')
+                .length,
+          );
           final rejectedCount = _summaryCount(
             viewModel,
             'rejected_approval_count',
@@ -745,12 +752,20 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
           );
 
           final actions = <Widget>[
+            if (pendingApprovalCount > 0)
+              StatusHintChip(
+                label: '待审核施工单',
+                count: pendingApprovalCount,
+                icon: Icons.rule_folder_outlined,
+                selected: viewModel.approvalStatusFilter == 'pending',
+                onTap: () => _openQuickFilter('pending'),
+              ),
             if (rejectedCount > 0)
               StatusHintChip(
                 label: '待处理退回',
                 count: rejectedCount,
                 selected: viewModel.approvalStatusFilter == 'rejected',
-                onTap: () => _openQuickFilter(),
+                onTap: () => _openQuickFilter('rejected'),
               ),
             if (_hasQuickFilter(viewModel))
               OutlinedButton.icon(
@@ -930,14 +945,14 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
   }
 
   bool _hasQuickFilter(WorkOrderViewModel viewModel) {
-    return (viewModel.approvalStatusFilter ?? '') == 'rejected';
+    return (viewModel.approvalStatusFilter ?? '').isNotEmpty;
   }
 
-  void _openQuickFilter() {
+  void _openQuickFilter(String approvalStatus) {
     context.go(
       Uri(
         path: '/workorders',
-        queryParameters: {'approval_status': 'rejected'},
+        queryParameters: {'approval_status': approvalStatus},
       ).toString(),
     );
   }

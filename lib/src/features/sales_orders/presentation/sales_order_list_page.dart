@@ -600,6 +600,13 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
       padding: EdgeInsets.zero,
       actions: LayoutBuilder(
         builder: (context, constraints) {
+          final submittedCount = _summaryCount(
+            viewModel,
+            'submitted_count',
+            fallback: viewModel.salesOrders
+                .where((item) => (item.status ?? '') == 'submitted')
+                .length,
+          );
           final rejectedCount = _summaryCount(
             viewModel,
             'rejected_count',
@@ -621,6 +628,14 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
           );
 
           final actions = <Widget>[
+            if (submittedCount > 0)
+              StatusHintChip(
+                label: '待审核订单',
+                count: submittedCount,
+                icon: Icons.fact_check_outlined,
+                selected: viewModel.statusFilter == 'submitted',
+                onTap: () => _openQuickFilter(status: 'submitted'),
+              ),
             if (rejectedCount > 0)
               StatusHintChip(
                 label: '待处理退回',
