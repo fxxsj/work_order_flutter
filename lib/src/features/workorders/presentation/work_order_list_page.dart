@@ -350,6 +350,8 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
         DataColumn(label: Text('产品')),
         DataColumn(label: Text('状态')),
         DataColumn(label: Text('审核')),
+        DataColumn(label: Text('任务')),
+        DataColumn(label: Text('下一步')),
         DataColumn(label: Text('优先级')),
         DataColumn(label: Text('交货日期')),
         DataColumn(label: Text('金额')),
@@ -383,6 +385,8 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
                       _emptyCellText,
                   style: textStyle,
                 )),
+                DataCell(Text(_taskSummaryText(workOrder), style: textStyle)),
+                DataCell(Text(_followUpText(workOrder), style: textStyle)),
                 DataCell(Text(
                   workOrder.priorityDisplay ??
                       workOrder.priority ??
@@ -462,6 +466,8 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     final progress = workOrder.progressPercentage == null
         ? _emptyCellText
         : '${workOrder.progressPercentage}%';
+    final taskSummary = _taskSummaryText(workOrder);
+    final followUp = _followUpText(workOrder);
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
     final isCompact = BreakpointsUtil.isMobile(context);
 
@@ -495,7 +501,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
                     children: [
                       _SummaryChip(label: '状态', value: status),
                       _SummaryChip(label: '审核', value: approval),
-                      _SummaryChip(label: '优先级', value: priority),
+                      _SummaryChip(label: '任务', value: taskSummary),
                     ],
                   ),
                 ],
@@ -536,11 +542,14 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
             children: [
               _SummaryField(label: '交货日期', value: deliveryDate),
               _SummaryField(label: '进度', value: progress),
+              _SummaryField(label: '任务', value: taskSummary),
+              _SummaryField(label: '下一步', value: followUp),
               _SummaryField(
                   label: '负责人', value: workOrder.managerName ?? _emptyCellText),
               _SummaryField(
                   label: '业务员',
                   value: workOrder.salespersonName ?? _emptyCellText),
+              _SummaryField(label: '优先级', value: priority),
               _SummaryField(
                   label: '数量',
                   value: _formatQuantity(workOrder.quantity, workOrder.unit)),
@@ -992,6 +1001,51 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     final formatted = value.toStringAsFixed(value % 1 == 0 ? 0 : 2);
     final unitText = unit?.trim().isNotEmpty == true ? unit! : '';
     return unitText.isEmpty ? formatted : '$formatted $unitText';
+  }
+
+  String _taskSummaryText(WorkOrder workOrder) {
+    final total = workOrder.totalTaskCount ?? 0;
+    final draft = workOrder.draftTaskCount ?? 0;
+    if (total <= 0) {
+      return '未生成';
+    }
+    if (draft <= 0) {
+      return '$total 项';
+    }
+    return '$draft/$total 草稿';
+  }
+
+  String _followUpText(WorkOrder workOrder) {
+    final approvalStatus = workOrder.approvalStatus ?? '';
+    final status = workOrder.status ?? '';
+    final total = workOrder.totalTaskCount ?? 0;
+    final draft = workOrder.draftTaskCount ?? 0;
+
+    if (approvalStatus == 'pending') {
+      return '待审批后下发任务';
+    }
+    if (approvalStatus == 'rejected') {
+      return '待修改后重提';
+    }
+    if (status == 'cancelled') {
+      return '施工单已取消';
+    }
+    if (total <= 0) {
+      return '待生成任务';
+    }
+    if (draft > 0) {
+      return '待分派/开工';
+    }
+    if (status == 'pending') {
+      return '待开始生产';
+    }
+    if (status == 'in_progress') {
+      return '跟进生产进度';
+    }
+    if (status == 'completed') {
+      return '推进质检/入库';
+    }
+    return _emptyCellText;
   }
 }
 

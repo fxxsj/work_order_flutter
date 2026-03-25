@@ -20,6 +20,8 @@ class WorkOrderDto {
     this.approvalStatusDisplay,
     this.managerName,
     this.progressPercentage,
+    this.draftTaskCount,
+    this.totalTaskCount,
   });
 
   final int id;
@@ -40,6 +42,8 @@ class WorkOrderDto {
   final String? approvalStatusDisplay;
   final String? managerName;
   final int? progressPercentage;
+  final int? draftTaskCount;
+  final int? totalTaskCount;
 
   factory WorkOrderDto.fromJson(Map<String, dynamic> json) {
     return WorkOrder.fromJson(json).toDto();
@@ -65,6 +69,8 @@ class WorkOrderDto {
       approvalStatusDisplay: approvalStatusDisplay,
       managerName: managerName,
       progressPercentage: progressPercentage,
+      draftTaskCount: draftTaskCount,
+      totalTaskCount: totalTaskCount,
     );
   }
 }
@@ -90,6 +96,8 @@ extension WorkOrderMapper on WorkOrder {
       approvalStatusDisplay: approvalStatusDisplay,
       managerName: managerName,
       progressPercentage: progressPercentage,
+      draftTaskCount: draftTaskCount,
+      totalTaskCount: totalTaskCount,
     );
   }
 }
