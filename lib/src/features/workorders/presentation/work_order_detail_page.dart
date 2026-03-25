@@ -14,6 +14,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/store_util.dart';
+import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/workorders/application/work_order_view_model.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
@@ -687,6 +688,10 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   Widget build(BuildContext context) {
     final detail = _detail;
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
+    final canChangeWorkOrder =
+        PermissionUtil.hasPermission(context, 'workorder.change_workorder');
+    final canDeleteWorkOrder =
+        PermissionUtil.hasPermission(context, 'workorder.delete_workorder');
 
     final statusOptions = const [
       DropdownMenuItem(value: 'pending', child: Text('待开始')),
@@ -713,16 +718,18 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
               label: '返回',
             ),
             PageActionButton.filled(
-              onPressed: () =>
-                  context.go('/workorders/${widget.workOrderId}/edit'),
+              onPressed: canChangeWorkOrder
+                  ? () => context.go('/workorders/${widget.workOrderId}/edit')
+                  : null,
               icon: const Icon(Icons.edit, size: 16),
               label: '编辑',
             ),
-            PageActionButton.outlined(
-              onPressed: _actionLoading ? null : _confirmDelete,
-              icon: const Icon(Icons.delete_outline, size: 16),
-              square: true,
-            ),
+            if (canDeleteWorkOrder)
+              PageActionButton.outlined(
+                onPressed: _actionLoading ? null : _confirmDelete,
+                icon: const Icon(Icons.delete_outline, size: 16),
+                square: true,
+              ),
           ],
         ),
       ),
@@ -760,15 +767,26 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                           statusOptions: statusOptions,
                           statusSelection: _statusSelection,
                           actionLoading: _actionLoading,
-                          onUploadDesignFile: _handleUploadDesignFile,
+                          onUploadDesignFile: canChangeWorkOrder
+                              ? _handleUploadDesignFile
+                              : null,
                           hasMultiApproval: _hasMultiApproval,
-                          onStatusChanged: (value) =>
-                              setState(() => _statusSelection = value),
-                          onUpdateStatus: _handleUpdateStatus,
-                          onApprove: () => _showApproveDialog(approved: true),
-                          onReject: () => _showApproveDialog(approved: false),
-                          onResubmit: _handleResubmit,
-                          onRequestReapproval: _showReapprovalDialog,
+                          onStatusChanged: canChangeWorkOrder
+                              ? (value) =>
+                                  setState(() => _statusSelection = value)
+                              : null,
+                          onUpdateStatus:
+                              canChangeWorkOrder ? _handleUpdateStatus : null,
+                          onApprove: canChangeWorkOrder
+                              ? () => _showApproveDialog(approved: true)
+                              : null,
+                          onReject: canChangeWorkOrder
+                              ? () => _showApproveDialog(approved: false)
+                              : null,
+                          onResubmit:
+                              canChangeWorkOrder ? _handleResubmit : null,
+                          onRequestReapproval:
+                              canChangeWorkOrder ? _showReapprovalDialog : null,
                           buildInfoGrid: _buildInfoGrid,
                           buildSection: _buildSection,
                           buildResourceGroup: _buildResourceGroup,
@@ -784,14 +802,17 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                             comment: _workOrderRejectionComment,
                             nextStep: '根据退回原因补充资料或修改内容后，直接点击“重新提交审核”。',
                             primaryAction: FilledButton.icon(
-                              onPressed:
-                                  _actionLoading ? null : _handleResubmit,
+                              onPressed: canChangeWorkOrder && !_actionLoading
+                                  ? _handleResubmit
+                                  : null,
                               icon: const Icon(Icons.send_outlined, size: 18),
                               label: const Text('重新提交审核'),
                             ),
                             secondaryAction: OutlinedButton.icon(
-                              onPressed: () => context
-                                  .go('/workorders/${widget.workOrderId}/edit'),
+                              onPressed: canChangeWorkOrder
+                                  ? () => context.go(
+                                      '/workorders/${widget.workOrderId}/edit')
+                                  : null,
                               icon: const Icon(Icons.edit_outlined, size: 18),
                               label: const Text('先去修改'),
                             ),

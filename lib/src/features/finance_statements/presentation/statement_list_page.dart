@@ -17,6 +17,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/finance_statements/application/statement_view_model.dart';
@@ -132,6 +133,10 @@ class _StatementListViewState extends State<_StatementListView> {
   }
 
   Future<void> _openCreateDialog(StatementViewModel viewModel) async {
+    if (!PermissionUtil.hasPermission(context, 'workorder.add_statement')) {
+      ToastUtil.showError('当前账号无权新建对账单');
+      return;
+    }
     await _loadOptions();
     if (_customers.isEmpty && _suppliers.isEmpty) {
       ToastUtil.showError('请先配置客户或供应商信息');
@@ -153,6 +158,10 @@ class _StatementListViewState extends State<_StatementListView> {
   }
 
   Future<void> _openGenerateDialog() async {
+    if (!PermissionUtil.hasPermission(context, 'workorder.add_statement')) {
+      ToastUtil.showError('当前账号无权生成对账数据');
+      return;
+    }
     await _loadOptions();
     final result = await showStatementGenerateDialog(
       context,
@@ -174,6 +183,10 @@ class _StatementListViewState extends State<_StatementListView> {
     Statement statement, {
     required bool confirmed,
   }) async {
+    if (!PermissionUtil.hasPermission(context, 'workorder.change_statement')) {
+      ToastUtil.showError('当前账号无权处理对账状态');
+      return;
+    }
     final notes = await showStatementConfirmDialog(
       context,
       confirmed: confirmed,
@@ -362,16 +375,20 @@ class _StatementListViewState extends State<_StatementListView> {
                 count: disputedCount,
                 icon: Icons.report_problem_outlined,
               ),
-            PageActionButton.filled(
-              onPressed: () => _openCreateDialog(viewModel),
-              icon: const Icon(Icons.add, size: 16),
-              label: '新建对账单',
-            ),
-            PageActionButton.outlined(
-              onPressed: _openGenerateDialog,
-              icon: const Icon(Icons.auto_fix_high_outlined, size: 16),
-              label: '生成对账数据',
-            ),
+            if (PermissionUtil.hasPermission(
+                context, 'workorder.add_statement'))
+              PageActionButton.filled(
+                onPressed: () => _openCreateDialog(viewModel),
+                icon: const Icon(Icons.add, size: 16),
+                label: '新建对账单',
+              ),
+            if (PermissionUtil.hasPermission(
+                context, 'workorder.add_statement'))
+              PageActionButton.outlined(
+                onPressed: _openGenerateDialog,
+                icon: const Icon(Icons.auto_fix_high_outlined, size: 16),
+                label: '生成对账数据',
+              ),
             PageActionButton.outlined(
               onPressed: () => viewModel.loadStatements(resetPage: true),
               icon: const Icon(Icons.refresh, size: 16),
@@ -391,9 +408,11 @@ class _StatementListViewState extends State<_StatementListView> {
   }
 
   Widget _buildRowActions(StatementViewModel viewModel, Statement statement) {
+    final canChangeStatement =
+        PermissionUtil.hasPermission(context, 'workorder.change_statement');
     final actions = <RowAction>[];
     final status = statement.status ?? '';
-    if (status == 'draft' || status == 'sent') {
+    if (canChangeStatement && (status == 'draft' || status == 'sent')) {
       actions.add(RowAction(
         label: '确认',
         icon: Icons.verified_outlined,
@@ -442,6 +461,8 @@ class _StatementListViewState extends State<_StatementListView> {
 
   Widget _buildSummaryCard(
       BuildContext context, Statement statement, bool isMobile) {
+    final canChangeStatement =
+        PermissionUtil.hasPermission(context, 'workorder.change_statement');
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
@@ -458,7 +479,7 @@ class _StatementListViewState extends State<_StatementListView> {
 
     final actions = <RowAction>[];
     final statusCode = statement.status ?? '';
-    if (statusCode == 'draft' || statusCode == 'sent') {
+    if (canChangeStatement && (statusCode == 'draft' || statusCode == 'sent')) {
       actions.add(RowAction(
         label: '确认',
         icon: Icons.verified_outlined,

@@ -21,6 +21,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widg
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/file_link_util.dart';
+import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/finance_invoices/application/invoice_view_model.dart';
@@ -109,6 +110,10 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
         int.tryParse(uri.queryParameters['sales_order_id'] ?? '');
     final customerId = int.tryParse(uri.queryParameters['customer_id'] ?? '');
     if (salesOrderId != null && (createFlag == '1' || createFlag == 'true')) {
+      if (!PermissionUtil.hasPermission(context, 'workorder.add_invoice')) {
+        _prefillHandled = true;
+        return;
+      }
       _prefillSalesOrderId = salesOrderId;
       _prefillCustomerId = customerId;
       _pendingPrefill = true;
@@ -151,6 +156,10 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     int? prefillSalesOrderId,
     int? prefillCustomerId,
   }) async {
+    if (!PermissionUtil.hasPermission(context, 'workorder.add_invoice')) {
+      ToastUtil.showError('当前账号无权新建发票');
+      return;
+    }
     await _loadOptions();
     if (_customers.isEmpty) {
       ToastUtil.showError('请先配置客户信息');
@@ -735,11 +744,12 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                 count: pendingReceiptCount,
                 icon: Icons.verified_outlined,
               ),
-            PageActionButton.filled(
-              onPressed: () => _openCreateDialog(viewModel),
-              icon: const Icon(Icons.add, size: 16),
-              label: '新建发票',
-            ),
+            if (PermissionUtil.hasPermission(context, 'workorder.add_invoice'))
+              PageActionButton.filled(
+                onPressed: () => _openCreateDialog(viewModel),
+                icon: const Icon(Icons.add, size: 16),
+                label: '新建发票',
+              ),
             PageActionButton.outlined(
               onPressed: () => viewModel.loadInvoices(resetPage: true),
               icon: const Icon(Icons.refresh, size: 16),
@@ -759,13 +769,17 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
   }
 
   Widget _buildRowActions(InvoiceViewModel viewModel, Invoice invoice) {
+    final canChangeInvoice =
+        PermissionUtil.hasPermission(context, 'workorder.change_invoice');
     final actions = <RowAction>[];
     final status = invoice.status ?? '';
-    actions.add(RowAction(
-      label: _hasAttachment(invoice) ? '更新附件' : '上传附件',
-      icon: Icons.upload_file_outlined,
-      onPressed: () => _uploadAttachment(viewModel, invoice),
-    ));
+    if (canChangeInvoice) {
+      actions.add(RowAction(
+        label: _hasAttachment(invoice) ? '更新附件' : '上传附件',
+        icon: Icons.upload_file_outlined,
+        onPressed: () => _uploadAttachment(viewModel, invoice),
+      ));
+    }
     if (_hasAttachment(invoice)) {
       actions.add(RowAction(
         label: '附件',
@@ -787,14 +801,14 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
         onPressed: () => _openWorkOrder(invoice),
       ));
     }
-    if (status == 'draft') {
+    if (canChangeInvoice && status == 'draft') {
       actions.add(RowAction(
         label: '提交',
         icon: Icons.send_outlined,
         onPressed: () => _submitInvoice(viewModel, invoice),
       ));
     }
-    if (status == 'issued') {
+    if (canChangeInvoice && status == 'issued') {
       actions.add(RowAction(
         label: '确认收到',
         icon: Icons.verified_outlined,
@@ -834,6 +848,8 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
 
   Widget _buildSummaryCard(
       BuildContext context, Invoice invoice, bool isMobile) {
+    final canChangeInvoice =
+        PermissionUtil.hasPermission(context, 'workorder.change_invoice');
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
@@ -848,12 +864,14 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
 
     final actions = <RowAction>[];
     final statusCode = invoice.status ?? '';
-    actions.add(RowAction(
-      label: _hasAttachment(invoice) ? '更新附件' : '上传附件',
-      icon: Icons.upload_file_outlined,
-      onPressed: () =>
-          _uploadAttachment(context.read<InvoiceViewModel>(), invoice),
-    ));
+    if (canChangeInvoice) {
+      actions.add(RowAction(
+        label: _hasAttachment(invoice) ? '更新附件' : '上传附件',
+        icon: Icons.upload_file_outlined,
+        onPressed: () =>
+            _uploadAttachment(context.read<InvoiceViewModel>(), invoice),
+      ));
+    }
     if (_hasAttachment(invoice)) {
       actions.add(RowAction(
         label: '附件',
@@ -875,7 +893,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
         onPressed: () => _openWorkOrder(invoice),
       ));
     }
-    if (statusCode == 'draft') {
+    if (canChangeInvoice && statusCode == 'draft') {
       actions.add(RowAction(
         label: '提交',
         icon: Icons.send_outlined,
@@ -883,7 +901,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
             _submitInvoice(context.read<InvoiceViewModel>(), invoice),
       ));
     }
-    if (statusCode == 'issued') {
+    if (canChangeInvoice && statusCode == 'issued') {
       actions.add(RowAction(
         label: '确认收到',
         icon: Icons.verified_outlined,

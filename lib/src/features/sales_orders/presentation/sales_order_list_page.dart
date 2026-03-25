@@ -17,6 +17,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.
 import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/sales_orders/application/sales_order_view_model.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_action_service.dart';
@@ -332,6 +333,12 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     List<SalesOrder> orders,
     bool isMobile,
   ) {
+    final canChangeSalesOrder =
+        PermissionUtil.hasPermission(context, 'workorder.change_salesorder');
+    final canCreateWorkOrder =
+        PermissionUtil.hasPermission(context, 'workorder.add_workorder');
+    final canCreateDeliveryOrder =
+        PermissionUtil.hasPermission(context, 'workorder.add_deliveryorder');
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
     if (viewModel.loading && orders.isEmpty) {
       return const Center(child: CircularProgressIndicator());
@@ -351,7 +358,13 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     }
 
     if (!isMobile) {
-      return _buildDesktopTable(context, orders);
+      return _buildDesktopTable(
+        context,
+        orders,
+        canChangeSalesOrder: canChangeSalesOrder,
+        canCreateWorkOrder: canCreateWorkOrder,
+        canCreateDeliveryOrder: canCreateDeliveryOrder,
+      );
     }
 
     return ListView.separated(
@@ -362,13 +375,25 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         return _SalesOrderSummaryCard(
           order: order,
           isMobile: isMobile,
-          actions: _buildActionsForOrder(context, order),
+          actions: _buildActionsForOrder(
+            context,
+            order,
+            canChangeSalesOrder: canChangeSalesOrder,
+            canCreateWorkOrder: canCreateWorkOrder,
+            canCreateDeliveryOrder: canCreateDeliveryOrder,
+          ),
         );
       },
     );
   }
 
-  Widget _buildDesktopTable(BuildContext context, List<SalesOrder> orders) {
+  Widget _buildDesktopTable(
+    BuildContext context,
+    List<SalesOrder> orders, {
+    required bool canChangeSalesOrder,
+    required bool canCreateWorkOrder,
+    required bool canCreateDeliveryOrder,
+  }) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final textStyle = theme.textTheme.bodySmall;
@@ -411,7 +436,13 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
                     style: theme.textTheme.bodyMedium)),
                 DataCell(
                   RowActionGroup(
-                    actions: _buildActionsForOrder(context, order),
+                    actions: _buildActionsForOrder(
+                      context,
+                      order,
+                      canChangeSalesOrder: canChangeSalesOrder,
+                      canCreateWorkOrder: canCreateWorkOrder,
+                      canCreateDeliveryOrder: canCreateDeliveryOrder,
+                    ),
                     primaryCount: 2,
                   ),
                 ),
@@ -424,8 +455,11 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
 
   List<RowAction> _buildActionsForOrder(
     BuildContext context,
-    SalesOrder order,
-  ) {
+    SalesOrder order, {
+    required bool canChangeSalesOrder,
+    required bool canCreateWorkOrder,
+    required bool canCreateDeliveryOrder,
+  }) {
     final viewModel = context.read<SalesOrderViewModel>();
     final actions = <RowAction>[
       RowAction(
@@ -433,29 +467,30 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         icon: Icons.visibility_outlined,
         onPressed: () => context.go('/sales-orders/${order.id}'),
       ),
-      RowAction(
-        label: '编辑',
-        icon: Icons.edit_outlined,
-        onPressed: () => context.go('/sales-orders/${order.id}/edit'),
-      ),
+      if (canChangeSalesOrder)
+        RowAction(
+          label: '编辑',
+          icon: Icons.edit_outlined,
+          onPressed: () => context.go('/sales-orders/${order.id}/edit'),
+        ),
     ];
 
     final status = order.status ?? '';
-    if (status == 'draft') {
+    if (canChangeSalesOrder && status == 'draft') {
       actions.add(RowAction(
         label: '提交',
         icon: Icons.send_outlined,
         onPressed: () => _submitOrder(viewModel, order),
       ));
     }
-    if (status == 'rejected') {
+    if (canChangeSalesOrder && status == 'rejected') {
       actions.add(RowAction(
         label: '重新提交',
         icon: Icons.send_outlined,
         onPressed: () => _submitOrder(viewModel, order),
       ));
     }
-    if (status == 'submitted') {
+    if (canChangeSalesOrder && status == 'submitted') {
       actions.add(RowAction(
         label: '审核通过',
         icon: Icons.check_circle_outline,
@@ -468,14 +503,18 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         onPressed: () => _rejectOrder(viewModel, order),
       ));
     }
-    if (status == 'approved' || status == 'in_production') {
+    if (canChangeSalesOrder &&
+        (status == 'approved' || status == 'in_production')) {
       actions.add(RowAction(
         label: '完成订单',
         icon: Icons.task_alt_outlined,
         onPressed: () => _completeOrder(viewModel, order),
       ));
     }
-    if (status.isNotEmpty && status != 'completed' && status != 'cancelled') {
+    if (canChangeSalesOrder &&
+        status.isNotEmpty &&
+        status != 'completed' &&
+        status != 'cancelled') {
       actions.add(RowAction(
         label: '取消订单',
         icon: Icons.block_outlined,
@@ -483,19 +522,21 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         onPressed: () => _cancelOrder(viewModel, order),
       ));
     }
-    if (status == 'completed') {
+    if (canCreateDeliveryOrder && status == 'completed') {
       actions.add(RowAction(
         label: '生成送货单',
         icon: Icons.local_shipping_outlined,
         onPressed: () => _goToCreateDeliveryOrder(order),
       ));
     }
-    actions.add(RowAction(
-      label: '更新付款',
-      icon: Icons.payments_outlined,
-      onPressed: () => _updatePayment(viewModel, order),
-    ));
-    if (status == 'approved') {
+    if (canChangeSalesOrder) {
+      actions.add(RowAction(
+        label: '更新付款',
+        icon: Icons.payments_outlined,
+        onPressed: () => _updatePayment(viewModel, order),
+      ));
+    }
+    if (canCreateWorkOrder && status == 'approved') {
       actions.add(RowAction(
         label: '生成施工单',
         icon: Icons.assignment_outlined,
@@ -530,6 +571,8 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     SalesOrderViewModel viewModel,
     bool isMobile,
   ) {
+    final canCreateSalesOrder =
+        PermissionUtil.hasPermission(context, 'workorder.add_salesorder');
     return PageHeaderBar(
       breadcrumb: null,
       useSurface: false,
@@ -561,11 +604,12 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
               icon: const Icon(Icons.refresh, size: 16),
               label: _refreshButtonText,
             ),
-            PageActionButton.filled(
-              onPressed: () => context.go('/sales-orders/create'),
-              icon: const Icon(Icons.add),
-              label: _createButtonText,
-            ),
+            if (canCreateSalesOrder)
+              PageActionButton.filled(
+                onPressed: () => context.go('/sales-orders/create'),
+                icon: const Icon(Icons.add),
+                label: _createButtonText,
+              ),
           ];
 
           return ListToolbar(

@@ -6,6 +6,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/detail_secti
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
+import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/artworks/domain/artwork.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
@@ -167,6 +168,13 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
   }
 
   Future<void> _handleSubmit() async {
+    final requiredPermission = widget.mode == WorkOrderFormMode.create
+        ? 'workorder.add_workorder'
+        : 'workorder.change_workorder';
+    if (!PermissionUtil.hasPermission(context, requiredPermission)) {
+      ToastUtil.showError('当前账号无权执行该操作');
+      return;
+    }
     final form = _formKey.currentState;
     if (form == null || !form.validate()) {
       return;
@@ -235,6 +243,12 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    final canSubmit = PermissionUtil.hasPermission(
+      context,
+      widget.mode == WorkOrderFormMode.create
+          ? 'workorder.add_workorder'
+          : 'workorder.change_workorder',
+    );
     return ListPageScaffold(
       spacing: _spacing,
       header: PageHeaderBar(
@@ -252,7 +266,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
               label: '返回',
             ),
             PageActionButton.filled(
-              onPressed: _submitting ? null : _handleSubmit,
+              onPressed: _submitting || !canSubmit ? null : _handleSubmit,
               icon: const Icon(Icons.save, size: 16),
               label: _submitting ? '保存中' : '保存',
             ),

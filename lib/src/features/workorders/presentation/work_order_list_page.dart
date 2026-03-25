@@ -19,6 +19,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widg
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/file_download.dart';
+import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
@@ -261,6 +262,10 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     List<WorkOrder> workOrders,
     bool isMobile,
   ) {
+    final canChangeWorkOrder =
+        PermissionUtil.hasPermission(context, 'workorder.change_workorder');
+    final canDeleteWorkOrder =
+        PermissionUtil.hasPermission(context, 'workorder.delete_workorder');
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
 
     if (viewModel.loading && workOrders.isEmpty) {
@@ -281,7 +286,13 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     }
 
     if (!isMobile) {
-      return _buildDesktopTable(context, viewModel, workOrders);
+      return _buildDesktopTable(
+        context,
+        viewModel,
+        workOrders,
+        canChangeWorkOrder: canChangeWorkOrder,
+        canDeleteWorkOrder: canDeleteWorkOrder,
+      );
     }
 
     return ListView.separated(
@@ -289,7 +300,12 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
       separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
       itemBuilder: (context, index) {
         final workOrder = workOrders[index];
-        return _buildSummaryCard(context, workOrder);
+        return _buildSummaryCard(
+          context,
+          workOrder,
+          canChangeWorkOrder: canChangeWorkOrder,
+          canDeleteWorkOrder: canDeleteWorkOrder,
+        );
       },
     );
   }
@@ -297,8 +313,10 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
   Widget _buildDesktopTable(
     BuildContext context,
     WorkOrderViewModel viewModel,
-    List<WorkOrder> workOrders,
-  ) {
+    List<WorkOrder> workOrders, {
+    required bool canChangeWorkOrder,
+    required bool canDeleteWorkOrder,
+  }) {
     final theme = Theme.of(context);
     final textStyle = theme.textTheme.bodySmall;
     return AppDataTable(
@@ -372,17 +390,19 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
                       onPressed: () =>
                           context.go('/workorders/${workOrder.id}'),
                     ),
-                    RowAction(
-                      label: '编辑',
-                      onPressed: () =>
-                          context.go('/workorders/${workOrder.id}/edit'),
-                    ),
-                    RowAction(
-                      label: '删除',
-                      onPressed: () =>
-                          _confirmDelete(context, viewModel, workOrder),
-                      destructive: true,
-                    ),
+                    if (canChangeWorkOrder)
+                      RowAction(
+                        label: '编辑',
+                        onPressed: () =>
+                            context.go('/workorders/${workOrder.id}/edit'),
+                      ),
+                    if (canDeleteWorkOrder)
+                      RowAction(
+                        label: '删除',
+                        onPressed: () =>
+                            _confirmDelete(context, viewModel, workOrder),
+                        destructive: true,
+                      ),
                   ],
                 )),
               ],
@@ -392,7 +412,12 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     );
   }
 
-  Widget _buildSummaryCard(BuildContext context, WorkOrder workOrder) {
+  Widget _buildSummaryCard(
+    BuildContext context,
+    WorkOrder workOrder, {
+    required bool canChangeWorkOrder,
+    required bool canDeleteWorkOrder,
+  }) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final viewModel = context.read<WorkOrderViewModel>();
@@ -507,19 +532,23 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
                 icon: const Icon(Icons.open_in_new, size: 16),
                 label: const Text('查看'),
               ),
-              OutlinedButton.icon(
-                onPressed: () => context.go('/workorders/${workOrder.id}/edit'),
-                icon: const Icon(Icons.edit, size: 16),
-                label: const Text('编辑'),
-              ),
-              OutlinedButton.icon(
-                onPressed: () => _confirmDelete(context, viewModel, workOrder),
-                icon: const Icon(Icons.delete_outline, size: 16),
-                label: const Text('删除'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: theme.colorScheme.error,
+              if (canChangeWorkOrder)
+                OutlinedButton.icon(
+                  onPressed: () =>
+                      context.go('/workorders/${workOrder.id}/edit'),
+                  icon: const Icon(Icons.edit, size: 16),
+                  label: const Text('编辑'),
                 ),
-              ),
+              if (canDeleteWorkOrder)
+                OutlinedButton.icon(
+                  onPressed: () =>
+                      _confirmDelete(context, viewModel, workOrder),
+                  icon: const Icon(Icons.delete_outline, size: 16),
+                  label: const Text('删除'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: theme.colorScheme.error,
+                  ),
+                ),
             ],
           ),
         ],
@@ -532,6 +561,8 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     WorkOrderViewModel viewModel,
     bool isMobile,
   ) {
+    final canCreateWorkOrder =
+        PermissionUtil.hasPermission(context, 'workorder.add_workorder');
     final statusItems = const [
       DropdownMenuItem(value: 'pending', child: Text('待开始')),
       DropdownMenuItem(value: 'in_progress', child: Text('进行中')),
@@ -698,11 +729,12 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
               icon: const Icon(Icons.refresh, size: 16),
               label: _refreshButtonText,
             ),
-            PageActionButton.filled(
-              onPressed: () => context.go('/workorders/create'),
-              icon: const Icon(Icons.add),
-              label: _createButtonText,
-            ),
+            if (canCreateWorkOrder)
+              PageActionButton.filled(
+                onPressed: () => context.go('/workorders/create'),
+                icon: const Icon(Icons.add),
+                label: _createButtonText,
+              ),
             PageActionButton.outlined(
               onPressed: openFilterDrawer,
               icon: const Icon(Icons.filter_alt_outlined, size: 16),

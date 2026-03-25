@@ -18,6 +18,7 @@ import 'package:work_order_app/src/core/presentation/providers/feature_entry.dar
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
 import 'package:work_order_app/src/features/customer/data/customer_repository_impl.dart';
@@ -250,6 +251,10 @@ class _CustomerListViewState extends State<_CustomerListView> {
     CustomerViewModel viewModel,
     List<Customer> customers,
   ) {
+    final canChangeCustomer =
+        PermissionUtil.hasPermission(context, 'workorder.change_customer');
+    final canDeleteCustomer =
+        PermissionUtil.hasPermission(context, 'workorder.delete_customer');
     final theme = Theme.of(context);
     final textStyle = theme.textTheme.bodySmall;
     return AppDataTable(
@@ -298,17 +303,19 @@ class _CustomerListViewState extends State<_CustomerListView> {
                 )),
                 DataCell(RowActionGroup(
                   actions: [
-                    RowAction(
-                      label: '编辑',
-                      onPressed: () =>
-                          _openEditPage(context, viewModel, customer),
-                    ),
-                    RowAction(
-                      label: '删除',
-                      onPressed: () =>
-                          _confirmDelete(context, viewModel, customer),
-                      destructive: true,
-                    ),
+                    if (canChangeCustomer)
+                      RowAction(
+                        label: '编辑',
+                        onPressed: () =>
+                            _openEditPage(context, viewModel, customer),
+                      ),
+                    if (canDeleteCustomer)
+                      RowAction(
+                        label: '删除',
+                        onPressed: () =>
+                            _confirmDelete(context, viewModel, customer),
+                        destructive: true,
+                      ),
                   ],
                 )),
               ],
@@ -324,6 +331,10 @@ class _CustomerListViewState extends State<_CustomerListView> {
     Customer customer,
     bool isMobile,
   ) {
+    final canChangeCustomer =
+        PermissionUtil.hasPermission(context, 'workorder.change_customer');
+    final canDeleteCustomer =
+        PermissionUtil.hasPermission(context, 'workorder.delete_customer');
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
@@ -410,19 +421,21 @@ class _CustomerListViewState extends State<_CustomerListView> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              OutlinedButton.icon(
-                onPressed: () => _openEditPage(context, viewModel, customer),
-                icon: const Icon(Icons.edit, size: 16),
-                label: const Text('编辑'),
-              ),
-              OutlinedButton.icon(
-                onPressed: () => _confirmDelete(context, viewModel, customer),
-                icon: const Icon(Icons.delete_outline, size: 16),
-                label: const Text('删除'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: theme.colorScheme.error,
+              if (canChangeCustomer)
+                OutlinedButton.icon(
+                  onPressed: () => _openEditPage(context, viewModel, customer),
+                  icon: const Icon(Icons.edit, size: 16),
+                  label: const Text('编辑'),
                 ),
-              ),
+              if (canDeleteCustomer)
+                OutlinedButton.icon(
+                  onPressed: () => _confirmDelete(context, viewModel, customer),
+                  icon: const Icon(Icons.delete_outline, size: 16),
+                  label: const Text('删除'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: theme.colorScheme.error,
+                  ),
+                ),
             ],
           ),
         ],
@@ -435,6 +448,8 @@ class _CustomerListViewState extends State<_CustomerListView> {
     CustomerViewModel viewModel,
     bool isMobile,
   ) {
+    final canCreateCustomer =
+        PermissionUtil.hasPermission(context, 'workorder.add_customer');
     return PageHeaderBar(
       breadcrumb: null,
       useSurface: false,
@@ -461,11 +476,12 @@ class _CustomerListViewState extends State<_CustomerListView> {
               icon: const Icon(Icons.refresh, size: 16),
               label: _refreshButtonText,
             ),
-            PageActionButton.filled(
-              onPressed: () => _openEditPage(context, viewModel, null),
-              icon: const Icon(Icons.add),
-              label: _createButtonText,
-            ),
+            if (canCreateCustomer)
+              PageActionButton.filled(
+                onPressed: () => _openEditPage(context, viewModel, null),
+                icon: const Icon(Icons.add),
+                label: _createButtonText,
+              ),
           ];
 
           return ListToolbar(

@@ -17,6 +17,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/finance_payments/application/payment_view_model.dart';
@@ -133,6 +134,10 @@ class _PaymentListViewState extends State<_PaymentListView> {
   }
 
   Future<void> _openCreateDialog(PaymentViewModel viewModel) async {
+    if (!PermissionUtil.hasPermission(context, 'workorder.add_payment')) {
+      ToastUtil.showError('当前账号无权新建收款');
+      return;
+    }
     await _loadOptions();
     if (_customers.isEmpty) {
       ToastUtil.showError('请先配置客户信息');
@@ -328,11 +333,12 @@ class _PaymentListViewState extends State<_PaymentListView> {
                 count: missingInvoiceLinkCount,
                 icon: Icons.receipt_long_outlined,
               ),
-            PageActionButton.filled(
-              onPressed: () => _openCreateDialog(viewModel),
-              icon: const Icon(Icons.add, size: 16),
-              label: '新建收款',
-            ),
+            if (PermissionUtil.hasPermission(context, 'workorder.add_payment'))
+              PageActionButton.filled(
+                onPressed: () => _openCreateDialog(viewModel),
+                icon: const Icon(Icons.add, size: 16),
+                label: '新建收款',
+              ),
             PageActionButton.outlined(
               onPressed: () => viewModel.loadPayments(resetPage: true),
               icon: const Icon(Icons.refresh, size: 16),

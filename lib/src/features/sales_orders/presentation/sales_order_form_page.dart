@@ -8,6 +8,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
 import 'package:work_order_app/src/features/customer/data/customer_dto.dart';
@@ -326,6 +327,13 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
   }
 
   Future<void> _handleSubmit() async {
+    final requiredPermission = widget.mode == SalesOrderFormMode.create
+        ? 'workorder.add_salesorder'
+        : 'workorder.change_salesorder';
+    if (!PermissionUtil.hasPermission(context, requiredPermission)) {
+      ToastUtil.showError('当前账号无权执行该操作');
+      return;
+    }
     final form = _formKey.currentState;
     if (form == null || !form.validate()) return;
     if (_customerId == null) {
@@ -545,6 +553,12 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    final canSubmit = PermissionUtil.hasPermission(
+      context,
+      widget.mode == SalesOrderFormMode.create
+          ? 'workorder.add_salesorder'
+          : 'workorder.change_salesorder',
+    );
     final isDesktop = BreakpointsUtil.isDesktop(context);
     final isTablet = BreakpointsUtil.isTablet(context);
     final fieldWidth = isDesktop ? 260.0 : (isTablet ? 220.0 : double.infinity);
@@ -565,7 +579,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               label: '返回',
             ),
             PageActionButton.filled(
-              onPressed: _submitting ? null : _handleSubmit,
+              onPressed: _submitting || !canSubmit ? null : _handleSubmit,
               icon: const Icon(Icons.save, size: 16),
               label: _submitting ? '保存中' : '保存',
             ),

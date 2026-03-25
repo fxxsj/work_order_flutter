@@ -6,6 +6,7 @@ import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/edit_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/application/customer_view_model.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
@@ -87,6 +88,13 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
   }
 
   Future<void> _handleSubmit(CustomerViewModel viewModel) async {
+    final requiredPermission = widget.customer == null
+        ? 'workorder.add_customer'
+        : 'workorder.change_customer';
+    if (!PermissionUtil.hasPermission(context, requiredPermission)) {
+      ToastUtil.showError('当前账号无权执行该操作');
+      return;
+    }
     final form = _formKey.currentState;
     if (form == null || !form.validate()) {
       return;
@@ -172,6 +180,12 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
 
   @override
   Widget build(BuildContext context) {
+    final canSubmit = PermissionUtil.hasPermission(
+      context,
+      widget.customer == null
+          ? 'workorder.add_customer'
+          : 'workorder.change_customer',
+    );
     final viewModel = context.watch<CustomerViewModel>();
     final salespersons = viewModel.salespersons;
     final salespersonsError = viewModel.salespersonsError;
@@ -207,8 +221,9 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                   label: _cancelText,
                 ),
                 PageActionButton.filled(
-                  onPressed:
-                      _submitting ? null : () => _handleSubmit(viewModel),
+                  onPressed: _submitting || !canSubmit
+                      ? null
+                      : () => _handleSubmit(viewModel),
                   icon: const Icon(Icons.save, size: 16),
                   label: _submitting
                       ? '保存中'

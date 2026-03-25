@@ -42,14 +42,14 @@ class WorkOrderDetailOverviewSection extends StatelessWidget {
   final List<DropdownMenuItem<String>> statusOptions;
   final String? statusSelection;
   final bool actionLoading;
-  final VoidCallback onUploadDesignFile;
+  final VoidCallback? onUploadDesignFile;
   final bool hasMultiApproval;
-  final ValueChanged<String?> onStatusChanged;
-  final VoidCallback onUpdateStatus;
-  final VoidCallback onApprove;
-  final VoidCallback onReject;
-  final VoidCallback onResubmit;
-  final VoidCallback onRequestReapproval;
+  final ValueChanged<String?>? onStatusChanged;
+  final VoidCallback? onUpdateStatus;
+  final VoidCallback? onApprove;
+  final VoidCallback? onReject;
+  final VoidCallback? onResubmit;
+  final VoidCallback? onRequestReapproval;
   final Widget Function(List<WorkOrderInfoItem> items) buildInfoGrid;
   final Widget Function(String title, Widget child) buildSection;
   final Widget Function(String title, List<String> items) buildResourceGroup;
@@ -132,12 +132,12 @@ class WorkOrderActionPanel extends StatelessWidget {
   final String? statusSelection;
   final bool actionLoading;
   final bool hasMultiApproval;
-  final ValueChanged<String?> onStatusChanged;
-  final VoidCallback onUpdateStatus;
-  final VoidCallback onApprove;
-  final VoidCallback onReject;
-  final VoidCallback onResubmit;
-  final VoidCallback onRequestReapproval;
+  final ValueChanged<String?>? onStatusChanged;
+  final VoidCallback? onUpdateStatus;
+  final VoidCallback? onApprove;
+  final VoidCallback? onReject;
+  final VoidCallback? onResubmit;
+  final VoidCallback? onRequestReapproval;
 
   @override
   Widget build(BuildContext context) {
@@ -151,7 +151,10 @@ class WorkOrderActionPanel extends StatelessWidget {
         final useColumnButtons = constraints.maxWidth < 320;
         final approvalActions = <Widget>[];
 
-        if (!hasMultiApproval && detail.approvalStatus == 'pending') {
+        if (!hasMultiApproval &&
+            detail.approvalStatus == 'pending' &&
+            onApprove != null &&
+            onReject != null) {
           if (useColumnButtons) {
             approvalActions.addAll([
               FilledButton(
@@ -186,7 +189,9 @@ class WorkOrderActionPanel extends StatelessWidget {
             );
           }
         }
-        if (!hasMultiApproval && detail.approvalStatus == 'rejected') {
+        if (!hasMultiApproval &&
+            detail.approvalStatus == 'rejected' &&
+            onResubmit != null) {
           approvalActions.add(
             FilledButton(
               onPressed: actionLoading ? null : onResubmit,
@@ -194,7 +199,9 @@ class WorkOrderActionPanel extends StatelessWidget {
             ),
           );
         }
-        if (!hasMultiApproval && detail.approvalStatus == 'approved') {
+        if (!hasMultiApproval &&
+            detail.approvalStatus == 'approved' &&
+            onRequestReapproval != null) {
           approvalActions.add(
             OutlinedButton(
               onPressed: actionLoading ? null : onRequestReapproval,
@@ -211,11 +218,15 @@ class WorkOrderActionPanel extends StatelessWidget {
               isExpanded: true,
               decoration: const InputDecoration(labelText: '状态'),
               items: statusOptions,
-              onChanged: actionLoading ? null : onStatusChanged,
+              onChanged: actionLoading || onStatusChanged == null
+                  ? null
+                  : onStatusChanged,
             ),
             SizedBox(height: spacing),
             FilledButton(
-              onPressed: actionLoading ? null : onUpdateStatus,
+              onPressed: actionLoading || onUpdateStatus == null
+                  ? null
+                  : onUpdateStatus,
               child: const Text('更新状态'),
             ),
             if (approvalActions.isNotEmpty) ...[
@@ -530,7 +541,7 @@ class _SummaryContent extends StatelessWidget {
   final double sectionSpacing;
   final String emptyText;
   final bool actionLoading;
-  final VoidCallback onUploadDesignFile;
+  final VoidCallback? onUploadDesignFile;
   final Widget Function(List<WorkOrderInfoItem> items) buildInfoGrid;
   final Widget Function(String title, List<String> items) buildResourceGroup;
 
@@ -634,15 +645,16 @@ class _SummaryContent extends StatelessWidget {
                   label: '查看设计文件',
                   errorPrefix: '打开设计文件失败',
                 ),
-                OutlinedButton.icon(
-                  onPressed: actionLoading ? null : onUploadDesignFile,
-                  icon: const Icon(Icons.upload_file_outlined, size: 18),
-                  label: const Text('重新上传'),
-                ),
+                if (onUploadDesignFile != null)
+                  OutlinedButton.icon(
+                    onPressed: actionLoading ? null : onUploadDesignFile,
+                    icon: const Icon(Icons.upload_file_outlined, size: 18),
+                    label: const Text('重新上传'),
+                  ),
               ],
             ),
           ),
-        ] else ...[
+        ] else if (onUploadDesignFile != null) ...[
           SizedBox(height: sectionSpacing),
           Align(
             alignment: Alignment.centerLeft,

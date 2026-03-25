@@ -10,6 +10,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
+import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/features/sales_orders/application/sales_order_view_model.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_api_service.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_repository_impl.dart';
@@ -517,20 +518,26 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
 
   List<SalesOrderActionItem> _buildActions(SalesOrderDetail? detail) {
     final status = detail?.status ?? '';
+    final canChangeSalesOrder =
+        PermissionUtil.hasPermission(context, 'workorder.change_salesorder');
+    final canCreateWorkOrder =
+        PermissionUtil.hasPermission(context, 'workorder.add_workorder');
+    final canCreateDeliveryOrder =
+        PermissionUtil.hasPermission(context, 'workorder.add_deliveryorder');
     final actions = <SalesOrderActionItem>[
-      if (status == 'draft')
+      if (canChangeSalesOrder && status == 'draft')
         SalesOrderActionItem(
           label: '提交',
           icon: Icons.send_outlined,
           onTap: _showSubmitDialog,
         ),
-      if (status == 'rejected')
+      if (canChangeSalesOrder && status == 'rejected')
         SalesOrderActionItem(
           label: '重新提交',
           icon: Icons.send_outlined,
           onTap: () => _showSubmitDialog(resubmitting: true),
         ),
-      if (status == 'submitted') ...[
+      if (canChangeSalesOrder && status == 'submitted') ...[
         SalesOrderActionItem(
           label: '审核通过',
           icon: Icons.check_circle_outline,
@@ -542,31 +549,36 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
           onTap: _showRejectDialog,
         ),
       ],
-      if (status == 'approved' || status == 'in_production')
+      if (canChangeSalesOrder &&
+          (status == 'approved' || status == 'in_production'))
         SalesOrderActionItem(
           label: '完成订单',
           icon: Icons.task_alt_outlined,
           onTap: _showCompleteDialog,
         ),
-      if (status.isNotEmpty && status != 'completed' && status != 'cancelled')
+      if (canChangeSalesOrder &&
+          status.isNotEmpty &&
+          status != 'completed' &&
+          status != 'cancelled')
         SalesOrderActionItem(
           label: '取消订单',
           icon: Icons.block_outlined,
           onTap: _showCancelDialog,
           destructive: true,
         ),
-      if (status == 'completed')
+      if (canCreateDeliveryOrder && status == 'completed')
         SalesOrderActionItem(
           label: '生成送货单',
           icon: Icons.local_shipping_outlined,
           onTap: _goToCreateDeliveryOrder,
         ),
-      SalesOrderActionItem(
-        label: '更新付款',
-        icon: Icons.payments_outlined,
-        onTap: _showUpdatePaymentDialog,
-      ),
-      if (status == 'approved')
+      if (canChangeSalesOrder)
+        SalesOrderActionItem(
+          label: '更新付款',
+          icon: Icons.payments_outlined,
+          onTap: _showUpdatePaymentDialog,
+        ),
+      if (canCreateWorkOrder && status == 'approved')
         SalesOrderActionItem(
           label: '生成施工单',
           icon: Icons.assignment_outlined,
@@ -583,6 +595,8 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
         ? '客户订单 ${detail!.orderNumber}'
         : '客户订单 #${widget.orderId}';
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
+    final canChangeSalesOrder =
+        PermissionUtil.hasPermission(context, 'workorder.change_salesorder');
 
     return ListPageScaffold(
       spacing: sectionSpacing,
@@ -601,8 +615,9 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
               label: '返回',
             ),
             PageActionButton.filled(
-              onPressed: () =>
-                  context.go('/sales-orders/${widget.orderId}/edit'),
+              onPressed: canChangeSalesOrder
+                  ? () => context.go('/sales-orders/${widget.orderId}/edit')
+                  : null,
               icon: const Icon(Icons.edit, size: 16),
               label: '编辑',
             ),
@@ -654,15 +669,17 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
                             comment: detail.approvalComment,
                             nextStep: '根据退回原因补充订单信息后，直接重新提交审核。',
                             primaryAction: FilledButton.icon(
-                              onPressed: _actionLoading
-                                  ? null
-                                  : () => _showSubmitDialog(resubmitting: true),
+                              onPressed: canChangeSalesOrder && !_actionLoading
+                                  ? () => _showSubmitDialog(resubmitting: true)
+                                  : null,
                               icon: const Icon(Icons.send_outlined, size: 18),
                               label: const Text('重新提交'),
                             ),
                             secondaryAction: OutlinedButton.icon(
-                              onPressed: () => context
-                                  .go('/sales-orders/${widget.orderId}/edit'),
+                              onPressed: canChangeSalesOrder
+                                  ? () => context.go(
+                                      '/sales-orders/${widget.orderId}/edit')
+                                  : null,
                               icon: const Icon(Icons.edit_outlined, size: 18),
                               label: const Text('先去修改'),
                             ),
