@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
@@ -12,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
@@ -67,7 +69,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
   static const double _controlHeight = PageActionStyle.height;
   static const String _emptyCellText = '-';
 
-  static const String _searchHintText = '搜索产品名称/编码';
+  static const String _searchHintText = '搜索产品名称/编码/客户/施工单';
   static const String _refreshButtonText = '刷新';
   static const String _emptyText = '暂无库存数据';
   static const String _errorFallbackText = '加载失败';
@@ -350,11 +352,13 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     return AppDataTable(
       columns: const [
         DataColumn(label: Text('产品')),
+        DataColumn(label: Text('来源')),
         DataColumn(label: Text('批次')),
         DataColumn(label: Text('状态')),
         DataColumn(label: Text('库存')),
         DataColumn(label: Text('预留')),
         DataColumn(label: Text('可用')),
+        DataColumn(label: Text('待办')),
         DataColumn(label: Text('库位')),
         DataColumn(label: Text('到期日')),
         DataColumn(label: Text('库存价值')),
@@ -368,6 +372,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
                   _displayText(stock.productName),
                   style: theme.textTheme.bodyMedium,
                 )),
+                DataCell(Text(_sourceSummary(stock), style: textStyle)),
                 DataCell(Text(_displayText(stock.batchNo), style: textStyle)),
                 DataCell(Text(
                   _displayText(stock.statusDisplay ?? stock.status),
@@ -378,12 +383,19 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
                     style: textStyle)),
                 DataCell(Text(_formatAmount(stock.availableQuantity),
                     style: textStyle)),
+                DataCell(Text(_followUpText(stock), style: textStyle)),
                 DataCell(Text(_displayText(stock.location), style: textStyle)),
                 DataCell(Text(_formatDate(stock.expiryDate), style: textStyle)),
                 DataCell(Text(_formatAmount(stock.totalValue),
                     style: theme.textTheme.bodyMedium)),
                 DataCell(RowActionGroup(
                   actions: [
+                    if ((stock.customerName ?? '').trim().isNotEmpty)
+                      RowAction(
+                        label: '去发货',
+                        icon: Icons.local_shipping_outlined,
+                        onPressed: () => _openDeliveryList(stock.customerName!),
+                      ),
                     RowAction(
                       label: '查看',
                       onPressed: () => _openDetailDialog(stock),
@@ -483,6 +495,12 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
       actions: LayoutBuilder(
         builder: (context, constraints) {
           final activeFilters = _activeFilterCount(viewModel);
+          final reservedCount = viewModel.stocks
+              .where((stock) => (stock.status ?? '') == 'reserved')
+              .length;
+          final qualityCount = viewModel.stocks
+              .where((stock) => (stock.status ?? '') == 'quality_check')
+              .length;
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -497,6 +515,18 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
           );
 
           final actions = <Widget>[
+            if (reservedCount > 0)
+              StatusHintChip(
+                label: '待发货库存',
+                count: reservedCount,
+                icon: Icons.local_shipping_outlined,
+              ),
+            if (qualityCount > 0)
+              StatusHintChip(
+                label: '待质检库存',
+                count: qualityCount,
+                icon: Icons.fact_check_outlined,
+              ),
             PageActionButton.outlined(
               onPressed: () => viewModel.loadStocks(resetPage: true),
               icon: const Icon(Icons.refresh, size: 16),
@@ -615,6 +645,41 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     return '$year-$month-$day';
   }
 
+  String _sourceSummary(ProductStock stock) {
+    final customer = (stock.customerName ?? '').trim();
+    final workOrder = (stock.workOrderNumber ?? '').trim();
+    if (customer.isNotEmpty && workOrder.isNotEmpty) {
+      return '$customer · $workOrder';
+    }
+    if (customer.isNotEmpty) return customer;
+    if (workOrder.isNotEmpty) return workOrder;
+    final productCode = (stock.productCode ?? '').trim();
+    return productCode.isEmpty ? _emptyCellText : productCode;
+  }
+
+  String _followUpText(ProductStock stock) {
+    switch (stock.status ?? '') {
+      case 'quality_check':
+        return '待完成质检';
+      case 'reserved':
+        return '待安排发货';
+      case 'in_stock':
+        return '可备货/发货';
+      case 'defective':
+        return '待处置次品';
+      default:
+        return _emptyCellText;
+    }
+  }
+
+  void _openDeliveryList(String keyword) {
+    final uri = Uri(
+      path: '/inventory/delivery',
+      queryParameters: {'search': keyword},
+    );
+    context.go(uri.toString());
+  }
+
   Widget _buildSummaryCard(
     BuildContext context,
     ProductStockViewModel viewModel,
@@ -626,6 +691,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
     final productName = _displayText(stock.productName);
     final productCode = _displayText(stock.productCode);
+    final customer = _displayText(stock.customerName);
     final workOrder = _displayText(stock.workOrderNumber);
     final quantity = _formatAmount(stock.quantity);
     final reserved = _formatAmount(stock.reservedQuantity);
@@ -652,7 +718,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
                   ),
                   SizedBox(height: sectionSpacing),
                   Text(
-                    productCode,
+                    _sourceSummary(stock),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colors?.subtleText ?? theme.hintColor,
                     ),
@@ -664,6 +730,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
                     children: [
                       _SummaryChip(label: '可用', value: available),
                       _SummaryChip(label: '状态', value: status),
+                      _SummaryChip(label: '待办', value: _followUpText(stock)),
                     ],
                   ),
                 ],
@@ -689,12 +756,14 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
             isMobile: isMobile,
             children: [
               _SummaryField(label: '产品编码', value: productCode),
+              _SummaryField(label: '客户', value: customer),
               _SummaryField(label: '施工单', value: workOrder),
               _SummaryField(label: '库存', value: quantity),
               _SummaryField(label: '预留', value: reserved),
               _SummaryField(label: '可用', value: available),
               _SummaryField(label: '库存价值', value: totalValue),
               _SummaryField(label: '状态', value: status),
+              _SummaryField(label: '下一步', value: _followUpText(stock)),
               _SummaryField(label: '到期日', value: expiryDate),
             ],
           ),
@@ -703,6 +772,12 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
             spacing: 8,
             runSpacing: 8,
             children: [
+              if ((stock.customerName ?? '').trim().isNotEmpty)
+                OutlinedButton.icon(
+                  onPressed: () => _openDeliveryList(stock.customerName!),
+                  icon: const Icon(Icons.local_shipping_outlined, size: 16),
+                  label: const Text('去发货'),
+                ),
               OutlinedButton.icon(
                 onPressed: () => _openDetailDialog(stock),
                 icon: const Icon(Icons.visibility_outlined, size: 16),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/models/generic_record.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
@@ -6,6 +7,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/generic_reso
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_detail.dart';
@@ -21,25 +23,41 @@ class StockOutListEntry extends StatelessWidget {
         id: 'stock_outs',
         title: '出库单',
         endpoint: '/stock-outs/',
-        searchHintText: '搜索出库单号/发货单号',
+        searchHintText: '搜索出库单号/发货单号/客户',
         emptyText: '暂无出库单',
         emptyIcon: Icons.exit_to_app_outlined,
         columns: const [
           GenericColumn(label: '出库单号', value: _orderNumber),
+          GenericColumn(label: '客户', value: _customerName),
           GenericColumn(label: '出库类型', value: _outType),
           GenericColumn(label: '发货单号', value: _deliveryOrderNumber),
           GenericColumn(label: '状态', value: _status),
+          GenericColumn(label: '下一步', value: _followUpText),
           GenericColumn(label: '操作员', value: _operator),
           GenericColumn(label: '创建时间', value: _createdAt),
         ],
         summaryFields: const [
+          GenericSummaryField(label: '客户', value: _customerName),
           GenericSummaryField(label: '出库类型', value: _outType),
           GenericSummaryField(label: '发货单号', value: _deliveryOrderNumber),
           GenericSummaryField(label: '状态', value: _status),
+          GenericSummaryField(label: '下一步', value: _followUpText),
           GenericSummaryField(label: '操作员', value: _operator),
         ],
-        titleBuilder: _orderNumber,
+        titleBuilder: _title,
         headerActionsBuilder: (context, viewModel) => [
+          if (_submittedCount(viewModel) > 0)
+            StatusHintChip(
+              label: '待审核出库',
+              count: _submittedCount(viewModel),
+              icon: Icons.fact_check_outlined,
+            ),
+          if (_draftCount(viewModel) > 0)
+            StatusHintChip(
+              label: '待处理出库',
+              count: _draftCount(viewModel),
+              icon: Icons.outbox_outlined,
+            ),
           PageActionButton.filled(
             onPressed: () => _openStockOutForm(context),
             icon: const Icon(Icons.add),
@@ -64,6 +82,14 @@ class StockOutListEntry extends StatelessWidget {
               onPressed: () =>
                   _openDeliveryOrderDialog(context, deliveryOrderId.toInt()),
             ));
+            actions.add(RowAction(
+              label: '发货模块',
+              icon: Icons.open_in_new_outlined,
+              onPressed: () => _openDeliveryList(
+                context,
+                record.getString('customer_name'),
+              ),
+            ));
           }
           return actions;
         },
@@ -73,6 +99,17 @@ class StockOutListEntry extends StatelessWidget {
 
   static String _orderNumber(GenericRecord record) {
     return GenericValueFormatter.text(record.getString('order_number'));
+  }
+
+  static String _title(GenericRecord record) {
+    final order = _orderNumber(record);
+    final customer = _customerName(record);
+    if (customer == GenericValueFormatter.empty) return order;
+    return '$order · $customer';
+  }
+
+  static String _customerName(GenericRecord record) {
+    return GenericValueFormatter.text(record.getString('customer_name'));
   }
 
   static String _outType(GenericRecord record) {
@@ -88,12 +125,45 @@ class StockOutListEntry extends StatelessWidget {
     return GenericValueFormatter.text(record.getString('status_display'));
   }
 
+  static String _followUpText(GenericRecord record) {
+    final status = record.getString('status') ?? '';
+    final outType = record.getString('out_type') ?? '';
+    if (status == 'draft') return '待提交/审核';
+    if (status == 'submitted') return '待审核出库';
+    if (status == 'completed' && outType == 'delivery') return '已出库，待发货/签收';
+    if (status == 'completed') return '已完成出库';
+    return GenericValueFormatter.empty;
+  }
+
   static String _operator(GenericRecord record) {
     return GenericValueFormatter.text(record.getString('operator_name'));
   }
 
   static String _createdAt(GenericRecord record) {
     return GenericValueFormatter.date(record.getString('created_at'));
+  }
+
+  static int _submittedCount(GenericListViewModel viewModel) {
+    return viewModel.records
+        .where((record) => (record.getString('status') ?? '') == 'submitted')
+        .length;
+  }
+
+  static int _draftCount(GenericListViewModel viewModel) {
+    return viewModel.records
+        .where((record) => (record.getString('status') ?? '') == 'draft')
+        .length;
+  }
+
+  static void _openDeliveryList(BuildContext context, String? keyword) {
+    final trimmed = keyword?.trim() ?? '';
+    final uri = trimmed.isEmpty
+        ? Uri(path: '/inventory/delivery')
+        : Uri(
+            path: '/inventory/delivery',
+            queryParameters: {'search': trimmed},
+          );
+    context.go(uri.toString());
   }
 
   static const List<_OutTypeOption> _outTypeOptions = [

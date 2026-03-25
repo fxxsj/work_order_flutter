@@ -5,6 +5,7 @@ class ProductStock {
     required this.id,
     this.productName,
     this.productCode,
+    this.customerName,
     this.batchNo,
     this.workOrderNumber,
     this.status,
@@ -27,6 +28,7 @@ class ProductStock {
   final int id;
   final String? productName;
   final String? productCode;
+  final String? customerName;
   final String? batchNo;
   final String? workOrderNumber;
   final String? status;
@@ -50,6 +52,7 @@ class ProductStock {
       id: toInt(json['id']) ?? 0,
       productName: toStringOrNull(json['product_name']),
       productCode: toStringOrNull(json['product_code']),
+      customerName: toStringOrNull(json['customer_name']),
       batchNo: toStringOrNull(json['batch_no']),
       workOrderNumber: toStringOrNull(json['work_order_number']),
       status: toStringOrNull(json['status']),
