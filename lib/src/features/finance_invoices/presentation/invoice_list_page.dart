@@ -13,12 +13,14 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_s
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/risk_action_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
+import 'package:work_order_app/src/core/utils/audit_log_navigation.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/file_link_util.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
@@ -459,10 +461,39 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(approved ? '确认收到' : '作废发票'),
-        content: TextField(
-          controller: commentController,
-          decoration: const InputDecoration(labelText: '备注（可选）'),
-          maxLines: 3,
+        content: SizedBox(
+          width: 520,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RiskActionHintPanel(
+                summary: approved
+                    ? '确认收到后，发票会进入后续收款与对账环节。'
+                    : '作废后，这张发票将退出后续收款与对账闭环，需要业务和财务重新核对来源单据。',
+                impacts: approved
+                    ? const [
+                        '请确认票据号码、金额和附件已齐全',
+                        '错误确认会影响后续收款匹配',
+                      ]
+                    : const [
+                        '如已发送给客户，请先确认是否应走红冲或换票流程',
+                        '作废后建议同步核对客户订单、施工单和附件资料',
+                      ],
+                auditHint: approved
+                    ? '确认记录建议保留审批备注，便于后续收款追踪。'
+                    : '作废原因会进入审计记录，便于财务复盘和争议处理。',
+                destructive: !approved,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: commentController,
+                decoration: InputDecoration(
+                  labelText: approved ? '确认说明（可选）' : '作废说明（可选）',
+                ),
+                maxLines: 3,
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -771,6 +802,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
   Widget _buildRowActions(InvoiceViewModel viewModel, Invoice invoice) {
     final canChangeInvoice =
         PermissionUtil.hasPermission(context, 'workorder.change_invoice');
+    final canViewAudit = AuditLogNavigation.canView(context);
     final actions = <RowAction>[];
     final status = invoice.status ?? '';
     if (canChangeInvoice) {
@@ -799,6 +831,15 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
         label: '施工单',
         icon: Icons.assignment_outlined,
         onPressed: () => _openWorkOrder(invoice),
+      ));
+    }
+    final auditKeyword = (invoice.invoiceNumber ?? '').trim();
+    if (canViewAudit && auditKeyword.isNotEmpty) {
+      actions.add(RowAction(
+        label: '审计',
+        icon: Icons.history_outlined,
+        onPressed: () =>
+            AuditLogNavigation.open(context, keyword: auditKeyword),
       ));
     }
     if (canChangeInvoice && status == 'draft') {
@@ -850,6 +891,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
       BuildContext context, Invoice invoice, bool isMobile) {
     final canChangeInvoice =
         PermissionUtil.hasPermission(context, 'workorder.change_invoice');
+    final canViewAudit = AuditLogNavigation.canView(context);
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
@@ -891,6 +933,15 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
         label: '施工单',
         icon: Icons.assignment_outlined,
         onPressed: () => _openWorkOrder(invoice),
+      ));
+    }
+    final auditKeyword = (invoice.invoiceNumber ?? '').trim();
+    if (canViewAudit && auditKeyword.isNotEmpty) {
+      actions.add(RowAction(
+        label: '审计',
+        icon: Icons.history_outlined,
+        onPressed: () =>
+            AuditLogNavigation.open(context, keyword: auditKeyword),
       ));
     }
     if (canChangeInvoice && statusCode == 'draft') {

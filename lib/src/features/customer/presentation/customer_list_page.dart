@@ -14,6 +14,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/risk_action_dialog.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
@@ -71,9 +72,6 @@ class _CustomerListViewState extends State<_CustomerListView> {
   static const String _errorFallbackText = '加载失败';
   static const String _retryText = '重新加载';
   static const String _deleteDialogTitle = '确认删除';
-  static const String _deleteDialogContent = '确定要删除客户 \"{name}\" 吗？此操作不可恢复。';
-  static const String _cancelText = '取消';
-  static const String _deleteText = '删除';
   static const String _deleteSuccessText = '删除成功';
   static const String _deleteFailedText = '删除失败: ';
   static const String _createSuccessText = '创建成功';
@@ -139,23 +137,19 @@ class _CustomerListViewState extends State<_CustomerListView> {
 
   Future<void> _confirmDelete(BuildContext context, CustomerViewModel viewModel,
       Customer customer) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(_deleteDialogTitle),
-        content:
-            Text(_deleteDialogContent.replaceFirst('{name}', customer.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(_cancelText),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(_deleteText),
-          ),
-        ],
-      ),
+    final confirmed = await showRiskActionConfirmDialog(
+      context,
+      title: _deleteDialogTitle,
+      summary: '即将删除客户 ${customer.name}。删除后，相关业务单据再按该客户回溯会变得困难。',
+      impacts: [
+        if ((customer.contactPerson ?? '').trim().isNotEmpty)
+          '联系人：${customer.contactPerson!.trim()}',
+        '如已有客户订单、施工单或财务记录引用，删除可能失败或需要额外清理',
+        '删除后不能直接恢复，建议先确认该客户是否仍在历史单据中使用',
+      ],
+      auditHint: '如果只是停用合作，优先考虑保留客户资料并停止新增业务，而不是直接删除。',
+      confirmText: '确认删除',
+      destructive: true,
     );
     if (confirmed != true) return;
 

@@ -83,7 +83,6 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
   static const String _retryText = '重新加载';
   static const String _resetButtonText = '重置筛选';
   static const String _deleteDialogTitle = '确认删除';
-  static const String _deleteDialogContent = '确定要删除施工单 "{name}" 吗？此操作不可恢复。';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
   static const String _pageSizeLabel = '每页 {size}';
 
@@ -879,8 +878,8 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     final confirmed = await showWorkOrderDeleteConfirmDialog(
       context,
       title: _deleteDialogTitle,
-      content:
-          _deleteDialogContent.replaceFirst('{name}', workOrder.orderNumber),
+      number: workOrder.orderNumber,
+      customerName: workOrder.customerName,
     );
     if (confirmed != true) return;
     await viewModel

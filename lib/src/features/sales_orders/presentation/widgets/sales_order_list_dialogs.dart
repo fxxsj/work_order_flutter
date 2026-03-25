@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/risk_action_dialog.dart';
 
 class SalesOrderApprovalResult {
   const SalesOrderApprovalResult({
@@ -103,21 +104,34 @@ Future<SalesOrderApprovalResult?> showSalesOrderRejectDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('审核拒绝'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: reasonController,
-              decoration: const InputDecoration(labelText: '拒绝原因'),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: commentController,
-              decoration: const InputDecoration(labelText: '审核意见（可选）'),
-              maxLines: 3,
-            ),
-          ],
+        content: SizedBox(
+          width: 520,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const RiskActionHintPanel(
+                summary: '拒绝客户订单后，业务需要补充资料或重新确认交期后再提交。',
+                impacts: [
+                  '请把缺少的资料、需要修改的内容写清楚',
+                  '只写“有问题”会导致业务反复确认，无法直接修正',
+                ],
+                auditHint: '拒绝原因会直接进入审批和审计记录，后续会被客户、业务、生产共同参考。',
+                destructive: true,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: reasonController,
+                decoration: const InputDecoration(labelText: '拒绝原因'),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: commentController,
+                decoration: const InputDecoration(labelText: '审核意见（可选）'),
+                maxLines: 3,
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -149,10 +163,28 @@ Future<String?> showSalesOrderCancelDialog(BuildContext context) async {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('取消订单'),
-        content: TextField(
-          controller: reasonController,
-          decoration: const InputDecoration(labelText: '取消原因（可选）'),
-          maxLines: 3,
+        content: SizedBox(
+          width: 520,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const RiskActionHintPanel(
+                summary: '取消客户订单会中断后续施工、发货和财务闭环，相关部门需要同步停单。',
+                impacts: [
+                  '如果已排产或已出货，请先确认是否应走变更、退货或异常流程',
+                  '建议填写取消原因，便于业务和财务后续对账追踪',
+                ],
+                auditHint: '订单取消原因会影响后续争议处理和经营复盘。',
+                destructive: true,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: reasonController,
+                decoration: const InputDecoration(labelText: '取消原因（可选）'),
+                maxLines: 3,
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(

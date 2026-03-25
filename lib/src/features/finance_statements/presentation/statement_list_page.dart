@@ -16,6 +16,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar
 import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
+import 'package:work_order_app/src/core/utils/audit_log_navigation.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -410,6 +411,7 @@ class _StatementListViewState extends State<_StatementListView> {
   Widget _buildRowActions(StatementViewModel viewModel, Statement statement) {
     final canChangeStatement =
         PermissionUtil.hasPermission(context, 'workorder.change_statement');
+    final canViewAudit = AuditLogNavigation.canView(context);
     final actions = <RowAction>[];
     final status = statement.status ?? '';
     if (canChangeStatement && (status == 'draft' || status == 'sent')) {
@@ -425,6 +427,15 @@ class _StatementListViewState extends State<_StatementListView> {
         destructive: true,
         onPressed: () =>
             _confirmStatement(viewModel, statement, confirmed: false),
+      ));
+    }
+    final auditKeyword = (statement.statementNumber ?? '').trim();
+    if (canViewAudit && auditKeyword.isNotEmpty) {
+      actions.add(RowAction(
+        label: '审计',
+        icon: Icons.history_outlined,
+        onPressed: () =>
+            AuditLogNavigation.open(context, keyword: auditKeyword),
       ));
     }
     if (actions.isEmpty) {
@@ -463,6 +474,7 @@ class _StatementListViewState extends State<_StatementListView> {
       BuildContext context, Statement statement, bool isMobile) {
     final canChangeStatement =
         PermissionUtil.hasPermission(context, 'workorder.change_statement');
+    final canViewAudit = AuditLogNavigation.canView(context);
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
@@ -498,6 +510,15 @@ class _StatementListViewState extends State<_StatementListView> {
           statement,
           confirmed: false,
         ),
+      ));
+    }
+    final auditKeyword = (statement.statementNumber ?? '').trim();
+    if (canViewAudit && auditKeyword.isNotEmpty) {
+      actions.add(RowAction(
+        label: '审计',
+        icon: Icons.history_outlined,
+        onPressed: () =>
+            AuditLogNavigation.open(context, keyword: auditKeyword),
       ));
     }
     if ((statement.statementType ?? '') == 'customer') {

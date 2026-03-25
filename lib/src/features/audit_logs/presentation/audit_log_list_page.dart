@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
@@ -71,6 +72,23 @@ class _AuditLogListViewState extends State<_AuditLogListView> {
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
+  String? _prefillKeyword;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final keyword = GoRouterState.of(context).uri.queryParameters['search'];
+    final trimmed = keyword?.trim() ?? '';
+    if (trimmed == _prefillKeyword) return;
+    _prefillKeyword = trimmed;
+    _searchController.text = trimmed;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final viewModel = context.read<AuditLogViewModel>();
+      viewModel.setSearchText(trimmed);
+      viewModel.loadLogs(resetPage: true);
+    });
+  }
 
   @override
   void dispose() {
@@ -221,6 +239,7 @@ class _AuditLogListViewState extends State<_AuditLogListView> {
       padding: EdgeInsets.zero,
       actions: LayoutBuilder(
         builder: (context, constraints) {
+          final activeSearch = viewModel.searchText.trim();
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -235,6 +254,15 @@ class _AuditLogListViewState extends State<_AuditLogListView> {
           );
 
           final actions = <Widget>[
+            if (activeSearch.isNotEmpty)
+              PageActionButton.outlined(
+                onPressed: () {
+                  _searchController.clear();
+                  _scheduleSearch(viewModel, immediate: true);
+                },
+                icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
+                label: '清除筛选',
+              ),
             PageActionButton.outlined(
               onPressed: () => viewModel.loadLogs(resetPage: true),
               icon: const Icon(Icons.refresh, size: 16),

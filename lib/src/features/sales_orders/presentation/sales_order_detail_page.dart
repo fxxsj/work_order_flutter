@@ -7,8 +7,10 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/approval_rej
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/risk_action_dialog.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/utils/audit_log_navigation.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/features/sales_orders/application/sales_order_view_model.dart';
@@ -203,27 +205,40 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('退回客户订单'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _rejectionReasonController,
-              decoration: const InputDecoration(
-                labelText: '退回原因',
-                hintText: '请明确写清需要补充或修改的内容',
+        content: SizedBox(
+          width: 520,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const RiskActionHintPanel(
+                summary: '退回后，业务需要先补充订单资料或重新确认交期，再重新提交审核。',
+                impacts: [
+                  '请明确写清需要补什么、改什么',
+                  '模糊退回会让业务、生产和客户重复确认',
+                ],
+                auditHint: '退回原因会直接进入审批和审计记录。',
+                destructive: true,
               ),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _approvalCommentController,
-              decoration: const InputDecoration(
-                labelText: '补充说明（可选）',
-                hintText: '例如：客户信息不完整，需补充联系人和交期',
+              const SizedBox(height: 12),
+              TextField(
+                controller: _rejectionReasonController,
+                decoration: const InputDecoration(
+                  labelText: '退回原因',
+                  hintText: '请明确写清需要补充或修改的内容',
+                ),
+                maxLines: 3,
               ),
-              maxLines: 3,
-            ),
-          ],
+              const SizedBox(height: 12),
+              TextField(
+                controller: _approvalCommentController,
+                decoration: const InputDecoration(
+                  labelText: '补充说明（可选）',
+                  hintText: '例如：客户信息不完整，需补充联系人和交期',
+                ),
+                maxLines: 3,
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -289,10 +304,28 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('取消订单'),
-        content: TextField(
-          controller: _cancelReasonController,
-          decoration: const InputDecoration(labelText: '取消原因（可选）'),
-          maxLines: 3,
+        content: SizedBox(
+          width: 520,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const RiskActionHintPanel(
+                summary: '取消客户订单会中断后续施工、发货和财务闭环，相关部门需要同步停单。',
+                impacts: [
+                  '如果已排产或已出货，请先确认是否应走变更、退货或异常流程',
+                  '建议填写取消原因，便于业务和财务后续对账追踪',
+                ],
+                auditHint: '订单取消原因会影响后续争议处理和经营复盘。',
+                destructive: true,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _cancelReasonController,
+                decoration: const InputDecoration(labelText: '取消原因（可选）'),
+                maxLines: 3,
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -597,6 +630,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
     final canChangeSalesOrder =
         PermissionUtil.hasPermission(context, 'workorder.change_salesorder');
+    final canViewAudit = AuditLogNavigation.canView(context);
 
     return ListPageScaffold(
       spacing: sectionSpacing,
@@ -621,6 +655,16 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
               icon: const Icon(Icons.edit, size: 16),
               label: '编辑',
             ),
+            if (canViewAudit &&
+                (detail?.orderNumber.trim().isNotEmpty ?? false))
+              PageActionButton.outlined(
+                onPressed: () => AuditLogNavigation.open(
+                  context,
+                  keyword: detail!.orderNumber,
+                ),
+                icon: const Icon(Icons.history_outlined, size: 16),
+                label: '相关审计',
+              ),
             SalesOrderActionMenu(
               actions: _buildActions(detail),
               disabled: _actionLoading,

@@ -13,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/detail_secti
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
+import 'package:work_order_app/src/core/utils/audit_log_navigation.dart';
 import 'package:work_order_app/src/core/utils/store_util.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -58,7 +59,6 @@ class WorkOrderDetailPage extends StatefulWidget {
 class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   static const String _emptyText = '-';
   static const String _deleteDialogTitle = '确认删除';
-  static const String _deleteDialogContent = '确定要删除施工单 "{name}" 吗？此操作不可恢复。';
   static const List<String> _designFileExtensions = [
     'pdf',
     'png',
@@ -140,7 +140,8 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     final confirmed = await showWorkOrderDeleteConfirmDialog(
       context,
       title: _deleteDialogTitle,
-      content: _deleteDialogContent.replaceFirst('{name}', detail.orderNumber),
+      number: detail.orderNumber,
+      customerName: detail.customerName,
     );
     if (!confirmed) return;
     setState(() => _actionLoading = true);
@@ -692,6 +693,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
         PermissionUtil.hasPermission(context, 'workorder.change_workorder');
     final canDeleteWorkOrder =
         PermissionUtil.hasPermission(context, 'workorder.delete_workorder');
+    final canViewAudit = AuditLogNavigation.canView(context);
 
     final statusOptions = const [
       DropdownMenuItem(value: 'pending', child: Text('待开始')),
@@ -724,6 +726,16 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
               icon: const Icon(Icons.edit, size: 16),
               label: '编辑',
             ),
+            if (canViewAudit &&
+                (detail?.orderNumber.trim().isNotEmpty ?? false))
+              PageActionButton.outlined(
+                onPressed: () => AuditLogNavigation.open(
+                  context,
+                  keyword: detail!.orderNumber,
+                ),
+                icon: const Icon(Icons.history_outlined, size: 16),
+                label: '相关审计',
+              ),
             if (canDeleteWorkOrder)
               PageActionButton.outlined(
                 onPressed: _actionLoading ? null : _confirmDelete,
