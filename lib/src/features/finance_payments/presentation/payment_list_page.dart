@@ -264,7 +264,7 @@ class _PaymentListViewState extends State<_PaymentListView> {
         DataColumn(label: Text('来源单据')),
         DataColumn(label: Text('收款方式')),
         DataColumn(label: Text('金额')),
-        DataColumn(label: Text('待办')),
+        DataColumn(label: Text('下一步')),
         DataColumn(label: Text('收款日期')),
         DataColumn(label: Text('操作')),
       ],
@@ -441,7 +441,7 @@ class _PaymentListViewState extends State<_PaymentListView> {
                     children: [
                       _SummaryChip(label: '金额', value: amount),
                       _SummaryChip(label: '收款方式', value: paymentMethod),
-                      _SummaryChip(label: '待办', value: followUp),
+                      _SummaryChip(label: '下一步', value: followUp),
                     ],
                   ),
                 ],
@@ -489,7 +489,7 @@ class _PaymentListViewState extends State<_PaymentListView> {
                     '${_formatAmount(payment.appliedAmount)} / ${_formatAmount(payment.remainingAmount)}',
               ),
               _SummaryField(label: '收款日期', value: paymentDate),
-              _SummaryField(label: '待办', value: followUp),
+              _SummaryField(label: '下一步', value: followUp),
             ],
           ),
           if (actions.isNotEmpty) ...[
@@ -553,12 +553,12 @@ class _PaymentListViewState extends State<_PaymentListView> {
     }
     final remaining = payment.remainingAmount ?? 0;
     if (remaining > 0) {
-      return '待核销 ${_formatAmount(remaining)}';
+      return '推进收款核销 ${_formatAmount(remaining)}';
     }
     if ((payment.invoiceId ?? 0) <= 0 && (payment.salesOrderId ?? 0) > 0) {
       return '待关联发票';
     }
-    return '已完成';
+    return '收款已完成';
   }
 
   void _clearFilters() {

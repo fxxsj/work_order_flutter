@@ -31,7 +31,7 @@ class PaymentPlanListEntry extends StatelessWidget {
           GenericColumn(label: '计划日期', value: _planDate),
           GenericColumn(label: '状态', value: _status),
           GenericColumn(label: '待收金额', value: _remainingAmount, numeric: true),
-          GenericColumn(label: '待办', value: _followUp),
+          GenericColumn(label: '下一步', value: _followUp),
           GenericColumn(label: '已收金额', value: _paidAmount, numeric: true),
         ],
         summaryFields: const [
@@ -40,7 +40,7 @@ class PaymentPlanListEntry extends StatelessWidget {
           GenericSummaryField(label: '待收金额', value: _remainingAmount),
           GenericSummaryField(label: '计划日期', value: _planDate),
           GenericSummaryField(label: '状态', value: _status),
-          GenericSummaryField(label: '待办', value: _followUp),
+          GenericSummaryField(label: '下一步', value: _followUp),
           GenericSummaryField(label: '已收金额', value: _paidAmount),
         ],
         titleBuilder: _title,
@@ -123,7 +123,7 @@ class PaymentPlanListEntry extends StatelessWidget {
     }
     if (record.getBool('is_overdue') == true) {
       final days = record.getNumber('overdue_days')?.toInt() ?? 0;
-      return '已逾期 $days 天';
+      return '推进收款，已逾期 $days 天';
     }
     return GenericValueFormatter.empty;
   }

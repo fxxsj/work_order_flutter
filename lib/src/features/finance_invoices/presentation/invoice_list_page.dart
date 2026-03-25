@@ -713,7 +713,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
         DataColumn(label: Text('类型')),
         DataColumn(label: Text('金额')),
         DataColumn(label: Text('状态')),
-        DataColumn(label: Text('待办')),
+        DataColumn(label: Text('下一步')),
         DataColumn(label: Text('开票日期')),
         DataColumn(label: Text('附件')),
         DataColumn(label: Text('操作')),
@@ -1062,7 +1062,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                     children: [
                       _SummaryChip(label: '金额', value: amount),
                       _SummaryChip(label: '状态', value: status),
-                      _SummaryChip(label: '待办', value: followUp),
+                      _SummaryChip(label: '下一步', value: followUp),
                     ],
                   ),
                 ],
@@ -1105,7 +1105,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
               _SummaryField(label: '发票类型', value: invoiceType),
               _SummaryField(label: '金额', value: amount),
               _SummaryField(label: '状态', value: status),
-              _SummaryField(label: '待办', value: followUp),
+              _SummaryField(label: '下一步', value: followUp),
               _SummaryField(label: '开票日期', value: issueDate),
               _SummaryField(label: '附件', value: attachmentStatus),
             ],
@@ -1141,15 +1141,15 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     final text = invoice.followUpText?.trim() ?? '';
     if (text.isNotEmpty) return text;
     final status = invoice.status ?? '';
-    if (status == 'draft') return '待提交开票';
+    if (status == 'draft') return '推进开票提交';
     if (status == 'received' && (invoice.paymentRemainingAmount ?? 0) > 0) {
-      return '待跟进收款 ${_formatAmount(invoice.paymentRemainingAmount)}';
+      return '推进收款 ${_formatAmount(invoice.paymentRemainingAmount)}';
     }
     if (status == 'issued' || status == 'sent') {
-      return _hasAttachment(invoice) ? '待确认客户收票' : '待补发票附件';
+      return _hasAttachment(invoice) ? '待确认收票' : '待补开票附件';
     }
     if (status == 'cancelled' || status == 'refunded') {
-      return '已关闭';
+      return '单据已关闭';
     }
     return _emptyCellText;
   }

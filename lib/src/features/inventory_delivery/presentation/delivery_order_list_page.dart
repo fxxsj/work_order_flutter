@@ -1493,18 +1493,18 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     if (count > 0) {
       return '已关联 $count 张发票';
     }
-    return _shouldPromptInvoice(order) ? '待开票' : _emptyCellText;
+    return _shouldPromptInvoice(order) ? '推进开票处理' : _emptyCellText;
   }
 
   String _deliveryFollowUpText(DeliveryOrder order) {
     switch (order.status ?? '') {
       case 'pending':
-        return '待发货出库';
+        return '待发货执行';
       case 'shipped':
       case 'in_transit':
         return '待签收确认';
       case 'received':
-        return _shouldPromptInvoice(order) ? '已签收，待开票' : '已完成交付';
+        return _shouldPromptInvoice(order) ? '已签收，推进开票' : '交付已完成';
       case 'rejected':
         if (_hasResolvedRejectedException(order)) {
           return order.exceptionResolutionDisplay ?? '已登记拒收处理';

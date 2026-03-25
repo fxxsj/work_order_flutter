@@ -314,7 +314,7 @@ class _StatementListViewState extends State<_StatementListView> {
         DataColumn(label: Text('对账周期')),
         DataColumn(label: Text('期末余额')),
         DataColumn(label: Text('状态')),
-        DataColumn(label: Text('待办')),
+        DataColumn(label: Text('下一步')),
         DataColumn(label: Text('操作')),
       ],
       rows: statements
@@ -584,7 +584,7 @@ class _StatementListViewState extends State<_StatementListView> {
                     children: [
                       _SummaryChip(label: '金额', value: amount),
                       _SummaryChip(label: '状态', value: status),
-                      _SummaryChip(label: '待办', value: followUp),
+                      _SummaryChip(label: '下一步', value: followUp),
                     ],
                   ),
                 ],
@@ -628,7 +628,7 @@ class _StatementListViewState extends State<_StatementListView> {
               _SummaryField(label: '本期金额', value: amount),
               _SummaryField(label: '期末余额', value: closingBalance),
               _SummaryField(label: '状态', value: status),
-              _SummaryField(label: '待办', value: followUp),
+              _SummaryField(label: '下一步', value: followUp),
               if ((statement.confirmedByName ?? '').trim().isNotEmpty)
                 _SummaryField(
                   label: '确认人',
@@ -668,12 +668,12 @@ class _StatementListViewState extends State<_StatementListView> {
     }
     final status = statement.status ?? '';
     if (status == 'draft' || status == 'sent') {
-      return '待对方确认';
+      return '推进对账确认';
     }
     if (status == 'disputed') {
-      return '待财务处理异议';
+      return '推进异议处理';
     }
-    return '已闭环';
+    return '对账已闭环';
   }
 
   void _clearFilters() {
