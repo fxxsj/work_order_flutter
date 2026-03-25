@@ -7,13 +7,17 @@ class InvoiceViewModel extends PaginatedViewModel<Invoice> {
   InvoiceViewModel(this._repository);
 
   final InvoiceRepository _repository;
+  Map<String, dynamic> _summary = const {};
 
   List<Invoice> get invoices => items;
+  Map<String, dynamic> get summary => _summary;
 
-  Future<void> initialize() => loadItems(resetPage: true);
+  Future<void> initialize() => loadInvoices(resetPage: true);
 
-  Future<void> loadInvoices({bool resetPage = false}) =>
-      loadItems(resetPage: resetPage);
+  Future<void> loadInvoices({bool resetPage = false}) async {
+    await loadItems(resetPage: resetPage);
+    await _loadSummary();
+  }
 
   Future<void> submitInvoice(int id) {
     return _repository.submit(id);
@@ -29,6 +33,15 @@ class InvoiceViewModel extends PaginatedViewModel<Invoice> {
 
   Future<void> approveInvoice(int id, Map<String, dynamic> payload) {
     return _repository.approve(id, payload);
+  }
+
+  Future<void> _loadSummary() async {
+    try {
+      _summary = await _repository.getSummary();
+      safeNotify();
+    } catch (_) {
+      // Keep the list usable even if the summary endpoint fails.
+    }
   }
 
   @override

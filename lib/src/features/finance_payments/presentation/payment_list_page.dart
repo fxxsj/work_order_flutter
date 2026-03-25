@@ -299,14 +299,10 @@ class _PaymentListViewState extends State<_PaymentListView> {
       padding: EdgeInsets.zero,
       actions: LayoutBuilder(
         builder: (context, constraints) {
-          final pendingWriteOffCount = viewModel.payments
-              .where((payment) => (payment.remainingAmount ?? 0) > 0)
-              .length;
-          final missingInvoiceLinkCount = viewModel.payments
-              .where((payment) =>
-                  (payment.invoiceId ?? 0) <= 0 &&
-                  (payment.salesOrderId ?? 0) > 0)
-              .length;
+          final pendingWriteOffCount =
+              _summaryCount(viewModel.summary, 'pending_writeoff_count');
+          final missingInvoiceLinkCount =
+              _summaryCount(viewModel.summary, 'missing_invoice_link_count');
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -526,6 +522,10 @@ class _PaymentListViewState extends State<_PaymentListView> {
   }
 
   String _followUpText(Payment payment) {
+    final backendText = payment.followUpText?.trim() ?? '';
+    if (backendText.isNotEmpty) {
+      return backendText;
+    }
     final remaining = payment.remainingAmount ?? 0;
     if (remaining > 0) {
       return '待核销 ${_formatAmount(remaining)}';
@@ -534,6 +534,24 @@ class _PaymentListViewState extends State<_PaymentListView> {
       return '待关联发票';
     }
     return '已完成';
+  }
+
+  int _summaryCount(Map<String, dynamic> payload, String key) {
+    final summary = _summaryMap(payload);
+    final value = summary[key];
+    if (value is int) return value;
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  Map<String, dynamic> _summaryMap(Map<String, dynamic> payload) {
+    final summary = payload['summary'];
+    if (summary is Map<String, dynamic>) {
+      return summary;
+    }
+    if (summary is Map) {
+      return Map<String, dynamic>.from(summary);
+    }
+    return const {};
   }
 }
 

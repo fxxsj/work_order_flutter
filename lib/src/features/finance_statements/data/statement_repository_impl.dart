@@ -13,7 +13,8 @@ class StatementRepositoryImpl implements StatementRepository {
     int pageSize = 20,
     String? search,
   }) {
-    return _apiService.fetchStatements(page: page, pageSize: pageSize, search: search);
+    return _apiService.fetchStatements(
+        page: page, pageSize: pageSize, search: search);
   }
 
   @override
@@ -24,5 +25,10 @@ class StatementRepositoryImpl implements StatementRepository {
   @override
   Future<Map<String, dynamic>> generate({Map<String, dynamic>? params}) {
     return _apiService.generate(params: params);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getSummary() {
+    return _apiService.fetchSummary();
   }
 }

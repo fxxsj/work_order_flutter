@@ -12,9 +12,12 @@ class Invoice {
     this.invoiceType,
     this.invoiceTypeDisplay,
     this.amount,
+    this.paymentReceivedAmount,
+    this.paymentRemainingAmount,
     this.attachmentUrl,
     this.status,
     this.statusDisplay,
+    this.followUpText,
     this.issueDate,
   });
 
@@ -28,9 +31,12 @@ class Invoice {
   final String? invoiceType;
   final String? invoiceTypeDisplay;
   final double? amount;
+  final double? paymentReceivedAmount;
+  final double? paymentRemainingAmount;
   final String? attachmentUrl;
   final String? status;
   final String? statusDisplay;
+  final String? followUpText;
   final DateTime? issueDate;
 
   factory Invoice.fromJson(Map<String, dynamic> json) {
@@ -46,9 +52,12 @@ class Invoice {
       invoiceType: toStringOrNull(json['invoice_type']),
       invoiceTypeDisplay: toStringOrNull(json['invoice_type_display']),
       amount: _toDouble(json['amount'] ?? json['total_amount']),
+      paymentReceivedAmount: _toDouble(json['payment_received_amount']),
+      paymentRemainingAmount: _toDouble(json['payment_remaining_amount']),
       attachmentUrl: toStringOrNull(json['attachment']),
       status: toStringOrNull(json['status']),
       statusDisplay: toStringOrNull(json['status_display']),
+      followUpText: toStringOrNull(json['follow_up_text']),
       issueDate: toDateTime(json['issue_date'] ?? json['created_at']),
     );
   }

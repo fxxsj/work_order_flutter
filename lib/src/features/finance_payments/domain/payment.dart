@@ -17,6 +17,7 @@ class Payment {
     this.remainingAmount,
     this.status,
     this.statusDisplay,
+    this.followUpText,
     this.paymentDate,
   });
 
@@ -35,6 +36,7 @@ class Payment {
   final double? remainingAmount;
   final String? status;
   final String? statusDisplay;
+  final String? followUpText;
   final DateTime? paymentDate;
 
   factory Payment.fromJson(Map<String, dynamic> json) {
@@ -55,6 +57,7 @@ class Payment {
       remainingAmount: _toDouble(json['remaining_amount']),
       status: toStringOrNull(json['status']),
       statusDisplay: toStringOrNull(json['status_display']),
+      followUpText: toStringOrNull(json['follow_up_text']),
       paymentDate: toDateTime(json['payment_date'] ?? json['created_at']),
     );
   }

@@ -16,6 +16,7 @@ class Statement {
     this.closingBalance,
     this.status,
     this.statusDisplay,
+    this.followUpText,
     this.confirmedByName,
     this.confirmedAt,
     this.confirmationNotes,
@@ -35,6 +36,7 @@ class Statement {
   final double? closingBalance;
   final String? status;
   final String? statusDisplay;
+  final String? followUpText;
   final String? confirmedByName;
   final DateTime? confirmedAt;
   final String? confirmationNotes;
@@ -59,6 +61,7 @@ class Statement {
           _toDouble(json['closing_balance'] ?? json['closing_amount']),
       status: toStringOrNull(json['status']),
       statusDisplay: toStringOrNull(json['status_display']),
+      followUpText: toStringOrNull(json['follow_up_text']),
       confirmedByName: toStringOrNull(json['confirmed_by_name']),
       confirmedAt: toDateTime(json['confirmed_at']),
       confirmationNotes:

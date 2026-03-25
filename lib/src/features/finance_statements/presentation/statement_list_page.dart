@@ -342,14 +342,10 @@ class _StatementListViewState extends State<_StatementListView> {
       padding: EdgeInsets.zero,
       actions: LayoutBuilder(
         builder: (context, constraints) {
-          final pendingConfirmCount = viewModel.statements
-              .where((statement) =>
-                  (statement.status ?? '') == 'draft' ||
-                  (statement.status ?? '') == 'sent')
-              .length;
-          final disputedCount = viewModel.statements
-              .where((statement) => (statement.status ?? '') == 'disputed')
-              .length;
+          final pendingConfirmCount =
+              _summaryCount(viewModel.summary, 'pending_confirm_count');
+          final disputedCount =
+              _summaryCount(viewModel.summary, 'disputed_count');
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -637,6 +633,10 @@ class _StatementListViewState extends State<_StatementListView> {
   }
 
   String _followUpText(Statement statement) {
+    final backendText = statement.followUpText?.trim() ?? '';
+    if (backendText.isNotEmpty) {
+      return backendText;
+    }
     final status = statement.status ?? '';
     if (status == 'draft' || status == 'sent') {
       return '待对方确认';
@@ -645,6 +645,24 @@ class _StatementListViewState extends State<_StatementListView> {
       return '待财务处理异议';
     }
     return '已闭环';
+  }
+
+  int _summaryCount(Map<String, dynamic> payload, String key) {
+    final summary = _summaryMap(payload);
+    final value = summary[key];
+    if (value is int) return value;
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  Map<String, dynamic> _summaryMap(Map<String, dynamic> payload) {
+    final summary = payload['summary'];
+    if (summary is Map<String, dynamic>) {
+      return summary;
+    }
+    if (summary is Map) {
+      return Map<String, dynamic>.from(summary);
+    }
+    return const {};
   }
 }
 

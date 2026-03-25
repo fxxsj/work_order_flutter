@@ -6,12 +6,26 @@ class StatementViewModel extends PaginatedViewModel<Statement> {
   StatementViewModel(this._repository);
 
   final StatementRepository _repository;
+  Map<String, dynamic> _summary = const {};
 
   List<Statement> get statements => items;
+  Map<String, dynamic> get summary => _summary;
 
-  Future<void> initialize() => loadItems(resetPage: true);
+  Future<void> initialize() => loadStatements(resetPage: true);
 
-  Future<void> loadStatements({bool resetPage = false}) => loadItems(resetPage: resetPage);
+  Future<void> loadStatements({bool resetPage = false}) async {
+    await loadItems(resetPage: resetPage);
+    await _loadSummary();
+  }
+
+  Future<void> _loadSummary() async {
+    try {
+      _summary = await _repository.getSummary();
+      safeNotify();
+    } catch (_) {
+      // Keep the list usable even if the summary endpoint fails.
+    }
+  }
 
   @override
   Future<PageData<Statement>> fetchPage({

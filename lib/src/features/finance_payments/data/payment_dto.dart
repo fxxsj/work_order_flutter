@@ -9,6 +9,7 @@ class PaymentDto {
     this.amount,
     this.status,
     this.statusDisplay,
+    this.followUpText,
     this.paymentDate,
   });
 
@@ -19,6 +20,7 @@ class PaymentDto {
   final double? amount;
   final String? status;
   final String? statusDisplay;
+  final String? followUpText;
   final DateTime? paymentDate;
 
   factory PaymentDto.fromJson(Map<String, dynamic> json) {
@@ -34,6 +36,7 @@ class PaymentDto {
       amount: amount,
       status: status,
       statusDisplay: statusDisplay,
+      followUpText: followUpText,
       paymentDate: paymentDate,
     );
   }
@@ -49,6 +52,7 @@ extension PaymentMapper on Payment {
       amount: amount,
       status: status,
       statusDisplay: statusDisplay,
+      followUpText: followUpText,
       paymentDate: paymentDate,
     );
   }

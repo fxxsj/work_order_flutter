@@ -10,4 +10,6 @@ abstract class StatementRepository {
   Future<Map<String, dynamic>> confirm(int id, Map<String, dynamic> payload);
 
   Future<Map<String, dynamic>> generate({Map<String, dynamic>? params});
+
+  Future<Map<String, dynamic>> getSummary();
 }

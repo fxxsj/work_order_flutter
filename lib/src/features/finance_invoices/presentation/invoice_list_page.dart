@@ -685,6 +685,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
         DataColumn(label: Text('类型')),
         DataColumn(label: Text('金额')),
         DataColumn(label: Text('状态')),
+        DataColumn(label: Text('待办')),
         DataColumn(label: Text('开票日期')),
         DataColumn(label: Text('附件')),
         DataColumn(label: Text('操作')),
@@ -716,6 +717,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                   invoice.statusDisplay ?? invoice.status ?? _emptyCellText,
                   style: textStyle,
                 )),
+                DataCell(Text(_followUpText(invoice), style: textStyle)),
                 DataCell(
                     Text(_formatDate(invoice.issueDate), style: textStyle)),
                 DataCell(Text(
@@ -742,13 +744,14 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
       padding: EdgeInsets.zero,
       actions: LayoutBuilder(
         builder: (context, constraints) {
-          final missingAttachmentCount = viewModel.invoices
-              .where((invoice) =>
-                  _shouldHaveAttachment(invoice) && !_hasAttachment(invoice))
-              .length;
-          final pendingReceiptCount = viewModel.invoices
-              .where((invoice) => (invoice.status ?? '') == 'issued')
-              .length;
+          final missingAttachmentCount =
+              _summaryCount(viewModel.summary, 'pending_attachment_count');
+          final pendingReceiptCount =
+              _summaryCount(viewModel.summary, 'pending_receipt_count');
+          final pendingIssueCount =
+              _summaryCount(viewModel.summary, 'pending_issue_count');
+          final pendingPaymentCount =
+              _summaryCount(viewModel.summary, 'pending_payment_count');
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -763,6 +766,12 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
           );
 
           final actions = <Widget>[
+            if (pendingIssueCount > 0)
+              StatusHintChip(
+                label: '待开票',
+                count: pendingIssueCount,
+                icon: Icons.edit_note_outlined,
+              ),
             if (missingAttachmentCount > 0)
               StatusHintChip(
                 label: '待补附件',
@@ -774,6 +783,12 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                 label: '待确认收到',
                 count: pendingReceiptCount,
                 icon: Icons.verified_outlined,
+              ),
+            if (pendingPaymentCount > 0)
+              StatusHintChip(
+                label: '待催收款',
+                count: pendingPaymentCount,
+                icon: Icons.payments_outlined,
               ),
             if (PermissionUtil.hasPermission(context, 'workorder.add_invoice'))
               PageActionButton.filled(
@@ -901,6 +916,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     final invoiceType = _invoiceTypeText(invoice);
     final amount = _formatAmount(invoice.amount);
     final status = invoice.statusDisplay ?? invoice.status ?? _emptyCellText;
+    final followUp = _followUpText(invoice);
     final issueDate = _formatDate(invoice.issueDate);
     final attachmentStatus = _attachmentStatusText(invoice);
 
@@ -1004,7 +1020,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                     children: [
                       _SummaryChip(label: '金额', value: amount),
                       _SummaryChip(label: '状态', value: status),
-                      _SummaryChip(label: '附件', value: attachmentStatus),
+                      _SummaryChip(label: '待办', value: followUp),
                     ],
                   ),
                 ],
@@ -1047,6 +1063,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
               _SummaryField(label: '发票类型', value: invoiceType),
               _SummaryField(label: '金额', value: amount),
               _SummaryField(label: '状态', value: status),
+              _SummaryField(label: '待办', value: followUp),
               _SummaryField(label: '开票日期', value: issueDate),
               _SummaryField(label: '附件', value: attachmentStatus),
             ],
@@ -1076,6 +1093,23 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
 
   String _invoiceTypeText(Invoice invoice) {
     return _displayText(invoice.invoiceTypeDisplay ?? invoice.invoiceType);
+  }
+
+  String _followUpText(Invoice invoice) {
+    final text = invoice.followUpText?.trim() ?? '';
+    if (text.isNotEmpty) return text;
+    final status = invoice.status ?? '';
+    if (status == 'draft') return '待提交开票';
+    if (status == 'received' && (invoice.paymentRemainingAmount ?? 0) > 0) {
+      return '待跟进收款 ${_formatAmount(invoice.paymentRemainingAmount)}';
+    }
+    if (status == 'issued' || status == 'sent') {
+      return _hasAttachment(invoice) ? '待确认客户收票' : '待补发票附件';
+    }
+    if (status == 'cancelled' || status == 'refunded') {
+      return '已关闭';
+    }
+    return _emptyCellText;
   }
 
   String _sourceSummary(Invoice invoice) {
@@ -1114,6 +1148,24 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     } catch (err) {
       ToastUtil.showError('打开附件失败: $err');
     }
+  }
+
+  int _summaryCount(Map<String, dynamic> payload, String key) {
+    final summary = _summaryMap(payload);
+    final value = summary[key];
+    if (value is int) return value;
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  Map<String, dynamic> _summaryMap(Map<String, dynamic> payload) {
+    final summary = payload['summary'];
+    if (summary is Map<String, dynamic>) {
+      return summary;
+    }
+    if (summary is Map) {
+      return Map<String, dynamic>.from(summary);
+    }
+    return const {};
   }
 }
 

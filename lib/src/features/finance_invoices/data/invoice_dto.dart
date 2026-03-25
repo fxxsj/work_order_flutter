@@ -7,8 +7,11 @@ class InvoiceDto {
     this.workOrderNumber,
     this.customerName,
     this.amount,
+    this.paymentReceivedAmount,
+    this.paymentRemainingAmount,
     this.status,
     this.statusDisplay,
+    this.followUpText,
     this.issueDate,
   });
 
@@ -17,8 +20,11 @@ class InvoiceDto {
   final String? workOrderNumber;
   final String? customerName;
   final double? amount;
+  final double? paymentReceivedAmount;
+  final double? paymentRemainingAmount;
   final String? status;
   final String? statusDisplay;
+  final String? followUpText;
   final DateTime? issueDate;
 
   factory InvoiceDto.fromJson(Map<String, dynamic> json) {
@@ -32,8 +38,11 @@ class InvoiceDto {
       workOrderNumber: workOrderNumber,
       customerName: customerName,
       amount: amount,
+      paymentReceivedAmount: paymentReceivedAmount,
+      paymentRemainingAmount: paymentRemainingAmount,
       status: status,
       statusDisplay: statusDisplay,
+      followUpText: followUpText,
       issueDate: issueDate,
     );
   }
@@ -47,8 +56,11 @@ extension InvoiceMapper on Invoice {
       workOrderNumber: workOrderNumber,
       customerName: customerName,
       amount: amount,
+      paymentReceivedAmount: paymentReceivedAmount,
+      paymentRemainingAmount: paymentRemainingAmount,
       status: status,
       statusDisplay: statusDisplay,
+      followUpText: followUpText,
       issueDate: issueDate,
     );
   }

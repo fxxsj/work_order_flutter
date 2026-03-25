@@ -10,6 +10,7 @@ class StatementDto {
     this.totalAmount,
     this.status,
     this.statusDisplay,
+    this.followUpText,
   });
 
   final int id;
@@ -20,6 +21,7 @@ class StatementDto {
   final double? totalAmount;
   final String? status;
   final String? statusDisplay;
+  final String? followUpText;
 
   factory StatementDto.fromJson(Map<String, dynamic> json) {
     return Statement.fromJson(json).toDto();
@@ -35,6 +37,7 @@ class StatementDto {
       totalAmount: totalAmount,
       status: status,
       statusDisplay: statusDisplay,
+      followUpText: followUpText,
     );
   }
 }
@@ -50,6 +53,7 @@ extension StatementMapper on Statement {
       totalAmount: totalAmount,
       status: status,
       statusDisplay: statusDisplay,
+      followUpText: followUpText,
     );
   }
 }

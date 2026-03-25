@@ -28,34 +28,46 @@ class StatementApiService {
       final list = results is List
           ? results
               .whereType<Map>()
-              .map((item) => StatementDto.fromJson(Map<String, dynamic>.from(item)))
+              .map((item) =>
+                  StatementDto.fromJson(Map<String, dynamic>.from(item)))
               .toList()
           : <StatementDto>[];
       final total = toInt(payload['count']) ?? list.length;
-      return StatementPageDto(items: list, total: total, page: page, pageSize: pageSize);
+      return StatementPageDto(
+          items: list, total: total, page: page, pageSize: pageSize);
     }
     if (payload is List) {
       final list = payload
           .whereType<Map>()
           .map((item) => StatementDto.fromJson(Map<String, dynamic>.from(item)))
           .toList();
-      return StatementPageDto(items: list, total: list.length, page: 1, pageSize: list.length);
+      return StatementPageDto(
+          items: list, total: list.length, page: 1, pageSize: list.length);
     }
     return const StatementPageDto(items: [], total: 0, page: 1, pageSize: 20);
   }
 
-  Future<Map<String, dynamic>> confirm(int id, Map<String, dynamic> payload) async {
-    final response = await _client.post('/statements/$id/confirm/', data: payload);
+  Future<Map<String, dynamic>> confirm(
+      int id, Map<String, dynamic> payload) async {
+    final response =
+        await _client.post('/statements/$id/confirm/', data: payload);
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> createStatement(Map<String, dynamic> payload) async {
+  Future<Map<String, dynamic>> createStatement(
+      Map<String, dynamic> payload) async {
     final response = await _client.post('/statements/', data: payload);
     return _mapFromResponse(response.data);
   }
 
   Future<Map<String, dynamic>> generate({Map<String, dynamic>? params}) async {
-    final response = await _client.get('/statements/generate/', queryParameters: params);
+    final response =
+        await _client.get('/statements/generate/', queryParameters: params);
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> fetchSummary() async {
+    final response = await _client.get('/statements/summary/');
     return _mapFromResponse(response.data);
   }
 
