@@ -9,6 +9,7 @@ import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
@@ -647,82 +648,20 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     ];
 
     void openFilterDrawer() {
-      if (isMobile) {
-        showModalBottomSheet<void>(
-          context: context,
-          isScrollControlled: true,
-          useSafeArea: true,
-          showDragHandle: true,
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-          builder: (sheetContext) {
-            return WorkOrderListFilterDrawerContent(
-              title: '筛选',
-              child: _buildFilterPanel(
-                sheetContext,
-                viewModel,
-                statusItems: statusItems,
-                priorityItems: priorityItems,
-                approvalItems: approvalItems,
-                customerItems: customerItems,
-                productItems: productItems,
-                processItems: processItems,
-                bottomSpacing: 16,
-              ),
-            );
-          },
-        );
-        return;
-      }
-
-      showGeneralDialog(
-        context: context,
-        barrierDismissible: true,
-        barrierLabel: '筛选',
-        barrierColor: Colors.black.withValues(alpha: 0.3),
-        transitionDuration: const Duration(milliseconds: 220),
-        pageBuilder: (dialogContext, animation, secondaryAnimation) {
-          return Align(
-            alignment: Alignment.centerRight,
-            child: Material(
-              color: Theme.of(dialogContext).colorScheme.surface,
-              shape:
-                  const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-              child: SizedBox(
-                width: 360,
-                height: double.infinity,
-                child: SafeArea(
-                  child: WorkOrderListFilterDrawerContent(
-                    title: '筛选',
-                    child: _buildFilterPanel(
-                      dialogContext,
-                      viewModel,
-                      statusItems: statusItems,
-                      priorityItems: priorityItems,
-                      approvalItems: approvalItems,
-                      customerItems: customerItems,
-                      productItems: productItems,
-                      processItems: processItems,
-                      bottomSpacing: 20,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-        transitionBuilder: (context, animation, secondaryAnimation, child) {
-          final offsetTween =
-              Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero);
-          return SlideTransition(
-            position: animation
-                .drive(
-                  CurveTween(curve: Curves.easeOutCubic),
-                )
-                .drive(offsetTween),
-            child: child,
-          );
-        },
+      showAdaptiveFilterDrawer(
+        context,
+        isMobile: isMobile,
+        child: _buildFilterPanel(
+          context,
+          viewModel,
+          statusItems: statusItems,
+          priorityItems: priorityItems,
+          approvalItems: approvalItems,
+          customerItems: customerItems,
+          productItems: productItems,
+          processItems: processItems,
+          bottomSpacing: isMobile ? 16 : 20,
+        ),
       );
     }
 
@@ -831,10 +770,11 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     required List<DropdownMenuItem<int?>> processItems,
     required double bottomSpacing,
   }) {
-    final spacing = LayoutTokens.formSectionSpacing(context);
-    final content = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
+    return FilterPanelBody(
+      bottomSpacing: bottomSpacing,
+      resetLabel: _resetButtonText,
+      onReset: () => _resetFilters(viewModel),
+      fields: [
         if (_loadingOptions) const LinearProgressIndicator(minHeight: 2),
         SearchableDropdownFormField<String>(
           initialValue: _statusFilter,
@@ -846,7 +786,6 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
             _applyFilters(viewModel);
           },
         ),
-        SizedBox(height: spacing),
         SearchableDropdownFormField<String>(
           initialValue: _priorityFilter,
           isExpanded: true,
@@ -857,7 +796,6 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
             _applyFilters(viewModel);
           },
         ),
-        SizedBox(height: spacing),
         SearchableDropdownFormField<String>(
           initialValue: _approvalStatusFilter,
           isExpanded: true,
@@ -868,7 +806,6 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
             _applyFilters(viewModel);
           },
         ),
-        SizedBox(height: spacing),
         SearchableDropdownFormField<int?>(
           initialValue: _customerFilterId,
           isExpanded: true,
@@ -879,7 +816,6 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
             _applyFilters(viewModel);
           },
         ),
-        SizedBox(height: spacing),
         SearchableDropdownFormField<int?>(
           initialValue: _productFilterId,
           isExpanded: true,
@@ -890,7 +826,6 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
             _applyFilters(viewModel);
           },
         ),
-        SizedBox(height: spacing),
         SearchableDropdownFormField<int?>(
           initialValue: _processFilterId,
           isExpanded: true,
@@ -901,27 +836,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
             _applyFilters(viewModel);
           },
         ),
-        SizedBox(height: bottomSpacing),
-        Row(
-          children: [
-            PageActionButton.outlined(
-              onPressed: () => _resetFilters(viewModel),
-              icon: const Icon(Icons.restart_alt, size: 16),
-              label: _resetButtonText,
-            ),
-            SizedBox(width: spacing),
-            PageActionButton.filled(
-              onPressed: () => Navigator.of(context).maybePop(),
-              label: '完成',
-            ),
-          ],
-        ),
       ],
-    );
-
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-      children: [content],
     );
   }
 

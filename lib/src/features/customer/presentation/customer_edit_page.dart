@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/edit_page_scaffold.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/application/customer_view_model.dart';
@@ -22,7 +20,6 @@ class CustomerEditPage extends StatefulWidget {
 }
 
 class _CustomerEditPageState extends State<CustomerEditPage> {
-  final _formKey = GlobalKey<FormState>();
   static const double _loadingIndicatorSize = 14;
   static const double _indicatorStrokeWidth = 2;
   static const double _inlineSpacing = 8;
@@ -36,14 +33,12 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
   static const String _notesLabel = '备注';
   static const String _noSalespersonText = '不指定';
   static const String _loadingSalespersonsText = '正在加载业务员列表...';
-  static const String _submitCreateText = '保存';
-  static const String _submitUpdateText = '保存';
+  static const String _submitText = '保存';
   static const String _submitErrorText = '操作失败: ';
   static const String _nameRequiredText = '请输入客户名称';
   static const String _nameLengthText = '客户名称至少需要2个字符';
   static const String _phoneInvalidText = '电话号码格式不正确';
   static const String _emailInvalidText = '请输入正确的邮箱地址';
-  static const String _cancelText = '返回';
   static const String _basicSectionTitle = '基本信息';
   static const String _contactSectionTitle = '联系信息';
   static const String _extraSectionTitle = '补充信息';
@@ -60,7 +55,6 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
   late final TextEditingController _notesController;
 
   int? _salespersonId;
-  bool _submitting = false;
 
   @override
   void initState() {
@@ -95,11 +89,6 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
       ToastUtil.showError('当前账号无权执行该操作');
       return;
     }
-    final form = _formKey.currentState;
-    if (form == null || !form.validate()) {
-      return;
-    }
-    setState(() => _submitting = true);
 
     String? salespersonName;
     if (_salespersonId != null) {
@@ -125,21 +114,10 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
       updatedAt: widget.customer?.updatedAt,
     );
 
-    try {
-      if (widget.customer == null) {
-        await viewModel.createCustomer(payload);
-      } else {
-        await viewModel.updateCustomer(payload);
-      }
-      if (!mounted) return;
-      Navigator.of(context).pop(true);
-    } catch (err) {
-      if (!mounted) return;
-      ToastUtil.showError('$_submitErrorText$err');
-    } finally {
-      if (mounted) {
-        setState(() => _submitting = false);
-      }
+    if (widget.customer == null) {
+      await viewModel.createCustomer(payload);
+    } else {
+      await viewModel.updateCustomer(payload);
     }
   }
 
@@ -154,95 +132,100 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
     return '$year-$month-$day $hour:$minute';
   }
 
-  Widget _sectionTitle(ThemeData theme, String text) {
-    return Text(
-      text,
-      style: theme.textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.w700,
-        color: theme.colorScheme.onSurface,
-      ),
-    );
-  }
-
   Widget _readonlyField(ThemeData theme, String label, String value) {
     final colors = theme.extension<AppColors>();
     final subtleText = colors?.subtleText ?? theme.hintColor;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: theme.textTheme.bodySmall?.copyWith(color: subtleText)),
+        Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(color: subtleText),
+        ),
         const SizedBox(height: LayoutTokens.gapSm),
         Text(value, style: theme.textTheme.bodyMedium),
       ],
     );
   }
 
+  Widget _salespersonStateField(
+    BuildContext context,
+    CustomerViewModel viewModel,
+    ThemeData theme,
+  ) {
+    final salespersonsError = viewModel.salespersonsError;
+    final sectionSpacing = LayoutTokens.formSectionSpacing(context);
+
+    if (viewModel.loadingSalespersons) {
+      return Padding(
+        padding: EdgeInsets.only(top: sectionSpacing),
+        child: Row(
+          children: [
+            const SizedBox(
+              width: _loadingIndicatorSize,
+              height: _loadingIndicatorSize,
+              child: CircularProgressIndicator(
+                strokeWidth: _indicatorStrokeWidth,
+              ),
+            ),
+            const SizedBox(width: _inlineSpacing),
+            const Text(_loadingSalespersonsText),
+          ],
+        ),
+      );
+    }
+
+    if (salespersonsError != null && salespersonsError.isNotEmpty) {
+      return Padding(
+        padding: EdgeInsets.only(top: sectionSpacing),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                salespersonsError,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: viewModel.loadSalespersons,
+              child: const Text('重试'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final canSubmit = PermissionUtil.hasPermission(
-      context,
-      widget.customer == null
-          ? 'workorder.add_customer'
-          : 'workorder.change_customer',
-    );
+    final customer = widget.customer;
     final viewModel = context.watch<CustomerViewModel>();
     final salespersons = viewModel.salespersons;
-    final salespersonsError = viewModel.salespersonsError;
-    final theme = Theme.of(context);
-    final isMobile = BreakpointsUtil.isMobile(context);
-    final customer = widget.customer;
-    final contentPadding = LayoutTokens.pagePadding(context);
-    final sectionSpacing = LayoutTokens.formSectionSpacing(context);
-    final actionSpacing = LayoutTokens.formActionSpacing(context);
-    final pageSpacing = LayoutTokens.formPageSpacing(context);
-    final columnSpacing = LayoutTokens.formColumnSpacing(context);
 
-    return SafeArea(
-      child: Form(
-        key: _formKey,
-        child: EditPageScaffold(
-          spacing: pageSpacing,
-          contentPadding: contentPadding,
-          header: PageHeaderBar(
-            breadcrumb: null,
-            useSurface: false,
-            showDivider: false,
-            padding: EdgeInsets.zero,
-            actions: Wrap(
-              spacing: _inlineSpacing,
-              runSpacing: 8,
-              children: [
-                PageActionButton.outlined(
-                  onPressed: _submitting
-                      ? null
-                      : () => Navigator.of(context).pop(false),
-                  icon: const Icon(Icons.arrow_back, size: 16),
-                  label: _cancelText,
-                ),
-                PageActionButton.filled(
-                  onPressed: _submitting || !canSubmit
-                      ? null
-                      : () => _handleSubmit(viewModel),
-                  icon: const Icon(Icons.save, size: 16),
-                  label: _submitting
-                      ? '保存中'
-                      : (customer == null
-                          ? _submitCreateText
-                          : _submitUpdateText),
-                ),
-              ],
-            ),
-          ),
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (isMobile) ...[
-                _sectionTitle(theme, _basicSectionTitle),
-                SizedBox(height: sectionSpacing),
-                TextFormField(
+    return CrudEditPage<Customer, CustomerViewModel>(
+      item: customer,
+      config: CrudEditConfig<Customer, CustomerViewModel>(
+        submitText: _submitText,
+        submittingText: '保存中',
+        errorMessagePrefix: _submitErrorText,
+        canSave: (context, viewModel, item) => PermissionUtil.hasPermission(
+          context,
+          item == null ? 'workorder.add_customer' : 'workorder.change_customer',
+        ),
+        sectionsBuilder: (context, isMobile) {
+          final theme = Theme.of(context);
+          return [
+            CrudFormSection(
+              title: _basicSectionTitle,
+              column: 0,
+              fields: [
+                CrudFormField.text(
+                  label: _nameLabel,
                   controller: _nameController,
-                  decoration: const InputDecoration(labelText: _nameLabel),
                   validator: (value) {
                     final text = value?.trim() ?? '';
                     if (text.isEmpty) {
@@ -254,318 +237,111 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                     return null;
                   },
                 ),
-                SizedBox(height: sectionSpacing),
-                SearchableDropdownFormField<int?>(
-                  initialValue: _salespersonId,
-                  decoration:
-                      const InputDecoration(labelText: _salespersonLabel),
-                  items: [
-                    const DropdownMenuItem<int?>(
+                CrudFormField.dropdown(
+                  label: _salespersonLabel,
+                  value: _salespersonId,
+                  options: [
+                    const CrudFieldOption<dynamic>(
                       value: null,
-                      child: Text(_noSalespersonText),
+                      label: _noSalespersonText,
                     ),
                     ...salespersons.map(
-                      (item) => DropdownMenuItem<int?>(
+                      (item) => CrudFieldOption<dynamic>(
                         value: item.id,
-                        child: Text(item.name),
+                        label: item.name,
                       ),
                     ),
                   ],
                   onChanged: (value) {
-                    setState(() {
-                      _salespersonId = value;
-                    });
+                    setState(() => _salespersonId = value as int?);
                   },
-                  validator: (_) => null,
                 ),
-                if (viewModel.loadingSalespersons)
-                  Padding(
-                    padding: EdgeInsets.only(top: sectionSpacing),
-                    child: Row(
-                      children: [
-                        const SizedBox(
-                          width: _loadingIndicatorSize,
-                          height: _loadingIndicatorSize,
-                          child: CircularProgressIndicator(
-                              strokeWidth: _indicatorStrokeWidth),
-                        ),
-                        const SizedBox(width: _inlineSpacing),
-                        const Text(_loadingSalespersonsText),
-                      ],
-                    ),
-                  )
-                else if (salespersonsError != null &&
-                    salespersonsError.isNotEmpty)
-                  Padding(
-                    padding: EdgeInsets.only(top: sectionSpacing),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            salespersonsError,
-                            style: theme.textTheme.bodySmall
-                                ?.copyWith(color: theme.colorScheme.error),
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: viewModel.loadSalespersons,
-                          child: const Text('重试'),
-                        ),
-                      ],
-                    ),
-                  ),
-                SizedBox(height: sectionSpacing),
-                _sectionTitle(theme, _contactSectionTitle),
-                SizedBox(height: sectionSpacing),
-                TextFormField(
+                CrudFormField.custom(
+                  builder: (context) =>
+                      _salespersonStateField(context, viewModel, theme),
+                ),
+              ],
+            ),
+            CrudFormSection(
+              title: _contactSectionTitle,
+              column: 0,
+              fields: [
+                CrudFormField.text(
+                  label: _contactLabel,
                   controller: _contactController,
-                  decoration: const InputDecoration(labelText: _contactLabel),
-                  validator: (_) => null,
                 ),
-                SizedBox(height: sectionSpacing),
-                TextFormField(
+                CrudFormField.phone(
+                  label: _phoneLabel,
                   controller: _phoneController,
-                  decoration: const InputDecoration(labelText: _phoneLabel),
-                  keyboardType: TextInputType.phone,
                   validator: (value) {
                     final text = value?.trim() ?? '';
                     if (text.isEmpty) {
                       return null;
                     }
-                    final phoneRegex = RegExp(r'^[\d\-+() ]+$');
-                    if (!phoneRegex.hasMatch(text)) {
+                    if (!RegExp(r'^[\d\-+() ]+$').hasMatch(text)) {
                       return _phoneInvalidText;
                     }
                     return null;
                   },
                 ),
-                SizedBox(height: sectionSpacing),
-                TextFormField(
+                CrudFormField.email(
+                  label: _emailLabel,
                   controller: _emailController,
-                  decoration: const InputDecoration(labelText: _emailLabel),
-                  keyboardType: TextInputType.emailAddress,
                   validator: (value) {
                     final text = value?.trim() ?? '';
                     if (text.isEmpty) {
                       return null;
                     }
-                    final emailRegex =
-                        RegExp(r'^[\w\-.]+@([\w\-]+\.)+[\w\-]{2,4}$');
-                    if (!emailRegex.hasMatch(text)) {
+                    if (!RegExp(r'^[\w\-.]+@([\w\-]+\.)+[\w\-]{2,4}$')
+                        .hasMatch(text)) {
                       return _emailInvalidText;
                     }
                     return null;
                   },
                 ),
-                SizedBox(height: sectionSpacing),
-                _sectionTitle(theme, _extraSectionTitle),
-                SizedBox(height: sectionSpacing),
-                TextFormField(
+              ],
+            ),
+            CrudFormSection(
+              title: _extraSectionTitle,
+              column: isMobile ? 0 : 1,
+              fields: [
+                CrudFormField.textarea(
+                  label: _addressLabel,
                   controller: _addressController,
-                  decoration: const InputDecoration(labelText: _addressLabel),
+                  minLines: 2,
                   maxLines: 2,
-                  validator: (_) => null,
                 ),
-                SizedBox(height: sectionSpacing),
-                TextFormField(
+                CrudFormField.textarea(
+                  label: _notesLabel,
                   controller: _notesController,
-                  decoration: const InputDecoration(labelText: _notesLabel),
                   maxLines: 3,
-                  validator: (_) => null,
-                ),
-                if (customer != null) ...[
-                  SizedBox(height: sectionSpacing),
-                  _sectionTitle(theme, _systemSectionTitle),
-                  SizedBox(height: sectionSpacing),
-                  _readonlyField(theme, _createdAtLabel,
-                      _formatDateTime(customer.createdAt)),
-                  SizedBox(height: sectionSpacing),
-                  _readonlyField(theme, _updatedAtLabel,
-                      _formatDateTime(customer.updatedAt)),
-                ],
-              ] else ...[
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _sectionTitle(theme, _basicSectionTitle),
-                          SizedBox(height: sectionSpacing),
-                          TextFormField(
-                            controller: _nameController,
-                            decoration:
-                                const InputDecoration(labelText: _nameLabel),
-                            validator: (value) {
-                              final text = value?.trim() ?? '';
-                              if (text.isEmpty) {
-                                return _nameRequiredText;
-                              }
-                              if (text.length < 2) {
-                                return _nameLengthText;
-                              }
-                              return null;
-                            },
-                          ),
-                          SizedBox(height: sectionSpacing),
-                          SearchableDropdownFormField<int?>(
-                            initialValue: _salespersonId,
-                            decoration: const InputDecoration(
-                                labelText: _salespersonLabel),
-                            items: [
-                              const DropdownMenuItem<int?>(
-                                value: null,
-                                child: Text(_noSalespersonText),
-                              ),
-                              ...salespersons.map(
-                                (item) => DropdownMenuItem<int?>(
-                                  value: item.id,
-                                  child: Text(item.name),
-                                ),
-                              ),
-                            ],
-                            onChanged: (value) {
-                              setState(() {
-                                _salespersonId = value;
-                              });
-                            },
-                            validator: (_) => null,
-                          ),
-                          if (viewModel.loadingSalespersons)
-                            Padding(
-                              padding: EdgeInsets.only(top: sectionSpacing),
-                              child: Row(
-                                children: [
-                                  const SizedBox(
-                                    width: _loadingIndicatorSize,
-                                    height: _loadingIndicatorSize,
-                                    child: CircularProgressIndicator(
-                                        strokeWidth: _indicatorStrokeWidth),
-                                  ),
-                                  const SizedBox(width: _inlineSpacing),
-                                  const Text(_loadingSalespersonsText),
-                                ],
-                              ),
-                            )
-                          else if (salespersonsError != null &&
-                              salespersonsError.isNotEmpty)
-                            Padding(
-                              padding: EdgeInsets.only(top: sectionSpacing),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      salespersonsError,
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                              color: theme.colorScheme.error),
-                                    ),
-                                  ),
-                                  TextButton(
-                                    onPressed: viewModel.loadSalespersons,
-                                    child: const Text('重试'),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          SizedBox(height: sectionSpacing),
-                          _sectionTitle(theme, _contactSectionTitle),
-                          SizedBox(height: sectionSpacing),
-                          TextFormField(
-                            controller: _contactController,
-                            decoration:
-                                const InputDecoration(labelText: _contactLabel),
-                            validator: (_) => null,
-                          ),
-                          SizedBox(height: sectionSpacing),
-                          TextFormField(
-                            controller: _phoneController,
-                            decoration:
-                                const InputDecoration(labelText: _phoneLabel),
-                            keyboardType: TextInputType.phone,
-                            validator: (value) {
-                              final text = value?.trim() ?? '';
-                              if (text.isEmpty) {
-                                return null;
-                              }
-                              final phoneRegex = RegExp(r'^[\d\-+() ]+$');
-                              if (!phoneRegex.hasMatch(text)) {
-                                return _phoneInvalidText;
-                              }
-                              return null;
-                            },
-                          ),
-                          SizedBox(height: sectionSpacing),
-                          TextFormField(
-                            controller: _emailController,
-                            decoration:
-                                const InputDecoration(labelText: _emailLabel),
-                            keyboardType: TextInputType.emailAddress,
-                            validator: (value) {
-                              final text = value?.trim() ?? '';
-                              if (text.isEmpty) {
-                                return null;
-                              }
-                              final emailRegex =
-                                  RegExp(r'^[\w\-.]+@([\w\-]+\.)+[\w\-]{2,4}$');
-                              if (!emailRegex.hasMatch(text)) {
-                                return _emailInvalidText;
-                              }
-                              return null;
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: columnSpacing),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _sectionTitle(theme, _extraSectionTitle),
-                          SizedBox(height: sectionSpacing),
-                          TextFormField(
-                            controller: _addressController,
-                            decoration:
-                                const InputDecoration(labelText: _addressLabel),
-                            maxLines: 2,
-                            validator: (_) => null,
-                          ),
-                          SizedBox(height: sectionSpacing),
-                          TextFormField(
-                            controller: _notesController,
-                            decoration:
-                                const InputDecoration(labelText: _notesLabel),
-                            maxLines: 3,
-                            validator: (_) => null,
-                          ),
-                          if (customer != null) ...[
-                            SizedBox(height: sectionSpacing),
-                            _sectionTitle(theme, _systemSectionTitle),
-                            SizedBox(height: sectionSpacing),
-                            _readonlyField(
-                              theme,
-                              _createdAtLabel,
-                              _formatDateTime(customer.createdAt),
-                            ),
-                            SizedBox(height: sectionSpacing),
-                            _readonlyField(
-                              theme,
-                              _updatedAtLabel,
-                              _formatDateTime(customer.updatedAt),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ],
                 ),
               ],
-              SizedBox(height: actionSpacing),
-            ],
-          ),
-        ),
+            ),
+            CrudFormSection(
+              title: _systemSectionTitle,
+              column: isMobile ? 0 : 1,
+              visible: customer != null,
+              fields: [
+                CrudFormField.custom(
+                  builder: (context) => _readonlyField(
+                    theme,
+                    _createdAtLabel,
+                    _formatDateTime(customer?.createdAt),
+                  ),
+                ),
+                CrudFormField.custom(
+                  builder: (context) => _readonlyField(
+                    theme,
+                    _updatedAtLabel,
+                    _formatDateTime(customer?.updatedAt),
+                  ),
+                ),
+              ],
+            ),
+          ];
+        },
+        onSave: (context, viewModel, item) => _handleSubmit(viewModel),
       ),
     );
   }

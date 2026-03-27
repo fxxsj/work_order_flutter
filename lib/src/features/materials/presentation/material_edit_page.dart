@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/edit_page_scaffold.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
-import 'package:work_order_app/src/core/utils/toast_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/features/materials/application/material_view_model.dart';
 import 'package:work_order_app/src/features/materials/domain/material.dart';
 
@@ -18,10 +14,6 @@ class MaterialEditPage extends StatefulWidget {
 }
 
 class _MaterialEditPageState extends State<MaterialEditPage> {
-  final _formKey = GlobalKey<FormState>();
-
-  static const double _inlineSpacing = 8;
-
   static const String _codeLabel = '物料编码';
   static const String _nameLabel = '物料名称';
   static const String _unitLabel = '单位';
@@ -36,7 +28,6 @@ class _MaterialEditPageState extends State<MaterialEditPage> {
   static const String _codeInvalidText = '编码只能包含字母、数字和连字符';
   static const String _nameRequiredText = '请输入物料名称';
   static const String _unitRequiredText = '请输入单位';
-  static const String _cancelText = '返回';
   static const String _basicSectionTitle = '基本信息';
   static const String _extraSectionTitle = '库存信息';
 
@@ -46,8 +37,6 @@ class _MaterialEditPageState extends State<MaterialEditPage> {
   late final TextEditingController _unitPriceController;
   late final TextEditingController _stockController;
   late final TextEditingController _minStockController;
-
-  bool _submitting = false;
 
   @override
   void initState() {
@@ -79,36 +68,23 @@ class _MaterialEditPageState extends State<MaterialEditPage> {
   }
 
   Future<void> _handleSubmit(MaterialViewModel viewModel) async {
-    final form = _formKey.currentState;
-    if (form == null || !form.validate()) {
-      return;
-    }
-    setState(() => _submitting = true);
-
     final payload = MaterialItem(
       id: widget.material?.id ?? 0,
       code: _codeController.text.trim(),
       name: _nameController.text.trim(),
-      unit: _unitController.text.trim().isEmpty ? null : _unitController.text.trim(),
+      unit: _unitController.text.trim().isEmpty
+          ? null
+          : _unitController.text.trim(),
       unitPrice: _parseDouble(_unitPriceController.text),
       stockQuantity: _parseDouble(_stockController.text),
       minStockQuantity: _parseDouble(_minStockController.text),
       isActive: widget.material?.isActive,
     );
 
-    try {
-      if (widget.material == null) {
-        await viewModel.createMaterial(payload);
-      } else {
-        await viewModel.updateMaterial(payload);
-      }
-      if (!mounted) return;
-      Navigator.of(context).pop(true);
-    } catch (err) {
-      if (!mounted) return;
-      ToastUtil.showError('$_submitErrorText$err');
-    } finally {
-      if (mounted) setState(() => _submitting = false);
+    if (widget.material == null) {
+      await viewModel.createMaterial(payload);
+    } else {
+      await viewModel.updateMaterial(payload);
     }
   }
 
@@ -118,141 +94,76 @@ class _MaterialEditPageState extends State<MaterialEditPage> {
     return double.tryParse(text);
   }
 
-  Widget _sectionTitle(ThemeData theme, String text) {
-    return Text(
-      text,
-      style: theme.textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.w700,
-        color: theme.colorScheme.onSurface,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<MaterialViewModel>();
-    final theme = Theme.of(context);
-    final isMobile = BreakpointsUtil.isMobile(context);
-    final contentPadding = LayoutTokens.pagePadding(context);
-    final sectionSpacing = LayoutTokens.formSectionSpacing(context);
-    final actionSpacing = LayoutTokens.formActionSpacing(context);
-    final pageSpacing = LayoutTokens.formPageSpacing(context);
-    final columnSpacing = LayoutTokens.formColumnSpacing(context);
-
-    final basicFields = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _sectionTitle(theme, _basicSectionTitle),
-        SizedBox(height: sectionSpacing),
-        TextFormField(
-          controller: _codeController,
-          decoration: const InputDecoration(labelText: _codeLabel),
-          validator: (value) {
-            final text = value?.trim() ?? '';
-            if (text.isEmpty) return _codeRequiredText;
-            if (text.length < 2 || text.length > 50) return _codeLengthText;
-            final regex = RegExp(r'^[A-Za-z0-9-]+$');
-            if (!regex.hasMatch(text)) return _codeInvalidText;
-            return null;
-          },
-        ),
-        SizedBox(height: sectionSpacing),
-        TextFormField(
-          controller: _nameController,
-          decoration: const InputDecoration(labelText: _nameLabel),
-          validator: (value) {
-            final text = value?.trim() ?? '';
-            if (text.isEmpty) return _nameRequiredText;
-            return null;
-          },
-        ),
-        SizedBox(height: sectionSpacing),
-        TextFormField(
-          controller: _unitController,
-          decoration: const InputDecoration(labelText: _unitLabel),
-          validator: (value) {
-            final text = value?.trim() ?? '';
-            if (text.isEmpty) return _unitRequiredText;
-            return null;
-          },
-        ),
-      ],
-    );
-
-    final extraFields = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _sectionTitle(theme, _extraSectionTitle),
-        SizedBox(height: sectionSpacing),
-        TextFormField(
-          controller: _unitPriceController,
-          decoration: const InputDecoration(labelText: _unitPriceLabel),
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        ),
-        SizedBox(height: sectionSpacing),
-        TextFormField(
-          controller: _stockController,
-          decoration: const InputDecoration(labelText: _stockLabel),
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        ),
-        SizedBox(height: sectionSpacing),
-        TextFormField(
-          controller: _minStockController,
-          decoration: const InputDecoration(labelText: _minStockLabel),
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        ),
-      ],
-    );
-
-    final body = isMobile
-        ? Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              basicFields,
-              SizedBox(height: sectionSpacing),
-              extraFields,
-              SizedBox(height: actionSpacing),
+    return CrudEditPage<MaterialItem, MaterialViewModel>(
+      item: widget.material,
+      config: CrudEditConfig<MaterialItem, MaterialViewModel>(
+        submitText: _submitText,
+        submittingText: '保存中',
+        errorMessagePrefix: _submitErrorText,
+        sectionsBuilder: (context, isMobile) => [
+          CrudFormSection(
+            title: _basicSectionTitle,
+            column: 0,
+            fields: [
+              CrudFormField.text(
+                label: _codeLabel,
+                controller: _codeController,
+                validator: (value) {
+                  final text = value?.trim() ?? '';
+                  if (text.isEmpty) return _codeRequiredText;
+                  if (text.length < 2 || text.length > 50) {
+                    return _codeLengthText;
+                  }
+                  final regex = RegExp(r'^[A-Za-z0-9-]+$');
+                  if (!regex.hasMatch(text)) return _codeInvalidText;
+                  return null;
+                },
+              ),
+              CrudFormField.text(
+                label: _nameLabel,
+                controller: _nameController,
+                validator: (value) {
+                  final text = value?.trim() ?? '';
+                  if (text.isEmpty) return _nameRequiredText;
+                  return null;
+                },
+              ),
+              CrudFormField.text(
+                label: _unitLabel,
+                controller: _unitController,
+                validator: (value) {
+                  final text = value?.trim() ?? '';
+                  if (text.isEmpty) return _unitRequiredText;
+                  return null;
+                },
+              ),
             ],
-          )
-        : Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: basicFields),
-              SizedBox(width: columnSpacing),
-              Expanded(child: extraFields),
-            ],
-          );
-
-    return SafeArea(
-      child: Form(
-        key: _formKey,
-        child: EditPageScaffold(
-          spacing: pageSpacing,
-          contentPadding: contentPadding,
-          header: PageHeaderBar(
-            breadcrumb: null,
-            useSurface: false,
-            showDivider: false,
-            padding: EdgeInsets.zero,
-            actions: Wrap(
-              spacing: _inlineSpacing,
-              runSpacing: 8,
-              children: [
-                PageActionButton.outlined(
-                  onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
-                  icon: const Icon(Icons.arrow_back, size: 16),
-                  label: _cancelText,
-                ),
-                PageActionButton.filled(
-                  onPressed: _submitting ? null : () => _handleSubmit(viewModel),
-                  icon: const Icon(Icons.save, size: 16),
-                  label: _submitting ? '保存中' : _submitText,
-                ),
-              ],
-            ),
           ),
-          body: body,
-        ),
+          CrudFormSection(
+            title: _extraSectionTitle,
+            column: isMobile ? 0 : 1,
+            fields: [
+              CrudFormField.number(
+                label: _unitPriceLabel,
+                controller: _unitPriceController,
+                decimal: true,
+              ),
+              CrudFormField.number(
+                label: _stockLabel,
+                controller: _stockController,
+                decimal: true,
+              ),
+              CrudFormField.number(
+                label: _minStockLabel,
+                controller: _minStockController,
+                decimal: true,
+              ),
+            ],
+          ),
+        ],
+        onSave: (context, viewModel, item) => _handleSubmit(viewModel),
       ),
     );
   }

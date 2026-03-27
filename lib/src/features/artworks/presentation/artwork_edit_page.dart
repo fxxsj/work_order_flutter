@@ -3,10 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/edit_page_scaffold.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/artworks/application/artwork_view_model.dart';
 import 'package:work_order_app/src/features/artworks/domain/artwork.dart';
@@ -29,10 +28,6 @@ class ArtworkEditPage extends StatefulWidget {
 }
 
 class _ArtworkEditPageState extends State<ArtworkEditPage> {
-  final _formKey = GlobalKey<FormState>();
-
-  static const double _inlineSpacing = 8;
-
   static const String _baseCodeLabel = '图稿主编码';
   static const String _versionLabel = '版本号';
   static const String _nameLabel = '图稿名称';
@@ -51,7 +46,6 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
   static const String _submitText = '保存';
   static const String _submitErrorText = '操作失败: ';
   static const String _nameRequiredText = '请输入图稿名称';
-  static const String _cancelText = '返回';
   static const String _basicSectionTitle = '基本信息';
   static const String _extraSectionTitle = '补充信息';
   static const String _diePlaceholder = '请选择刀模（可多选）';
@@ -68,7 +62,6 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
 
   final Set<String> _cmykColors = {'C', 'M', 'Y', 'K'};
   final Set<String> _selectedCmyk = {};
-  bool _submitting = false;
   ProductApiService? _productApi;
   DieApiService? _dieApi;
   FoilingPlateApiService? _foilingApi;
@@ -167,9 +160,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
   }
 
   void _addProductItem() {
-    setState(() {
-      _productItems.add(_ArtworkProductItem(quantity: 1));
-    });
+    setState(() => _productItems.add(_ArtworkProductItem(quantity: 1)));
   }
 
   void _removeProductItem(int index) {
@@ -194,12 +185,6 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
   }
 
   Future<void> _handleSubmit(ArtworkViewModel viewModel) async {
-    final form = _formKey.currentState;
-    if (form == null || !form.validate()) {
-      return;
-    }
-    setState(() => _submitting = true);
-
     final otherColors = _otherColorsController.text
         .split(RegExp(r'[、,，\n]'))
         .map((e) => e.trim())
@@ -246,50 +231,66 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
       createdAt: widget.artwork?.createdAt,
     );
 
-    try {
-      if (widget.artwork == null) {
-        await viewModel.createArtwork(payload);
-      } else {
-        await viewModel.updateArtwork(payload);
-      }
-      if (!mounted) return;
-      Navigator.of(context).pop(true);
-    } catch (err) {
-      if (!mounted) return;
-      ToastUtil.showError('$_submitErrorText$err');
-    } finally {
-      if (mounted) {
-        setState(() => _submitting = false);
-      }
+    if (widget.artwork == null) {
+      await viewModel.createArtwork(payload);
+    } else {
+      await viewModel.updateArtwork(payload);
     }
   }
 
-  Widget _sectionTitle(ThemeData theme, String text) {
-    return Text(
-      text,
-      style: theme.textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.w700,
-        color: theme.colorScheme.onSurface,
+  Widget _buildVersionField(BuildContext context) {
+    return TextFormField(
+      initialValue: widget.artwork?.version?.toString() ?? '1',
+      decoration: const InputDecoration(labelText: _versionLabel),
+      enabled: false,
+    );
+  }
+
+  Widget _buildCmykField(BuildContext context) {
+    return InputDecorator(
+      decoration: const InputDecoration(labelText: _cmykLabel),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: _cmykColors.map((color) {
+          final selected = _selectedCmyk.contains(color);
+          return FilterChip(
+            label: Text(color),
+            selected: selected,
+            onSelected: (value) {
+              setState(() {
+                if (value) {
+                  _selectedCmyk.add(color);
+                } else {
+                  _selectedCmyk.remove(color);
+                }
+              });
+            },
+          );
+        }).toList(),
       ),
     );
   }
 
   Widget _buildChipSection(
-    ThemeData theme, {
+    BuildContext context, {
     required String title,
     required List<_OptionItem> options,
     required Set<int> selectedIds,
     required String placeholder,
-    required double sectionSpacing,
   }) {
+    final theme = Theme.of(context);
+    final sectionSpacing = LayoutTokens.formSectionSpacing(context);
     final colors = theme.extension<AppColors>();
     final subtleText = colors?.subtleText ?? theme.hintColor;
     final selectedItems =
         options.where((item) => selectedIds.contains(item.id)).toList();
 
     final content = options.isEmpty
-        ? Text('暂无可选项',
-            style: theme.textTheme.bodySmall?.copyWith(color: subtleText))
+        ? Text(
+            '暂无可选项',
+            style: theme.textTheme.bodySmall?.copyWith(color: subtleText),
+          )
         : InkWell(
             onTap: () => _openMultiSelectDialog(
               title: title,
@@ -298,14 +299,16 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
             ),
             borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
             child: InputDecorator(
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.all(12),
-                suffixIcon: const Icon(Icons.arrow_drop_down),
+              decoration: const InputDecoration(
+                contentPadding: EdgeInsets.all(12),
+                suffixIcon: Icon(Icons.arrow_drop_down),
               ),
               child: selectedItems.isEmpty
-                  ? Text(placeholder,
+                  ? Text(
+                      placeholder,
                       style: theme.textTheme.bodyMedium
-                          ?.copyWith(color: subtleText))
+                          ?.copyWith(color: subtleText),
+                    )
                   : Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -328,7 +331,13 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _sectionTitle(theme, title),
+        Text(
+          title,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
         SizedBox(height: sectionSpacing),
         if (_loadingPicklists)
           const LinearProgressIndicator(minHeight: 2)
@@ -376,8 +385,11 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                     Expanded(
                       child: filtered.isEmpty
                           ? Center(
-                              child: Text(_emptyMatchText,
-                                  style: Theme.of(context).textTheme.bodySmall))
+                              child: Text(
+                                _emptyMatchText,
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            )
                           : Scrollbar(
                               child: ListView.builder(
                                 itemCount: filtered.length,
@@ -440,12 +452,16 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
     );
   }
 
-  Widget _buildProductSection(ThemeData theme, double sectionSpacing) {
+  Widget _buildProductSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final sectionSpacing = LayoutTokens.formSectionSpacing(context);
     final colors = theme.extension<AppColors>();
     final subtleText = colors?.subtleText ?? theme.hintColor;
     final content = _productItems.isEmpty
-        ? Text('暂无产品项',
-            style: theme.textTheme.bodySmall?.copyWith(color: subtleText))
+        ? Text(
+            '暂无产品项',
+            style: theme.textTheme.bodySmall?.copyWith(color: subtleText),
+          )
         : Column(
             children: List.generate(_productItems.length, (index) {
               final item = _productItems[index];
@@ -469,9 +485,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                             )
                             .toList(),
                         onChanged: (value) {
-                          setState(() {
-                            item.productId = value;
-                          });
+                          setState(() => item.productId = value);
                         },
                       ),
                     ),
@@ -487,8 +501,10 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                     const SizedBox(width: 8),
                     IconButton(
                       tooltip: '移除',
-                      icon: Icon(Icons.delete_outline,
-                          color: theme.colorScheme.error),
+                      icon: Icon(
+                        Icons.delete_outline,
+                        color: theme.colorScheme.error,
+                      ),
                       onPressed: () => _removeProductItem(index),
                     ),
                   ],
@@ -500,7 +516,13 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _sectionTitle(theme, _productSectionTitle),
+        Text(
+          _productSectionTitle,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
         SizedBox(height: sectionSpacing),
         if (_loadingPicklists)
           const LinearProgressIndicator(minHeight: 2)
@@ -509,10 +531,10 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
         SizedBox(height: sectionSpacing),
         Align(
           alignment: Alignment.centerLeft,
-          child: PageActionButton.outlined(
+          child: TextButton.icon(
             onPressed: _addProductItem,
-            icon: const Icon(Icons.add, size: 16),
-            label: _addProductText,
+            icon: const Icon(Icons.add),
+            label: const Text(_addProductText),
           ),
         ),
       ],
@@ -521,237 +543,120 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<ArtworkViewModel>();
-    final theme = Theme.of(context);
-    final isMobile = BreakpointsUtil.isMobile(context);
-    final contentPadding = LayoutTokens.pagePadding(context);
-    final sectionSpacing = LayoutTokens.formSectionSpacing(context);
-    final actionSpacing = LayoutTokens.formActionSpacing(context);
-    final pageSpacing = LayoutTokens.formPageSpacing(context);
-    final columnSpacing = LayoutTokens.formColumnSpacing(context);
-
-    final baseCodeField = TextFormField(
-      controller: _baseCodeController,
-      decoration: const InputDecoration(
-        labelText: _baseCodeLabel,
-        hintText: '留空则系统自动生成',
-      ),
-      enabled: widget.artwork == null,
-    );
-
-    final versionField = widget.artwork == null
-        ? const SizedBox.shrink()
-        : TextFormField(
-            initialValue: widget.artwork?.version?.toString() ?? '1',
-            decoration: const InputDecoration(labelText: _versionLabel),
-            enabled: false,
-          );
-
-    final nameField = TextFormField(
-      controller: _nameController,
-      decoration: const InputDecoration(labelText: _nameLabel),
-      validator: (value) {
-        final text = value?.trim() ?? '';
-        if (text.isEmpty) {
-          return _nameRequiredText;
-        }
-        return null;
-      },
-    );
-
-    final cmykField = InputDecorator(
-      decoration: const InputDecoration(labelText: _cmykLabel),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: _cmykColors.map((color) {
-          final selected = _selectedCmyk.contains(color);
-          return FilterChip(
-            label: Text(color),
-            selected: selected,
-            onSelected: (value) {
-              setState(() {
-                if (value) {
-                  _selectedCmyk.add(color);
-                } else {
-                  _selectedCmyk.remove(color);
-                }
-              });
-            },
-          );
-        }).toList(),
-      ),
-    );
-
-    final otherColorsField = TextFormField(
-      controller: _otherColorsController,
-      decoration: const InputDecoration(
-        labelText: _otherColorsLabel,
-        hintText: '多个颜色用逗号或顿号分隔',
-      ),
-    );
-
-    final impositionField = TextFormField(
-      controller: _impositionController,
-      decoration: const InputDecoration(labelText: _impositionLabel),
-    );
-
-    final notesField = TextFormField(
-      controller: _notesController,
-      decoration: const InputDecoration(labelText: _notesLabel),
-      maxLines: 3,
-    );
-
-    final dieSection = _buildChipSection(
-      theme,
-      title: _dieLabel,
-      options: _dieOptions
-          .map((die) => _OptionItem(die.id, _optionLabel(die.name, die.code)))
-          .toList(),
-      selectedIds: _selectedDieIds,
-      placeholder: _diePlaceholder,
-      sectionSpacing: sectionSpacing,
-    );
-    final foilingSection = _buildChipSection(
-      theme,
-      title: _foilingLabel,
-      options: _foilingOptions
-          .map((plate) =>
-              _OptionItem(plate.id, _optionLabel(plate.name, plate.code)))
-          .toList(),
-      selectedIds: _selectedFoilingIds,
-      placeholder: _foilingPlaceholder,
-      sectionSpacing: sectionSpacing,
-    );
-    final embossingSection = _buildChipSection(
-      theme,
-      title: _embossingLabel,
-      options: _embossingOptions
-          .map((plate) =>
-              _OptionItem(plate.id, _optionLabel(plate.name, plate.code)))
-          .toList(),
-      selectedIds: _selectedEmbossingIds,
-      placeholder: _embossingPlaceholder,
-      sectionSpacing: sectionSpacing,
-    );
-    final productSection = _buildProductSection(theme, sectionSpacing);
-
-    final mainContent = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (isMobile) ...[
-          _sectionTitle(theme, _basicSectionTitle),
-          SizedBox(height: sectionSpacing),
-          baseCodeField,
-          if (widget.artwork != null) ...[
-            SizedBox(height: sectionSpacing),
-            versionField,
-          ],
-          SizedBox(height: sectionSpacing),
-          nameField,
-          SizedBox(height: sectionSpacing),
-          cmykField,
-          SizedBox(height: sectionSpacing),
-          otherColorsField,
-          SizedBox(height: sectionSpacing),
-          _sectionTitle(theme, _extraSectionTitle),
-          SizedBox(height: sectionSpacing),
-          impositionField,
-          SizedBox(height: sectionSpacing),
-          dieSection,
-          SizedBox(height: sectionSpacing),
-          foilingSection,
-          SizedBox(height: sectionSpacing),
-          embossingSection,
-          SizedBox(height: sectionSpacing),
-          productSection,
-          SizedBox(height: sectionSpacing),
-          notesField,
-        ] else ...[
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _sectionTitle(theme, _basicSectionTitle),
-                    SizedBox(height: sectionSpacing),
-                    baseCodeField,
-                    if (widget.artwork != null) ...[
-                      SizedBox(height: sectionSpacing),
-                      versionField,
-                    ],
-                    SizedBox(height: sectionSpacing),
-                    nameField,
-                    SizedBox(height: sectionSpacing),
-                    cmykField,
-                    SizedBox(height: sectionSpacing),
-                    otherColorsField,
-                    SizedBox(height: sectionSpacing),
-                    impositionField,
-                  ],
+    return CrudEditPage<Artwork, ArtworkViewModel>(
+      item: widget.artwork,
+      config: CrudEditConfig<Artwork, ArtworkViewModel>(
+        submitText: _submitText,
+        submittingText: '保存中',
+        errorMessagePrefix: _submitErrorText,
+        sectionsBuilder: (context, isMobile) => [
+          CrudFormSection(
+            title: _basicSectionTitle,
+            column: 0,
+            fields: [
+              CrudFormField.text(
+                label: _baseCodeLabel,
+                controller: _baseCodeController,
+                hintText: '留空则系统自动生成',
+                enabled: widget.artwork == null,
+              ),
+              if (widget.artwork != null)
+                CrudFormField.custom(
+                  builder: _buildVersionField,
+                ),
+              CrudFormField.text(
+                label: _nameLabel,
+                controller: _nameController,
+                validator: (value) {
+                  final text = value?.trim() ?? '';
+                  if (text.isEmpty) {
+                    return _nameRequiredText;
+                  }
+                  return null;
+                },
+              ),
+              CrudFormField.custom(
+                builder: _buildCmykField,
+              ),
+              CrudFormField.text(
+                label: _otherColorsLabel,
+                controller: _otherColorsController,
+                hintText: '多个颜色用逗号或顿号分隔',
+              ),
+              if (!isMobile)
+                CrudFormField.text(
+                  label: _impositionLabel,
+                  controller: _impositionController,
+                ),
+            ],
+          ),
+          CrudFormSection(
+            title: _extraSectionTitle,
+            column: isMobile ? 0 : 1,
+            fields: [
+              if (isMobile)
+                CrudFormField.text(
+                  label: _impositionLabel,
+                  controller: _impositionController,
+                ),
+              CrudFormField.custom(
+                builder: (context) => _buildChipSection(
+                  context,
+                  title: _dieLabel,
+                  options: _dieOptions
+                      .map(
+                        (die) => _OptionItem(
+                            die.id, _optionLabel(die.name, die.code)),
+                      )
+                      .toList(),
+                  selectedIds: _selectedDieIds,
+                  placeholder: _diePlaceholder,
                 ),
               ),
-              SizedBox(width: columnSpacing),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _sectionTitle(theme, _extraSectionTitle),
-                    SizedBox(height: sectionSpacing),
-                    dieSection,
-                    SizedBox(height: sectionSpacing),
-                    foilingSection,
-                    SizedBox(height: sectionSpacing),
-                    embossingSection,
-                    SizedBox(height: sectionSpacing),
-                    productSection,
-                    SizedBox(height: sectionSpacing),
-                    notesField,
-                  ],
+              CrudFormField.custom(
+                builder: (context) => _buildChipSection(
+                  context,
+                  title: _foilingLabel,
+                  options: _foilingOptions
+                      .map(
+                        (plate) => _OptionItem(
+                          plate.id,
+                          _optionLabel(plate.name, plate.code),
+                        ),
+                      )
+                      .toList(),
+                  selectedIds: _selectedFoilingIds,
+                  placeholder: _foilingPlaceholder,
                 ),
+              ),
+              CrudFormField.custom(
+                builder: (context) => _buildChipSection(
+                  context,
+                  title: _embossingLabel,
+                  options: _embossingOptions
+                      .map(
+                        (plate) => _OptionItem(
+                          plate.id,
+                          _optionLabel(plate.name, plate.code),
+                        ),
+                      )
+                      .toList(),
+                  selectedIds: _selectedEmbossingIds,
+                  placeholder: _embossingPlaceholder,
+                ),
+              ),
+              CrudFormField.custom(
+                builder: _buildProductSection,
+              ),
+              CrudFormField.textarea(
+                label: _notesLabel,
+                controller: _notesController,
+                maxLines: 3,
               ),
             ],
           ),
         ],
-        SizedBox(height: actionSpacing),
-      ],
-    );
-
-    return SafeArea(
-      child: Form(
-        key: _formKey,
-        child: EditPageScaffold(
-          spacing: pageSpacing,
-          contentPadding: contentPadding,
-          header: PageHeaderBar(
-            breadcrumb: null,
-            useSurface: false,
-            showDivider: false,
-            padding: EdgeInsets.zero,
-            actions: Wrap(
-              spacing: _inlineSpacing,
-              runSpacing: 8,
-              children: [
-                PageActionButton.outlined(
-                  onPressed: _submitting
-                      ? null
-                      : () => Navigator.of(context).pop(false),
-                  icon: const Icon(Icons.arrow_back, size: 16),
-                  label: _cancelText,
-                ),
-                PageActionButton.filled(
-                  onPressed:
-                      _submitting ? null : () => _handleSubmit(viewModel),
-                  icon: const Icon(Icons.save, size: 16),
-                  label: _submitting ? '保存中' : _submitText,
-                ),
-              ],
-            ),
-          ),
-          body: mainContent,
-        ),
+        onSave: (context, viewModel, item) => _handleSubmit(viewModel),
       ),
     );
   }

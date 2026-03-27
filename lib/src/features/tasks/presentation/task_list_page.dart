@@ -8,6 +8,7 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
@@ -30,7 +31,6 @@ import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_ui_helper.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_repository.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_action_dialogs.dart';
-import 'package:work_order_app/src/features/tasks/presentation/widgets/task_list_sections.dart';
 
 /// 任务列表入口。
 class TaskListEntry extends StatelessWidget {
@@ -477,79 +477,18 @@ class _TaskListViewState extends State<_TaskListView> {
           );
 
           void openFilterDrawer() {
-            if (isMobile) {
-              showModalBottomSheet<void>(
-                context: context,
-                isScrollControlled: true,
-                useSafeArea: true,
-                showDragHandle: true,
-                backgroundColor: Theme.of(context).colorScheme.surface,
-                shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.zero),
-                builder: (sheetContext) {
-                  return TaskListFilterDrawerContent(
-                    title: activeFilters > 0 ? '筛选 ($activeFilters)' : '筛选',
-                    child: _buildFilterPanel(
-                      sheetContext,
-                      viewModel,
-                      statusItems: statusItems,
-                      priorityItems: priorityItems,
-                      departmentItems: departmentItems,
-                      processItems: processItems,
-                    ),
-                  );
-                },
-              );
-              return;
-            }
-
-            showGeneralDialog(
-              context: context,
-              barrierDismissible: true,
-              barrierLabel: '筛选',
-              barrierColor: Colors.black.withValues(alpha: 0.3),
-              transitionDuration: const Duration(milliseconds: 220),
-              pageBuilder: (dialogContext, animation, secondaryAnimation) {
-                return Align(
-                  alignment: Alignment.centerRight,
-                  child: Material(
-                    color: Theme.of(dialogContext).colorScheme.surface,
-                    shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.zero),
-                    child: SizedBox(
-                      width: 360,
-                      height: double.infinity,
-                      child: SafeArea(
-                        child: TaskListFilterDrawerContent(
-                          title:
-                              activeFilters > 0 ? '筛选 ($activeFilters)' : '筛选',
-                          child: _buildFilterPanel(
-                            dialogContext,
-                            viewModel,
-                            statusItems: statusItems,
-                            priorityItems: priorityItems,
-                            departmentItems: departmentItems,
-                            processItems: processItems,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-              transitionBuilder:
-                  (context, animation, secondaryAnimation, child) {
-                final offsetTween =
-                    Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero);
-                return SlideTransition(
-                  position: animation
-                      .drive(
-                        CurveTween(curve: Curves.easeOutCubic),
-                      )
-                      .drive(offsetTween),
-                  child: child,
-                );
-              },
+            showAdaptiveFilterDrawer(
+              context,
+              isMobile: isMobile,
+              title: activeFilters > 0 ? '筛选 ($activeFilters)' : '筛选',
+              child: _buildFilterPanel(
+                context,
+                viewModel,
+                statusItems: statusItems,
+                priorityItems: priorityItems,
+                departmentItems: departmentItems,
+                processItems: processItems,
+              ),
             );
           }
 
@@ -620,10 +559,11 @@ class _TaskListViewState extends State<_TaskListView> {
     required List<DropdownMenuItem<int?>> departmentItems,
     required List<DropdownMenuItem<int?>> processItems,
   }) {
-    final spacing = LayoutTokens.formSectionSpacing(context);
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-      children: [
+    return FilterPanelBody(
+      bottomSpacing: LayoutTokens.formSectionSpacing(context),
+      resetLabel: _resetButtonText,
+      onReset: () => _resetFilters(viewModel),
+      fields: [
         if (_loadingOptions) const LinearProgressIndicator(minHeight: 2),
         SearchableDropdownFormField<String>(
           initialValue: _statusFilter,
@@ -635,7 +575,6 @@ class _TaskListViewState extends State<_TaskListView> {
             _applyFilters(viewModel);
           },
         ),
-        SizedBox(height: spacing),
         SearchableDropdownFormField<String>(
           initialValue: _priorityFilter,
           isExpanded: true,
@@ -646,7 +585,6 @@ class _TaskListViewState extends State<_TaskListView> {
             _applyFilters(viewModel);
           },
         ),
-        SizedBox(height: spacing),
         SearchableDropdownFormField<int?>(
           initialValue: _departmentFilterId,
           isExpanded: true,
@@ -657,7 +595,6 @@ class _TaskListViewState extends State<_TaskListView> {
             _applyFilters(viewModel);
           },
         ),
-        SizedBox(height: spacing),
         SearchableDropdownFormField<int?>(
           initialValue: _processFilterId,
           isExpanded: true,
@@ -667,21 +604,6 @@ class _TaskListViewState extends State<_TaskListView> {
             setState(() => _processFilterId = value);
             _applyFilters(viewModel);
           },
-        ),
-        SizedBox(height: spacing),
-        Row(
-          children: [
-            PageActionButton.outlined(
-              onPressed: () => _resetFilters(viewModel),
-              icon: const Icon(Icons.restart_alt, size: 16),
-              label: _resetButtonText,
-            ),
-            SizedBox(width: spacing),
-            PageActionButton.filled(
-              onPressed: () => Navigator.of(context).maybePop(),
-              label: '完成',
-            ),
-          ],
         ),
       ],
     );

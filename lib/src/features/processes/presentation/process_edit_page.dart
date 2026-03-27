@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/edit_page_scaffold.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
-import 'package:work_order_app/src/core/utils/toast_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/features/processes/application/process_view_model.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 
@@ -19,10 +15,6 @@ class ProcessEditPage extends StatefulWidget {
 }
 
 class _ProcessEditPageState extends State<ProcessEditPage> {
-  final _formKey = GlobalKey<FormState>();
-
-  static const double _inlineSpacing = 8;
-
   static const String _codeLabel = '工序编码';
   static const String _nameLabel = '工序名称';
   static const String _descLabel = '描述';
@@ -34,7 +26,6 @@ class _ProcessEditPageState extends State<ProcessEditPage> {
   static const String _submitErrorText = '操作失败: ';
   static const String _codeRequiredText = '请输入工序编码';
   static const String _nameRequiredText = '请输入工序名称';
-  static const String _cancelText = '返回';
   static const String _basicSectionTitle = '基本信息';
   static const String _extraSectionTitle = '补充信息';
 
@@ -45,7 +36,6 @@ class _ProcessEditPageState extends State<ProcessEditPage> {
   late final TextEditingController _sortController;
 
   bool _isActive = true;
-  bool _submitting = false;
 
   @override
   void initState() {
@@ -57,7 +47,9 @@ class _ProcessEditPageState extends State<ProcessEditPage> {
     _durationController = TextEditingController(
       text: process?.standardDuration?.toString() ?? '0',
     );
-    _sortController = TextEditingController(text: (process?.sortOrder ?? 0).toString());
+    _sortController = TextEditingController(
+      text: (process?.sortOrder ?? 0).toString(),
+    );
     _isActive = process?.isActive ?? true;
   }
 
@@ -72,12 +64,6 @@ class _ProcessEditPageState extends State<ProcessEditPage> {
   }
 
   Future<void> _handleSubmit(ProcessViewModel viewModel) async {
-    final form = _formKey.currentState;
-    if (form == null || !form.validate()) {
-      return;
-    }
-    setState(() => _submitting = true);
-
     final duration = double.tryParse(_durationController.text.trim()) ?? 0;
     final sortValue = int.tryParse(_sortController.text.trim()) ?? 0;
 
@@ -91,192 +77,75 @@ class _ProcessEditPageState extends State<ProcessEditPage> {
       isActive: _isActive,
     );
 
-    try {
-      if (widget.process == null) {
-        await viewModel.createProcess(payload);
-      } else {
-        await viewModel.updateProcess(payload);
-      }
-      if (!mounted) return;
-      Navigator.of(context).pop(true);
-    } catch (err) {
-      if (!mounted) return;
-      ToastUtil.showError('$_submitErrorText$err');
-    } finally {
-      if (mounted) {
-        setState(() => _submitting = false);
-      }
+    if (widget.process == null) {
+      await viewModel.createProcess(payload);
+    } else {
+      await viewModel.updateProcess(payload);
     }
-  }
-
-  Widget _sectionTitle(ThemeData theme, String text) {
-    return Text(
-      text,
-      style: theme.textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.w700,
-        color: theme.colorScheme.onSurface,
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<ProcessViewModel>();
-    final theme = Theme.of(context);
-    final isMobile = BreakpointsUtil.isMobile(context);
-    final contentPadding = LayoutTokens.pagePadding(context);
-    final sectionSpacing = LayoutTokens.formSectionSpacing(context);
-    final actionSpacing = LayoutTokens.formActionSpacing(context);
-    final pageSpacing = LayoutTokens.formPageSpacing(context);
-    final columnSpacing = LayoutTokens.formColumnSpacing(context);
-
-    final codeField = TextFormField(
-      controller: _codeController,
-      decoration: const InputDecoration(labelText: _codeLabel),
-      enabled: widget.process == null,
-      validator: (value) {
-        final text = value?.trim() ?? '';
-        if (text.isEmpty) {
-          return _codeRequiredText;
-        }
-        return null;
-      },
-    );
-
-    final nameField = TextFormField(
-      controller: _nameController,
-      decoration: const InputDecoration(labelText: _nameLabel),
-      validator: (value) {
-        final text = value?.trim() ?? '';
-        if (text.isEmpty) {
-          return _nameRequiredText;
-        }
-        return null;
-      },
-    );
-
-    final descField = TextFormField(
-      controller: _descController,
-      decoration: const InputDecoration(labelText: _descLabel),
-      maxLines: 3,
-    );
-
-    final durationField = TextFormField(
-      controller: _durationController,
-      decoration: const InputDecoration(labelText: _durationLabel),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-    );
-
-    final sortField = TextFormField(
-      controller: _sortController,
-      decoration: const InputDecoration(labelText: _sortLabel),
-      keyboardType: TextInputType.number,
-    );
-
-    final statusField = InputDecorator(
-      decoration: const InputDecoration(labelText: _statusLabel),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Switch(
-          value: _isActive,
-          onChanged: (value) {
-            setState(() {
-              _isActive = value;
-            });
-          },
-        ),
-      ),
-    );
-
-    final mainContent = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (isMobile) ...[
-          _sectionTitle(theme, _basicSectionTitle),
-          SizedBox(height: sectionSpacing),
-          codeField,
-          SizedBox(height: sectionSpacing),
-          nameField,
-          SizedBox(height: sectionSpacing),
-          descField,
-          SizedBox(height: sectionSpacing),
-          _sectionTitle(theme, _extraSectionTitle),
-          SizedBox(height: sectionSpacing),
-          durationField,
-          SizedBox(height: sectionSpacing),
-          sortField,
-          SizedBox(height: sectionSpacing),
-          statusField,
-        ] else ...[
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _sectionTitle(theme, _basicSectionTitle),
-                    SizedBox(height: sectionSpacing),
-                    codeField,
-                    SizedBox(height: sectionSpacing),
-                    nameField,
-                    SizedBox(height: sectionSpacing),
-                    descField,
-                  ],
-                ),
+    return CrudEditPage<Process, ProcessViewModel>(
+      item: widget.process,
+      config: CrudEditConfig<Process, ProcessViewModel>(
+        submitText: _submitText,
+        submittingText: '保存中',
+        errorMessagePrefix: _submitErrorText,
+        sectionsBuilder: (context, isMobile) => [
+          CrudFormSection(
+            title: _basicSectionTitle,
+            column: 0,
+            fields: [
+              CrudFormField.text(
+                label: _codeLabel,
+                controller: _codeController,
+                enabled: widget.process == null,
+                validator: (value) {
+                  final text = value?.trim() ?? '';
+                  if (text.isEmpty) return _codeRequiredText;
+                  return null;
+                },
               ),
-              SizedBox(width: columnSpacing),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _sectionTitle(theme, _extraSectionTitle),
-                    SizedBox(height: sectionSpacing),
-                    durationField,
-                    SizedBox(height: sectionSpacing),
-                    sortField,
-                    SizedBox(height: sectionSpacing),
-                    statusField,
-                  ],
-                ),
+              CrudFormField.text(
+                label: _nameLabel,
+                controller: _nameController,
+                validator: (value) {
+                  final text = value?.trim() ?? '';
+                  if (text.isEmpty) return _nameRequiredText;
+                  return null;
+                },
+              ),
+              CrudFormField.textarea(
+                label: _descLabel,
+                controller: _descController,
+                minLines: 3,
+                maxLines: 3,
+              ),
+            ],
+          ),
+          CrudFormSection(
+            title: _extraSectionTitle,
+            column: isMobile ? 0 : 1,
+            fields: [
+              CrudFormField.number(
+                label: _durationLabel,
+                controller: _durationController,
+                decimal: true,
+              ),
+              CrudFormField.number(
+                label: _sortLabel,
+                controller: _sortController,
+              ),
+              CrudFormField.toggle(
+                label: _statusLabel,
+                value: _isActive,
+                onChanged: (value) => setState(() => _isActive = value),
               ),
             ],
           ),
         ],
-        SizedBox(height: actionSpacing),
-      ],
-    );
-
-    return SafeArea(
-      child: Form(
-        key: _formKey,
-        child: EditPageScaffold(
-          spacing: pageSpacing,
-          contentPadding: contentPadding,
-          header: PageHeaderBar(
-            breadcrumb: null,
-            useSurface: false,
-            showDivider: false,
-            padding: EdgeInsets.zero,
-            actions: Wrap(
-              spacing: _inlineSpacing,
-              runSpacing: 8,
-              children: [
-                PageActionButton.outlined(
-                  onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
-                  icon: const Icon(Icons.arrow_back, size: 16),
-                  label: _cancelText,
-                ),
-                PageActionButton.filled(
-                  onPressed: _submitting ? null : () => _handleSubmit(viewModel),
-                  icon: const Icon(Icons.save, size: 16),
-                  label: _submitting ? '保存中' : _submitText,
-                ),
-              ],
-            ),
-          ),
-          body: mainContent,
-        ),
+        onSave: (context, viewModel, item) => _handleSubmit(viewModel),
       ),
     );
   }

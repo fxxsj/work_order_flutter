@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/edit_page_scaffold.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
-import 'package:work_order_app/src/core/utils/toast_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/features/departments/application/department_view_model.dart';
 import 'package:work_order_app/src/features/departments/domain/department.dart';
 
@@ -21,10 +18,6 @@ class DepartmentEditPage extends StatefulWidget {
 }
 
 class _DepartmentEditPageState extends State<DepartmentEditPage> {
-  final _formKey = GlobalKey<FormState>();
-
-  static const double _inlineSpacing = 8;
-
   static const String _codeLabel = '部门编码';
   static const String _nameLabel = '部门名称';
   static const String _parentLabel = '上级部门';
@@ -37,7 +30,6 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
   static const String _codeRequiredText = '请输入部门编码';
   static const String _codeInvalidText = '部门编码只能包含小写字母、数字和下划线';
   static const String _nameRequiredText = '请输入部门名称';
-  static const String _cancelText = '返回';
   static const String _basicSectionTitle = '基本信息';
   static const String _extraSectionTitle = '补充信息';
   static const String _processPlaceholder = '请选择工序（可多选）';
@@ -51,7 +43,6 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
   int? _parentId;
   bool _isActive = true;
   List<int> _processIds = [];
-  bool _submitting = false;
 
   @override
   void initState() {
@@ -75,14 +66,7 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
   }
 
   Future<void> _handleSubmit(DepartmentViewModel viewModel) async {
-    final form = _formKey.currentState;
-    if (form == null || !form.validate()) {
-      return;
-    }
-    setState(() => _submitting = true);
-
     final sortValue = int.tryParse(_sortController.text.trim()) ?? 0;
-
     final payload = Department(
       id: widget.department?.id ?? 0,
       code: _codeController.text.trim(),
@@ -98,41 +82,24 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
       level: widget.department?.level,
     );
 
-    try {
-      if (widget.department == null) {
-        await viewModel.createDepartment(payload);
-      } else {
-        await viewModel.updateDepartment(payload);
-      }
-      if (!mounted) return;
-      Navigator.of(context).pop(true);
-    } catch (err) {
-      if (!mounted) return;
-      ToastUtil.showError('$_submitErrorText$err');
-    } finally {
-      if (mounted) {
-        setState(() => _submitting = false);
-      }
+    if (widget.department == null) {
+      await viewModel.createDepartment(payload);
+    } else {
+      await viewModel.updateDepartment(payload);
     }
   }
 
   List<Department> _availableParents(List<Department> departments) {
     final current = widget.department;
-    return departments.where((dept) {
-      if (current != null && dept.id == current.id) return false;
-      if (dept.level != null && dept.level! >= 2) return false;
+    return departments.where((department) {
+      if (current != null && department.id == current.id) {
+        return false;
+      }
+      if (department.level != null && department.level! >= 2) {
+        return false;
+      }
       return true;
     }).toList();
-  }
-
-  Widget _sectionTitle(ThemeData theme, String text) {
-    return Text(
-      text,
-      style: theme.textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.w700,
-        color: theme.colorScheme.onSurface,
-      ),
-    );
   }
 
   @override
@@ -141,216 +108,132 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final subtleText = colors?.subtleText ?? theme.hintColor;
-    final isMobile = BreakpointsUtil.isMobile(context);
     final availableParents = _availableParents(viewModel.departmentOptions);
     final disableParent = widget.department != null &&
         (widget.department?.childrenCount ?? 0) > 0;
-    final contentPadding = LayoutTokens.pagePadding(context);
-    final sectionSpacing = LayoutTokens.formSectionSpacing(context);
-    final actionSpacing = LayoutTokens.formActionSpacing(context);
-    final pageSpacing = LayoutTokens.formPageSpacing(context);
-    final columnSpacing = LayoutTokens.formColumnSpacing(context);
 
-    final codeField = TextFormField(
-      controller: _codeController,
-      decoration: const InputDecoration(labelText: _codeLabel),
-      enabled: widget.department == null,
-      validator: (value) {
-        final text = value?.trim() ?? '';
-        if (text.isEmpty) {
-          return _codeRequiredText;
-        }
-        if (!RegExp(r'^[a-z0-9_]+$').hasMatch(text)) {
-          return _codeInvalidText;
-        }
-        return null;
-      },
-    );
-
-    final nameField = TextFormField(
-      controller: _nameController,
-      decoration: const InputDecoration(labelText: _nameLabel),
-      validator: (value) {
-        final text = value?.trim() ?? '';
-        if (text.isEmpty) {
-          return _nameRequiredText;
-        }
-        return null;
-      },
-    );
-
-    final parentField = SearchableDropdownFormField<int?>(
-      initialValue: _parentId,
-      decoration: const InputDecoration(labelText: _parentLabel),
-      items: [
-        const DropdownMenuItem<int?>(value: null, child: Text('不设置')),
-        ...availableParents.map(
-          (dept) =>
-              DropdownMenuItem<int?>(value: dept.id, child: Text(dept.name)),
-        ),
-      ],
-      onChanged: disableParent
-          ? null
-          : (value) {
-              setState(() {
-                _parentId = value;
-              });
-            },
-    );
-
-    final sortField = TextFormField(
-      controller: _sortController,
-      decoration: const InputDecoration(labelText: _sortLabel),
-      keyboardType: TextInputType.number,
-    );
-
-    final processField = InkWell(
-      onTap: viewModel.processOptions.isEmpty
-          ? null
-          : () => _openProcessDialog(viewModel),
-      borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-      child: InputDecorator(
-        decoration: const InputDecoration(
-          labelText: _processLabel,
-          contentPadding: EdgeInsets.all(12),
-          suffixIcon: Icon(Icons.arrow_drop_down),
-        ),
-        child: viewModel.processOptions.isEmpty
-            ? Text('暂无工序数据',
-                style: theme.textTheme.bodySmall?.copyWith(color: subtleText))
-            : _processIds.isEmpty
-                ? Text(_processPlaceholder,
-                    style:
-                        theme.textTheme.bodyMedium?.copyWith(color: subtleText))
-                : Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: viewModel.processOptions
-                        .where((process) => _processIds.contains(process.id))
-                        .map(
-                          (process) => InputChip(
-                            label: Text(process.name),
-                            onDeleted: () {
-                              setState(() {
-                                _processIds = _processIds
-                                    .where((id) => id != process.id)
-                                    .toList();
-                              });
-                            },
-                          ),
-                        )
-                        .toList(),
+    return CrudEditPage<Department, DepartmentViewModel>(
+      item: widget.department,
+      config: CrudEditConfig<Department, DepartmentViewModel>(
+        submitText: _submitText,
+        submittingText: '保存中',
+        errorMessagePrefix: _submitErrorText,
+        sectionsBuilder: (context, isMobile) => [
+          CrudFormSection(
+            title: _basicSectionTitle,
+            column: 0,
+            fields: [
+              CrudFormField.text(
+                label: _codeLabel,
+                controller: _codeController,
+                enabled: widget.department == null,
+                validator: (value) {
+                  final text = value?.trim() ?? '';
+                  if (text.isEmpty) {
+                    return _codeRequiredText;
+                  }
+                  if (!RegExp(r'^[a-z0-9_]+$').hasMatch(text)) {
+                    return _codeInvalidText;
+                  }
+                  return null;
+                },
+              ),
+              CrudFormField.text(
+                label: _nameLabel,
+                controller: _nameController,
+                validator: (value) {
+                  final text = value?.trim() ?? '';
+                  if (text.isEmpty) {
+                    return _nameRequiredText;
+                  }
+                  return null;
+                },
+              ),
+              CrudFormField.dropdown(
+                label: _parentLabel,
+                value: _parentId,
+                enabled: !disableParent,
+                options: [
+                  const CrudFieldOption<dynamic>(value: null, label: '不设置'),
+                  ...availableParents.map(
+                    (department) => CrudFieldOption<dynamic>(
+                      value: department.id,
+                      label: department.name,
+                    ),
                   ),
-      ),
-    );
-
-    final statusField = InputDecorator(
-      decoration: const InputDecoration(labelText: _statusLabel),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Switch(
-          value: _isActive,
-          onChanged: (value) {
-            setState(() {
-              _isActive = value;
-            });
-          },
-        ),
-      ),
-    );
-
-    final mainContent = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (isMobile) ...[
-          _sectionTitle(theme, _basicSectionTitle),
-          SizedBox(height: sectionSpacing),
-          codeField,
-          SizedBox(height: sectionSpacing),
-          nameField,
-          SizedBox(height: sectionSpacing),
-          parentField,
-          SizedBox(height: sectionSpacing),
-          _sectionTitle(theme, _extraSectionTitle),
-          SizedBox(height: sectionSpacing),
-          sortField,
-          SizedBox(height: sectionSpacing),
-          processField,
-          SizedBox(height: sectionSpacing),
-          statusField,
-        ] else ...[
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _sectionTitle(theme, _basicSectionTitle),
-                    SizedBox(height: sectionSpacing),
-                    codeField,
-                    SizedBox(height: sectionSpacing),
-                    nameField,
-                    SizedBox(height: sectionSpacing),
-                    parentField,
-                  ],
+                ],
+                onChanged: (value) => setState(() => _parentId = value as int?),
+              ),
+            ],
+          ),
+          CrudFormSection(
+            title: _extraSectionTitle,
+            column: isMobile ? 0 : 1,
+            fields: [
+              CrudFormField.number(
+                label: _sortLabel,
+                controller: _sortController,
+              ),
+              CrudFormField.custom(
+                builder: (context) => InkWell(
+                  onTap: viewModel.processOptions.isEmpty
+                      ? null
+                      : () => _openProcessDialog(viewModel),
+                  borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+                  child: InputDecorator(
+                    decoration: const InputDecoration(
+                      labelText: _processLabel,
+                      contentPadding: EdgeInsets.all(12),
+                      suffixIcon: Icon(Icons.arrow_drop_down),
+                    ),
+                    child: viewModel.processOptions.isEmpty
+                        ? Text(
+                            '暂无工序数据',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(color: subtleText),
+                          )
+                        : _processIds.isEmpty
+                            ? Text(
+                                _processPlaceholder,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(color: subtleText),
+                              )
+                            : Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: viewModel.processOptions
+                                    .where((process) =>
+                                        _processIds.contains(process.id))
+                                    .map(
+                                      (process) => InputChip(
+                                        label: Text(process.name),
+                                        onDeleted: () {
+                                          setState(() {
+                                            _processIds = _processIds
+                                                .where((id) => id != process.id)
+                                                .toList();
+                                          });
+                                        },
+                                      ),
+                                    )
+                                    .toList(),
+                              ),
+                  ),
                 ),
               ),
-              SizedBox(width: columnSpacing),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _sectionTitle(theme, _extraSectionTitle),
-                    SizedBox(height: sectionSpacing),
-                    sortField,
-                    SizedBox(height: sectionSpacing),
-                    processField,
-                    SizedBox(height: sectionSpacing),
-                    statusField,
-                  ],
-                ),
+              CrudFormField.toggle(
+                label: _statusLabel,
+                value: _isActive,
+                onChanged: (value) => setState(() => _isActive = value),
               ),
             ],
           ),
         ],
-        SizedBox(height: actionSpacing),
-      ],
-    );
-
-    return SafeArea(
-      child: Form(
-        key: _formKey,
-        child: EditPageScaffold(
-          spacing: pageSpacing,
-          contentPadding: contentPadding,
-          header: PageHeaderBar(
-            breadcrumb: null,
-            useSurface: false,
-            showDivider: false,
-            padding: EdgeInsets.zero,
-            actions: Wrap(
-              spacing: _inlineSpacing,
-              runSpacing: 8,
-              children: [
-                PageActionButton.outlined(
-                  onPressed: _submitting
-                      ? null
-                      : () => Navigator.of(context).pop(false),
-                  icon: const Icon(Icons.arrow_back, size: 16),
-                  label: _cancelText,
-                ),
-                PageActionButton.filled(
-                  onPressed:
-                      _submitting ? null : () => _handleSubmit(viewModel),
-                  icon: const Icon(Icons.save, size: 16),
-                  label: _submitting ? '保存中' : _submitText,
-                ),
-              ],
-            ),
-          ),
-          body: mainContent,
-        ),
+        onSave: (context, viewModel, item) => _handleSubmit(viewModel),
       ),
     );
   }
@@ -389,8 +272,11 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
                     Expanded(
                       child: filtered.isEmpty
                           ? Center(
-                              child: Text(_emptyMatchText,
-                                  style: Theme.of(context).textTheme.bodySmall))
+                              child: Text(
+                                _emptyMatchText,
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            )
                           : Scrollbar(
                               child: ListView.builder(
                                 itemCount: filtered.length,
@@ -413,7 +299,7 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
                                               if (value == true) {
                                                 _processIds = [
                                                   ..._processIds,
-                                                  process.id
+                                                  process.id,
                                                 ];
                                               } else {
                                                 _processIds = _processIds

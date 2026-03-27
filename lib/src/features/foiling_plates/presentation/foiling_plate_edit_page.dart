@@ -3,10 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/edit_page_scaffold.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/foiling_plates/application/foiling_plate_view_model.dart';
 import 'package:work_order_app/src/features/foiling_plates/domain/foiling_plate.dart';
@@ -23,10 +23,6 @@ class FoilingPlateEditPage extends StatefulWidget {
 }
 
 class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
-  final _formKey = GlobalKey<FormState>();
-
-  static const double _inlineSpacing = 8;
-
   static const String _codeLabel = '烫金版编码';
   static const String _nameLabel = '烫金版名称';
   static const String _typeLabel = '类型';
@@ -42,7 +38,6 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
   static const String _submitText = '保存';
   static const String _submitErrorText = '操作失败: ';
   static const String _nameRequiredText = '请输入烫金版名称';
-  static const String _cancelText = '返回';
   static const String _basicSectionTitle = '基本信息';
   static const String _extraSectionTitle = '补充信息';
 
@@ -54,7 +49,6 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
   late final TextEditingController _notesController;
 
   String _foilingType = 'gold';
-  bool _submitting = false;
   ProductApiService? _productApi;
   bool _loadingProducts = false;
   final List<ProductOption> _productOptions = [];
@@ -124,9 +118,7 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
   }
 
   void _addProductItem() {
-    setState(() {
-      _productItems.add(_PlateProductItem(quantity: 1));
-    });
+    setState(() => _productItems.add(_PlateProductItem(quantity: 1)));
   }
 
   void _removeProductItem(int index) {
@@ -145,12 +137,6 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
   }
 
   Future<void> _handleSubmit(FoilingPlateViewModel viewModel) async {
-    final form = _formKey.currentState;
-    if (form == null || !form.validate()) {
-      return;
-    }
-    setState(() => _submitting = true);
-
     final products = _productItems
         .where((item) => item.productId != null)
         .map(
@@ -178,40 +164,23 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
       createdAt: widget.plate?.createdAt,
     );
 
-    try {
-      if (widget.plate == null) {
-        await viewModel.createFoilingPlate(payload);
-      } else {
-        await viewModel.updateFoilingPlate(payload);
-      }
-      if (!mounted) return;
-      Navigator.of(context).pop(true);
-    } catch (err) {
-      if (!mounted) return;
-      ToastUtil.showError('$_submitErrorText$err');
-    } finally {
-      if (mounted) {
-        setState(() => _submitting = false);
-      }
+    if (widget.plate == null) {
+      await viewModel.createFoilingPlate(payload);
+    } else {
+      await viewModel.updateFoilingPlate(payload);
     }
   }
 
-  Widget _sectionTitle(ThemeData theme, String text) {
-    return Text(
-      text,
-      style: theme.textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.w700,
-        color: theme.colorScheme.onSurface,
-      ),
-    );
-  }
-
-  Widget _buildProductSection(ThemeData theme, double sectionSpacing) {
+  Widget _buildProductSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final sectionSpacing = LayoutTokens.formSectionSpacing(context);
     final colors = theme.extension<AppColors>();
+    final subtleText = colors?.subtleText ?? theme.hintColor;
     final content = _productItems.isEmpty
-        ? Text('暂无产品项',
-            style: theme.textTheme.bodySmall
-                ?.copyWith(color: colors?.subtleText ?? theme.hintColor))
+        ? Text(
+            '暂无产品项',
+            style: theme.textTheme.bodySmall?.copyWith(color: subtleText),
+          )
         : Column(
             children: List.generate(_productItems.length, (index) {
               final item = _productItems[index];
@@ -235,9 +204,7 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
                             )
                             .toList(),
                         onChanged: (value) {
-                          setState(() {
-                            item.productId = value;
-                          });
+                          setState(() => item.productId = value);
                         },
                       ),
                     ),
@@ -253,8 +220,10 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
                     const SizedBox(width: 8),
                     IconButton(
                       tooltip: '移除',
-                      icon: Icon(Icons.delete_outline,
-                          color: theme.colorScheme.error),
+                      icon: Icon(
+                        Icons.delete_outline,
+                        color: theme.colorScheme.error,
+                      ),
                       onPressed: () => _removeProductItem(index),
                     ),
                   ],
@@ -266,8 +235,6 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _sectionTitle(theme, _productSectionTitle),
-        SizedBox(height: sectionSpacing),
         if (_loadingProducts)
           const LinearProgressIndicator(minHeight: 2)
         else
@@ -287,179 +254,88 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<FoilingPlateViewModel>();
-    final theme = Theme.of(context);
-    final isMobile = BreakpointsUtil.isMobile(context);
     final isConfirmed = widget.plate?.confirmed == true;
-    final contentPadding = LayoutTokens.pagePadding(context);
-    final sectionSpacing = LayoutTokens.formSectionSpacing(context);
-    final actionSpacing = LayoutTokens.formActionSpacing(context);
-    final pageSpacing = LayoutTokens.formPageSpacing(context);
-    final columnSpacing = LayoutTokens.formColumnSpacing(context);
 
-    final codeField = TextFormField(
-      controller: _codeController,
-      decoration: const InputDecoration(
-        labelText: _codeLabel,
-        hintText: '留空则系统自动生成',
-      ),
-      enabled: !isConfirmed,
-    );
-
-    final nameField = TextFormField(
-      controller: _nameController,
-      decoration: const InputDecoration(labelText: _nameLabel),
-      enabled: !isConfirmed,
-      validator: (value) {
-        final text = value?.trim() ?? '';
-        if (text.isEmpty) {
-          return _nameRequiredText;
-        }
-        return null;
-      },
-    );
-
-    final typeField = SearchableDropdownFormField<String>(
-      initialValue: _foilingType,
-      decoration: const InputDecoration(labelText: _typeLabel),
-      items: const [
-        DropdownMenuItem(value: 'gold', child: Text('烫金')),
-        DropdownMenuItem(value: 'silver', child: Text('烫银')),
-      ],
-      onChanged: (value) {
-        if (value == null) return;
-        setState(() {
-          _foilingType = value;
-        });
-      },
-    );
-
-    final sizeField = TextFormField(
-      controller: _sizeController,
-      decoration: const InputDecoration(labelText: _sizeLabel),
-      enabled: !isConfirmed,
-    );
-
-    final materialField = TextFormField(
-      controller: _materialController,
-      decoration: const InputDecoration(labelText: _materialLabel),
-      enabled: !isConfirmed,
-    );
-
-    final thicknessField = TextFormField(
-      controller: _thicknessController,
-      decoration: const InputDecoration(labelText: _thicknessLabel),
-      enabled: !isConfirmed,
-    );
-
-    final notesField = TextFormField(
-      controller: _notesController,
-      decoration: const InputDecoration(labelText: _notesLabel),
-      maxLines: 3,
-    );
-
-    final productSection = _buildProductSection(theme, sectionSpacing);
-
-    final mainContent = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (isMobile) ...[
-          _sectionTitle(theme, _basicSectionTitle),
-          SizedBox(height: sectionSpacing),
-          codeField,
-          SizedBox(height: sectionSpacing),
-          nameField,
-          SizedBox(height: sectionSpacing),
-          typeField,
-          SizedBox(height: sectionSpacing),
-          sizeField,
-          SizedBox(height: sectionSpacing),
-          materialField,
-          SizedBox(height: sectionSpacing),
-          thicknessField,
-          SizedBox(height: sectionSpacing),
-          productSection,
-          SizedBox(height: sectionSpacing),
-          _sectionTitle(theme, _extraSectionTitle),
-          SizedBox(height: sectionSpacing),
-          notesField,
-        ] else ...[
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _sectionTitle(theme, _basicSectionTitle),
-                    SizedBox(height: sectionSpacing),
-                    codeField,
-                    SizedBox(height: sectionSpacing),
-                    nameField,
-                    SizedBox(height: sectionSpacing),
-                    typeField,
-                    SizedBox(height: sectionSpacing),
-                    sizeField,
-                    SizedBox(height: sectionSpacing),
-                    productSection,
-                  ],
-                ),
+    return CrudEditPage<FoilingPlate, FoilingPlateViewModel>(
+      item: widget.plate,
+      config: CrudEditConfig<FoilingPlate, FoilingPlateViewModel>(
+        submitText: _submitText,
+        submittingText: '保存中',
+        errorMessagePrefix: _submitErrorText,
+        sectionsBuilder: (context, isMobile) => [
+          CrudFormSection(
+            title: _basicSectionTitle,
+            column: 0,
+            fields: [
+              CrudFormField.text(
+                label: _codeLabel,
+                controller: _codeController,
+                enabled: !isConfirmed,
+                hintText: '留空则系统自动生成',
               ),
-              SizedBox(width: columnSpacing),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _sectionTitle(theme, _extraSectionTitle),
-                    SizedBox(height: sectionSpacing),
-                    materialField,
-                    SizedBox(height: sectionSpacing),
-                    thicknessField,
-                    SizedBox(height: sectionSpacing),
-                    notesField,
-                  ],
-                ),
+              CrudFormField.text(
+                label: _nameLabel,
+                controller: _nameController,
+                enabled: !isConfirmed,
+                validator: (value) {
+                  final text = value?.trim() ?? '';
+                  if (text.isEmpty) {
+                    return _nameRequiredText;
+                  }
+                  return null;
+                },
+              ),
+              CrudFormField.dropdown(
+                label: _typeLabel,
+                value: _foilingType,
+                options: const [
+                  CrudFieldOption(value: 'gold', label: '烫金'),
+                  CrudFieldOption(value: 'silver', label: '烫银'),
+                ],
+                onChanged: (value) {
+                  if (value == null) return;
+                  setState(() => _foilingType = value as String);
+                },
+              ),
+              CrudFormField.text(
+                label: _sizeLabel,
+                controller: _sizeController,
+                enabled: !isConfirmed,
+              ),
+            ],
+          ),
+          CrudFormSection(
+            title: _extraSectionTitle,
+            column: isMobile ? 0 : 1,
+            fields: [
+              CrudFormField.text(
+                label: _materialLabel,
+                controller: _materialController,
+                enabled: !isConfirmed,
+              ),
+              CrudFormField.text(
+                label: _thicknessLabel,
+                controller: _thicknessController,
+                enabled: !isConfirmed,
+              ),
+              CrudFormField.textarea(
+                label: _notesLabel,
+                controller: _notesController,
+                maxLines: 3,
+              ),
+            ],
+          ),
+          CrudFormSection(
+            title: _productSectionTitle,
+            column: 0,
+            fields: [
+              CrudFormField.custom(
+                builder: _buildProductSection,
               ),
             ],
           ),
         ],
-        SizedBox(height: actionSpacing),
-      ],
-    );
-
-    return SafeArea(
-      child: Form(
-        key: _formKey,
-        child: EditPageScaffold(
-          spacing: pageSpacing,
-          contentPadding: contentPadding,
-          header: PageHeaderBar(
-            breadcrumb: null,
-            useSurface: false,
-            showDivider: false,
-            padding: EdgeInsets.zero,
-            actions: Wrap(
-              spacing: _inlineSpacing,
-              runSpacing: 8,
-              children: [
-                PageActionButton.outlined(
-                  onPressed: _submitting
-                      ? null
-                      : () => Navigator.of(context).pop(false),
-                  icon: const Icon(Icons.arrow_back, size: 16),
-                  label: _cancelText,
-                ),
-                PageActionButton.filled(
-                  onPressed:
-                      _submitting ? null : () => _handleSubmit(viewModel),
-                  icon: const Icon(Icons.save, size: 16),
-                  label: _submitting ? '保存中' : _submitText,
-                ),
-              ],
-            ),
-          ),
-          body: mainContent,
-        ),
+        onSave: (context, viewModel, item) => _handleSubmit(viewModel),
       ),
     );
   }

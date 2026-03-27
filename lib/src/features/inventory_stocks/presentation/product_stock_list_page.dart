@@ -8,6 +8,7 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
@@ -440,70 +441,14 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     bool isMobile,
   ) {
     void openFilterDrawer() {
-      if (isMobile) {
-        showModalBottomSheet<void>(
-          context: context,
-          isScrollControlled: true,
-          useSafeArea: true,
-          showDragHandle: true,
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-          builder: (sheetContext) {
-            return ProductStockFilterDrawerContent(
-              title: '筛选',
-              child: _buildFilterPanel(
-                sheetContext,
-                viewModel,
-                bottomSpacing: 16,
-              ),
-            );
-          },
-        );
-        return;
-      }
-
-      showGeneralDialog(
-        context: context,
-        barrierDismissible: true,
-        barrierLabel: '筛选',
-        barrierColor: Colors.black.withValues(alpha: 0.3),
-        transitionDuration: const Duration(milliseconds: 220),
-        pageBuilder: (dialogContext, animation, secondaryAnimation) {
-          return Align(
-            alignment: Alignment.centerRight,
-            child: Material(
-              color: Theme.of(dialogContext).colorScheme.surface,
-              shape:
-                  const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-              child: SizedBox(
-                width: 360,
-                height: double.infinity,
-                child: SafeArea(
-                  child: ProductStockFilterDrawerContent(
-                    title: '筛选',
-                    child: _buildFilterPanel(
-                      dialogContext,
-                      viewModel,
-                      bottomSpacing: 20,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-        transitionBuilder: (context, animation, secondaryAnimation, child) {
-          final offsetTween =
-              Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero);
-          return SlideTransition(
-            position: animation
-                .drive(
-                  CurveTween(curve: Curves.easeOutCubic),
-                )
-                .drive(offsetTween),
-            child: child,
-          );
-        },
+      showAdaptiveFilterDrawer(
+        context,
+        isMobile: isMobile,
+        child: _buildFilterPanel(
+          context,
+          viewModel,
+          bottomSpacing: isMobile ? 16 : 20,
+        ),
       );
     }
 
@@ -603,12 +548,13 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     ProductStockViewModel viewModel, {
     required double bottomSpacing,
   }) {
-    final spacing = LayoutTokens.formSectionSpacing(context);
     final statusValue =
         viewModel.statusFilter.isEmpty ? '' : viewModel.statusFilter;
-    final content = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
+    return FilterPanelBody(
+      bottomSpacing: bottomSpacing,
+      resetLabel: _resetButtonText,
+      onReset: () => _resetFilters(context, viewModel),
+      fields: [
         SearchableDropdownFormField<String>(
           key: ValueKey<String>(statusValue),
           initialValue: statusValue,
@@ -623,27 +569,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
           ],
           onChanged: (value) => viewModel.setStatusFilter(value ?? ''),
         ),
-        SizedBox(height: bottomSpacing < spacing ? spacing : bottomSpacing),
-        Row(
-          children: [
-            PageActionButton.outlined(
-              onPressed: () => _resetFilters(context, viewModel),
-              icon: const Icon(Icons.restart_alt, size: 16),
-              label: _resetButtonText,
-            ),
-            SizedBox(width: spacing),
-            PageActionButton.filled(
-              onPressed: () => Navigator.of(context).maybePop(),
-              label: '完成',
-            ),
-          ],
-        ),
       ],
-    );
-
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-      children: [content],
     );
   }
 

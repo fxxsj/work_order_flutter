@@ -12,6 +12,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/action_decis
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/approval_rejection_notice_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
@@ -744,70 +745,14 @@ class _QualityInspectionListViewState
     bool isMobile,
   ) {
     void openFilterDrawer() {
-      if (isMobile) {
-        showModalBottomSheet<void>(
-          context: context,
-          isScrollControlled: true,
-          useSafeArea: true,
-          showDragHandle: true,
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-          builder: (sheetContext) {
-            return _FilterDrawerContent(
-              title: '筛选',
-              child: _buildFilterPanel(
-                sheetContext,
-                viewModel,
-                bottomSpacing: 16,
-              ),
-            );
-          },
-        );
-        return;
-      }
-
-      showGeneralDialog(
-        context: context,
-        barrierDismissible: true,
-        barrierLabel: '筛选',
-        barrierColor: Colors.black.withValues(alpha: 0.3),
-        transitionDuration: const Duration(milliseconds: 220),
-        pageBuilder: (dialogContext, animation, secondaryAnimation) {
-          return Align(
-            alignment: Alignment.centerRight,
-            child: Material(
-              color: Theme.of(dialogContext).colorScheme.surface,
-              shape:
-                  const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-              child: SizedBox(
-                width: 360,
-                height: double.infinity,
-                child: SafeArea(
-                  child: _FilterDrawerContent(
-                    title: '筛选',
-                    child: _buildFilterPanel(
-                      dialogContext,
-                      viewModel,
-                      bottomSpacing: 20,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-        transitionBuilder: (context, animation, secondaryAnimation, child) {
-          final offsetTween =
-              Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero);
-          return SlideTransition(
-            position: animation
-                .drive(
-                  CurveTween(curve: Curves.easeOutCubic),
-                )
-                .drive(offsetTween),
-            child: child,
-          );
-        },
+      showAdaptiveFilterDrawer(
+        context,
+        isMobile: isMobile,
+        child: _buildFilterPanel(
+          context,
+          viewModel,
+          bottomSpacing: isMobile ? 16 : 20,
+        ),
       );
     }
 
@@ -888,13 +833,14 @@ class _QualityInspectionListViewState
     QualityInspectionViewModel viewModel, {
     required double bottomSpacing,
   }) {
-    final spacing = LayoutTokens.formSectionSpacing(context);
     final resultValue =
         viewModel.resultFilter.isEmpty ? '' : viewModel.resultFilter;
     final typeValue = viewModel.typeFilter.isEmpty ? '' : viewModel.typeFilter;
-    final content = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
+    return FilterPanelBody(
+      bottomSpacing: bottomSpacing,
+      resetLabel: _resetButtonText,
+      onReset: () => _resetFilters(viewModel),
+      fields: [
         SearchableDropdownFormField<String>(
           key: ValueKey<String>(typeValue),
           initialValue: typeValue,
@@ -909,7 +855,6 @@ class _QualityInspectionListViewState
           ],
           onChanged: (value) => viewModel.setTypeFilter(value ?? ''),
         ),
-        SizedBox(height: spacing),
         SearchableDropdownFormField<String>(
           key: ValueKey<String>(resultValue),
           initialValue: resultValue,
@@ -924,27 +869,7 @@ class _QualityInspectionListViewState
           ],
           onChanged: (value) => viewModel.setResultFilter(value ?? ''),
         ),
-        SizedBox(height: bottomSpacing < spacing ? spacing : bottomSpacing),
-        Row(
-          children: [
-            PageActionButton.outlined(
-              onPressed: () => _resetFilters(viewModel),
-              icon: const Icon(Icons.restart_alt, size: 16),
-              label: _resetButtonText,
-            ),
-            SizedBox(width: spacing),
-            PageActionButton.filled(
-              onPressed: () => Navigator.of(context).maybePop(),
-              label: '完成',
-            ),
-          ],
-        ),
       ],
-    );
-
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-      children: [content],
     );
   }
 
@@ -1356,48 +1281,6 @@ class _DetailRow extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _FilterDrawerContent extends StatelessWidget {
-  const _FilterDrawerContent({
-    required this.title,
-    required this.child,
-  });
-
-  final String title;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              IconButton(
-                tooltip: '关闭',
-                onPressed: () => Navigator.of(context).maybePop(),
-                icon: const Icon(Icons.close),
-              ),
-            ],
-          ),
-        ),
-        const Divider(height: 1),
-        Expanded(child: child),
-      ],
     );
   }
 }

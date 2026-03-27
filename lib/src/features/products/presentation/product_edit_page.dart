@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/edit_page_scaffold.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/materials/data/material_api_service.dart';
 import 'package:work_order_app/src/features/materials/domain/material.dart';
@@ -13,10 +12,10 @@ import 'package:work_order_app/src/features/processes/data/process_api_service.d
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/product_groups/data/product_group_api_service.dart';
 import 'package:work_order_app/src/features/product_groups/domain/product_group.dart';
+import 'package:work_order_app/src/features/product_materials/data/product_material_api_service.dart';
 import 'package:work_order_app/src/features/products/application/product_view_model.dart';
 import 'package:work_order_app/src/features/products/data/product_api_service.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
-import 'package:work_order_app/src/features/product_materials/data/product_material_api_service.dart';
 
 class ProductEditPage extends StatefulWidget {
   const ProductEditPage({super.key, this.product});
@@ -28,10 +27,6 @@ class ProductEditPage extends StatefulWidget {
 }
 
 class _ProductEditPageState extends State<ProductEditPage> {
-  final _formKey = GlobalKey<FormState>();
-
-  static const double _inlineSpacing = 8;
-
   static const String _codeLabel = '产品编码';
   static const String _nameLabel = '产品名称';
   static const String _specLabel = '规格';
@@ -57,7 +52,6 @@ class _ProductEditPageState extends State<ProductEditPage> {
   static const String _codeLengthText = '编码长度在2-50个字符之间';
   static const String _codeInvalidText = '编码只能包含字母、数字和连字符';
   static const String _nameRequiredText = '请输入产品名称';
-  static const String _cancelText = '返回';
   static const String _basicSectionTitle = '基本信息';
   static const String _extraSectionTitle = '补充信息';
   static const String _configSectionTitle = '工序与物料';
@@ -92,9 +86,10 @@ class _ProductEditPageState extends State<ProductEditPage> {
   final List<_MaterialDraft> _materialDrafts = [];
 
   bool _isActive = true;
-  bool _submitting = false;
   bool _loadingOptions = false;
   bool _loadingDetail = false;
+
+  bool get _isLoading => _loadingOptions || _loadingDetail;
 
   @override
   void initState() {
@@ -177,7 +172,9 @@ class _ProductEditPageState extends State<ProductEditPage> {
     } catch (err) {
       ToastUtil.showError('加载基础数据失败: $err');
     } finally {
-      if (mounted) setState(() => _loadingOptions = false);
+      if (mounted) {
+        setState(() => _loadingOptions = false);
+      }
     }
   }
 
@@ -189,7 +186,9 @@ class _ProductEditPageState extends State<ProductEditPage> {
     } catch (err) {
       ToastUtil.showError('加载产品详情失败: $err');
     } finally {
-      if (mounted) setState(() => _loadingDetail = false);
+      if (mounted) {
+        setState(() => _loadingDetail = false);
+      }
     }
   }
 
@@ -206,6 +205,9 @@ class _ProductEditPageState extends State<ProductEditPage> {
     _productType = detail.productType ?? _productType;
     _productGroupId = detail.productGroupId;
     _processIds = List<int>.from(detail.defaultProcessIds);
+    for (final draft in _materialDrafts) {
+      draft.dispose();
+    }
     _materialDrafts
       ..clear()
       ..addAll(
@@ -278,15 +280,10 @@ class _ProductEditPageState extends State<ProductEditPage> {
   }
 
   Future<void> _handleSubmit(ProductViewModel viewModel) async {
-    final form = _formKey.currentState;
-    if (form == null || !form.validate()) {
-      return;
-    }
     if (_productType != 'single' && _productGroupId == null) {
       ToastUtil.showError('请选择产品组');
       return;
     }
-    setState(() => _submitting = true);
 
     final description = _descriptionController.text.trim();
     final payload = Product(
@@ -311,21 +308,12 @@ class _ProductEditPageState extends State<ProductEditPage> {
       productGroupName: widget.product?.productGroupName,
     );
 
-    try {
-      final savedProduct = widget.product == null
-          ? await viewModel.createProduct(payload)
-          : await viewModel.updateProduct(payload);
-      final materialErrors = await _saveProductMaterials(savedProduct.id);
-      if (materialErrors) {
-        ToastUtil.showError('部分物料保存失败');
-      }
-      if (!mounted) return;
-      Navigator.of(context).pop(true);
-    } catch (err) {
-      if (!mounted) return;
-      ToastUtil.showError('$_submitErrorText$err');
-    } finally {
-      if (mounted) setState(() => _submitting = false);
+    final savedProduct = widget.product == null
+        ? await viewModel.createProduct(payload)
+        : await viewModel.updateProduct(payload);
+    final materialErrors = await _saveProductMaterials(savedProduct.id);
+    if (materialErrors) {
+      ToastUtil.showError('部分物料保存失败');
     }
   }
 
@@ -335,152 +323,20 @@ class _ProductEditPageState extends State<ProductEditPage> {
     return double.tryParse(text);
   }
 
-  Widget _sectionTitle(ThemeData theme, String text) {
-    return Text(
-      text,
-      style: theme.textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.w700,
-        color: theme.colorScheme.onSurface,
+  Widget _buildLoadingState(BuildContext context) {
+    return const SizedBox(
+      height: 240,
+      child: Center(
+        child: CircularProgressIndicator(),
       ),
     );
   }
 
-  Widget _subsectionTitle(ThemeData theme, String text) {
-    return Text(
-      text,
-      style: theme.textTheme.titleSmall?.copyWith(
-        fontWeight: FontWeight.w600,
-        color: theme.colorScheme.onSurface,
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final viewModel = context.watch<ProductViewModel>();
+  Widget _buildProcessField(BuildContext context) {
     final theme = Theme.of(context);
-    final isMobile = BreakpointsUtil.isMobile(context);
-    final contentPadding = LayoutTokens.pagePadding(context);
-    final sectionSpacing = LayoutTokens.formSectionSpacing(context);
-    final actionSpacing = LayoutTokens.formActionSpacing(context);
-    final pageSpacing = LayoutTokens.formPageSpacing(context);
-    final columnSpacing = LayoutTokens.formColumnSpacing(context);
-
-    final basicFields = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _sectionTitle(theme, _basicSectionTitle),
-        SizedBox(height: sectionSpacing),
-        TextFormField(
-          controller: _codeController,
-          decoration: const InputDecoration(labelText: _codeLabel),
-          enabled: widget.product == null,
-          validator: (value) {
-            final text = value?.trim() ?? '';
-            if (text.isEmpty) return _codeRequiredText;
-            if (text.length < 2 || text.length > 50) return _codeLengthText;
-            final regex = RegExp(r'^[A-Za-z0-9-]+$');
-            if (!regex.hasMatch(text)) return _codeInvalidText;
-            return null;
-          },
-        ),
-        SizedBox(height: sectionSpacing),
-        TextFormField(
-          controller: _nameController,
-          decoration: const InputDecoration(labelText: _nameLabel),
-          validator: (value) {
-            final text = value?.trim() ?? '';
-            if (text.isEmpty) return _nameRequiredText;
-            return null;
-          },
-        ),
-        SizedBox(height: sectionSpacing),
-        SearchableDropdownFormField<String>(
-          key: ValueKey(_productType),
-          initialValue: _productType,
-          decoration: const InputDecoration(labelText: _productTypeLabel),
-          items: _productTypeLabels.entries
-              .map(
-                (entry) => DropdownMenuItem<String>(
-                  value: entry.key,
-                  child: Text(entry.value),
-                ),
-              )
-              .toList(),
-          onChanged: _handleProductTypeChange,
-        ),
-        if (_productType != 'single') ...[
-          SizedBox(height: sectionSpacing),
-          SearchableDropdownFormField<int>(
-            key: ValueKey(_productGroupId),
-            initialValue: _productGroupId,
-            decoration: const InputDecoration(labelText: _productGroupLabel),
-            items: _productGroups
-                .map(
-                  (group) => DropdownMenuItem(
-                    value: group.id,
-                    child: Text('${group.code} ${group.name}'),
-                  ),
-                )
-                .toList(),
-            onChanged: (value) => setState(() => _productGroupId = value),
-            validator: (value) =>
-                _productType != 'single' && value == null ? '请选择产品组' : null,
-          ),
-        ],
-        SizedBox(height: sectionSpacing),
-        TextFormField(
-          controller: _specController,
-          decoration: const InputDecoration(labelText: _specLabel),
-        ),
-      ],
-    );
-
-    final extraFields = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _sectionTitle(theme, _extraSectionTitle),
-        SizedBox(height: sectionSpacing),
-        TextFormField(
-          controller: _unitController,
-          decoration: const InputDecoration(labelText: _unitLabel),
-        ),
-        SizedBox(height: sectionSpacing),
-        TextFormField(
-          controller: _unitPriceController,
-          decoration: const InputDecoration(labelText: _unitPriceLabel),
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        ),
-        SizedBox(height: sectionSpacing),
-        TextFormField(
-          controller: _stockController,
-          decoration: const InputDecoration(labelText: _stockLabel),
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        ),
-        SizedBox(height: sectionSpacing),
-        TextFormField(
-          controller: _minStockController,
-          decoration: const InputDecoration(labelText: _minStockLabel),
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        ),
-        SizedBox(height: sectionSpacing),
-        TextFormField(
-          controller: _descriptionController,
-          decoration: const InputDecoration(labelText: _descriptionLabel),
-          maxLines: 3,
-        ),
-        SizedBox(height: sectionSpacing),
-        SwitchListTile.adaptive(
-          contentPadding: EdgeInsets.zero,
-          title: const Text(_statusLabel),
-          value: _isActive,
-          onChanged: (value) => setState(() => _isActive = value),
-        ),
-      ],
-    );
-
-    final processField = InkWell(
-      onTap: _processes.isEmpty ? null : () => _openProcessDialog(),
+    final subtleText = theme.hintColor;
+    return InkWell(
+      onTap: _processes.isEmpty ? null : _openProcessDialog,
       borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
       child: InputDecorator(
         decoration: const InputDecoration(
@@ -489,13 +345,16 @@ class _ProductEditPageState extends State<ProductEditPage> {
           suffixIcon: Icon(Icons.arrow_drop_down),
         ),
         child: _processes.isEmpty
-            ? Text('暂无工序数据',
-                style:
-                    theme.textTheme.bodySmall?.copyWith(color: theme.hintColor))
+            ? Text(
+                '暂无工序数据',
+                style: theme.textTheme.bodySmall?.copyWith(color: subtleText),
+              )
             : _processIds.isEmpty
-                ? Text(_processPlaceholder,
-                    style: theme.textTheme.bodyMedium
-                        ?.copyWith(color: theme.hintColor))
+                ? Text(
+                    _processPlaceholder,
+                    style:
+                        theme.textTheme.bodyMedium?.copyWith(color: subtleText),
+                  )
                 : Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -517,11 +376,21 @@ class _ProductEditPageState extends State<ProductEditPage> {
                   ),
       ),
     );
+  }
 
-    final materialSection = Column(
+  Widget _buildMaterialSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final sectionSpacing = LayoutTokens.formSectionSpacing(context);
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _subsectionTitle(theme, _defaultMaterialTitle),
+        Text(
+          _defaultMaterialTitle,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
         SizedBox(height: sectionSpacing),
         if (_materialDrafts.isEmpty)
           Text(_materialEmptyText, style: theme.textTheme.bodySmall)
@@ -548,84 +417,153 @@ class _ProductEditPageState extends State<ProductEditPage> {
         ),
       ],
     );
+  }
 
-    final configSection = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _sectionTitle(theme, _configSectionTitle),
-        SizedBox(height: sectionSpacing),
-        processField,
-        SizedBox(height: sectionSpacing),
-        materialSection,
-      ],
-    );
-
-    final formContent = isMobile
-        ? Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              basicFields,
-              SizedBox(height: sectionSpacing),
-              extraFields,
-              SizedBox(height: sectionSpacing),
-              configSection,
-              SizedBox(height: actionSpacing),
-            ],
-          )
-        : Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: basicFields),
-                  SizedBox(width: columnSpacing),
-                  Expanded(child: extraFields),
+  @override
+  Widget build(BuildContext context) {
+    return CrudEditPage<Product, ProductViewModel>(
+      item: widget.product,
+      config: CrudEditConfig<Product, ProductViewModel>(
+        submitText: _submitText,
+        submittingText: '保存中',
+        errorMessagePrefix: _submitErrorText,
+        canSave: (context, viewModel, item) => !_isLoading,
+        sectionsBuilder: (context, isMobile) {
+          if (_isLoading) {
+            return [
+              CrudFormSection(
+                title: '',
+                fields: [
+                  CrudFormField.custom(
+                    builder: _buildLoadingState,
+                  ),
                 ],
               ),
-              SizedBox(height: sectionSpacing),
-              configSection,
-              SizedBox(height: actionSpacing),
-            ],
-          );
+            ];
+          }
 
-    final body = (_loadingOptions || _loadingDetail)
-        ? const Center(child: CircularProgressIndicator())
-        : formContent;
-
-    return SafeArea(
-      child: Form(
-        key: _formKey,
-        child: EditPageScaffold(
-          spacing: pageSpacing,
-          contentPadding: contentPadding,
-          header: PageHeaderBar(
-            breadcrumb: null,
-            useSurface: false,
-            showDivider: false,
-            padding: EdgeInsets.zero,
-            actions: Wrap(
-              spacing: _inlineSpacing,
-              runSpacing: 8,
-              children: [
-                PageActionButton.outlined(
-                  onPressed: _submitting
-                      ? null
-                      : () => Navigator.of(context).pop(false),
-                  icon: const Icon(Icons.arrow_back, size: 16),
-                  label: _cancelText,
+          return [
+            CrudFormSection(
+              title: _basicSectionTitle,
+              column: 0,
+              fields: [
+                CrudFormField.text(
+                  label: _codeLabel,
+                  controller: _codeController,
+                  enabled: widget.product == null,
+                  validator: (value) {
+                    final text = value?.trim() ?? '';
+                    if (text.isEmpty) return _codeRequiredText;
+                    if (text.length < 2 || text.length > 50) {
+                      return _codeLengthText;
+                    }
+                    if (!RegExp(r'^[A-Za-z0-9-]+$').hasMatch(text)) {
+                      return _codeInvalidText;
+                    }
+                    return null;
+                  },
                 ),
-                PageActionButton.filled(
-                  onPressed:
-                      _submitting ? null : () => _handleSubmit(viewModel),
-                  icon: const Icon(Icons.save, size: 16),
-                  label: _submitting ? '保存中' : _submitText,
+                CrudFormField.text(
+                  label: _nameLabel,
+                  controller: _nameController,
+                  validator: (value) {
+                    final text = value?.trim() ?? '';
+                    if (text.isEmpty) return _nameRequiredText;
+                    return null;
+                  },
+                ),
+                CrudFormField.dropdown(
+                  fieldKey: ValueKey(_productType),
+                  label: _productTypeLabel,
+                  value: _productType,
+                  options: _productTypeLabels.entries
+                      .map(
+                        (entry) => CrudFieldOption(
+                          value: entry.key,
+                          label: entry.value,
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) =>
+                      _handleProductTypeChange(value as String?),
+                ),
+                if (_productType != 'single')
+                  CrudFormField.dropdown(
+                    fieldKey:
+                        ValueKey('${_productType}_${_productGroupId ?? ''}'),
+                    label: _productGroupLabel,
+                    value: _productGroupId,
+                    options: _productGroups
+                        .map(
+                          (group) => CrudFieldOption(
+                            value: group.id,
+                            label: '${group.code} ${group.name}',
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) =>
+                        setState(() => _productGroupId = value as int?),
+                    validator: (value) =>
+                        _productType != 'single' && value == null
+                            ? '请选择产品组'
+                            : null,
+                  ),
+                CrudFormField.text(
+                  label: _specLabel,
+                  controller: _specController,
                 ),
               ],
             ),
-          ),
-          body: body,
-        ),
+            CrudFormSection(
+              title: _extraSectionTitle,
+              column: isMobile ? 0 : 1,
+              fields: [
+                CrudFormField.text(
+                  label: _unitLabel,
+                  controller: _unitController,
+                ),
+                CrudFormField.number(
+                  label: _unitPriceLabel,
+                  controller: _unitPriceController,
+                  decimal: true,
+                ),
+                CrudFormField.number(
+                  label: _stockLabel,
+                  controller: _stockController,
+                  decimal: true,
+                ),
+                CrudFormField.number(
+                  label: _minStockLabel,
+                  controller: _minStockController,
+                  decimal: true,
+                ),
+                CrudFormField.textarea(
+                  label: _descriptionLabel,
+                  controller: _descriptionController,
+                  maxLines: 3,
+                ),
+                CrudFormField.toggle(
+                  label: _statusLabel,
+                  value: _isActive,
+                  onChanged: (value) => setState(() => _isActive = value),
+                ),
+              ],
+            ),
+            CrudFormSection(
+              title: _configSectionTitle,
+              column: 0,
+              fields: [
+                CrudFormField.custom(
+                  builder: _buildProcessField,
+                ),
+                CrudFormField.custom(
+                  builder: _buildMaterialSection,
+                ),
+              ],
+            ),
+          ];
+        },
+        onSave: (context, viewModel, item) => _handleSubmit(viewModel),
       ),
     );
   }
@@ -664,8 +602,11 @@ class _ProductEditPageState extends State<ProductEditPage> {
                     Expanded(
                       child: filtered.isEmpty
                           ? Center(
-                              child: Text(_emptyMatchText,
-                                  style: Theme.of(context).textTheme.bodySmall))
+                              child: Text(
+                                _emptyMatchText,
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            )
                           : Scrollbar(
                               child: ListView.builder(
                                 itemCount: filtered.length,
@@ -688,7 +629,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
                                               if (value == true) {
                                                 _processIds = [
                                                   ..._processIds,
-                                                  process.id
+                                                  process.id,
                                                 ];
                                               } else {
                                                 _processIds = _processIds
