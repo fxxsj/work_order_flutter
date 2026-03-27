@@ -24,7 +24,12 @@ class TaskSupervisorFilterDrawerContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+          padding: EdgeInsets.fromLTRB(
+            LayoutTokens.gapLg,
+            LayoutTokens.gapMd,
+            LayoutTokens.gapSm,
+            LayoutTokens.gapSm,
+          ),
           child: Row(
             children: [
               Expanded(
@@ -127,7 +132,7 @@ class TaskSupervisorFocusCard extends StatelessWidget {
 
     return Container(
       constraints: const BoxConstraints(minWidth: 220, maxWidth: 320),
-      padding: const EdgeInsets.all(14),
+      padding: LayoutTokens.cardPadding(context),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
@@ -147,7 +152,7 @@ class TaskSupervisorFocusCard extends StatelessWidget {
                 ),
                 child: Icon(icon, size: 18, color: color),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: LayoutTokens.gapMd),
               Expanded(
                 child: Text(
                   label,
@@ -165,7 +170,7 @@ class TaskSupervisorFocusCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: LayoutTokens.gapMd),
           Text(
             hint,
             style: theme.textTheme.bodySmall?.copyWith(
@@ -173,7 +178,7 @@ class TaskSupervisorFocusCard extends StatelessWidget {
             ),
           ),
           if (onPressed != null && actionLabel != null) ...[
-            const SizedBox(height: 12),
+            SizedBox(height: LayoutTokens.gapMd),
             OutlinedButton.icon(
               onPressed: onPressed,
               icon: const Icon(Icons.arrow_forward_outlined, size: 16),
@@ -207,7 +212,7 @@ class TaskSupervisorOperatorCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      padding: LayoutTokens.cardPadding(context),
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
@@ -224,7 +229,7 @@ class TaskSupervisorOperatorCard extends StatelessWidget {
                     theme.colorScheme.primary.withValues(alpha: 0.15),
                 child: Icon(Icons.person, color: theme.colorScheme.primary),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: LayoutTokens.gapMd),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -252,7 +257,7 @@ class TaskSupervisorOperatorCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: LayoutTokens.gapMd),
           Wrap(
             spacing: 12,
             runSpacing: 8,
@@ -294,7 +299,7 @@ class TaskSupervisorTaskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: LayoutTokens.cardPadding(context),
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
@@ -309,7 +314,7 @@ class TaskSupervisorTaskCard extends StatelessWidget {
             showDivider: false,
             showAssignee: true,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: LayoutTokens.gapSm),
           OutlinedButton.icon(
             onPressed: onAssign,
             icon: const Icon(Icons.person_add_alt_1, size: 16),
@@ -343,7 +348,7 @@ class TaskSupervisorDraggableTaskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
     final card = Container(
-      padding: const EdgeInsets.all(10),
+      padding: LayoutTokens.cardPadding(context),
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
@@ -426,7 +431,7 @@ class TaskSupervisorDragColumn extends StatelessWidget {
           subtitle,
           style: theme.textTheme.bodySmall?.copyWith(color: colors.subtleText),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: LayoutTokens.gapMd),
         Expanded(
           child: tasks.isEmpty
               ? Center(
@@ -439,7 +444,8 @@ class TaskSupervisorDragColumn extends StatelessWidget {
                 )
               : ListView.separated(
                   itemCount: tasks.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  separatorBuilder: (_, __) =>
+                      SizedBox(height: LayoutTokens.gapSm),
                   itemBuilder: (context, index) {
                     final task = tasks[index];
                     return TaskSupervisorDraggableTaskCard(
@@ -496,7 +502,7 @@ class _TaskSupervisorColumnShell extends StatelessWidget {
     return Container(
       width: 280,
       height: height,
-      padding: const EdgeInsets.all(12),
+      padding: LayoutTokens.cardPadding(context),
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
@@ -596,7 +602,7 @@ class _TaskSupervisorAssignDialogState
             onChanged: (value) =>
                 setState(() => _operatorId = value ?? _operatorId),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           TextFormField(
             decoration: const InputDecoration(labelText: '备注（可选）'),
             onChanged: (value) => _notes = value,

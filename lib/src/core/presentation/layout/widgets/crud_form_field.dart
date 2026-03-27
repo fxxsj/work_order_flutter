@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/file_upload_picker.dart';
 
@@ -1973,15 +1974,4 @@ class _CrudColorFieldBody extends StatelessWidget {
   }
 }
 
-const List<Color> _defaultColorPalette = [
-  Color(0xFFEF4444),
-  Color(0xFFF97316),
-  Color(0xFFEAB308),
-  Color(0xFF22C55E),
-  Color(0xFF14B8A6),
-  Color(0xFF3B82F6),
-  Color(0xFF6366F1),
-  Color(0xFFEC4899),
-  Color(0xFF111827),
-  Color(0xFFFFFFFF),
-];
+const List<Color> _defaultColorPalette = ColorTokens.tagColors;

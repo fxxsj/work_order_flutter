@@ -53,7 +53,7 @@ class NotificationCenterView extends StatelessWidget {
                 onMarkAllRead: controller.markAllRead,
                 onRefresh: controller.refreshAll,
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: LayoutTokens.gapMd),
               if (controller.isLoading)
                 Center(
                   child: Padding(
@@ -92,9 +92,14 @@ class NotificationCenterView extends StatelessWidget {
                   Align(
                     alignment: Alignment.center,
                     child: TextButton(
-                      onPressed: controller.isLoadingMore ? null : controller.loadMore,
+                      onPressed:
+                          controller.isLoadingMore ? null : controller.loadMore,
                       child: controller.isLoadingMore
-                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                          ? SizedBox(
+                              width: LayoutTokens.iconXl,
+                              height: LayoutTokens.iconXl,
+                              child: const CircularProgressIndicator(
+                                  strokeWidth: 2))
                           : const Text('加载更多'),
                     ),
                   ),
@@ -197,7 +202,8 @@ class _NotificationListItem extends StatelessWidget {
       decoration: BoxDecoration(
         color: surface,
         borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-        border: Border.all(color: item.isRead ? Colors.transparent : levelColor.withAlpha(77)),
+        border: Border.all(
+            color: item.isRead ? Colors.transparent : levelColor.withAlpha(77)),
         boxShadow: [
           BoxShadow(
             color: (semantic?.shadowStrong ?? Colors.black).withAlpha(10),
@@ -230,7 +236,7 @@ class _NotificationListItem extends StatelessWidget {
                     color: accent,
                   ),
                 ),
-                const SizedBox(height: 6),
+                SizedBox(height: LayoutTokens.gapSm),
                 Text(
                   item.content,
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -238,7 +244,7 @@ class _NotificationListItem extends StatelessWidget {
                     height: 1.4,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: LayoutTokens.gapMd),
                 Text(
                   _formatRelativeTime(item.createdAt),
                   style: theme.textTheme.labelSmall?.copyWith(
@@ -266,9 +272,9 @@ Color _levelColorFor(
 ) {
   switch (level) {
     case NotificationLevel.warning:
-      return semantic?.warning ?? const Color(0xFFF59E0B);
+      return semantic?.warning ?? ColorTokens.warning;
     case NotificationLevel.urgent:
-      return semantic?.danger ?? const Color(0xFFEF4444);
+      return semantic?.danger ?? ColorTokens.danger;
     case NotificationLevel.info:
       return primary;
   }

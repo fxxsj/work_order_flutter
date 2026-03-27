@@ -506,7 +506,7 @@ class WorkOrderResourcesSection extends StatelessWidget {
               ),
               SizedBox(height: LayoutTokens.gapMd),
               const WorkOrderFormSubsectionTitle(title: 'CMYK 颜色'),
-              const SizedBox(height: 8),
+              SizedBox(height: LayoutTokens.gapSm),
               Wrap(
                 spacing: 8,
                 children: ['C', 'M', 'Y', 'K']
@@ -531,7 +531,7 @@ class WorkOrderResourcesSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const WorkOrderFormSubsectionTitle(title: '图稿'),
-              const SizedBox(height: 8),
+              SizedBox(height: LayoutTokens.gapSm),
               WorkOrderMultiSelectChips(
                 items: artworks
                     .map(
@@ -549,7 +549,7 @@ class WorkOrderResourcesSection extends StatelessWidget {
               ),
               SizedBox(height: LayoutTokens.gapMd),
               const WorkOrderFormSubsectionTitle(title: '刀模'),
-              const SizedBox(height: 8),
+              SizedBox(height: LayoutTokens.gapSm),
               WorkOrderMultiSelectChips(
                 items: dies
                     .map(
@@ -569,7 +569,7 @@ class WorkOrderResourcesSection extends StatelessWidget {
               ),
               SizedBox(height: LayoutTokens.gapMd),
               const WorkOrderFormSubsectionTitle(title: '烫金版'),
-              const SizedBox(height: 8),
+              SizedBox(height: LayoutTokens.gapSm),
               WorkOrderMultiSelectChips(
                 items: foilingPlates
                     .map(
@@ -589,7 +589,7 @@ class WorkOrderResourcesSection extends StatelessWidget {
               ),
               SizedBox(height: LayoutTokens.gapMd),
               const WorkOrderFormSubsectionTitle(title: '压凸版'),
-              const SizedBox(height: 8),
+              SizedBox(height: LayoutTokens.gapSm),
               WorkOrderMultiSelectChips(
                 items: embossingPlates
                     .map(

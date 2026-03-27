@@ -13,6 +13,7 @@ class AppCard extends StatelessWidget {
     this.radius,
     this.showBorder = true,
     this.showShadow = true,
+    this.shadowLevel = ShadowLevel.md,
   });
 
   final Widget child;
@@ -23,19 +24,19 @@ class AppCard extends StatelessWidget {
   final double? radius;
   final bool showBorder;
   final bool showShadow;
+  final ShadowLevel shadowLevel;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
-    final semantic = theme.extension<AppSemanticColors>();
     final resolvedPadding = padding ?? LayoutTokens.cardPadding(context);
     final resolvedRadius = radius ?? LayoutTokens.radiusMd;
     final resolvedBackground =
         background ?? colors?.surface ?? theme.colorScheme.surface;
-    final resolvedBorder = borderColor ?? colors?.borderColor ?? theme.dividerColor;
-    final resolvedBorderAlpha = borderAlpha ?? 0.55;
-    final shadowBase = semantic?.shadowStrong ?? theme.shadowColor;
+    final resolvedBorder =
+        borderColor ?? colors?.borderColor ?? theme.dividerColor;
+    final resolvedBorderAlpha = borderAlpha ?? OpacityTokens.border;
 
     return Container(
       padding: resolvedPadding,
@@ -43,20 +44,36 @@ class AppCard extends StatelessWidget {
         color: resolvedBackground,
         borderRadius: BorderRadius.circular(resolvedRadius),
         border: showBorder
-            ? Border.all(color: resolvedBorder.withValues(alpha: resolvedBorderAlpha))
+            ? Border.all(
+                color: resolvedBorder.withValues(alpha: resolvedBorderAlpha))
             : null,
-        boxShadow: showShadow
-            ? [
-                BoxShadow(
-                  color: shadowBase.withValues(alpha: 0.06),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                  spreadRadius: 0,
-                ),
-              ]
-            : null,
+        boxShadow: showShadow ? _getShadow(context, shadowLevel) : null,
       ),
       child: child,
     );
   }
+
+  List<BoxShadow> _getShadow(BuildContext context, ShadowLevel level) {
+    switch (level) {
+      case ShadowLevel.xs:
+        return ShadowTokens.xs;
+      case ShadowLevel.sm:
+        return ShadowTokens.sm;
+      case ShadowLevel.md:
+        return ShadowTokens.card;
+      case ShadowLevel.lg:
+        return ShadowTokens.lg;
+      case ShadowLevel.xl:
+        return ShadowTokens.xl;
+    }
+  }
+}
+
+/// 阴影等级
+enum ShadowLevel {
+  xs,
+  sm,
+  md,
+  lg,
+  xl,
 }

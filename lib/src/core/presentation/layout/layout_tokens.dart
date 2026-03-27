@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 
+/// 设计令牌统一导出
+export 'opacity_tokens.dart' show OpacityTokens, OpacityExtension;
+export 'shadow_tokens.dart' show ShadowTokens, ShadowExtension;
+export 'text_tokens.dart' show TextTokens, TextStyleExtension, TextBuilder;
+export 'animation_tokens.dart'
+    show AnimationTokens, AnimationBuilderExtension, PresetAnimations;
+export 'color_tokens.dart' show ColorTokens, ColorExtension;
+
 class LayoutTokens {
   const LayoutTokens._();
 

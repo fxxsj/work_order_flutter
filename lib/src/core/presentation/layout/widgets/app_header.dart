@@ -61,8 +61,9 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
       color: subtleText,
       fontWeight: FontWeight.w600,
     );
-    final sectionStyle = (isMobile ? theme.textTheme.titleSmall : theme.textTheme.titleMedium)
-        ?.copyWith(
+    final sectionStyle =
+        (isMobile ? theme.textTheme.titleSmall : theme.textTheme.titleMedium)
+            ?.copyWith(
       color: accent,
       fontWeight: FontWeight.w700,
     );
@@ -469,7 +470,8 @@ class _AvatarMenu extends StatelessWidget {
     return PopupMenuButton<String>(
       tooltip: '账户',
       offset: const Offset(0, 48),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(LayoutTokens.radiusMd)),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(LayoutTokens.radiusMd)),
       onSelected: (value) {
         if (value == 'profile') {
           onProfileTap();
@@ -516,9 +518,9 @@ Color _levelColorFor(
 ) {
   switch (level) {
     case NotificationLevel.warning:
-      return semantic?.warning ?? const Color(0xFFF59E0B);
+      return semantic?.warning ?? ColorTokens.warning;
     case NotificationLevel.urgent:
-      return semantic?.danger ?? const Color(0xFFEF4444);
+      return semantic?.danger ?? ColorTokens.danger;
     case NotificationLevel.info:
       return primary;
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_dto.dart';
@@ -92,7 +93,7 @@ Future<void> showDeliveryOrderFormDialog(
                             return null;
                           },
                         ),
-                      if (!isEdit) const SizedBox(height: 12),
+                      if (!isEdit) SizedBox(height: LayoutTokens.gapMd),
                       TextFormField(
                         controller: receiverNameController,
                         decoration: const InputDecoration(
@@ -102,7 +103,7 @@ Future<void> showDeliveryOrderFormDialog(
                         validator: (value) =>
                             (value?.trim().isEmpty ?? true) ? '请输入收货人' : null,
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: LayoutTokens.gapMd),
                       TextFormField(
                         controller: receiverPhoneController,
                         decoration: const InputDecoration(
@@ -112,7 +113,7 @@ Future<void> showDeliveryOrderFormDialog(
                         validator: (value) =>
                             (value?.trim().isEmpty ?? true) ? '请输入联系电话' : null,
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: LayoutTokens.gapMd),
                       TextFormField(
                         controller: addressController,
                         decoration: const InputDecoration(
@@ -122,13 +123,13 @@ Future<void> showDeliveryOrderFormDialog(
                         validator: (value) =>
                             (value?.trim().isEmpty ?? true) ? '请输入送货地址' : null,
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: LayoutTokens.gapMd),
                       DeliveryDateField(
                         label: '发货日期',
                         value: deliveryDate,
                         onPicked: onDatePicked,
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: LayoutTokens.gapMd),
                       TextFormField(
                         controller: logisticsController,
                         decoration: const InputDecoration(
@@ -136,7 +137,7 @@ Future<void> showDeliveryOrderFormDialog(
                           border: OutlineInputBorder(),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: LayoutTokens.gapMd),
                       TextFormField(
                         controller: trackingController,
                         decoration: const InputDecoration(
@@ -144,7 +145,7 @@ Future<void> showDeliveryOrderFormDialog(
                           border: OutlineInputBorder(),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: LayoutTokens.gapMd),
                       Row(
                         children: [
                           Expanded(
@@ -160,7 +161,7 @@ Future<void> showDeliveryOrderFormDialog(
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: LayoutTokens.gapMd),
                           Expanded(
                             child: TextFormField(
                               controller: packageCountController,
@@ -171,7 +172,7 @@ Future<void> showDeliveryOrderFormDialog(
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: LayoutTokens.gapMd),
                           Expanded(
                             child: TextFormField(
                               controller: packageWeightController,
@@ -187,7 +188,7 @@ Future<void> showDeliveryOrderFormDialog(
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: LayoutTokens.gapMd),
                       TextFormField(
                         controller: notesController,
                         maxLines: 3,
@@ -196,7 +197,7 @@ Future<void> showDeliveryOrderFormDialog(
                           border: OutlineInputBorder(),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: LayoutTokens.gapLg),
                       Row(
                         children: [
                           Expanded(
@@ -225,7 +226,7 @@ Future<void> showDeliveryOrderFormDialog(
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: LayoutTokens.gapSm),
                       if (items.isEmpty)
                         const Text('暂无明细')
                       else
@@ -331,7 +332,7 @@ class DeliveryItemRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: EdgeInsets.only(bottom: LayoutTokens.gapSm),
       child: Row(
         children: [
           Expanded(
@@ -365,7 +366,7 @@ class DeliveryItemRow extends StatelessWidget {
               },
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: LayoutTokens.gapSm),
           SizedBox(
             width: 90,
             child: TextFormField(
@@ -390,7 +391,7 @@ class DeliveryItemRow extends StatelessWidget {
               },
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: LayoutTokens.gapSm),
           SizedBox(
             width: 90,
             child: TextFormField(
@@ -403,7 +404,7 @@ class DeliveryItemRow extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: LayoutTokens.gapSm),
           SizedBox(
             width: 110,
             child: TextFormField(
@@ -418,7 +419,7 @@ class DeliveryItemRow extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: LayoutTokens.gapSm),
           SizedBox(
             width: 120,
             child: TextFormField(
@@ -431,7 +432,7 @@ class DeliveryItemRow extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: LayoutTokens.gapSm),
           IconButton(
             onPressed: enabled ? onRemove : null,
             icon: const Icon(Icons.delete_outline),

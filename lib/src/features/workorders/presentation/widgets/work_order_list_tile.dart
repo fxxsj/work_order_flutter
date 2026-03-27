@@ -53,7 +53,7 @@ class WorkOrderListTile extends StatelessWidget {
                     ),
                   ),
                   if (workOrder.deliveryDate != null) ...[
-                    SizedBox(width: isXs ? 8 : 12),
+                    SizedBox(width: isXs ? LayoutTokens.gapSm : LayoutTokens.gapMd),
                     Flexible(
                       child: Text(
                         _formatDate(workOrder.deliveryDate),
@@ -69,10 +69,10 @@ class WorkOrderListTile extends StatelessWidget {
                   ],
                 ],
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: LayoutTokens.gapMd),
               Wrap(
-                spacing: 8,
-                runSpacing: 8,
+                spacing: LayoutTokens.gapSm,
+                runSpacing: LayoutTokens.gapSm,
                 children: [
                   if (workOrder.customerName?.isNotEmpty == true)
                     _MetaChip(label: '客户', value: workOrder.customerName!),
@@ -121,9 +121,9 @@ class _MetaChip extends StatelessWidget {
     );
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd, vertical: LayoutTokens.gapXs),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withValues(alpha: 0.05),
+        color: theme.colorScheme.primary.withValues(alpha: OpacityTokens.faint),
         borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
         border: Border.all(color: colors.borderColor),
       ),
