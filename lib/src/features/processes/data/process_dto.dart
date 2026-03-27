@@ -1,4 +1,3 @@
-import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 
 class ProcessDto {
@@ -21,17 +20,7 @@ class ProcessDto {
   final bool isActive;
 
   factory ProcessDto.fromJson(Map<String, dynamic> json) {
-    return ProcessDto(
-      id: toInt(json['id']) ?? 0,
-      code: json['code']?.toString() ?? '',
-      name: json['name']?.toString() ?? '',
-      description: toStringOrNull(json['description']),
-      standardDuration: json['standard_duration'] == null
-          ? null
-          : double.tryParse(json['standard_duration'].toString()),
-      sortOrder: toInt(json['sort_order']),
-      isActive: json['is_active'] == null ? true : json['is_active'] == true,
-    );
+    return ProcessDto.fromEntity(Process.fromJson(json));
   }
 
   factory ProcessDto.fromEntity(Process entity) {
@@ -67,6 +56,20 @@ class ProcessDto {
       'sort_order': sortOrder ?? 0,
       'is_active': isActive,
     };
+  }
+}
+
+extension ProcessMapper on Process {
+  ProcessDto toDto() {
+    return ProcessDto(
+      id: id,
+      code: code,
+      name: name,
+      description: description,
+      standardDuration: standardDuration,
+      sortOrder: sortOrder,
+      isActive: isActive,
+    );
   }
 }
 

@@ -15,7 +15,7 @@ class StatusHintChip extends StatelessWidget {
     super.key,
     required this.label,
     required this.count,
-    this.icon = Icons.warning_amber_rounded,
+    this.icon,
     this.onTap,
     this.selected = false,
     this.variant = StatusChipVariant.warning,
@@ -23,7 +23,7 @@ class StatusHintChip extends StatelessWidget {
 
   final String label;
   final int count;
-  final IconData icon;
+  final IconData? icon;
   final VoidCallback? onTap;
   final bool selected;
   final StatusChipVariant variant;

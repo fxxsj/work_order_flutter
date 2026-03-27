@@ -1,57 +1,55 @@
+// ignore_for_file: invalid_annotation_target
+
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 
-class SalesOrder {
-  const SalesOrder({
-    required this.id,
-    required this.orderNumber,
-    this.customerName,
-    this.customerCode,
-    this.status,
-    this.statusDisplay,
-    this.paymentStatus,
-    this.paymentStatusDisplay,
-    this.totalAmount,
-    this.orderDate,
-    this.deliveryDate,
-    this.itemsCount,
-    this.workOrderCount,
-  });
+part 'sales_order.freezed.dart';
+part 'sales_order.g.dart';
 
-  final int id;
-  final String orderNumber;
-  final String? customerName;
-  final String? customerCode;
-  final String? status;
-  final String? statusDisplay;
-  final String? paymentStatus;
-  final String? paymentStatusDisplay;
-  final double? totalAmount;
-  final DateTime? orderDate;
-  final DateTime? deliveryDate;
-  final int? itemsCount;
-  final int? workOrderCount;
+@freezed
+class SalesOrder with _$SalesOrder {
+  const factory SalesOrder({
+    @JsonKey(fromJson: _intFromJson) required int id,
+    @JsonKey(name: 'order_number', fromJson: _stringFromJson)
+    required String orderNumber,
+    @JsonKey(name: 'customer_name', fromJson: _stringOrNullFromJson)
+    String? customerName,
+    @JsonKey(name: 'customer_code', fromJson: _stringOrNullFromJson)
+    String? customerCode,
+    @JsonKey(fromJson: _stringOrNullFromJson) String? status,
+    @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
+    String? statusDisplay,
+    @JsonKey(name: 'payment_status', fromJson: _stringOrNullFromJson)
+    String? paymentStatus,
+    @JsonKey(name: 'payment_status_display', fromJson: _stringOrNullFromJson)
+    String? paymentStatusDisplay,
+    @JsonKey(name: 'total_amount', fromJson: _doubleOrNullFromJson)
+    double? totalAmount,
+    @JsonKey(name: 'order_date', fromJson: _dateTimeOrNullFromJson)
+    DateTime? orderDate,
+    @JsonKey(name: 'delivery_date', fromJson: _dateTimeOrNullFromJson)
+    DateTime? deliveryDate,
+    @JsonKey(name: 'items_count', fromJson: _intOrNullFromJson) int? itemsCount,
+    @JsonKey(name: 'work_order_count', fromJson: _intOrNullFromJson)
+    int? workOrderCount,
+  }) = _SalesOrder;
 
-  factory SalesOrder.fromJson(Map<String, dynamic> json) {
-    return SalesOrder(
-      id: toInt(json['id']) ?? 0,
-      orderNumber: json['order_number']?.toString() ?? '',
-      customerName: toStringOrNull(json['customer_name']),
-      customerCode: toStringOrNull(json['customer_code']),
-      status: toStringOrNull(json['status']),
-      statusDisplay: toStringOrNull(json['status_display']),
-      paymentStatus: toStringOrNull(json['payment_status']),
-      paymentStatusDisplay: toStringOrNull(json['payment_status_display']),
-      totalAmount: _toDouble(json['total_amount']),
-      orderDate: toDateTime(json['order_date']),
-      deliveryDate: toDateTime(json['delivery_date']),
-      itemsCount: toInt(json['items_count']),
-      workOrderCount: toInt(json['work_order_count']),
-    );
-  }
-
-  static double? _toDouble(dynamic value) {
-    if (value == null) return null;
-    if (value is num) return value.toDouble();
-    return double.tryParse(value.toString());
-  }
+  factory SalesOrder.fromJson(Map<String, dynamic> json) =>
+      _$SalesOrderFromJson(json);
 }
+
+int _intFromJson(Object? value) => toInt(value) ?? 0;
+
+int? _intOrNullFromJson(Object? value) => toInt(value);
+
+double? _doubleOrNullFromJson(Object? value) {
+  if (value == null) return null;
+  if (value is num) return value.toDouble();
+  return double.tryParse(value.toString());
+}
+
+String _stringFromJson(Object? value) => value?.toString() ?? '';
+
+String? _stringOrNullFromJson(Object? value) => toStringOrNull(value);
+
+DateTime? _dateTimeOrNullFromJson(Object? value) => toDateTime(value);

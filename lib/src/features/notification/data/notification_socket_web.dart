@@ -1,5 +1,7 @@
 import 'dart:async';
-import 'dart:html';
+import 'dart:js_interop';
+
+import 'package:web/web.dart' as web;
 
 import 'notification_socket.dart';
 
@@ -9,10 +11,10 @@ class _WebNotificationSocket implements NotificationSocket {
   _WebNotificationSocket(this._url);
 
   final String _url;
-  WebSocket? _socket;
-  StreamSubscription<MessageEvent>? _messageSub;
-  StreamSubscription<Event>? _errorSub;
-  StreamSubscription<CloseEvent>? _closeSub;
+  web.WebSocket? _socket;
+  StreamSubscription<web.MessageEvent>? _messageSub;
+  StreamSubscription<web.Event>? _errorSub;
+  StreamSubscription<web.CloseEvent>? _closeSub;
 
   @override
   Future<void> connect({
@@ -20,10 +22,10 @@ class _WebNotificationSocket implements NotificationSocket {
     NotificationSocketError? onError,
     void Function()? onDone,
   }) async {
-    final socket = WebSocket(_url);
+    final socket = web.WebSocket(_url);
     _socket = socket;
     _messageSub = socket.onMessage.listen((event) {
-      onMessage(event.data?.toString() ?? '');
+      onMessage(_readMessage(event));
     });
     _errorSub = socket.onError.listen((event) {
       onError?.call(event);
@@ -43,5 +45,16 @@ class _WebNotificationSocket implements NotificationSocket {
     _errorSub = null;
     _closeSub = null;
     _socket = null;
+  }
+
+  String _readMessage(web.MessageEvent event) {
+    final data = event.data;
+    if (data == null) {
+      return '';
+    }
+    if (data.typeofEquals('string')) {
+      return (data as JSString).toDart;
+    }
+    return data.toString();
   }
 }

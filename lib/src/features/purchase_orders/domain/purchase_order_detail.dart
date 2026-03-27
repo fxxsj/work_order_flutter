@@ -1,156 +1,123 @@
+// ignore_for_file: invalid_annotation_target
+
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 
-class PurchaseOrderDetail {
-  const PurchaseOrderDetail({
-    required this.id,
-    required this.orderNumber,
-    this.supplierId,
-    this.supplierName,
-    this.supplierContact,
-    this.supplierPhone,
-    this.status,
-    this.statusDisplay,
-    this.totalAmount,
-    this.submittedByName,
-    this.submittedAt,
-    this.approvedByName,
-    this.approvedAt,
-    this.workOrderId,
-    this.workOrderNumber,
-    this.expectedDate,
-    this.orderedDate,
-    this.actualReceivedDate,
-    this.notes,
-    this.rejectionReason,
-    this.createdAt,
-    this.updatedAt,
-    this.items = const [],
-  });
+part 'purchase_order_detail.freezed.dart';
+part 'purchase_order_detail.g.dart';
 
-  final int id;
-  final String orderNumber;
-  final int? supplierId;
-  final String? supplierName;
-  final String? supplierContact;
-  final String? supplierPhone;
-  final String? status;
-  final String? statusDisplay;
-  final double? totalAmount;
-  final String? submittedByName;
-  final DateTime? submittedAt;
-  final String? approvedByName;
-  final DateTime? approvedAt;
-  final int? workOrderId;
-  final String? workOrderNumber;
-  final DateTime? expectedDate;
-  final DateTime? orderedDate;
-  final DateTime? actualReceivedDate;
-  final String? notes;
-  final String? rejectionReason;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
-  final List<PurchaseOrderItemDetail> items;
+@freezed
+class PurchaseOrderDetail with _$PurchaseOrderDetail {
+  const factory PurchaseOrderDetail({
+    @JsonKey(fromJson: _intFromJson) required int id,
+    @JsonKey(name: 'order_number', fromJson: _stringFromJson)
+    required String orderNumber,
+    @JsonKey(name: 'supplier', fromJson: _intOrNullFromJson) int? supplierId,
+    @JsonKey(name: 'supplier_name', fromJson: _stringOrNullFromJson)
+    String? supplierName,
+    @JsonKey(name: 'supplier_contact', fromJson: _stringOrNullFromJson)
+    String? supplierContact,
+    @JsonKey(name: 'supplier_phone', fromJson: _stringOrNullFromJson)
+    String? supplierPhone,
+    @JsonKey(fromJson: _stringOrNullFromJson) String? status,
+    @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
+    String? statusDisplay,
+    @JsonKey(name: 'total_amount', fromJson: _doubleOrNullFromJson)
+    double? totalAmount,
+    @JsonKey(name: 'submitted_by_name', fromJson: _stringOrNullFromJson)
+    String? submittedByName,
+    @JsonKey(name: 'submitted_at', fromJson: _dateTimeOrNullFromJson)
+    DateTime? submittedAt,
+    @JsonKey(name: 'approved_by_name', fromJson: _stringOrNullFromJson)
+    String? approvedByName,
+    @JsonKey(name: 'approved_at', fromJson: _dateTimeOrNullFromJson)
+    DateTime? approvedAt,
+    @JsonKey(name: 'work_order', fromJson: _intOrNullFromJson) int? workOrderId,
+    @JsonKey(name: 'work_order_number', fromJson: _stringOrNullFromJson)
+    String? workOrderNumber,
+    @JsonKey(name: 'expected_date', fromJson: _dateTimeOrNullFromJson)
+    DateTime? expectedDate,
+    @JsonKey(name: 'ordered_date', fromJson: _dateTimeOrNullFromJson)
+    DateTime? orderedDate,
+    @JsonKey(name: 'actual_received_date', fromJson: _dateTimeOrNullFromJson)
+    DateTime? actualReceivedDate,
+    @JsonKey(fromJson: _stringOrNullFromJson) String? notes,
+    @JsonKey(name: 'rejection_reason', fromJson: _stringOrNullFromJson)
+    String? rejectionReason,
+    @JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson)
+    DateTime? createdAt,
+    @JsonKey(name: 'updated_at', fromJson: _dateTimeOrNullFromJson)
+    DateTime? updatedAt,
+    @JsonKey(name: 'items', fromJson: _purchaseOrderItemListFromJson)
+    @Default(<PurchaseOrderItemDetail>[])
+    List<PurchaseOrderItemDetail> items,
+  }) = _PurchaseOrderDetail;
 
-  factory PurchaseOrderDetail.fromJson(Map<String, dynamic> json) {
-    return PurchaseOrderDetail(
-      id: toInt(json['id']) ?? 0,
-      orderNumber: json['order_number']?.toString() ?? '',
-      supplierId: toInt(json['supplier']),
-      supplierName: toStringOrNull(json['supplier_name']),
-      supplierContact: toStringOrNull(json['supplier_contact']),
-      supplierPhone: toStringOrNull(json['supplier_phone']),
-      status: toStringOrNull(json['status']),
-      statusDisplay: toStringOrNull(json['status_display']),
-      totalAmount: _toDouble(json['total_amount']),
-      submittedByName: toStringOrNull(json['submitted_by_name']),
-      submittedAt: toDateTime(json['submitted_at']),
-      approvedByName: toStringOrNull(json['approved_by_name']),
-      approvedAt: toDateTime(json['approved_at']),
-      workOrderId: toInt(json['work_order']),
-      workOrderNumber: toStringOrNull(json['work_order_number']),
-      expectedDate: toDateTime(json['expected_date']),
-      orderedDate: toDateTime(json['ordered_date']),
-      actualReceivedDate: toDateTime(json['actual_received_date']),
-      notes: toStringOrNull(json['notes']),
-      rejectionReason: toStringOrNull(json['rejection_reason']),
-      createdAt: toDateTime(json['created_at']),
-      updatedAt: toDateTime(json['updated_at']),
-      items: _parseItems(json['items']),
-    );
-  }
-
-  static List<PurchaseOrderItemDetail> _parseItems(dynamic value) {
-    if (value is! List) return const [];
-    return value
-        .whereType<Map>()
-        .map((item) => PurchaseOrderItemDetail.fromJson(
-              Map<String, dynamic>.from(item),
-            ))
-        .toList();
-  }
-
-  static double? _toDouble(dynamic value) {
-    if (value == null) return null;
-    if (value is num) return value.toDouble();
-    return double.tryParse(value.toString());
-  }
+  factory PurchaseOrderDetail.fromJson(Map<String, dynamic> json) =>
+      _$PurchaseOrderDetailFromJson(json);
 }
 
-class PurchaseOrderItemDetail {
-  const PurchaseOrderItemDetail({
-    required this.id,
-    this.materialId,
-    this.materialName,
-    this.materialCode,
-    this.materialUnit,
-    this.supplierCode,
-    this.quantity,
-    this.receivedQuantity,
-    this.remainingQuantity,
-    this.unitPrice,
-    this.subtotal,
-    this.status,
-    this.statusDisplay,
-    this.notes,
-  });
+@freezed
+class PurchaseOrderItemDetail with _$PurchaseOrderItemDetail {
+  const factory PurchaseOrderItemDetail({
+    @JsonKey(fromJson: _intFromJson) required int id,
+    @JsonKey(name: 'material', fromJson: _intOrNullFromJson) int? materialId,
+    @JsonKey(name: 'material_name', fromJson: _stringOrNullFromJson)
+    String? materialName,
+    @JsonKey(name: 'material_code', fromJson: _stringOrNullFromJson)
+    String? materialCode,
+    @JsonKey(
+      name: 'material_unit',
+      readValue: _readMaterialUnit,
+      fromJson: _stringOrNullFromJson,
+    )
+    String? materialUnit,
+    @JsonKey(name: 'supplier_code', fromJson: _stringOrNullFromJson)
+    String? supplierCode,
+    @JsonKey(fromJson: _doubleOrNullFromJson) double? quantity,
+    @JsonKey(name: 'received_quantity', fromJson: _doubleOrNullFromJson)
+    double? receivedQuantity,
+    @JsonKey(name: 'remaining_quantity', fromJson: _doubleOrNullFromJson)
+    double? remainingQuantity,
+    @JsonKey(name: 'unit_price', fromJson: _doubleOrNullFromJson)
+    double? unitPrice,
+    @JsonKey(name: 'subtotal', fromJson: _doubleOrNullFromJson)
+    double? subtotal,
+    @JsonKey(fromJson: _stringOrNullFromJson) String? status,
+    @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
+    String? statusDisplay,
+    @JsonKey(fromJson: _stringOrNullFromJson) String? notes,
+  }) = _PurchaseOrderItemDetail;
 
-  final int id;
-  final int? materialId;
-  final String? materialName;
-  final String? materialCode;
-  final String? materialUnit;
-  final String? supplierCode;
-  final double? quantity;
-  final double? receivedQuantity;
-  final double? remainingQuantity;
-  final double? unitPrice;
-  final double? subtotal;
-  final String? status;
-  final String? statusDisplay;
-  final String? notes;
-
-  factory PurchaseOrderItemDetail.fromJson(Map<String, dynamic> json) {
-    return PurchaseOrderItemDetail(
-      id: toInt(json['id']) ?? 0,
-      materialId: toInt(json['material']),
-      materialName: toStringOrNull(json['material_name']),
-      materialCode: toStringOrNull(json['material_code']),
-      materialUnit: toStringOrNull(json['material_unit'] ?? json['unit']),
-      supplierCode: toStringOrNull(json['supplier_code']),
-      quantity: _toDouble(json['quantity']),
-      receivedQuantity: _toDouble(json['received_quantity']),
-      remainingQuantity: _toDouble(json['remaining_quantity']),
-      unitPrice: _toDouble(json['unit_price']),
-      subtotal: _toDouble(json['subtotal']),
-      status: toStringOrNull(json['status']),
-      statusDisplay: toStringOrNull(json['status_display']),
-      notes: toStringOrNull(json['notes']),
-    );
-  }
-
-  static double? _toDouble(dynamic value) {
-    if (value == null) return null;
-    if (value is num) return value.toDouble();
-    return double.tryParse(value.toString());
-  }
+  factory PurchaseOrderItemDetail.fromJson(Map<String, dynamic> json) =>
+      _$PurchaseOrderItemDetailFromJson(json);
 }
+
+int _intFromJson(Object? value) => toInt(value) ?? 0;
+
+int? _intOrNullFromJson(Object? value) => toInt(value);
+
+double? _doubleOrNullFromJson(Object? value) {
+  if (value == null) return null;
+  if (value is num) return value.toDouble();
+  return double.tryParse(value.toString());
+}
+
+String _stringFromJson(Object? value) => value?.toString() ?? '';
+
+String? _stringOrNullFromJson(Object? value) => toStringOrNull(value);
+
+DateTime? _dateTimeOrNullFromJson(Object? value) => toDateTime(value);
+
+List<PurchaseOrderItemDetail> _purchaseOrderItemListFromJson(Object? value) {
+  if (value is! List) return const [];
+  return value
+      .whereType<Map>()
+      .map(
+        (item) =>
+            PurchaseOrderItemDetail.fromJson(Map<String, dynamic>.from(item)),
+      )
+      .toList(growable: false);
+}
+
+Object? _readMaterialUnit(Map json, String key) => json[key] ?? json['unit'];

@@ -16,6 +16,7 @@ class TaskDto {
     this.quantityCompleted,
     this.workOrderId,
     this.workOrderNumber,
+    this.customerName,
     this.processName,
     this.priorityDisplay,
     this.deliveryDate,
@@ -35,6 +36,7 @@ class TaskDto {
   final double? quantityCompleted;
   final int? workOrderId;
   final String? workOrderNumber;
+  final String? customerName;
   final String? processName;
   final String? priorityDisplay;
   final DateTime? deliveryDate;
@@ -59,6 +61,7 @@ class TaskDto {
       quantityCompleted: quantityCompleted,
       workOrderId: workOrderId,
       workOrderNumber: workOrderNumber,
+      customerName: customerName,
       processName: processName,
       priorityDisplay: priorityDisplay,
       deliveryDate: deliveryDate,
@@ -83,6 +86,7 @@ extension TaskMapper on Task {
       quantityCompleted: quantityCompleted,
       workOrderId: workOrderId,
       workOrderNumber: workOrderNumber,
+      customerName: customerName,
       processName: processName,
       priorityDisplay: priorityDisplay,
       deliveryDate: deliveryDate,

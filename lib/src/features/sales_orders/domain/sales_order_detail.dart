@@ -1,219 +1,225 @@
+// ignore_for_file: invalid_annotation_target
+
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:work_order_app/src/core/models/traceability_summary_item.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 
-class SalesOrderDetail {
-  const SalesOrderDetail({
-    required this.id,
-    required this.orderNumber,
-    this.customerId,
-    this.customerName,
-    this.customerContact,
-    this.customerPhone,
-    this.customerAddress,
-    this.status,
-    this.statusDisplay,
-    this.approvalComment,
-    this.rejectionReason,
-    this.paymentStatus,
-    this.paymentStatusDisplay,
-    this.orderDate,
-    this.deliveryDate,
-    this.actualDeliveryDate,
-    this.subtotal,
-    this.taxRate,
-    this.taxAmount,
-    this.discountAmount,
-    this.totalAmount,
-    this.depositAmount,
-    this.paidAmount,
-    this.paymentDate,
-    this.contactPerson,
-    this.contactPhone,
-    this.shippingAddress,
-    this.notes,
-    this.paymentCount,
-    this.pendingPaymentPlanCount,
-    this.pendingPaymentPlanAmount,
-    this.unpaidAmount,
-    this.workOrderNumbers = const [],
-    this.deliveryOrderNumbers = const [],
-    this.invoiceNumbers = const [],
-    this.workOrderSummaries = const [],
-    this.deliveryOrderSummaries = const [],
-    this.invoiceSummaries = const [],
-    this.items = const [],
-  });
+part 'sales_order_detail.freezed.dart';
+part 'sales_order_detail.g.dart';
 
-  final int id;
-  final String orderNumber;
-  final int? customerId;
-  final String? customerName;
-  final String? customerContact;
-  final String? customerPhone;
-  final String? customerAddress;
-  final String? status;
-  final String? statusDisplay;
-  final String? approvalComment;
-  final String? rejectionReason;
-  final String? paymentStatus;
-  final String? paymentStatusDisplay;
-  final DateTime? orderDate;
-  final DateTime? deliveryDate;
-  final DateTime? actualDeliveryDate;
-  final double? subtotal;
-  final double? taxRate;
-  final double? taxAmount;
-  final double? discountAmount;
-  final double? totalAmount;
-  final double? depositAmount;
-  final double? paidAmount;
-  final DateTime? paymentDate;
-  final String? contactPerson;
-  final String? contactPhone;
-  final String? shippingAddress;
-  final String? notes;
-  final int? paymentCount;
-  final int? pendingPaymentPlanCount;
-  final double? pendingPaymentPlanAmount;
-  final double? unpaidAmount;
-  final List<String> workOrderNumbers;
-  final List<String> deliveryOrderNumbers;
-  final List<String> invoiceNumbers;
-  final List<TraceabilitySummaryItem> workOrderSummaries;
-  final List<TraceabilitySummaryItem> deliveryOrderSummaries;
-  final List<TraceabilitySummaryItem> invoiceSummaries;
-  final List<SalesOrderItem> items;
+@freezed
+class SalesOrderDetail with _$SalesOrderDetail {
+  const factory SalesOrderDetail({
+    @JsonKey(fromJson: _intFromJson) required int id,
+    @JsonKey(name: 'order_number', fromJson: _stringFromJson)
+    required String orderNumber,
+    @JsonKey(name: 'customer', fromJson: _intOrNullFromJson) int? customerId,
+    @JsonKey(name: 'customer_name', fromJson: _stringOrNullFromJson)
+    String? customerName,
+    @JsonKey(name: 'customer_contact', fromJson: _stringOrNullFromJson)
+    String? customerContact,
+    @JsonKey(name: 'customer_phone', fromJson: _stringOrNullFromJson)
+    String? customerPhone,
+    @JsonKey(name: 'customer_address', fromJson: _stringOrNullFromJson)
+    String? customerAddress,
+    @JsonKey(fromJson: _stringOrNullFromJson) String? status,
+    @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
+    String? statusDisplay,
+    @JsonKey(name: 'approval_comment', fromJson: _stringOrNullFromJson)
+    String? approvalComment,
+    @JsonKey(name: 'rejection_reason', fromJson: _stringOrNullFromJson)
+    String? rejectionReason,
+    @JsonKey(name: 'payment_status', fromJson: _stringOrNullFromJson)
+    String? paymentStatus,
+    @JsonKey(name: 'payment_status_display', fromJson: _stringOrNullFromJson)
+    String? paymentStatusDisplay,
+    @JsonKey(name: 'order_date', fromJson: _dateTimeOrNullFromJson)
+    DateTime? orderDate,
+    @JsonKey(name: 'delivery_date', fromJson: _dateTimeOrNullFromJson)
+    DateTime? deliveryDate,
+    @JsonKey(name: 'actual_delivery_date', fromJson: _dateTimeOrNullFromJson)
+    DateTime? actualDeliveryDate,
+    @JsonKey(name: 'subtotal', fromJson: _doubleOrNullFromJson)
+    double? subtotal,
+    @JsonKey(name: 'tax_rate', fromJson: _doubleOrNullFromJson) double? taxRate,
+    @JsonKey(name: 'tax_amount', fromJson: _doubleOrNullFromJson)
+    double? taxAmount,
+    @JsonKey(name: 'discount_amount', fromJson: _doubleOrNullFromJson)
+    double? discountAmount,
+    @JsonKey(name: 'total_amount', fromJson: _doubleOrNullFromJson)
+    double? totalAmount,
+    @JsonKey(name: 'deposit_amount', fromJson: _doubleOrNullFromJson)
+    double? depositAmount,
+    @JsonKey(name: 'paid_amount', fromJson: _doubleOrNullFromJson)
+    double? paidAmount,
+    @JsonKey(name: 'payment_date', fromJson: _dateTimeOrNullFromJson)
+    DateTime? paymentDate,
+    @JsonKey(name: 'contact_person', fromJson: _stringOrNullFromJson)
+    String? contactPerson,
+    @JsonKey(name: 'contact_phone', fromJson: _stringOrNullFromJson)
+    String? contactPhone,
+    @JsonKey(name: 'shipping_address', fromJson: _stringOrNullFromJson)
+    String? shippingAddress,
+    @JsonKey(fromJson: _stringOrNullFromJson) String? notes,
+    @JsonKey(name: 'payment_count', fromJson: _intOrNullFromJson)
+    int? paymentCount,
+    @JsonKey(name: 'pending_payment_plan_count', fromJson: _intOrNullFromJson)
+    int? pendingPaymentPlanCount,
+    @JsonKey(
+      name: 'pending_payment_plan_amount',
+      fromJson: _doubleOrNullFromJson,
+    )
+    double? pendingPaymentPlanAmount,
+    @JsonKey(name: 'unpaid_amount', fromJson: _doubleOrNullFromJson)
+    double? unpaidAmount,
+    @JsonKey(name: 'work_order_numbers', fromJson: _stringListFromJson)
+    @Default(<String>[])
+    List<String> workOrderNumbers,
+    @JsonKey(name: 'delivery_order_numbers', fromJson: _stringListFromJson)
+    @Default(<String>[])
+    List<String> deliveryOrderNumbers,
+    @JsonKey(name: 'invoice_numbers', fromJson: _stringListFromJson)
+    @Default(<String>[])
+    List<String> invoiceNumbers,
+    @JsonKey(
+      name: 'work_order_summaries',
+      readValue: _readWorkOrderSummaries,
+      fromJson: _traceabilitySummaryListFromJson,
+      toJson: _traceabilitySummaryListToJson,
+    )
+    @Default(<TraceabilitySummaryItem>[])
+    List<TraceabilitySummaryItem> workOrderSummaries,
+    @JsonKey(
+      name: 'delivery_order_summaries',
+      readValue: _readDeliveryOrderSummaries,
+      fromJson: _traceabilitySummaryListFromJson,
+      toJson: _traceabilitySummaryListToJson,
+    )
+    @Default(<TraceabilitySummaryItem>[])
+    List<TraceabilitySummaryItem> deliveryOrderSummaries,
+    @JsonKey(
+      name: 'invoice_summaries',
+      readValue: _readInvoiceSummaries,
+      fromJson: _traceabilitySummaryListFromJson,
+      toJson: _traceabilitySummaryListToJson,
+    )
+    @Default(<TraceabilitySummaryItem>[])
+    List<TraceabilitySummaryItem> invoiceSummaries,
+    @JsonKey(name: 'items', fromJson: _salesOrderItemListFromJson)
+    @Default(<SalesOrderItem>[])
+    List<SalesOrderItem> items,
+  }) = _SalesOrderDetail;
 
-  factory SalesOrderDetail.fromJson(Map<String, dynamic> json) {
-    return SalesOrderDetail(
-      id: toInt(json['id']) ?? 0,
-      orderNumber: json['order_number']?.toString() ?? '',
-      customerId: toInt(json['customer']),
-      customerName: toStringOrNull(json['customer_name']),
-      customerContact: toStringOrNull(json['customer_contact']),
-      customerPhone: toStringOrNull(json['customer_phone']),
-      customerAddress: toStringOrNull(json['customer_address']),
-      status: toStringOrNull(json['status']),
-      statusDisplay: toStringOrNull(json['status_display']),
-      approvalComment: toStringOrNull(json['approval_comment']),
-      rejectionReason: toStringOrNull(json['rejection_reason']),
-      paymentStatus: toStringOrNull(json['payment_status']),
-      paymentStatusDisplay: toStringOrNull(json['payment_status_display']),
-      orderDate: toDateTime(json['order_date']),
-      deliveryDate: toDateTime(json['delivery_date']),
-      actualDeliveryDate: toDateTime(json['actual_delivery_date']),
-      subtotal: _toDouble(json['subtotal']),
-      taxRate: _toDouble(json['tax_rate']),
-      taxAmount: _toDouble(json['tax_amount']),
-      discountAmount: _toDouble(json['discount_amount']),
-      totalAmount: _toDouble(json['total_amount']),
-      depositAmount: _toDouble(json['deposit_amount']),
-      paidAmount: _toDouble(json['paid_amount']),
-      paymentDate: toDateTime(json['payment_date']),
-      contactPerson: toStringOrNull(json['contact_person']),
-      contactPhone: toStringOrNull(json['contact_phone']),
-      shippingAddress: toStringOrNull(json['shipping_address']),
-      notes: toStringOrNull(json['notes']),
-      paymentCount: toInt(json['payment_count']),
-      pendingPaymentPlanCount: toInt(json['pending_payment_plan_count']),
-      pendingPaymentPlanAmount: _toDouble(json['pending_payment_plan_amount']),
-      unpaidAmount: _toDouble(json['unpaid_amount']),
-      workOrderNumbers: _parseStringList(json['work_order_numbers']),
-      deliveryOrderNumbers: _parseStringList(json['delivery_order_numbers']),
-      invoiceNumbers: _parseStringList(json['invoice_numbers']),
-      workOrderSummaries: _parseSummaryList(
-        json['work_order_summaries'],
-        fallbackNumbers: json['work_order_numbers'],
-      ),
-      deliveryOrderSummaries: _parseSummaryList(
-        json['delivery_order_summaries'],
-        fallbackNumbers: json['delivery_order_numbers'],
-      ),
-      invoiceSummaries: _parseSummaryList(
-        json['invoice_summaries'],
-        fallbackNumbers: json['invoice_numbers'],
-      ),
-      items: _parseItems(json['items']),
-    );
-  }
-
-  static double? _toDouble(dynamic value) {
-    if (value == null) return null;
-    if (value is num) return value.toDouble();
-    return double.tryParse(value.toString());
-  }
-
-  static List<String> _parseStringList(dynamic value) {
-    if (value is! List) return const [];
-    return value.map((item) => item.toString()).toList();
-  }
-
-  static List<TraceabilitySummaryItem> _parseSummaryList(
-    dynamic value, {
-    dynamic fallbackNumbers,
-  }) {
-    final items = TraceabilitySummaryItem.parseList(value);
-    if (items.isNotEmpty) return items;
-    return _parseStringList(fallbackNumbers)
-        .map((number) => TraceabilitySummaryItem(number: number))
-        .toList();
-  }
-
-  static List<SalesOrderItem> _parseItems(dynamic value) {
-    if (value is! List) return const [];
-    final items = <SalesOrderItem>[];
-    for (final item in value) {
-      if (item is Map) {
-        items.add(SalesOrderItem.fromJson(Map<String, dynamic>.from(item)));
-      }
-    }
-    return items;
-  }
+  factory SalesOrderDetail.fromJson(Map<String, dynamic> json) =>
+      _$SalesOrderDetailFromJson(json);
 }
 
-class SalesOrderItem {
-  const SalesOrderItem({
-    required this.id,
-    this.productId,
-    this.productName,
-    this.productCode,
-    this.quantity,
-    this.deliveredQuantity,
-    this.unit,
-    this.unitPrice,
-    this.taxRate,
-    this.discountAmount,
-    this.subtotal,
-    this.notes,
-  });
+@freezed
+class SalesOrderItem with _$SalesOrderItem {
+  const factory SalesOrderItem({
+    @JsonKey(fromJson: _intFromJson) required int id,
+    @JsonKey(name: 'product', fromJson: _intOrNullFromJson) int? productId,
+    @JsonKey(name: 'product_name', fromJson: _stringOrNullFromJson)
+    String? productName,
+    @JsonKey(name: 'product_code', fromJson: _stringOrNullFromJson)
+    String? productCode,
+    @JsonKey(name: 'quantity', fromJson: _intOrNullFromJson) int? quantity,
+    @JsonKey(name: 'delivered_quantity', fromJson: _doubleOrNullFromJson)
+    double? deliveredQuantity,
+    @JsonKey(name: 'unit', fromJson: _stringOrNullFromJson) String? unit,
+    @JsonKey(name: 'unit_price', fromJson: _doubleOrNullFromJson)
+    double? unitPrice,
+    @JsonKey(name: 'tax_rate', fromJson: _doubleOrNullFromJson) double? taxRate,
+    @JsonKey(name: 'discount_amount', fromJson: _doubleOrNullFromJson)
+    double? discountAmount,
+    @JsonKey(name: 'subtotal', fromJson: _doubleOrNullFromJson)
+    double? subtotal,
+    @JsonKey(name: 'notes', fromJson: _stringOrNullFromJson) String? notes,
+  }) = _SalesOrderItem;
 
-  final int id;
-  final int? productId;
-  final String? productName;
-  final String? productCode;
-  final int? quantity;
-  final double? deliveredQuantity;
-  final String? unit;
-  final double? unitPrice;
-  final double? taxRate;
-  final double? discountAmount;
-  final double? subtotal;
-  final String? notes;
+  factory SalesOrderItem.fromJson(Map<String, dynamic> json) =>
+      _$SalesOrderItemFromJson(json);
+}
 
-  factory SalesOrderItem.fromJson(Map<String, dynamic> json) {
-    return SalesOrderItem(
-      id: toInt(json['id']) ?? 0,
-      productId: toInt(json['product']),
-      productName: toStringOrNull(json['product_name']),
-      productCode: toStringOrNull(json['product_code']),
-      quantity: toInt(json['quantity']),
-      deliveredQuantity: SalesOrderDetail._toDouble(json['delivered_quantity']),
-      unit: toStringOrNull(json['unit']),
-      unitPrice: SalesOrderDetail._toDouble(json['unit_price']),
-      taxRate: SalesOrderDetail._toDouble(json['tax_rate']),
-      discountAmount: SalesOrderDetail._toDouble(json['discount_amount']),
-      subtotal: SalesOrderDetail._toDouble(json['subtotal']),
-      notes: toStringOrNull(json['notes']),
-    );
+int _intFromJson(Object? value) => toInt(value) ?? 0;
+
+int? _intOrNullFromJson(Object? value) => toInt(value);
+
+double? _doubleOrNullFromJson(Object? value) {
+  if (value == null) return null;
+  if (value is num) return value.toDouble();
+  return double.tryParse(value.toString());
+}
+
+String _stringFromJson(Object? value) => value?.toString() ?? '';
+
+String? _stringOrNullFromJson(Object? value) => toStringOrNull(value);
+
+DateTime? _dateTimeOrNullFromJson(Object? value) => toDateTime(value);
+
+List<String> _stringListFromJson(Object? value) {
+  if (value is! List) return const [];
+  return value.map((item) => item.toString()).toList(growable: false);
+}
+
+List<TraceabilitySummaryItem> _traceabilitySummaryListFromJson(Object? value) {
+  if (value is! List) return const [];
+  final items = <TraceabilitySummaryItem>[];
+  for (final item in value) {
+    if (item is Map) {
+      final summary =
+          TraceabilitySummaryItem.fromJson(Map<String, dynamic>.from(item));
+      if (summary.number.trim().isNotEmpty) {
+        items.add(summary);
+      }
+      continue;
+    }
+    final number = item.toString().trim();
+    if (number.isNotEmpty) {
+      items.add(TraceabilitySummaryItem(number: number));
+    }
   }
+  return items;
+}
+
+List<Map<String, dynamic>> _traceabilitySummaryListToJson(
+  List<TraceabilitySummaryItem> items,
+) {
+  return items
+      .map(
+        (item) => {
+          'number': item.number,
+          'id': item.id,
+          'status_display': item.statusDisplay,
+          'source_label': item.sourceLabel,
+          'batch_no': item.batchNo,
+        },
+      )
+      .toList(growable: false);
+}
+
+List<SalesOrderItem> _salesOrderItemListFromJson(Object? value) {
+  if (value is! List) return const [];
+  return value
+      .whereType<Map>()
+      .map((item) => SalesOrderItem.fromJson(Map<String, dynamic>.from(item)))
+      .toList(growable: false);
+}
+
+Object? _readWorkOrderSummaries(Map json, String key) {
+  final value = json[key];
+  if (value is List && value.isNotEmpty) return value;
+  return json['work_order_numbers'];
+}
+
+Object? _readDeliveryOrderSummaries(Map json, String key) {
+  final value = json[key];
+  if (value is List && value.isNotEmpty) return value;
+  return json['delivery_order_numbers'];
+}
+
+Object? _readInvoiceSummaries(Map json, String key) {
+  final value = json[key];
+  if (value is List && value.isNotEmpty) return value;
+  return json['invoice_numbers'];
 }

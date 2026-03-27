@@ -1,98 +1,84 @@
+// ignore_for_file: invalid_annotation_target
+
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 
-class QualityInspection {
-  const QualityInspection({
-    required this.id,
-    required this.inspectionNumber,
-    this.workOrderId,
-    this.inspectionType,
-    this.inspectionTypeDisplay,
-    this.result,
-    this.resultDisplay,
-    this.customerName,
-    this.workOrderNumber,
-    this.productName,
-    this.batchNo,
-    this.inspectorName,
-    this.inspectionDate,
-    this.inspectionQuantity,
-    this.passedQuantity,
-    this.failedQuantity,
-    this.defectiveRateFormatted,
-    this.inspectionStandard,
-    this.inspectionItems = const [],
-    this.defects = const [],
-    this.defectDescription,
-    this.disposition,
-    this.dispositionNotes,
-    this.attachmentUrl,
-    this.notes,
-  });
+part 'quality_inspection.freezed.dart';
+part 'quality_inspection.g.dart';
 
-  final int id;
-  final String inspectionNumber;
-  final int? workOrderId;
-  final String? inspectionType;
-  final String? inspectionTypeDisplay;
-  final String? result;
-  final String? resultDisplay;
-  final String? customerName;
-  final String? workOrderNumber;
-  final String? productName;
-  final String? batchNo;
-  final String? inspectorName;
-  final DateTime? inspectionDate;
-  final double? inspectionQuantity;
-  final double? passedQuantity;
-  final double? failedQuantity;
-  final String? defectiveRateFormatted;
-  final String? inspectionStandard;
-  final List<String> inspectionItems;
-  final List<String> defects;
-  final String? defectDescription;
-  final String? disposition;
-  final String? dispositionNotes;
-  final String? attachmentUrl;
-  final String? notes;
+@freezed
+class QualityInspection with _$QualityInspection {
+  const factory QualityInspection({
+    @JsonKey(fromJson: _intFromJson) required int id,
+    @JsonKey(name: 'inspection_number', fromJson: _stringFromJson)
+    required String inspectionNumber,
+    @JsonKey(name: 'work_order', fromJson: _intOrNullFromJson) int? workOrderId,
+    @JsonKey(name: 'inspection_type', fromJson: _stringOrNullFromJson)
+    String? inspectionType,
+    @JsonKey(name: 'inspection_type_display', fromJson: _stringOrNullFromJson)
+    String? inspectionTypeDisplay,
+    @JsonKey(fromJson: _stringOrNullFromJson) String? result,
+    @JsonKey(name: 'result_display', fromJson: _stringOrNullFromJson)
+    String? resultDisplay,
+    @JsonKey(name: 'customer_name', fromJson: _stringOrNullFromJson)
+    String? customerName,
+    @JsonKey(name: 'work_order_number', fromJson: _stringOrNullFromJson)
+    String? workOrderNumber,
+    @JsonKey(name: 'product_name', fromJson: _stringOrNullFromJson)
+    String? productName,
+    @JsonKey(name: 'batch_no', fromJson: _stringOrNullFromJson) String? batchNo,
+    @JsonKey(name: 'inspector_name', fromJson: _stringOrNullFromJson)
+    String? inspectorName,
+    @JsonKey(name: 'inspection_date', fromJson: _dateTimeOrNullFromJson)
+    DateTime? inspectionDate,
+    @JsonKey(name: 'inspection_quantity', fromJson: _doubleOrNullFromJson)
+    double? inspectionQuantity,
+    @JsonKey(name: 'passed_quantity', fromJson: _doubleOrNullFromJson)
+    double? passedQuantity,
+    @JsonKey(name: 'failed_quantity', fromJson: _doubleOrNullFromJson)
+    double? failedQuantity,
+    @JsonKey(name: 'defective_rate_formatted', fromJson: _stringOrNullFromJson)
+    String? defectiveRateFormatted,
+    @JsonKey(name: 'inspection_standard', fromJson: _stringOrNullFromJson)
+    String? inspectionStandard,
+    @JsonKey(name: 'inspection_items', fromJson: _stringListFromJson)
+    @Default(<String>[])
+    List<String> inspectionItems,
+    @JsonKey(name: 'defects', fromJson: _stringListFromJson)
+    @Default(<String>[])
+    List<String> defects,
+    @JsonKey(name: 'defect_description', fromJson: _stringOrNullFromJson)
+    String? defectDescription,
+    @JsonKey(name: 'disposition', fromJson: _stringOrNullFromJson)
+    String? disposition,
+    @JsonKey(name: 'disposition_notes', fromJson: _stringOrNullFromJson)
+    String? dispositionNotes,
+    @JsonKey(name: 'attachment', fromJson: _stringOrNullFromJson)
+    String? attachmentUrl,
+    @JsonKey(fromJson: _stringOrNullFromJson) String? notes,
+  }) = _QualityInspection;
 
-  factory QualityInspection.fromJson(Map<String, dynamic> json) {
-    return QualityInspection(
-      id: toInt(json['id']) ?? 0,
-      inspectionNumber: json['inspection_number']?.toString() ?? '',
-      workOrderId: toInt(json['work_order']),
-      inspectionType: toStringOrNull(json['inspection_type']),
-      inspectionTypeDisplay: toStringOrNull(json['inspection_type_display']),
-      result: toStringOrNull(json['result']),
-      resultDisplay: toStringOrNull(json['result_display']),
-      customerName: toStringOrNull(json['customer_name']),
-      workOrderNumber: toStringOrNull(json['work_order_number']),
-      productName: toStringOrNull(json['product_name']),
-      batchNo: toStringOrNull(json['batch_no']),
-      inspectorName: toStringOrNull(json['inspector_name']),
-      inspectionDate: toDateTime(json['inspection_date']),
-      inspectionQuantity: _toDouble(json['inspection_quantity']),
-      passedQuantity: _toDouble(json['passed_quantity']),
-      failedQuantity: _toDouble(json['failed_quantity']),
-      defectiveRateFormatted: toStringOrNull(json['defective_rate_formatted']),
-      inspectionStandard: toStringOrNull(json['inspection_standard']),
-      inspectionItems: _toStringList(json['inspection_items']),
-      defects: _toStringList(json['defects']),
-      defectDescription: toStringOrNull(json['defect_description']),
-      disposition: toStringOrNull(json['disposition']),
-      dispositionNotes: toStringOrNull(json['disposition_notes']),
-      attachmentUrl: toStringOrNull(json['attachment']),
-      notes: toStringOrNull(json['notes']),
-    );
-  }
+  factory QualityInspection.fromJson(Map<String, dynamic> json) =>
+      _$QualityInspectionFromJson(json);
+}
 
-  static double? _toDouble(dynamic value) {
-    if (value == null) return null;
-    if (value is num) return value.toDouble();
-    return double.tryParse(value.toString());
-  }
+int _intFromJson(Object? value) => toInt(value) ?? 0;
 
-  static List<String> _toStringList(dynamic value) {
-    if (value is! List) return const [];
-    return value.map((item) => item.toString()).toList();
-  }
+int? _intOrNullFromJson(Object? value) => toInt(value);
+
+double? _doubleOrNullFromJson(Object? value) {
+  if (value == null) return null;
+  if (value is num) return value.toDouble();
+  return double.tryParse(value.toString());
+}
+
+String _stringFromJson(Object? value) => value?.toString() ?? '';
+
+String? _stringOrNullFromJson(Object? value) => toStringOrNull(value);
+
+DateTime? _dateTimeOrNullFromJson(Object? value) => toDateTime(value);
+
+List<String> _stringListFromJson(Object? value) {
+  if (value is! List) return const [];
+  return value.map((item) => item.toString()).toList(growable: false);
 }

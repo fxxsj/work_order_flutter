@@ -1,4 +1,3 @@
-import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/suppliers/domain/supplier.dart';
 
 /// 供应商数据传输对象。
@@ -30,19 +29,7 @@ class SupplierDto {
   final String? notes;
 
   factory SupplierDto.fromJson(Map<String, dynamic> json) {
-    return SupplierDto(
-      id: toInt(json['id']) ?? 0,
-      name: json['name']?.toString() ?? '',
-      code: toStringOrNull(json['code']),
-      contactPerson: toStringOrNull(json['contact_person']),
-      phone: toStringOrNull(json['phone']),
-      email: toStringOrNull(json['email']),
-      address: toStringOrNull(json['address']),
-      status: toStringOrNull(json['status']),
-      statusDisplay: toStringOrNull(json['status_display']),
-      materialCount: toInt(json['material_count']),
-      notes: toStringOrNull(json['notes']),
-    );
+    return SupplierDto.fromEntity(Supplier.fromJson(json));
   }
 
   factory SupplierDto.fromEntity(Supplier entity) {

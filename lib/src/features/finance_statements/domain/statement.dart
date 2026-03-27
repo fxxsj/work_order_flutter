@@ -1,77 +1,134 @@
+// ignore_for_file: invalid_annotation_target
+
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 
-class Statement {
-  const Statement({
-    required this.id,
-    this.statementNumber,
-    this.statementType,
-    this.statementTypeDisplay,
-    this.partnerName,
-    this.customerName,
-    this.periodStart,
-    this.periodEnd,
-    this.totalAmount,
-    this.debitAmount,
-    this.creditAmount,
-    this.closingBalance,
-    this.status,
-    this.statusDisplay,
-    this.followUpText,
-    this.confirmedByName,
-    this.confirmedAt,
-    this.confirmationNotes,
-  });
+part 'statement.freezed.dart';
+part 'statement.g.dart';
 
-  final int id;
-  final String? statementNumber;
-  final String? statementType;
-  final String? statementTypeDisplay;
-  final String? partnerName;
-  final String? customerName;
-  final DateTime? periodStart;
-  final DateTime? periodEnd;
-  final double? totalAmount;
-  final double? debitAmount;
-  final double? creditAmount;
-  final double? closingBalance;
-  final String? status;
-  final String? statusDisplay;
-  final String? followUpText;
-  final String? confirmedByName;
-  final DateTime? confirmedAt;
-  final String? confirmationNotes;
+@freezed
+class Statement with _$Statement {
+  const factory Statement({
+    @JsonKey(fromJson: _intFromJson) required int id,
+    @JsonKey(
+      name: 'statement_number',
+      readValue: _readStatementNumber,
+      fromJson: _stringOrNullFromJson,
+    )
+    String? statementNumber,
+    @JsonKey(name: 'statement_type', fromJson: _stringOrNullFromJson)
+    String? statementType,
+    @JsonKey(name: 'statement_type_display', fromJson: _stringOrNullFromJson)
+    String? statementTypeDisplay,
+    @JsonKey(name: 'partner_name', fromJson: _stringOrNullFromJson)
+    String? partnerName,
+    @JsonKey(
+      name: 'customer_name',
+      readValue: _readCustomerName,
+      fromJson: _stringOrNullFromJson,
+    )
+    String? customerName,
+    @JsonKey(
+      name: 'period_start',
+      readValue: _readPeriodStart,
+      fromJson: _dateTimeOrNullFromJson,
+    )
+    DateTime? periodStart,
+    @JsonKey(
+      name: 'period_end',
+      readValue: _readPeriodEnd,
+      fromJson: _dateTimeOrNullFromJson,
+    )
+    DateTime? periodEnd,
+    @JsonKey(
+      name: 'total_amount',
+      readValue: _readTotalAmount,
+      fromJson: _doubleOrNullFromJson,
+    )
+    double? totalAmount,
+    @JsonKey(
+      name: 'debit_amount',
+      readValue: _readDebitAmount,
+      fromJson: _doubleOrNullFromJson,
+    )
+    double? debitAmount,
+    @JsonKey(
+      name: 'credit_amount',
+      readValue: _readCreditAmount,
+      fromJson: _doubleOrNullFromJson,
+    )
+    double? creditAmount,
+    @JsonKey(
+      name: 'closing_balance',
+      readValue: _readClosingBalance,
+      fromJson: _doubleOrNullFromJson,
+    )
+    double? closingBalance,
+    @JsonKey(fromJson: _stringOrNullFromJson) String? status,
+    @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
+    String? statusDisplay,
+    @JsonKey(name: 'follow_up_text', fromJson: _stringOrNullFromJson)
+    String? followUpText,
+    @JsonKey(name: 'confirmed_by_name', fromJson: _stringOrNullFromJson)
+    String? confirmedByName,
+    @JsonKey(name: 'confirmed_at', fromJson: _dateTimeOrNullFromJson)
+    DateTime? confirmedAt,
+    @JsonKey(
+      name: 'confirmation_notes',
+      readValue: _readConfirmationNotes,
+      fromJson: _stringOrNullFromJson,
+    )
+    String? confirmationNotes,
+  }) = _Statement;
 
-  factory Statement.fromJson(Map<String, dynamic> json) {
-    return Statement(
-      id: toInt(json['id']) ?? 0,
-      statementNumber: toStringOrNull(json['statement_number']) ??
-          toStringOrNull(json['number']),
-      statementType: toStringOrNull(json['statement_type']),
-      statementTypeDisplay: toStringOrNull(json['statement_type_display']),
-      partnerName: toStringOrNull(json['partner_name']),
-      customerName: toStringOrNull(json['partner_name']) ??
-          toStringOrNull(json['customer_name']) ??
-          toStringOrNull(json['supplier_name']),
-      periodStart: toDateTime(json['period_start'] ?? json['start_date']),
-      periodEnd: toDateTime(json['period_end'] ?? json['end_date']),
-      totalAmount: _toDouble(json['total_amount'] ?? json['amount']),
-      debitAmount: _toDouble(json['debit_amount'] ?? json['total_debit']),
-      creditAmount: _toDouble(json['credit_amount'] ?? json['total_credit']),
-      closingBalance:
-          _toDouble(json['closing_balance'] ?? json['closing_amount']),
-      status: toStringOrNull(json['status']),
-      statusDisplay: toStringOrNull(json['status_display']),
-      followUpText: toStringOrNull(json['follow_up_text']),
-      confirmedByName: toStringOrNull(json['confirmed_by_name']),
-      confirmedAt: toDateTime(json['confirmed_at']),
-      confirmationNotes:
-          toStringOrNull(json['confirmation_notes'] ?? json['confirm_notes']),
-    );
-  }
+  factory Statement.fromJson(Map<String, dynamic> json) =>
+      _$StatementFromJson(json);
+}
 
-  static double? _toDouble(dynamic value) {
-    if (value == null) return null;
-    if (value is num) return value.toDouble();
-    return double.tryParse(value.toString());
-  }
+int _intFromJson(Object? value) => toInt(value) ?? 0;
+
+double? _doubleOrNullFromJson(Object? value) {
+  if (value == null) return null;
+  if (value is num) return value.toDouble();
+  return double.tryParse(value.toString());
+}
+
+String? _stringOrNullFromJson(Object? value) => toStringOrNull(value);
+
+DateTime? _dateTimeOrNullFromJson(Object? value) => toDateTime(value);
+
+Object? _readStatementNumber(Map json, String key) {
+  return json[key] ?? json['number'];
+}
+
+Object? _readCustomerName(Map json, String key) {
+  return json['partner_name'] ?? json[key] ?? json['supplier_name'];
+}
+
+Object? _readPeriodStart(Map json, String key) {
+  return json[key] ?? json['start_date'];
+}
+
+Object? _readPeriodEnd(Map json, String key) {
+  return json[key] ?? json['end_date'];
+}
+
+Object? _readTotalAmount(Map json, String key) {
+  return json[key] ?? json['amount'];
+}
+
+Object? _readDebitAmount(Map json, String key) {
+  return json[key] ?? json['total_debit'];
+}
+
+Object? _readCreditAmount(Map json, String key) {
+  return json[key] ?? json['total_credit'];
+}
+
+Object? _readClosingBalance(Map json, String key) {
+  return json[key] ?? json['closing_amount'];
+}
+
+Object? _readConfirmationNotes(Map json, String key) {
+  return json[key] ?? json['confirm_notes'];
 }

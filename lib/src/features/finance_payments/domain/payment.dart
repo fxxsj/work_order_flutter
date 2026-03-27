@@ -1,70 +1,85 @@
+// ignore_for_file: invalid_annotation_target
+
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 
-class Payment {
-  const Payment({
-    required this.id,
-    this.paymentNumber,
-    this.salesOrderId,
-    this.salesOrderNumber,
-    this.invoiceId,
-    this.invoiceNumber,
-    this.workOrderNumber,
-    this.customerName,
-    this.amount,
-    this.paymentMethod,
-    this.paymentMethodDisplay,
-    this.appliedAmount,
-    this.remainingAmount,
-    this.status,
-    this.statusDisplay,
-    this.followUpText,
-    this.paymentDate,
-  });
+part 'payment.freezed.dart';
+part 'payment.g.dart';
 
-  final int id;
-  final String? paymentNumber;
-  final int? salesOrderId;
-  final String? salesOrderNumber;
-  final int? invoiceId;
-  final String? invoiceNumber;
-  final String? workOrderNumber;
-  final String? customerName;
-  final double? amount;
-  final String? paymentMethod;
-  final String? paymentMethodDisplay;
-  final double? appliedAmount;
-  final double? remainingAmount;
-  final String? status;
-  final String? statusDisplay;
-  final String? followUpText;
-  final DateTime? paymentDate;
+@freezed
+class Payment with _$Payment {
+  const factory Payment({
+    @JsonKey(fromJson: _intFromJson) required int id,
+    @JsonKey(
+      name: 'payment_number',
+      readValue: _readPaymentNumber,
+      fromJson: _stringOrNullFromJson,
+    )
+    String? paymentNumber,
+    @JsonKey(name: 'sales_order', fromJson: _intOrNullFromJson)
+    int? salesOrderId,
+    @JsonKey(name: 'sales_order_number', fromJson: _stringOrNullFromJson)
+    String? salesOrderNumber,
+    @JsonKey(name: 'invoice', fromJson: _intOrNullFromJson) int? invoiceId,
+    @JsonKey(name: 'invoice_number', fromJson: _stringOrNullFromJson)
+    String? invoiceNumber,
+    @JsonKey(name: 'work_order_number', fromJson: _stringOrNullFromJson)
+    String? workOrderNumber,
+    @JsonKey(name: 'customer_name', fromJson: _stringOrNullFromJson)
+    String? customerName,
+    @JsonKey(
+      name: 'amount',
+      readValue: _readAmount,
+      fromJson: _doubleOrNullFromJson,
+    )
+    double? amount,
+    @JsonKey(name: 'payment_method', fromJson: _stringOrNullFromJson)
+    String? paymentMethod,
+    @JsonKey(name: 'payment_method_display', fromJson: _stringOrNullFromJson)
+    String? paymentMethodDisplay,
+    @JsonKey(name: 'applied_amount', fromJson: _doubleOrNullFromJson)
+    double? appliedAmount,
+    @JsonKey(name: 'remaining_amount', fromJson: _doubleOrNullFromJson)
+    double? remainingAmount,
+    @JsonKey(fromJson: _stringOrNullFromJson) String? status,
+    @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
+    String? statusDisplay,
+    @JsonKey(name: 'follow_up_text', fromJson: _stringOrNullFromJson)
+    String? followUpText,
+    @JsonKey(
+      name: 'payment_date',
+      readValue: _readPaymentDate,
+      fromJson: _dateTimeOrNullFromJson,
+    )
+    DateTime? paymentDate,
+  }) = _Payment;
 
-  factory Payment.fromJson(Map<String, dynamic> json) {
-    return Payment(
-      id: toInt(json['id']) ?? 0,
-      paymentNumber: toStringOrNull(json['payment_number']) ??
-          toStringOrNull(json['number']),
-      salesOrderId: toInt(json['sales_order']),
-      salesOrderNumber: toStringOrNull(json['sales_order_number']),
-      invoiceId: toInt(json['invoice']),
-      invoiceNumber: toStringOrNull(json['invoice_number']),
-      workOrderNumber: toStringOrNull(json['work_order_number']),
-      customerName: toStringOrNull(json['customer_name']),
-      amount: _toDouble(json['amount'] ?? json['total_amount']),
-      paymentMethod: toStringOrNull(json['payment_method']),
-      paymentMethodDisplay: toStringOrNull(json['payment_method_display']),
-      appliedAmount: _toDouble(json['applied_amount']),
-      remainingAmount: _toDouble(json['remaining_amount']),
-      status: toStringOrNull(json['status']),
-      statusDisplay: toStringOrNull(json['status_display']),
-      followUpText: toStringOrNull(json['follow_up_text']),
-      paymentDate: toDateTime(json['payment_date'] ?? json['created_at']),
-    );
-  }
+  factory Payment.fromJson(Map<String, dynamic> json) =>
+      _$PaymentFromJson(json);
+}
 
-  static double? _toDouble(dynamic value) {
-    if (value == null) return null;
-    if (value is num) return value.toDouble();
-    return double.tryParse(value.toString());
-  }
+int _intFromJson(Object? value) => toInt(value) ?? 0;
+
+int? _intOrNullFromJson(Object? value) => toInt(value);
+
+double? _doubleOrNullFromJson(Object? value) {
+  if (value == null) return null;
+  if (value is num) return value.toDouble();
+  return double.tryParse(value.toString());
+}
+
+String? _stringOrNullFromJson(Object? value) => toStringOrNull(value);
+
+DateTime? _dateTimeOrNullFromJson(Object? value) => toDateTime(value);
+
+Object? _readPaymentNumber(Map json, String key) {
+  return json[key] ?? json['number'];
+}
+
+Object? _readAmount(Map json, String key) {
+  return json[key] ?? json['total_amount'];
+}
+
+Object? _readPaymentDate(Map json, String key) {
+  return json[key] ?? json['created_at'];
 }

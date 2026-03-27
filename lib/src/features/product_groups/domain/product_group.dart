@@ -1,31 +1,48 @@
+// ignore_for_file: invalid_annotation_target
+
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 
-class ProductGroup {
-  const ProductGroup({
-    required this.id,
-    required this.code,
-    required this.name,
-    this.description,
-    this.isActive,
-    this.itemsCount,
-  });
+part 'product_group.freezed.dart';
+part 'product_group.g.dart';
 
-  final int id;
-  final String code;
-  final String name;
-  final String? description;
-  final bool? isActive;
-  final int? itemsCount;
+@freezed
+class ProductGroup with _$ProductGroup {
+  const factory ProductGroup({
+    @JsonKey(fromJson: _intFromJson) required int id,
+    @JsonKey(fromJson: _stringFromJson) required String code,
+    @JsonKey(fromJson: _stringFromJson) required String name,
+    @JsonKey(fromJson: _stringOrNullFromJson) String? description,
+    @JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson) bool? isActive,
+    @JsonKey(
+      name: 'items_count',
+      readValue: _readItemsCount,
+      fromJson: _intOrNullFromJson,
+    )
+    int? itemsCount,
+  }) = _ProductGroup;
 
-  factory ProductGroup.fromJson(Map<String, dynamic> json) {
-    final items = json['items'];
-    return ProductGroup(
-      id: toInt(json['id']) ?? 0,
-      code: json['code']?.toString() ?? '',
-      name: json['name']?.toString() ?? '',
-      description: toStringOrNull(json['description']),
-      isActive: json['is_active'] == null ? null : json['is_active'] == true,
-      itemsCount: items is List ? items.length : toInt(json['items_count']),
-    );
+  factory ProductGroup.fromJson(Map<String, dynamic> json) =>
+      _$ProductGroupFromJson(json);
+}
+
+int _intFromJson(Object? value) => toInt(value) ?? 0;
+
+int? _intOrNullFromJson(Object? value) => toInt(value);
+
+String _stringFromJson(Object? value) => value?.toString() ?? '';
+
+String? _stringOrNullFromJson(Object? value) => toStringOrNull(value);
+
+bool? _boolOrNullFromJson(Object? value) {
+  if (value == null) return null;
+  return value == true;
+}
+
+Object? _readItemsCount(Map json, String key) {
+  final items = json['items'];
+  if (items is List) {
+    return items.length;
   }
+  return json[key];
 }

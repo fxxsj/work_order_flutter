@@ -32,7 +32,7 @@ import 'package:work_order_app/src/features/workorders/data/work_order_list_supp
 import 'package:work_order_app/src/features/workorders/data/work_order_repository_impl.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
-import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_list_sections.dart';
+import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_delete_confirm_dialog.dart';
 
 /// 施工单列表入口。
 class WorkOrderListEntry extends StatelessWidget {

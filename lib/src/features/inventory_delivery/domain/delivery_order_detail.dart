@@ -1,173 +1,137 @@
+// ignore_for_file: invalid_annotation_target
+
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 
-class DeliveryOrderDetail {
-  const DeliveryOrderDetail({
-    required this.id,
-    required this.orderNumber,
-    this.salesOrderId,
-    this.salesOrderNumber,
-    this.customerId,
-    this.customerName,
-    this.status,
-    this.statusDisplay,
-    this.deliveryDate,
-    this.receiverName,
-    this.receiverPhone,
-    this.deliveryAddress,
-    this.logisticsCompany,
-    this.trackingNumber,
-    this.freight,
-    this.packageCount,
-    this.packageWeight,
-    this.receivedDate,
-    this.receivedNotes,
-    this.receiverSignatureUrl,
-    this.notes,
-    this.invoiceCount,
-    this.invoiceNumbers = const [],
-    this.items = const [],
-    this.exceptionResolution,
-    this.exceptionResolutionDisplay,
-    this.exceptionResolutionNotes,
-    this.exceptionClosed,
-  });
+part 'delivery_order_detail.freezed.dart';
+part 'delivery_order_detail.g.dart';
 
-  final int id;
-  final String orderNumber;
-  final int? salesOrderId;
-  final String? salesOrderNumber;
-  final int? customerId;
-  final String? customerName;
-  final String? status;
-  final String? statusDisplay;
-  final DateTime? deliveryDate;
-  final String? receiverName;
-  final String? receiverPhone;
-  final String? deliveryAddress;
-  final String? logisticsCompany;
-  final String? trackingNumber;
-  final double? freight;
-  final int? packageCount;
-  final double? packageWeight;
-  final DateTime? receivedDate;
-  final String? receivedNotes;
-  final String? receiverSignatureUrl;
-  final String? notes;
-  final int? invoiceCount;
-  final List<String> invoiceNumbers;
-  final List<DeliveryOrderItem> items;
-  final String? exceptionResolution;
-  final String? exceptionResolutionDisplay;
-  final String? exceptionResolutionNotes;
-  final bool? exceptionClosed;
+@freezed
+class DeliveryOrderDetail with _$DeliveryOrderDetail {
+  const factory DeliveryOrderDetail({
+    @JsonKey(fromJson: _intFromJson) required int id,
+    @JsonKey(name: 'order_number', fromJson: _stringFromJson)
+    required String orderNumber,
+    @JsonKey(name: 'sales_order', fromJson: _intOrNullFromJson)
+    int? salesOrderId,
+    @JsonKey(name: 'sales_order_number', fromJson: _stringOrNullFromJson)
+    String? salesOrderNumber,
+    @JsonKey(name: 'customer', fromJson: _intOrNullFromJson) int? customerId,
+    @JsonKey(name: 'customer_name', fromJson: _stringOrNullFromJson)
+    String? customerName,
+    @JsonKey(fromJson: _stringOrNullFromJson) String? status,
+    @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
+    String? statusDisplay,
+    @JsonKey(name: 'delivery_date', fromJson: _dateTimeOrNullFromJson)
+    DateTime? deliveryDate,
+    @JsonKey(name: 'receiver_name', fromJson: _stringOrNullFromJson)
+    String? receiverName,
+    @JsonKey(name: 'receiver_phone', fromJson: _stringOrNullFromJson)
+    String? receiverPhone,
+    @JsonKey(name: 'delivery_address', fromJson: _stringOrNullFromJson)
+    String? deliveryAddress,
+    @JsonKey(name: 'logistics_company', fromJson: _stringOrNullFromJson)
+    String? logisticsCompany,
+    @JsonKey(name: 'tracking_number', fromJson: _stringOrNullFromJson)
+    String? trackingNumber,
+    @JsonKey(fromJson: _doubleOrNullFromJson) double? freight,
+    @JsonKey(name: 'package_count', fromJson: _intOrNullFromJson)
+    int? packageCount,
+    @JsonKey(name: 'package_weight', fromJson: _doubleOrNullFromJson)
+    double? packageWeight,
+    @JsonKey(name: 'received_date', fromJson: _dateTimeOrNullFromJson)
+    DateTime? receivedDate,
+    @JsonKey(name: 'received_notes', fromJson: _stringOrNullFromJson)
+    String? receivedNotes,
+    @JsonKey(name: 'receiver_signature', fromJson: _stringOrNullFromJson)
+    String? receiverSignatureUrl,
+    @JsonKey(fromJson: _stringOrNullFromJson) String? notes,
+    @JsonKey(name: 'invoice_count', fromJson: _intOrNullFromJson)
+    int? invoiceCount,
+    @JsonKey(name: 'invoice_numbers', fromJson: _stringListFromJson)
+    @Default(<String>[])
+    List<String> invoiceNumbers,
+    @JsonKey(name: 'items', fromJson: _deliveryOrderItemListFromJson)
+    @Default(<DeliveryOrderItem>[])
+    List<DeliveryOrderItem> items,
+    @JsonKey(name: 'exception_resolution', fromJson: _stringOrNullFromJson)
+    String? exceptionResolution,
+    @JsonKey(
+      name: 'exception_resolution_display',
+      fromJson: _stringOrNullFromJson,
+    )
+    String? exceptionResolutionDisplay,
+    @JsonKey(
+      name: 'exception_resolution_notes',
+      fromJson: _stringOrNullFromJson,
+    )
+    String? exceptionResolutionNotes,
+    @JsonKey(name: 'exception_closed', fromJson: _boolOrNullFromJson)
+    bool? exceptionClosed,
+  }) = _DeliveryOrderDetail;
 
-  factory DeliveryOrderDetail.fromJson(Map<String, dynamic> json) {
-    return DeliveryOrderDetail(
-      id: toInt(json['id']) ?? 0,
-      orderNumber: json['order_number']?.toString() ?? '',
-      salesOrderId: toInt(json['sales_order']),
-      salesOrderNumber: toStringOrNull(json['sales_order_number']),
-      customerId: toInt(json['customer']),
-      customerName: toStringOrNull(json['customer_name']),
-      status: toStringOrNull(json['status']),
-      statusDisplay: toStringOrNull(json['status_display']),
-      deliveryDate: toDateTime(json['delivery_date']),
-      receiverName: toStringOrNull(json['receiver_name']),
-      receiverPhone: toStringOrNull(json['receiver_phone']),
-      deliveryAddress: toStringOrNull(json['delivery_address']),
-      logisticsCompany: toStringOrNull(json['logistics_company']),
-      trackingNumber: toStringOrNull(json['tracking_number']),
-      freight: _toDouble(json['freight']),
-      packageCount: toInt(json['package_count']),
-      packageWeight: _toDouble(json['package_weight']),
-      receivedDate: toDateTime(json['received_date']),
-      receivedNotes: toStringOrNull(json['received_notes']),
-      receiverSignatureUrl: toStringOrNull(json['receiver_signature']),
-      notes: toStringOrNull(json['notes']),
-      invoiceCount: toInt(json['invoice_count']),
-      invoiceNumbers: _parseStrings(json['invoice_numbers']),
-      items: _parseItems(json['items']),
-      exceptionResolution: toStringOrNull(json['exception_resolution']),
-      exceptionResolutionDisplay:
-          toStringOrNull(json['exception_resolution_display']),
-      exceptionResolutionNotes:
-          toStringOrNull(json['exception_resolution_notes']),
-      exceptionClosed: _toBool(json['exception_closed']),
-    );
-  }
-
-  static double? _toDouble(dynamic value) {
-    if (value == null) return null;
-    if (value is num) return value.toDouble();
-    return double.tryParse(value.toString());
-  }
-
-  static bool? _toBool(dynamic value) {
-    if (value is bool) return value;
-    final text = value?.toString().trim().toLowerCase();
-    if (text == 'true' || text == '1') return true;
-    if (text == 'false' || text == '0') return false;
-    return null;
-  }
-
-  static List<DeliveryOrderItem> _parseItems(dynamic value) {
-    if (value is! List) return const [];
-    return value
-        .whereType<Map>()
-        .map((item) =>
-            DeliveryOrderItem.fromJson(Map<String, dynamic>.from(item)))
-        .toList();
-  }
-
-  static List<String> _parseStrings(dynamic value) {
-    if (value is! List) return const [];
-    return value.map((item) => item.toString()).toList();
-  }
+  factory DeliveryOrderDetail.fromJson(Map<String, dynamic> json) =>
+      _$DeliveryOrderDetailFromJson(json);
 }
 
-class DeliveryOrderItem {
-  const DeliveryOrderItem({
-    required this.id,
-    this.productId,
-    this.productName,
-    this.productCode,
-    this.quantity,
-    this.unit,
-    this.unitPrice,
-    this.subtotal,
-    this.stockBatch,
-    this.notes,
-  });
+@freezed
+class DeliveryOrderItem with _$DeliveryOrderItem {
+  const factory DeliveryOrderItem({
+    @JsonKey(fromJson: _intFromJson) required int id,
+    @JsonKey(name: 'product', fromJson: _intOrNullFromJson) int? productId,
+    @JsonKey(name: 'product_name', fromJson: _stringOrNullFromJson)
+    String? productName,
+    @JsonKey(name: 'product_code', fromJson: _stringOrNullFromJson)
+    String? productCode,
+    @JsonKey(fromJson: _doubleOrNullFromJson) double? quantity,
+    @JsonKey(fromJson: _stringOrNullFromJson) String? unit,
+    @JsonKey(name: 'unit_price', fromJson: _doubleOrNullFromJson)
+    double? unitPrice,
+    @JsonKey(name: 'subtotal', fromJson: _doubleOrNullFromJson)
+    double? subtotal,
+    @JsonKey(name: 'stock_batch', fromJson: _stringOrNullFromJson)
+    String? stockBatch,
+    @JsonKey(fromJson: _stringOrNullFromJson) String? notes,
+  }) = _DeliveryOrderItem;
 
-  final int id;
-  final int? productId;
-  final String? productName;
-  final String? productCode;
-  final double? quantity;
-  final String? unit;
-  final double? unitPrice;
-  final double? subtotal;
-  final String? stockBatch;
-  final String? notes;
+  factory DeliveryOrderItem.fromJson(Map<String, dynamic> json) =>
+      _$DeliveryOrderItemFromJson(json);
+}
 
-  factory DeliveryOrderItem.fromJson(Map<String, dynamic> json) {
-    return DeliveryOrderItem(
-      id: toInt(json['id']) ?? 0,
-      productId: toInt(json['product']),
-      productName: toStringOrNull(json['product_name']),
-      productCode: toStringOrNull(json['product_code']),
-      quantity: _toDouble(json['quantity']),
-      unit: toStringOrNull(json['unit']),
-      unitPrice: _toDouble(json['unit_price']),
-      subtotal: _toDouble(json['subtotal']),
-      stockBatch: toStringOrNull(json['stock_batch']),
-      notes: toStringOrNull(json['notes']),
-    );
-  }
+int _intFromJson(Object? value) => toInt(value) ?? 0;
 
-  static double? _toDouble(dynamic value) {
-    if (value == null) return null;
-    if (value is num) return value.toDouble();
-    return double.tryParse(value.toString());
-  }
+int? _intOrNullFromJson(Object? value) => toInt(value);
+
+double? _doubleOrNullFromJson(Object? value) {
+  if (value == null) return null;
+  if (value is num) return value.toDouble();
+  return double.tryParse(value.toString());
+}
+
+String _stringFromJson(Object? value) => value?.toString() ?? '';
+
+String? _stringOrNullFromJson(Object? value) => toStringOrNull(value);
+
+DateTime? _dateTimeOrNullFromJson(Object? value) => toDateTime(value);
+
+bool? _boolOrNullFromJson(Object? value) {
+  if (value is bool) return value;
+  final text = value?.toString().trim().toLowerCase();
+  if (text == 'true' || text == '1') return true;
+  if (text == 'false' || text == '0') return false;
+  return null;
+}
+
+List<DeliveryOrderItem> _deliveryOrderItemListFromJson(Object? value) {
+  if (value is! List) return const [];
+  return value
+      .whereType<Map>()
+      .map(
+          (item) => DeliveryOrderItem.fromJson(Map<String, dynamic>.from(item)))
+      .toList(growable: false);
+}
+
+List<String> _stringListFromJson(Object? value) {
+  if (value is! List) return const [];
+  return value.map((item) => item.toString()).toList(growable: false);
 }

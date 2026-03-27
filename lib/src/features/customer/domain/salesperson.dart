@@ -1,40 +1,25 @@
+// ignore_for_file: invalid_annotation_target
+
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 
+part 'salesperson.freezed.dart';
+part 'salesperson.g.dart';
+
 /// 业务员领域模型。
-class Salesperson {
+@freezed
+class Salesperson with _$Salesperson {
   /// 创建一个业务员对象。
-  const Salesperson({
-    required this.id,
-    required this.name,
-  });
-
-  final int id;
-  final String name;
-
-  /// 复制并更新业务员信息。
-  Salesperson copyWith({
-    int? id,
-    String? name,
-  }) {
-    return Salesperson(
-      id: id ?? this.id,
-      name: name ?? this.name,
-    );
-  }
-
-  /// 序列化为 Map。
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-    };
-  }
+  const factory Salesperson({
+    @JsonKey(fromJson: _intFromJson) required int id,
+    @JsonKey(fromJson: _stringFromJson) required String name,
+  }) = _Salesperson;
 
   /// 从 Map 反序列化。
-  factory Salesperson.fromJson(Map<String, dynamic> json) {
-    return Salesperson(
-      id: toInt(json['id']) ?? 0,
-      name: json['name']?.toString() ?? '',
-    );
-  }
+  factory Salesperson.fromJson(Map<String, dynamic> json) =>
+      _$SalespersonFromJson(json);
 }
+
+int _intFromJson(Object? value) => toInt(value) ?? 0;
+
+String _stringFromJson(Object? value) => value?.toString() ?? '';
