@@ -1,7 +1,9 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/utils/file_upload_picker.dart';
 
 enum CrudFieldType {
   text,
@@ -13,7 +15,11 @@ enum CrudFieldType {
   dateRange,
   textarea,
   toggle,
+  fileUpload,
   multiSelect,
+  tags,
+  checkboxGroup,
+  radioGroup,
   color,
   custom,
 }
@@ -30,6 +36,17 @@ class CrudFieldOption<T> {
   final bool enabled;
 }
 
+class CrudPickedFile {
+  const CrudPickedFile({
+    required this.filename,
+    required this.file,
+  });
+
+  final String filename;
+  final MultipartFile file;
+}
+
+/// Reusable field factory used by [CrudEditPage] sections.
 class CrudFormField {
   CrudFormField._({
     required this.label,
@@ -57,6 +74,8 @@ class CrudFormField {
     this.confirmText,
     this.cancelText,
     this.palette,
+    this.allowedExtensions,
+    this.fallbackFilename,
     this.firstDate,
     this.lastDate,
     this.builder,
@@ -275,6 +294,35 @@ class CrudFormField {
           helperText: helperText,
         );
 
+  CrudFormField.fileUpload({
+    required String label,
+    Key? fieldKey,
+    CrudPickedFile? value,
+    ValueChanged<CrudPickedFile?>? onChanged,
+    String? Function(CrudPickedFile?)? validator,
+    bool enabled = true,
+    String? hintText,
+    String? helperText,
+    required List<String> allowedExtensions,
+    String fallbackFilename = 'upload.bin',
+  }) : this._(
+          label: label,
+          type: CrudFieldType.fileUpload,
+          fieldKey: fieldKey,
+          value: value,
+          onChanged: onChanged == null
+              ? null
+              : (value) => onChanged(value as CrudPickedFile?),
+          validator: validator == null
+              ? null
+              : (value) => validator(value as CrudPickedFile?),
+          enabled: enabled,
+          hintText: hintText,
+          helperText: helperText,
+          allowedExtensions: allowedExtensions,
+          fallbackFilename: fallbackFilename,
+        );
+
   CrudFormField.multiSelect({
     required String label,
     Key? fieldKey,
@@ -312,6 +360,85 @@ class CrudFormField {
           clearText: clearText,
           confirmText: confirmText,
           cancelText: cancelText,
+        );
+
+  CrudFormField.tags({
+    required String label,
+    Key? fieldKey,
+    required List<String> values,
+    ValueChanged<List<String>>? onChanged,
+    String? Function(List<String>?)? validator,
+    bool enabled = true,
+    String? hintText,
+    String? helperText,
+    String emptyText = '暂无标签',
+  }) : this._(
+          label: label,
+          type: CrudFieldType.tags,
+          fieldKey: fieldKey,
+          value: List<String>.from(values),
+          onChanged: onChanged == null
+              ? null
+              : (value) => onChanged(List<String>.from(value as List<String>)),
+          validator: validator == null
+              ? null
+              : (value) => validator(value as List<String>?),
+          enabled: enabled,
+          hintText: hintText,
+          helperText: helperText,
+          emptyText: emptyText,
+        );
+
+  CrudFormField.checkboxGroup({
+    required String label,
+    Key? fieldKey,
+    required List<CrudFieldOption<dynamic>> options,
+    required Set<dynamic> values,
+    ValueChanged<Set<dynamic>>? onChanged,
+    String? Function(Set<dynamic>?)? validator,
+    bool enabled = true,
+    String? hintText,
+    String? helperText,
+    String emptyText = '暂无可选项',
+  }) : this._(
+          label: label,
+          type: CrudFieldType.checkboxGroup,
+          fieldKey: fieldKey,
+          options: options,
+          value: Set<dynamic>.from(values),
+          onChanged: onChanged == null
+              ? null
+              : (value) => onChanged(Set<dynamic>.from(value as Set<dynamic>)),
+          validator: validator == null
+              ? null
+              : (value) => validator(value as Set<dynamic>?),
+          enabled: enabled,
+          hintText: hintText,
+          helperText: helperText,
+          emptyText: emptyText,
+        );
+
+  CrudFormField.radioGroup({
+    required String label,
+    Key? fieldKey,
+    required List<CrudFieldOption<dynamic>> options,
+    dynamic value,
+    ValueChanged<dynamic>? onChanged,
+    String? Function(dynamic)? validator,
+    bool enabled = true,
+    String? hintText,
+    String? helperText,
+  }) : this._(
+          label: label,
+          type: CrudFieldType.radioGroup,
+          fieldKey: fieldKey,
+          options: options,
+          value: value,
+          onChanged: onChanged,
+          validator: validator,
+          enabled: enabled,
+          hintText: hintText,
+          helperText: helperText,
         );
 
   CrudFormField.color({
@@ -380,6 +507,8 @@ class CrudFormField {
   final String? confirmText;
   final String? cancelText;
   final List<Color>? palette;
+  final List<String>? allowedExtensions;
+  final String? fallbackFilename;
   final DateTime? firstDate;
   final DateTime? lastDate;
   final Widget Function(BuildContext context)? builder;
@@ -443,12 +572,26 @@ class CrudFormField {
             ),
           ),
         );
+      case CrudFieldType.fileUpload:
+        return _CrudFileUploadFormField(
+          fieldKey: fieldKey,
+          label: label,
+          value: value as CrudPickedFile?,
+          onChanged: enabled ? onChanged : null,
+          validator: validator as String? Function(CrudPickedFile?)?,
+          enabled: enabled,
+          hintText: hintText,
+          helperText: helperText,
+          allowedExtensions: allowedExtensions ?? const [],
+          fallbackFilename: fallbackFilename ?? 'upload.bin',
+        );
       case CrudFieldType.multiSelect:
         return _CrudMultiSelectFormField(
           fieldKey: fieldKey,
           label: label,
           options: options,
-          selectedValues: (value as Set<dynamic>? ?? const {}).cast<dynamic>(),
+          selectedValues:
+              (value as Set<dynamic>? ?? <dynamic>{}).cast<dynamic>(),
           onChanged: enabled ? onChanged : null,
           validator: validator as String? Function(Set<dynamic>?)?,
           enabled: enabled,
@@ -460,6 +603,44 @@ class CrudFormField {
           clearText: clearText ?? '清空',
           confirmText: confirmText ?? '确定',
           cancelText: cancelText ?? '取消',
+        );
+      case CrudFieldType.tags:
+        return _CrudTagsFormField(
+          fieldKey: fieldKey,
+          label: label,
+          values: (value as List<String>? ?? const <String>[]),
+          onChanged: enabled ? onChanged : null,
+          validator: validator as String? Function(List<String>?)?,
+          enabled: enabled,
+          hintText: hintText,
+          helperText: helperText,
+          emptyText: emptyText ?? '暂无标签',
+        );
+      case CrudFieldType.checkboxGroup:
+        return _CrudCheckboxGroupFormField(
+          fieldKey: fieldKey,
+          label: label,
+          options: options,
+          selectedValues:
+              (value as Set<dynamic>? ?? <dynamic>{}).cast<dynamic>(),
+          onChanged: enabled ? onChanged : null,
+          validator: validator as String? Function(Set<dynamic>?)?,
+          enabled: enabled,
+          hintText: hintText,
+          helperText: helperText,
+          emptyText: emptyText ?? '暂无可选项',
+        );
+      case CrudFieldType.radioGroup:
+        return _CrudRadioGroupFormField(
+          fieldKey: fieldKey,
+          label: label,
+          options: options,
+          value: value,
+          onChanged: enabled ? onChanged : null,
+          validator: validator,
+          enabled: enabled,
+          hintText: hintText,
+          helperText: helperText,
         );
       case CrudFieldType.color:
         return _CrudColorFormField(
@@ -716,6 +897,164 @@ String _formatDateYmd(DateTime date) {
   final month = date.month.toString().padLeft(2, '0');
   final day = date.day.toString().padLeft(2, '0');
   return '$year-$month-$day';
+}
+
+class _CrudFileUploadFormField extends FormField<CrudPickedFile?> {
+  _CrudFileUploadFormField({
+    Key? fieldKey,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    required this.enabled,
+    required this.hintText,
+    required this.helperText,
+    required this.allowedExtensions,
+    required this.fallbackFilename,
+    String? Function(CrudPickedFile?)? validator,
+  }) : super(
+          key: fieldKey,
+          initialValue: value,
+          validator: validator,
+          builder: (state) => _CrudFileUploadFieldBody(
+            state: state,
+            label: label,
+            value: value,
+            onChanged: onChanged,
+            enabled: enabled,
+            hintText: hintText,
+            helperText: helperText,
+            allowedExtensions: allowedExtensions,
+            fallbackFilename: fallbackFilename,
+          ),
+        );
+
+  final String label;
+  final CrudPickedFile? value;
+  final ValueChanged<dynamic>? onChanged;
+  final bool enabled;
+  final String? hintText;
+  final String? helperText;
+  final List<String> allowedExtensions;
+  final String fallbackFilename;
+
+  @override
+  FormFieldState<CrudPickedFile?> createState() =>
+      _CrudFileUploadFormFieldState();
+}
+
+class _CrudFileUploadFormFieldState extends FormFieldState<CrudPickedFile?> {
+  @override
+  _CrudFileUploadFormField get widget =>
+      super.widget as _CrudFileUploadFormField;
+
+  @override
+  void didUpdateWidget(covariant _CrudFileUploadFormField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.value?.filename != value?.filename) {
+      setValue(widget.value);
+    }
+  }
+}
+
+class _CrudFileUploadFieldBody extends StatelessWidget {
+  const _CrudFileUploadFieldBody({
+    required this.state,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    required this.enabled,
+    required this.hintText,
+    required this.helperText,
+    required this.allowedExtensions,
+    required this.fallbackFilename,
+  });
+
+  final FormFieldState<CrudPickedFile?> state;
+  final String label;
+  final CrudPickedFile? value;
+  final ValueChanged<dynamic>? onChanged;
+  final bool enabled;
+  final String? hintText;
+  final String? helperText;
+  final List<String> allowedExtensions;
+  final String fallbackFilename;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final currentValue = state.value ?? value;
+    final hasValue = currentValue != null;
+    final supportedTypes = allowedExtensions.join(', ').toUpperCase();
+
+    return InputDecorator(
+      decoration: InputDecoration(
+        labelText: label,
+        helperText: helperText ??
+            (supportedTypes.isEmpty ? null : '支持格式: $supportedTypes'),
+        errorText: state.errorText,
+      ).applyDefaults(theme.inputDecorationTheme).copyWith(enabled: enabled),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            hasValue ? currentValue.filename : (hintText ?? '请选择文件'),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: hasValue ? null : theme.hintColor,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: enabled ? () => _pickFile(context) : null,
+                icon: const Icon(Icons.attach_file_outlined),
+                label: Text(hasValue ? '重新选择' : '选择文件'),
+              ),
+              if (hasValue)
+                TextButton.icon(
+                  onPressed: enabled ? _clearFile : null,
+                  icon: const Icon(Icons.clear),
+                  label: const Text('清空'),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickFile(BuildContext context) async {
+    try {
+      final multipartFile = await pickMultipartFile(
+        allowedExtensions: allowedExtensions,
+        fallbackFilename: fallbackFilename,
+      );
+      if (multipartFile == null) {
+        return;
+      }
+      final picked = CrudPickedFile(
+        filename: multipartFile.filename ?? fallbackFilename,
+        file: multipartFile,
+      );
+      state.didChange(picked);
+      onChanged?.call(picked);
+    } on FileUploadPickException catch (err) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(err.message)));
+    } catch (_) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('读取文件失败')));
+    }
+  }
+
+  void _clearFile() {
+    state.didChange(null);
+    onChanged?.call(null);
+  }
 }
 
 class _CrudMultiSelectFormField extends FormField<Set<dynamic>> {
@@ -996,6 +1335,463 @@ class _CrudMultiSelectFieldBody extends StatelessWidget {
           },
         );
       },
+    );
+  }
+}
+
+class _CrudTagsFormField extends FormField<List<String>> {
+  _CrudTagsFormField({
+    Key? fieldKey,
+    required this.label,
+    required this.values,
+    required this.onChanged,
+    required this.enabled,
+    required this.hintText,
+    required this.helperText,
+    required this.emptyText,
+    String? Function(List<String>?)? validator,
+  }) : super(
+          key: fieldKey,
+          initialValue: List<String>.from(values),
+          validator: validator,
+          builder: (state) => _CrudTagsFieldBody(
+            state: state,
+            label: label,
+            values: values,
+            onChanged: onChanged,
+            enabled: enabled,
+            hintText: hintText,
+            helperText: helperText,
+            emptyText: emptyText,
+          ),
+        );
+
+  final String label;
+  final List<String> values;
+  final ValueChanged<dynamic>? onChanged;
+  final bool enabled;
+  final String? hintText;
+  final String? helperText;
+  final String emptyText;
+
+  @override
+  FormFieldState<List<String>> createState() => _CrudTagsFormFieldState();
+}
+
+class _CrudTagsFormFieldState extends FormFieldState<List<String>> {
+  @override
+  _CrudTagsFormField get widget => super.widget as _CrudTagsFormField;
+
+  @override
+  void didUpdateWidget(covariant _CrudTagsFormField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!listEquals(widget.values, value ?? const <String>[])) {
+      setValue(List<String>.from(widget.values));
+    }
+  }
+}
+
+class _CrudTagsFieldBody extends StatefulWidget {
+  const _CrudTagsFieldBody({
+    required this.state,
+    required this.label,
+    required this.values,
+    required this.onChanged,
+    required this.enabled,
+    required this.hintText,
+    required this.helperText,
+    required this.emptyText,
+  });
+
+  final FormFieldState<List<String>> state;
+  final String label;
+  final List<String> values;
+  final ValueChanged<dynamic>? onChanged;
+  final bool enabled;
+  final String? hintText;
+  final String? helperText;
+  final String emptyText;
+
+  @override
+  State<_CrudTagsFieldBody> createState() => _CrudTagsFieldBodyState();
+}
+
+class _CrudTagsFieldBodyState extends State<_CrudTagsFieldBody> {
+  static final RegExp _separatorPattern = RegExp(r'[、,，\n]+');
+
+  late final TextEditingController _inputController;
+
+  @override
+  void initState() {
+    super.initState();
+    _inputController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _inputController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tags = widget.state.value ?? widget.values;
+
+    return InputDecorator(
+      decoration: InputDecoration(
+        labelText: widget.label,
+        helperText: widget.helperText,
+        errorText: widget.state.errorText,
+      ).applyDefaults(theme.inputDecorationTheme).copyWith(
+            enabled: widget.enabled,
+          ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (tags.isNotEmpty)
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: tags
+                  .map(
+                    (tag) => InputChip(
+                      label: Text(tag),
+                      onDeleted: widget.enabled ? () => _removeTag(tag) : null,
+                    ),
+                  )
+                  .toList(),
+            )
+          else
+            Text(
+              widget.emptyText,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.hintColor,
+              ),
+            ),
+          const SizedBox(height: 12),
+          if (widget.enabled)
+            TextField(
+              controller: _inputController,
+              decoration: InputDecoration(
+                hintText: widget.hintText ?? '输入后按回车、逗号或换行添加',
+                suffixIcon: IconButton(
+                  onPressed: _commitInput,
+                  icon: const Icon(Icons.add),
+                  tooltip: '添加',
+                ),
+              ),
+              onChanged: _handleInputChanged,
+              onSubmitted: (_) => _commitInput(),
+            )
+          else if (tags.isEmpty && widget.hintText != null)
+            Text(
+              widget.hintText!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.hintColor,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _handleInputChanged(String raw) {
+    if (!raw.contains(_separatorPattern)) {
+      return;
+    }
+    final segments = raw.split(_separatorPattern);
+    final endsWithSeparator = RegExp(r'[、,，\n]\s*$').hasMatch(raw);
+    final pending = endsWithSeparator || segments.isEmpty
+        ? ''
+        : segments.removeLast().trim();
+    _addTags(
+      segments.map((item) => item.trim()).where((item) => item.isNotEmpty),
+    );
+    _inputController.value = TextEditingValue(
+      text: pending,
+      selection: TextSelection.collapsed(offset: pending.length),
+    );
+  }
+
+  void _commitInput() {
+    final current = _inputController.text.trim();
+    if (current.isEmpty) {
+      return;
+    }
+    _addTags(
+      current
+          .split(_separatorPattern)
+          .map((item) => item.trim())
+          .where((item) => item.isNotEmpty),
+    );
+    _inputController.clear();
+  }
+
+  void _addTags(Iterable<String> nextTags) {
+    final current = List<String>.from(widget.state.value ?? widget.values);
+    var changed = false;
+    for (final tag in nextTags) {
+      if (current.contains(tag)) {
+        continue;
+      }
+      current.add(tag);
+      changed = true;
+    }
+    if (!changed) {
+      return;
+    }
+    widget.state.didChange(current);
+    widget.onChanged?.call(current);
+  }
+
+  void _removeTag(String tag) {
+    final current = List<String>.from(widget.state.value ?? widget.values)
+      ..remove(tag);
+    widget.state.didChange(current);
+    widget.onChanged?.call(current);
+  }
+}
+
+class _CrudCheckboxGroupFormField extends FormField<Set<dynamic>> {
+  _CrudCheckboxGroupFormField({
+    Key? fieldKey,
+    required this.label,
+    required this.options,
+    required this.selectedValues,
+    required this.onChanged,
+    required this.enabled,
+    required this.hintText,
+    required this.helperText,
+    required this.emptyText,
+    String? Function(Set<dynamic>?)? validator,
+  }) : super(
+          key: fieldKey,
+          initialValue: Set<dynamic>.from(selectedValues),
+          validator: validator,
+          builder: (state) => _CrudCheckboxGroupFieldBody(
+            state: state,
+            label: label,
+            options: options,
+            selectedValues: selectedValues,
+            onChanged: onChanged,
+            enabled: enabled,
+            hintText: hintText,
+            helperText: helperText,
+            emptyText: emptyText,
+          ),
+        );
+
+  final String label;
+  final List<CrudFieldOption<dynamic>> options;
+  final Set<dynamic> selectedValues;
+  final ValueChanged<dynamic>? onChanged;
+  final bool enabled;
+  final String? hintText;
+  final String? helperText;
+  final String emptyText;
+
+  @override
+  FormFieldState<Set<dynamic>> createState() =>
+      _CrudCheckboxGroupFormFieldState();
+}
+
+class _CrudCheckboxGroupFormFieldState extends FormFieldState<Set<dynamic>> {
+  @override
+  _CrudCheckboxGroupFormField get widget =>
+      super.widget as _CrudCheckboxGroupFormField;
+
+  @override
+  void didUpdateWidget(covariant _CrudCheckboxGroupFormField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!setEquals(widget.selectedValues, value ?? <dynamic>{})) {
+      setValue(Set<dynamic>.from(widget.selectedValues));
+    }
+  }
+}
+
+class _CrudCheckboxGroupFieldBody extends StatelessWidget {
+  const _CrudCheckboxGroupFieldBody({
+    required this.state,
+    required this.label,
+    required this.options,
+    required this.selectedValues,
+    required this.onChanged,
+    required this.enabled,
+    required this.hintText,
+    required this.helperText,
+    required this.emptyText,
+  });
+
+  final FormFieldState<Set<dynamic>> state;
+  final String label;
+  final List<CrudFieldOption<dynamic>> options;
+  final Set<dynamic> selectedValues;
+  final ValueChanged<dynamic>? onChanged;
+  final bool enabled;
+  final String? hintText;
+  final String? helperText;
+  final String emptyText;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final currentValues = state.value ?? Set<dynamic>.from(selectedValues);
+
+    return InputDecorator(
+      decoration: InputDecoration(
+        labelText: label,
+        helperText: helperText ?? hintText,
+        errorText: state.errorText,
+      ).applyDefaults(theme.inputDecorationTheme).copyWith(enabled: enabled),
+      child: options.isEmpty
+          ? Text(
+              emptyText,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.hintColor,
+              ),
+            )
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              children: options
+                  .map(
+                    (option) => CheckboxListTile(
+                      value: currentValues.contains(option.value),
+                      contentPadding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      title: Text(option.label),
+                      onChanged: enabled && option.enabled
+                          ? (checked) {
+                              final nextValues = Set<dynamic>.from(
+                                currentValues,
+                              );
+                              if (checked == true) {
+                                nextValues.add(option.value);
+                              } else {
+                                nextValues.remove(option.value);
+                              }
+                              state.didChange(nextValues);
+                              onChanged?.call(nextValues);
+                            }
+                          : null,
+                    ),
+                  )
+                  .toList(),
+            ),
+    );
+  }
+}
+
+class _CrudRadioGroupFormField extends FormField<dynamic> {
+  _CrudRadioGroupFormField({
+    Key? fieldKey,
+    required this.label,
+    required this.options,
+    required this.value,
+    required this.onChanged,
+    required this.enabled,
+    required this.hintText,
+    required this.helperText,
+    String? Function(dynamic)? validator,
+  }) : super(
+          key: fieldKey,
+          initialValue: value,
+          validator: validator,
+          builder: (state) => _CrudRadioGroupFieldBody(
+            state: state,
+            label: label,
+            options: options,
+            value: value,
+            onChanged: onChanged,
+            enabled: enabled,
+            hintText: hintText,
+            helperText: helperText,
+          ),
+        );
+
+  final String label;
+  final List<CrudFieldOption<dynamic>> options;
+  final dynamic value;
+  final ValueChanged<dynamic>? onChanged;
+  final bool enabled;
+  final String? hintText;
+  final String? helperText;
+
+  @override
+  FormFieldState<dynamic> createState() => _CrudRadioGroupFormFieldState();
+}
+
+class _CrudRadioGroupFormFieldState extends FormFieldState<dynamic> {
+  @override
+  _CrudRadioGroupFormField get widget =>
+      super.widget as _CrudRadioGroupFormField;
+
+  @override
+  void didUpdateWidget(covariant _CrudRadioGroupFormField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.value != value) {
+      setValue(widget.value);
+    }
+  }
+}
+
+class _CrudRadioGroupFieldBody extends StatelessWidget {
+  const _CrudRadioGroupFieldBody({
+    required this.state,
+    required this.label,
+    required this.options,
+    required this.value,
+    required this.onChanged,
+    required this.enabled,
+    required this.hintText,
+    required this.helperText,
+  });
+
+  final FormFieldState<dynamic> state;
+  final String label;
+  final List<CrudFieldOption<dynamic>> options;
+  final dynamic value;
+  final ValueChanged<dynamic>? onChanged;
+  final bool enabled;
+  final String? hintText;
+  final String? helperText;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final currentValue = state.value ?? value;
+
+    return InputDecorator(
+      decoration: InputDecoration(
+        labelText: label,
+        helperText: helperText ?? hintText,
+        errorText: state.errorText,
+      ).applyDefaults(theme.inputDecorationTheme).copyWith(enabled: enabled),
+      child: RadioGroup<dynamic>(
+        groupValue: currentValue,
+        onChanged: (nextValue) {
+          if (!enabled) {
+            return;
+          }
+          state.didChange(nextValue);
+          onChanged?.call(nextValue);
+        },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: options
+              .map(
+                (option) => RadioListTile<dynamic>(
+                  value: option.value,
+                  contentPadding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                  enabled: enabled && option.enabled,
+                  title: Text(option.label),
+                ),
+              )
+              .toList(),
+        ),
+      ),
     );
   }
 }

@@ -158,6 +158,7 @@ class CrudActionConfig<T> {
   final bool destructive;
 }
 
+/// Generic paginated list page for CRUD modules with shared search and actions.
 class CrudListPage<T, VM extends PaginatedViewModel<T>> extends StatefulWidget {
   const CrudListPage({
     super.key,

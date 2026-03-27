@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/action_decision_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
@@ -43,10 +44,8 @@ Future<StatementCreateResult?> showStatementCreateDialog(
         builder: (context, setState) {
           final showCustomer = statementType == 'customer';
 
-          void submit() {
+          Future<void> submit() async {
             if (!(formKey.currentState?.validate() ?? false)) return;
-            if (showCustomer && selectedCustomerId == null) return;
-            if (!showCustomer && selectedSupplierId == null) return;
             final payload = <String, dynamic>{
               'statement_type': statementType,
               'period': periodController.text.trim(),
@@ -65,137 +64,120 @@ Future<StatementCreateResult?> showStatementCreateDialog(
             Navigator.of(dialogContext).pop();
           }
 
-          return AlertDialog(
-            title: const Text('新建对账单'),
-            content: SizedBox(
-              width: 720,
-              child: SingleChildScrollView(
-                child: Form(
-                  key: formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SearchableDropdownFormField<String>(
-                        initialValue: statementType,
-                        decoration: const InputDecoration(
-                          labelText: '对账单类型',
-                          border: OutlineInputBorder(),
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'customer',
-                            child: Text('客户对账单'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'supplier',
-                            child: Text('供应商对账单'),
-                          ),
-                        ],
-                        onChanged: (value) =>
-                            setState(() => statementType = value ?? 'customer'),
+          return FormDialog(
+            title: '新建对账单',
+            formKey: formKey,
+            onSubmit: submit,
+            submitText: '创建',
+            maxWidth: 720,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CrudFormField.radioGroup(
+                  label: '对账单类型',
+                  value: statementType,
+                  options: const [
+                    CrudFieldOption<dynamic>(
+                      value: 'customer',
+                      label: '客户对账单',
+                    ),
+                    CrudFieldOption<dynamic>(
+                      value: 'supplier',
+                      label: '供应商对账单',
+                    ),
+                  ],
+                  onChanged: (value) =>
+                      setState(() => statementType = value as String),
+                ).build(context),
+                const SizedBox(height: 12),
+                if (showCustomer)
+                  SearchableDropdownFormField<int?>(
+                    initialValue: selectedCustomerId,
+                    decoration: const InputDecoration(
+                      labelText: '客户',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: [
+                      const DropdownMenuItem<int?>(
+                        value: null,
+                        child: Text('请选择客户'),
                       ),
-                      const SizedBox(height: 12),
-                      if (showCustomer)
-                        SearchableDropdownFormField<int?>(
-                          initialValue: selectedCustomerId,
-                          decoration: const InputDecoration(
-                            labelText: '客户',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: [
-                            const DropdownMenuItem<int?>(
-                              value: null,
-                              child: Text('请选择客户'),
-                            ),
-                            ...customers.map(
-                              (customer) => DropdownMenuItem<int?>(
-                                value: customer.id,
-                                child: Text(customer.name),
-                              ),
-                            ),
-                          ],
-                          onChanged: (value) =>
-                              setState(() => selectedCustomerId = value),
+                      ...customers.map(
+                        (customer) => DropdownMenuItem<int?>(
+                          value: customer.id,
+                          child: Text(customer.name),
                         ),
-                      if (!showCustomer)
-                        SearchableDropdownFormField<int?>(
-                          initialValue: selectedSupplierId,
-                          decoration: const InputDecoration(
-                            labelText: '供应商',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: [
-                            const DropdownMenuItem<int?>(
-                              value: null,
-                              child: Text('请选择供应商'),
-                            ),
-                            ...suppliers.map(
-                              (supplier) => DropdownMenuItem<int?>(
-                                value: supplier.id,
-                                child: Text(supplier.name),
-                              ),
-                            ),
-                          ],
-                          onChanged: (value) =>
-                              setState(() => selectedSupplierId = value),
-                        ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: periodController,
-                        decoration: const InputDecoration(
-                          labelText: '对账周期（YYYY-MM）',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) =>
-                            (value == null || value.trim().isEmpty)
-                                ? '请输入对账周期'
-                                : null,
-                      ),
-                      const SizedBox(height: 12),
-                      CrudFormField.dateRange(
-                        label: '对账日期范围',
-                        startController: startDateController,
-                        endController: endDateController,
-                        hintText: '请选择开始和结束日期',
-                        helperText: '会自动回填开始日期和结束日期',
-                        validator: (range) =>
-                            range == null ? '请选择对账日期范围' : null,
-                      ).build(context),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: openingBalanceController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: '期初余额',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: notesController,
-                        decoration: const InputDecoration(
-                          labelText: '备注（可选）',
-                          border: OutlineInputBorder(),
-                        ),
-                        maxLines: 3,
                       ),
                     ],
+                    onChanged: (value) =>
+                        setState(() => selectedCustomerId = value),
+                    validator: (value) => value == null ? '请选择客户' : null,
+                  ),
+                if (!showCustomer)
+                  SearchableDropdownFormField<int?>(
+                    initialValue: selectedSupplierId,
+                    decoration: const InputDecoration(
+                      labelText: '供应商',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: [
+                      const DropdownMenuItem<int?>(
+                        value: null,
+                        child: Text('请选择供应商'),
+                      ),
+                      ...suppliers.map(
+                        (supplier) => DropdownMenuItem<int?>(
+                          value: supplier.id,
+                          child: Text(supplier.name),
+                        ),
+                      ),
+                    ],
+                    onChanged: (value) =>
+                        setState(() => selectedSupplierId = value),
+                    validator: (value) => value == null ? '请选择供应商' : null,
+                  ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: periodController,
+                  decoration: const InputDecoration(
+                    labelText: '对账周期（YYYY-MM）',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) => (value == null || value.trim().isEmpty)
+                      ? '请输入对账周期'
+                      : null,
+                ),
+                const SizedBox(height: 12),
+                CrudFormField.dateRange(
+                  label: '对账日期范围',
+                  startController: startDateController,
+                  endController: endDateController,
+                  hintText: '请选择开始和结束日期',
+                  helperText: '会自动回填开始日期和结束日期',
+                  validator: (range) => range == null ? '请选择对账日期范围' : null,
+                ).build(context),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: openingBalanceController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: '期初余额',
+                    border: OutlineInputBorder(),
                   ),
                 ),
-              ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: notesController,
+                  decoration: const InputDecoration(
+                    labelText: '备注（可选）',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: const Text('取消'),
-              ),
-              FilledButton(
-                onPressed: submit,
-                child: const Text('创建'),
-              ),
-            ],
           );
         },
       ),
@@ -228,10 +210,8 @@ Future<StatementGenerateResult?> showStatementGenerateDialog(
         builder: (context, setState) {
           final showCustomer = statementType == 'customer';
 
-          void submit() {
+          Future<void> submit() async {
             if (!(formKey.currentState?.validate() ?? false)) return;
-            if (showCustomer && selectedCustomerId == null) return;
-            if (!showCustomer && selectedSupplierId == null) return;
             final params = <String, dynamic>{
               'period': periodController.text.trim(),
             };
@@ -244,107 +224,91 @@ Future<StatementGenerateResult?> showStatementGenerateDialog(
             Navigator.of(dialogContext).pop();
           }
 
-          return AlertDialog(
-            title: const Text('生成对账数据'),
-            content: SizedBox(
-              width: 640,
-              child: SingleChildScrollView(
-                child: Form(
-                  key: formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SearchableDropdownFormField<String>(
-                        initialValue: statementType,
-                        decoration: const InputDecoration(
-                          labelText: '对账单类型',
-                          border: OutlineInputBorder(),
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'customer',
-                            child: Text('客户对账单'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'supplier',
-                            child: Text('供应商对账单'),
-                          ),
-                        ],
-                        onChanged: (value) =>
-                            setState(() => statementType = value ?? 'customer'),
+          return FormDialog(
+            title: '生成对账数据',
+            formKey: formKey,
+            onSubmit: submit,
+            submitText: '生成',
+            maxWidth: 640,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CrudFormField.radioGroup(
+                  label: '对账单类型',
+                  value: statementType,
+                  options: const [
+                    CrudFieldOption<dynamic>(
+                      value: 'customer',
+                      label: '客户对账单',
+                    ),
+                    CrudFieldOption<dynamic>(
+                      value: 'supplier',
+                      label: '供应商对账单',
+                    ),
+                  ],
+                  onChanged: (value) =>
+                      setState(() => statementType = value as String),
+                ).build(context),
+                const SizedBox(height: 12),
+                if (showCustomer)
+                  SearchableDropdownFormField<int?>(
+                    initialValue: selectedCustomerId,
+                    decoration: const InputDecoration(
+                      labelText: '客户',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: [
+                      const DropdownMenuItem<int?>(
+                        value: null,
+                        child: Text('请选择客户'),
                       ),
-                      const SizedBox(height: 12),
-                      if (showCustomer)
-                        SearchableDropdownFormField<int?>(
-                          initialValue: selectedCustomerId,
-                          decoration: const InputDecoration(
-                            labelText: '客户',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: [
-                            const DropdownMenuItem<int?>(
-                              value: null,
-                              child: Text('请选择客户'),
-                            ),
-                            ...customers.map(
-                              (customer) => DropdownMenuItem<int?>(
-                                value: customer.id,
-                                child: Text(customer.name),
-                              ),
-                            ),
-                          ],
-                          onChanged: (value) =>
-                              setState(() => selectedCustomerId = value),
+                      ...customers.map(
+                        (customer) => DropdownMenuItem<int?>(
+                          value: customer.id,
+                          child: Text(customer.name),
                         ),
-                      if (!showCustomer)
-                        SearchableDropdownFormField<int?>(
-                          initialValue: selectedSupplierId,
-                          decoration: const InputDecoration(
-                            labelText: '供应商',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: [
-                            const DropdownMenuItem<int?>(
-                              value: null,
-                              child: Text('请选择供应商'),
-                            ),
-                            ...suppliers.map(
-                              (supplier) => DropdownMenuItem<int?>(
-                                value: supplier.id,
-                                child: Text(supplier.name),
-                              ),
-                            ),
-                          ],
-                          onChanged: (value) =>
-                              setState(() => selectedSupplierId = value),
-                        ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: periodController,
-                        decoration: const InputDecoration(
-                          labelText: '对账周期（YYYY-MM）',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) =>
-                            (value == null || value.trim().isEmpty)
-                                ? '请输入对账周期'
-                                : null,
                       ),
                     ],
+                    onChanged: (value) =>
+                        setState(() => selectedCustomerId = value),
+                    validator: (value) => value == null ? '请选择客户' : null,
                   ),
+                if (!showCustomer)
+                  SearchableDropdownFormField<int?>(
+                    initialValue: selectedSupplierId,
+                    decoration: const InputDecoration(
+                      labelText: '供应商',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: [
+                      const DropdownMenuItem<int?>(
+                        value: null,
+                        child: Text('请选择供应商'),
+                      ),
+                      ...suppliers.map(
+                        (supplier) => DropdownMenuItem<int?>(
+                          value: supplier.id,
+                          child: Text(supplier.name),
+                        ),
+                      ),
+                    ],
+                    onChanged: (value) =>
+                        setState(() => selectedSupplierId = value),
+                    validator: (value) => value == null ? '请选择供应商' : null,
+                  ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: periodController,
+                  decoration: const InputDecoration(
+                    labelText: '对账周期（YYYY-MM）',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) => (value == null || value.trim().isEmpty)
+                      ? '请输入对账周期'
+                      : null,
                 ),
-              ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: const Text('取消'),
-              ),
-              FilledButton(
-                onPressed: submit,
-                child: const Text('生成'),
-              ),
-            ],
           );
         },
       ),
@@ -368,8 +332,15 @@ Future<void> showStatementGeneratePreviewDialog(
   final closing = data['closing_balance'] ?? '-';
   return showDialog<void>(
     context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('对账数据预览'),
+    builder: (context) => BaseDialog(
+      title: '对账数据预览',
+      scrollable: false,
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('知道了'),
+        ),
+      ],
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -383,12 +354,6 @@ Future<void> showStatementGeneratePreviewDialog(
           Text('期末余额: $closing'),
         ],
       ),
-      actions: [
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('知道了'),
-        ),
-      ],
     ),
   );
 }

@@ -54,12 +54,12 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
 
   late final TextEditingController _baseCodeController;
   late final TextEditingController _nameController;
-  late final TextEditingController _otherColorsController;
   late final TextEditingController _impositionController;
   late final TextEditingController _notesController;
 
   final Set<String> _cmykColors = {'C', 'M', 'Y', 'K'};
   final Set<String> _selectedCmyk = {};
+  final List<String> _otherColors = [];
   ProductApiService? _productApi;
   DieApiService? _dieApi;
   FoilingPlateApiService? _foilingApi;
@@ -80,12 +80,11 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
     final artwork = widget.artwork;
     _baseCodeController = TextEditingController(text: artwork?.baseCode ?? '');
     _nameController = TextEditingController(text: artwork?.name ?? '');
-    _otherColorsController =
-        TextEditingController(text: artwork?.otherColors.join('、') ?? '');
     _impositionController =
         TextEditingController(text: artwork?.impositionSize ?? '');
     _notesController = TextEditingController(text: artwork?.notes ?? '');
     _selectedCmyk.addAll(artwork?.cmykColors ?? const []);
+    _otherColors.addAll(artwork?.otherColors ?? const []);
     _selectedDieIds.addAll(artwork?.dieIds ?? const []);
     _selectedFoilingIds.addAll(artwork?.foilingPlateIds ?? const []);
     _selectedEmbossingIds.addAll(artwork?.embossingPlateIds ?? const []);
@@ -103,7 +102,6 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
   void dispose() {
     _baseCodeController.dispose();
     _nameController.dispose();
-    _otherColorsController.dispose();
     _impositionController.dispose();
     _notesController.dispose();
     for (final item in _productItems) {
@@ -183,12 +181,6 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
   }
 
   Future<void> _handleSubmit(ArtworkViewModel viewModel) async {
-    final otherColors = _otherColorsController.text
-        .split(RegExp(r'[、,，\n]'))
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
-
     final products = _productItems
         .where((item) => item.productId != null)
         .map(
@@ -208,7 +200,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
       version: widget.artwork?.version,
       name: _nameController.text.trim(),
       cmykColors: _selectedCmyk.toList(),
-      otherColors: otherColors,
+      otherColors: List<String>.from(_otherColors),
       impositionSize: _impositionController.text.trim(),
       notes: _notesController.text.trim(),
       confirmed: widget.artwork?.confirmed ?? false,
@@ -367,7 +359,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                   return null;
                 },
               ),
-              CrudFormField.multiSelect(
+              CrudFormField.checkboxGroup(
                 label: _cmykLabel,
                 options: _cmykColors
                     .map((color) => CrudFieldOption<dynamic>(
@@ -376,7 +368,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                         ))
                     .toList(),
                 values: _selectedCmyk,
-                hintText: '请选择 CMYK 颜色',
+                helperText: '可选择多个 CMYK 色值',
                 onChanged: (values) {
                   setState(() {
                     _selectedCmyk
@@ -385,10 +377,17 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                   });
                 },
               ),
-              CrudFormField.text(
+              CrudFormField.tags(
                 label: _otherColorsLabel,
-                controller: _otherColorsController,
-                hintText: '多个颜色用逗号或顿号分隔',
+                values: _otherColors,
+                hintText: '输入后按回车、逗号或换行添加颜色',
+                onChanged: (values) {
+                  setState(() {
+                    _otherColors
+                      ..clear()
+                      ..addAll(values);
+                  });
+                },
               ),
               if (!isMobile)
                 CrudFormField.text(

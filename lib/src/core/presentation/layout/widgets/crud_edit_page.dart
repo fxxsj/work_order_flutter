@@ -10,6 +10,7 @@ import 'package:work_order_app/src/core/utils/toast_util.dart';
 typedef CrudSaveHandler<T, VM extends ChangeNotifier> = Future<void> Function(
     BuildContext context, VM viewModel, T? item);
 
+/// Section definition used by [CrudEditPage] to organize form content.
 class CrudFormSection {
   const CrudFormSection({
     required this.title,
@@ -24,6 +25,7 @@ class CrudFormSection {
   final bool visible;
 }
 
+/// Configuration object for a reusable CRUD edit page.
 class CrudEditConfig<T, VM extends ChangeNotifier> {
   const CrudEditConfig({
     required this.sectionsBuilder,
@@ -45,6 +47,7 @@ class CrudEditConfig<T, VM extends ChangeNotifier> {
   final bool Function(BuildContext context, VM viewModel, T? item)? canSave;
 }
 
+/// Generic edit page that renders [CrudFormField] sections and save actions.
 class CrudEditPage<T, VM extends ChangeNotifier> extends StatefulWidget {
   const CrudEditPage({
     super.key,
