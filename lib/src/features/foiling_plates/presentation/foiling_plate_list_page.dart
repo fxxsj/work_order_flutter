@@ -1,20 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
-import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/foiling_plates/application/foiling_plate_view_model.dart';
 import 'package:work_order_app/src/features/foiling_plates/data/foiling_plate_api_service.dart';
@@ -45,78 +35,82 @@ class FoilingPlateListEntry extends StatelessWidget {
 class FoilingPlateListPage extends StatelessWidget {
   const FoilingPlateListPage({super.key});
 
+  static const CrudDeleteConfig<FoilingPlate> _deleteConfig = CrudDeleteConfig(
+    title: '确认删除',
+    summaryBuilder: _buildDeleteSummary,
+    impactsBuilder: _buildDeleteImpacts,
+    auditHintBuilder: _buildDeleteAuditHint,
+    confirmText: '确认删除',
+    errorMessagePrefix: '删除失败: ',
+  );
+
+  static const CrudActionConfig<FoilingPlate> _confirmConfig = CrudActionConfig(
+    title: '确认烫金版',
+    summaryBuilder: _buildConfirmSummary,
+    impactsBuilder: _buildConfirmImpacts,
+    auditHintBuilder: _buildConfirmAuditHint,
+    confirmText: '确认烫金版',
+    successMessageBuilder: _buildConfirmSuccessMessage,
+    errorMessagePrefix: '确认失败: ',
+  );
+
+  static const CrudListConfig<FoilingPlate, FoilingPlateViewModel> _config =
+      CrudListConfig(
+    searchHintText: '搜索烫金版编码、名称、尺寸、材质',
+    emptyText: '暂无烫金版数据',
+    emptyIcon: Icons.auto_fix_high_outlined,
+    loadItems: _loadFoilingPlates,
+    titleBuilder: _titleText,
+    subtitleBuilder: _subtitleText,
+    summaryChipsBuilder: _summaryChips,
+    summaryFieldsBuilder: _summaryFields,
+    headerActionsBuilder: _headerActions,
+    rowActionsBuilder: _rowActions,
+    columns: [
+      CrudTableColumn(label: '烫金版', cellBuilder: _buildNameCell),
+      CrudTableColumn(label: '编码', cellBuilder: _buildCodeCell),
+      CrudTableColumn(label: '类型', cellBuilder: _buildTypeCell),
+      CrudTableColumn(label: '尺寸', cellBuilder: _buildSizeCell),
+      CrudTableColumn(label: '材质', cellBuilder: _buildMaterialCell),
+      CrudTableColumn(label: '厚度', cellBuilder: _buildThicknessCell),
+      CrudTableColumn(label: '确认状态', cellBuilder: _buildConfirmedCell),
+      CrudTableColumn(label: '包含产品', cellBuilder: _buildProductsCell),
+      CrudTableColumn(label: '创建时间', cellBuilder: _buildCreatedAtCell),
+    ],
+  );
+
   @override
-  Widget build(BuildContext context) => const _FoilingPlateListView();
-}
-
-class _FoilingPlateListView extends StatefulWidget {
-  const _FoilingPlateListView();
-
-  @override
-  State<_FoilingPlateListView> createState() => _FoilingPlateListViewState();
-}
-
-class _FoilingPlateListViewState extends State<_FoilingPlateListView> {
-  static const _searchDebounceDuration = Duration(milliseconds: 450);
-  static const double _searchWidth = 300;
-  static const double _spacingSm = LayoutTokens.gapSm;
-  static const String _emptyCellText = '-';
-
-  static const String _searchHintText = '搜索烫金版编码、名称、尺寸、材质';
-  static const String _refreshButtonText = '刷新';
-  static const String _createButtonText = '新建烫金版';
-  static const String _emptyText = '暂无烫金版数据';
-  static const String _errorFallbackText = '加载失败';
-  static const String _retryText = '重新加载';
-  static const String _deleteDialogTitle = '确认删除';
-  static const String _deleteDialogContent = '确定要删除烫金版 "{name}" 吗？此操作不可恢复。';
-  static const String _confirmDialogTitle = '确认烫金版';
-  static const String _confirmDialogContent = '确定要确认烫金版 "{name}" 吗？确认后将不可修改。';
-  static const String _cancelText = '取消';
-  static const String _okText = '确定';
-  static const String _deleteSuccessText = '删除成功';
-  static const String _deleteFailedText = '删除失败: ';
-  static const String _confirmSuccessText = '确认成功';
-  static const String _confirmFailedText = '确认失败: ';
-  static const String _createSuccessText = '创建成功';
-  static const String _updateSuccessText = '更新成功';
-  static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
-  static const String _pageSizeLabel = '每页 {size}';
-
-  final TextEditingController _searchController = TextEditingController();
-  Timer? _searchDebounce;
-
-  @override
-  void dispose() {
-    _searchDebounce?.cancel();
-    _searchController.dispose();
-    super.dispose();
+  Widget build(BuildContext context) {
+    return const CrudListPage<FoilingPlate, FoilingPlateViewModel>(
+      config: _config,
+    );
   }
 
-  void _scheduleSearch(FoilingPlateViewModel viewModel,
-      {bool immediate = false}) {
-    _searchDebounce?.cancel();
-    if (immediate) {
-      viewModel.setSearchText(_searchController.text.trim());
-      viewModel.loadFoilingPlates(resetPage: true);
-      return;
-    }
-    _searchDebounce = Timer(_searchDebounceDuration, () {
-      viewModel.setSearchText(_searchController.text.trim());
-      viewModel.loadFoilingPlates(resetPage: true);
-    });
+  static Future<void> _loadFoilingPlates(
+    FoilingPlateViewModel viewModel, {
+    bool resetPage = false,
+  }) {
+    return viewModel.loadFoilingPlates(resetPage: resetPage);
   }
 
-  Future<void> _openEditPage(BuildContext context,
-      FoilingPlateViewModel viewModel, FoilingPlate? plate) async {
+  static Future<void> _openEditPage(
+    BuildContext context,
+    FoilingPlateViewModel viewModel,
+    FoilingPlate? plate,
+  ) async {
     FoilingPlate? target = plate;
     if (plate != null) {
       try {
         final apiService = context.read<FoilingPlateApiService>();
         final detail = await apiService.fetchFoilingPlate(plate.id);
+        if (!context.mounted) {
+          return;
+        }
         target = detail.toEntity();
       } catch (err) {
-        if (!mounted) return;
+        if (!context.mounted) {
+          return;
+        }
         ToastUtil.showError('加载烫金版详情失败: $err');
         return;
       }
@@ -129,420 +123,247 @@ class _FoilingPlateListViewState extends State<_FoilingPlateListView> {
         ),
       ),
     );
-    if (!mounted) return;
     if (result == true) {
-      ToastUtil.showSuccess(
-          plate == null ? _createSuccessText : _updateSuccessText);
+      ToastUtil.showSuccess(plate == null ? '创建成功' : '更新成功');
     }
   }
 
-  Future<void> _confirmDelete(BuildContext context,
-      FoilingPlateViewModel viewModel, FoilingPlate plate) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(_deleteDialogTitle),
-        content: Text(_deleteDialogContent.replaceFirst('{name}', plate.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(_cancelText),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(_okText),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-
-    try {
-      await viewModel.deleteFoilingPlate(plate.id);
-      if (!mounted) return;
-      ToastUtil.showSuccess(_deleteSuccessText);
-    } catch (err) {
-      if (!mounted) return;
-      ToastUtil.showError('$_deleteFailedText$err');
-    }
-  }
-
-  Future<void> _confirmPlate(BuildContext context,
-      FoilingPlateViewModel viewModel, FoilingPlate plate) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(_confirmDialogTitle),
-        content: Text(_confirmDialogContent.replaceFirst('{name}', plate.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(_cancelText),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(_okText),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-
-    try {
-      await viewModel.confirmFoilingPlate(plate.id);
-      if (!mounted) return;
-      ToastUtil.showSuccess(_confirmSuccessText);
-    } catch (err) {
-      if (!mounted) return;
-      ToastUtil.showError('$_confirmFailedText$err');
-    }
-  }
-
-  static String _pageInfoText(FoilingPlateViewModel viewModel) {
-    return _pageInfoTemplate
-        .replaceFirst('{page}', viewModel.page.toString())
-        .replaceFirst('{total}', viewModel.totalPages.toString())
-        .replaceFirst('{count}', viewModel.total.toString());
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isMobile = BreakpointsUtil.isMobile(context);
-
-    return Consumer<FoilingPlateViewModel>(
-      builder: (context, viewModel, _) {
-        final plates = viewModel.foilingPlates;
-        return ListPageScaffold(
-          spacing: _spacingSm,
-          header: _buildPageHeader(context, viewModel, isMobile),
-          body: _buildListBody(context, viewModel, plates, isMobile),
-          footer: viewModel.totalPages > 1
-              ? ResponsivePaginationBar(
-                  infoText: _pageInfoText(viewModel),
-                  page: viewModel.page,
-                  pageSize: viewModel.pageSize,
-                  pageSizeOptions: viewModel.pageSizeOptions,
-                  onPageSizeChanged: viewModel.setPageSize,
-                  onPrev: () => viewModel.setPage(viewModel.page - 1),
-                  onNext: () => viewModel.setPage(viewModel.page + 1),
-                  hasPrev: viewModel.hasPrev,
-                  hasNext: viewModel.hasNext,
-                  pageSizeLabelBuilder: (size) =>
-                      _pageSizeLabel.replaceFirst('{size}', size.toString()),
-                )
-              : null,
-        );
-      },
-    );
-  }
-
-  Widget _buildListBody(
+  static Future<void> _confirmDelete(
     BuildContext context,
     FoilingPlateViewModel viewModel,
-    List<FoilingPlate> plates,
-    bool isMobile,
+    FoilingPlate plate,
   ) {
-    final sectionSpacing = LayoutTokens.sectionSpacing(context);
-    if (viewModel.loading && plates.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (viewModel.errorMessage != null && !viewModel.loading) {
-      return ErrorStateCard(
-        message: viewModel.errorMessage ?? _errorFallbackText,
-        retryLabel: _retryText,
-        onRetry: () => viewModel.loadFoilingPlates(resetPage: true),
-      );
-    }
-    if (!viewModel.loading && plates.isEmpty) {
-      return const EmptyStateCard(
-        icon: Icons.auto_fix_high_outlined,
-        text: _emptyText,
-      );
-    }
-
-    if (!isMobile) {
-      return _buildDesktopTable(context, viewModel, plates);
-    }
-
-    return ListView.separated(
-      itemCount: plates.length,
-      separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
-      itemBuilder: (context, index) {
-        final plate = plates[index];
-        return _buildSummaryCard(context, viewModel, plate, isMobile);
-      },
+    return confirmCrudDeletion(
+      context,
+      item: plate,
+      onDelete: (item) => viewModel.deleteFoilingPlate(item.id),
+      config: _deleteConfig,
     );
   }
 
-  Widget _buildDesktopTable(
+  static Future<void> _confirmPlate(
     BuildContext context,
     FoilingPlateViewModel viewModel,
-    List<FoilingPlate> plates,
+    FoilingPlate plate,
   ) {
-    final theme = Theme.of(context);
-    final textStyle = theme.textTheme.bodySmall;
-    return AppDataTable(
-      columns: const [
-        DataColumn(label: Text('烫金版')),
-        DataColumn(label: Text('编码')),
-        DataColumn(label: Text('类型')),
-        DataColumn(label: Text('尺寸')),
-        DataColumn(label: Text('材质')),
-        DataColumn(label: Text('厚度')),
-        DataColumn(label: Text('确认状态')),
-        DataColumn(label: Text('包含产品')),
-        DataColumn(label: Text('创建时间')),
-        DataColumn(label: Text('操作')),
-      ],
-      rows: plates
-          .map(
-            (plate) => DataRow(
-              cells: [
-                DataCell(Text(
-                  _displayText(plate.name),
-                  style: theme.textTheme.bodyMedium,
-                )),
-                DataCell(Text(_displayText(plate.code), style: textStyle)),
-                DataCell(Text(
-                  _displayText(_typeLabel(plate.foilingType)),
-                  style: textStyle,
-                )),
-                DataCell(Text(_displayText(plate.size), style: textStyle)),
-                DataCell(Text(_displayText(plate.material), style: textStyle)),
-                DataCell(Text(_displayText(plate.thickness), style: textStyle)),
-                DataCell(
-                    Text(plate.confirmed ? '已确认' : '待确认', style: textStyle)),
-                DataCell(
-                    Text(_productSummary(plate.products), style: textStyle)),
-                DataCell(
-                    Text(_formatDateTime(plate.createdAt), style: textStyle)),
-                DataCell(RowActionGroup(
-                  actions: [
-                    RowAction(
-                      label: '编辑',
-                      onPressed: () => _openEditPage(context, viewModel, plate),
-                    ),
-                    if (!plate.confirmed)
-                      RowAction(
-                        label: '确认',
-                        onPressed: () =>
-                            _confirmPlate(context, viewModel, plate),
-                      ),
-                    RowAction(
-                      label: '删除',
-                      onPressed: () =>
-                          _confirmDelete(context, viewModel, plate),
-                      destructive: true,
-                    ),
-                  ],
-                )),
-              ],
-            ),
-          )
-          .toList(),
+    return confirmCrudAction(
+      context,
+      item: plate,
+      onConfirm: (item) => viewModel.confirmFoilingPlate(item.id),
+      config: _confirmConfig,
     );
   }
 
-  Widget _buildPageHeader(
+  static List<Widget> _headerActions(
     BuildContext context,
     FoilingPlateViewModel viewModel,
-    bool isMobile,
   ) {
-    return PageHeaderBar(
-      breadcrumb: null,
-      useSurface: false,
-      showDivider: false,
-      padding: EdgeInsets.zero,
-      actions: LayoutBuilder(
-        builder: (context, constraints) {
-          final searchField = ListSearchField(
-            controller: _searchController,
-            hintText: _searchHintText,
-            height: PageActionStyle.height,
-            width: isMobile ? constraints.maxWidth : _searchWidth,
-            onChanged: (_) => _scheduleSearch(viewModel),
-            onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
-            onClear: () {
-              _searchController.clear();
-              _scheduleSearch(viewModel, immediate: true);
-            },
-          );
-
-          final actions = <Widget>[
-            PageActionButton.outlined(
-              onPressed: () => viewModel.loadFoilingPlates(resetPage: true),
-              icon: const Icon(Icons.refresh, size: 16),
-              label: _refreshButtonText,
-            ),
-            PageActionButton.filled(
-              onPressed: () => _openEditPage(context, viewModel, null),
-              icon: const Icon(Icons.add),
-              label: _createButtonText,
-            ),
-          ];
-
-          return ListToolbar(
-            isMobile: isMobile,
-            searchField: searchField,
-            actions: actions,
-            spacing: _spacingSm,
-          );
-        },
+    return [
+      PageActionButton.filled(
+        onPressed: () => _openEditPage(context, viewModel, null),
+        icon: const Icon(Icons.add),
+        label: '新建烫金版',
       ),
+    ];
+  }
+
+  static List<RowAction> _rowActions(
+    BuildContext context,
+    FoilingPlateViewModel viewModel,
+    FoilingPlate plate,
+  ) {
+    return [
+      RowAction(
+        label: '编辑',
+        onPressed: () => _openEditPage(context, viewModel, plate),
+      ),
+      if (!plate.confirmed)
+        RowAction(
+          label: '确认',
+          onPressed: () => _confirmPlate(context, viewModel, plate),
+        ),
+      RowAction(
+        label: '删除',
+        onPressed: () => _confirmDelete(context, viewModel, plate),
+        destructive: true,
+      ),
+    ];
+  }
+
+  static Widget _buildNameCell(BuildContext context, FoilingPlate plate) {
+    return Text(
+      _titleText(plate),
+      style: Theme.of(context).textTheme.bodyMedium,
     );
   }
 
-  static String _displayText(String? value) {
-    final text = value?.trim() ?? '';
-    return text.isEmpty ? _emptyCellText : text;
+  static Widget _buildCodeCell(BuildContext context, FoilingPlate plate) {
+    return _buildBodyText(context, CrudValueFormatter.text(plate.code));
   }
 
-  static String _typeLabel(String? value) {
-    switch (value) {
+  static Widget _buildTypeCell(BuildContext context, FoilingPlate plate) {
+    return _buildBodyText(context, _typeText(plate));
+  }
+
+  static Widget _buildSizeCell(BuildContext context, FoilingPlate plate) {
+    return _buildBodyText(context, CrudValueFormatter.text(plate.size));
+  }
+
+  static Widget _buildMaterialCell(BuildContext context, FoilingPlate plate) {
+    return _buildBodyText(context, CrudValueFormatter.text(plate.material));
+  }
+
+  static Widget _buildThicknessCell(
+    BuildContext context,
+    FoilingPlate plate,
+  ) {
+    return _buildBodyText(context, CrudValueFormatter.text(plate.thickness));
+  }
+
+  static Widget _buildConfirmedCell(
+    BuildContext context,
+    FoilingPlate plate,
+  ) {
+    return _buildBodyText(context, _confirmedText(plate));
+  }
+
+  static Widget _buildProductsCell(
+    BuildContext context,
+    FoilingPlate plate,
+  ) {
+    return _buildBodyText(context, _productSummary(plate.products));
+  }
+
+  static Widget _buildCreatedAtCell(
+    BuildContext context,
+    FoilingPlate plate,
+  ) {
+    return _buildBodyText(
+        context, CrudValueFormatter.dateTime(plate.createdAt));
+  }
+
+  static Widget _buildBodyText(BuildContext context, String value) {
+    return Text(
+      value,
+      style: Theme.of(context).textTheme.bodySmall,
+    );
+  }
+
+  static String _titleText(FoilingPlate plate) {
+    return CrudValueFormatter.text(plate.name);
+  }
+
+  static String _subtitleText(FoilingPlate plate) {
+    return '${CrudValueFormatter.text(plate.code)} · ${_typeText(plate)}';
+  }
+
+  static String _typeText(FoilingPlate plate) {
+    switch (plate.foilingType) {
       case 'gold':
         return '烫金';
       case 'silver':
         return '烫银';
       default:
-        return _emptyCellText;
+        return CrudValueFormatter.empty;
     }
   }
 
-  static String _formatDateTime(DateTime? value) {
-    if (value == null) return _emptyCellText;
-    final local = value.toLocal();
-    final year = local.year.toString().padLeft(4, '0');
-    final month = local.month.toString().padLeft(2, '0');
-    final day = local.day.toString().padLeft(2, '0');
-    final hour = local.hour.toString().padLeft(2, '0');
-    final minute = local.minute.toString().padLeft(2, '0');
-    return '$year-$month-$day $hour:$minute';
+  static String _confirmedText(FoilingPlate plate) {
+    return plate.confirmed ? '已确认' : '待确认';
   }
 
   static String _productSummary(List<FoilingPlateProduct> products) {
-    if (products.isEmpty) return _emptyCellText;
-    final display = products
+    if (products.isEmpty) {
+      return CrudValueFormatter.empty;
+    }
+    return products
         .map((item) => '${item.productName}(${item.quantity ?? 1}个)')
-        .toList();
-    return display.join('、');
+        .join('、');
   }
 
-  Widget _buildSummaryCard(
-    BuildContext context,
-    FoilingPlateViewModel viewModel,
-    FoilingPlate plate,
-    bool isMobile,
-  ) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>();
-    final sectionSpacing = LayoutTokens.sectionSpacing(context);
-    final code = _displayText(plate.code);
-    final name = _displayText(plate.name);
-    final type = _displayText(_typeLabel(plate.foilingType));
-    final size = _displayText(plate.size);
-    final material = _displayText(plate.material);
-    final thickness = _displayText(plate.thickness);
-    final confirmed = plate.confirmed ? '已确认' : '待确认';
-    final products = _productSummary(plate.products);
-    final notes = _displayText(plate.notes);
-    final createdAt = _formatDateTime(plate.createdAt);
-
-    return ExpandableSummaryCard(
-      headerBuilder: (context, expanded) {
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: colors?.sidebarText,
-                    ),
-                  ),
-                  SizedBox(height: sectionSpacing),
-                  Text(
-                    '$code · $type',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colors?.subtleText ?? theme.hintColor,
-                    ),
-                  ),
-                  SizedBox(height: sectionSpacing),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _SummaryChip(label: '状态', value: confirmed),
-                      _SummaryChip(label: '尺寸', value: size),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(width: sectionSpacing),
-            AnimatedRotation(
-              turns: expanded ? 0.5 : 0.0,
-              duration: const Duration(milliseconds: 200),
-              child: Icon(
-                Icons.expand_more,
-                size: 20,
-                color: colors?.subtleText ?? theme.hintColor,
-              ),
-            ),
-          ],
-        );
-      },
-      expandedChild: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SummaryFieldWrap(
-            isMobile: isMobile,
-            children: [
-              _SummaryField(label: '编码', value: code),
-              _SummaryField(label: '类型', value: type),
-              _SummaryField(label: '尺寸', value: size),
-              _SummaryField(label: '材质', value: material),
-              _SummaryField(label: '厚度', value: thickness),
-              _SummaryField(label: '确认状态', value: confirmed),
-              _SummaryField(label: '包含产品', value: products),
-              _SummaryField(label: '备注', value: notes),
-              _SummaryField(label: '创建时间', value: createdAt),
-            ],
-          ),
-          SizedBox(height: sectionSpacing),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              OutlinedButton.icon(
-                onPressed: () => _openEditPage(context, viewModel, plate),
-                icon: const Icon(Icons.edit, size: 16),
-                label: const Text('编辑'),
-              ),
-              if (!plate.confirmed)
-                OutlinedButton.icon(
-                  onPressed: () => _confirmPlate(context, viewModel, plate),
-                  icon: const Icon(Icons.verified_outlined, size: 16),
-                  label: const Text('确认'),
-                ),
-              OutlinedButton.icon(
-                onPressed: () => _confirmDelete(context, viewModel, plate),
-                icon: const Icon(Icons.delete_outline, size: 16),
-                label: const Text('删除'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: theme.colorScheme.error,
-                ),
-              ),
-            ],
-          ),
-        ],
+  static List<CrudSummaryChipData> _summaryChips(FoilingPlate plate) {
+    return [
+      CrudSummaryChipData(label: '状态', value: _confirmedText(plate)),
+      CrudSummaryChipData(
+        label: '尺寸',
+        value: CrudValueFormatter.text(plate.size),
       ),
-    );
+    ];
+  }
+
+  static List<CrudSummaryFieldData> _summaryFields(FoilingPlate plate) {
+    return [
+      CrudSummaryFieldData(
+        label: '编码',
+        value: CrudValueFormatter.text(plate.code),
+      ),
+      CrudSummaryFieldData(
+        label: '类型',
+        value: _typeText(plate),
+      ),
+      CrudSummaryFieldData(
+        label: '尺寸',
+        value: CrudValueFormatter.text(plate.size),
+      ),
+      CrudSummaryFieldData(
+        label: '材质',
+        value: CrudValueFormatter.text(plate.material),
+      ),
+      CrudSummaryFieldData(
+        label: '厚度',
+        value: CrudValueFormatter.text(plate.thickness),
+      ),
+      CrudSummaryFieldData(
+        label: '确认状态',
+        value: _confirmedText(plate),
+      ),
+      CrudSummaryFieldData(
+        label: '包含产品',
+        value: _productSummary(plate.products),
+      ),
+      CrudSummaryFieldData(
+        label: '备注',
+        value: CrudValueFormatter.text(plate.notes),
+      ),
+      CrudSummaryFieldData(
+        label: '创建时间',
+        value: CrudValueFormatter.dateTime(plate.createdAt),
+      ),
+    ];
+  }
+
+  static String _buildDeleteSummary(FoilingPlate plate) {
+    return '即将删除烫金版 ${_titleText(plate)}。删除后，关联图稿和产品的版材追溯可能受影响。';
+  }
+
+  static List<String> _buildDeleteImpacts(FoilingPlate plate) {
+    return [
+      '版材编码：${CrudValueFormatter.text(plate.code)}',
+      '版材类型：${_typeText(plate)}',
+      if (plate.products.isNotEmpty) '包含产品：${_productSummary(plate.products)}',
+    ];
+  }
+
+  static String _buildDeleteAuditHint(FoilingPlate plate) {
+    return '如果该烫金版已用于历史图稿或订单，优先保留档案并停止引用。';
+  }
+
+  static String _buildConfirmSummary(FoilingPlate plate) {
+    return '即将确认烫金版 ${_titleText(plate)}。确认后当前版材将不再允许直接修改。';
+  }
+
+  static List<String> _buildConfirmImpacts(FoilingPlate plate) {
+    return [
+      '确认后如需改动，建议新建或复制新的版材记录',
+      '当前编码：${CrudValueFormatter.text(plate.code)}',
+    ];
+  }
+
+  static String _buildConfirmAuditHint(FoilingPlate plate) {
+    return '请确认类型、尺寸、材质、厚度和产品关联信息均已核对。';
+  }
+
+  static String _buildConfirmSuccessMessage(FoilingPlate plate) {
+    return '确认成功';
   }
 }
-
-typedef _SummaryField = SummaryField;
-typedef _SummaryChip = SummaryChip;

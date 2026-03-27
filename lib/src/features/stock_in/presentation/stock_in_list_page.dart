@@ -9,6 +9,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.
 import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
+import 'package:work_order_app/src/features/inventory_shared/presentation/widgets/inventory_document_form_dialog.dart';
 import 'package:work_order_app/src/features/stock_in/data/stock_in_support_service.dart';
 
 class StockInListEntry extends StatelessWidget {
@@ -249,96 +250,46 @@ class StockInListEntry extends StatelessWidget {
       text: record?.getString('notes') ?? '',
     );
 
-    await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        bool loading = false;
-        return StatefulBuilder(
-          builder: (context, setState) => AlertDialog(
-            title: Text(isEdit ? '编辑入库单' : '新建入库单'),
-            content: SizedBox(
-              width: 520,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: workOrderController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: '施工单ID'),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: dateController,
-                      readOnly: true,
-                      decoration: const InputDecoration(labelText: '入库日期'),
-                      onTap: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate: DateTime.tryParse(dateController.text) ??
-                              DateTime.now(),
-                          firstDate: DateTime(2020),
-                          lastDate: DateTime(2100),
-                        );
-                        if (picked != null) {
-                          dateController.text = _formatDate(picked);
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: notesController,
-                      decoration: const InputDecoration(labelText: '备注'),
-                      maxLines: 3,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed:
-                    loading ? null : () => Navigator.of(context).pop(false),
-                child: const Text('取消'),
-              ),
-              FilledButton(
-                onPressed: loading
-                    ? null
-                    : () async {
-                        final workOrderId =
-                            int.tryParse(workOrderController.text.trim());
-                        if (workOrderId == null) {
-                          ToastUtil.showError('请输入有效的施工单ID');
-                          return;
-                        }
-                        setState(() => loading = true);
-                        try {
-                          final payload = {
-                            'work_order': workOrderId,
-                            'stock_in_date': dateController.text.trim(),
-                            'notes': notesController.text.trim(),
-                          };
-                          await supportService.save(
-                            id: isEdit ? recordId : null,
-                            payload: payload,
-                          );
-                          if (!context.mounted) return;
-                          context
-                              .read<GenericListViewModel>()
-                              .reload(resetPage: true);
-                          Navigator.of(context).pop(true);
-                          ToastUtil.showSuccess(isEdit ? '已更新' : '已创建');
-                        } catch (err) {
-                          ToastUtil.showError('保存失败: $err');
-                        } finally {
-                          if (context.mounted) setState(() => loading = false);
-                        }
-                      },
-                child: Text(loading ? '保存中' : '保存'),
-              ),
-            ],
+    await showInventoryDocumentFormDialog(
+      context,
+      title: isEdit ? '编辑入库单' : '新建入库单',
+      dateLabel: '入库日期',
+      dateController: dateController,
+      notesController: notesController,
+      fieldsBuilder: (context, setState, submitting) => [
+        TextField(
+          controller: workOrderController,
+          enabled: !submitting,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: '施工单ID',
+            border: OutlineInputBorder(),
           ),
-        );
+        ),
+      ],
+      onSubmit: () async {
+        final workOrderId = int.tryParse(workOrderController.text.trim());
+        if (workOrderId == null) {
+          ToastUtil.showError('请输入有效的施工单ID');
+          return;
+        }
+        try {
+          final payload = {
+            'work_order': workOrderId,
+            'stock_in_date': dateController.text.trim(),
+            'notes': notesController.text.trim(),
+          };
+          await supportService.save(
+            id: isEdit ? recordId : null,
+            payload: payload,
+          );
+          if (!context.mounted) return;
+          context.read<GenericListViewModel>().reload(resetPage: true);
+          Navigator.of(context).pop(true);
+          ToastUtil.showSuccess(isEdit ? '已更新' : '已创建');
+        } catch (err) {
+          ToastUtil.showError('保存失败: $err');
+        }
       },
     );
 
@@ -371,21 +322,21 @@ class StockInListEntry extends StatelessWidget {
     }
   }
 
-  static String _formatDate(DateTime value) {
-    final year = value.year.toString().padLeft(4, '0');
-    final month = value.month.toString().padLeft(2, '0');
-    final day = value.day.toString().padLeft(2, '0');
-    return '$year-$month-$day';
-  }
-
   static String _today() {
-    return _formatDate(DateTime.now());
+    final now = DateTime.now();
+    final year = now.year.toString().padLeft(4, '0');
+    final month = now.month.toString().padLeft(2, '0');
+    final day = now.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
   }
 
   static String? _normalizeDate(String? value) {
     if (value == null || value.trim().isEmpty) return null;
     final parsed = DateTime.tryParse(value);
     if (parsed == null) return value;
-    return _formatDate(parsed);
+    final year = parsed.year.toString().padLeft(4, '0');
+    final month = parsed.month.toString().padLeft(2, '0');
+    final day = parsed.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
   }
 }

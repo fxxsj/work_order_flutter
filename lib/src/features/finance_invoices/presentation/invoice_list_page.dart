@@ -9,11 +9,12 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/action_decision_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/risk_action_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
@@ -88,6 +89,15 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
   static const String _retryText = '重新加载';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
   static const String _pageSizeLabel = '每页 {size}';
+  static const CrudActionConfig<Invoice> _submitConfig = CrudActionConfig(
+    title: '提交发票',
+    summaryBuilder: _buildSubmitSummary,
+    impactsBuilder: _buildSubmitImpacts,
+    auditHintBuilder: _buildSubmitAuditHint,
+    confirmText: '提交发票',
+    successMessageBuilder: _buildSubmitSuccessMessage,
+    errorMessagePrefix: '提交失败: ',
+  );
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
@@ -452,28 +462,16 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
 
   Future<void> _submitInvoice(
       InvoiceViewModel viewModel, Invoice invoice) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('提交发票'),
-        content: const Text('确认提交该发票吗？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('提交'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
     try {
-      await viewModel.submitInvoice(invoice.id);
-      ToastUtil.showSuccess('发票已提交');
-      await viewModel.loadInvoices(resetPage: false);
+      await confirmCrudAction(
+        context,
+        item: invoice,
+        onConfirm: (item) async {
+          await viewModel.submitInvoice(item.id);
+          await viewModel.loadInvoices(resetPage: false);
+        },
+        config: _submitConfig,
+      );
     } catch (err) {
       ToastUtil.showError('提交失败: $err');
     }
@@ -484,72 +482,40 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     Invoice invoice, {
     required bool approved,
   }) async {
-    final commentController = TextEditingController();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(approved ? '确认收到' : '作废发票'),
-        content: SizedBox(
-          width: 520,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              RiskActionHintPanel(
-                summary: approved
-                    ? '确认收到后，发票会进入后续收款与对账环节。'
-                    : '作废后，这张发票将退出后续收款与对账闭环，需要业务和财务重新核对来源单据。',
-                impacts: approved
-                    ? const [
-                        '请确认票据号码、金额和附件已齐全',
-                        '错误确认会影响后续收款匹配',
-                      ]
-                    : const [
-                        '如已发送给客户，请先确认是否应走红冲或换票流程',
-                        '作废后建议同步核对客户订单、施工单和附件资料',
-                      ],
-                auditHint: approved
-                    ? '确认记录建议保留审批备注，便于后续收款追踪。'
-                    : '作废原因会进入审计记录，便于财务复盘和争议处理。',
-                destructive: !approved,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: commentController,
-                decoration: InputDecoration(
-                  labelText: approved ? '确认说明（可选）' : '作废说明（可选）',
-                ),
-                maxLines: 3,
-              ),
+    final decision = await showActionDecisionDialog<void>(
+      context,
+      title: approved ? '确认收到' : '作废发票',
+      summary: approved
+          ? '确认收到后，发票会进入后续收款与对账环节。'
+          : '作废后，这张发票将退出后续收款与对账闭环，需要业务和财务重新核对来源单据。',
+      impacts: approved
+          ? const [
+              '请确认票据号码、金额和附件已齐全',
+              '错误确认会影响后续收款匹配',
+            ]
+          : const [
+              '如已发送给客户，请先确认是否应走红冲或换票流程',
+              '作废后建议同步核对客户订单、施工单和附件资料',
             ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(approved ? '确认' : '作废'),
-          ),
-        ],
-      ),
+      auditHint:
+          approved ? '确认记录建议保留审批备注，便于后续收款追踪。' : '作废原因会进入审计记录，便于财务复盘和争议处理。',
+      destructive: !approved,
+      notesLabel: approved ? '确认说明（可选）' : '作废说明（可选）',
+      notesMaxLines: 3,
+      submitText: approved ? '确认' : '作废',
     );
-    if (confirmed != true) {
-      commentController.dispose();
+    if (decision == null) {
       return;
     }
     try {
       await viewModel.approveInvoice(invoice.id, {
         'approved': approved,
-        'approval_comment': commentController.text.trim(),
+        'approval_comment': decision.notes,
       });
       ToastUtil.showSuccess(approved ? '已确认收到' : '已作废');
       await viewModel.loadInvoices(resetPage: false);
     } catch (err) {
       ToastUtil.showError('操作失败: $err');
-    } finally {
-      commentController.dispose();
     }
   }
 
@@ -627,6 +593,38 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
         .replaceFirst('{page}', viewModel.page.toString())
         .replaceFirst('{total}', viewModel.totalPages.toString())
         .replaceFirst('{count}', viewModel.total.toString());
+  }
+
+  static String _invoiceLabel(Invoice invoice) {
+    final number = (invoice.invoiceNumber ?? '').trim();
+    if (number.isNotEmpty) {
+      return number;
+    }
+    return '发票 #${invoice.id}';
+  }
+
+  static String _buildSubmitSummary(Invoice invoice) {
+    return '即将提交发票 ${_invoiceLabel(invoice)}。提交后将进入财务流转，后续需根据状态确认收到或作废。';
+  }
+
+  static List<String> _buildSubmitImpacts(Invoice invoice) {
+    return [
+      '客户：${CrudValueFormatter.text(invoice.customerName)}',
+      '类型：${_invoiceTypeStaticText(invoice)}',
+      '金额：${CrudValueFormatter.amount(invoice.amount)}',
+      if ((invoice.salesOrderNumber ?? '').trim().isNotEmpty)
+        '关联客户订单：${invoice.salesOrderNumber!.trim()}',
+      if ((invoice.workOrderNumber ?? '').trim().isNotEmpty)
+        '关联施工单：${invoice.workOrderNumber!.trim()}',
+    ];
+  }
+
+  static String _buildSubmitAuditHint(Invoice invoice) {
+    return '请确认金额、客户信息和附件资料已准备齐全，再执行提交。';
+  }
+
+  static String _buildSubmitSuccessMessage(Invoice invoice) {
+    return '发票已提交';
   }
 
   @override
@@ -928,6 +926,23 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
   static String _displayText(String? value) {
     final text = value?.trim() ?? '';
     return text.isEmpty ? _emptyCellText : text;
+  }
+
+  static String _invoiceTypeStaticText(Invoice invoice) {
+    final display = (invoice.invoiceTypeDisplay ?? '').trim();
+    if (display.isNotEmpty) {
+      return display;
+    }
+    switch (invoice.invoiceType) {
+      case 'vat_special':
+        return '增值税专用发票';
+      case 'vat_normal':
+        return '增值税普通发票';
+      case 'electronic':
+        return '电子发票';
+      default:
+        return _emptyCellText;
+    }
   }
 
   String _formatAmount(double? value) {

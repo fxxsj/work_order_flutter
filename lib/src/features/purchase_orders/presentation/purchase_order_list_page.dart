@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -100,9 +101,19 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
   static const String _receiveText = '收货';
   static const String _inspectText = '质检';
   static const String _cancelOrderText = '取消采购单';
-  static const String _deletePrompt = '确认取消该采购单？';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
   static const String _pageSizeLabel = '每页 {size}';
+  static const CrudActionConfig<PurchaseOrder> _cancelOrderConfig =
+      CrudActionConfig(
+    title: _cancelOrderText,
+    summaryBuilder: _buildCancelSummary,
+    impactsBuilder: _buildCancelImpacts,
+    auditHintBuilder: _buildCancelAuditHint,
+    confirmText: '确认取消',
+    successMessageBuilder: _buildCancelSuccessMessage,
+    errorMessagePrefix: '取消失败: ',
+    destructive: true,
+  );
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
@@ -196,6 +207,36 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
     final hour = local.hour.toString().padLeft(2, '0');
     final minute = local.minute.toString().padLeft(2, '0');
     return '$year-$month-$day $hour:$minute';
+  }
+
+  static String _orderLabel(PurchaseOrder order) {
+    final number = order.orderNumber.trim();
+    if (number.isNotEmpty) {
+      return number;
+    }
+    return '采购单 #${order.id}';
+  }
+
+  static String _buildCancelSummary(PurchaseOrder order) {
+    return '即将取消采购单 ${_orderLabel(order)}。取消后，该采购流程会停止推进，相关收货与质检动作将无法继续。';
+  }
+
+  static List<String> _buildCancelImpacts(PurchaseOrder order) {
+    return [
+      '供应商：${CrudValueFormatter.text(order.supplierName)}',
+      '状态：${CrudValueFormatter.text(order.statusDisplay ?? order.status)}',
+      '金额：${CrudValueFormatter.amount(order.totalAmount)}',
+      if ((order.workOrderNumber ?? '').trim().isNotEmpty)
+        '关联施工单：${order.workOrderNumber!.trim()}',
+    ];
+  }
+
+  static String _buildCancelAuditHint(PurchaseOrder order) {
+    return '若该采购单已进入下单或收货阶段，建议先确认业务影响，再执行取消。';
+  }
+
+  static String _buildCancelSuccessMessage(PurchaseOrder order) {
+    return '取消成功';
   }
 
   Future<PurchaseOrderDetail?> _fetchDetail(int id) async {
@@ -459,26 +500,14 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
         await apiService.placeOrder(order.id, payload);
         ToastUtil.showSuccess('下单成功');
       } else if (action == 'cancel') {
-        final confirmed = await showDialog<bool>(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: const Text(_cancelOrderText),
-            content: const Text(_deletePrompt),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: const Text(_cancelText),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(true),
-                child: const Text('确认'),
-              ),
-            ],
-          ),
+        await confirmCrudAction(
+          context,
+          item: order,
+          onConfirm: (item) => apiService.cancel(item.id),
+          config: _cancelOrderConfig,
         );
-        if (confirmed != true) return;
-        await apiService.cancel(order.id);
-        ToastUtil.showSuccess('取消成功');
+      } else {
+        return;
       }
       await viewModel.loadPurchaseOrders(resetPage: false);
     } catch (err) {

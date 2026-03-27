@@ -1,20 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
-import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/artworks/application/artwork_view_model.dart';
 import 'package:work_order_app/src/features/artworks/data/artwork_api_service.dart';
@@ -43,81 +33,91 @@ class ArtworkListEntry extends StatelessWidget {
 class ArtworkListPage extends StatelessWidget {
   const ArtworkListPage({super.key});
 
+  static const CrudDeleteConfig<Artwork> _deleteConfig = CrudDeleteConfig(
+    title: '确认删除',
+    summaryBuilder: _buildDeleteSummary,
+    impactsBuilder: _buildDeleteImpacts,
+    auditHintBuilder: _buildDeleteAuditHint,
+    confirmText: '确认删除',
+    errorMessagePrefix: '删除失败: ',
+  );
+
+  static const CrudActionConfig<Artwork> _confirmConfig = CrudActionConfig(
+    title: '确认图稿',
+    summaryBuilder: _buildConfirmSummary,
+    impactsBuilder: _buildConfirmImpacts,
+    auditHintBuilder: _buildConfirmAuditHint,
+    confirmText: '确认图稿',
+    successMessageBuilder: _buildConfirmSuccessMessage,
+    errorMessagePrefix: '确认失败: ',
+  );
+
+  static const CrudActionConfig<Artwork> _versionConfig = CrudActionConfig(
+    title: '创建新版本',
+    summaryBuilder: _buildVersionSummary,
+    impactsBuilder: _buildVersionImpacts,
+    auditHintBuilder: _buildVersionAuditHint,
+    confirmText: '创建版本',
+    successMessageBuilder: _buildVersionSuccessMessage,
+    errorMessagePrefix: '创建新版本失败: ',
+  );
+
+  static const CrudListConfig<Artwork, ArtworkViewModel> _config =
+      CrudListConfig(
+    searchHintText: '搜索图稿编码、名称、拼版尺寸',
+    emptyText: '暂无图稿数据',
+    emptyIcon: Icons.image_outlined,
+    loadItems: _loadArtworks,
+    titleBuilder: _titleText,
+    subtitleBuilder: _subtitleText,
+    summaryChipsBuilder: _summaryChips,
+    summaryFieldsBuilder: _summaryFields,
+    headerActionsBuilder: _headerActions,
+    rowActionsBuilder: _rowActions,
+    columns: [
+      CrudTableColumn(label: '稿件', cellBuilder: _buildNameCell),
+      CrudTableColumn(label: '编码', cellBuilder: _buildCodeCell),
+      CrudTableColumn(label: '色数', cellBuilder: _buildColorCell),
+      CrudTableColumn(label: '拼版尺寸', cellBuilder: _buildSizeCell),
+      CrudTableColumn(label: '状态', cellBuilder: _buildStatusCell),
+      CrudTableColumn(label: '关联刀模', cellBuilder: _buildDiesCell),
+      CrudTableColumn(label: '烫金版', cellBuilder: _buildFoilingCell),
+      CrudTableColumn(label: '压凸版', cellBuilder: _buildEmbossingCell),
+      CrudTableColumn(label: '包含产品', cellBuilder: _buildProductsCell),
+      CrudTableColumn(label: '创建时间', cellBuilder: _buildCreatedAtCell),
+    ],
+  );
+
   @override
-  Widget build(BuildContext context) => const _ArtworkListView();
-}
-
-class _ArtworkListView extends StatefulWidget {
-  const _ArtworkListView();
-
-  @override
-  State<_ArtworkListView> createState() => _ArtworkListViewState();
-}
-
-class _ArtworkListViewState extends State<_ArtworkListView> {
-  static const _searchDebounceDuration = Duration(milliseconds: 450);
-  static const double _searchWidth = 300;
-  static const double _spacingSm = LayoutTokens.gapSm;
-  static const String _emptyCellText = '-';
-
-  static const String _searchHintText = '搜索图稿编码、名称、拼版尺寸';
-  static const String _refreshButtonText = '刷新';
-  static const String _createButtonText = '新建图稿';
-  static const String _emptyText = '暂无图稿数据';
-  static const String _errorFallbackText = '加载失败';
-  static const String _retryText = '重新加载';
-  static const String _deleteDialogTitle = '确认删除';
-  static const String _deleteDialogContent = '确定要删除图稿 "{name}" 吗？此操作不可恢复。';
-  static const String _confirmDialogTitle = '确认图稿';
-  static const String _confirmDialogContent = '确定要确认图稿 "{name}" 吗？确认后将不可修改。';
-  static const String _versionDialogTitle = '创建新版本';
-  static const String _versionDialogContent = '确定要基于 "{code}" 创建新版本吗？';
-  static const String _cancelText = '取消';
-  static const String _okText = '确定';
-  static const String _deleteSuccessText = '删除成功';
-  static const String _deleteFailedText = '删除失败: ';
-  static const String _confirmSuccessText = '图稿已确认';
-  static const String _confirmFailedText = '确认失败: ';
-  static const String _versionSuccessText = '新版本创建成功';
-  static const String _versionFailedText = '创建新版本失败: ';
-  static const String _createSuccessText = '创建成功';
-  static const String _updateSuccessText = '更新成功';
-  static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
-  static const String _pageSizeLabel = '每页 {size}';
-
-  final TextEditingController _searchController = TextEditingController();
-  Timer? _searchDebounce;
-
-  @override
-  void dispose() {
-    _searchDebounce?.cancel();
-    _searchController.dispose();
-    super.dispose();
+  Widget build(BuildContext context) {
+    return const CrudListPage<Artwork, ArtworkViewModel>(config: _config);
   }
 
-  void _scheduleSearch(ArtworkViewModel viewModel, {bool immediate = false}) {
-    _searchDebounce?.cancel();
-    if (immediate) {
-      viewModel.setSearchText(_searchController.text.trim());
-      viewModel.loadArtworks(resetPage: true);
-      return;
-    }
-    _searchDebounce = Timer(_searchDebounceDuration, () {
-      viewModel.setSearchText(_searchController.text.trim());
-      viewModel.loadArtworks(resetPage: true);
-    });
+  static Future<void> _loadArtworks(
+    ArtworkViewModel viewModel, {
+    bool resetPage = false,
+  }) {
+    return viewModel.loadArtworks(resetPage: resetPage);
   }
 
-  Future<void> _openEditPage(BuildContext context, ArtworkViewModel viewModel,
-      Artwork? artwork) async {
+  static Future<void> _openEditPage(
+    BuildContext context,
+    ArtworkViewModel viewModel,
+    Artwork? artwork,
+  ) async {
     Artwork? target = artwork;
     if (artwork != null) {
       try {
         final apiService = context.read<ArtworkApiService>();
         final detail = await apiService.fetchArtwork(artwork.id);
+        if (!context.mounted) {
+          return;
+        }
         target = detail.toEntity();
       } catch (err) {
-        if (!mounted) return;
+        if (!context.mounted) {
+          return;
+        }
         ToastUtil.showError('加载图稿详情失败: $err');
         return;
       }
@@ -130,334 +130,182 @@ class _ArtworkListViewState extends State<_ArtworkListView> {
         ),
       ),
     );
-    if (!mounted) return;
     if (result == true) {
-      ToastUtil.showSuccess(
-          artwork == null ? _createSuccessText : _updateSuccessText);
+      ToastUtil.showSuccess(artwork == null ? '创建成功' : '更新成功');
     }
   }
 
-  Future<void> _confirmDelete(
-      BuildContext context, ArtworkViewModel viewModel, Artwork artwork) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(_deleteDialogTitle),
-        content:
-            Text(_deleteDialogContent.replaceFirst('{name}', artwork.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(_cancelText),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(_okText),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-
-    try {
-      await viewModel.deleteArtwork(artwork.id);
-      if (!mounted) return;
-      ToastUtil.showSuccess(_deleteSuccessText);
-    } catch (err) {
-      if (!mounted) return;
-      ToastUtil.showError('$_deleteFailedText$err');
-    }
-  }
-
-  Future<void> _confirmArtwork(
-      BuildContext context, ArtworkViewModel viewModel, Artwork artwork) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(_confirmDialogTitle),
-        content:
-            Text(_confirmDialogContent.replaceFirst('{name}', artwork.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(_cancelText),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(_okText),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-
-    try {
-      await viewModel.confirmArtwork(artwork.id);
-      if (!mounted) return;
-      ToastUtil.showSuccess(_confirmSuccessText);
-    } catch (err) {
-      if (!mounted) return;
-      ToastUtil.showError('$_confirmFailedText$err');
-    }
-  }
-
-  Future<void> _createVersion(
-      BuildContext context, ArtworkViewModel viewModel, Artwork artwork) async {
-    final fullCode =
-        artwork.fullCode.isNotEmpty ? artwork.fullCode : artwork.name;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(_versionDialogTitle),
-        content: Text(_versionDialogContent.replaceFirst('{code}', fullCode)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(_cancelText),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(_okText),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-
-    try {
-      await viewModel.createVersion(artwork.id);
-      if (!mounted) return;
-      ToastUtil.showSuccess(_versionSuccessText);
-    } catch (err) {
-      if (!mounted) return;
-      ToastUtil.showError('$_versionFailedText$err');
-    }
-  }
-
-  static String _pageInfoText(ArtworkViewModel viewModel) {
-    return _pageInfoTemplate
-        .replaceFirst('{page}', viewModel.page.toString())
-        .replaceFirst('{total}', viewModel.totalPages.toString())
-        .replaceFirst('{count}', viewModel.total.toString());
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isMobile = BreakpointsUtil.isMobile(context);
-
-    return Consumer<ArtworkViewModel>(
-      builder: (context, viewModel, _) {
-        final artworks = viewModel.artworks;
-        return ListPageScaffold(
-          spacing: _spacingSm,
-          header: _buildPageHeader(context, viewModel, isMobile),
-          body: _buildListBody(context, viewModel, artworks, isMobile),
-          footer: viewModel.totalPages > 1
-              ? ResponsivePaginationBar(
-                  infoText: _pageInfoText(viewModel),
-                  page: viewModel.page,
-                  pageSize: viewModel.pageSize,
-                  pageSizeOptions: viewModel.pageSizeOptions,
-                  onPageSizeChanged: viewModel.setPageSize,
-                  onPrev: () => viewModel.setPage(viewModel.page - 1),
-                  onNext: () => viewModel.setPage(viewModel.page + 1),
-                  hasPrev: viewModel.hasPrev,
-                  hasNext: viewModel.hasNext,
-                  pageSizeLabelBuilder: (size) =>
-                      _pageSizeLabel.replaceFirst('{size}', size.toString()),
-                )
-              : null,
-        );
-      },
-    );
-  }
-
-  Widget _buildListBody(
+  static Future<void> _confirmDelete(
     BuildContext context,
     ArtworkViewModel viewModel,
-    List<Artwork> artworks,
-    bool isMobile,
+    Artwork artwork,
   ) {
-    final sectionSpacing = LayoutTokens.sectionSpacing(context);
-    if (viewModel.loading && artworks.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (viewModel.errorMessage != null && !viewModel.loading) {
-      return ErrorStateCard(
-        message: viewModel.errorMessage ?? _errorFallbackText,
-        retryLabel: _retryText,
-        onRetry: () => viewModel.loadArtworks(resetPage: true),
-      );
-    }
-    if (!viewModel.loading && artworks.isEmpty) {
-      return const EmptyStateCard(
-        icon: Icons.image_outlined,
-        text: _emptyText,
-      );
-    }
-
-    if (!isMobile) {
-      return _buildDesktopTable(context, viewModel, artworks);
-    }
-
-    return ListView.separated(
-      itemCount: artworks.length,
-      separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
-      itemBuilder: (context, index) {
-        final artwork = artworks[index];
-        return _buildSummaryCard(context, viewModel, artwork, isMobile);
-      },
+    return confirmCrudDeletion(
+      context,
+      item: artwork,
+      onDelete: (item) => viewModel.deleteArtwork(item.id),
+      config: _deleteConfig,
     );
   }
 
-  Widget _buildDesktopTable(
+  static Future<void> _confirmArtwork(
     BuildContext context,
     ArtworkViewModel viewModel,
-    List<Artwork> artworks,
+    Artwork artwork,
   ) {
-    final theme = Theme.of(context);
-    final textStyle = theme.textTheme.bodySmall;
-    return AppDataTable(
-      columns: const [
-        DataColumn(label: Text('稿件')),
-        DataColumn(label: Text('编码')),
-        DataColumn(label: Text('色数')),
-        DataColumn(label: Text('拼版尺寸')),
-        DataColumn(label: Text('状态')),
-        DataColumn(label: Text('关联刀模')),
-        DataColumn(label: Text('烫金版')),
-        DataColumn(label: Text('压凸版')),
-        DataColumn(label: Text('包含产品')),
-        DataColumn(label: Text('创建时间')),
-        DataColumn(label: Text('操作')),
-      ],
-      rows: artworks
-          .map(
-            (artwork) => DataRow(
-              cells: [
-                DataCell(Text(
-                  _displayText(artwork.name),
-                  style: theme.textTheme.bodyMedium,
-                )),
-                DataCell(Text(
-                  _displayText(artwork.fullCode.isNotEmpty
-                      ? artwork.fullCode
-                      : artwork.code),
-                  style: textStyle,
-                )),
-                DataCell(
-                    Text(_displayText(artwork.colorDisplay), style: textStyle)),
-                DataCell(Text(_displayText(artwork.impositionSize),
-                    style: textStyle)),
-                DataCell(
-                    Text(artwork.confirmed ? '已确认' : '未确认', style: textStyle)),
-                DataCell(Text(
-                  _compactListText(artwork.dieCodes, artwork.dieNames),
-                  style: textStyle,
-                )),
-                DataCell(Text(
-                  _compactListText(
-                      artwork.foilingPlateCodes, artwork.foilingPlateNames),
-                  style: textStyle,
-                )),
-                DataCell(Text(
-                  _compactListText(
-                      artwork.embossingPlateCodes, artwork.embossingPlateNames),
-                  style: textStyle,
-                )),
-                DataCell(
-                    Text(_productSummary(artwork.products), style: textStyle)),
-                DataCell(
-                    Text(_formatDateTime(artwork.createdAt), style: textStyle)),
-                DataCell(RowActionGroup(
-                  actions: [
-                    RowAction(
-                      label: '编辑',
-                      onPressed: () =>
-                          _openEditPage(context, viewModel, artwork),
-                    ),
-                    RowAction(
-                      label: '新版本',
-                      onPressed: () =>
-                          _createVersion(context, viewModel, artwork),
-                    ),
-                    if (!artwork.confirmed)
-                      RowAction(
-                        label: '确认',
-                        onPressed: () =>
-                            _confirmArtwork(context, viewModel, artwork),
-                      ),
-                    RowAction(
-                      label: '删除',
-                      onPressed: () =>
-                          _confirmDelete(context, viewModel, artwork),
-                      destructive: true,
-                    ),
-                  ],
-                )),
-              ],
-            ),
-          )
-          .toList(),
+    return confirmCrudAction(
+      context,
+      item: artwork,
+      onConfirm: (item) => viewModel.confirmArtwork(item.id),
+      config: _confirmConfig,
     );
   }
 
-  Widget _buildPageHeader(
+  static Future<void> _createVersion(
     BuildContext context,
     ArtworkViewModel viewModel,
-    bool isMobile,
+    Artwork artwork,
   ) {
-    return PageHeaderBar(
-      breadcrumb: null,
-      useSurface: false,
-      showDivider: false,
-      padding: EdgeInsets.zero,
-      actions: LayoutBuilder(
-        builder: (context, constraints) {
-          final searchField = ListSearchField(
-            controller: _searchController,
-            hintText: _searchHintText,
-            height: PageActionStyle.height,
-            width: isMobile ? constraints.maxWidth : _searchWidth,
-            onChanged: (_) => _scheduleSearch(viewModel),
-            onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
-            onClear: () {
-              _searchController.clear();
-              _scheduleSearch(viewModel, immediate: true);
-            },
-          );
+    return confirmCrudAction(
+      context,
+      item: artwork,
+      onConfirm: (item) => viewModel.createVersion(item.id),
+      config: _versionConfig,
+    );
+  }
 
-          final actions = <Widget>[
-            PageActionButton.outlined(
-              onPressed: () => viewModel.loadArtworks(resetPage: true),
-              icon: const Icon(Icons.refresh, size: 16),
-              label: _refreshButtonText,
-            ),
-            PageActionButton.filled(
-              onPressed: () => _openEditPage(context, viewModel, null),
-              icon: const Icon(Icons.add),
-              label: _createButtonText,
-            ),
-          ];
+  static List<Widget> _headerActions(
+    BuildContext context,
+    ArtworkViewModel viewModel,
+  ) {
+    return [
+      PageActionButton.filled(
+        onPressed: () => _openEditPage(context, viewModel, null),
+        icon: const Icon(Icons.add),
+        label: '新建图稿',
+      ),
+    ];
+  }
 
-          return ListToolbar(
-            isMobile: isMobile,
-            searchField: searchField,
-            actions: actions,
-            spacing: _spacingSm,
-          );
-        },
+  static List<RowAction> _rowActions(
+    BuildContext context,
+    ArtworkViewModel viewModel,
+    Artwork artwork,
+  ) {
+    return [
+      RowAction(
+        label: '编辑',
+        onPressed: () => _openEditPage(context, viewModel, artwork),
+      ),
+      RowAction(
+        label: '新版本',
+        onPressed: () => _createVersion(context, viewModel, artwork),
+      ),
+      if (!artwork.confirmed)
+        RowAction(
+          label: '确认',
+          onPressed: () => _confirmArtwork(context, viewModel, artwork),
+        ),
+      RowAction(
+        label: '删除',
+        onPressed: () => _confirmDelete(context, viewModel, artwork),
+        destructive: true,
+      ),
+    ];
+  }
+
+  static Widget _buildNameCell(BuildContext context, Artwork artwork) {
+    return Text(
+      _titleText(artwork),
+      style: Theme.of(context).textTheme.bodyMedium,
+    );
+  }
+
+  static Widget _buildCodeCell(BuildContext context, Artwork artwork) {
+    return _buildBodyText(context, _codeText(artwork));
+  }
+
+  static Widget _buildColorCell(BuildContext context, Artwork artwork) {
+    return _buildBodyText(
+      context,
+      CrudValueFormatter.text(artwork.colorDisplay),
+    );
+  }
+
+  static Widget _buildSizeCell(BuildContext context, Artwork artwork) {
+    return _buildBodyText(
+      context,
+      CrudValueFormatter.text(artwork.impositionSize),
+    );
+  }
+
+  static Widget _buildStatusCell(BuildContext context, Artwork artwork) {
+    return _buildBodyText(context, _statusText(artwork));
+  }
+
+  static Widget _buildDiesCell(BuildContext context, Artwork artwork) {
+    return _buildBodyText(
+      context,
+      _compactListText(artwork.dieCodes, artwork.dieNames),
+    );
+  }
+
+  static Widget _buildFoilingCell(BuildContext context, Artwork artwork) {
+    return _buildBodyText(
+      context,
+      _compactListText(artwork.foilingPlateCodes, artwork.foilingPlateNames),
+    );
+  }
+
+  static Widget _buildEmbossingCell(BuildContext context, Artwork artwork) {
+    return _buildBodyText(
+      context,
+      _compactListText(
+        artwork.embossingPlateCodes,
+        artwork.embossingPlateNames,
       ),
     );
   }
 
-  static String _displayText(String? value) {
-    final text = value?.trim() ?? '';
-    return text.isEmpty ? _emptyCellText : text;
+  static Widget _buildProductsCell(BuildContext context, Artwork artwork) {
+    return _buildBodyText(context, _productSummary(artwork.products));
+  }
+
+  static Widget _buildCreatedAtCell(BuildContext context, Artwork artwork) {
+    return _buildBodyText(
+        context, CrudValueFormatter.dateTime(artwork.createdAt));
+  }
+
+  static Widget _buildBodyText(BuildContext context, String value) {
+    return Text(
+      value,
+      style: Theme.of(context).textTheme.bodySmall,
+    );
+  }
+
+  static String _titleText(Artwork artwork) {
+    return CrudValueFormatter.text(artwork.name);
+  }
+
+  static String _codeText(Artwork artwork) {
+    return CrudValueFormatter.text(
+      artwork.fullCode.isNotEmpty ? artwork.fullCode : artwork.code,
+    );
+  }
+
+  static String _subtitleText(Artwork artwork) {
+    return '${_codeText(artwork)} · '
+        '${CrudValueFormatter.text(artwork.colorDisplay)}';
+  }
+
+  static String _statusText(Artwork artwork) {
+    return artwork.confirmed ? '已确认' : '未确认';
   }
 
   static String _compactListText(List<String> codes, List<String> names) {
-    if (codes.isEmpty) return _emptyCellText;
+    if (codes.isEmpty) {
+      return CrudValueFormatter.empty;
+    }
     final display = <String>[];
     for (var i = 0; i < codes.length; i++) {
       final code = codes[i];
@@ -468,151 +316,126 @@ class _ArtworkListViewState extends State<_ArtworkListView> {
   }
 
   static String _productSummary(List<ArtworkProduct> products) {
-    if (products.isEmpty) return _emptyCellText;
-    final display = products
+    if (products.isEmpty) {
+      return CrudValueFormatter.empty;
+    }
+    return products
         .map((item) => '${item.productName}(${item.impositionQuantity ?? 1}拼)')
-        .toList();
-    return display.join('、');
+        .join('、');
   }
 
-  static String _formatDateTime(DateTime? value) {
-    if (value == null) return _emptyCellText;
-    final local = value.toLocal();
-    final year = local.year.toString().padLeft(4, '0');
-    final month = local.month.toString().padLeft(2, '0');
-    final day = local.day.toString().padLeft(2, '0');
-    final hour = local.hour.toString().padLeft(2, '0');
-    final minute = local.minute.toString().padLeft(2, '0');
-    return '$year-$month-$day $hour:$minute';
-  }
-
-  Widget _buildSummaryCard(
-    BuildContext context,
-    ArtworkViewModel viewModel,
-    Artwork artwork,
-    bool isMobile,
-  ) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>();
-    final sectionSpacing = LayoutTokens.sectionSpacing(context);
-    final code = _displayText(
-        artwork.fullCode.isNotEmpty ? artwork.fullCode : artwork.code);
-    final name = _displayText(artwork.name);
-    final color = _displayText(artwork.colorDisplay);
-    final size = _displayText(artwork.impositionSize);
-    final status = artwork.confirmed ? '已确认' : '未确认';
-    final dies = _compactListText(artwork.dieCodes, artwork.dieNames);
-    final foiling =
-        _compactListText(artwork.foilingPlateCodes, artwork.foilingPlateNames);
-    final embossing = _compactListText(
-        artwork.embossingPlateCodes, artwork.embossingPlateNames);
-    final products = _productSummary(artwork.products);
-    final notes = _displayText(artwork.notes);
-    final createdAt = _formatDateTime(artwork.createdAt);
-
-    return ExpandableSummaryCard(
-      headerBuilder: (context, expanded) {
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: colors?.sidebarText,
-                    ),
-                  ),
-                  SizedBox(height: sectionSpacing),
-                  Text(
-                    '$code · $color',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colors?.subtleText ?? theme.hintColor,
-                    ),
-                  ),
-                  SizedBox(height: sectionSpacing),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _SummaryChip(label: '状态', value: status),
-                      _SummaryChip(label: '拼版', value: size),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(width: sectionSpacing),
-            AnimatedRotation(
-              turns: expanded ? 0.5 : 0.0,
-              duration: const Duration(milliseconds: 200),
-              child: Icon(
-                Icons.expand_more,
-                size: 20,
-                color: colors?.subtleText ?? theme.hintColor,
-              ),
-            ),
-          ],
-        );
-      },
-      expandedChild: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SummaryFieldWrap(
-            isMobile: isMobile,
-            children: [
-              _SummaryField(label: '编码', value: code),
-              _SummaryField(label: '色数', value: color),
-              _SummaryField(label: '拼版尺寸', value: size),
-              _SummaryField(label: '确认状态', value: status),
-              _SummaryField(label: '关联刀模', value: dies),
-              _SummaryField(label: '关联烫金版', value: foiling),
-              _SummaryField(label: '关联压凸版', value: embossing),
-              _SummaryField(label: '包含产品', value: products),
-              _SummaryField(label: '备注', value: notes),
-              _SummaryField(label: '创建时间', value: createdAt),
-            ],
-          ),
-          SizedBox(height: sectionSpacing),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              OutlinedButton.icon(
-                onPressed: () => _openEditPage(context, viewModel, artwork),
-                icon: const Icon(Icons.edit, size: 16),
-                label: const Text('编辑'),
-              ),
-              OutlinedButton.icon(
-                onPressed: () => _createVersion(context, viewModel, artwork),
-                icon: const Icon(Icons.control_point_duplicate_outlined,
-                    size: 16),
-                label: const Text('新版本'),
-              ),
-              if (!artwork.confirmed)
-                OutlinedButton.icon(
-                  onPressed: () => _confirmArtwork(context, viewModel, artwork),
-                  icon: const Icon(Icons.verified_outlined, size: 16),
-                  label: const Text('确认'),
-                ),
-              OutlinedButton.icon(
-                onPressed: () => _confirmDelete(context, viewModel, artwork),
-                icon: const Icon(Icons.delete_outline, size: 16),
-                label: const Text('删除'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: theme.colorScheme.error,
-                ),
-              ),
-            ],
-          ),
-        ],
+  static List<CrudSummaryChipData> _summaryChips(Artwork artwork) {
+    return [
+      CrudSummaryChipData(label: '状态', value: _statusText(artwork)),
+      CrudSummaryChipData(
+        label: '拼版',
+        value: CrudValueFormatter.text(artwork.impositionSize),
       ),
-    );
+    ];
+  }
+
+  static List<CrudSummaryFieldData> _summaryFields(Artwork artwork) {
+    return [
+      CrudSummaryFieldData(label: '编码', value: _codeText(artwork)),
+      CrudSummaryFieldData(
+        label: '色数',
+        value: CrudValueFormatter.text(artwork.colorDisplay),
+      ),
+      CrudSummaryFieldData(
+        label: '拼版尺寸',
+        value: CrudValueFormatter.text(artwork.impositionSize),
+      ),
+      CrudSummaryFieldData(label: '确认状态', value: _statusText(artwork)),
+      CrudSummaryFieldData(
+        label: '关联刀模',
+        value: _compactListText(artwork.dieCodes, artwork.dieNames),
+      ),
+      CrudSummaryFieldData(
+        label: '关联烫金版',
+        value: _compactListText(
+          artwork.foilingPlateCodes,
+          artwork.foilingPlateNames,
+        ),
+      ),
+      CrudSummaryFieldData(
+        label: '关联压凸版',
+        value: _compactListText(
+          artwork.embossingPlateCodes,
+          artwork.embossingPlateNames,
+        ),
+      ),
+      CrudSummaryFieldData(
+        label: '包含产品',
+        value: _productSummary(artwork.products),
+      ),
+      CrudSummaryFieldData(
+        label: '备注',
+        value: CrudValueFormatter.text(artwork.notes),
+      ),
+      CrudSummaryFieldData(
+        label: '创建时间',
+        value: CrudValueFormatter.dateTime(artwork.createdAt),
+      ),
+    ];
+  }
+
+  static String _buildDeleteSummary(Artwork artwork) {
+    return '即将删除图稿 ${_titleText(artwork)}。删除后，相关产品、刀模和版材追溯可能受影响。';
+  }
+
+  static List<String> _buildDeleteImpacts(Artwork artwork) {
+    return [
+      '图稿编码：${_codeText(artwork)}',
+      if (artwork.dieCodes.isNotEmpty)
+        '关联刀模：${_compactListText(artwork.dieCodes, artwork.dieNames)}',
+      if (artwork.foilingPlateCodes.isNotEmpty)
+        '关联烫金版：${_compactListText(artwork.foilingPlateCodes, artwork.foilingPlateNames)}',
+      if (artwork.embossingPlateCodes.isNotEmpty)
+        '关联压凸版：${_compactListText(artwork.embossingPlateCodes, artwork.embossingPlateNames)}',
+      if (artwork.products.isNotEmpty)
+        '包含产品：${_productSummary(artwork.products)}',
+    ];
+  }
+
+  static String _buildDeleteAuditHint(Artwork artwork) {
+    return '如果图稿已用于历史业务，优先保留档案并停止引用，而不是直接删除。';
+  }
+
+  static String _buildConfirmSummary(Artwork artwork) {
+    return '即将确认图稿 ${_titleText(artwork)}。确认后当前版本将不再允许直接修改。';
+  }
+
+  static List<String> _buildConfirmImpacts(Artwork artwork) {
+    return [
+      '确认后如需调整内容，应基于当前版本创建新版本',
+      '当前编码：${_codeText(artwork)}',
+    ];
+  }
+
+  static String _buildConfirmAuditHint(Artwork artwork) {
+    return '请确认色数、拼版尺寸和关联版材信息已校对无误。';
+  }
+
+  static String _buildConfirmSuccessMessage(Artwork artwork) {
+    return '图稿已确认';
+  }
+
+  static String _buildVersionSummary(Artwork artwork) {
+    return '即将基于图稿 ${_codeText(artwork)} 创建新版本，新版本会继承当前版本的主要配置。';
+  }
+
+  static List<String> _buildVersionImpacts(Artwork artwork) {
+    return [
+      '新版本适合用于后续修改，不影响当前版本历史记录',
+      '当前名称：${_titleText(artwork)}',
+    ];
+  }
+
+  static String _buildVersionAuditHint(Artwork artwork) {
+    return '若当前版本已经确认，建议通过新版本承接后续改动。';
+  }
+
+  static String _buildVersionSuccessMessage(Artwork artwork) {
+    return '新版本创建成功';
   }
 }
-
-typedef _SummaryField = SummaryField;
-typedef _SummaryChip = SummaryChip;

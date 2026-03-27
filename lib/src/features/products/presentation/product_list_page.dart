@@ -1,20 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
-import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/products/application/product_view_model.dart';
 import 'package:work_order_app/src/features/products/data/product_api_service.dart';
@@ -45,65 +35,54 @@ class ProductListEntry extends StatelessWidget {
 class ProductListPage extends StatelessWidget {
   const ProductListPage({super.key});
 
-  @override
-  Widget build(BuildContext context) => const _ProductListView();
-}
+  static const CrudDeleteConfig<Product> _deleteConfig = CrudDeleteConfig(
+    title: '确认删除',
+    summaryBuilder: _buildDeleteSummary,
+    impactsBuilder: _buildDeleteImpacts,
+    auditHintBuilder: _buildDeleteAuditHint,
+    confirmText: '确认删除',
+    errorMessagePrefix: '删除失败: ',
+  );
 
-class _ProductListView extends StatefulWidget {
-  const _ProductListView();
-
-  @override
-  State<_ProductListView> createState() => _ProductListViewState();
-}
-
-class _ProductListViewState extends State<_ProductListView> {
-  static const _searchDebounceDuration = Duration(milliseconds: 450);
-  static const double _searchWidth = 320;
-  static const double _spacingSm = LayoutTokens.gapSm;
-  static const double _controlHeight = PageActionStyle.height;
-  static const String _emptyCellText = '-';
-
-  static const String _searchHintText = '搜索产品名称/编码';
-  static const String _refreshButtonText = '刷新';
-  static const String _createButtonText = '新建产品';
-  static const String _emptyText = '暂无产品数据';
-  static const String _errorFallbackText = '加载失败';
-  static const String _retryText = '重新加载';
-  static const String _deleteDialogTitle = '确认删除';
-  static const String _deleteDialogContent = '确定要删除产品 \"{name}\" 吗？此操作不可恢复。';
-  static const String _cancelText = '取消';
-  static const String _deleteText = '删除';
-  static const String _deleteSuccessText = '删除成功';
-  static const String _deleteFailedText = '删除失败: ';
-  static const String _createSuccessText = '创建成功';
-  static const String _updateSuccessText = '更新成功';
-  static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
-  static const String _pageSizeLabel = '每页 {size}';
-
-  final TextEditingController _searchController = TextEditingController();
-  Timer? _searchDebounce;
+  static const CrudListConfig<Product, ProductViewModel> _config =
+      CrudListConfig(
+    searchHintText: '搜索产品名称/编码',
+    emptyText: '暂无产品数据',
+    emptyIcon: Icons.inventory_2_outlined,
+    loadItems: _loadProducts,
+    titleBuilder: _titleText,
+    subtitleBuilder: _subtitleText,
+    summaryChipsBuilder: _summaryChips,
+    summaryFieldsBuilder: _summaryFields,
+    headerActionsBuilder: _headerActions,
+    rowActionsBuilder: _rowActions,
+    columns: [
+      CrudTableColumn(label: '产品', cellBuilder: _buildNameCell),
+      CrudTableColumn(label: '编码', cellBuilder: _buildCodeCell),
+      CrudTableColumn(label: '类型', cellBuilder: _buildTypeCell),
+      CrudTableColumn(label: '产品组', cellBuilder: _buildGroupCell),
+      CrudTableColumn(label: '规格', cellBuilder: _buildSpecificationCell),
+      CrudTableColumn(label: '单位', cellBuilder: _buildUnitCell),
+      CrudTableColumn(label: '单价', cellBuilder: _buildPriceCell),
+      CrudTableColumn(label: '库存', cellBuilder: _buildStockCell),
+      CrudTableColumn(label: '最小库存', cellBuilder: _buildMinStockCell),
+      CrudTableColumn(label: '状态', cellBuilder: _buildStatusCell),
+    ],
+  );
 
   @override
-  void dispose() {
-    _searchDebounce?.cancel();
-    _searchController.dispose();
-    super.dispose();
+  Widget build(BuildContext context) {
+    return const CrudListPage<Product, ProductViewModel>(config: _config);
   }
 
-  void _scheduleSearch(ProductViewModel viewModel, {bool immediate = false}) {
-    _searchDebounce?.cancel();
-    if (immediate) {
-      viewModel.setSearchText(_searchController.text.trim());
-      viewModel.loadProducts(resetPage: true);
-      return;
-    }
-    _searchDebounce = Timer(_searchDebounceDuration, () {
-      viewModel.setSearchText(_searchController.text.trim());
-      viewModel.loadProducts(resetPage: true);
-    });
+  static Future<void> _loadProducts(
+    ProductViewModel viewModel, {
+    bool resetPage = false,
+  }) {
+    return viewModel.loadProducts(resetPage: resetPage);
   }
 
-  Future<void> _openEditPage(
+  static Future<void> _openEditPage(
     BuildContext context,
     ProductViewModel viewModel,
     Product? product,
@@ -116,267 +95,131 @@ class _ProductListViewState extends State<_ProductListView> {
         ),
       ),
     );
-    if (!mounted) return;
     if (result == true) {
-      ToastUtil.showSuccess(
-          product == null ? _createSuccessText : _updateSuccessText);
+      ToastUtil.showSuccess(product == null ? '创建成功' : '更新成功');
     }
   }
 
-  Future<void> _confirmDelete(
+  static Future<void> _confirmDelete(
     BuildContext context,
     ProductViewModel viewModel,
     Product product,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(_deleteDialogTitle),
-        content:
-            Text(_deleteDialogContent.replaceFirst('{name}', product.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(_cancelText),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(_deleteText),
-          ),
-        ],
+  ) {
+    return confirmCrudDeletion(
+      context,
+      item: product,
+      onDelete: (item) => viewModel.deleteProduct(item.id),
+      config: _deleteConfig,
+    );
+  }
+
+  static List<Widget> _headerActions(
+    BuildContext context,
+    ProductViewModel viewModel,
+  ) {
+    return [
+      PageActionButton.filled(
+        onPressed: () => _openEditPage(context, viewModel, null),
+        icon: const Icon(Icons.add),
+        label: '新建产品',
       ),
-    );
-    if (confirmed != true) return;
-
-    try {
-      await viewModel.deleteProduct(product.id);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(_deleteSuccessText)),
-      );
-    } catch (err) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$_deleteFailedText$err')),
-      );
-    }
+    ];
   }
 
-  static String _pageInfoText(ProductViewModel viewModel) {
-    return _pageInfoTemplate
-        .replaceFirst('{page}', viewModel.page.toString())
-        .replaceFirst('{total}', viewModel.totalPages.toString())
-        .replaceFirst('{count}', viewModel.total.toString());
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isMobile = BreakpointsUtil.isMobile(context);
-
-    return Consumer<ProductViewModel>(
-      builder: (context, viewModel, _) {
-        final products = viewModel.products;
-        return ListPageScaffold(
-          spacing: _spacingSm,
-          header: _buildPageHeader(context, viewModel, isMobile),
-          body: _buildListBody(context, viewModel, products, isMobile),
-          footer: viewModel.totalPages > 1
-              ? ResponsivePaginationBar(
-                  infoText: _pageInfoText(viewModel),
-                  page: viewModel.page,
-                  pageSize: viewModel.pageSize,
-                  pageSizeOptions: viewModel.pageSizeOptions,
-                  onPageSizeChanged: viewModel.setPageSize,
-                  onPrev: () => viewModel.setPage(viewModel.page - 1),
-                  onNext: () => viewModel.setPage(viewModel.page + 1),
-                  hasPrev: viewModel.hasPrev,
-                  hasNext: viewModel.hasNext,
-                  pageSizeLabelBuilder: (size) =>
-                      _pageSizeLabel.replaceFirst('{size}', size.toString()),
-                )
-              : null,
-        );
-      },
-    );
-  }
-
-  Widget _buildListBody(
+  static List<RowAction> _rowActions(
     BuildContext context,
     ProductViewModel viewModel,
-    List<Product> products,
-    bool isMobile,
+    Product product,
   ) {
-    final sectionSpacing = LayoutTokens.sectionSpacing(context);
-    if (viewModel.loading && products.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (viewModel.errorMessage != null && !viewModel.loading) {
-      return ErrorStateCard(
-        message: viewModel.errorMessage ?? _errorFallbackText,
-        retryLabel: _retryText,
-        onRetry: () => viewModel.loadProducts(resetPage: true),
-      );
-    }
-    if (!viewModel.loading && products.isEmpty) {
-      return const EmptyStateCard(
-        icon: Icons.inventory_2_outlined,
-        text: _emptyText,
-      );
-    }
-
-    if (!isMobile) {
-      return _buildDesktopTable(context, viewModel, products);
-    }
-
-    return ListView.separated(
-      itemCount: products.length,
-      separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
-      itemBuilder: (context, index) {
-        final product = products[index];
-        return _buildSummaryCard(context, viewModel, product, isMobile);
-      },
-    );
-  }
-
-  Widget _buildDesktopTable(
-    BuildContext context,
-    ProductViewModel viewModel,
-    List<Product> products,
-  ) {
-    final theme = Theme.of(context);
-    final textStyle = theme.textTheme.bodySmall;
-    return AppDataTable(
-      columns: const [
-        DataColumn(label: Text('产品')),
-        DataColumn(label: Text('编码')),
-        DataColumn(label: Text('类型')),
-        DataColumn(label: Text('产品组')),
-        DataColumn(label: Text('规格')),
-        DataColumn(label: Text('单位')),
-        DataColumn(label: Text('单价')),
-        DataColumn(label: Text('库存')),
-        DataColumn(label: Text('最小库存')),
-        DataColumn(label: Text('状态')),
-        DataColumn(label: Text('操作')),
-      ],
-      rows: products
-          .map(
-            (product) => DataRow(
-              cells: [
-                DataCell(Text(
-                  product.name.isNotEmpty ? product.name : _emptyCellText,
-                  style: theme.textTheme.bodyMedium,
-                )),
-                DataCell(Text(
-                  product.code.isNotEmpty ? product.code : _emptyCellText,
-                  style: textStyle,
-                )),
-                DataCell(Text(
-                  _formatProductType(product),
-                  style: textStyle,
-                )),
-                DataCell(Text(
-                  product.productGroupName ?? _emptyCellText,
-                  style: textStyle,
-                )),
-                DataCell(Text(
-                  product.specification ?? _emptyCellText,
-                  style: textStyle,
-                )),
-                DataCell(
-                    Text(product.unit ?? _emptyCellText, style: textStyle)),
-                DataCell(
-                    Text(_formatAmount(product.unitPrice), style: textStyle)),
-                DataCell(Text(_formatAmount(product.stockQuantity),
-                    style: textStyle)),
-                DataCell(Text(_formatAmount(product.minStockQuantity),
-                    style: textStyle)),
-                DataCell(
-                    Text(_formatStatus(product.isActive), style: textStyle)),
-                DataCell(RowActionGroup(
-                  actions: [
-                    RowAction(
-                      label: '编辑',
-                      onPressed: () =>
-                          _openEditPage(context, viewModel, product),
-                    ),
-                    RowAction(
-                      label: '删除',
-                      onPressed: () =>
-                          _confirmDelete(context, viewModel, product),
-                      destructive: true,
-                    ),
-                  ],
-                )),
-              ],
-            ),
-          )
-          .toList(),
-    );
-  }
-
-  Widget _buildPageHeader(
-    BuildContext context,
-    ProductViewModel viewModel,
-    bool isMobile,
-  ) {
-    return PageHeaderBar(
-      breadcrumb: null,
-      useSurface: false,
-      showDivider: false,
-      padding: EdgeInsets.zero,
-      actions: LayoutBuilder(
-        builder: (context, constraints) {
-          final searchField = ListSearchField(
-            controller: _searchController,
-            hintText: _searchHintText,
-            height: _controlHeight,
-            width: isMobile ? constraints.maxWidth : _searchWidth,
-            onChanged: (_) => _scheduleSearch(viewModel),
-            onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
-            onClear: () {
-              _searchController.clear();
-              _scheduleSearch(viewModel, immediate: true);
-            },
-          );
-
-          final actions = <Widget>[
-            PageActionButton.outlined(
-              onPressed: () => viewModel.loadProducts(resetPage: true),
-              icon: const Icon(Icons.refresh, size: 16),
-              label: _refreshButtonText,
-            ),
-            PageActionButton.filled(
-              onPressed: () => _openEditPage(context, viewModel, null),
-              icon: const Icon(Icons.add),
-              label: _createButtonText,
-            ),
-          ];
-
-          return ListToolbar(
-            isMobile: isMobile,
-            searchField: searchField,
-            actions: actions,
-            spacing: _spacingSm,
-          );
-        },
+    return [
+      RowAction(
+        label: '编辑',
+        onPressed: () => _openEditPage(context, viewModel, product),
       ),
+      RowAction(
+        label: '删除',
+        onPressed: () => _confirmDelete(context, viewModel, product),
+        destructive: true,
+      ),
+    ];
+  }
+
+  static Widget _buildNameCell(BuildContext context, Product product) {
+    return Text(
+      _titleText(product),
+      style: Theme.of(context).textTheme.bodyMedium,
     );
   }
 
-  String _formatAmount(double? value) {
-    if (value == null) return _emptyCellText;
-    return value.toStringAsFixed(2);
+  static Widget _buildCodeCell(BuildContext context, Product product) {
+    return _buildBodyText(context, CrudValueFormatter.text(product.code));
   }
 
-  String _formatStatus(bool? isActive) {
-    if (isActive == null) return _emptyCellText;
-    return isActive ? '启用' : '停用';
+  static Widget _buildTypeCell(BuildContext context, Product product) {
+    return _buildBodyText(context, _productTypeText(product));
   }
 
-  String _formatProductType(Product product) {
+  static Widget _buildGroupCell(BuildContext context, Product product) {
+    return _buildBodyText(
+      context,
+      CrudValueFormatter.text(product.productGroupName),
+    );
+  }
+
+  static Widget _buildSpecificationCell(BuildContext context, Product product) {
+    return _buildBodyText(
+      context,
+      CrudValueFormatter.text(product.specification),
+    );
+  }
+
+  static Widget _buildUnitCell(BuildContext context, Product product) {
+    return _buildBodyText(context, CrudValueFormatter.text(product.unit));
+  }
+
+  static Widget _buildPriceCell(BuildContext context, Product product) {
+    return _buildBodyText(
+        context, CrudValueFormatter.amount(product.unitPrice));
+  }
+
+  static Widget _buildStockCell(BuildContext context, Product product) {
+    return _buildBodyText(
+      context,
+      CrudValueFormatter.amount(product.stockQuantity),
+    );
+  }
+
+  static Widget _buildMinStockCell(BuildContext context, Product product) {
+    return _buildBodyText(
+      context,
+      CrudValueFormatter.amount(product.minStockQuantity),
+    );
+  }
+
+  static Widget _buildStatusCell(BuildContext context, Product product) {
+    return _buildBodyText(context, _statusText(product));
+  }
+
+  static Widget _buildBodyText(BuildContext context, String value) {
+    return Text(
+      value,
+      style: Theme.of(context).textTheme.bodySmall,
+    );
+  }
+
+  static String _titleText(Product product) {
+    return CrudValueFormatter.text(product.name);
+  }
+
+  static String _subtitleText(Product product) {
+    return '${CrudValueFormatter.text(product.code)} · ${_productTypeText(product)}';
+  }
+
+  static String _productTypeText(Product product) {
     final display = product.productTypeDisplay;
-    if (display != null && display.isNotEmpty) return display;
+    if (display != null && display.isNotEmpty) {
+      return display;
+    }
     switch (product.productType) {
       case 'group_main':
         return '套装主产品';
@@ -385,121 +228,96 @@ class _ProductListViewState extends State<_ProductListView> {
       case 'single':
         return '单品';
       default:
-        return _emptyCellText;
+        return CrudValueFormatter.empty;
     }
   }
 
-  Widget _buildSummaryCard(
-    BuildContext context,
-    ProductViewModel viewModel,
-    Product product,
-    bool isMobile,
-  ) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>();
-    final sectionSpacing = LayoutTokens.sectionSpacing(context);
-    final title = product.name;
-    final code = product.code.isEmpty ? _emptyCellText : product.code;
-    final type = _formatProductType(product);
-    final group = product.productGroupName ?? _emptyCellText;
-    final spec = product.specification ?? _emptyCellText;
-    final unit = product.unit ?? _emptyCellText;
-    final price = _formatAmount(product.unitPrice);
-    final stock = _formatAmount(product.stockQuantity);
-    final minStock = _formatAmount(product.minStockQuantity);
-    final status = _formatStatus(product.isActive);
-    final description = product.description ?? _emptyCellText;
+  static String _statusText(Product product) {
+    final isActive = product.isActive;
+    if (isActive == null) {
+      return CrudValueFormatter.empty;
+    }
+    return isActive ? '启用' : '停用';
+  }
 
-    return ExpandableSummaryCard(
-      headerBuilder: (context, expanded) {
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: colors?.sidebarText,
-                    ),
-                  ),
-                  SizedBox(height: sectionSpacing),
-                  Text(
-                    '$code · $type',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colors?.subtleText ?? theme.hintColor,
-                    ),
-                  ),
-                  SizedBox(height: sectionSpacing),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _SummaryChip(label: '状态', value: status),
-                      _SummaryChip(label: '单价', value: price),
-                      _SummaryChip(label: '库存', value: stock),
-                      _SummaryChip(label: '最小库存', value: minStock),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(width: sectionSpacing),
-            AnimatedRotation(
-              turns: expanded ? 0.5 : 0.0,
-              duration: const Duration(milliseconds: 200),
-              child: Icon(
-                Icons.expand_more,
-                size: 20,
-                color: colors?.subtleText ?? theme.hintColor,
-              ),
-            ),
-          ],
-        );
-      },
-      expandedChild: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SummaryFieldWrap(
-            isMobile: isMobile,
-            children: [
-              _SummaryField(label: '产品编码', value: code),
-              _SummaryField(label: '产品类型', value: type),
-              _SummaryField(label: '产品组', value: group),
-              _SummaryField(label: '规格', value: spec),
-              _SummaryField(label: '单位', value: unit),
-              _SummaryField(label: '单价', value: price),
-              _SummaryField(label: '库存', value: stock),
-              _SummaryField(label: '最小库存', value: minStock),
-              _SummaryField(label: '状态', value: status),
-              _SummaryField(label: '描述', value: description),
-            ],
-          ),
-          SizedBox(height: sectionSpacing),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              OutlinedButton.icon(
-                onPressed: () => _openEditPage(context, viewModel, product),
-                icon: const Icon(Icons.edit, size: 16),
-                label: const Text('编辑'),
-              ),
-              OutlinedButton.icon(
-                onPressed: () => _confirmDelete(context, viewModel, product),
-                icon: const Icon(Icons.delete_outline, size: 16),
-                label: const Text('删除'),
-              ),
-            ],
-          ),
-        ],
+  static List<CrudSummaryChipData> _summaryChips(Product product) {
+    return [
+      CrudSummaryChipData(label: '状态', value: _statusText(product)),
+      CrudSummaryChipData(
+        label: '单价',
+        value: CrudValueFormatter.amount(product.unitPrice),
       ),
-    );
+      CrudSummaryChipData(
+        label: '库存',
+        value: CrudValueFormatter.amount(product.stockQuantity),
+      ),
+      CrudSummaryChipData(
+        label: '最小库存',
+        value: CrudValueFormatter.amount(product.minStockQuantity),
+      ),
+    ];
+  }
+
+  static List<CrudSummaryFieldData> _summaryFields(Product product) {
+    return [
+      CrudSummaryFieldData(
+        label: '产品编码',
+        value: CrudValueFormatter.text(product.code),
+      ),
+      CrudSummaryFieldData(
+        label: '产品类型',
+        value: _productTypeText(product),
+      ),
+      CrudSummaryFieldData(
+        label: '产品组',
+        value: CrudValueFormatter.text(product.productGroupName),
+      ),
+      CrudSummaryFieldData(
+        label: '规格',
+        value: CrudValueFormatter.text(product.specification),
+      ),
+      CrudSummaryFieldData(
+        label: '单位',
+        value: CrudValueFormatter.text(product.unit),
+      ),
+      CrudSummaryFieldData(
+        label: '单价',
+        value: CrudValueFormatter.amount(product.unitPrice),
+      ),
+      CrudSummaryFieldData(
+        label: '库存',
+        value: CrudValueFormatter.amount(product.stockQuantity),
+      ),
+      CrudSummaryFieldData(
+        label: '最小库存',
+        value: CrudValueFormatter.amount(product.minStockQuantity),
+      ),
+      CrudSummaryFieldData(
+        label: '状态',
+        value: _statusText(product),
+      ),
+      CrudSummaryFieldData(
+        label: '描述',
+        value: CrudValueFormatter.text(product.description),
+      ),
+    ];
+  }
+
+  static String _buildDeleteSummary(Product product) {
+    return '即将删除产品 ${_titleText(product)}。删除后，施工单、订单和库存追溯可能受到影响。';
+  }
+
+  static List<String> _buildDeleteImpacts(Product product) {
+    return [
+      '产品编码：${CrudValueFormatter.text(product.code)}',
+      '产品类型：${_productTypeText(product)}',
+      if ((product.productGroupName ?? '').trim().isNotEmpty)
+        '所属产品组：${product.productGroupName!.trim()}',
+      '若已有订单、库存或刀模关联，删除可能失败或需要先解除引用',
+    ];
+  }
+
+  static String _buildDeleteAuditHint(Product product) {
+    return '如果只是暂停销售或生产，优先考虑停用状态，而不是直接删除。';
   }
 }
-
-typedef _SummaryField = SummaryField;
-typedef _SummaryChip = SummaryChip;

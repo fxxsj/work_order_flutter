@@ -1,20 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
-import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/embossing_plates/application/embossing_plate_view_model.dart';
 import 'package:work_order_app/src/features/embossing_plates/data/embossing_plate_api_service.dart';
@@ -45,70 +35,66 @@ class EmbossingPlateListEntry extends StatelessWidget {
 class EmbossingPlateListPage extends StatelessWidget {
   const EmbossingPlateListPage({super.key});
 
+  static const CrudDeleteConfig<EmbossingPlate> _deleteConfig =
+      CrudDeleteConfig(
+    title: '确认删除',
+    summaryBuilder: _buildDeleteSummary,
+    impactsBuilder: _buildDeleteImpacts,
+    auditHintBuilder: _buildDeleteAuditHint,
+    confirmText: '确认删除',
+    errorMessagePrefix: '删除失败: ',
+  );
+
+  static const CrudActionConfig<EmbossingPlate> _confirmConfig =
+      CrudActionConfig(
+    title: '确认压凸版',
+    summaryBuilder: _buildConfirmSummary,
+    impactsBuilder: _buildConfirmImpacts,
+    auditHintBuilder: _buildConfirmAuditHint,
+    confirmText: '确认压凸版',
+    successMessageBuilder: _buildConfirmSuccessMessage,
+    errorMessagePrefix: '确认失败: ',
+  );
+
+  static const CrudListConfig<EmbossingPlate, EmbossingPlateViewModel> _config =
+      CrudListConfig(
+    searchHintText: '搜索压凸版编码、名称、尺寸、材质',
+    emptyText: '暂无压凸版数据',
+    emptyIcon: Icons.dashboard_customize_outlined,
+    loadItems: _loadEmbossingPlates,
+    titleBuilder: _titleText,
+    subtitleBuilder: _subtitleText,
+    summaryChipsBuilder: _summaryChips,
+    summaryFieldsBuilder: _summaryFields,
+    headerActionsBuilder: _headerActions,
+    rowActionsBuilder: _rowActions,
+    columns: [
+      CrudTableColumn(label: '压凸版', cellBuilder: _buildNameCell),
+      CrudTableColumn(label: '编码', cellBuilder: _buildCodeCell),
+      CrudTableColumn(label: '尺寸', cellBuilder: _buildSizeCell),
+      CrudTableColumn(label: '材质', cellBuilder: _buildMaterialCell),
+      CrudTableColumn(label: '厚度', cellBuilder: _buildThicknessCell),
+      CrudTableColumn(label: '确认状态', cellBuilder: _buildConfirmedCell),
+      CrudTableColumn(label: '包含产品', cellBuilder: _buildProductsCell),
+      CrudTableColumn(label: '创建时间', cellBuilder: _buildCreatedAtCell),
+    ],
+  );
+
   @override
-  Widget build(BuildContext context) => const _EmbossingPlateListView();
-}
-
-class _EmbossingPlateListView extends StatefulWidget {
-  const _EmbossingPlateListView();
-
-  @override
-  State<_EmbossingPlateListView> createState() =>
-      _EmbossingPlateListViewState();
-}
-
-class _EmbossingPlateListViewState extends State<_EmbossingPlateListView> {
-  static const _searchDebounceDuration = Duration(milliseconds: 450);
-  static const double _searchWidth = 300;
-  static const double _spacingSm = LayoutTokens.gapSm;
-  static const String _emptyCellText = '-';
-
-  static const String _searchHintText = '搜索压凸版编码、名称、尺寸、材质';
-  static const String _refreshButtonText = '刷新';
-  static const String _createButtonText = '新建压凸版';
-  static const String _emptyText = '暂无压凸版数据';
-  static const String _errorFallbackText = '加载失败';
-  static const String _retryText = '重新加载';
-  static const String _deleteDialogTitle = '确认删除';
-  static const String _deleteDialogContent = '确定要删除压凸版 "{name}" 吗？此操作不可恢复。';
-  static const String _confirmDialogTitle = '确认压凸版';
-  static const String _confirmDialogContent = '确定要确认压凸版 "{name}" 吗？确认后将不可修改。';
-  static const String _cancelText = '取消';
-  static const String _okText = '确定';
-  static const String _deleteSuccessText = '删除成功';
-  static const String _deleteFailedText = '删除失败: ';
-  static const String _confirmSuccessText = '确认成功';
-  static const String _confirmFailedText = '确认失败: ';
-  static const String _createSuccessText = '创建成功';
-  static const String _updateSuccessText = '更新成功';
-  static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
-  static const String _pageSizeLabel = '每页 {size}';
-
-  final TextEditingController _searchController = TextEditingController();
-  Timer? _searchDebounce;
-
-  @override
-  void dispose() {
-    _searchDebounce?.cancel();
-    _searchController.dispose();
-    super.dispose();
+  Widget build(BuildContext context) {
+    return const CrudListPage<EmbossingPlate, EmbossingPlateViewModel>(
+      config: _config,
+    );
   }
 
-  void _scheduleSearch(EmbossingPlateViewModel viewModel,
-      {bool immediate = false}) {
-    _searchDebounce?.cancel();
-    if (immediate) {
-      viewModel.setSearchText(_searchController.text.trim());
-      viewModel.loadEmbossingPlates(resetPage: true);
-      return;
-    }
-    _searchDebounce = Timer(_searchDebounceDuration, () {
-      viewModel.setSearchText(_searchController.text.trim());
-      viewModel.loadEmbossingPlates(resetPage: true);
-    });
+  static Future<void> _loadEmbossingPlates(
+    EmbossingPlateViewModel viewModel, {
+    bool resetPage = false,
+  }) {
+    return viewModel.loadEmbossingPlates(resetPage: resetPage);
   }
 
-  Future<void> _openEditPage(
+  static Future<void> _openEditPage(
     BuildContext context,
     EmbossingPlateViewModel viewModel,
     EmbossingPlate? plate,
@@ -118,9 +104,14 @@ class _EmbossingPlateListViewState extends State<_EmbossingPlateListView> {
       try {
         final apiService = context.read<EmbossingPlateApiService>();
         final detail = await apiService.fetchEmbossingPlate(plate.id);
+        if (!context.mounted) {
+          return;
+        }
         target = detail.toEntity();
       } catch (err) {
-        if (!mounted) return;
+        if (!context.mounted) {
+          return;
+        }
         ToastUtil.showError('加载压凸版详情失败: $err');
         return;
       }
@@ -133,408 +124,229 @@ class _EmbossingPlateListViewState extends State<_EmbossingPlateListView> {
         ),
       ),
     );
-    if (!mounted) return;
     if (result == true) {
-      ToastUtil.showSuccess(
-          plate == null ? _createSuccessText : _updateSuccessText);
+      ToastUtil.showSuccess(plate == null ? '创建成功' : '更新成功');
     }
   }
 
-  Future<void> _confirmDelete(
+  static Future<void> _confirmDelete(
     BuildContext context,
     EmbossingPlateViewModel viewModel,
     EmbossingPlate plate,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(_deleteDialogTitle),
-        content: Text(_deleteDialogContent.replaceFirst('{name}', plate.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(_cancelText),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(_okText),
-          ),
-        ],
-      ),
+  ) {
+    return confirmCrudDeletion(
+      context,
+      item: plate,
+      onDelete: (item) => viewModel.deleteEmbossingPlate(item.id),
+      config: _deleteConfig,
     );
-    if (confirmed != true) return;
-
-    try {
-      await viewModel.deleteEmbossingPlate(plate.id);
-      if (!mounted) return;
-      ToastUtil.showSuccess(_deleteSuccessText);
-    } catch (err) {
-      if (!mounted) return;
-      ToastUtil.showError('$_deleteFailedText$err');
-    }
   }
 
-  Future<void> _confirmPlate(
+  static Future<void> _confirmPlate(
     BuildContext context,
     EmbossingPlateViewModel viewModel,
     EmbossingPlate plate,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(_confirmDialogTitle),
-        content: Text(_confirmDialogContent.replaceFirst('{name}', plate.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(_cancelText),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(_okText),
-          ),
-        ],
+  ) {
+    return confirmCrudAction(
+      context,
+      item: plate,
+      onConfirm: (item) => viewModel.confirmEmbossingPlate(item.id),
+      config: _confirmConfig,
+    );
+  }
+
+  static List<Widget> _headerActions(
+    BuildContext context,
+    EmbossingPlateViewModel viewModel,
+  ) {
+    return [
+      PageActionButton.filled(
+        onPressed: () => _openEditPage(context, viewModel, null),
+        icon: const Icon(Icons.add),
+        label: '新建压凸版',
       ),
-    );
-    if (confirmed != true) return;
-
-    try {
-      await viewModel.confirmEmbossingPlate(plate.id);
-      if (!mounted) return;
-      ToastUtil.showSuccess(_confirmSuccessText);
-    } catch (err) {
-      if (!mounted) return;
-      ToastUtil.showError('$_confirmFailedText$err');
-    }
+    ];
   }
 
-  static String _pageInfoText(EmbossingPlateViewModel viewModel) {
-    return _pageInfoTemplate
-        .replaceFirst('{page}', viewModel.page.toString())
-        .replaceFirst('{total}', viewModel.totalPages.toString())
-        .replaceFirst('{count}', viewModel.total.toString());
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isMobile = BreakpointsUtil.isMobile(context);
-
-    return Consumer<EmbossingPlateViewModel>(
-      builder: (context, viewModel, _) {
-        final plates = viewModel.embossingPlates;
-        return ListPageScaffold(
-          spacing: _spacingSm,
-          header: _buildPageHeader(context, viewModel, isMobile),
-          body: _buildListBody(context, viewModel, plates, isMobile),
-          footer: viewModel.totalPages > 1
-              ? ResponsivePaginationBar(
-                  infoText: _pageInfoText(viewModel),
-                  page: viewModel.page,
-                  pageSize: viewModel.pageSize,
-                  pageSizeOptions: viewModel.pageSizeOptions,
-                  onPageSizeChanged: viewModel.setPageSize,
-                  onPrev: () => viewModel.setPage(viewModel.page - 1),
-                  onNext: () => viewModel.setPage(viewModel.page + 1),
-                  hasPrev: viewModel.hasPrev,
-                  hasNext: viewModel.hasNext,
-                  pageSizeLabelBuilder: (size) =>
-                      _pageSizeLabel.replaceFirst('{size}', size.toString()),
-                )
-              : null,
-        );
-      },
-    );
-  }
-
-  Widget _buildListBody(
+  static List<RowAction> _rowActions(
     BuildContext context,
     EmbossingPlateViewModel viewModel,
-    List<EmbossingPlate> plates,
-    bool isMobile,
+    EmbossingPlate plate,
   ) {
-    final sectionSpacing = LayoutTokens.sectionSpacing(context);
-    if (viewModel.loading && plates.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (viewModel.errorMessage != null && !viewModel.loading) {
-      return ErrorStateCard(
-        message: viewModel.errorMessage ?? _errorFallbackText,
-        retryLabel: _retryText,
-        onRetry: () => viewModel.loadEmbossingPlates(resetPage: true),
-      );
-    }
-    if (!viewModel.loading && plates.isEmpty) {
-      return const EmptyStateCard(
-        icon: Icons.dashboard_customize_outlined,
-        text: _emptyText,
-      );
-    }
-
-    if (!isMobile) {
-      return _buildDesktopTable(context, viewModel, plates);
-    }
-
-    return ListView.separated(
-      itemCount: plates.length,
-      separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
-      itemBuilder: (context, index) {
-        final plate = plates[index];
-        return _buildSummaryCard(context, viewModel, plate, isMobile);
-      },
-    );
-  }
-
-  Widget _buildDesktopTable(
-    BuildContext context,
-    EmbossingPlateViewModel viewModel,
-    List<EmbossingPlate> plates,
-  ) {
-    final theme = Theme.of(context);
-    final textStyle = theme.textTheme.bodySmall;
-    return AppDataTable(
-      columns: const [
-        DataColumn(label: Text('压凸版')),
-        DataColumn(label: Text('编码')),
-        DataColumn(label: Text('尺寸')),
-        DataColumn(label: Text('材质')),
-        DataColumn(label: Text('厚度')),
-        DataColumn(label: Text('确认状态')),
-        DataColumn(label: Text('包含产品')),
-        DataColumn(label: Text('创建时间')),
-        DataColumn(label: Text('操作')),
-      ],
-      rows: plates
-          .map(
-            (plate) => DataRow(
-              cells: [
-                DataCell(Text(
-                  _displayText(plate.name),
-                  style: theme.textTheme.bodyMedium,
-                )),
-                DataCell(Text(_displayText(plate.code), style: textStyle)),
-                DataCell(Text(_displayText(plate.size), style: textStyle)),
-                DataCell(Text(_displayText(plate.material), style: textStyle)),
-                DataCell(Text(_displayText(plate.thickness), style: textStyle)),
-                DataCell(
-                    Text(plate.confirmed ? '已确认' : '待确认', style: textStyle)),
-                DataCell(
-                    Text(_productSummary(plate.products), style: textStyle)),
-                DataCell(
-                    Text(_formatDateTime(plate.createdAt), style: textStyle)),
-                DataCell(RowActionGroup(
-                  actions: [
-                    RowAction(
-                      label: '编辑',
-                      onPressed: () => _openEditPage(context, viewModel, plate),
-                    ),
-                    if (!plate.confirmed)
-                      RowAction(
-                        label: '确认',
-                        onPressed: () =>
-                            _confirmPlate(context, viewModel, plate),
-                      ),
-                    RowAction(
-                      label: '删除',
-                      onPressed: () =>
-                          _confirmDelete(context, viewModel, plate),
-                      destructive: true,
-                    ),
-                  ],
-                )),
-              ],
-            ),
-          )
-          .toList(),
-    );
-  }
-
-  Widget _buildPageHeader(
-    BuildContext context,
-    EmbossingPlateViewModel viewModel,
-    bool isMobile,
-  ) {
-    return PageHeaderBar(
-      breadcrumb: null,
-      useSurface: false,
-      showDivider: false,
-      padding: EdgeInsets.zero,
-      actions: LayoutBuilder(
-        builder: (context, constraints) {
-          final searchField = ListSearchField(
-            controller: _searchController,
-            hintText: _searchHintText,
-            height: PageActionStyle.height,
-            width: isMobile ? constraints.maxWidth : _searchWidth,
-            onChanged: (_) => _scheduleSearch(viewModel),
-            onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
-            onClear: () {
-              _searchController.clear();
-              _scheduleSearch(viewModel, immediate: true);
-            },
-          );
-
-          final actions = <Widget>[
-            PageActionButton.outlined(
-              onPressed: () => viewModel.loadEmbossingPlates(resetPage: true),
-              icon: const Icon(Icons.refresh, size: 16),
-              label: _refreshButtonText,
-            ),
-            PageActionButton.filled(
-              onPressed: () => _openEditPage(context, viewModel, null),
-              icon: const Icon(Icons.add),
-              label: _createButtonText,
-            ),
-          ];
-
-          return ListToolbar(
-            isMobile: isMobile,
-            searchField: searchField,
-            actions: actions,
-            spacing: _spacingSm,
-          );
-        },
+    return [
+      RowAction(
+        label: '编辑',
+        onPressed: () => _openEditPage(context, viewModel, plate),
       ),
+      if (!plate.confirmed)
+        RowAction(
+          label: '确认',
+          onPressed: () => _confirmPlate(context, viewModel, plate),
+        ),
+      RowAction(
+        label: '删除',
+        onPressed: () => _confirmDelete(context, viewModel, plate),
+        destructive: true,
+      ),
+    ];
+  }
+
+  static Widget _buildNameCell(BuildContext context, EmbossingPlate plate) {
+    return Text(
+      _titleText(plate),
+      style: Theme.of(context).textTheme.bodyMedium,
     );
   }
 
-  static String _displayText(String? value) {
-    final text = value?.trim() ?? '';
-    return text.isEmpty ? _emptyCellText : text;
+  static Widget _buildCodeCell(BuildContext context, EmbossingPlate plate) {
+    return _buildBodyText(context, CrudValueFormatter.text(plate.code));
+  }
+
+  static Widget _buildSizeCell(BuildContext context, EmbossingPlate plate) {
+    return _buildBodyText(context, CrudValueFormatter.text(plate.size));
+  }
+
+  static Widget _buildMaterialCell(BuildContext context, EmbossingPlate plate) {
+    return _buildBodyText(context, CrudValueFormatter.text(plate.material));
+  }
+
+  static Widget _buildThicknessCell(
+    BuildContext context,
+    EmbossingPlate plate,
+  ) {
+    return _buildBodyText(context, CrudValueFormatter.text(plate.thickness));
+  }
+
+  static Widget _buildConfirmedCell(
+    BuildContext context,
+    EmbossingPlate plate,
+  ) {
+    return _buildBodyText(context, _confirmedText(plate));
+  }
+
+  static Widget _buildProductsCell(
+    BuildContext context,
+    EmbossingPlate plate,
+  ) {
+    return _buildBodyText(context, _productSummary(plate.products));
+  }
+
+  static Widget _buildCreatedAtCell(
+    BuildContext context,
+    EmbossingPlate plate,
+  ) {
+    return _buildBodyText(
+        context, CrudValueFormatter.dateTime(plate.createdAt));
+  }
+
+  static Widget _buildBodyText(BuildContext context, String value) {
+    return Text(
+      value,
+      style: Theme.of(context).textTheme.bodySmall,
+    );
+  }
+
+  static String _titleText(EmbossingPlate plate) {
+    return CrudValueFormatter.text(plate.name);
+  }
+
+  static String _subtitleText(EmbossingPlate plate) {
+    return '${CrudValueFormatter.text(plate.code)} · '
+        '${CrudValueFormatter.text(plate.size)}';
+  }
+
+  static String _confirmedText(EmbossingPlate plate) {
+    return plate.confirmed ? '已确认' : '待确认';
   }
 
   static String _productSummary(List<EmbossingPlateProduct> products) {
-    if (products.isEmpty) return _emptyCellText;
-    final display = products
+    if (products.isEmpty) {
+      return CrudValueFormatter.empty;
+    }
+    return products
         .map((item) => '${item.productName}(${item.quantity ?? 1}个)')
-        .toList();
-    return display.join('、');
+        .join('、');
   }
 
-  static String _formatDateTime(DateTime? value) {
-    if (value == null) return _emptyCellText;
-    final local = value.toLocal();
-    final year = local.year.toString().padLeft(4, '0');
-    final month = local.month.toString().padLeft(2, '0');
-    final day = local.day.toString().padLeft(2, '0');
-    final hour = local.hour.toString().padLeft(2, '0');
-    final minute = local.minute.toString().padLeft(2, '0');
-    return '$year-$month-$day $hour:$minute';
-  }
-
-  Widget _buildSummaryCard(
-    BuildContext context,
-    EmbossingPlateViewModel viewModel,
-    EmbossingPlate plate,
-    bool isMobile,
-  ) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>();
-    final sectionSpacing = LayoutTokens.sectionSpacing(context);
-    final code = _displayText(plate.code);
-    final name = _displayText(plate.name);
-    final size = _displayText(plate.size);
-    final material = _displayText(plate.material);
-    final thickness = _displayText(plate.thickness);
-    final confirmed = plate.confirmed ? '已确认' : '待确认';
-    final products = _productSummary(plate.products);
-    final notes = _displayText(plate.notes);
-    final createdAt = _formatDateTime(plate.createdAt);
-
-    return ExpandableSummaryCard(
-      headerBuilder: (context, expanded) {
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: colors?.sidebarText,
-                    ),
-                  ),
-                  SizedBox(height: sectionSpacing),
-                  Text(
-                    '$code · $size',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colors?.subtleText ?? theme.hintColor,
-                    ),
-                  ),
-                  SizedBox(height: sectionSpacing),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _SummaryChip(label: '状态', value: confirmed),
-                      _SummaryChip(label: '材质', value: material),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(width: sectionSpacing),
-            AnimatedRotation(
-              turns: expanded ? 0.5 : 0.0,
-              duration: const Duration(milliseconds: 200),
-              child: Icon(
-                Icons.expand_more,
-                size: 20,
-                color: colors?.subtleText ?? theme.hintColor,
-              ),
-            ),
-          ],
-        );
-      },
-      expandedChild: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SummaryFieldWrap(
-            isMobile: isMobile,
-            children: [
-              _SummaryField(label: '编码', value: code),
-              _SummaryField(label: '尺寸', value: size),
-              _SummaryField(label: '材质', value: material),
-              _SummaryField(label: '厚度', value: thickness),
-              _SummaryField(label: '确认状态', value: confirmed),
-              _SummaryField(label: '包含产品', value: products),
-              _SummaryField(label: '备注', value: notes),
-              _SummaryField(label: '创建时间', value: createdAt),
-            ],
-          ),
-          SizedBox(height: sectionSpacing),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              OutlinedButton.icon(
-                onPressed: () => _openEditPage(context, viewModel, plate),
-                icon: const Icon(Icons.edit, size: 16),
-                label: const Text('编辑'),
-              ),
-              if (!plate.confirmed)
-                OutlinedButton.icon(
-                  onPressed: () => _confirmPlate(context, viewModel, plate),
-                  icon: const Icon(Icons.verified_outlined, size: 16),
-                  label: const Text('确认'),
-                ),
-              OutlinedButton.icon(
-                onPressed: () => _confirmDelete(context, viewModel, plate),
-                icon: const Icon(Icons.delete_outline, size: 16),
-                label: const Text('删除'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: theme.colorScheme.error,
-                ),
-              ),
-            ],
-          ),
-        ],
+  static List<CrudSummaryChipData> _summaryChips(EmbossingPlate plate) {
+    return [
+      CrudSummaryChipData(label: '状态', value: _confirmedText(plate)),
+      CrudSummaryChipData(
+        label: '材质',
+        value: CrudValueFormatter.text(plate.material),
       ),
-    );
+    ];
+  }
+
+  static List<CrudSummaryFieldData> _summaryFields(EmbossingPlate plate) {
+    return [
+      CrudSummaryFieldData(
+        label: '编码',
+        value: CrudValueFormatter.text(plate.code),
+      ),
+      CrudSummaryFieldData(
+        label: '尺寸',
+        value: CrudValueFormatter.text(plate.size),
+      ),
+      CrudSummaryFieldData(
+        label: '材质',
+        value: CrudValueFormatter.text(plate.material),
+      ),
+      CrudSummaryFieldData(
+        label: '厚度',
+        value: CrudValueFormatter.text(plate.thickness),
+      ),
+      CrudSummaryFieldData(
+        label: '确认状态',
+        value: _confirmedText(plate),
+      ),
+      CrudSummaryFieldData(
+        label: '包含产品',
+        value: _productSummary(plate.products),
+      ),
+      CrudSummaryFieldData(
+        label: '备注',
+        value: CrudValueFormatter.text(plate.notes),
+      ),
+      CrudSummaryFieldData(
+        label: '创建时间',
+        value: CrudValueFormatter.dateTime(plate.createdAt),
+      ),
+    ];
+  }
+
+  static String _buildDeleteSummary(EmbossingPlate plate) {
+    return '即将删除压凸版 ${_titleText(plate)}。删除后，关联图稿和产品的版材追溯可能受影响。';
+  }
+
+  static List<String> _buildDeleteImpacts(EmbossingPlate plate) {
+    return [
+      '版材编码：${CrudValueFormatter.text(plate.code)}',
+      '尺寸：${CrudValueFormatter.text(plate.size)}',
+      if (plate.products.isNotEmpty) '包含产品：${_productSummary(plate.products)}',
+    ];
+  }
+
+  static String _buildDeleteAuditHint(EmbossingPlate plate) {
+    return '如果该压凸版已用于历史订单或图稿，优先保留档案并停止引用。';
+  }
+
+  static String _buildConfirmSummary(EmbossingPlate plate) {
+    return '即将确认压凸版 ${_titleText(plate)}。确认后当前版材将不再允许直接修改。';
+  }
+
+  static List<String> _buildConfirmImpacts(EmbossingPlate plate) {
+    return [
+      '确认后如需改动，建议新建或复制新的版材记录',
+      '当前编码：${CrudValueFormatter.text(plate.code)}',
+    ];
+  }
+
+  static String _buildConfirmAuditHint(EmbossingPlate plate) {
+    return '请确认尺寸、材质、厚度和产品关联信息均已核对。';
+  }
+
+  static String _buildConfirmSuccessMessage(EmbossingPlate plate) {
+    return '确认成功';
   }
 }
-
-typedef _SummaryField = SummaryField;
-typedef _SummaryChip = SummaryChip;

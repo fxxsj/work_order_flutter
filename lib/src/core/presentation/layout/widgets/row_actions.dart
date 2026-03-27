@@ -48,7 +48,7 @@ class RowActionGroup extends StatelessWidget {
         for (var i = 0; i < primary.length; i++) ...[
           _ActionIconButton(
             label: primary[i].label,
-            icon: primary[i].icon ?? _iconForLabel(primary[i].label),
+            icon: primary[i].icon ?? resolveRowActionIcon(primary[i].label),
             onPressed: primary[i].onPressed,
             color: primary[i].destructive ? theme.colorScheme.error : null,
           ),
@@ -65,7 +65,8 @@ class RowActionGroup extends StatelessWidget {
                   child: Row(
                     children: [
                       Icon(
-                        overflow[i].icon ?? _iconForLabel(overflow[i].label),
+                        overflow[i].icon ??
+                            resolveRowActionIcon(overflow[i].label),
                         size: 16,
                         color: overflow[i].destructive
                             ? theme.colorScheme.error
@@ -129,7 +130,7 @@ class _ActionIconButton extends StatelessWidget {
   }
 }
 
-IconData _iconForLabel(String label) {
+IconData resolveRowActionIcon(String label) {
   switch (label) {
     case '查看':
     case '详情':

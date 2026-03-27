@@ -1,20 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
-import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/suppliers/application/supplier_view_model.dart';
 import 'package:work_order_app/src/features/suppliers/data/supplier_api_service.dart';
@@ -46,65 +36,54 @@ class SupplierListEntry extends StatelessWidget {
 class SupplierListPage extends StatelessWidget {
   const SupplierListPage({super.key});
 
-  @override
-  Widget build(BuildContext context) => const _SupplierListView();
-}
+  static const CrudDeleteConfig<Supplier> _deleteConfig = CrudDeleteConfig(
+    title: '确认删除',
+    summaryBuilder: _buildDeleteSummary,
+    impactsBuilder: _buildDeleteImpacts,
+    auditHintBuilder: _buildDeleteAuditHint,
+    confirmText: '确认删除',
+    errorMessagePrefix: '删除失败: ',
+  );
 
-class _SupplierListView extends StatefulWidget {
-  const _SupplierListView();
-
-  @override
-  State<_SupplierListView> createState() => _SupplierListViewState();
-}
-
-class _SupplierListViewState extends State<_SupplierListView> {
-  static const _searchDebounceDuration = Duration(milliseconds: 450);
-  static const double _searchWidth = 300;
-  static const double _spacingSm = LayoutTokens.gapSm;
-  static const String _emptyCellText = '-';
-
-  static const String _searchHintText = '搜索供应商名称/编码';
-  static const String _refreshButtonText = '刷新';
-  static const String _createButtonText = '新建供应商';
-  static const String _emptyText = '暂无供应商数据';
-  static const String _errorFallbackText = '加载失败';
-  static const String _retryText = '重新加载';
-  static const String _deleteDialogTitle = '确认删除';
-  static const String _deleteDialogContent = '确定要删除供应商 \"{name}\" 吗？此操作不可恢复。';
-  static const String _cancelText = '取消';
-  static const String _deleteText = '删除';
-  static const String _deleteSuccessText = '删除成功';
-  static const String _deleteFailedText = '删除失败: ';
-  static const String _createSuccessText = '创建成功';
-  static const String _updateSuccessText = '更新成功';
-  static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
-  static const String _pageSizeLabel = '每页 {size}';
-
-  final TextEditingController _searchController = TextEditingController();
-  Timer? _searchDebounce;
+  static const CrudListConfig<Supplier, SupplierViewModel> _config =
+      CrudListConfig(
+    searchHintText: '搜索供应商名称/编码',
+    emptyText: '暂无供应商数据',
+    emptyIcon: Icons.storefront_outlined,
+    loadItems: _loadSuppliers,
+    titleBuilder: _titleText,
+    subtitleBuilder: _subtitleText,
+    summaryChipsBuilder: _summaryChips,
+    summaryFieldsBuilder: _summaryFields,
+    headerActionsBuilder: _headerActions,
+    rowActionsBuilder: _rowActions,
+    columns: [
+      CrudTableColumn(label: '供应商', cellBuilder: _buildNameCell),
+      CrudTableColumn(label: '编码', cellBuilder: _buildCodeCell),
+      CrudTableColumn(label: '联系人', cellBuilder: _buildContactCell),
+      CrudTableColumn(label: '电话', cellBuilder: _buildPhoneCell),
+      CrudTableColumn(label: '状态', cellBuilder: _buildStatusCell),
+      CrudTableColumn(label: '物料数', cellBuilder: _buildMaterialCountCell),
+    ],
+  );
 
   @override
-  void dispose() {
-    _searchDebounce?.cancel();
-    _searchController.dispose();
-    super.dispose();
+  Widget build(BuildContext context) {
+    return const CrudListPage<Supplier, SupplierViewModel>(config: _config);
   }
 
-  void _scheduleSearch(SupplierViewModel viewModel, {bool immediate = false}) {
-    _searchDebounce?.cancel();
-    if (immediate) {
-      viewModel.setSearchText(_searchController.text.trim());
-      viewModel.loadSuppliers(resetPage: true);
-      return;
-    }
-    _searchDebounce = Timer(_searchDebounceDuration, () {
-      viewModel.setSearchText(_searchController.text.trim());
-      viewModel.loadSuppliers(resetPage: true);
-    });
+  static Future<void> _loadSuppliers(
+    SupplierViewModel viewModel, {
+    bool resetPage = false,
+  }) {
+    return viewModel.loadSuppliers(resetPage: resetPage);
   }
 
-  Future<void> _openEditPage(BuildContext context, SupplierViewModel viewModel,
-      Supplier? supplier) async {
+  static Future<void> _openEditPage(
+    BuildContext context,
+    SupplierViewModel viewModel,
+    Supplier? supplier,
+  ) async {
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => ChangeNotifierProvider.value(
@@ -113,345 +92,165 @@ class _SupplierListViewState extends State<_SupplierListView> {
         ),
       ),
     );
-    if (!mounted) return;
     if (result == true) {
-      ToastUtil.showSuccess(
-          supplier == null ? _createSuccessText : _updateSuccessText);
+      ToastUtil.showSuccess(supplier == null ? '创建成功' : '更新成功');
     }
   }
 
-  Future<void> _confirmDelete(BuildContext context, SupplierViewModel viewModel,
-      Supplier supplier) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(_deleteDialogTitle),
-        content:
-            Text(_deleteDialogContent.replaceFirst('{name}', supplier.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(_cancelText),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(_deleteText),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-
-    try {
-      await viewModel.deleteSupplier(supplier.id);
-      if (!mounted) return;
-      ToastUtil.showSuccess(_deleteSuccessText);
-    } catch (err) {
-      if (!mounted) return;
-      ToastUtil.showError('$_deleteFailedText$err');
-    }
-  }
-
-  static String _pageInfoText(SupplierViewModel viewModel) {
-    return _pageInfoTemplate
-        .replaceFirst('{page}', viewModel.page.toString())
-        .replaceFirst('{total}', viewModel.totalPages.toString())
-        .replaceFirst('{count}', viewModel.total.toString());
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isMobile = BreakpointsUtil.isMobile(context);
-
-    return Consumer<SupplierViewModel>(
-      builder: (context, viewModel, _) {
-        final suppliers = viewModel.suppliers;
-        return ListPageScaffold(
-          spacing: _spacingSm,
-          header: _buildPageHeader(context, viewModel, isMobile),
-          body: _buildListBody(context, viewModel, suppliers, isMobile),
-          footer: viewModel.totalPages > 1
-              ? ResponsivePaginationBar(
-                  infoText: _pageInfoText(viewModel),
-                  page: viewModel.page,
-                  pageSize: viewModel.pageSize,
-                  pageSizeOptions: viewModel.pageSizeOptions,
-                  onPageSizeChanged: viewModel.setPageSize,
-                  onPrev: () => viewModel.setPage(viewModel.page - 1),
-                  onNext: () => viewModel.setPage(viewModel.page + 1),
-                  hasPrev: viewModel.hasPrev,
-                  hasNext: viewModel.hasNext,
-                  pageSizeLabelBuilder: (size) =>
-                      _pageSizeLabel.replaceFirst('{size}', size.toString()),
-                )
-              : null,
-        );
-      },
-    );
-  }
-
-  Widget _buildListBody(
-    BuildContext context,
-    SupplierViewModel viewModel,
-    List<Supplier> suppliers,
-    bool isMobile,
-  ) {
-    final sectionSpacing = LayoutTokens.sectionSpacing(context);
-    if (viewModel.loading && suppliers.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (viewModel.errorMessage != null && !viewModel.loading) {
-      return ErrorStateCard(
-        message: viewModel.errorMessage ?? _errorFallbackText,
-        retryLabel: _retryText,
-        onRetry: () => viewModel.loadSuppliers(resetPage: true),
-      );
-    }
-    if (!viewModel.loading && suppliers.isEmpty) {
-      return const EmptyStateCard(
-        icon: Icons.storefront_outlined,
-        text: _emptyText,
-      );
-    }
-
-    if (!isMobile) {
-      return _buildDesktopTable(context, viewModel, suppliers);
-    }
-
-    return ListView.separated(
-      itemCount: suppliers.length,
-      separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
-      itemBuilder: (context, index) {
-        final supplier = suppliers[index];
-        return _buildSummaryCard(context, viewModel, supplier, isMobile);
-      },
-    );
-  }
-
-  Widget _buildDesktopTable(
-    BuildContext context,
-    SupplierViewModel viewModel,
-    List<Supplier> suppliers,
-  ) {
-    final theme = Theme.of(context);
-    final textStyle = theme.textTheme.bodySmall;
-    return AppDataTable(
-      columns: const [
-        DataColumn(label: Text('供应商')),
-        DataColumn(label: Text('编码')),
-        DataColumn(label: Text('联系人')),
-        DataColumn(label: Text('电话')),
-        DataColumn(label: Text('状态')),
-        DataColumn(label: Text('物料数')),
-        DataColumn(label: Text('操作')),
-      ],
-      rows: suppliers
-          .map(
-            (supplier) => DataRow(
-              cells: [
-                DataCell(Text(
-                  _displayText(supplier.name),
-                  style: theme.textTheme.bodyMedium,
-                )),
-                DataCell(Text(_displayText(supplier.code), style: textStyle)),
-                DataCell(Text(_displayText(supplier.contactPerson),
-                    style: textStyle)),
-                DataCell(Text(_displayText(supplier.phone), style: textStyle)),
-                DataCell(Text(_displayStatus(supplier), style: textStyle)),
-                DataCell(Text(_displayNumber(supplier.materialCount),
-                    style: textStyle)),
-                DataCell(RowActionGroup(
-                  actions: [
-                    RowAction(
-                      label: '编辑',
-                      onPressed: () =>
-                          _openEditPage(context, viewModel, supplier),
-                    ),
-                    RowAction(
-                      label: '删除',
-                      onPressed: () =>
-                          _confirmDelete(context, viewModel, supplier),
-                      destructive: true,
-                    ),
-                  ],
-                )),
-              ],
-            ),
-          )
-          .toList(),
-    );
-  }
-
-  Widget _buildPageHeader(
-    BuildContext context,
-    SupplierViewModel viewModel,
-    bool isMobile,
-  ) {
-    return PageHeaderBar(
-      breadcrumb: null,
-      useSurface: false,
-      showDivider: false,
-      padding: EdgeInsets.zero,
-      actions: LayoutBuilder(
-        builder: (context, constraints) {
-          final searchField = ListSearchField(
-            controller: _searchController,
-            hintText: _searchHintText,
-            height: PageActionStyle.height,
-            width: isMobile ? constraints.maxWidth : _searchWidth,
-            onChanged: (_) => _scheduleSearch(viewModel),
-            onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
-            onClear: () {
-              _searchController.clear();
-              _scheduleSearch(viewModel, immediate: true);
-            },
-          );
-
-          final actions = <Widget>[
-            PageActionButton.outlined(
-              onPressed: () => viewModel.loadSuppliers(resetPage: true),
-              icon: const Icon(Icons.refresh, size: 16),
-              label: _refreshButtonText,
-            ),
-            PageActionButton.filled(
-              onPressed: () => _openEditPage(context, viewModel, null),
-              icon: const Icon(Icons.add),
-              label: _createButtonText,
-            ),
-          ];
-
-          return ListToolbar(
-            isMobile: isMobile,
-            searchField: searchField,
-            actions: actions,
-            spacing: _spacingSm,
-          );
-        },
-      ),
-    );
-  }
-
-  static String _displayText(String? value) {
-    final text = value?.trim() ?? '';
-    return text.isEmpty ? _emptyCellText : text;
-  }
-
-  static String _displayNumber(int? value) {
-    if (value == null) return _emptyCellText;
-    return value.toString();
-  }
-
-  Widget _buildSummaryCard(
+  static Future<void> _confirmDelete(
     BuildContext context,
     SupplierViewModel viewModel,
     Supplier supplier,
-    bool isMobile,
   ) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>();
-    final sectionSpacing = LayoutTokens.sectionSpacing(context);
-    final code = _displayText(supplier.code);
-    final name = _displayText(supplier.name);
-    final contact = _displayText(supplier.contactPerson);
-    final phone = _displayText(supplier.phone);
-    final email = _displayText(supplier.email);
-    final statusText = _displayStatus(supplier);
-    final materialCount = _displayNumber(supplier.materialCount);
-    final notes = _displayText(supplier.notes);
-
-    return ExpandableSummaryCard(
-      headerBuilder: (context, expanded) {
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: colors?.sidebarText,
-                    ),
-                  ),
-                  SizedBox(height: sectionSpacing),
-                  Text(
-                    '$code · $contact',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colors?.subtleText ?? theme.hintColor,
-                    ),
-                  ),
-                  SizedBox(height: sectionSpacing),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _SummaryChip(label: '状态', value: statusText),
-                      _SummaryChip(label: '物料数', value: materialCount),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(width: sectionSpacing),
-            AnimatedRotation(
-              turns: expanded ? 0.5 : 0.0,
-              duration: const Duration(milliseconds: 200),
-              child: Icon(
-                Icons.expand_more,
-                size: 20,
-                color: colors?.subtleText ?? theme.hintColor,
-              ),
-            ),
-          ],
-        );
-      },
-      expandedChild: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SummaryFieldWrap(
-            isMobile: isMobile,
-            children: [
-              _SummaryField(label: '编码', value: code),
-              _SummaryField(label: '联系人', value: contact),
-              _SummaryField(label: '电话', value: phone),
-              _SummaryField(label: '邮箱', value: email),
-              _SummaryField(label: '状态', value: statusText),
-              _SummaryField(label: '供应物料数', value: materialCount),
-              _SummaryField(label: '备注', value: notes),
-            ],
-          ),
-          SizedBox(height: sectionSpacing),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              OutlinedButton.icon(
-                onPressed: () => _openEditPage(context, viewModel, supplier),
-                icon: const Icon(Icons.edit, size: 16),
-                label: const Text('编辑'),
-              ),
-              OutlinedButton.icon(
-                onPressed: () => _confirmDelete(context, viewModel, supplier),
-                icon: const Icon(Icons.delete_outline, size: 16),
-                label: const Text('删除'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: theme.colorScheme.error,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+    return confirmCrudDeletion(
+      context,
+      item: supplier,
+      onDelete: (item) => viewModel.deleteSupplier(item.id),
+      config: _deleteConfig,
     );
   }
 
-  static String _displayStatus(Supplier supplier) {
-    final label = supplier.statusDisplay ?? supplier.status ?? _emptyCellText;
-    return _displayText(label);
+  static List<Widget> _headerActions(
+    BuildContext context,
+    SupplierViewModel viewModel,
+  ) {
+    return [
+      PageActionButton.filled(
+        onPressed: () => _openEditPage(context, viewModel, null),
+        icon: const Icon(Icons.add),
+        label: '新建供应商',
+      ),
+    ];
+  }
+
+  static List<RowAction> _rowActions(
+    BuildContext context,
+    SupplierViewModel viewModel,
+    Supplier supplier,
+  ) {
+    return [
+      RowAction(
+        label: '编辑',
+        onPressed: () => _openEditPage(context, viewModel, supplier),
+      ),
+      RowAction(
+        label: '删除',
+        onPressed: () => _confirmDelete(context, viewModel, supplier),
+        destructive: true,
+      ),
+    ];
+  }
+
+  static Widget _buildNameCell(BuildContext context, Supplier supplier) {
+    return Text(
+      _titleText(supplier),
+      style: Theme.of(context).textTheme.bodyMedium,
+    );
+  }
+
+  static Widget _buildCodeCell(BuildContext context, Supplier supplier) {
+    return _buildBodyText(context, CrudValueFormatter.text(supplier.code));
+  }
+
+  static Widget _buildContactCell(BuildContext context, Supplier supplier) {
+    return _buildBodyText(
+      context,
+      CrudValueFormatter.text(supplier.contactPerson),
+    );
+  }
+
+  static Widget _buildPhoneCell(BuildContext context, Supplier supplier) {
+    return _buildBodyText(context, CrudValueFormatter.text(supplier.phone));
+  }
+
+  static Widget _buildStatusCell(BuildContext context, Supplier supplier) {
+    return _buildBodyText(context, _statusText(supplier));
+  }
+
+  static Widget _buildMaterialCountCell(
+      BuildContext context, Supplier supplier) {
+    return _buildBodyText(
+      context,
+      CrudValueFormatter.number(supplier.materialCount),
+    );
+  }
+
+  static Widget _buildBodyText(BuildContext context, String value) {
+    return Text(
+      value,
+      style: Theme.of(context).textTheme.bodySmall,
+    );
+  }
+
+  static String _titleText(Supplier supplier) {
+    return CrudValueFormatter.text(supplier.name);
+  }
+
+  static String _subtitleText(Supplier supplier) {
+    return '${CrudValueFormatter.text(supplier.code)} · '
+        '${CrudValueFormatter.text(supplier.contactPerson)}';
+  }
+
+  static List<CrudSummaryChipData> _summaryChips(Supplier supplier) {
+    return [
+      CrudSummaryChipData(label: '状态', value: _statusText(supplier)),
+      CrudSummaryChipData(
+        label: '物料数',
+        value: CrudValueFormatter.number(supplier.materialCount),
+      ),
+    ];
+  }
+
+  static List<CrudSummaryFieldData> _summaryFields(Supplier supplier) {
+    return [
+      CrudSummaryFieldData(
+        label: '编码',
+        value: CrudValueFormatter.text(supplier.code),
+      ),
+      CrudSummaryFieldData(
+        label: '联系人',
+        value: CrudValueFormatter.text(supplier.contactPerson),
+      ),
+      CrudSummaryFieldData(
+        label: '电话',
+        value: CrudValueFormatter.text(supplier.phone),
+      ),
+      CrudSummaryFieldData(
+        label: '邮箱',
+        value: CrudValueFormatter.text(supplier.email),
+      ),
+      CrudSummaryFieldData(
+        label: '状态',
+        value: _statusText(supplier),
+      ),
+      CrudSummaryFieldData(
+        label: '供应物料数',
+        value: CrudValueFormatter.number(supplier.materialCount),
+      ),
+      CrudSummaryFieldData(
+        label: '备注',
+        value: CrudValueFormatter.text(supplier.notes),
+      ),
+    ];
+  }
+
+  static String _statusText(Supplier supplier) {
+    return CrudValueFormatter.text(supplier.statusDisplay ?? supplier.status);
+  }
+
+  static String _buildDeleteSummary(Supplier supplier) {
+    return '即将删除供应商 ${_titleText(supplier)}。删除后，相关采购、物料绑定和历史记录可能无法完整追溯。';
+  }
+
+  static List<String> _buildDeleteImpacts(Supplier supplier) {
+    return [
+      '供应商编码：${CrudValueFormatter.text(supplier.code)}',
+      '如已有采购单、送货单或物料引用，删除可能失败或需要先解除关联',
+      '删除后不能直接恢复，建议先确认该供应商已停止使用且不再参与历史追溯',
+    ];
+  }
+
+  static String _buildDeleteAuditHint(Supplier supplier) {
+    return '如果只是暂停合作，优先考虑保留供应商资料并停用，而不是直接删除。';
   }
 }
-
-typedef _SummaryField = SummaryField;
-typedef _SummaryChip = SummaryChip;

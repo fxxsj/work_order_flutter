@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/risk_action_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/action_decision_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/suppliers/domain/supplier.dart';
@@ -410,60 +410,26 @@ Future<String?> showStatementConfirmDialog(
   BuildContext context, {
   required bool confirmed,
 }) async {
-  final notesController = TextEditingController();
-  try {
-    final confirmedResult = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(confirmed ? '确认对账单' : '标记为有异议'),
-        content: SizedBox(
-          width: 520,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              RiskActionHintPanel(
-                summary: confirmed
-                    ? '确认后，这张对账单会作为当前往来结论进入后续财务跟进。'
-                    : '标记为有异议后，这张对账单需要重新核差，相关收款或付款判断应暂缓。',
-                impacts: confirmed
-                    ? const [
-                        '请先确认期初、借贷方和期末余额已核对完成',
-                        '错误确认会影响后续收付款和经营分析',
-                      ]
-                    : const [
-                        '请在备注中写清差异原因和下一步责任人',
-                        '如果只是待补资料，建议说明预计补齐时间',
-                      ],
-                auditHint:
-                    confirmed ? '确认说明可作为后续财务追踪依据。' : '异议说明会保留在审计与对账处理记录中。',
-                destructive: !confirmed,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: notesController,
-                decoration: InputDecoration(
-                  labelText: confirmed ? '确认说明（可选）' : '异议说明（可选）',
-                ),
-                maxLines: 3,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(confirmed ? '确认' : '提交'),
-          ),
-        ],
-      ),
-    );
-    if (confirmedResult != true) return null;
-    return notesController.text.trim();
-  } finally {
-    notesController.dispose();
-  }
+  final result = await showActionDecisionDialog<void>(
+    context,
+    title: confirmed ? '确认对账单' : '标记为有异议',
+    summary: confirmed
+        ? '确认后，这张对账单会作为当前往来结论进入后续财务跟进。'
+        : '标记为有异议后，这张对账单需要重新核差，相关收款或付款判断应暂缓。',
+    impacts: confirmed
+        ? const [
+            '请先确认期初、借贷方和期末余额已核对完成',
+            '错误确认会影响后续收付款和经营分析',
+          ]
+        : const [
+            '请在备注中写清差异原因和下一步责任人',
+            '如果只是待补资料，建议说明预计补齐时间',
+          ],
+    auditHint: confirmed ? '确认说明可作为后续财务追踪依据。' : '异议说明会保留在审计与对账处理记录中。',
+    destructive: !confirmed,
+    notesLabel: confirmed ? '确认说明（可选）' : '异议说明（可选）',
+    notesMaxLines: 3,
+    submitText: confirmed ? '确认' : '提交',
+  );
+  return result?.notes;
 }

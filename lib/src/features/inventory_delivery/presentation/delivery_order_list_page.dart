@@ -9,6 +9,8 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/action_decision_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -95,7 +97,6 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
   static const String _editTitle = '编辑发货单';
   static const String _detailTitle = '发货单详情';
   static const String _deleteTitle = '删除发货单';
-  static const String _deleteContent = '确认删除该发货单？';
   static const String _deleteSuccessText = '发货单已删除';
   static const String _deleteErrorText = '删除失败: ';
   static const String _statusFilterLabel = '发货状态';
@@ -111,6 +112,15 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     'jpg',
     'jpeg',
   ];
+  static const CrudDeleteConfig<DeliveryOrder> _deleteConfig = CrudDeleteConfig(
+    title: _deleteTitle,
+    summaryBuilder: _buildDeleteSummary,
+    impactsBuilder: _buildDeleteImpacts,
+    auditHintBuilder: _buildDeleteAuditHint,
+    confirmText: '确认删除',
+    successMessageBuilder: _buildDeleteSuccessMessage,
+    errorMessagePrefix: _deleteErrorText,
+  );
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
@@ -330,38 +340,51 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     }
   }
 
+  static String _deliveryLabel(DeliveryOrder order) {
+    final number = order.orderNumber.trim();
+    if (number.isNotEmpty) {
+      return number;
+    }
+    return '发货单 #${order.id}';
+  }
+
+  static String _buildDeleteSummary(DeliveryOrder order) {
+    return '即将删除发货单 ${_deliveryLabel(order)}。删除后，当前发货记录及后续签收追踪将一并失效。';
+  }
+
+  static List<String> _buildDeleteImpacts(DeliveryOrder order) {
+    return [
+      '客户：${CrudValueFormatter.text(order.customerName)}',
+      '状态：${CrudValueFormatter.text(order.statusDisplay ?? order.status)}',
+      if ((order.salesOrderNumber ?? '').trim().isNotEmpty)
+        '客户订单：${order.salesOrderNumber!.trim()}',
+      if ((order.logisticsCompany ?? '').trim().isNotEmpty)
+        '物流公司：${order.logisticsCompany!.trim()}',
+    ];
+  }
+
+  static String _buildDeleteAuditHint(DeliveryOrder order) {
+    return '如果该发货单已发货或已签收，建议优先保留记录并通过异常处理或作废流程纠正。';
+  }
+
+  static String _buildDeleteSuccessMessage(DeliveryOrder order) {
+    return _deleteSuccessText;
+  }
+
   Future<void> _confirmDelete(
     DeliveryOrderViewModel viewModel,
     DeliveryOrder order,
   ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text(_deleteTitle),
-        content: const Text(_deleteContent),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text(_cancelText),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('删除'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
     final apiService = context.read<DeliveryOrderApiService>();
-    try {
-      await apiService.deleteDeliveryOrder(order.id);
-      if (!mounted) return;
-      ToastUtil.showSuccess(_deleteSuccessText);
-      await viewModel.loadDeliveryOrders(resetPage: false);
-    } catch (err) {
-      if (!mounted) return;
-      ToastUtil.showError('$_deleteErrorText$err');
-    }
+    await confirmCrudDeletion(
+      context,
+      item: order,
+      onDelete: (item) async {
+        await apiService.deleteDeliveryOrder(item.id);
+        await viewModel.loadDeliveryOrders(resetPage: false);
+      },
+      config: _deleteConfig,
+    );
   }
 
   Future<void> _openFormDialog(
@@ -661,98 +684,49 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     DeliveryOrder order,
   ) async {
     final apiService = context.read<DeliveryOrderApiService>();
-    String resolution = (order.exceptionResolution ?? '').trim();
-    final notesController = TextEditingController(
-      text: order.exceptionResolutionNotes ?? '',
+    final decision = await showActionDecisionDialog<String>(
+      context,
+      title: _hasResolvedRejectedException(order) ? '更新拒收处理' : '登记拒收处理',
+      summary: '请登记当前发货单的拒收处理方案，处理记录会直接影响后续补发、终止交付和客户沟通跟进。',
+      impacts: [
+        '客户：${CrudValueFormatter.text(order.customerName)}',
+        '发货单号：${_deliveryLabel(order)}',
+        if ((order.salesOrderNumber ?? '').trim().isNotEmpty)
+          '客户订单：${order.salesOrderNumber!.trim()}',
+      ],
+      auditHint: '请填写明确的处理结论和执行说明，便于后续追踪责任与闭环。',
+      selectionLabel: '处理结论',
+      options: const [
+        ActionDecisionOption(value: 'reship', label: '安排补发'),
+        ActionDecisionOption(value: 'terminate', label: '终止交付'),
+      ],
+      initialSelection: (order.exceptionResolution ?? '').trim().isEmpty
+          ? null
+          : order.exceptionResolution!.trim(),
+      requireSelection: true,
+      selectionErrorText: '请选择处理结论',
+      notesLabel: '处理说明',
+      notesHint: '填写补发计划、终止原因、客户沟通结果等',
+      initialNotes: order.exceptionResolutionNotes ?? '',
+      requireNotes: true,
+      notesErrorText: '请填写处理说明',
+      submitText: '保存处理',
     );
-    bool submitting = false;
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            Future<void> submit() async {
-              final trimmedNotes = notesController.text.trim();
-              if (resolution.isEmpty) {
-                ToastUtil.showError('请选择处理结论');
-                return;
-              }
-              if (trimmedNotes.isEmpty) {
-                ToastUtil.showError('请填写处理说明');
-                return;
-              }
-              setState(() => submitting = true);
-              try {
-                await apiService.resolveException(order.id, {
-                  'resolution': resolution,
-                  'resolution_notes': trimmedNotes,
-                });
-                if (!mounted) return;
-                Navigator.of(dialogContext).pop();
-                ToastUtil.showSuccess('拒收处理已登记');
-                await viewModel.loadDeliveryOrders(resetPage: false);
-              } catch (err) {
-                if (!mounted) return;
-                setState(() => submitting = false);
-                ToastUtil.showError('登记拒收处理失败: $err');
-              }
-            }
-
-            return AlertDialog(
-              title: Text(
-                _hasResolvedRejectedException(order) ? '更新拒收处理' : '登记拒收处理',
-              ),
-              content: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SearchableDropdownFormField<String>(
-                      key: ValueKey<String>(resolution),
-                      initialValue: resolution,
-                      decoration: const InputDecoration(labelText: '处理结论'),
-                      items: const [
-                        DropdownMenuItem(value: 'reship', child: Text('安排补发')),
-                        DropdownMenuItem(
-                            value: 'terminate', child: Text('终止交付')),
-                      ],
-                      onChanged: submitting
-                          ? null
-                          : (value) => setState(() => resolution = value ?? ''),
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: notesController,
-                      enabled: !submitting,
-                      maxLines: 4,
-                      decoration: const InputDecoration(
-                        labelText: '处理说明',
-                        hintText: '填写补发计划、终止原因、客户沟通结果等',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: submitting
-                      ? null
-                      : () => Navigator.of(dialogContext).pop(),
-                  child: const Text(_cancelText),
-                ),
-                FilledButton(
-                  onPressed: submitting ? null : submit,
-                  child: Text(submitting ? '提交中...' : '保存处理'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-
-    notesController.dispose();
+    if (decision == null || decision.selection == null) {
+      return;
+    }
+    try {
+      await apiService.resolveException(order.id, {
+        'resolution': decision.selection,
+        'resolution_notes': decision.notes,
+      });
+      if (!mounted) return;
+      ToastUtil.showSuccess('拒收处理已登记');
+      await viewModel.loadDeliveryOrders(resetPage: false);
+    } catch (err) {
+      if (!mounted) return;
+      ToastUtil.showError('登记拒收处理失败: $err');
+    }
   }
 
   static String _pageInfoText(DeliveryOrderViewModel viewModel) {

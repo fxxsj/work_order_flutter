@@ -7,6 +7,8 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/action_decision_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -78,6 +80,26 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
   static const String _retryText = '重新加载';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
   static const String _pageSizeLabel = '每页 {size}';
+  static const CrudActionConfig<SalesOrder> _submitOrderConfig =
+      CrudActionConfig(
+    title: '提交订单',
+    summaryBuilder: _submitSummary,
+    impactsBuilder: _submitImpacts,
+    auditHintBuilder: _submitAuditHint,
+    confirmText: '确认提交',
+    successMessageBuilder: _submitSuccessMessage,
+    errorMessagePrefix: '提交失败: ',
+  );
+  static const CrudActionConfig<SalesOrder> _completeOrderConfig =
+      CrudActionConfig(
+    title: '完成订单',
+    summaryBuilder: _completeSummary,
+    impactsBuilder: _completeImpacts,
+    auditHintBuilder: _completeAuditHint,
+    confirmText: '确认完成',
+    successMessageBuilder: _completeSuccessMessage,
+    errorMessagePrefix: '完成失败: ',
+  );
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
@@ -141,30 +163,37 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     SalesOrderViewModel viewModel,
     SalesOrder order,
   ) async {
-    final confirmed = await showSalesOrderConfirmDialog(
+    await confirmCrudAction(
       context,
-      title: '提交订单',
-      content: '确认提交该客户订单吗？',
-      confirmText: '提交',
+      item: order,
+      onConfirm: (item) async {
+        await _actionService!.submit(item.id);
+        await viewModel.loadSalesOrders(resetPage: false);
+      },
+      config: _submitOrderConfig,
     );
-    if (!confirmed) return;
-    try {
-      await _actionService!.submit(order.id);
-      ToastUtil.showSuccess('已提交');
-      await viewModel.loadSalesOrders(resetPage: false);
-    } catch (err) {
-      ToastUtil.showError('提交失败: $err');
-    }
   }
 
   Future<void> _approveOrder(
     SalesOrderViewModel viewModel,
     SalesOrder order,
   ) async {
-    final result = await showSalesOrderApproveDialog(context);
+    final result = await showActionDecisionDialog<void>(
+      context,
+      title: '审核通过',
+      summary: '通过后，客户订单会进入生产准备和后续履约流程。',
+      impacts: const [
+        '请确认客户信息、产品规格、交期与金额已核对无误',
+        '通过后通常会进入施工单生成和排产准备',
+      ],
+      auditHint: '审批说明会进入业务与审计记录，建议保留必要结论。',
+      notesLabel: '审核意见（可选）',
+      notesMaxLines: 3,
+      submitText: '通过',
+    );
     if (result == null) return;
     try {
-      await _actionService!.approve(order.id, comment: result.comment);
+      await _actionService!.approve(order.id, comment: result.notes);
       ToastUtil.showSuccess('已审核通过');
       await viewModel.loadSalesOrders(resetPage: false);
     } catch (err) {
@@ -176,18 +205,29 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     SalesOrderViewModel viewModel,
     SalesOrder order,
   ) async {
-    final result = await showSalesOrderRejectDialog(context);
+    final result = await showActionDecisionDialog<void>(
+      context,
+      title: '审核拒绝',
+      summary: '拒绝客户订单后，业务需要补充资料或重新确认交期后再提交。',
+      impacts: const [
+        '请把缺少的资料、需要修改的内容写清楚',
+        '只写“有问题”会导致业务反复确认，无法直接修正',
+      ],
+      auditHint: '拒绝原因会直接进入审批和审计记录，后续会被客户、业务、生产共同参考。',
+      destructive: true,
+      notesLabel: '拒绝原因',
+      requireNotes: true,
+      notesErrorText: '请填写拒绝原因',
+      extraNotesLabel: '审核意见（可选）',
+      extraNotesMaxLines: 3,
+      submitText: '拒绝',
+    );
     if (result == null) return;
-    final reason = result.reason ?? '';
-    if (reason.isEmpty) {
-      ToastUtil.showError('请填写拒绝原因');
-      return;
-    }
     try {
       await _actionService!.reject(
         order.id,
-        reason: reason,
-        comment: result.comment,
+        reason: result.notes,
+        comment: result.extraNotes,
       );
       ToastUtil.showSuccess('已拒绝');
       await viewModel.loadSalesOrders(resetPage: false);
@@ -200,20 +240,15 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     SalesOrderViewModel viewModel,
     SalesOrder order,
   ) async {
-    final confirmed = await showSalesOrderConfirmDialog(
+    await confirmCrudAction(
       context,
-      title: '完成订单',
-      content: '确认标记该订单为已完成吗？',
-      confirmText: '完成',
+      item: order,
+      onConfirm: (item) async {
+        await _actionService!.complete(item.id);
+        await viewModel.loadSalesOrders(resetPage: false);
+      },
+      config: _completeOrderConfig,
     );
-    if (!confirmed) return;
-    try {
-      await _actionService!.complete(order.id);
-      ToastUtil.showSuccess('已完成');
-      await viewModel.loadSalesOrders(resetPage: false);
-    } catch (err) {
-      ToastUtil.showError('操作失败: $err');
-    }
   }
 
   void _goToCreateDeliveryOrder(SalesOrder order) {
@@ -224,10 +259,23 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     SalesOrderViewModel viewModel,
     SalesOrder order,
   ) async {
-    final reason = await showSalesOrderCancelDialog(context);
-    if (reason == null) return;
+    final decision = await showActionDecisionDialog<void>(
+      context,
+      title: '取消订单',
+      summary: '取消客户订单会中断后续施工、发货和财务闭环，相关部门需要同步停单。',
+      impacts: const [
+        '如果已排产或已出货，请先确认是否应走变更、退货或异常流程',
+        '建议填写取消原因，便于业务和财务后续对账追踪',
+      ],
+      auditHint: '订单取消原因会影响后续争议处理和经营复盘。',
+      destructive: true,
+      notesLabel: '取消原因（可选）',
+      notesMaxLines: 3,
+      submitText: '确认取消',
+    );
+    if (decision == null) return;
     try {
-      await _actionService!.cancel(order.id, reason: reason);
+      await _actionService!.cancel(order.id, reason: decision.notes);
       ToastUtil.showSuccess('已取消');
       await viewModel.loadSalesOrders(resetPage: false);
     } catch (err) {
@@ -575,6 +623,48 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     final text = value?.trim() ?? '';
     return text.isEmpty ? _SalesOrderSummaryCard._emptyCellText : text;
   }
+
+  static String _orderLabel(SalesOrder order) {
+    return _displayText(order.orderNumber);
+  }
+
+  static String _customerLabel(SalesOrder order) {
+    return _displayText(order.customerName);
+  }
+
+  static String _submitSummary(SalesOrder order) {
+    return '即将提交客户订单 ${_orderLabel(order)}。提交后，订单会进入业务审核流程。';
+  }
+
+  static List<String> _submitImpacts(SalesOrder order) {
+    return [
+      '客户：${_customerLabel(order)}',
+      '提交后建议尽快跟进审核，避免影响交期和生产准备',
+    ];
+  }
+
+  static String _submitAuditHint(SalesOrder order) {
+    return '提交记录会进入订单流转日志，建议先确认核心字段已填写完整。';
+  }
+
+  static String _submitSuccessMessage(SalesOrder order) => '已提交';
+
+  static String _completeSummary(SalesOrder order) {
+    return '即将完成客户订单 ${_orderLabel(order)}。完成后，该订单会进入后续发货和结算阶段。';
+  }
+
+  static List<String> _completeImpacts(SalesOrder order) {
+    return [
+      '客户：${_customerLabel(order)}',
+      '请确认生产和交付条件已满足，避免过早完结影响后续跟踪',
+    ];
+  }
+
+  static String _completeAuditHint(SalesOrder order) {
+    return '完成操作会影响后续发货与经营统计，建议先核对履约状态。';
+  }
+
+  static String _completeSuccessMessage(SalesOrder order) => '已完成';
 
   static String _workOrderText(SalesOrder order) {
     final count = order.workOrderCount ?? 0;

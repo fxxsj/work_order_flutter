@@ -1,20 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
-import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/departments/application/department_view_model.dart';
 import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
@@ -47,66 +37,56 @@ class DepartmentListEntry extends StatelessWidget {
 class DepartmentListPage extends StatelessWidget {
   const DepartmentListPage({super.key});
 
-  @override
-  Widget build(BuildContext context) => const _DepartmentListView();
-}
+  static const CrudDeleteConfig<Department> _deleteConfig = CrudDeleteConfig(
+    title: '确认删除',
+    summaryBuilder: _buildDeleteSummary,
+    impactsBuilder: _buildDeleteImpacts,
+    auditHintBuilder: _buildDeleteAuditHint,
+    confirmText: '确认删除',
+    errorMessagePrefix: '删除失败: ',
+  );
 
-class _DepartmentListView extends StatefulWidget {
-  const _DepartmentListView();
-
-  @override
-  State<_DepartmentListView> createState() => _DepartmentListViewState();
-}
-
-class _DepartmentListViewState extends State<_DepartmentListView> {
-  static const _searchDebounceDuration = Duration(milliseconds: 450);
-  static const double _searchWidth = 300;
-  static const double _spacingSm = LayoutTokens.gapSm;
-  static const String _emptyCellText = '-';
-
-  static const String _searchHintText = '搜索部门名称、编码';
-  static const String _refreshButtonText = '刷新';
-  static const String _createButtonText = '新建部门';
-  static const String _emptyText = '暂无部门数据';
-  static const String _errorFallbackText = '加载失败';
-  static const String _retryText = '重新加载';
-  static const String _deleteDialogTitle = '确认删除';
-  static const String _deleteDialogContent = '确定要删除部门 "{name}" 吗？此操作不可恢复。';
-  static const String _cancelText = '取消';
-  static const String _deleteText = '删除';
-  static const String _deleteSuccessText = '删除成功';
-  static const String _deleteFailedText = '删除失败: ';
-  static const String _createSuccessText = '创建成功';
-  static const String _updateSuccessText = '更新成功';
-  static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
-  static const String _pageSizeLabel = '每页 {size}';
-
-  final TextEditingController _searchController = TextEditingController();
-  Timer? _searchDebounce;
+  static const CrudListConfig<Department, DepartmentViewModel> _config =
+      CrudListConfig(
+    searchHintText: '搜索部门名称、编码',
+    emptyText: '暂无部门数据',
+    emptyIcon: Icons.apartment_outlined,
+    loadItems: _loadDepartments,
+    titleBuilder: _titleText,
+    subtitleBuilder: _subtitleText,
+    summaryChipsBuilder: _summaryChips,
+    summaryFieldsBuilder: _summaryFields,
+    headerActionsBuilder: _headerActions,
+    rowActionsBuilder: _rowActions,
+    columns: [
+      CrudTableColumn(label: '部门', cellBuilder: _buildNameCell),
+      CrudTableColumn(label: '编码', cellBuilder: _buildCodeCell),
+      CrudTableColumn(label: '上级部门', cellBuilder: _buildParentCell),
+      CrudTableColumn(label: '子部门', cellBuilder: _buildChildrenCountCell),
+      CrudTableColumn(label: '工序', cellBuilder: _buildProcessesCell),
+      CrudTableColumn(label: '排序', cellBuilder: _buildSortOrderCell),
+      CrudTableColumn(label: '状态', cellBuilder: _buildStatusCell),
+      CrudTableColumn(label: '创建时间', cellBuilder: _buildCreatedAtCell),
+    ],
+  );
 
   @override
-  void dispose() {
-    _searchDebounce?.cancel();
-    _searchController.dispose();
-    super.dispose();
+  Widget build(BuildContext context) {
+    return const CrudListPage<Department, DepartmentViewModel>(config: _config);
   }
 
-  void _scheduleSearch(DepartmentViewModel viewModel,
-      {bool immediate = false}) {
-    _searchDebounce?.cancel();
-    if (immediate) {
-      viewModel.setSearchText(_searchController.text.trim());
-      viewModel.loadDepartments(resetPage: true);
-      return;
-    }
-    _searchDebounce = Timer(_searchDebounceDuration, () {
-      viewModel.setSearchText(_searchController.text.trim());
-      viewModel.loadDepartments(resetPage: true);
-    });
+  static Future<void> _loadDepartments(
+    DepartmentViewModel viewModel, {
+    bool resetPage = false,
+  }) {
+    return viewModel.loadDepartments(resetPage: resetPage);
   }
 
-  Future<void> _openEditPage(BuildContext context,
-      DepartmentViewModel viewModel, Department? department) async {
+  static Future<void> _openEditPage(
+    BuildContext context,
+    DepartmentViewModel viewModel,
+    Department? department,
+  ) async {
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => ChangeNotifierProvider.value(
@@ -115,365 +95,197 @@ class _DepartmentListViewState extends State<_DepartmentListView> {
         ),
       ),
     );
-    if (!mounted) return;
     if (result == true) {
-      ToastUtil.showSuccess(
-          department == null ? _createSuccessText : _updateSuccessText);
+      ToastUtil.showSuccess(department == null ? '创建成功' : '更新成功');
     }
   }
 
-  Future<void> _confirmDelete(BuildContext context,
-      DepartmentViewModel viewModel, Department department) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(_deleteDialogTitle),
-        content:
-            Text(_deleteDialogContent.replaceFirst('{name}', department.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(_cancelText),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(_deleteText),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-
-    try {
-      await viewModel.deleteDepartment(department.id);
-      if (!mounted) return;
-      ToastUtil.showSuccess(_deleteSuccessText);
-    } catch (err) {
-      if (!mounted) return;
-      ToastUtil.showError('$_deleteFailedText$err');
-    }
-  }
-
-  static String _pageInfoText(DepartmentViewModel viewModel) {
-    return _pageInfoTemplate
-        .replaceFirst('{page}', viewModel.page.toString())
-        .replaceFirst('{total}', viewModel.totalPages.toString())
-        .replaceFirst('{count}', viewModel.total.toString());
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isMobile = BreakpointsUtil.isMobile(context);
-
-    return Consumer<DepartmentViewModel>(
-      builder: (context, viewModel, _) {
-        final departments = viewModel.departments;
-        return ListPageScaffold(
-          spacing: _spacingSm,
-          header: _buildPageHeader(context, viewModel, isMobile),
-          body: _buildListBody(context, viewModel, departments, isMobile),
-          footer: viewModel.totalPages > 1
-              ? ResponsivePaginationBar(
-                  infoText: _pageInfoText(viewModel),
-                  page: viewModel.page,
-                  pageSize: viewModel.pageSize,
-                  pageSizeOptions: viewModel.pageSizeOptions,
-                  onPageSizeChanged: viewModel.setPageSize,
-                  onPrev: () => viewModel.setPage(viewModel.page - 1),
-                  onNext: () => viewModel.setPage(viewModel.page + 1),
-                  hasPrev: viewModel.hasPrev,
-                  hasNext: viewModel.hasNext,
-                  pageSizeLabelBuilder: (size) =>
-                      _pageSizeLabel.replaceFirst('{size}', size.toString()),
-                )
-              : null,
-        );
-      },
-    );
-  }
-
-  Widget _buildListBody(
-    BuildContext context,
-    DepartmentViewModel viewModel,
-    List<Department> departments,
-    bool isMobile,
-  ) {
-    final sectionSpacing = LayoutTokens.sectionSpacing(context);
-    if (viewModel.loading && departments.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (viewModel.errorMessage != null && !viewModel.loading) {
-      return ErrorStateCard(
-        message: viewModel.errorMessage ?? _errorFallbackText,
-        retryLabel: _retryText,
-        onRetry: () => viewModel.loadDepartments(resetPage: true),
-      );
-    }
-    if (!viewModel.loading && departments.isEmpty) {
-      return const EmptyStateCard(
-        icon: Icons.apartment_outlined,
-        text: _emptyText,
-      );
-    }
-
-    if (!isMobile) {
-      return _buildDesktopTable(context, viewModel, departments);
-    }
-
-    return ListView.separated(
-      itemCount: departments.length,
-      separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
-      itemBuilder: (context, index) {
-        final department = departments[index];
-        return _buildSummaryCard(context, viewModel, department, isMobile);
-      },
-    );
-  }
-
-  Widget _buildDesktopTable(
-    BuildContext context,
-    DepartmentViewModel viewModel,
-    List<Department> departments,
-  ) {
-    final theme = Theme.of(context);
-    final textStyle = theme.textTheme.bodySmall;
-    return AppDataTable(
-      columns: const [
-        DataColumn(label: Text('部门')),
-        DataColumn(label: Text('编码')),
-        DataColumn(label: Text('上级部门')),
-        DataColumn(label: Text('子部门')),
-        DataColumn(label: Text('工序')),
-        DataColumn(label: Text('排序')),
-        DataColumn(label: Text('状态')),
-        DataColumn(label: Text('创建时间')),
-        DataColumn(label: Text('操作')),
-      ],
-      rows: departments
-          .map(
-            (department) => DataRow(
-              cells: [
-                DataCell(Text(
-                  _displayText(department.name),
-                  style: theme.textTheme.bodyMedium,
-                )),
-                DataCell(Text(_displayText(department.code), style: textStyle)),
-                DataCell(Text(_displayText(department.parentName),
-                    style: textStyle)),
-                DataCell(Text(
-                    department.childrenCount?.toString() ?? _emptyCellText,
-                    style: textStyle)),
-                DataCell(Text(
-                    department.processNames.isEmpty
-                        ? _emptyCellText
-                        : department.processNames.join('、'),
-                    style: textStyle)),
-                DataCell(Text(_displayNumber(department.sortOrder),
-                    style: textStyle)),
-                DataCell(
-                    Text(department.isActive ? '启用' : '禁用', style: textStyle)),
-                DataCell(Text(_formatDateTime(department.createdAt),
-                    style: textStyle)),
-                DataCell(RowActionGroup(
-                  actions: [
-                    RowAction(
-                      label: '编辑',
-                      onPressed: () =>
-                          _openEditPage(context, viewModel, department),
-                    ),
-                    RowAction(
-                      label: '删除',
-                      onPressed: () =>
-                          _confirmDelete(context, viewModel, department),
-                      destructive: true,
-                    ),
-                  ],
-                )),
-              ],
-            ),
-          )
-          .toList(),
-    );
-  }
-
-  Widget _buildPageHeader(
-    BuildContext context,
-    DepartmentViewModel viewModel,
-    bool isMobile,
-  ) {
-    return PageHeaderBar(
-      breadcrumb: null,
-      useSurface: false,
-      showDivider: false,
-      padding: EdgeInsets.zero,
-      actions: LayoutBuilder(
-        builder: (context, constraints) {
-          final searchField = ListSearchField(
-            controller: _searchController,
-            hintText: _searchHintText,
-            height: PageActionStyle.height,
-            width: isMobile ? constraints.maxWidth : _searchWidth,
-            onChanged: (_) => _scheduleSearch(viewModel),
-            onSubmitted: (_) => _scheduleSearch(viewModel, immediate: true),
-            onClear: () {
-              _searchController.clear();
-              _scheduleSearch(viewModel, immediate: true);
-            },
-          );
-
-          final actions = <Widget>[
-            PageActionButton.outlined(
-              onPressed: () => viewModel.loadDepartments(resetPage: true),
-              icon: const Icon(Icons.refresh, size: 16),
-              label: _refreshButtonText,
-            ),
-            PageActionButton.filled(
-              onPressed: () => _openEditPage(context, viewModel, null),
-              icon: const Icon(Icons.add),
-              label: _createButtonText,
-            ),
-          ];
-
-          return ListToolbar(
-            isMobile: isMobile,
-            searchField: searchField,
-            actions: actions,
-            spacing: _spacingSm,
-          );
-        },
-      ),
-    );
-  }
-
-  static String _displayText(String? value) {
-    final text = value?.trim() ?? '';
-    return text.isEmpty ? _emptyCellText : text;
-  }
-
-  static String _displayNumber(int? value) {
-    if (value == null) return _emptyCellText;
-    return value.toString();
-  }
-
-  static String _formatDateTime(DateTime? value) {
-    if (value == null) return _emptyCellText;
-    final local = value.toLocal();
-    final year = local.year.toString().padLeft(4, '0');
-    final month = local.month.toString().padLeft(2, '0');
-    final day = local.day.toString().padLeft(2, '0');
-    final hour = local.hour.toString().padLeft(2, '0');
-    final minute = local.minute.toString().padLeft(2, '0');
-    return '$year-$month-$day $hour:$minute';
-  }
-
-  Widget _buildSummaryCard(
+  static Future<void> _confirmDelete(
     BuildContext context,
     DepartmentViewModel viewModel,
     Department department,
-    bool isMobile,
   ) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>();
-    final sectionSpacing = LayoutTokens.sectionSpacing(context);
-    final code = _displayText(department.code);
-    final name = _displayText(department.name);
-    final parent = _displayText(department.parentName);
-    final childrenCount = _displayNumber(department.childrenCount);
-    final processes = department.processNames.isEmpty
-        ? _emptyCellText
-        : department.processNames.join('、');
-    final sortOrder = _displayNumber(department.sortOrder);
-    final statusText = department.isActive ? '启用' : '禁用';
-    final createdAt = _formatDateTime(department.createdAt);
-
-    return ExpandableSummaryCard(
-      headerBuilder: (context, expanded) {
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: colors?.sidebarText,
-                    ),
-                  ),
-                  SizedBox(height: sectionSpacing),
-                  Text(
-                    '$code · $parent',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colors?.subtleText ?? theme.hintColor,
-                    ),
-                  ),
-                  SizedBox(height: sectionSpacing),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _SummaryChip(label: '状态', value: statusText),
-                      _SummaryChip(label: '子部门', value: childrenCount),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(width: sectionSpacing),
-            AnimatedRotation(
-              turns: expanded ? 0.5 : 0.0,
-              duration: const Duration(milliseconds: 200),
-              child: Icon(
-                Icons.expand_more,
-                size: 20,
-                color: colors?.subtleText ?? theme.hintColor,
-              ),
-            ),
-          ],
-        );
-      },
-      expandedChild: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SummaryFieldWrap(
-            isMobile: isMobile,
-            children: [
-              _SummaryField(label: '编码', value: code),
-              _SummaryField(label: '上级部门', value: parent),
-              _SummaryField(label: '子部门', value: childrenCount),
-              _SummaryField(label: '工序', value: processes),
-              _SummaryField(label: '排序', value: sortOrder),
-              _SummaryField(label: '状态', value: statusText),
-              _SummaryField(label: '创建时间', value: createdAt),
-            ],
-          ),
-          SizedBox(height: sectionSpacing),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              OutlinedButton.icon(
-                onPressed: () => _openEditPage(context, viewModel, department),
-                icon: const Icon(Icons.edit, size: 16),
-                label: const Text('编辑'),
-              ),
-              OutlinedButton.icon(
-                onPressed: () => _confirmDelete(context, viewModel, department),
-                icon: const Icon(Icons.delete_outline, size: 16),
-                label: const Text('删除'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: theme.colorScheme.error,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+    return confirmCrudDeletion(
+      context,
+      item: department,
+      onDelete: (item) => viewModel.deleteDepartment(item.id),
+      config: _deleteConfig,
     );
   }
-}
 
-typedef _SummaryField = SummaryField;
-typedef _SummaryChip = SummaryChip;
+  static List<Widget> _headerActions(
+    BuildContext context,
+    DepartmentViewModel viewModel,
+  ) {
+    return [
+      PageActionButton.filled(
+        onPressed: () => _openEditPage(context, viewModel, null),
+        icon: const Icon(Icons.add),
+        label: '新建部门',
+      ),
+    ];
+  }
+
+  static List<RowAction> _rowActions(
+    BuildContext context,
+    DepartmentViewModel viewModel,
+    Department department,
+  ) {
+    return [
+      RowAction(
+        label: '编辑',
+        onPressed: () => _openEditPage(context, viewModel, department),
+      ),
+      RowAction(
+        label: '删除',
+        onPressed: () => _confirmDelete(context, viewModel, department),
+        destructive: true,
+      ),
+    ];
+  }
+
+  static Widget _buildNameCell(BuildContext context, Department department) {
+    return Text(
+      _titleText(department),
+      style: Theme.of(context).textTheme.bodyMedium,
+    );
+  }
+
+  static Widget _buildCodeCell(BuildContext context, Department department) {
+    return _buildBodyText(context, CrudValueFormatter.text(department.code));
+  }
+
+  static Widget _buildParentCell(BuildContext context, Department department) {
+    return _buildBodyText(
+      context,
+      CrudValueFormatter.text(department.parentName),
+    );
+  }
+
+  static Widget _buildChildrenCountCell(
+    BuildContext context,
+    Department department,
+  ) {
+    return _buildBodyText(
+      context,
+      CrudValueFormatter.number(department.childrenCount),
+    );
+  }
+
+  static Widget _buildProcessesCell(
+      BuildContext context, Department department) {
+    return _buildBodyText(context, _processesText(department));
+  }
+
+  static Widget _buildSortOrderCell(
+    BuildContext context,
+    Department department,
+  ) {
+    return _buildBodyText(
+      context,
+      CrudValueFormatter.number(department.sortOrder),
+    );
+  }
+
+  static Widget _buildStatusCell(BuildContext context, Department department) {
+    return _buildBodyText(context, _statusText(department));
+  }
+
+  static Widget _buildCreatedAtCell(
+    BuildContext context,
+    Department department,
+  ) {
+    return _buildBodyText(
+      context,
+      CrudValueFormatter.dateTime(department.createdAt),
+    );
+  }
+
+  static Widget _buildBodyText(BuildContext context, String value) {
+    return Text(
+      value,
+      style: Theme.of(context).textTheme.bodySmall,
+    );
+  }
+
+  static String _titleText(Department department) {
+    return CrudValueFormatter.text(department.name);
+  }
+
+  static String _subtitleText(Department department) {
+    return '${CrudValueFormatter.text(department.code)} · '
+        '${CrudValueFormatter.text(department.parentName)}';
+  }
+
+  static String _statusText(Department department) {
+    return department.isActive ? '启用' : '禁用';
+  }
+
+  static String _processesText(Department department) {
+    if (department.processNames.isEmpty) {
+      return CrudValueFormatter.empty;
+    }
+    return department.processNames.join('、');
+  }
+
+  static List<CrudSummaryChipData> _summaryChips(Department department) {
+    return [
+      CrudSummaryChipData(label: '状态', value: _statusText(department)),
+      CrudSummaryChipData(
+        label: '子部门',
+        value: CrudValueFormatter.number(department.childrenCount),
+      ),
+    ];
+  }
+
+  static List<CrudSummaryFieldData> _summaryFields(Department department) {
+    return [
+      CrudSummaryFieldData(
+        label: '编码',
+        value: CrudValueFormatter.text(department.code),
+      ),
+      CrudSummaryFieldData(
+        label: '上级部门',
+        value: CrudValueFormatter.text(department.parentName),
+      ),
+      CrudSummaryFieldData(
+        label: '子部门',
+        value: CrudValueFormatter.number(department.childrenCount),
+      ),
+      CrudSummaryFieldData(
+        label: '工序',
+        value: _processesText(department),
+      ),
+      CrudSummaryFieldData(
+        label: '排序',
+        value: CrudValueFormatter.number(department.sortOrder),
+      ),
+      CrudSummaryFieldData(
+        label: '状态',
+        value: _statusText(department),
+      ),
+      CrudSummaryFieldData(
+        label: '创建时间',
+        value: CrudValueFormatter.dateTime(department.createdAt),
+      ),
+    ];
+  }
+
+  static String _buildDeleteSummary(Department department) {
+    return '即将删除部门 ${_titleText(department)}。删除后，组织层级和相关业务配置可能受到影响。';
+  }
+
+  static List<String> _buildDeleteImpacts(Department department) {
+    return [
+      '部门编码：${CrudValueFormatter.text(department.code)}',
+      if ((department.childrenCount ?? 0) > 0)
+        '当前存在 ${department.childrenCount} 个子部门，删除前需要先调整层级关系',
+      if (department.processNames.isNotEmpty)
+        '已关联工序：${department.processNames.join('、')}',
+    ];
+  }
+
+  static String _buildDeleteAuditHint(Department department) {
+    return '若只是停用部门，优先考虑调整状态或迁移人员归属，而不是直接删除。';
+  }
+}

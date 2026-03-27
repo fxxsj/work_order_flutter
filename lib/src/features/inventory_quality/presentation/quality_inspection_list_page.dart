@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/action_decision_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/approval_rejection_notice_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
@@ -554,100 +555,51 @@ class _QualityInspectionListViewState
     QualityInspectionViewModel viewModel,
     QualityInspection inspection,
   ) async {
-    String disposition = (inspection.disposition ?? '').trim();
-    final notesController = TextEditingController(
-      text: inspection.dispositionNotes ?? '',
+    final decision = await showActionDecisionDialog<String>(
+      context,
+      title: _hasRecordedExceptionAction(inspection) ? '更新异常处理' : '登记异常处理',
+      summary: '请记录当前质检异常的处理方案，处理结论会影响返工、报废、退货或放行后的后续流程。',
+      impacts: [
+        '质检单号：${_displayText(inspection.inspectionNumber)}',
+        '产品：${_displayText(inspection.productName)}',
+        '检验结果：${_displayText(inspection.resultDisplay ?? inspection.result)}',
+        if (inspection.defects.isNotEmpty) '缺陷：${inspection.defects.join('、')}',
+      ],
+      auditHint: '请填写清晰的处理结论和说明，便于后续复检、责任追踪和审计复盘。',
+      selectionLabel: '处理结论',
+      options: const [
+        ActionDecisionOption(value: 'accept', label: '接收放行'),
+        ActionDecisionOption(value: 'rework', label: '安排返工'),
+        ActionDecisionOption(value: 'scrap', label: '判定报废'),
+        ActionDecisionOption(value: 'return', label: '退货处理'),
+      ],
+      initialSelection: (inspection.disposition ?? '').trim().isEmpty
+          ? null
+          : inspection.disposition!.trim(),
+      requireSelection: true,
+      selectionErrorText: '请选择处理结论',
+      notesLabel: '处理说明',
+      notesHint: '填写返工安排、责任人、复检要求或放行范围',
+      initialNotes: inspection.dispositionNotes ?? '',
+      requireNotes: true,
+      notesErrorText: '请填写处理说明',
+      submitText: '保存处理',
     );
-    bool submitting = false;
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            Future<void> submit() async {
-              final trimmedNotes = notesController.text.trim();
-              if (disposition.isEmpty) {
-                ToastUtil.showError('请选择处理结论');
-                return;
-              }
-              if (trimmedNotes.isEmpty) {
-                ToastUtil.showError('请填写处理说明');
-                return;
-              }
-              setState(() => submitting = true);
-              try {
-                await viewModel.updateInspection(inspection.id, {
-                  'disposition': disposition,
-                  'disposition_notes': trimmedNotes,
-                });
-                if (!mounted) return;
-                Navigator.of(dialogContext).pop();
-                ToastUtil.showSuccess('异常处理已登记');
-                await viewModel.loadInspections(resetPage: false);
-              } catch (err) {
-                if (!mounted) return;
-                setState(() => submitting = false);
-                ToastUtil.showError('登记异常处理失败: $err');
-              }
-            }
-
-            return AlertDialog(
-              title: Text(_hasRecordedExceptionAction(inspection)
-                  ? '更新异常处理'
-                  : '登记异常处理'),
-              content: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SearchableDropdownFormField<String>(
-                      key: ValueKey<String>(disposition),
-                      initialValue: disposition,
-                      decoration: const InputDecoration(labelText: '处理结论'),
-                      items: const [
-                        DropdownMenuItem(value: 'accept', child: Text('接收放行')),
-                        DropdownMenuItem(value: 'rework', child: Text('安排返工')),
-                        DropdownMenuItem(value: 'scrap', child: Text('判定报废')),
-                        DropdownMenuItem(value: 'return', child: Text('退货处理')),
-                      ],
-                      onChanged: submitting
-                          ? null
-                          : (value) =>
-                              setState(() => disposition = value ?? ''),
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: notesController,
-                      enabled: !submitting,
-                      maxLines: 4,
-                      decoration: const InputDecoration(
-                        labelText: '处理说明',
-                        hintText: '填写返工安排、责任人、复检要求或放行范围',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: submitting
-                      ? null
-                      : () => Navigator.of(dialogContext).pop(),
-                  child: const Text(_cancelText),
-                ),
-                FilledButton(
-                  onPressed: submitting ? null : submit,
-                  child: Text(submitting ? '提交中...' : '保存处理'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-
-    notesController.dispose();
+    if (decision == null || decision.selection == null) {
+      return;
+    }
+    try {
+      await viewModel.updateInspection(inspection.id, {
+        'disposition': decision.selection,
+        'disposition_notes': decision.notes,
+      });
+      if (!mounted) return;
+      ToastUtil.showSuccess('异常处理已登记');
+      await viewModel.loadInspections(resetPage: false);
+    } catch (err) {
+      if (!mounted) return;
+      ToastUtil.showError('登记异常处理失败: $err');
+    }
   }
 
   Widget _buildListBody(

@@ -11,6 +11,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_detail.dart';
+import 'package:work_order_app/src/features/inventory_shared/presentation/widgets/inventory_document_form_dialog.dart';
 import 'package:work_order_app/src/features/stock_out/data/stock_out_support_service.dart';
 
 class StockOutListEntry extends StatelessWidget {
@@ -263,111 +264,65 @@ class StockOutListEntry extends StatelessWidget {
       text: record?.getString('notes') ?? '',
     );
 
-    await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        bool loading = false;
-        return StatefulBuilder(
-          builder: (context, setState) => AlertDialog(
-            title: Text(isEdit ? '编辑出库单' : '新建出库单'),
-            content: SizedBox(
-              width: 520,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SearchableDropdownFormField<String>(
-                      initialValue: outTypeController.text,
-                      isExpanded: true,
-                      decoration: const InputDecoration(labelText: '出库类型'),
-                      items: _outTypeOptions
-                          .map(
-                            (option) => DropdownMenuItem(
-                              value: option.value,
-                              child: Text(option.label),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) =>
-                          outTypeController.text = value ?? 'delivery',
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: deliveryOrderController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: '发货单ID（可选）'),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: dateController,
-                      readOnly: true,
-                      decoration: const InputDecoration(labelText: '出库日期'),
-                      onTap: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate: DateTime.tryParse(dateController.text) ??
-                              DateTime.now(),
-                          firstDate: DateTime(2020),
-                          lastDate: DateTime(2100),
-                        );
-                        if (picked != null) {
-                          dateController.text = _formatDate(picked);
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: notesController,
-                      decoration: const InputDecoration(labelText: '备注'),
-                      maxLines: 3,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed:
-                    loading ? null : () => Navigator.of(context).pop(false),
-                child: const Text('取消'),
-              ),
-              FilledButton(
-                onPressed: loading
-                    ? null
-                    : () async {
-                        setState(() => loading = true);
-                        try {
-                          final payload = <String, dynamic>{
-                            'out_type': outTypeController.text.trim(),
-                            'stock_out_date': dateController.text.trim(),
-                            'notes': notesController.text.trim(),
-                          };
-                          final deliveryOrderId =
-                              int.tryParse(deliveryOrderController.text.trim());
-                          if (deliveryOrderId != null) {
-                            payload['delivery_order'] = deliveryOrderId;
-                          }
-                          await supportService.save(
-                            id: isEdit ? recordId : null,
-                            payload: payload,
-                          );
-                          if (!context.mounted) return;
-                          context
-                              .read<GenericListViewModel>()
-                              .reload(resetPage: true);
-                          Navigator.of(context).pop(true);
-                          ToastUtil.showSuccess(isEdit ? '已更新' : '已创建');
-                        } catch (err) {
-                          ToastUtil.showError('保存失败: $err');
-                        } finally {
-                          if (context.mounted) setState(() => loading = false);
-                        }
-                      },
-                child: Text(loading ? '保存中' : '保存'),
-              ),
-            ],
+    await showInventoryDocumentFormDialog(
+      context,
+      title: isEdit ? '编辑出库单' : '新建出库单',
+      dateLabel: '出库日期',
+      dateController: dateController,
+      notesController: notesController,
+      fieldsBuilder: (context, setState, submitting) => [
+        SearchableDropdownFormField<String>(
+          initialValue: outTypeController.text,
+          isExpanded: true,
+          decoration: const InputDecoration(
+            labelText: '出库类型',
+            border: OutlineInputBorder(),
           ),
-        );
+          items: _outTypeOptions
+              .map(
+                (option) => DropdownMenuItem(
+                  value: option.value,
+                  child: Text(option.label),
+                ),
+              )
+              .toList(),
+          onChanged: submitting
+              ? null
+              : (value) => outTypeController.text = value ?? 'delivery',
+        ),
+        TextField(
+          controller: deliveryOrderController,
+          enabled: !submitting,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: '发货单ID（可选）',
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ],
+      onSubmit: () async {
+        try {
+          final payload = <String, dynamic>{
+            'out_type': outTypeController.text.trim(),
+            'stock_out_date': dateController.text.trim(),
+            'notes': notesController.text.trim(),
+          };
+          final deliveryOrderId =
+              int.tryParse(deliveryOrderController.text.trim());
+          if (deliveryOrderId != null) {
+            payload['delivery_order'] = deliveryOrderId;
+          }
+          await supportService.save(
+            id: isEdit ? recordId : null,
+            payload: payload,
+          );
+          if (!context.mounted) return;
+          context.read<GenericListViewModel>().reload(resetPage: true);
+          Navigator.of(context).pop(true);
+          ToastUtil.showSuccess(isEdit ? '已更新' : '已创建');
+        } catch (err) {
+          ToastUtil.showError('保存失败: $err');
+        }
       },
     );
 
