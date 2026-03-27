@@ -10,6 +10,7 @@ import 'package:work_order_app/src/features/dies/domain/die.dart';
 import 'package:work_order_app/src/features/embossing_plates/domain/embossing_plate.dart';
 import 'package:work_order_app/src/features/foiling_plates/domain/foiling_plate.dart';
 import 'package:work_order_app/src/features/materials/domain/material.dart';
+import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
 import 'package:work_order_app/src/features/workorders/presentation/work_order_form_page.dart';
@@ -129,8 +130,6 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
   const WorkOrderBasicInfoSection({
     super.key,
     required this.mode,
-    required this.customerId,
-    required this.customers,
     required this.status,
     required this.priority,
     required this.orderDateController,
@@ -139,7 +138,6 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
     required this.defectiveQuantityController,
     required this.actualDeliveryDateController,
     required this.notesController,
-    required this.onCustomerChanged,
     required this.onStatusChanged,
     required this.onPriorityChanged,
     required this.onPickOrderDate,
@@ -148,8 +146,6 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
   });
 
   final WorkOrderFormMode mode;
-  final int? customerId;
-  final List<Customer> customers;
   final String status;
   final String priority;
   final TextEditingController orderDateController;
@@ -158,7 +154,6 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
   final TextEditingController defectiveQuantityController;
   final TextEditingController actualDeliveryDateController;
   final TextEditingController notesController;
-  final ValueChanged<int?> onCustomerChanged;
   final ValueChanged<String?> onStatusChanged;
   final ValueChanged<String?> onPriorityChanged;
   final VoidCallback onPickOrderDate;
@@ -172,21 +167,6 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SearchableDropdownFormField<int>(
-            initialValue: customerId,
-            decoration: const InputDecoration(labelText: '客户'),
-            items: customers
-                .map(
-                  (item) => DropdownMenuItem(
-                    value: item.id,
-                    child: Text(item.name),
-                  ),
-                )
-                .toList(),
-            onChanged: onCustomerChanged,
-            validator: (value) => value == null ? '请选择客户' : null,
-          ),
-          const SizedBox(height: 12),
           LayoutBuilder(
             builder: (context, constraints) {
               final maxWidth = constraints.maxWidth;
@@ -316,6 +296,40 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
   }
 }
 
+class WorkOrderCustomerSection extends StatelessWidget {
+  const WorkOrderCustomerSection({
+    super.key,
+    required this.customerId,
+    required this.customers,
+    required this.onCustomerChanged,
+  });
+
+  final int? customerId;
+  final List<Customer> customers;
+  final ValueChanged<int?> onCustomerChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return WorkOrderFormSectionCard(
+      title: '客户信息',
+      child: SearchableDropdownFormField<int>(
+        initialValue: customerId,
+        decoration: const InputDecoration(labelText: '客户'),
+        items: customers
+            .map(
+              (item) => DropdownMenuItem(
+                value: item.id,
+                child: Text(item.name),
+              ),
+            )
+            .toList(),
+        onChanged: onCustomerChanged,
+        validator: (value) => value == null ? '请选择客户' : null,
+      ),
+    );
+  }
+}
+
 class WorkOrderProductListSection extends StatelessWidget {
   const WorkOrderProductListSection({
     super.key,
@@ -391,6 +405,36 @@ class WorkOrderMaterialListSection extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class WorkOrderProcessConfigSection extends StatelessWidget {
+  const WorkOrderProcessConfigSection({
+    super.key,
+    required this.processes,
+    required this.processIds,
+    required this.onSelectionChanged,
+  });
+
+  final List<Process> processes;
+  final Set<int> processIds;
+  final VoidCallback onSelectionChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return WorkOrderFormSectionCard(
+      title: '工序配置',
+      child: WorkOrderMultiSelectChips(
+        items: processes
+            .map((item) => WorkOrderOptionItem(item.id, item.name))
+            .toList(),
+        selected: processIds,
+        emptyText: '暂无工序数据',
+        title: '工序选择',
+        placeholder: '请选择工序（可多选）',
+        onChanged: onSelectionChanged,
       ),
     );
   }
@@ -586,6 +630,166 @@ class WorkOrderResourcesSection extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+}
+
+class WorkOrderFormContent extends StatelessWidget {
+  const WorkOrderFormContent({
+    super.key,
+    required this.mode,
+    required this.customerId,
+    required this.customers,
+    required this.status,
+    required this.priority,
+    required this.orderDateController,
+    required this.deliveryDateController,
+    required this.productionQuantityController,
+    required this.defectiveQuantityController,
+    required this.actualDeliveryDateController,
+    required this.notesController,
+    required this.productDrafts,
+    required this.products,
+    required this.processes,
+    required this.processIds,
+    required this.materialDrafts,
+    required this.materials,
+    required this.printingType,
+    required this.printingCmyk,
+    required this.printingOtherColorsController,
+    required this.artworks,
+    required this.artworkIds,
+    required this.dies,
+    required this.dieIds,
+    required this.foilingPlates,
+    required this.foilingPlateIds,
+    required this.embossingPlates,
+    required this.embossingPlateIds,
+    required this.onCustomerChanged,
+    required this.onStatusChanged,
+    required this.onPriorityChanged,
+    required this.onPickOrderDate,
+    required this.onPickDeliveryDate,
+    required this.onPickActualDeliveryDate,
+    required this.onAddProduct,
+    required this.onRemoveProduct,
+    required this.onProcessSelectionChanged,
+    required this.onAddMaterial,
+    required this.onRemoveMaterial,
+    required this.onPrintingTypeChanged,
+    required this.onToggleCmyk,
+    required this.onResourceSelectionChanged,
+    this.sectionSpacing = LayoutTokens.gapLg,
+  });
+
+  final WorkOrderFormMode mode;
+  final int? customerId;
+  final List<Customer> customers;
+  final String status;
+  final String priority;
+  final TextEditingController orderDateController;
+  final TextEditingController deliveryDateController;
+  final TextEditingController productionQuantityController;
+  final TextEditingController defectiveQuantityController;
+  final TextEditingController actualDeliveryDateController;
+  final TextEditingController notesController;
+  final List<WorkOrderProductDraft> productDrafts;
+  final List<ProductOption> products;
+  final List<Process> processes;
+  final Set<int> processIds;
+  final List<WorkOrderMaterialDraft> materialDrafts;
+  final List<MaterialItem> materials;
+  final String printingType;
+  final Set<String> printingCmyk;
+  final TextEditingController printingOtherColorsController;
+  final List<Artwork> artworks;
+  final Set<int> artworkIds;
+  final List<Die> dies;
+  final Set<int> dieIds;
+  final List<FoilingPlate> foilingPlates;
+  final Set<int> foilingPlateIds;
+  final List<EmbossingPlate> embossingPlates;
+  final Set<int> embossingPlateIds;
+  final ValueChanged<int?> onCustomerChanged;
+  final ValueChanged<String?> onStatusChanged;
+  final ValueChanged<String?> onPriorityChanged;
+  final VoidCallback onPickOrderDate;
+  final VoidCallback onPickDeliveryDate;
+  final VoidCallback onPickActualDeliveryDate;
+  final VoidCallback onAddProduct;
+  final ValueChanged<int> onRemoveProduct;
+  final VoidCallback onProcessSelectionChanged;
+  final VoidCallback onAddMaterial;
+  final ValueChanged<int> onRemoveMaterial;
+  final ValueChanged<String?> onPrintingTypeChanged;
+  final ValueChanged<String> onToggleCmyk;
+  final VoidCallback onResourceSelectionChanged;
+  final double sectionSpacing;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      children: [
+        WorkOrderCustomerSection(
+          customerId: customerId,
+          customers: customers,
+          onCustomerChanged: onCustomerChanged,
+        ),
+        SizedBox(height: sectionSpacing),
+        WorkOrderBasicInfoSection(
+          mode: mode,
+          status: status,
+          priority: priority,
+          orderDateController: orderDateController,
+          deliveryDateController: deliveryDateController,
+          productionQuantityController: productionQuantityController,
+          defectiveQuantityController: defectiveQuantityController,
+          actualDeliveryDateController: actualDeliveryDateController,
+          notesController: notesController,
+          onStatusChanged: onStatusChanged,
+          onPriorityChanged: onPriorityChanged,
+          onPickOrderDate: onPickOrderDate,
+          onPickDeliveryDate: onPickDeliveryDate,
+          onPickActualDeliveryDate: onPickActualDeliveryDate,
+        ),
+        SizedBox(height: sectionSpacing),
+        WorkOrderProductListSection(
+          drafts: productDrafts,
+          products: products,
+          onAdd: onAddProduct,
+          onRemove: onRemoveProduct,
+        ),
+        SizedBox(height: sectionSpacing),
+        WorkOrderProcessConfigSection(
+          processes: processes,
+          processIds: processIds,
+          onSelectionChanged: onProcessSelectionChanged,
+        ),
+        SizedBox(height: sectionSpacing),
+        WorkOrderMaterialListSection(
+          drafts: materialDrafts,
+          materials: materials,
+          onAdd: onAddMaterial,
+          onRemove: onRemoveMaterial,
+        ),
+        SizedBox(height: sectionSpacing),
+        WorkOrderResourcesSection(
+          printingType: printingType,
+          printingCmyk: printingCmyk,
+          printingOtherColorsController: printingOtherColorsController,
+          artworks: artworks,
+          artworkIds: artworkIds,
+          dies: dies,
+          dieIds: dieIds,
+          foilingPlates: foilingPlates,
+          foilingPlateIds: foilingPlateIds,
+          embossingPlates: embossingPlates,
+          embossingPlateIds: embossingPlateIds,
+          onPrintingTypeChanged: onPrintingTypeChanged,
+          onToggleCmyk: onToggleCmyk,
+          onSelectionChanged: onResourceSelectionChanged,
+        ),
+      ],
     );
   }
 }

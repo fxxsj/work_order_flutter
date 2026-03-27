@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
@@ -24,7 +25,6 @@ import 'package:work_order_app/src/features/workorders/data/work_order_repositor
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
 import 'package:work_order_app/src/features/workorders/presentation/work_order_form_state.dart';
-import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_form_row_widgets.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_form_sections.dart';
 
 enum WorkOrderFormMode { create, edit }
@@ -64,7 +64,6 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
   final _formKey = GlobalKey<FormState>();
   final _draft = WorkOrderFormDraftState();
   static const double _spacing = 12;
-  static const double _sectionSpacing = 16;
 
   List<Customer> _customers = [];
   List<ProductOption> _products = [];
@@ -223,8 +222,10 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     return showDialog<bool>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('工序已更新'),
+        return BaseDialog(
+          title: '工序已更新',
+          maxWidth: 420,
+          scrollable: false,
           content: const Text('检测到工序选择已变更，是否前往任务同步预览？'),
           actions: [
             TextButton(
@@ -282,93 +283,66 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
             )
           : Form(
               key: _formKey,
-              child: ListView(
-                children: [
-                  WorkOrderBasicInfoSection(
-                    mode: widget.mode,
-                    customerId: _draft.customerId,
-                    customers: _customers,
-                    status: _draft.status,
-                    priority: _draft.priority,
-                    orderDateController: _draft.orderDateController,
-                    deliveryDateController: _draft.deliveryDateController,
-                    productionQuantityController:
-                        _draft.productionQuantityController,
-                    defectiveQuantityController:
-                        _draft.defectiveQuantityController,
-                    actualDeliveryDateController:
-                        _draft.actualDeliveryDateController,
-                    notesController: _draft.notesController,
-                    onCustomerChanged: (value) =>
-                        setState(() => _draft.customerId = value),
-                    onStatusChanged: (value) =>
-                        setState(() => _draft.status = value ?? 'pending'),
-                    onPriorityChanged: (value) =>
-                        setState(() => _draft.priority = value ?? 'normal'),
-                    onPickOrderDate: () => _pickDate(isOrderDate: true),
-                    onPickDeliveryDate: () => _pickDate(isOrderDate: false),
-                    onPickActualDeliveryDate: _pickActualDeliveryDate,
-                  ),
-                  const SizedBox(height: _sectionSpacing),
-                  WorkOrderProductListSection(
-                    drafts: _draft.productDrafts,
-                    products: _products,
-                    onAdd: () => setState(_draft.addProductDraft),
-                    onRemove: (index) =>
-                        setState(() => _draft.removeProductDraftAt(index)),
-                  ),
-                  const SizedBox(height: _sectionSpacing),
-                  WorkOrderFormSectionCard(
-                    title: '工序选择',
-                    child: WorkOrderMultiSelectChips(
-                      items: _processes
-                          .map(
-                              (item) => WorkOrderOptionItem(item.id, item.name))
-                          .toList(),
-                      selected: _draft.processIds,
-                      emptyText: '暂无工序数据',
-                      title: '工序选择',
-                      placeholder: '请选择工序（可多选）',
-                      onChanged: () => setState(() {}),
-                    ),
-                  ),
-                  const SizedBox(height: _sectionSpacing),
-                  WorkOrderMaterialListSection(
-                    drafts: _draft.materialDrafts,
-                    materials: _materials,
-                    onAdd: () => setState(_draft.addMaterialDraft),
-                    onRemove: (index) =>
-                        setState(() => _draft.removeMaterialDraftAt(index)),
-                  ),
-                  const SizedBox(height: _sectionSpacing),
-                  WorkOrderResourcesSection(
-                    printingType: _draft.printingType,
-                    printingCmyk: _draft.printingCmyk,
-                    printingOtherColorsController:
-                        _draft.printingOtherColorsController,
-                    artworks: _artworks,
-                    artworkIds: _draft.artworkIds,
-                    dies: _dies,
-                    dieIds: _draft.dieIds,
-                    foilingPlates: _foilingPlates,
-                    foilingPlateIds: _draft.foilingPlateIds,
-                    embossingPlates: _embossingPlates,
-                    embossingPlateIds: _draft.embossingPlateIds,
-                    onPrintingTypeChanged: (value) => setState(
-                      () => _draft.printingType = value ?? 'none',
-                    ),
-                    onToggleCmyk: (color) {
-                      setState(() {
-                        if (_draft.printingCmyk.contains(color)) {
-                          _draft.printingCmyk.remove(color);
-                        } else {
-                          _draft.printingCmyk.add(color);
-                        }
-                      });
-                    },
-                    onSelectionChanged: () => setState(() {}),
-                  ),
-                ],
+              child: WorkOrderFormContent(
+                mode: widget.mode,
+                customerId: _draft.customerId,
+                customers: _customers,
+                status: _draft.status,
+                priority: _draft.priority,
+                orderDateController: _draft.orderDateController,
+                deliveryDateController: _draft.deliveryDateController,
+                productionQuantityController:
+                    _draft.productionQuantityController,
+                defectiveQuantityController: _draft.defectiveQuantityController,
+                actualDeliveryDateController:
+                    _draft.actualDeliveryDateController,
+                notesController: _draft.notesController,
+                productDrafts: _draft.productDrafts,
+                products: _products,
+                processes: _processes,
+                processIds: _draft.processIds,
+                materialDrafts: _draft.materialDrafts,
+                materials: _materials,
+                printingType: _draft.printingType,
+                printingCmyk: _draft.printingCmyk,
+                printingOtherColorsController:
+                    _draft.printingOtherColorsController,
+                artworks: _artworks,
+                artworkIds: _draft.artworkIds,
+                dies: _dies,
+                dieIds: _draft.dieIds,
+                foilingPlates: _foilingPlates,
+                foilingPlateIds: _draft.foilingPlateIds,
+                embossingPlates: _embossingPlates,
+                embossingPlateIds: _draft.embossingPlateIds,
+                onCustomerChanged: (value) =>
+                    setState(() => _draft.customerId = value),
+                onStatusChanged: (value) =>
+                    setState(() => _draft.status = value ?? 'pending'),
+                onPriorityChanged: (value) =>
+                    setState(() => _draft.priority = value ?? 'normal'),
+                onPickOrderDate: () => _pickDate(isOrderDate: true),
+                onPickDeliveryDate: () => _pickDate(isOrderDate: false),
+                onPickActualDeliveryDate: _pickActualDeliveryDate,
+                onAddProduct: () => setState(_draft.addProductDraft),
+                onRemoveProduct: (index) =>
+                    setState(() => _draft.removeProductDraftAt(index)),
+                onProcessSelectionChanged: () => setState(() {}),
+                onAddMaterial: () => setState(_draft.addMaterialDraft),
+                onRemoveMaterial: (index) =>
+                    setState(() => _draft.removeMaterialDraftAt(index)),
+                onPrintingTypeChanged: (value) =>
+                    setState(() => _draft.printingType = value ?? 'none'),
+                onToggleCmyk: (color) {
+                  setState(() {
+                    if (_draft.printingCmyk.contains(color)) {
+                      _draft.printingCmyk.remove(color);
+                    } else {
+                      _draft.printingCmyk.add(color);
+                    }
+                  });
+                },
+                onResourceSelectionChanged: () => setState(() {}),
               ),
             ),
     );
