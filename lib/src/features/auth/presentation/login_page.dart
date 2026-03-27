@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/utils/validators.dart';
 import 'package:work_order_app/src/features/auth/application/auth_view_model.dart';
 import 'package:work_order_app/src/features/auth/domain/user.dart';
 import 'package:work_order_app/src/features/auth/presentation/widgets/auth_scaffold.dart';
@@ -72,7 +73,7 @@ class _LoginState extends State<Login> {
                 prefixIcon: Icon(Icons.person_outline),
               ),
               onFieldSubmitted: (_) => focusNodePassword.requestFocus(),
-              validator: (v) => (v == null || v.isEmpty) ? '请输入账号' : null,
+              validator: FormValidators.required('请输入账号'),
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -101,7 +102,7 @@ class _LoginState extends State<Login> {
                   _login();
                 }
               },
-              validator: (v) => (v == null || v.isEmpty) ? '请输入密码' : null,
+              validator: FormValidators.required('请输入密码'),
             ),
             const SizedBox(height: 20),
             SizedBox(

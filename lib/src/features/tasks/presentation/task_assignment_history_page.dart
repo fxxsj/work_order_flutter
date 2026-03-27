@@ -5,6 +5,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/date_range_filter_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -158,25 +159,6 @@ class _TaskAssignmentHistoryViewState
       _operatorId = null;
       _startDate = null;
       _endDate = null;
-    });
-    _loadData(resetPage: true);
-  }
-
-  Future<void> _pickDate({required bool isStart}) async {
-    final initial = isStart ? _startDate : _endDate;
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: initial ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (picked == null) return;
-    setState(() {
-      if (isStart) {
-        _startDate = picked;
-      } else {
-        _endDate = picked;
-      }
     });
     _loadData(resetPage: true);
   }
@@ -339,22 +321,16 @@ class _TaskAssignmentHistoryViewState
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
       children: [
-        _DateField(
-          label: '开始日期',
-          value: _startDate,
-          onTap: () => _pickDate(isStart: true),
-          onClear: () {
-            setState(() => _startDate = null);
-            _loadData(resetPage: true);
-          },
-        ),
-        SizedBox(height: spacing),
-        _DateField(
-          label: '结束日期',
-          value: _endDate,
-          onTap: () => _pickDate(isStart: false),
-          onClear: () {
-            setState(() => _endDate = null);
+        DateRangeFilterField(
+          label: '日期范围',
+          startDate: _startDate,
+          endDate: _endDate,
+          helperText: '筛选分派记录时间范围',
+          onChanged: (range) {
+            setState(() {
+              _startDate = range?.start;
+              _endDate = range?.end;
+            });
             _loadData(resetPage: true);
           },
         ),
@@ -553,42 +529,6 @@ class _FilterDrawerContent extends StatelessWidget {
         const Divider(height: 1),
         Expanded(child: child),
       ],
-    );
-  }
-}
-
-class _DateField extends StatelessWidget {
-  const _DateField({
-    required this.label,
-    required this.value,
-    required this.onTap,
-    required this.onClear,
-  });
-
-  final String label;
-  final DateTime? value;
-  final VoidCallback onTap;
-  final VoidCallback onClear;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = value == null
-        ? ''
-        : '${value!.year.toString().padLeft(4, '0')}-${value!.month.toString().padLeft(2, '0')}-${value!.day.toString().padLeft(2, '0')}';
-    return InkWell(
-      onTap: onTap,
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          suffixIcon: value == null
-              ? const Icon(Icons.calendar_today, size: 16)
-              : IconButton(
-                  icon: const Icon(Icons.close, size: 16),
-                  onPressed: onClear,
-                ),
-        ),
-        child: Text(text.isEmpty ? '请选择' : text),
-      ),
     );
   }
 }

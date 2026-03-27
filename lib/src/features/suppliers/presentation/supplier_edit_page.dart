@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
+import 'package:work_order_app/src/core/utils/validators.dart';
 import 'package:work_order_app/src/features/suppliers/application/supplier_view_model.dart';
 import 'package:work_order_app/src/features/suppliers/domain/supplier.dart';
 
@@ -115,26 +116,19 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
                 label: _codeLabel,
                 controller: _codeController,
                 enabled: widget.supplier == null,
-                validator: (value) {
-                  final text = value?.trim() ?? '';
-                  if (text.isEmpty) return _codeRequiredText;
-                  if (text.length < 2 || text.length > 50) {
-                    return _codeLengthText;
-                  }
-                  if (!RegExp(r'^[A-Za-z0-9-]+$').hasMatch(text)) {
-                    return _codeInvalidText;
-                  }
-                  return null;
-                },
+                validator: FormValidators.compose<String>([
+                  FormValidators.required(_codeRequiredText),
+                  FormValidators.lengthRange(2, 50, _codeLengthText),
+                  FormValidators.pattern(
+                    RegExp(r'^[A-Za-z0-9-]+$'),
+                    _codeInvalidText,
+                  ),
+                ]),
               ),
               CrudFormField.text(
                 label: _nameLabel,
                 controller: _nameController,
-                validator: (value) {
-                  final text = value?.trim() ?? '';
-                  if (text.isEmpty) return _nameRequiredText;
-                  return null;
-                },
+                validator: FormValidators.required(_nameRequiredText),
               ),
             ],
           ),
@@ -149,26 +143,12 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
               CrudFormField.phone(
                 label: _phoneLabel,
                 controller: _phoneController,
-                validator: (value) {
-                  final text = value?.trim() ?? '';
-                  if (text.isEmpty) return null;
-                  if (!RegExp(r'^1[3-9]\d{9}$').hasMatch(text)) {
-                    return _phoneInvalidText;
-                  }
-                  return null;
-                },
+                validator: FormValidators.phone(_phoneInvalidText),
               ),
               CrudFormField.email(
                 label: _emailLabel,
                 controller: _emailController,
-                validator: (value) {
-                  final text = value?.trim() ?? '';
-                  if (text.isEmpty) return null;
-                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(text)) {
-                    return _emailInvalidText;
-                  }
-                  return null;
-                },
+                validator: FormValidators.email(_emailInvalidText),
               ),
             ],
           ),

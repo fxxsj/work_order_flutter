@@ -11,6 +11,7 @@ import 'package:work_order_app/src/features/suppliers/data/supplier_api_service.
 import 'package:work_order_app/src/features/suppliers/data/supplier_repository_impl.dart';
 import 'package:work_order_app/src/features/suppliers/domain/supplier.dart';
 import 'package:work_order_app/src/features/suppliers/domain/supplier_repository.dart';
+import 'package:work_order_app/src/features/suppliers/presentation/supplier_detail_page.dart';
 import 'package:work_order_app/src/features/suppliers/presentation/supplier_edit_page.dart';
 
 /// 供应商列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
@@ -110,6 +111,17 @@ class SupplierListPage extends StatelessWidget {
     );
   }
 
+  static Future<void> _openDetailPage(
+    BuildContext context,
+    Supplier supplier,
+  ) {
+    return Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => SupplierDetailPage(supplier: supplier),
+      ),
+    );
+  }
+
   static List<Widget> _headerActions(
     BuildContext context,
     SupplierViewModel viewModel,
@@ -129,6 +141,10 @@ class SupplierListPage extends StatelessWidget {
     Supplier supplier,
   ) {
     return [
+      RowAction(
+        label: '详情',
+        onPressed: () => _openDetailPage(context, supplier),
+      ),
       RowAction(
         label: '编辑',
         onPressed: () => _openEditPage(context, viewModel, supplier),

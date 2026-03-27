@@ -332,52 +332,6 @@ class _ProductEditPageState extends State<ProductEditPage> {
     );
   }
 
-  Widget _buildProcessField(BuildContext context) {
-    final theme = Theme.of(context);
-    final subtleText = theme.hintColor;
-    return InkWell(
-      onTap: _processes.isEmpty ? null : _openProcessDialog,
-      borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-      child: InputDecorator(
-        decoration: const InputDecoration(
-          labelText: _defaultProcessTitle,
-          contentPadding: EdgeInsets.all(12),
-          suffixIcon: Icon(Icons.arrow_drop_down),
-        ),
-        child: _processes.isEmpty
-            ? Text(
-                '暂无工序数据',
-                style: theme.textTheme.bodySmall?.copyWith(color: subtleText),
-              )
-            : _processIds.isEmpty
-                ? Text(
-                    _processPlaceholder,
-                    style:
-                        theme.textTheme.bodyMedium?.copyWith(color: subtleText),
-                  )
-                : Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: _processes
-                        .where((process) => _processIds.contains(process.id))
-                        .map(
-                          (process) => InputChip(
-                            label: Text(process.name),
-                            onDeleted: () {
-                              setState(() {
-                                _processIds = _processIds
-                                    .where((id) => id != process.id)
-                                    .toList();
-                              });
-                            },
-                          ),
-                        )
-                        .toList(),
-                  ),
-      ),
-    );
-  }
-
   Widget _buildMaterialSection(BuildContext context) {
     final theme = Theme.of(context);
     final sectionSpacing = LayoutTokens.formSectionSpacing(context);
@@ -553,8 +507,28 @@ class _ProductEditPageState extends State<ProductEditPage> {
               title: _configSectionTitle,
               column: 0,
               fields: [
-                CrudFormField.custom(
-                  builder: _buildProcessField,
+                CrudFormField.multiSelect(
+                  label: _defaultProcessTitle,
+                  options: _processes
+                      .map(
+                        (process) => CrudFieldOption<dynamic>(
+                          value: process.id,
+                          label: process.isActive
+                              ? process.name
+                              : '${process.name}（已停用）',
+                          enabled: process.isActive,
+                        ),
+                      )
+                      .toList(),
+                  values: _processIds.toSet(),
+                  hintText: _processPlaceholder,
+                  searchHintText: _processSearchHint,
+                  noResultsText: _emptyMatchText,
+                  onChanged: (values) {
+                    setState(() {
+                      _processIds = values.cast<int>().toList();
+                    });
+                  },
                 ),
                 CrudFormField.custom(
                   builder: _buildMaterialSection,
@@ -565,114 +539,6 @@ class _ProductEditPageState extends State<ProductEditPage> {
         },
         onSave: (context, viewModel, item) => _handleSubmit(viewModel),
       ),
-    );
-  }
-
-  Future<void> _openProcessDialog() async {
-    if (_processes.isEmpty) return;
-    final original = List<int>.from(_processIds);
-    String query = '';
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            final filtered = _processes
-                .where((process) =>
-                    process.name.toLowerCase().contains(query.toLowerCase()))
-                .toList();
-            return AlertDialog(
-              title: const Text(_defaultProcessTitle),
-              content: SizedBox(
-                width: 520,
-                height: 420,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextField(
-                      decoration: const InputDecoration(
-                        hintText: _processSearchHint,
-                        prefixIcon: Icon(Icons.search),
-                      ),
-                      onChanged: (value) =>
-                          setDialogState(() => query = value.trim()),
-                    ),
-                    const SizedBox(height: 12),
-                    Expanded(
-                      child: filtered.isEmpty
-                          ? Center(
-                              child: Text(
-                                _emptyMatchText,
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            )
-                          : Scrollbar(
-                              child: ListView.builder(
-                                itemCount: filtered.length,
-                                itemBuilder: (context, index) {
-                                  final process = filtered[index];
-                                  final selected =
-                                      _processIds.contains(process.id);
-                                  return CheckboxListTile(
-                                    value: selected,
-                                    dense: true,
-                                    controlAffinity:
-                                        ListTileControlAffinity.leading,
-                                    title: Text(process.name),
-                                    subtitle: process.isActive
-                                        ? null
-                                        : const Text('已停用'),
-                                    onChanged: process.isActive
-                                        ? (value) {
-                                            setDialogState(() {
-                                              if (value == true) {
-                                                _processIds = [
-                                                  ..._processIds,
-                                                  process.id,
-                                                ];
-                                              } else {
-                                                _processIds = _processIds
-                                                    .where((id) =>
-                                                        id != process.id)
-                                                    .toList();
-                                              }
-                                            });
-                                            setState(() {});
-                                          }
-                                        : null,
-                                  );
-                                },
-                              ),
-                            ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    setState(() => _processIds = List<int>.from(original));
-                    Navigator.of(dialogContext).pop();
-                  },
-                  child: const Text('取消'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    setDialogState(() => _processIds = []);
-                    setState(() {});
-                  },
-                  child: const Text('清空'),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('确定'),
-                ),
-              ],
-            );
-          },
-        );
-      },
     );
   }
 }

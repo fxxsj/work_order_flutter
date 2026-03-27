@@ -4,8 +4,10 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
+import 'package:work_order_app/src/core/utils/extensions/datetime_extensions.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
+import 'package:work_order_app/src/core/utils/validators.dart';
 import 'package:work_order_app/src/features/customer/application/customer_view_model.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 
@@ -45,7 +47,6 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
   static const String _systemSectionTitle = '系统信息';
   static const String _createdAtLabel = '创建时间';
   static const String _updatedAtLabel = '更新时间';
-  static const String _emptyText = '-';
 
   late final TextEditingController _nameController;
   late final TextEditingController _contactController;
@@ -119,17 +120,6 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
     } else {
       await viewModel.updateCustomer(payload);
     }
-  }
-
-  String _formatDateTime(DateTime? value) {
-    if (value == null) return _emptyText;
-    final local = value.toLocal();
-    final year = local.year.toString().padLeft(4, '0');
-    final month = local.month.toString().padLeft(2, '0');
-    final day = local.day.toString().padLeft(2, '0');
-    final hour = local.hour.toString().padLeft(2, '0');
-    final minute = local.minute.toString().padLeft(2, '0');
-    return '$year-$month-$day $hour:$minute';
   }
 
   Widget _readonlyField(ThemeData theme, String label, String value) {
@@ -226,16 +216,10 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                 CrudFormField.text(
                   label: _nameLabel,
                   controller: _nameController,
-                  validator: (value) {
-                    final text = value?.trim() ?? '';
-                    if (text.isEmpty) {
-                      return _nameRequiredText;
-                    }
-                    if (text.length < 2) {
-                      return _nameLengthText;
-                    }
-                    return null;
-                  },
+                  validator: FormValidators.compose<String>([
+                    FormValidators.required(_nameRequiredText),
+                    FormValidators.minLength(2, _nameLengthText),
+                  ]),
                 ),
                 CrudFormField.dropdown(
                   label: _salespersonLabel,
@@ -273,31 +257,15 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                 CrudFormField.phone(
                   label: _phoneLabel,
                   controller: _phoneController,
-                  validator: (value) {
-                    final text = value?.trim() ?? '';
-                    if (text.isEmpty) {
-                      return null;
-                    }
-                    if (!RegExp(r'^[\d\-+() ]+$').hasMatch(text)) {
-                      return _phoneInvalidText;
-                    }
-                    return null;
-                  },
+                  validator: FormValidators.pattern(
+                    RegExp(r'^[\d\-+() ]+$'),
+                    _phoneInvalidText,
+                  ),
                 ),
                 CrudFormField.email(
                   label: _emailLabel,
                   controller: _emailController,
-                  validator: (value) {
-                    final text = value?.trim() ?? '';
-                    if (text.isEmpty) {
-                      return null;
-                    }
-                    if (!RegExp(r'^[\w\-.]+@([\w\-]+\.)+[\w\-]{2,4}$')
-                        .hasMatch(text)) {
-                      return _emailInvalidText;
-                    }
-                    return null;
-                  },
+                  validator: FormValidators.email(_emailInvalidText),
                 ),
               ],
             ),
@@ -327,14 +295,14 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
                   builder: (context) => _readonlyField(
                     theme,
                     _createdAtLabel,
-                    _formatDateTime(customer?.createdAt),
+                    customer?.createdAt.toYMDHM ?? '-',
                   ),
                 ),
                 CrudFormField.custom(
                   builder: (context) => _readonlyField(
                     theme,
                     _updatedAtLabel,
-                    _formatDateTime(customer?.updatedAt),
+                    customer?.updatedAt.toYMDHM ?? '-',
                   ),
                 ),
               ],

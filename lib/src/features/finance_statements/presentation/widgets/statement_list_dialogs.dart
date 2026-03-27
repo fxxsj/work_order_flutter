@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/action_decision_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/suppliers/domain/supplier.dart';
@@ -151,29 +152,15 @@ Future<StatementCreateResult?> showStatementCreateDialog(
                                 : null,
                       ),
                       const SizedBox(height: 12),
-                      TextFormField(
-                        controller: startDateController,
-                        decoration: const InputDecoration(
-                          labelText: '开始日期（YYYY-MM-DD）',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) =>
-                            (value == null || value.trim().isEmpty)
-                                ? '请输入开始日期'
-                                : null,
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: endDateController,
-                        decoration: const InputDecoration(
-                          labelText: '结束日期（YYYY-MM-DD）',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) =>
-                            (value == null || value.trim().isEmpty)
-                                ? '请输入结束日期'
-                                : null,
-                      ),
+                      CrudFormField.dateRange(
+                        label: '对账日期范围',
+                        startController: startDateController,
+                        endController: endDateController,
+                        hintText: '请选择开始和结束日期',
+                        helperText: '会自动回填开始日期和结束日期',
+                        validator: (range) =>
+                            range == null ? '请选择对账日期范围' : null,
+                      ).build(context),
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: openingBalanceController,

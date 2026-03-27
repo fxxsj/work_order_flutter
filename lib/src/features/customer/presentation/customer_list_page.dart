@@ -12,6 +12,7 @@ import 'package:work_order_app/src/features/customer/data/customer_api_service.d
 import 'package:work_order_app/src/features/customer/data/customer_repository_impl.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/customer/domain/customer_repository.dart';
+import 'package:work_order_app/src/features/customer/presentation/customer_detail_page.dart';
 import 'package:work_order_app/src/features/customer/presentation/customer_edit_page.dart';
 
 /// 客户列表入口。
@@ -111,6 +112,17 @@ class CustomerListPage extends StatelessWidget {
     );
   }
 
+  static Future<void> _openDetailPage(
+    BuildContext context,
+    Customer customer,
+  ) {
+    return Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => CustomerDetailPage(customer: customer),
+      ),
+    );
+  }
+
   static List<Widget> _headerActions(
     BuildContext context,
     CustomerViewModel viewModel,
@@ -140,6 +152,10 @@ class CustomerListPage extends StatelessWidget {
         PermissionUtil.hasPermission(context, 'workorder.delete_customer');
 
     return [
+      RowAction(
+        label: '详情',
+        onPressed: () => _openDetailPage(context, customer),
+      ),
       if (canChangeCustomer)
         RowAction(
           label: '编辑',

@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -24,6 +23,7 @@ import 'package:work_order_app/src/core/presentation/providers/feature_entry.dar
 import 'package:work_order_app/src/core/utils/audit_log_navigation.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/file_link_util.dart';
+import 'package:work_order_app/src/core/utils/file_upload_picker.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
@@ -526,29 +526,17 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     if (_uploadingInvoiceId == invoice.id) {
       return;
     }
-
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: _attachmentExtensions,
-      withData: true,
-    );
-    if (result == null || result.files.isEmpty) {
+    MultipartFile? attachment;
+    try {
+      attachment = await pickMultipartFile(
+        allowedExtensions: _attachmentExtensions,
+        fallbackFilename: 'invoice-attachment',
+      );
+    } on FileUploadPickException catch (err) {
+      ToastUtil.showError(err.message);
       return;
     }
-
-    final picked = result.files.single;
-    final fileName =
-        picked.name.trim().isEmpty ? 'invoice-attachment' : picked.name;
-    MultipartFile attachment;
-    final bytes = picked.bytes;
-
-    if (bytes != null && bytes.isNotEmpty) {
-      attachment = MultipartFile.fromBytes(bytes, filename: fileName);
-    } else if ((picked.path ?? '').trim().isNotEmpty) {
-      attachment =
-          await MultipartFile.fromFile(picked.path!.trim(), filename: fileName);
-    } else {
-      ToastUtil.showError('无法读取所选文件');
+    if (attachment == null) {
       return;
     }
 

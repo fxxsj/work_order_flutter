@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/features/departments/application/department_view_model.dart';
@@ -33,8 +31,6 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
   static const String _basicSectionTitle = '基本信息';
   static const String _extraSectionTitle = '补充信息';
   static const String _processPlaceholder = '请选择工序（可多选）';
-  static const String _processSearchHint = '搜索工序名称';
-  static const String _emptyMatchText = '无匹配项';
 
   late final TextEditingController _codeController;
   late final TextEditingController _nameController;
@@ -105,9 +101,6 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<DepartmentViewModel>();
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>();
-    final subtleText = colors?.subtleText ?? theme.hintColor;
     final availableParents = _availableParents(viewModel.departmentOptions);
     final disableParent = widget.department != null &&
         (widget.department?.childrenCount ?? 0) > 0;
@@ -174,56 +167,28 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
                 label: _sortLabel,
                 controller: _sortController,
               ),
-              CrudFormField.custom(
-                builder: (context) => InkWell(
-                  onTap: viewModel.processOptions.isEmpty
-                      ? null
-                      : () => _openProcessDialog(viewModel),
-                  borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-                  child: InputDecorator(
-                    decoration: const InputDecoration(
-                      labelText: _processLabel,
-                      contentPadding: EdgeInsets.all(12),
-                      suffixIcon: Icon(Icons.arrow_drop_down),
-                    ),
-                    child: viewModel.processOptions.isEmpty
-                        ? Text(
-                            '暂无工序数据',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(color: subtleText),
-                          )
-                        : _processIds.isEmpty
-                            ? Text(
-                                _processPlaceholder,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(color: subtleText),
-                              )
-                            : Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: viewModel.processOptions
-                                    .where((process) =>
-                                        _processIds.contains(process.id))
-                                    .map(
-                                      (process) => InputChip(
-                                        label: Text(process.name),
-                                        onDeleted: () {
-                                          setState(() {
-                                            _processIds = _processIds
-                                                .where((id) => id != process.id)
-                                                .toList();
-                                          });
-                                        },
-                                      ),
-                                    )
-                                    .toList(),
-                              ),
-                  ),
-                ),
+              CrudFormField.multiSelect(
+                label: _processLabel,
+                options: viewModel.processOptions
+                    .map(
+                      (process) => CrudFieldOption<dynamic>(
+                        value: process.id,
+                        label: process.isActive
+                            ? process.name
+                            : '${process.name}（已停用）',
+                        enabled: process.isActive,
+                      ),
+                    )
+                    .toList(),
+                values: _processIds.toSet(),
+                hintText: _processPlaceholder,
+                searchHintText: '搜索工序名称',
+                noResultsText: '无匹配项',
+                onChanged: (values) {
+                  setState(() {
+                    _processIds = values.cast<int>().toList();
+                  });
+                },
               ),
               CrudFormField.toggle(
                 label: _statusLabel,
@@ -235,114 +200,6 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
         ],
         onSave: (context, viewModel, item) => _handleSubmit(viewModel),
       ),
-    );
-  }
-
-  Future<void> _openProcessDialog(DepartmentViewModel viewModel) async {
-    if (viewModel.processOptions.isEmpty) return;
-    final original = List<int>.from(_processIds);
-    String query = '';
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            final filtered = viewModel.processOptions
-                .where((process) =>
-                    process.name.toLowerCase().contains(query.toLowerCase()))
-                .toList();
-            return AlertDialog(
-              title: const Text(_processLabel),
-              content: SizedBox(
-                width: 520,
-                height: 420,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextField(
-                      decoration: const InputDecoration(
-                        hintText: _processSearchHint,
-                        prefixIcon: Icon(Icons.search),
-                      ),
-                      onChanged: (value) =>
-                          setDialogState(() => query = value.trim()),
-                    ),
-                    const SizedBox(height: 12),
-                    Expanded(
-                      child: filtered.isEmpty
-                          ? Center(
-                              child: Text(
-                                _emptyMatchText,
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            )
-                          : Scrollbar(
-                              child: ListView.builder(
-                                itemCount: filtered.length,
-                                itemBuilder: (context, index) {
-                                  final process = filtered[index];
-                                  final selected =
-                                      _processIds.contains(process.id);
-                                  return CheckboxListTile(
-                                    value: selected,
-                                    dense: true,
-                                    controlAffinity:
-                                        ListTileControlAffinity.leading,
-                                    title: Text(process.name),
-                                    subtitle: process.isActive
-                                        ? null
-                                        : const Text('已停用'),
-                                    onChanged: process.isActive
-                                        ? (value) {
-                                            setDialogState(() {
-                                              if (value == true) {
-                                                _processIds = [
-                                                  ..._processIds,
-                                                  process.id,
-                                                ];
-                                              } else {
-                                                _processIds = _processIds
-                                                    .where((id) =>
-                                                        id != process.id)
-                                                    .toList();
-                                              }
-                                            });
-                                            setState(() {});
-                                          }
-                                        : null,
-                                  );
-                                },
-                              ),
-                            ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    setState(() => _processIds = List<int>.from(original));
-                    Navigator.of(dialogContext).pop();
-                  },
-                  child: const Text('取消'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    setDialogState(() => _processIds = []);
-                    setState(() {});
-                  },
-                  child: const Text('清空'),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('确定'),
-                ),
-              ],
-            );
-          },
-        );
-      },
     );
   }
 }

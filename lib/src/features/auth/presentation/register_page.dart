@@ -3,6 +3,7 @@ import 'package:work_order_app/src/core/common/api_exception.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/utils/validators.dart';
 import 'package:work_order_app/src/features/auth/application/auth_view_model.dart';
 import 'package:work_order_app/src/features/auth/domain/user.dart';
 import 'package:work_order_app/src/features/auth/presentation/widgets/auth_scaffold.dart';
@@ -56,7 +57,7 @@ class _RegisterState extends State {
                 hintText: '建议使用姓名拼音或工号',
                 prefixIcon: Icon(Icons.person_outline),
               ),
-              validator: (v) => (v == null || v.isEmpty) ? '请输入账号' : null,
+              validator: FormValidators.required('请输入账号'),
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -80,7 +81,7 @@ class _RegisterState extends State {
                   ),
                 ),
               ),
-              validator: (v) => (v == null || v.isEmpty) ? '请输入密码' : null,
+              validator: FormValidators.required('请输入密码'),
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -103,7 +104,13 @@ class _RegisterState extends State {
                   ),
                 ),
               ),
-              validator: (v) => v == passwordController.text ? null : '两次密码不一致',
+              validator: FormValidators.compose<String>([
+                FormValidators.required('请再次输入密码'),
+                FormValidators.sameAs(
+                  () => passwordController.text,
+                  message: '两次密码不一致',
+                ),
+              ]),
             ),
             const SizedBox(height: 20),
             SizedBox(

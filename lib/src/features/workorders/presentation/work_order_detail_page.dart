@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -14,6 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/audit_log_navigation.dart';
+import 'package:work_order_app/src/core/utils/file_upload_picker.dart';
 import 'package:work_order_app/src/core/utils/store_util.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -182,27 +182,17 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   }
 
   Future<void> _handleUploadDesignFile() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: _designFileExtensions,
-      withData: true,
-    );
-    if (result == null || result.files.isEmpty) {
+    MultipartFile? designFile;
+    try {
+      designFile = await pickMultipartFile(
+        allowedExtensions: _designFileExtensions,
+        fallbackFilename: 'design-file',
+      );
+    } on FileUploadPickException catch (err) {
+      ToastUtil.showError(err.message);
       return;
     }
-
-    final picked = result.files.single;
-    final fileName = picked.name.trim().isEmpty ? 'design-file' : picked.name;
-    MultipartFile designFile;
-    final bytes = picked.bytes;
-
-    if (bytes != null && bytes.isNotEmpty) {
-      designFile = MultipartFile.fromBytes(bytes, filename: fileName);
-    } else if ((picked.path ?? '').trim().isNotEmpty) {
-      designFile =
-          await MultipartFile.fromFile(picked.path!.trim(), filename: fileName);
-    } else {
-      ToastUtil.showError('无法读取所选文件');
+    if (designFile == null) {
       return;
     }
 

@@ -51,8 +51,6 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
   static const String _diePlaceholder = '请选择刀模（可多选）';
   static const String _foilingPlaceholder = '请选择烫金版（可多选）';
   static const String _embossingPlaceholder = '请选择压凸版（可多选）';
-  static const String _searchHint = '搜索名称或编码';
-  static const String _emptyMatchText = '无匹配项';
 
   late final TextEditingController _baseCodeController;
   late final TextEditingController _nameController;
@@ -246,212 +244,6 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
     );
   }
 
-  Widget _buildCmykField(BuildContext context) {
-    return InputDecorator(
-      decoration: const InputDecoration(labelText: _cmykLabel),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: _cmykColors.map((color) {
-          final selected = _selectedCmyk.contains(color);
-          return FilterChip(
-            label: Text(color),
-            selected: selected,
-            onSelected: (value) {
-              setState(() {
-                if (value) {
-                  _selectedCmyk.add(color);
-                } else {
-                  _selectedCmyk.remove(color);
-                }
-              });
-            },
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildChipSection(
-    BuildContext context, {
-    required String title,
-    required List<_OptionItem> options,
-    required Set<int> selectedIds,
-    required String placeholder,
-  }) {
-    final theme = Theme.of(context);
-    final sectionSpacing = LayoutTokens.formSectionSpacing(context);
-    final colors = theme.extension<AppColors>();
-    final subtleText = colors?.subtleText ?? theme.hintColor;
-    final selectedItems =
-        options.where((item) => selectedIds.contains(item.id)).toList();
-
-    final content = options.isEmpty
-        ? Text(
-            '暂无可选项',
-            style: theme.textTheme.bodySmall?.copyWith(color: subtleText),
-          )
-        : InkWell(
-            onTap: () => _openMultiSelectDialog(
-              title: title,
-              options: options,
-              selectedIds: selectedIds,
-            ),
-            borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-            child: InputDecorator(
-              decoration: const InputDecoration(
-                contentPadding: EdgeInsets.all(12),
-                suffixIcon: Icon(Icons.arrow_drop_down),
-              ),
-              child: selectedItems.isEmpty
-                  ? Text(
-                      placeholder,
-                      style: theme.textTheme.bodyMedium
-                          ?.copyWith(color: subtleText),
-                    )
-                  : Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: selectedItems
-                          .map(
-                            (item) => InputChip(
-                              label: Text(item.label),
-                              onDeleted: () {
-                                setState(() {
-                                  selectedIds.remove(item.id);
-                                });
-                              },
-                            ),
-                          )
-                          .toList(),
-                    ),
-            ),
-          );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          title,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-        SizedBox(height: sectionSpacing),
-        if (_loadingPicklists)
-          const LinearProgressIndicator(minHeight: 2)
-        else
-          content,
-      ],
-    );
-  }
-
-  Future<void> _openMultiSelectDialog({
-    required String title,
-    required List<_OptionItem> options,
-    required Set<int> selectedIds,
-  }) async {
-    if (options.isEmpty) return;
-    final original = Set<int>.from(selectedIds);
-    String query = '';
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            final filtered = options
-                .where((item) =>
-                    item.label.toLowerCase().contains(query.toLowerCase()))
-                .toList();
-            return AlertDialog(
-              title: Text(title),
-              content: SizedBox(
-                width: 520,
-                height: 420,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextField(
-                      decoration: const InputDecoration(
-                        hintText: _searchHint,
-                        prefixIcon: Icon(Icons.search),
-                      ),
-                      onChanged: (value) =>
-                          setDialogState(() => query = value.trim()),
-                    ),
-                    const SizedBox(height: 12),
-                    Expanded(
-                      child: filtered.isEmpty
-                          ? Center(
-                              child: Text(
-                                _emptyMatchText,
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            )
-                          : Scrollbar(
-                              child: ListView.builder(
-                                itemCount: filtered.length,
-                                itemBuilder: (context, index) {
-                                  final item = filtered[index];
-                                  final selected =
-                                      selectedIds.contains(item.id);
-                                  return CheckboxListTile(
-                                    value: selected,
-                                    dense: true,
-                                    controlAffinity:
-                                        ListTileControlAffinity.leading,
-                                    title: Text(item.label),
-                                    onChanged: (value) {
-                                      setDialogState(() {
-                                        if (value == true) {
-                                          selectedIds.add(item.id);
-                                        } else {
-                                          selectedIds.remove(item.id);
-                                        }
-                                      });
-                                      setState(() {});
-                                    },
-                                  );
-                                },
-                              ),
-                            ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      selectedIds
-                        ..clear()
-                        ..addAll(original);
-                    });
-                    Navigator.of(dialogContext).pop();
-                  },
-                  child: const Text('取消'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    setDialogState(() => selectedIds.clear());
-                    setState(() {});
-                  },
-                  child: const Text('清空'),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('确定'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
   Widget _buildProductSection(BuildContext context) {
     final theme = Theme.of(context);
     final sectionSpacing = LayoutTokens.formSectionSpacing(context);
@@ -575,8 +367,23 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                   return null;
                 },
               ),
-              CrudFormField.custom(
-                builder: _buildCmykField,
+              CrudFormField.multiSelect(
+                label: _cmykLabel,
+                options: _cmykColors
+                    .map((color) => CrudFieldOption<dynamic>(
+                          value: color,
+                          label: color,
+                        ))
+                    .toList(),
+                values: _selectedCmyk,
+                hintText: '请选择 CMYK 颜色',
+                onChanged: (values) {
+                  setState(() {
+                    _selectedCmyk
+                      ..clear()
+                      ..addAll(values.cast<String>());
+                  });
+                },
               ),
               CrudFormField.text(
                 label: _otherColorsLabel,
@@ -599,52 +406,70 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                   label: _impositionLabel,
                   controller: _impositionController,
                 ),
-              CrudFormField.custom(
-                builder: (context) => _buildChipSection(
-                  context,
-                  title: _dieLabel,
-                  options: _dieOptions
-                      .map(
-                        (die) => _OptionItem(
-                            die.id, _optionLabel(die.name, die.code)),
-                      )
-                      .toList(),
-                  selectedIds: _selectedDieIds,
-                  placeholder: _diePlaceholder,
-                ),
+              CrudFormField.multiSelect(
+                label: _dieLabel,
+                options: _dieOptions
+                    .map(
+                      (die) => CrudFieldOption<dynamic>(
+                        value: die.id,
+                        label: _optionLabel(die.name, die.code),
+                      ),
+                    )
+                    .toList(),
+                values: _selectedDieIds,
+                hintText: _diePlaceholder,
+                onChanged: (values) {
+                  setState(() {
+                    _selectedDieIds
+                      ..clear()
+                      ..addAll(values.cast<int>());
+                  });
+                },
               ),
-              CrudFormField.custom(
-                builder: (context) => _buildChipSection(
-                  context,
-                  title: _foilingLabel,
-                  options: _foilingOptions
-                      .map(
-                        (plate) => _OptionItem(
-                          plate.id,
-                          _optionLabel(plate.name, plate.code),
-                        ),
-                      )
-                      .toList(),
-                  selectedIds: _selectedFoilingIds,
-                  placeholder: _foilingPlaceholder,
-                ),
+              CrudFormField.multiSelect(
+                label: _foilingLabel,
+                options: _foilingOptions
+                    .map(
+                      (plate) => CrudFieldOption<dynamic>(
+                        value: plate.id,
+                        label: _optionLabel(plate.name, plate.code),
+                      ),
+                    )
+                    .toList(),
+                values: _selectedFoilingIds,
+                hintText: _foilingPlaceholder,
+                onChanged: (values) {
+                  setState(() {
+                    _selectedFoilingIds
+                      ..clear()
+                      ..addAll(values.cast<int>());
+                  });
+                },
               ),
-              CrudFormField.custom(
-                builder: (context) => _buildChipSection(
-                  context,
-                  title: _embossingLabel,
-                  options: _embossingOptions
-                      .map(
-                        (plate) => _OptionItem(
-                          plate.id,
-                          _optionLabel(plate.name, plate.code),
-                        ),
-                      )
-                      .toList(),
-                  selectedIds: _selectedEmbossingIds,
-                  placeholder: _embossingPlaceholder,
-                ),
+              CrudFormField.multiSelect(
+                label: _embossingLabel,
+                options: _embossingOptions
+                    .map(
+                      (plate) => CrudFieldOption<dynamic>(
+                        value: plate.id,
+                        label: _optionLabel(plate.name, plate.code),
+                      ),
+                    )
+                    .toList(),
+                values: _selectedEmbossingIds,
+                hintText: _embossingPlaceholder,
+                onChanged: (values) {
+                  setState(() {
+                    _selectedEmbossingIds
+                      ..clear()
+                      ..addAll(values.cast<int>());
+                  });
+                },
               ),
+              if (_loadingPicklists)
+                CrudFormField.custom(
+                  builder: (_) => const LinearProgressIndicator(minHeight: 2),
+                ),
               CrudFormField.custom(
                 builder: _buildProductSection,
               ),
@@ -660,13 +485,6 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
       ),
     );
   }
-}
-
-class _OptionItem {
-  const _OptionItem(this.id, this.label);
-
-  final int id;
-  final String label;
 }
 
 class _ArtworkProductItem {
