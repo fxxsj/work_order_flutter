@@ -28,21 +28,51 @@ class CustomerApiService {
     final payload = response.data;
     if (payload is Map<String, dynamic>) {
       final results = payload['results'];
-      final list = results is List
-          ? results
-              .whereType<Map>()
-              .map((item) => CustomerDto.fromJson(Map<String, dynamic>.from(item)))
-              .toList()
-          : <CustomerDto>[];
-      final total = toInt(payload['count']) ?? list.length;
-      return CustomerPageDto(items: list, total: total, page: page, pageSize: pageSize);
+      if (results is List) {
+        final list = results
+            .whereType<Map>()
+            .map(
+                (item) => CustomerDto.fromJson(Map<String, dynamic>.from(item)))
+            .toList();
+        final total = toInt(payload['count']) ?? list.length;
+        return CustomerPageDto(
+          items: list,
+          total: total,
+          page: page,
+          pageSize: pageSize,
+        );
+      }
+
+      final items = payload['items'];
+      if (items is List) {
+        final list = items
+            .whereType<Map>()
+            .map(
+                (item) => CustomerDto.fromJson(Map<String, dynamic>.from(item)))
+            .toList();
+        final pagination = payload['pagination'];
+        final total = pagination is Map<String, dynamic>
+            ? toInt(pagination['total_items']) ?? list.length
+            : toInt(payload['total']) ?? list.length;
+        return CustomerPageDto(
+          items: list,
+          total: total,
+          page: page,
+          pageSize: pageSize,
+        );
+      }
     }
     if (payload is List) {
       final list = payload
           .whereType<Map>()
           .map((item) => CustomerDto.fromJson(Map<String, dynamic>.from(item)))
           .toList();
-      return CustomerPageDto(items: list, total: list.length, page: 1, pageSize: list.length);
+      return CustomerPageDto(
+        items: list,
+        total: list.length,
+        page: 1,
+        pageSize: list.length,
+      );
     }
     return const CustomerPageDto(items: [], total: 0, page: 1, pageSize: 20);
   }
@@ -51,15 +81,20 @@ class CustomerApiService {
   Future<CustomerDto> createCustomer(CustomerDto dto) async {
     final response = await _client.post('/customers/', data: dto.toPayload());
     final payload = response.data;
-    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    final map = payload is Map
+        ? Map<String, dynamic>.from(payload)
+        : <String, dynamic>{};
     return CustomerDto.fromJson(map);
   }
 
   /// 更新客户。
   Future<CustomerDto> updateCustomer(CustomerDto dto) async {
-    final response = await _client.put('/customers/${dto.id}/', data: dto.toPayload());
+    final response =
+        await _client.put('/customers/${dto.id}/', data: dto.toPayload());
     final payload = response.data;
-    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    final map = payload is Map
+        ? Map<String, dynamic>.from(payload)
+        : <String, dynamic>{};
     return CustomerDto.fromJson(map);
   }
 
@@ -75,7 +110,8 @@ class CustomerApiService {
     if (payload is List) {
       return payload
           .whereType<Map>()
-          .map((item) => SalespersonDto.fromJson(Map<String, dynamic>.from(item)))
+          .map((item) =>
+              SalespersonDto.fromJson(Map<String, dynamic>.from(item)))
           .toList();
     }
     return [];

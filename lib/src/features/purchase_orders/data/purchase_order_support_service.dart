@@ -31,19 +31,17 @@ class PurchaseOrderSupportService {
     final materialApi = MaterialApiService(_client);
     final workOrderApi = WorkOrderApiService(_client);
 
-    final results = await Future.wait([
-      supplierApi.fetchSuppliers(pageSize: 200),
-      materialApi.fetchMaterials(pageSize: 400),
-      workOrderApi.fetchWorkOrders(
-        pageSize: 200,
-        approvalStatus: 'approved',
-        ordering: '-created_at',
-      ),
-    ]);
+    final supplierFuture = supplierApi.fetchSuppliers(pageSize: 200);
+    final materialFuture = materialApi.fetchMaterials(pageSize: 400);
+    final workOrderFuture = workOrderApi.fetchWorkOrders(
+      pageSize: 200,
+      approvalStatus: 'approved',
+      ordering: '-created_at',
+    );
 
-    final supplierPage = results[0] as dynamic;
-    final materialPage = results[1] as dynamic;
-    final workOrderPage = results[2] as dynamic;
+    final supplierPage = await supplierFuture;
+    final materialPage = await materialFuture;
+    final workOrderPage = await workOrderFuture;
 
     return PurchaseOrderSupportData(
       suppliers: List<SupplierDto>.from(supplierPage.items),

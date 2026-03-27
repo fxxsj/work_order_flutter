@@ -29,19 +29,18 @@ class DepartmentViewModel extends PaginatedViewModel<Department> {
     ]);
   }
 
-  Future<void> loadDepartments({bool resetPage = false}) => loadItems(resetPage: resetPage);
+  Future<void> loadDepartments({bool resetPage = false}) =>
+      loadItems(resetPage: resetPage);
 
   Future<void> loadOptions() async {
     _loadingOptions = true;
     _optionsError = null;
     safeNotify();
     try {
-      final results = await Future.wait([
-        _repository.getAllDepartments(),
-        _repository.getProcessOptions(),
-      ]);
-      _departmentOptions = results[0] as List<Department>;
-      _processOptions = results[1] as List<ProcessOption>;
+      final departmentFuture = _repository.getAllDepartments();
+      final processFuture = _repository.getProcessOptions();
+      _departmentOptions = await departmentFuture;
+      _processOptions = await processFuture;
     } catch (err) {
       _optionsError = err.toString().replaceFirst('Exception: ', '');
     } finally {
@@ -56,7 +55,8 @@ class DepartmentViewModel extends PaginatedViewModel<Department> {
     required int pageSize,
     String? search,
   }) async {
-    return _repository.getDepartments(page: page, pageSize: pageSize, search: search);
+    return _repository.getDepartments(
+        page: page, pageSize: pageSize, search: search);
   }
 
   Future<void> createDepartment(Department department) async {

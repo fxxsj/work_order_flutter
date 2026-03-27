@@ -28,25 +28,20 @@ class InvoiceFormOptionsLoader {
     final salesOrderApi = SalesOrderApiService(_client);
     final workOrderApi = WorkOrderApiService(_client);
 
-    final results = await Future.wait([
-      customerApi.fetchCustomers(page: 1, pageSize: 200),
-      salesOrderApi.fetchSalesOrders(page: 1, pageSize: 200),
-      workOrderApi.fetchWorkOrders(page: 1, pageSize: 200),
-    ]);
+    final customerFuture = customerApi.fetchCustomers(page: 1, pageSize: 200);
+    final salesOrderFuture =
+        salesOrderApi.fetchSalesOrders(page: 1, pageSize: 200);
+    final workOrderFuture =
+        workOrderApi.fetchWorkOrders(page: 1, pageSize: 200);
 
-    final customerPage = results[0] as dynamic;
-    final salesOrderPage = results[1] as dynamic;
-    final workOrderPage = results[2] as dynamic;
+    final customerPage = await customerFuture;
+    final salesOrderPage = await salesOrderFuture;
+    final workOrderPage = await workOrderFuture;
 
     return InvoiceFormOptionsData(
-      customers:
-          customerPage.items.map<Customer>((item) => item.toEntity()).toList(),
-      salesOrders: salesOrderPage.items
-          .map<SalesOrder>((item) => item.toEntity())
-          .toList(),
-      workOrders: workOrderPage.items
-          .map<WorkOrder>((item) => item.toEntity())
-          .toList(),
+      customers: customerPage.items.map((item) => item.toEntity()).toList(),
+      salesOrders: salesOrderPage.items.map((item) => item.toEntity()).toList(),
+      workOrders: workOrderPage.items.map((item) => item.toEntity()).toList(),
     );
   }
 }

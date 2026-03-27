@@ -2,10 +2,8 @@ import 'dart:typed_data';
 
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
-import 'package:work_order_app/src/features/customer/data/customer_dto.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/processes/data/process_api_service.dart';
-import 'package:work_order_app/src/features/processes/data/process_dto.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/products/data/product_api_service.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
@@ -39,20 +37,21 @@ class WorkOrderListSupportService {
   final ApiClient _client;
 
   Future<WorkOrderListFilterOptions> loadFilterOptions() async {
-    final results = await Future.wait([
-      CustomerApiService(_client).fetchCustomers(page: 1, pageSize: 200),
-      ProductApiService(_client).fetchProducts(pageSize: 200, isActive: true),
-      ProcessApiService(_client).fetchProcesses(page: 1, pageSize: 200),
-    ]);
-    final customerPage = results[0] as CustomerPageDto;
-    final productOptions = results[1] as List<ProductOption>;
-    final processPage = results[2] as ProcessPageDto;
+    final customerFuture =
+        CustomerApiService(_client).fetchCustomers(page: 1, pageSize: 200);
+    final productFuture =
+        ProductApiService(_client).fetchProducts(pageSize: 200, isActive: true);
+    final processFuture =
+        ProcessApiService(_client).fetchProcesses(page: 1, pageSize: 200);
+
+    final customerPage = await customerFuture;
+    final productOptions = await productFuture;
+    final processPage = await processFuture;
+
     return WorkOrderListFilterOptions(
-      customers:
-          customerPage.items.map<Customer>((item) => item.toEntity()).toList(),
+      customers: customerPage.items.map((item) => item.toEntity()).toList(),
       products: productOptions,
-      processes:
-          processPage.items.map<Process>((item) => item.toEntity()).toList(),
+      processes: processPage.items.map((item) => item.toEntity()).toList(),
     );
   }
 

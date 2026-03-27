@@ -53,44 +53,36 @@ class WorkOrderFormOptionsLoader {
     final foilingApi = FoilingPlateApiService(_client);
     final embossingApi = EmbossingPlateApiService(_client);
 
-    final results = await Future.wait([
-      customerApi.fetchCustomers(page: 1, pageSize: 200),
-      productApi.fetchProducts(pageSize: 200, isActive: true),
-      materialApi.fetchMaterials(page: 1, pageSize: 200),
-      processApi.fetchProcesses(page: 1, pageSize: 200),
-      artworkApi.fetchArtworks(page: 1, pageSize: 200),
-      dieApi.fetchDies(page: 1, pageSize: 200),
-      foilingApi.fetchFoilingPlates(page: 1, pageSize: 200),
-      embossingApi.fetchEmbossingPlates(page: 1, pageSize: 200),
-    ]);
+    final customerFuture = customerApi.fetchCustomers(page: 1, pageSize: 200);
+    final productFuture =
+        productApi.fetchProducts(pageSize: 200, isActive: true);
+    final materialFuture = materialApi.fetchMaterials(page: 1, pageSize: 200);
+    final processFuture = processApi.fetchProcesses(page: 1, pageSize: 200);
+    final artworkFuture = artworkApi.fetchArtworks(page: 1, pageSize: 200);
+    final dieFuture = dieApi.fetchDies(page: 1, pageSize: 200);
+    final foilingFuture = foilingApi.fetchFoilingPlates(page: 1, pageSize: 200);
+    final embossingFuture =
+        embossingApi.fetchEmbossingPlates(page: 1, pageSize: 200);
 
-    final customerPage = results[0] as dynamic;
-    final productOptions = results[1] as List<ProductOption>;
-    final materialPage = results[2] as dynamic;
-    final processPage = results[3] as dynamic;
-    final artworkPage = results[4] as dynamic;
-    final diePage = results[5] as dynamic;
-    final foilingPage = results[6] as dynamic;
-    final embossingPage = results[7] as dynamic;
+    final customerPage = await customerFuture;
+    final productOptions = await productFuture;
+    final materialPage = await materialFuture;
+    final processPage = await processFuture;
+    final artworkPage = await artworkFuture;
+    final diePage = await dieFuture;
+    final foilingPage = await foilingFuture;
+    final embossingPage = await embossingFuture;
 
     return WorkOrderFormOptionsData(
-      customers:
-          customerPage.items.map<Customer>((item) => item.toEntity()).toList(),
+      customers: customerPage.items.map((item) => item.toEntity()).toList(),
       products: productOptions,
-      materials: materialPage.items
-          .map<MaterialItem>((item) => item.toEntity())
-          .toList(),
-      processes:
-          processPage.items.map<Process>((item) => item.toEntity()).toList(),
-      artworks:
-          artworkPage.items.map<Artwork>((item) => item.toEntity()).toList(),
-      dies: diePage.items.map<Die>((item) => item.toEntity()).toList(),
-      foilingPlates: foilingPage.items
-          .map<FoilingPlate>((item) => item.toEntity())
-          .toList(),
-      embossingPlates: embossingPage.items
-          .map<EmbossingPlate>((item) => item.toEntity())
-          .toList(),
+      materials: materialPage.items.map((item) => item.toEntity()).toList(),
+      processes: processPage.items.map((item) => item.toEntity()).toList(),
+      artworks: artworkPage.items.map((item) => item.toEntity()).toList(),
+      dies: diePage.items.map((item) => item.toEntity()).toList(),
+      foilingPlates: foilingPage.items.map((item) => item.toEntity()).toList(),
+      embossingPlates:
+          embossingPage.items.map((item) => item.toEntity()).toList(),
     );
   }
 }

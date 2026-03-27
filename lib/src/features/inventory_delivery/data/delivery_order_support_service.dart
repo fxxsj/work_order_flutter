@@ -31,15 +31,13 @@ class DeliveryOrderSupportService {
     final salesOrderApi = SalesOrderApiService(_client);
     final productApi = ProductApiService(_client);
 
-    final results = await Future.wait([
-      customerApi.fetchCustomers(pageSize: 200),
-      salesOrderApi.fetchSalesOrders(pageSize: 200),
-      productApi.fetchProducts(pageSize: 300),
-    ]);
+    final customerFuture = customerApi.fetchCustomers(pageSize: 200);
+    final salesOrderFuture = salesOrderApi.fetchSalesOrders(pageSize: 200);
+    final productFuture = productApi.fetchProducts(pageSize: 300);
 
-    final customerPage = results[0] as dynamic;
-    final salesOrderPage = results[1] as dynamic;
-    final products = results[2] as List<ProductOption>;
+    final customerPage = await customerFuture;
+    final salesOrderPage = await salesOrderFuture;
+    final products = await productFuture;
 
     return DeliveryOrderSupportData(
       customers: List<CustomerDto>.from(customerPage.items),

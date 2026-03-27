@@ -2,10 +2,8 @@ import 'dart:typed_data';
 
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
-import 'package:work_order_app/src/features/departments/data/department_dto.dart';
 import 'package:work_order_app/src/features/departments/domain/department.dart';
 import 'package:work_order_app/src/features/processes/data/process_api_service.dart';
-import 'package:work_order_app/src/features/processes/data/process_dto.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
 
@@ -35,18 +33,17 @@ class TaskListSupportService {
   final ApiClient _client;
 
   Future<TaskListFilterOptions> loadFilterOptions() async {
-    final results = await Future.wait([
-      DepartmentApiService(_client).fetchDepartments(page: 1, pageSize: 200),
-      ProcessApiService(_client).fetchProcesses(page: 1, pageSize: 200),
-    ]);
-    final departmentPage = results[0] as DepartmentPageDto;
-    final processPage = results[1] as ProcessPageDto;
+    final departmentFuture =
+        DepartmentApiService(_client).fetchDepartments(page: 1, pageSize: 200);
+    final processFuture =
+        ProcessApiService(_client).fetchProcesses(page: 1, pageSize: 200);
+
+    final departmentPage = await departmentFuture;
+    final processPage = await processFuture;
+
     return TaskListFilterOptions(
-      departments: departmentPage.items
-          .map<Department>((item) => item.toEntity())
-          .toList(),
-      processes:
-          processPage.items.map<Process>((item) => item.toEntity()).toList(),
+      departments: departmentPage.items.map((item) => item.toEntity()).toList(),
+      processes: processPage.items.map((item) => item.toEntity()).toList(),
     );
   }
 

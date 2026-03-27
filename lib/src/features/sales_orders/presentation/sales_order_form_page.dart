@@ -11,7 +11,6 @@ import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
-import 'package:work_order_app/src/features/customer/data/customer_dto.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/products/data/product_api_service.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
@@ -136,16 +135,13 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
     final customerApi = CustomerApiService(apiClient);
     final productApi = ProductApiService(apiClient);
     try {
-      final results = await Future.wait([
-        customerApi.fetchCustomers(page: 1, pageSize: 200),
-        productApi.fetchProducts(pageSize: 200, isActive: true),
-      ]);
-      final customerPage = results[0] as CustomerPageDto;
-      final productOptions = results[1] as List<ProductOption>;
+      final customerFuture = customerApi.fetchCustomers(page: 1, pageSize: 200);
+      final productFuture =
+          productApi.fetchProducts(pageSize: 200, isActive: true);
+      final customerPage = await customerFuture;
+      final productOptions = await productFuture;
       setState(() {
-        _customers = customerPage.items
-            .map<Customer>((item) => item.toEntity())
-            .toList();
+        _customers = customerPage.items.map((item) => item.toEntity()).toList();
         _products = productOptions;
       });
     } catch (err) {

@@ -8,13 +8,10 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_d
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/materials/data/material_api_service.dart';
-import 'package:work_order_app/src/features/materials/data/material_dto.dart';
 import 'package:work_order_app/src/features/materials/domain/material.dart';
 import 'package:work_order_app/src/features/processes/data/process_api_service.dart';
-import 'package:work_order_app/src/features/processes/data/process_dto.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/product_groups/data/product_group_api_service.dart';
-import 'package:work_order_app/src/features/product_groups/data/product_group_dto.dart';
 import 'package:work_order_app/src/features/product_groups/domain/product_group.dart';
 import 'package:work_order_app/src/features/products/application/product_view_model.dart';
 import 'package:work_order_app/src/features/products/data/product_api_service.dart';
@@ -158,21 +155,24 @@ class _ProductEditPageState extends State<ProductEditPage> {
   Future<void> _loadOptions() async {
     setState(() => _loadingOptions = true);
     try {
-      final results = await Future.wait([
-        _productGroupApi.fetchProductGroups(page: 1, pageSize: 200, isActive: true),
-        _processApi.fetchProcesses(page: 1, pageSize: 200, isActive: true),
-        _materialApi.fetchMaterials(page: 1, pageSize: 200),
-      ]);
-      final groupPage = results[0] as ProductGroupPageDto;
-      final processPage = results[1] as ProcessPageDto;
-      final materialPage = results[2] as MaterialPageDto;
+      final productGroupFuture = _productGroupApi.fetchProductGroups(
+        page: 1,
+        pageSize: 200,
+        isActive: true,
+      );
+      final processFuture =
+          _processApi.fetchProcesses(page: 1, pageSize: 200, isActive: true);
+      final materialFuture =
+          _materialApi.fetchMaterials(page: 1, pageSize: 200);
+      final groupPage = await productGroupFuture;
+      final processPage = await processFuture;
+      final materialPage = await materialFuture;
       if (!mounted) return;
       setState(() {
         _productGroups =
             groupPage.items.map((item) => item.toEntity()).toList();
         _processes = processPage.items.map((item) => item.toEntity()).toList();
-        _materials =
-            materialPage.items.map((item) => item.toEntity()).toList();
+        _materials = materialPage.items.map((item) => item.toEntity()).toList();
       });
     } catch (err) {
       ToastUtil.showError('加载基础数据失败: $err');
@@ -198,10 +198,8 @@ class _ProductEditPageState extends State<ProductEditPage> {
     _nameController.text = detail.name;
     _specController.text = detail.specification ?? '';
     _unitController.text = detail.unit ?? '件';
-    _unitPriceController.text =
-        detail.unitPrice?.toStringAsFixed(2) ?? '';
-    _stockController.text =
-        detail.stockQuantity?.toStringAsFixed(0) ?? '';
+    _unitPriceController.text = detail.unitPrice?.toStringAsFixed(2) ?? '';
+    _stockController.text = detail.stockQuantity?.toStringAsFixed(0) ?? '';
     _minStockController.text =
         detail.minStockQuantity?.toStringAsFixed(0) ?? '';
     _descriptionController.text = detail.description ?? '';
@@ -297,8 +295,12 @@ class _ProductEditPageState extends State<ProductEditPage> {
       name: _nameController.text.trim(),
       productType: _productType,
       productGroupId: _productType == 'single' ? null : _productGroupId,
-      specification: _specController.text.trim().isEmpty ? null : _specController.text.trim(),
-      unit: _unitController.text.trim().isEmpty ? null : _unitController.text.trim(),
+      specification: _specController.text.trim().isEmpty
+          ? null
+          : _specController.text.trim(),
+      unit: _unitController.text.trim().isEmpty
+          ? null
+          : _unitController.text.trim(),
       unitPrice: _parseDouble(_unitPriceController.text),
       stockQuantity: _parseDouble(_stockController.text),
       minStockQuantity: _parseDouble(_minStockController.text),
@@ -488,8 +490,8 @@ class _ProductEditPageState extends State<ProductEditPage> {
         ),
         child: _processes.isEmpty
             ? Text('暂无工序数据',
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: theme.hintColor))
+                style:
+                    theme.textTheme.bodySmall?.copyWith(color: theme.hintColor))
             : _processIds.isEmpty
                 ? Text(_processPlaceholder,
                     style: theme.textTheme.bodyMedium
@@ -607,12 +609,15 @@ class _ProductEditPageState extends State<ProductEditPage> {
               runSpacing: 8,
               children: [
                 PageActionButton.outlined(
-                  onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
+                  onPressed: _submitting
+                      ? null
+                      : () => Navigator.of(context).pop(false),
                   icon: const Icon(Icons.arrow_back, size: 16),
                   label: _cancelText,
                 ),
                 PageActionButton.filled(
-                  onPressed: _submitting ? null : () => _handleSubmit(viewModel),
+                  onPressed:
+                      _submitting ? null : () => _handleSubmit(viewModel),
                   icon: const Icon(Icons.save, size: 16),
                   label: _submitting ? '保存中' : _submitText,
                 ),
@@ -660,8 +665,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
                       child: filtered.isEmpty
                           ? Center(
                               child: Text(_emptyMatchText,
-                                  style:
-                                      Theme.of(context).textTheme.bodySmall))
+                                  style: Theme.of(context).textTheme.bodySmall))
                           : Scrollbar(
                               child: ListView.builder(
                                 itemCount: filtered.length,
@@ -813,8 +817,7 @@ class _MaterialCardState extends State<_MaterialCard> {
                         .map(
                           (material) => DropdownMenuItem(
                             value: material.id,
-                            child:
-                                Text('${material.code} ${material.name}'),
+                            child: Text('${material.code} ${material.name}'),
                           ),
                         )
                         .toList(),
@@ -854,8 +857,7 @@ class _MaterialCardState extends State<_MaterialCard> {
               contentPadding: EdgeInsets.zero,
               title: const Text('需要开料'),
               value: draft.needCutting,
-              onChanged: (value) =>
-                  setState(() => draft.needCutting = value),
+              onChanged: (value) => setState(() => draft.needCutting = value),
             ),
             SizedBox(height: sectionSpacing),
             TextFormField(
