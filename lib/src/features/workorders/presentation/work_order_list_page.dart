@@ -14,7 +14,8 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart'
+    show StatusHintChip, StatusChipVariant;
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
@@ -768,6 +769,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
                 icon: Icons.rule_folder_outlined,
                 selected: viewModel.approvalStatusFilter == 'pending',
                 onTap: () => _openQuickFilter('pending'),
+                variant: StatusChipVariant.info,
               ),
             if (rejectedCount > 0)
               StatusHintChip(
@@ -775,6 +777,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
                 count: rejectedCount,
                 selected: viewModel.approvalStatusFilter == 'rejected',
                 onTap: () => _openQuickFilter('rejected'),
+                variant: StatusChipVariant.warning,
               ),
             if (_hasQuickFilter(viewModel))
               OutlinedButton.icon(
@@ -783,9 +786,10 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
                 label: const Text('清除筛选'),
               ),
             PageActionButton.outlined(
-              onPressed: _exporting ? null : () => _exportWorkOrders(viewModel),
+              onPressed: () => _exportWorkOrders(viewModel),
               icon: const Icon(Icons.download_outlined, size: 16),
-              label: _exporting ? '导出中' : '导出',
+              label: '导出',
+              loading: _exporting,
             ),
             PageActionButton.outlined(
               onPressed: () => viewModel.loadWorkOrders(resetPage: true),

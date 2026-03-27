@@ -149,16 +149,23 @@ class EmptyStateCard extends StatelessWidget {
     super.key,
     required this.icon,
     required this.text,
+    this.subtitle,
+    this.actionLabel,
+    this.onAction,
   });
 
   final IconData icon;
   final String text;
+  final String? subtitle;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final background = theme.colorScheme.primary.withValues(alpha: 0.05);
-    final border = theme.colorScheme.primary.withValues(alpha: 0.15);
+    final semantic = theme.extension<AppSemanticColors>();
+    final background = (semantic?.info ?? theme.colorScheme.primary).withValues(alpha: 0.05);
+    final border = (semantic?.info ?? theme.colorScheme.primary).withValues(alpha: 0.15);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -173,9 +180,31 @@ class EmptyStateCard extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, color: theme.colorScheme.primary, size: 36),
+                Icon(icon, color: semantic?.info ?? theme.colorScheme.primary, size: LayoutTokens.iconXxxl),
                 const SizedBox(height: LayoutTokens.gapSm),
-                Text(text, style: theme.textTheme.bodyMedium),
+                Text(
+                  text,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: LayoutTokens.gapXs),
+                  Text(
+                    subtitle!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+                if (actionLabel != null && onAction != null) ...[
+                  const SizedBox(height: LayoutTokens.gapMd),
+                  OutlinedButton.icon(
+                    onPressed: onAction,
+                    icon: const Icon(Icons.add, size: LayoutTokens.iconSm),
+                    label: Text(actionLabel!),
+                  ),
+                ],
               ],
             ),
           ),
@@ -197,17 +226,21 @@ class ErrorStateCard extends StatelessWidget {
     required this.message,
     required this.retryLabel,
     required this.onRetry,
+    this.subtitle,
   });
 
   final String message;
   final String retryLabel;
   final VoidCallback onRetry;
+  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final background = theme.colorScheme.error.withValues(alpha: 0.06);
-    final border = theme.colorScheme.error.withValues(alpha: 0.2);
+    final semantic = theme.extension<AppSemanticColors>();
+    final danger = semantic?.danger ?? theme.colorScheme.error;
+    final background = danger.withValues(alpha: 0.06);
+    final border = danger.withValues(alpha: 0.2);
 
     return SizedBox(
       width: double.infinity,
@@ -218,14 +251,29 @@ class ErrorStateCard extends StatelessWidget {
         borderColor: border,
         borderAlpha: 1,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, color: theme.colorScheme.error, size: 32),
+            Icon(Icons.error_outline, color: danger, size: LayoutTokens.iconXxl),
             const SizedBox(height: LayoutTokens.gapSm),
-            Text(message, style: theme.textTheme.bodyMedium),
+            Text(
+              message,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+            if (subtitle != null) ...[
+              const SizedBox(height: LayoutTokens.gapXs),
+              Text(
+                subtitle!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
             const SizedBox(height: LayoutTokens.gapSm),
             OutlinedButton.icon(
               onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
+              icon: const Icon(Icons.refresh, size: LayoutTokens.iconSm),
               label: Text(retryLabel),
             ),
           ],
@@ -272,12 +320,12 @@ class ListSearchField extends StatelessWidget {
               decoration: InputDecoration(
                 constraints: BoxConstraints.tightFor(height: height),
                 hintText: hintText,
-                prefixIcon: const Icon(Icons.search, size: 18),
+                prefixIcon: const Icon(Icons.search, size: LayoutTokens.iconMd),
                 suffixIcon: value.text.isEmpty
                     ? null
                     : IconButton(
                         tooltip: '清空',
-                        icon: const Icon(Icons.close, size: 18),
+                        icon: const Icon(Icons.close, size: LayoutTokens.iconMd),
                         onPressed: onClear,
                       ),
                 isDense: true,
@@ -355,7 +403,7 @@ class ListToolbarButton extends StatelessWidget {
       height: height,
       child: OutlinedButton.icon(
         onPressed: onPressed,
-        icon: Icon(icon, size: 16),
+        icon: Icon(icon, size: LayoutTokens.iconSm),
         label: Text(label),
         style: compact
             ? OutlinedButton.styleFrom(

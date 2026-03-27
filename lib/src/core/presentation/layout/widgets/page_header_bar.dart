@@ -108,6 +108,7 @@ class PageActionButton extends StatelessWidget {
     this.minWidth,
     this.square = false,
     this.padding,
+    this.loading = false,
   }) : variant = PageActionVariant.filled;
 
   const PageActionButton.outlined({
@@ -118,6 +119,7 @@ class PageActionButton extends StatelessWidget {
     this.minWidth,
     this.square = false,
     this.padding,
+    this.loading = false,
   }) : variant = PageActionVariant.outlined;
 
   final PageActionVariant variant;
@@ -127,6 +129,7 @@ class PageActionButton extends StatelessWidget {
   final double? minWidth;
   final bool square;
   final EdgeInsetsGeometry? padding;
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
@@ -172,34 +175,54 @@ class PageActionButton extends StatelessWidget {
             ),
           );
 
+    final effectiveOnPressed = loading ? null : onPressed;
+    final buttonChild = SizedBox(
+      width: 16,
+      height: 16,
+      child: loading
+          ? CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                variant == PageActionVariant.filled
+                    ? Theme.of(context).colorScheme.onPrimary
+                    : Theme.of(context).colorScheme.primary,
+              ),
+            )
+          : icon ?? Text(label ?? ''),
+    );
+
     Widget button;
     if (variant == PageActionVariant.filled) {
-      if (icon != null && hasLabel) {
+      if (icon != null && hasLabel && !loading) {
         button = FilledButton.icon(
           style: style,
-          onPressed: onPressed,
+          onPressed: effectiveOnPressed,
           icon: icon!,
           label: Text(label!),
         );
       } else {
         button = FilledButton(
           style: style,
-          onPressed: onPressed,
-          child: icon ?? Text(label ?? ''),
+          onPressed: effectiveOnPressed,
+          child: loading
+              ? buttonChild
+              : (hasLabel ? Text(label!) : (icon ?? const SizedBox.shrink())),
         );
       }
-    } else if (icon != null && hasLabel) {
+    } else if (icon != null && hasLabel && !loading) {
       button = OutlinedButton.icon(
         style: style,
-        onPressed: onPressed,
+        onPressed: effectiveOnPressed,
         icon: icon!,
         label: Text(label!),
       );
     } else {
       button = OutlinedButton(
         style: style,
-        onPressed: onPressed,
-        child: icon ?? Text(label ?? ''),
+        onPressed: effectiveOnPressed,
+        child: loading
+            ? buttonChild
+            : (hasLabel ? Text(label!) : (icon ?? const SizedBox.shrink())),
       );
     }
 
@@ -265,7 +288,7 @@ class WorkbenchHeaderBar extends StatelessWidget {
 
     return AppCard(
       padding: EdgeInsets.all(cardPadding),
-      radius: isXs ? LayoutTokens.radiusLg : LayoutTokens.radiusXl,
+      radius: isXs ? LayoutTokens.radiusMd : LayoutTokens.radiusLg,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

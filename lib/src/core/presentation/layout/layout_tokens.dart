@@ -7,10 +7,12 @@ class LayoutTokens {
   static const double maxContentWidth = 1440;
   static const double maxContentWidthWide = 1680;
 
+  /// 统一圆角规范: 8/12/16/20
+  static const double radiusXs = 8;
   static const double radiusSm = 12;
   static const double radiusMd = 16;
-  static const double radiusLg = 18;
-  static const double radiusXl = 20;
+  static const double radiusLg = 20;
+  static const double radiusXl = 24;
   static const double radiusPill = 999;
   static const double navItemHeight = 40;
 
@@ -18,6 +20,16 @@ class LayoutTokens {
   static const double gapSm = 8;
   static const double gapMd = 12;
   static const double gapLg = 16;
+  static const double gapXl = 24;
+
+  /// 统一图标大小规范
+  static const double iconXs = 14;
+  static const double iconSm = 16;
+  static const double iconMd = 18;
+  static const double iconLg = 20;
+  static const double iconXl = 24;
+  static const double iconXxl = 32;
+  static const double iconXxxl = 36;
 
   static EdgeInsets pagePadding(BuildContext context) {
     final isXs = BreakpointsUtil.isXs(context);

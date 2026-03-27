@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/common/theme_ext.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 
 class RiskActionHintPanel extends StatelessWidget {
   const RiskActionHintPanel({
@@ -18,7 +20,10 @@ class RiskActionHintPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final tone = destructive ? scheme.error : scheme.primary;
+    final semantic = theme.extension<AppSemanticColors>();
+    final tone = destructive
+        ? (semantic?.danger ?? scheme.error)
+        : (semantic?.info ?? scheme.primary);
     final bg = tone.withValues(alpha: 0.08);
 
     return Container(
@@ -26,7 +31,7 @@ class RiskActionHintPanel extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
         border: Border.all(color: tone.withValues(alpha: 0.18)),
       ),
       child: Column(
@@ -37,8 +42,11 @@ class RiskActionHintPanel extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(
-                destructive ? Icons.warning_amber_rounded : Icons.info_outline,
+                destructive
+                    ? Icons.warning_amber_rounded
+                    : Icons.info_outline,
                 color: tone,
+                size: LayoutTokens.iconLg,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -106,34 +114,47 @@ Future<bool> showRiskActionConfirmDialog(
 }) async {
   final confirmed = await showDialog<bool>(
     context: context,
-    builder: (context) => AlertDialog(
-      title: Text(title),
-      content: SizedBox(
-        width: 520,
-        child: RiskActionHintPanel(
-          summary: summary,
-          impacts: impacts,
-          auditHint: auditHint,
-          destructive: destructive,
+    builder: (context) {
+      final screenWidth = MediaQuery.sizeOf(context).width;
+      final dialogWidth = (screenWidth < 600)
+          ? screenWidth - 32
+          : (screenWidth < 900 ? 520.0 : 600.0);
+
+      return AlertDialog(
+        title: Text(title),
+        content: SizedBox(
+          width: dialogWidth,
+          child: RiskActionHintPanel(
+            summary: summary,
+            impacts: impacts,
+            auditHint: auditHint,
+            destructive: destructive,
+          ),
         ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('取消'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
         ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(true),
-          style: destructive
-              ? FilledButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                  foregroundColor: Theme.of(context).colorScheme.onError,
-                )
-              : null,
-          child: Text(confirmText),
-        ),
-      ],
-    ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: destructive
+                ? FilledButton.styleFrom(
+                    backgroundColor:
+                        Theme.of(context).extension<AppSemanticColors>()?.danger ??
+                        Theme.of(context).colorScheme.error,
+                    foregroundColor:
+                        Theme.of(context).colorScheme.onError,
+                  )
+                : null,
+            child: Text(confirmText),
+          ),
+        ],
+      );
+    },
   );
   return confirmed == true;
 }

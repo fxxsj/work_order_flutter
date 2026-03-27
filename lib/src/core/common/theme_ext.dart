@@ -9,6 +9,10 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
     required this.info,
     required this.surfaceAlt,
     required this.shadowStrong,
+    this.successBg,
+    this.warningBg,
+    this.dangerBg,
+    this.infoBg,
   });
 
   final Color success;
@@ -17,6 +21,10 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
   final Color info;
   final Color surfaceAlt;
   final Color shadowStrong;
+  final Color? successBg;
+  final Color? warningBg;
+  final Color? dangerBg;
+  final Color? infoBg;
 
   @override
   AppSemanticColors copyWith({
@@ -26,6 +34,10 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
     Color? info,
     Color? surfaceAlt,
     Color? shadowStrong,
+    Color? successBg,
+    Color? warningBg,
+    Color? dangerBg,
+    Color? infoBg,
   }) {
     return AppSemanticColors(
       success: success ?? this.success,
@@ -34,6 +46,10 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
       info: info ?? this.info,
       surfaceAlt: surfaceAlt ?? this.surfaceAlt,
       shadowStrong: shadowStrong ?? this.shadowStrong,
+      successBg: successBg ?? this.successBg,
+      warningBg: warningBg ?? this.warningBg,
+      dangerBg: dangerBg ?? this.dangerBg,
+      infoBg: infoBg ?? this.infoBg,
     );
   }
 
@@ -49,8 +65,18 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
       info: Color.lerp(info, other.info, t) ?? info,
       surfaceAlt: Color.lerp(surfaceAlt, other.surfaceAlt, t) ?? surfaceAlt,
       shadowStrong: Color.lerp(shadowStrong, other.shadowStrong, t) ?? shadowStrong,
+      successBg: Color.lerp(successBg, other.successBg, t) ?? successBg,
+      warningBg: Color.lerp(warningBg, other.warningBg, t) ?? warningBg,
+      dangerBg: Color.lerp(dangerBg, other.dangerBg, t) ?? dangerBg,
+      infoBg: Color.lerp(infoBg, other.infoBg, t) ?? infoBg,
     );
   }
+
+  /// 获取语义色对应的浅色背景
+  Color getSuccessBg() => successBg ?? success.withValues(alpha: 0.1);
+  Color getWarningBg() => warningBg ?? warning.withValues(alpha: 0.1);
+  Color getDangerBg() => dangerBg ?? danger.withValues(alpha: 0.1);
+  Color getInfoBg() => infoBg ?? info.withValues(alpha: 0.1);
 }
 
 @immutable

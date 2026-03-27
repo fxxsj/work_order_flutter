@@ -33,6 +33,11 @@ class AppDataTable extends StatelessWidget {
       color: colors?.subtleText ?? theme.hintColor,
       fontWeight: FontWeight.w600,
       letterSpacing: 0.2,
+      fontSize: 14,
+    );
+    final dataStyle = theme.textTheme.bodyMedium?.copyWith(
+      fontSize: 14,
+      height: 1.4,
     );
 
     return AppCard(
@@ -60,8 +65,9 @@ class AppDataTable extends StatelessWidget {
                   headingRowHeight: headingRowHeight,
                   dataRowMinHeight: dataRowMinHeight,
                   dataRowMaxHeight: dataRowMaxHeight,
-                  dividerThickness: 0.6,
+                  dividerThickness: 0.8,
                   showBottomBorder: true,
+                  dataTextStyle: dataStyle,
                 ),
               ),
             ),

@@ -11,7 +11,7 @@ class ThemeController extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.system;
   Color _seedColor = defaultSeed;
   Color _tempColor = defaultSeed;
-  double _fontScale = 1.0;
+  double _fontScale = 1.08;
 
   ThemeMode get themeMode => _themeMode;
   Color get seedColor => _seedColor;
