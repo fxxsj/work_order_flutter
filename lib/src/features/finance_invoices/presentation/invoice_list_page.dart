@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -11,6 +10,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_tab
 import 'package:work_order_app/src/core/presentation/layout/widgets/action_decision_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/file_upload_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
@@ -23,7 +23,6 @@ import 'package:work_order_app/src/core/presentation/providers/feature_entry.dar
 import 'package:work_order_app/src/core/utils/audit_log_navigation.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/file_link_util.dart';
-import 'package:work_order_app/src/core/utils/file_upload_picker.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
@@ -526,16 +525,16 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     if (_uploadingInvoiceId == invoice.id) {
       return;
     }
-    MultipartFile? attachment;
-    try {
-      attachment = await pickMultipartFile(
-        allowedExtensions: _attachmentExtensions,
-        fallbackFilename: 'invoice-attachment',
-      );
-    } on FileUploadPickException catch (err) {
-      ToastUtil.showError(err.message);
-      return;
-    }
+    final pickedFile = await showFileUploadDialog(
+      context,
+      title: '上传发票附件',
+      label: '发票附件',
+      allowedExtensions: _attachmentExtensions,
+      fallbackFilename: 'invoice-attachment',
+      helperText: '支持 PDF、图片等票据资料',
+      submitText: '上传',
+    );
+    final attachment = pickedFile?.file;
     if (attachment == null) {
       return;
     }

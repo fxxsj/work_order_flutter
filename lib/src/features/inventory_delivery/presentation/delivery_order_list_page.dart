@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -11,6 +10,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_tab
 import 'package:work_order_app/src/core/presentation/layout/widgets/action_decision_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/file_upload_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -22,7 +22,6 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widg
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
-import 'package:work_order_app/src/core/utils/file_upload_picker.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/data/customer_dto.dart';
 import 'package:work_order_app/src/features/inventory_delivery/application/delivery_order_view_model.dart';
@@ -297,16 +296,16 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     if (_uploadingDeliveryId == order.id) {
       return;
     }
-    MultipartFile? receiverSignature;
-    try {
-      receiverSignature = await pickMultipartFile(
-        allowedExtensions: _signatureExtensions,
-        fallbackFilename: 'receiver-signature',
-      );
-    } on FileUploadPickException catch (err) {
-      ToastUtil.showError(err.message);
-      return;
-    }
+    final pickedFile = await showFileUploadDialog(
+      context,
+      title: '上传签收附件',
+      label: '签收附件',
+      allowedExtensions: _signatureExtensions,
+      fallbackFilename: 'receiver-signature',
+      helperText: '支持签收单照片、PDF 和图片文件',
+      submitText: '上传',
+    );
+    final receiverSignature = pickedFile?.file;
     if (receiverSignature == null) {
       return;
     }

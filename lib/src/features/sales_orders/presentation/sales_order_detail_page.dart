@@ -4,12 +4,12 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/approval_rejection_notice_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/risk_action_dialog.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/audit_log_navigation.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
@@ -19,6 +19,7 @@ import 'package:work_order_app/src/features/sales_orders/data/sales_order_reposi
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order_detail.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order_repository.dart';
 import 'package:work_order_app/src/features/sales_orders/presentation/widgets/sales_order_detail_sections.dart';
+import 'package:work_order_app/src/features/sales_orders/presentation/widgets/sales_order_list_dialogs.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_flow_api_service.dart';
 
 class SalesOrderDetailEntry extends StatelessWidget {
@@ -60,22 +61,12 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
   bool _actionLoading = false;
   String? _errorMessage;
   bool _initialized = false;
-  String _workOrderPriority = 'normal';
 
   final TextEditingController _approvalCommentController =
       TextEditingController();
   final TextEditingController _rejectionReasonController =
       TextEditingController();
   final TextEditingController _cancelReasonController = TextEditingController();
-  final TextEditingController _paymentAmountController =
-      TextEditingController();
-  final TextEditingController _paymentDateController = TextEditingController();
-  final TextEditingController _workOrderQuantityController =
-      TextEditingController();
-  final TextEditingController _workOrderDeliveryDateController =
-      TextEditingController();
-  final TextEditingController _workOrderNotesController =
-      TextEditingController();
 
   @override
   void didChangeDependencies() {
@@ -90,11 +81,6 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     _approvalCommentController.dispose();
     _rejectionReasonController.dispose();
     _cancelReasonController.dispose();
-    _paymentAmountController.dispose();
-    _paymentDateController.dispose();
-    _workOrderQuantityController.dispose();
-    _workOrderDeliveryDateController.dispose();
-    _workOrderNotesController.dispose();
     super.dispose();
   }
 
@@ -138,24 +124,11 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
   }
 
   Future<void> _showSubmitDialog({bool resubmitting = false}) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(resubmitting ? '重新提交客户订单' : '提交客户订单'),
-        content: Text(
-          resubmitting ? '确认按退回意见修改后重新提交该客户订单吗？' : '确认提交该客户订单吗？',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(resubmitting ? '重新提交' : '提交'),
-          ),
-        ],
-      ),
+    final confirmed = await showRiskActionConfirmDialog(
+      context,
+      title: resubmitting ? '重新提交客户订单' : '提交客户订单',
+      summary: resubmitting ? '确认按退回意见修改后重新提交该客户订单吗？' : '确认提交该客户订单吗？',
+      confirmText: resubmitting ? '重新提交' : '提交',
     );
     if (confirmed != true) return;
     final viewModel = context.read<SalesOrderViewModel>();
@@ -167,25 +140,20 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
 
   Future<void> _showApproveDialog() async {
     _approvalCommentController.clear();
+    final formKey = GlobalKey<FormState>();
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('审核通过'),
-        content: TextField(
+      builder: (dialogContext) => FormDialog(
+        title: '审核通过',
+        formKey: formKey,
+        submitText: '通过',
+        maxWidth: 420,
+        onSubmit: () async => Navigator.of(dialogContext).pop(true),
+        content: TextFormField(
           controller: _approvalCommentController,
           decoration: const InputDecoration(labelText: '审核意见（可选）'),
           maxLines: 3,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('通过'),
-          ),
-        ],
       ),
     );
     if (confirmed != true) return;
@@ -201,63 +169,53 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
   Future<void> _showRejectDialog() async {
     _approvalCommentController.clear();
     _rejectionReasonController.clear();
+    final formKey = GlobalKey<FormState>();
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('退回客户订单'),
-        content: SizedBox(
-          width: 520,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const RiskActionHintPanel(
-                summary: '退回后，业务需要先补充订单资料或重新确认交期，再重新提交审核。',
-                impacts: [
-                  '请明确写清需要补什么、改什么',
-                  '模糊退回会让业务、生产和客户重复确认',
-                ],
-                auditHint: '退回原因会直接进入审批和审计记录。',
-                destructive: true,
+      builder: (dialogContext) => FormDialog(
+        title: '退回客户订单',
+        formKey: formKey,
+        submitText: '确认退回',
+        maxWidth: 520,
+        onSubmit: () async => Navigator.of(dialogContext).pop(true),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const RiskActionHintPanel(
+              summary: '退回后，业务需要先补充订单资料或重新确认交期，再重新提交审核。',
+              impacts: [
+                '请明确写清需要补什么、改什么',
+                '模糊退回会让业务、生产和客户重复确认',
+              ],
+              auditHint: '退回原因会直接进入审批和审计记录。',
+              destructive: true,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _rejectionReasonController,
+              decoration: const InputDecoration(
+                labelText: '退回原因',
+                hintText: '请明确写清需要补充或修改的内容',
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _rejectionReasonController,
-                decoration: const InputDecoration(
-                  labelText: '退回原因',
-                  hintText: '请明确写清需要补充或修改的内容',
-                ),
-                maxLines: 3,
+              maxLines: 3,
+              validator: (value) =>
+                  (value?.trim().isEmpty ?? true) ? '请填写拒绝原因' : null,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _approvalCommentController,
+              decoration: const InputDecoration(
+                labelText: '补充说明（可选）',
+                hintText: '例如：客户信息不完整，需补充联系人和交期',
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _approvalCommentController,
-                decoration: const InputDecoration(
-                  labelText: '补充说明（可选）',
-                  hintText: '例如：客户信息不完整，需补充联系人和交期',
-                ),
-                maxLines: 3,
-              ),
-            ],
-          ),
+              maxLines: 3,
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('确认退回'),
-          ),
-        ],
       ),
     );
     if (confirmed != true) return;
     final reason = _rejectionReasonController.text.trim();
-    if (reason.isEmpty) {
-      ToastUtil.showError('请填写拒绝原因');
-      return;
-    }
     final viewModel = context.read<SalesOrderViewModel>();
     await _runDetailAction(
       () => viewModel.reject(widget.orderId, {
@@ -269,22 +227,11 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
   }
 
   Future<void> _showCompleteDialog() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('完成订单'),
-        content: const Text('确认标记该订单为已完成吗？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('完成'),
-          ),
-        ],
-      ),
+    final confirmed = await showRiskActionConfirmDialog(
+      context,
+      title: '完成订单',
+      summary: '确认标记该订单为已完成吗？',
+      confirmText: '完成',
     );
     if (confirmed != true) return;
     final viewModel = context.read<SalesOrderViewModel>();
@@ -300,43 +247,35 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
 
   Future<void> _showCancelDialog() async {
     _cancelReasonController.clear();
+    final formKey = GlobalKey<FormState>();
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('取消订单'),
-        content: SizedBox(
-          width: 520,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const RiskActionHintPanel(
-                summary: '取消客户订单会中断后续施工、发货和财务闭环，相关部门需要同步停单。',
-                impacts: [
-                  '如果已排产或已出货，请先确认是否应走变更、退货或异常流程',
-                  '建议填写取消原因，便于业务和财务后续对账追踪',
-                ],
-                auditHint: '订单取消原因会影响后续争议处理和经营复盘。',
-                destructive: true,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _cancelReasonController,
-                decoration: const InputDecoration(labelText: '取消原因（可选）'),
-                maxLines: 3,
-              ),
-            ],
-          ),
+      builder: (dialogContext) => FormDialog(
+        title: '取消订单',
+        formKey: formKey,
+        submitText: '确认取消',
+        maxWidth: 520,
+        onSubmit: () async => Navigator.of(dialogContext).pop(true),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const RiskActionHintPanel(
+              summary: '取消客户订单会中断后续施工、发货和财务闭环，相关部门需要同步停单。',
+              impacts: [
+                '如果已排产或已出货，请先确认是否应走变更、退货或异常流程',
+                '建议填写取消原因，便于业务和财务后续对账追踪',
+              ],
+              auditHint: '订单取消原因会影响后续争议处理和经营复盘。',
+              destructive: true,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _cancelReasonController,
+              decoration: const InputDecoration(labelText: '取消原因（可选）'),
+              maxLines: 3,
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('确认取消'),
-          ),
-        ],
       ),
     );
     if (confirmed != true) return;
@@ -350,47 +289,15 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
   }
 
   Future<void> _showUpdatePaymentDialog() async {
-    _paymentAmountController.text =
-        _detail?.paidAmount?.toStringAsFixed(2) ?? '';
-    _paymentDateController.text = _formatDate(_detail?.paymentDate);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('更新付款信息'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _paymentAmountController,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(labelText: '已付金额'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _paymentDateController,
-              decoration: const InputDecoration(
-                labelText: '付款日期（YYYY-MM-DD）',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('更新'),
-          ),
-        ],
-      ),
+    final result = await showSalesOrderPaymentDialog(
+      context,
+      initialAmountText: _detail?.paidAmount?.toStringAsFixed(2) ?? '',
+      initialDateText: _formatDate(_detail?.paymentDate),
     );
-    if (confirmed != true) return;
+    if (result == null) return;
 
-    final amountText = _paymentAmountController.text.trim();
-    final dateText = _paymentDateController.text.trim();
+    final amountText = result.amountText.trim();
+    final dateText = result.dateText.trim();
     if (amountText.isEmpty && dateText.isEmpty) {
       ToastUtil.showError('请至少填写一项');
       return;
@@ -415,75 +322,18 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
   }
 
   Future<void> _showCreateWorkOrderDialog() async {
-    _workOrderQuantityController.text = '';
-    _workOrderDeliveryDateController.text = _formatDate(_detail?.deliveryDate);
-    _workOrderNotesController.text = '';
-    _workOrderPriority = 'normal';
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('生成施工单'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _workOrderQuantityController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: '生产数量（可选）',
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _workOrderDeliveryDateController,
-                decoration: const InputDecoration(
-                  labelText: '交货日期（YYYY-MM-DD，可选）',
-                ),
-              ),
-              const SizedBox(height: 12),
-              SearchableDropdownFormField<String>(
-                initialValue: _workOrderPriority,
-                decoration: const InputDecoration(labelText: '优先级'),
-                items: const [
-                  DropdownMenuItem(value: 'low', child: Text('低')),
-                  DropdownMenuItem(value: 'normal', child: Text('普通')),
-                  DropdownMenuItem(value: 'high', child: Text('高')),
-                  DropdownMenuItem(value: 'urgent', child: Text('紧急')),
-                ],
-                onChanged: (value) =>
-                    setState(() => _workOrderPriority = value ?? 'normal'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _workOrderNotesController,
-                decoration: const InputDecoration(labelText: '备注（可选）'),
-                maxLines: 3,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('取消'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('生成'),
-            ),
-          ],
-        ),
-      ),
+    final result = await showSalesOrderCreateWorkOrderDialog(
+      context,
+      initialDeliveryDate: _formatDate(_detail?.deliveryDate),
     );
-    if (confirmed != true) return;
+    if (result == null) return;
 
     final payload = <String, dynamic>{
       'sales_order_id': widget.orderId,
-      'priority': _workOrderPriority,
-      'notes': _workOrderNotesController.text.trim(),
+      'priority': result.priority,
+      'notes': result.notes,
     };
-    final quantityText = _workOrderQuantityController.text.trim();
+    final quantityText = result.quantityText.trim();
     if (quantityText.isNotEmpty) {
       final quantity = int.tryParse(quantityText);
       if (quantity == null || quantity <= 0) {
@@ -492,7 +342,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
       }
       payload['production_quantity'] = quantity;
     }
-    final deliveryDate = _workOrderDeliveryDateController.text.trim();
+    final deliveryDate = result.deliveryDateText.trim();
     if (deliveryDate.isNotEmpty) {
       payload['delivery_date'] = deliveryDate;
     }
@@ -507,22 +357,8 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
       ToastUtil.showSuccess('施工单已生成');
       await _loadDetail();
       if (workOrderId != null && mounted) {
-        final goToDetail = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('查看施工单'),
-            content: const Text('施工单已生成，是否立即查看？'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('稍后'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('查看'),
-              ),
-            ],
-          ),
+        final goToDetail = await showSalesOrderNavigateToWorkOrderDialog(
+          context,
         );
         if (goToDetail == true && mounted) {
           context.go('/workorders/$workOrderId');

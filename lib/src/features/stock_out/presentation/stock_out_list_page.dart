@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/models/generic_record.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/generic_resource_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
@@ -339,8 +340,15 @@ class StockOutListEntry extends StatelessWidget {
     final supportService = StockOutSupportService(context.read<ApiClient>());
     await showDialog<void>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('发货单详情'),
+      builder: (dialogContext) => BaseDialog(
+        title: '发货单详情',
+        maxWidth: 520,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('关闭'),
+          ),
+        ],
         content: FutureBuilder<DeliveryOrderDetail>(
           future: supportService.fetchDeliveryOrderDetail(orderId),
           builder: (context, snapshot) {
@@ -360,38 +368,36 @@ class StockOutListEntry extends StatelessWidget {
             final detail = snapshot.data!;
             return SizedBox(
               width: 520,
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _DetailRow(label: '发货单号', value: detail.orderNumber),
-                    _DetailRow(label: '客户', value: detail.customerName ?? '-'),
-                    _DetailRow(
-                        label: '状态',
-                        value: detail.statusDisplay ?? detail.status ?? '-'),
-                    _DetailRow(
-                        label: '客户订单号', value: detail.salesOrderNumber ?? '-'),
-                    _DetailRow(
-                        label: '发货日期', value: _formatDate(detail.deliveryDate)),
-                    _DetailRow(label: '收货人', value: detail.receiverName ?? '-'),
-                    _DetailRow(
-                        label: '物流公司', value: detail.logisticsCompany ?? '-'),
-                    _DetailRow(
-                        label: '运单号', value: detail.trackingNumber ?? '-'),
-                    if ((detail.notes ?? '').trim().isNotEmpty)
-                      _DetailRow(label: '备注', value: detail.notes ?? ''),
-                  ],
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _DetailRow(label: '发货单号', value: detail.orderNumber),
+                  _DetailRow(label: '客户', value: detail.customerName ?? '-'),
+                  _DetailRow(
+                    label: '状态',
+                    value: detail.statusDisplay ?? detail.status ?? '-',
+                  ),
+                  _DetailRow(
+                    label: '客户订单号',
+                    value: detail.salesOrderNumber ?? '-',
+                  ),
+                  _DetailRow(
+                    label: '发货日期',
+                    value: _formatDate(detail.deliveryDate),
+                  ),
+                  _DetailRow(label: '收货人', value: detail.receiverName ?? '-'),
+                  _DetailRow(
+                    label: '物流公司',
+                    value: detail.logisticsCompany ?? '-',
+                  ),
+                  _DetailRow(label: '运单号', value: detail.trackingNumber ?? '-'),
+                  if ((detail.notes ?? '').trim().isNotEmpty)
+                    _DetailRow(label: '备注', value: detail.notes ?? ''),
+                ],
               ),
             );
           },
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('关闭'),
-          ),
-        ],
       ),
     );
   }

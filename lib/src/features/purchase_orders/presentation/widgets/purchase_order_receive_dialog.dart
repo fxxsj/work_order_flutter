@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/features/purchase_orders/domain/purchase_order_detail.dart';
 
 class PurchaseReceiveSubmission {
@@ -104,78 +105,64 @@ Future<bool?> showPurchaseReceiveDialog(
               }
             }
 
-            return AlertDialog(
-              title: Text(title),
-              content: SizedBox(
-                width: 760,
-                child: SingleChildScrollView(
-                  child: Form(
-                    key: formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _DetailRow(label: '采购单号', value: detail.orderNumber),
-                        _DetailRow(
-                            label: '供应商',
-                            value: _displayText(detail.supplierName)),
-                        _DetailRow(
-                          label: '状态',
-                          value: _displayText(
-                              detail.statusDisplay ?? detail.status),
+            return FormDialog(
+              title: title,
+              formKey: formKey,
+              submitText: '确认收货',
+              cancelText: cancelText,
+              submitting: submitting,
+              maxWidth: 760,
+              onSubmit: submit,
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _DetailRow(label: '采购单号', value: detail.orderNumber),
+                  _DetailRow(
+                    label: '供应商',
+                    value: _displayText(detail.supplierName),
+                  ),
+                  _DetailRow(
+                    label: '状态',
+                    value: _displayText(detail.statusDisplay ?? detail.status),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _DateField(
+                          label: '收货日期',
+                          value: receivedDate.value,
+                          onPicked: (picked) =>
+                              setState(() => receivedDate.value = picked),
                         ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _DateField(
-                                label: '收货日期',
-                                value: receivedDate.value,
-                                onPicked: (picked) =>
-                                    setState(() => receivedDate.value = picked),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: TextFormField(
-                                controller: deliveryNoteController,
-                                decoration: const InputDecoration(
-                                  labelText: '送货单号',
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        ...items.map(
-                          (item) => _ReceiveItemRow(
-                            item: item,
-                            enabled: !submitting,
-                            onChanged: () => setState(() {}),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextFormField(
+                          controller: deliveryNoteController,
+                          decoration: const InputDecoration(
+                            labelText: '送货单号',
+                            border: OutlineInputBorder(),
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          summaryText,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  ...items.map(
+                    (item) => _ReceiveItemRow(
+                      item: item,
+                      enabled: !submitting,
+                      onChanged: () => setState(() {}),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Text(
+                    summaryText,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
               ),
-              actions: [
-                TextButton(
-                  onPressed: submitting
-                      ? null
-                      : () => Navigator.of(dialogContext).pop(false),
-                  child: Text(cancelText),
-                ),
-                FilledButton(
-                  onPressed: submitting ? null : submit,
-                  child: Text(submitting ? '提交中...' : '确认收货'),
-                ),
-              ],
             );
           },
         );

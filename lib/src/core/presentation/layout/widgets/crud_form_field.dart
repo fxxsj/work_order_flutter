@@ -982,7 +982,7 @@ class _CrudFileUploadFieldBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currentValue = state.value ?? value;
+    final currentValue = state.value;
     final hasValue = currentValue != null;
     final supportedTypes = allowedExtensions.join(', ').toUpperCase();
 
@@ -1760,7 +1760,7 @@ class _CrudRadioGroupFieldBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currentValue = state.value ?? value;
+    final currentValue = state.value;
 
     return InputDecorator(
       decoration: InputDecoration(

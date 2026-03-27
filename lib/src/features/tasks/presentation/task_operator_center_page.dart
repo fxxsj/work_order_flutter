@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
@@ -630,99 +631,79 @@ class _TaskUpdateDialogState extends State<_TaskUpdateDialog> {
     final completed = task.quantityCompleted ?? 0;
     final progress = total > 0 ? (completed / total * 100).round() : 0;
 
-    return AlertDialog(
-      title: Text(_completeMode ? '完成任务' : '更新进度'),
-      content: SizedBox(
-        width: 420,
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(task.workContent ?? '任务 #${task.id}'),
-                const SizedBox(height: 8),
-                LinearProgressIndicator(
-                    value: total > 0 ? completed / total : 0),
-                const SizedBox(height: 6),
-                Text('$completed / $total · $progress%'),
-                const SizedBox(height: 16),
-                ToggleButtons(
-                  isSelected: [_completeMode == false, _completeMode == true],
-                  onPressed: (index) {
-                    setState(() => _completeMode = index == 1);
-                  },
-                  children: const [
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
-                      child: Text('增量更新'),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
-                      child: Text('直接完成'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                if (!_completeMode) ...[
-                  TextFormField(
-                    initialValue: _quantityIncrement.toString(),
-                    decoration: const InputDecoration(labelText: '本次完成数量'),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      final parsed = int.tryParse(value ?? '');
-                      if (parsed == null || parsed <= 0) {
-                        return '请输入大于 0 的数量';
-                      }
-                      return null;
-                    },
-                    onChanged: (value) {
-                      _quantityIncrement = int.tryParse(value) ?? 0;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                TextFormField(
-                  initialValue: _quantityDefective.toString(),
-                  decoration: const InputDecoration(labelText: '不良品数量'),
-                  keyboardType: TextInputType.number,
-                  onChanged: (value) {
-                    _quantityDefective = int.tryParse(value) ?? 0;
-                  },
-                ),
-                if (_completeMode) ...[
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    decoration: const InputDecoration(labelText: '完成理由（可选）'),
-                    onChanged: (value) => _completionReason = value,
-                  ),
-                ],
-                const SizedBox(height: 12),
-                TextFormField(
-                  decoration: const InputDecoration(labelText: '备注（可选）'),
-                  onChanged: (value) => _notes = value,
-                ),
-              ],
-            ),
+    return FormDialog(
+      title: _completeMode ? '完成任务' : '更新进度',
+      formKey: _formKey,
+      submitText: _completeMode ? '确认完成' : '确认更新',
+      submitting: _submitting,
+      maxWidth: 420,
+      onSubmit: _submit,
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(task.workContent ?? '任务 #${task.id}'),
+          const SizedBox(height: 8),
+          LinearProgressIndicator(value: total > 0 ? completed / total : 0),
+          const SizedBox(height: 6),
+          Text('$completed / $total · $progress%'),
+          const SizedBox(height: 16),
+          ToggleButtons(
+            isSelected: [_completeMode == false, _completeMode == true],
+            onPressed: (index) {
+              setState(() => _completeMode = index == 1);
+            },
+            children: const [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                child: Text('增量更新'),
+              ),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                child: Text('直接完成'),
+              ),
+            ],
           ),
-        ),
+          const SizedBox(height: 12),
+          if (!_completeMode) ...[
+            TextFormField(
+              initialValue: _quantityIncrement.toString(),
+              decoration: const InputDecoration(labelText: '本次完成数量'),
+              keyboardType: TextInputType.number,
+              validator: (value) {
+                final parsed = int.tryParse(value ?? '');
+                if (parsed == null || parsed <= 0) {
+                  return '请输入大于 0 的数量';
+                }
+                return null;
+              },
+              onChanged: (value) {
+                _quantityIncrement = int.tryParse(value) ?? 0;
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
+          TextFormField(
+            initialValue: _quantityDefective.toString(),
+            decoration: const InputDecoration(labelText: '不良品数量'),
+            keyboardType: TextInputType.number,
+            onChanged: (value) {
+              _quantityDefective = int.tryParse(value) ?? 0;
+            },
+          ),
+          if (_completeMode) ...[
+            const SizedBox(height: 12),
+            TextFormField(
+              decoration: const InputDecoration(labelText: '完成理由（可选）'),
+              onChanged: (value) => _completionReason = value,
+            ),
+          ],
+          const SizedBox(height: 12),
+          TextFormField(
+            decoration: const InputDecoration(labelText: '备注（可选）'),
+            onChanged: (value) => _notes = value,
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: _submitting ? null : () => Navigator.of(context).pop(),
-          child: const Text('取消'),
-        ),
-        FilledButton(
-          onPressed: _submitting ? null : _submit,
-          child: _submitting
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(_completeMode ? '确认完成' : '确认更新'),
-        ),
-      ],
     );
   }
 

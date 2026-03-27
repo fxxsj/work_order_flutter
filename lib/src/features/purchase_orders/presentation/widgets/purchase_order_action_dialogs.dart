@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 
 Future<String?> showPurchaseReasonDialog(
   BuildContext context, {
@@ -7,27 +8,23 @@ Future<String?> showPurchaseReasonDialog(
   String confirmText = '确认',
   String fieldLabel = '原因',
 }) async {
+  final formKey = GlobalKey<FormState>();
   final controller = TextEditingController();
   final result = await showDialog<String>(
     context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: Text(title),
+    builder: (dialogContext) => FormDialog(
+      title: title,
+      formKey: formKey,
+      submitText: confirmText,
+      cancelText: cancelText,
+      maxWidth: 420,
+      onSubmit: () async =>
+          Navigator.of(dialogContext).pop(controller.text.trim()),
       content: TextFormField(
         controller: controller,
         maxLines: 3,
         decoration: InputDecoration(labelText: fieldLabel),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(dialogContext).pop(),
-          child: Text(cancelText),
-        ),
-        TextButton(
-          onPressed: () =>
-              Navigator.of(dialogContext).pop(controller.text.trim()),
-          child: Text(confirmText),
-        ),
-      ],
     ),
   );
   controller.dispose();

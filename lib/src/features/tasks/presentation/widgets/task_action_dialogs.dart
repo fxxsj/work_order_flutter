@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/features/departments/domain/department.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
@@ -77,70 +78,51 @@ class _TaskQuantityDialogState extends State<_TaskQuantityDialog> {
     final completed = task.quantityCompleted ?? 0;
     final remaining = (total - completed).clamp(0, double.infinity).toInt();
 
-    return AlertDialog(
-      title: const Text('更新进度'),
-      content: SizedBox(
-        width: 420,
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(task.workContent ?? '任务 #${task.id}'),
-                const SizedBox(height: 8),
-                Text('已完成 $completed / $total · 剩余 $remaining'),
-                const SizedBox(height: 12),
-                TextFormField(
-                  initialValue: _quantityIncrement.toString(),
-                  decoration: const InputDecoration(labelText: '本次完成数量'),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    final parsed = int.tryParse(value ?? '');
-                    if (parsed == null || parsed <= 0) {
-                      return '请输入大于 0 的数量';
-                    }
-                    return null;
-                  },
-                  onChanged: (value) {
-                    _quantityIncrement = int.tryParse(value) ?? 0;
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  initialValue: _quantityDefective.toString(),
-                  decoration: const InputDecoration(labelText: '不良品数量'),
-                  keyboardType: TextInputType.number,
-                  onChanged: (value) {
-                    _quantityDefective = int.tryParse(value) ?? 0;
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  decoration: const InputDecoration(labelText: '备注（可选）'),
-                  onChanged: (value) => _notes = value,
-                ),
-              ],
-            ),
+    return FormDialog(
+      title: '更新进度',
+      formKey: _formKey,
+      submitText: '确认更新',
+      submitting: _submitting,
+      maxWidth: 420,
+      onSubmit: _submit,
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(task.workContent ?? '任务 #${task.id}'),
+          const SizedBox(height: 8),
+          Text('已完成 $completed / $total · 剩余 $remaining'),
+          const SizedBox(height: 12),
+          TextFormField(
+            initialValue: _quantityIncrement.toString(),
+            decoration: const InputDecoration(labelText: '本次完成数量'),
+            keyboardType: TextInputType.number,
+            validator: (value) {
+              final parsed = int.tryParse(value ?? '');
+              if (parsed == null || parsed <= 0) {
+                return '请输入大于 0 的数量';
+              }
+              return null;
+            },
+            onChanged: (value) {
+              _quantityIncrement = int.tryParse(value) ?? 0;
+            },
           ),
-        ),
+          const SizedBox(height: 12),
+          TextFormField(
+            initialValue: _quantityDefective.toString(),
+            decoration: const InputDecoration(labelText: '不良品数量'),
+            keyboardType: TextInputType.number,
+            onChanged: (value) {
+              _quantityDefective = int.tryParse(value) ?? 0;
+            },
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            decoration: const InputDecoration(labelText: '备注（可选）'),
+            onChanged: (value) => _notes = value,
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: _submitting ? null : () => Navigator.of(context).pop(),
-          child: const Text('取消'),
-        ),
-        FilledButton(
-          onPressed: _submitting ? null : _submit,
-          child: _submitting
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('确认更新'),
-        ),
-      ],
     );
   }
 
@@ -174,6 +156,7 @@ class _TaskCompleteDialog extends StatefulWidget {
 }
 
 class _TaskCompleteDialogState extends State<_TaskCompleteDialog> {
+  final _formKey = GlobalKey<FormState>();
   int _quantityDefective = 0;
   String _completionReason = '';
   String _notes = '';
@@ -182,54 +165,38 @@ class _TaskCompleteDialogState extends State<_TaskCompleteDialog> {
   @override
   Widget build(BuildContext context) {
     final task = widget.task;
-    return AlertDialog(
-      title: const Text('完成任务'),
-      content: SizedBox(
-        width: 420,
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(task.workContent ?? '任务 #${task.id}'),
-              const SizedBox(height: 12),
-              TextFormField(
-                initialValue: _quantityDefective.toString(),
-                decoration: const InputDecoration(labelText: '不良品数量'),
-                keyboardType: TextInputType.number,
-                onChanged: (value) {
-                  _quantityDefective = int.tryParse(value) ?? 0;
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                decoration: const InputDecoration(labelText: '完成理由（可选）'),
-                onChanged: (value) => _completionReason = value,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                decoration: const InputDecoration(labelText: '备注（可选）'),
-                onChanged: (value) => _notes = value,
-              ),
-            ],
+    return FormDialog(
+      title: '完成任务',
+      formKey: _formKey,
+      submitText: '确认完成',
+      submitting: _submitting,
+      maxWidth: 420,
+      onSubmit: _submit,
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(task.workContent ?? '任务 #${task.id}'),
+          const SizedBox(height: 12),
+          TextFormField(
+            initialValue: _quantityDefective.toString(),
+            decoration: const InputDecoration(labelText: '不良品数量'),
+            keyboardType: TextInputType.number,
+            onChanged: (value) {
+              _quantityDefective = int.tryParse(value) ?? 0;
+            },
           ),
-        ),
+          const SizedBox(height: 12),
+          TextFormField(
+            decoration: const InputDecoration(labelText: '完成理由（可选）'),
+            onChanged: (value) => _completionReason = value,
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            decoration: const InputDecoration(labelText: '备注（可选）'),
+            onChanged: (value) => _notes = value,
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: _submitting ? null : () => Navigator.of(context).pop(),
-          child: const Text('取消'),
-        ),
-        FilledButton(
-          onPressed: _submitting ? null : _submit,
-          child: _submitting
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('确认完成'),
-        ),
-      ],
     );
   }
 
@@ -267,6 +234,7 @@ class _TaskAssignDialog extends StatefulWidget {
 }
 
 class _TaskAssignDialogState extends State<_TaskAssignDialog> {
+  final _formKey = GlobalKey<FormState>();
   int? _departmentId;
   List<_OperatorOption> _operators = [];
   int? _operatorId;
@@ -288,81 +256,71 @@ class _TaskAssignDialogState extends State<_TaskAssignDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('分派操作员'),
-      content: SizedBox(
-        width: 420,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SearchableDropdownFormField<int?>(
-              key: ValueKey<int?>(_departmentId),
-              initialValue: _departmentId,
-              decoration: const InputDecoration(labelText: '部门'),
-              items: [
-                for (final dept in widget.departments)
-                  DropdownMenuItem<int?>(
-                    value: dept.id,
-                    child: Text(dept.name),
-                  ),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _departmentId = value;
-                  _operatorId = null;
-                  _operators = [];
-                });
-                if (value != null) {
-                  _loadOperators(value);
-                }
-              },
-            ),
-            const SizedBox(height: 12),
-            if (_loadingOperators) const LinearProgressIndicator(minHeight: 2),
-            SearchableDropdownFormField<int?>(
-              key: ValueKey<int?>(_operatorId),
-              initialValue: _operatorId,
-              decoration: const InputDecoration(labelText: '操作员'),
-              items: _operators
-                  .map(
-                    (op) => DropdownMenuItem<int?>(
-                        value: op.id, child: Text(op.name)),
-                  )
-                  .toList(),
-              onChanged: (value) => setState(() => _operatorId = value),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              decoration: const InputDecoration(labelText: '备注（可选）'),
-              onChanged: (value) => _notes = value,
-            ),
-            if (_operators.isEmpty && !_loadingOperators)
-              const Padding(
-                padding: EdgeInsets.only(top: 8),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text('当前部门暂无可分派操作员'),
+    return FormDialog(
+      title: '分派操作员',
+      formKey: _formKey,
+      submitText: '确认分派',
+      submitting: _submitting,
+      maxWidth: 420,
+      onSubmit: _submit,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SearchableDropdownFormField<int?>(
+            key: ValueKey<int?>(_departmentId),
+            initialValue: _departmentId,
+            decoration: const InputDecoration(labelText: '部门'),
+            items: [
+              for (final dept in widget.departments)
+                DropdownMenuItem<int?>(
+                  value: dept.id,
+                  child: Text(dept.name),
                 ),
-              ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _submitting ? null : () => Navigator.of(context).pop(),
-          child: const Text('取消'),
-        ),
-        FilledButton(
-          onPressed: _submitting || _operatorId == null ? null : _submit,
-          child: _submitting
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+            ],
+            onChanged: (value) {
+              setState(() {
+                _departmentId = value;
+                _operatorId = null;
+                _operators = [];
+              });
+              if (value != null) {
+                _loadOperators(value);
+              }
+            },
+            validator: (value) => value == null ? '请选择部门' : null,
+          ),
+          const SizedBox(height: 12),
+          if (_loadingOperators) const LinearProgressIndicator(minHeight: 2),
+          SearchableDropdownFormField<int?>(
+            key: ValueKey<int?>(_operatorId),
+            initialValue: _operatorId,
+            decoration: const InputDecoration(labelText: '操作员'),
+            items: _operators
+                .map(
+                  (op) => DropdownMenuItem<int?>(
+                    value: op.id,
+                    child: Text(op.name),
+                  ),
                 )
-              : const Text('确认分派'),
-        ),
-      ],
+                .toList(),
+            onChanged: (value) => setState(() => _operatorId = value),
+            validator: (value) => value == null ? '请选择操作员' : null,
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            decoration: const InputDecoration(labelText: '备注（可选）'),
+            onChanged: (value) => _notes = value,
+          ),
+          if (_operators.isEmpty && !_loadingOperators)
+            const Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text('当前部门暂无可分派操作员'),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -388,7 +346,9 @@ class _TaskAssignDialogState extends State<_TaskAssignDialog> {
   }
 
   Future<void> _submit() async {
-    if (_operatorId == null) return;
+    if (!(_formKey.currentState?.validate() ?? false) || _operatorId == null) {
+      return;
+    }
     setState(() => _submitting = true);
     try {
       await widget.onSubmit(_operatorId!, _notes);

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 
 Future<void> showPurchaseLowStockDialog(
@@ -11,8 +12,9 @@ Future<void> showPurchaseLowStockDialog(
 }) {
   return showDialog<void>(
     context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: Text(title),
+    builder: (dialogContext) => BaseDialog(
+      title: title,
+      maxWidth: 720,
       content: SizedBox(
         width: 720,
         child: materials.isEmpty

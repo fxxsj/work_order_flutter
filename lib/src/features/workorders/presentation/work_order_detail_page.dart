@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -9,11 +8,11 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/approval_rejection_notice_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/file_upload_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/audit_log_navigation.dart';
-import 'package:work_order_app/src/core/utils/file_upload_picker.dart';
 import 'package:work_order_app/src/core/utils/store_util.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -182,16 +181,16 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   }
 
   Future<void> _handleUploadDesignFile() async {
-    MultipartFile? designFile;
-    try {
-      designFile = await pickMultipartFile(
-        allowedExtensions: _designFileExtensions,
-        fallbackFilename: 'design-file',
-      );
-    } on FileUploadPickException catch (err) {
-      ToastUtil.showError(err.message);
-      return;
-    }
+    final pickedFile = await showFileUploadDialog(
+      context,
+      title: '上传设计文件',
+      label: '设计文件',
+      allowedExtensions: _designFileExtensions,
+      fallbackFilename: 'design-file',
+      helperText: '支持 PDF、AI、PSD、CDR、SVG 和常见图片格式',
+      submitText: '上传',
+    );
+    final designFile = pickedFile?.file;
     if (designFile == null) {
       return;
     }

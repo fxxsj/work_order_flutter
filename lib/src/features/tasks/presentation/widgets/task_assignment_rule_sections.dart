@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
@@ -57,8 +58,10 @@ Future<bool> showTaskAssignmentRuleDeleteDialog(
 }) async {
   final confirmed = await showDialog<bool>(
     context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('确认删除'),
+    builder: (context) => BaseDialog(
+      title: '确认删除',
+      maxWidth: 420,
+      scrollable: false,
       content: Text(content),
       actions: [
         TextButton(
@@ -119,114 +122,88 @@ class _TaskAssignmentRuleDialogState extends State<TaskAssignmentRuleDialog> {
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.rule != null;
-    return AlertDialog(
-      title: Text(isEdit ? '编辑分派规则' : '新建分派规则'),
-      content: SizedBox(
-        width: 420,
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                SearchableDropdownFormField<int>(
-                  key: ValueKey<int>(_processId),
-                  initialValue: _processId,
-                  decoration: const InputDecoration(labelText: '工序'),
-                  items: widget.processes
-                      .map(
-                        (p) => DropdownMenuItem(
-                          value: p.id,
-                          child: Text('${p.code} ${p.name}'),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: isEdit
-                      ? null
-                      : (value) =>
-                          setState(() => _processId = value ?? _processId),
-                ),
-                const SizedBox(height: 12),
-                SearchableDropdownFormField<int>(
-                  key: ValueKey<int>(_departmentId),
-                  initialValue: _departmentId,
-                  decoration: const InputDecoration(labelText: '分派部门'),
-                  items: widget.departments
-                      .map(
-                        (d) =>
-                            DropdownMenuItem(value: d.id, child: Text(d.name)),
-                      )
-                      .toList(),
-                  onChanged: isEdit
-                      ? null
-                      : (value) => setState(
-                            () => _departmentId = value ?? _departmentId,
-                          ),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  initialValue: _priority.toString(),
-                  decoration: const InputDecoration(labelText: '优先级 (0-100)'),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    final parsed = int.tryParse(value ?? '');
-                    if (parsed == null || parsed < 0 || parsed > 100) {
-                      return '请输入 0-100 的整数';
-                    }
-                    return null;
-                  },
-                  onChanged: (value) =>
-                      _priority = int.tryParse(value) ?? _priority,
-                ),
-                const SizedBox(height: 12),
-                SearchableDropdownFormField<String>(
-                  key: ValueKey<String>(_strategy),
-                  initialValue: _strategy,
-                  decoration: const InputDecoration(labelText: '操作员选择策略'),
-                  items: const [
-                    DropdownMenuItem(value: 'least_tasks', child: Text('任务最少')),
-                    DropdownMenuItem(value: 'random', child: Text('随机选择')),
-                    DropdownMenuItem(value: 'round_robin', child: Text('轮询分配')),
-                    DropdownMenuItem(
-                      value: 'first_available',
-                      child: Text('第一个可用'),
-                    ),
-                  ],
-                  onChanged: (value) =>
-                      setState(() => _strategy = value ?? _strategy),
-                ),
-                const SizedBox(height: 12),
-                SwitchListTile(
-                  value: _isActive,
-                  onChanged: (value) => setState(() => _isActive = value),
-                  title: const Text('启用规则'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-                TextFormField(
-                  initialValue: _notes,
-                  decoration: const InputDecoration(labelText: '备注（可选）'),
-                  onChanged: (value) => _notes = value,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _submitting ? null : () => Navigator.of(context).pop(),
-          child: const Text('取消'),
-        ),
-        FilledButton(
-          onPressed: _submitting ? null : _submit,
-          child: _submitting
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+    return FormDialog(
+      title: isEdit ? '编辑分派规则' : '新建分派规则',
+      formKey: _formKey,
+      submitText: '保存',
+      submitting: _submitting,
+      maxWidth: 420,
+      onSubmit: _submit,
+      content: Column(
+        children: [
+          SearchableDropdownFormField<int>(
+            key: ValueKey<int>(_processId),
+            initialValue: _processId,
+            decoration: const InputDecoration(labelText: '工序'),
+            items: widget.processes
+                .map(
+                  (p) => DropdownMenuItem(
+                    value: p.id,
+                    child: Text('${p.code} ${p.name}'),
+                  ),
                 )
-              : const Text('保存'),
-        ),
-      ],
+                .toList(),
+            onChanged: isEdit
+                ? null
+                : (value) => setState(() => _processId = value ?? _processId),
+          ),
+          const SizedBox(height: 12),
+          SearchableDropdownFormField<int>(
+            key: ValueKey<int>(_departmentId),
+            initialValue: _departmentId,
+            decoration: const InputDecoration(labelText: '分派部门'),
+            items: widget.departments
+                .map(
+                  (d) => DropdownMenuItem(value: d.id, child: Text(d.name)),
+                )
+                .toList(),
+            onChanged: isEdit
+                ? null
+                : (value) =>
+                    setState(() => _departmentId = value ?? _departmentId),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            initialValue: _priority.toString(),
+            decoration: const InputDecoration(labelText: '优先级 (0-100)'),
+            keyboardType: TextInputType.number,
+            validator: (value) {
+              final parsed = int.tryParse(value ?? '');
+              if (parsed == null || parsed < 0 || parsed > 100) {
+                return '请输入 0-100 的整数';
+              }
+              return null;
+            },
+            onChanged: (value) => _priority = int.tryParse(value) ?? _priority,
+          ),
+          const SizedBox(height: 12),
+          SearchableDropdownFormField<String>(
+            key: ValueKey<String>(_strategy),
+            initialValue: _strategy,
+            decoration: const InputDecoration(labelText: '操作员选择策略'),
+            items: const [
+              DropdownMenuItem(value: 'least_tasks', child: Text('任务最少')),
+              DropdownMenuItem(value: 'random', child: Text('随机选择')),
+              DropdownMenuItem(value: 'round_robin', child: Text('轮询分配')),
+              DropdownMenuItem(value: 'first_available', child: Text('第一个可用')),
+            ],
+            onChanged: (value) =>
+                setState(() => _strategy = value ?? _strategy),
+          ),
+          const SizedBox(height: 12),
+          SwitchListTile(
+            value: _isActive,
+            onChanged: (value) => setState(() => _isActive = value),
+            title: const Text('启用规则'),
+            contentPadding: EdgeInsets.zero,
+          ),
+          TextFormField(
+            initialValue: _notes,
+            decoration: const InputDecoration(labelText: '备注（可选）'),
+            onChanged: (value) => _notes = value,
+          ),
+        ],
+      ),
     );
   }
 

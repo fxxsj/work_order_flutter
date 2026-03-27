@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 
 class ProductStockAdjustResult {
   const ProductStockAdjustResult({
@@ -20,8 +21,10 @@ Future<void> showProductStockListDialog(
 }) {
   return showDialog<void>(
     context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: Text(title),
+    builder: (dialogContext) => BaseDialog(
+      title: title,
+      maxWidth: 640,
+      scrollable: false,
       content: SizedBox(width: 640, child: child),
       actions: [
         TextButton(
@@ -40,11 +43,12 @@ Future<void> showProductStockDetailDialog(
 }) {
   return showDialog<void>(
     context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: Text(title),
+    builder: (dialogContext) => BaseDialog(
+      title: title,
+      maxWidth: 640,
       content: SizedBox(
         width: 640,
-        child: SingleChildScrollView(child: child),
+        child: child,
       ),
       actions: [
         TextButton(
@@ -87,83 +91,66 @@ Future<ProductStockAdjustResult?> showProductStockAdjustDialog(
               Navigator.of(dialogContext).pop();
             }
 
-            return AlertDialog(
-              title: Text(title),
-              content: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: SingleChildScrollView(
-                  child: Form(
-                    key: formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        DropdownButtonFormField<String>(
-                          initialValue: adjustType,
-                          decoration: const InputDecoration(labelText: '调整方式'),
-                          items: const [
-                            DropdownMenuItem(value: 'add', child: Text('增加库存')),
-                            DropdownMenuItem(
-                              value: 'subtract',
-                              child: Text('减少库存'),
-                            ),
-                            DropdownMenuItem(value: 'set', child: Text('设定库存')),
-                          ],
-                          onChanged: submitting
-                              ? null
-                              : (value) {
-                                  if (value == null) return;
-                                  setState(() => adjustType = value);
-                                },
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: quantityController,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          decoration: const InputDecoration(labelText: '调整数量'),
-                          validator: (value) {
-                            final text = value?.trim() ?? '';
-                            final parsed = double.tryParse(text);
-                            if (parsed == null) return '请输入有效数量';
-                            if (adjustType == 'set' && parsed < 0) {
-                              return '数量不能小于 0';
-                            }
-                            if (adjustType != 'set' && parsed <= 0) {
-                              return '数量必须大于 0';
-                            }
-                            return null;
+            return FormDialog(
+              title: title,
+              formKey: formKey,
+              submitText: submitText,
+              cancelText: cancelText,
+              submitting: submitting,
+              maxWidth: 420,
+              onSubmit: () async => submit(),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<String>(
+                    initialValue: adjustType,
+                    decoration: const InputDecoration(labelText: '调整方式'),
+                    items: const [
+                      DropdownMenuItem(value: 'add', child: Text('增加库存')),
+                      DropdownMenuItem(value: 'subtract', child: Text('减少库存')),
+                      DropdownMenuItem(value: 'set', child: Text('设定库存')),
+                    ],
+                    onChanged: submitting
+                        ? null
+                        : (value) {
+                            if (value == null) return;
+                            setState(() => adjustType = value);
                           },
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: reasonController,
-                          maxLines: 3,
-                          decoration: const InputDecoration(labelText: '调整原因'),
-                          validator: (value) {
-                            if ((value?.trim() ?? '').isEmpty) {
-                              return '请输入调整原因';
-                            }
-                            return null;
-                          },
-                        ),
-                      ],
-                    ),
                   ),
-                ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: quantityController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(labelText: '调整数量'),
+                    validator: (value) {
+                      final text = value?.trim() ?? '';
+                      final parsed = double.tryParse(text);
+                      if (parsed == null) return '请输入有效数量';
+                      if (adjustType == 'set' && parsed < 0) {
+                        return '数量不能小于 0';
+                      }
+                      if (adjustType != 'set' && parsed <= 0) {
+                        return '数量必须大于 0';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: reasonController,
+                    maxLines: 3,
+                    decoration: const InputDecoration(labelText: '调整原因'),
+                    validator: (value) {
+                      if ((value?.trim() ?? '').isEmpty) {
+                        return '请输入调整原因';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
               ),
-              actions: [
-                TextButton(
-                  onPressed: submitting
-                      ? null
-                      : () => Navigator.of(dialogContext).pop(),
-                  child: Text(cancelText),
-                ),
-                FilledButton(
-                  onPressed: submitting ? null : submit,
-                  child: Text(submitting ? '提交中...' : submitText),
-                ),
-              ],
             );
           },
         );

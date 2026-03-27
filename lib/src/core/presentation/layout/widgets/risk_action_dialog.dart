@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 
 class RiskActionHintPanel extends StatelessWidget {
   const RiskActionHintPanel({
@@ -42,9 +43,7 @@ class RiskActionHintPanel extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(
-                destructive
-                    ? Icons.warning_amber_rounded
-                    : Icons.info_outline,
+                destructive ? Icons.warning_amber_rounded : Icons.info_outline,
                 color: tone,
                 size: LayoutTokens.iconLg,
               ),
@@ -120,8 +119,10 @@ Future<bool> showRiskActionConfirmDialog(
           ? screenWidth - 32
           : (screenWidth < 900 ? 520.0 : 600.0);
 
-      return AlertDialog(
-        title: Text(title),
+      return BaseDialog(
+        title: title,
+        maxWidth: dialogWidth,
+        scrollable: false,
         content: SizedBox(
           width: dialogWidth,
           child: RiskActionHintPanel(
@@ -130,9 +131,6 @@ Future<bool> showRiskActionConfirmDialog(
             auditHint: auditHint,
             destructive: destructive,
           ),
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
         ),
         actions: [
           TextButton(
@@ -143,11 +141,11 @@ Future<bool> showRiskActionConfirmDialog(
             onPressed: () => Navigator.of(context).pop(true),
             style: destructive
                 ? FilledButton.styleFrom(
-                    backgroundColor:
-                        Theme.of(context).extension<AppSemanticColors>()?.danger ??
+                    backgroundColor: Theme.of(context)
+                            .extension<AppSemanticColors>()
+                            ?.danger ??
                         Theme.of(context).colorScheme.error,
-                    foregroundColor:
-                        Theme.of(context).colorScheme.onError,
+                    foregroundColor: Theme.of(context).colorScheme.onError,
                   )
                 : null,
             child: Text(confirmText),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/features/materials/data/material_dto.dart';
 import 'package:work_order_app/src/features/suppliers/data/supplier_dto.dart';
@@ -60,165 +61,151 @@ Future<void> showPurchaseOrderFormDialog(
             }
           }
 
-          return AlertDialog(
-            title: Text(title),
-            content: SizedBox(
-              width: 720,
-              child: SingleChildScrollView(
-                child: Form(
-                  key: formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SearchableDropdownFormField<int>(
-                        key: ValueKey<String>(
-                          'purchase_supplier_${selectedSupplierId ?? 'none'}',
+          return FormDialog(
+            title: title,
+            formKey: formKey,
+            submitText: submitText,
+            cancelText: cancelText,
+            submitting: submitting,
+            maxWidth: 720,
+            onSubmit: submit,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SearchableDropdownFormField<int>(
+                  key: ValueKey<String>(
+                    'purchase_supplier_${selectedSupplierId ?? 'none'}',
+                  ),
+                  initialValue: selectedSupplierId,
+                  decoration: const InputDecoration(
+                    labelText: '供应商',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: suppliers
+                      .map(
+                        (supplier) => DropdownMenuItem<int>(
+                          value: supplier.id,
+                          child: Text(supplier.name),
                         ),
-                        initialValue: selectedSupplierId,
-                        decoration: const InputDecoration(
-                          labelText: '供应商',
-                          border: OutlineInputBorder(),
-                        ),
-                        items: suppliers
-                            .map(
-                              (supplier) => DropdownMenuItem<int>(
-                                value: supplier.id,
-                                child: Text(supplier.name),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: submitting ? null : onSupplierChanged,
-                        validator: (value) {
-                          if (value == null || value == 0) return '请选择供应商';
-                          return null;
-                        },
+                      )
+                      .toList(),
+                  onChanged: submitting ? null : onSupplierChanged,
+                  validator: (value) {
+                    if (value == null || value == 0) return '请选择供应商';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                SearchableDropdownFormField<int>(
+                  key: ValueKey<String>(
+                    'purchase_workorder_${selectedWorkOrderId ?? 'none'}',
+                  ),
+                  initialValue: selectedWorkOrderId,
+                  decoration: const InputDecoration(
+                    labelText: '关联施工单',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [
+                    const DropdownMenuItem<int>(
+                      value: 0,
+                      child: Text('不关联'),
+                    ),
+                    ...workOrderOptions.map(
+                      (order) => DropdownMenuItem<int>(
+                        value: order.id,
+                        child: Text(order.orderNumber),
                       ),
-                      const SizedBox(height: 12),
-                      SearchableDropdownFormField<int>(
-                        key: ValueKey<String>(
-                          'purchase_workorder_${selectedWorkOrderId ?? 'none'}',
-                        ),
-                        initialValue: selectedWorkOrderId,
-                        decoration: const InputDecoration(
-                          labelText: '关联施工单',
-                          border: OutlineInputBorder(),
-                        ),
-                        items: [
-                          const DropdownMenuItem<int>(
-                            value: 0,
-                            child: Text('不关联'),
-                          ),
-                          ...workOrderOptions.map(
-                            (order) => DropdownMenuItem<int>(
-                              value: order.id,
-                              child: Text(order.orderNumber),
-                            ),
-                          ),
-                        ],
-                        onChanged: submitting ? null : onWorkOrderChanged,
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: notesController,
-                        maxLines: 3,
-                        decoration: const InputDecoration(
-                          labelText: '备注',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              '采购明细',
-                              style: Theme.of(context).textTheme.titleSmall,
-                            ),
-                          ),
-                          TextButton.icon(
-                            onPressed: submitting || materialsLoading
-                                ? null
-                                : () {
-                                    setState(() {
-                                      items.add(
-                                        PurchaseItemDraft(
-                                          materialId: 0,
-                                          materialName: '-',
-                                          materialCode: '',
-                                          quantity: 1,
-                                          unitPrice: 0,
-                                          unit: '',
-                                        ),
-                                      );
-                                    });
-                                  },
-                            icon: const Icon(Icons.add, size: 16),
-                            label: const Text('添加明细'),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      if (items.isEmpty)
-                        const Text('暂无明细')
-                      else
-                        Column(
-                          children: items
-                              .map(
-                                (item) => PurchaseItemRow(
-                                  item: item,
-                                  enabled: !submitting,
-                                  materials: materials,
-                                  onRemove: () {
-                                    setState(() {
-                                      items.remove(item);
-                                      item.dispose();
-                                    });
-                                  },
-                                  onMaterialChanged: (material) {
-                                    setState(() {
-                                      item.materialId = material.id;
-                                      item.materialName = material.name;
-                                      item.materialCode = material.code;
-                                      item.setUnit(material.unit ?? item.unit);
-                                      item.setUnitPrice(
-                                        material.unitPrice ?? item.unitPrice,
-                                      );
-                                    });
-                                  },
-                                  onChanged: () => setState(() {}),
-                                ),
-                              )
-                              .toList(),
-                        ),
-                      if (items.isNotEmpty) ...[
-                        const SizedBox(height: 12),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: Text(
-                            '合计金额: ${totalAmount.toStringAsFixed(2)}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ],
-                    ],
+                    ),
+                  ],
+                  onChanged: submitting ? null : onWorkOrderChanged,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: notesController,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    labelText: '备注',
+                    border: OutlineInputBorder(),
                   ),
                 ),
-              ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '采购明细',
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: submitting || materialsLoading
+                          ? null
+                          : () {
+                              setState(() {
+                                items.add(
+                                  PurchaseItemDraft(
+                                    materialId: 0,
+                                    materialName: '-',
+                                    materialCode: '',
+                                    quantity: 1,
+                                    unitPrice: 0,
+                                    unit: '',
+                                  ),
+                                );
+                              });
+                            },
+                      icon: const Icon(Icons.add, size: 16),
+                      label: const Text('添加明细'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                if (items.isEmpty)
+                  const Text('暂无明细')
+                else
+                  Column(
+                    children: items
+                        .map(
+                          (item) => PurchaseItemRow(
+                            item: item,
+                            enabled: !submitting,
+                            materials: materials,
+                            onRemove: () {
+                              setState(() {
+                                items.remove(item);
+                                item.dispose();
+                              });
+                            },
+                            onMaterialChanged: (material) {
+                              setState(() {
+                                item.materialId = material.id;
+                                item.materialName = material.name;
+                                item.materialCode = material.code;
+                                item.setUnit(material.unit ?? item.unit);
+                                item.setUnitPrice(
+                                  material.unitPrice ?? item.unitPrice,
+                                );
+                              });
+                            },
+                            onChanged: () => setState(() {}),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                if (items.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      '合计金额: ${totalAmount.toStringAsFixed(2)}',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ),
+                ],
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed:
-                    submitting ? null : () => Navigator.of(dialogContext).pop(),
-                child: Text(cancelText),
-              ),
-              FilledButton(
-                onPressed: submitting ? null : submit,
-                child: Text(submitting ? '提交中...' : submitText),
-              ),
-            ],
           );
         },
       );

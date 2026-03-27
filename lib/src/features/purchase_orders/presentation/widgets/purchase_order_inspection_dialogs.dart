@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 
@@ -38,8 +39,15 @@ Future<void> showPurchaseInspectionDialog(
             });
           }
 
-          return AlertDialog(
-            title: Text(title),
+          return BaseDialog(
+            title: title,
+            maxWidth: 720,
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: Text(cancelText),
+              ),
+            ],
             content: SizedBox(
               width: 720,
               child: loading
@@ -136,8 +144,10 @@ Future<void> showPurchaseInspectionDialog(
                                                     await showDialog<bool>(
                                                   context: dialogContext,
                                                   builder: (confirmContext) =>
-                                                      AlertDialog(
-                                                    title: const Text('确认入库'),
+                                                      BaseDialog(
+                                                    title: '确认入库',
+                                                    maxWidth: 360,
+                                                    scrollable: false,
                                                     content: Text(
                                                       '确定将 $qualified 件物料入库吗？',
                                                     ),
@@ -149,7 +159,7 @@ Future<void> showPurchaseInspectionDialog(
                                                         ).pop(false),
                                                         child: const Text('取消'),
                                                       ),
-                                                      TextButton(
+                                                      FilledButton(
                                                         onPressed: () =>
                                                             Navigator.of(
                                                           confirmContext,
@@ -189,12 +199,6 @@ Future<void> showPurchaseInspectionDialog(
                           ),
                         ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: Text(cancelText),
-              ),
-            ],
           );
         },
       );
@@ -249,76 +253,63 @@ Future<void> showPurchaseInspectionFormDialog(
     builder: (dialogContext) {
       return StatefulBuilder(
         builder: (context, setState) {
-          return AlertDialog(
-            title: const Text('填写质检结果'),
-            content: SizedBox(
-              width: 420,
-              child: Form(
-                key: formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _DetailRow(
-                      label: '收货数量',
-                      value: received.toStringAsFixed(2),
-                    ),
-                    TextFormField(
-                      controller: qualifiedController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      decoration: const InputDecoration(labelText: '合格数量'),
-                      validator: (value) {
-                        final parsed = double.tryParse(value?.trim() ?? '');
-                        if (parsed == null || parsed < 0) return '请输入有效数量';
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: unqualifiedController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      decoration: const InputDecoration(labelText: '不合格数量'),
-                      validator: (value) {
-                        final parsed = double.tryParse(value?.trim() ?? '');
-                        if (parsed == null || parsed < 0) return '请输入有效数量';
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: reasonController,
-                      maxLines: 3,
-                      decoration: const InputDecoration(labelText: '不合格原因'),
-                      validator: (value) {
-                        final unqualified = double.tryParse(
-                              unqualifiedController.text.trim(),
-                            ) ??
-                            0;
-                        if (unqualified > 0 &&
-                            (value?.trim().isEmpty ?? true)) {
-                          return '请填写不合格原因';
-                        }
-                        return null;
-                      },
-                    ),
-                  ],
+          return FormDialog(
+            title: '填写质检结果',
+            formKey: formKey,
+            submitText: '确认',
+            submitting: submitting,
+            maxWidth: 420,
+            onSubmit: () => submit(setState),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _DetailRow(
+                  label: '收货数量',
+                  value: received.toStringAsFixed(2),
                 ),
-              ),
+                TextFormField(
+                  controller: qualifiedController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(labelText: '合格数量'),
+                  validator: (value) {
+                    final parsed = double.tryParse(value?.trim() ?? '');
+                    if (parsed == null || parsed < 0) return '请输入有效数量';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: unqualifiedController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(labelText: '不合格数量'),
+                  validator: (value) {
+                    final parsed = double.tryParse(value?.trim() ?? '');
+                    if (parsed == null || parsed < 0) return '请输入有效数量';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: reasonController,
+                  maxLines: 3,
+                  decoration: const InputDecoration(labelText: '不合格原因'),
+                  validator: (value) {
+                    final unqualified = double.tryParse(
+                          unqualifiedController.text.trim(),
+                        ) ??
+                        0;
+                    if (unqualified > 0 && (value?.trim().isEmpty ?? true)) {
+                      return '请填写不合格原因';
+                    }
+                    return null;
+                  },
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed:
-                    submitting ? null : () => Navigator.of(dialogContext).pop(),
-                child: const Text('取消'),
-              ),
-              FilledButton(
-                onPressed: submitting ? null : () => submit(setState),
-                child: Text(submitting ? '提交中...' : '确认'),
-              ),
-            ],
           );
         },
       );

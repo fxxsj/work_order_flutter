@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 
 typedef InventoryDocumentFieldsBuilder = List<Widget> Function(
   BuildContext context,
@@ -20,6 +21,7 @@ Future<void> showInventoryDocumentFormDialog(
   String submitText = '保存',
   double width = 520,
 }) {
+  final formKey = GlobalKey<FormState>();
   bool submitting = false;
 
   return showDialog<void>(
@@ -38,65 +40,54 @@ Future<void> showInventoryDocumentFormDialog(
 
           final fields = fieldsBuilder(context, setState, submitting);
 
-          return AlertDialog(
-            title: Text(title),
-            content: SizedBox(
-              width: width,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ..._withSpacing(fields),
-                    if (fields.isNotEmpty) const SizedBox(height: 12),
-                    TextField(
-                      controller: dateController,
-                      readOnly: true,
-                      enabled: !submitting,
-                      decoration: InputDecoration(
-                        labelText: dateLabel,
-                        border: const OutlineInputBorder(),
-                        suffixIcon:
-                            const Icon(Icons.calendar_today_outlined, size: 18),
-                      ),
-                      onTap: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate:
-                              _parseDate(dateController.text) ?? DateTime.now(),
-                          firstDate: DateTime(2020),
-                          lastDate: DateTime(2100),
-                        );
-                        if (picked != null) {
-                          dateController.text = _formatDate(picked);
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: notesController,
-                      enabled: !submitting,
-                      maxLines: 3,
-                      decoration: const InputDecoration(
-                        labelText: '备注',
-                        border: OutlineInputBorder(),
-                        alignLabelWithHint: true,
-                      ),
-                    ),
-                  ],
+          return FormDialog(
+            title: title,
+            formKey: formKey,
+            submitText: submitText,
+            submitting: submitting,
+            maxWidth: width,
+            onSubmit: submit,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ..._withSpacing(fields),
+                if (fields.isNotEmpty) const SizedBox(height: 12),
+                TextFormField(
+                  controller: dateController,
+                  readOnly: true,
+                  enabled: !submitting,
+                  decoration: InputDecoration(
+                    labelText: dateLabel,
+                    border: const OutlineInputBorder(),
+                    suffixIcon:
+                        const Icon(Icons.calendar_today_outlined, size: 18),
+                  ),
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate:
+                          _parseDate(dateController.text) ?? DateTime.now(),
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime(2100),
+                    );
+                    if (picked != null) {
+                      dateController.text = _formatDate(picked);
+                    }
+                  },
                 ),
-              ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: notesController,
+                  enabled: !submitting,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    labelText: '备注',
+                    border: OutlineInputBorder(),
+                    alignLabelWithHint: true,
+                  ),
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed:
-                    submitting ? null : () => Navigator.of(dialogContext).pop(),
-                child: Text(cancelText),
-              ),
-              FilledButton(
-                onPressed: submitting ? null : submit,
-                child: Text(submitting ? '保存中...' : submitText),
-              ),
-            ],
           );
         },
       );

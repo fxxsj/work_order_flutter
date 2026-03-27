@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
@@ -158,8 +159,10 @@ class _DieEditPageState extends State<DieEditPage> {
     if (value == 'dedicated' && _productItems.length > 1) {
       final keepFirst = await showDialog<bool>(
         context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('提示'),
+        builder: (context) => BaseDialog(
+          title: '提示',
+          maxWidth: 420,
+          scrollable: false,
           content: const Text('专用刀模只能关联1个产品，是否只保留第一个产品？'),
           actions: [
             TextButton(
