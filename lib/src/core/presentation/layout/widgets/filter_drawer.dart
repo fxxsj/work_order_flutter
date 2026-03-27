@@ -81,7 +81,12 @@ class FilterDrawerShell extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+          padding: EdgeInsets.fromLTRB(
+            LayoutTokens.gapLg,
+            LayoutTokens.gapMd,
+            LayoutTokens.gapSm,
+            LayoutTokens.gapSm,
+          ),
           child: Row(
             children: [
               Expanded(
@@ -115,7 +120,12 @@ class FilterPanelBody extends StatelessWidget {
     required this.bottomSpacing,
     this.resetLabel = '重置筛选',
     this.doneLabel = '完成',
-    this.padding = const EdgeInsets.fromLTRB(16, 12, 16, 20),
+    this.padding = const EdgeInsets.fromLTRB(
+      LayoutTokens.gapLg,
+      LayoutTokens.gapMd,
+      LayoutTokens.gapLg,
+      LayoutTokens.gapLg + LayoutTokens.gapXs,
+    ),
   });
 
   final List<Widget> fields;

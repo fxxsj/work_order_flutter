@@ -216,7 +216,7 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
             text: _emptyText,
           ),
           if (_hasFilters()) ...[
-            const SizedBox(height: 12),
+            SizedBox(height: LayoutTokens.gapMd),
             PageActionButton.outlined(
               onPressed: () => _resetFilters(viewModel),
               icon: const Icon(Icons.restart_alt, size: 16),
@@ -377,17 +377,17 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
                 minHeight: _controlHeight,
                 minWidth: isMobile ? 72 : 88,
               ),
-              children: const [
+              children: [
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
                   child: Text('看板'),
                 ),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
                   child: Text('列表'),
                 ),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
                   child: Text('时间轴'),
                 ),
               ],
@@ -418,7 +418,7 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
   }) {
     final spacing = LayoutTokens.formSectionSpacing(context);
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      padding: LayoutTokens.pagePadding(context),
       children: [
         if (_loadingDepartments) const LinearProgressIndicator(minHeight: 2),
         SearchableDropdownFormField<int?>(
@@ -535,7 +535,7 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
     if (isMobile) {
       boardContent = ListView.separated(
         itemCount: columns.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        separatorBuilder: (_, __) => SizedBox(height: LayoutTokens.gapMd),
         itemBuilder: (context, index) {
           final column = columns[index];
           return TaskBoardColumn(
@@ -556,7 +556,7 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
     } else {
       boardContent = LayoutBuilder(
         builder: (context, constraints) {
-          const gap = 16.0;
+          const gap = LayoutTokens.gapLg;
           final maxWidth = constraints.maxWidth;
           var columnsPerRow =
               ((maxWidth + gap) / (_columnMinWidth + gap)).floor();
@@ -601,7 +601,7 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildBoardQuickFilters(viewModel, tasks),
-        const SizedBox(height: 12),
+        SizedBox(height: LayoutTokens.gapMd),
         Expanded(child: boardContent),
       ],
     );

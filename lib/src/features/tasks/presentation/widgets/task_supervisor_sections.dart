@@ -211,7 +211,7 @@ class TaskSupervisorOperatorCard extends StatelessWidget {
     final completionRate = _toNum(item['completion_rate']);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: LayoutTokens.gapMd),
       padding: LayoutTokens.cardPadding(context),
       decoration: BoxDecoration(
         color: colors.surface,

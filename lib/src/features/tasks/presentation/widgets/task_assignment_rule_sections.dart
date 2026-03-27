@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
@@ -26,7 +27,12 @@ class TaskAssignmentRuleFilterDrawerContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+          padding: EdgeInsets.fromLTRB(
+            LayoutTokens.gapLg,
+            LayoutTokens.gapMd,
+            LayoutTokens.gapSm,
+            LayoutTokens.gapSm,
+          ),
           child: Row(
             children: [
               Expanded(
@@ -147,7 +153,7 @@ class _TaskAssignmentRuleDialogState extends State<TaskAssignmentRuleDialog> {
                 ? null
                 : (value) => setState(() => _processId = value ?? _processId),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           SearchableDropdownFormField<int>(
             key: ValueKey<int>(_departmentId),
             initialValue: _departmentId,
@@ -162,7 +168,7 @@ class _TaskAssignmentRuleDialogState extends State<TaskAssignmentRuleDialog> {
                 : (value) =>
                     setState(() => _departmentId = value ?? _departmentId),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           TextFormField(
             initialValue: _priority.toString(),
             decoration: const InputDecoration(labelText: '优先级 (0-100)'),
@@ -176,7 +182,7 @@ class _TaskAssignmentRuleDialogState extends State<TaskAssignmentRuleDialog> {
             },
             onChanged: (value) => _priority = int.tryParse(value) ?? _priority,
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           SearchableDropdownFormField<String>(
             key: ValueKey<String>(_strategy),
             initialValue: _strategy,
@@ -190,7 +196,7 @@ class _TaskAssignmentRuleDialogState extends State<TaskAssignmentRuleDialog> {
             onChanged: (value) =>
                 setState(() => _strategy = value ?? _strategy),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           SwitchListTile(
             value: _isActive,
             onChanged: (value) => setState(() => _isActive = value),
@@ -268,7 +274,7 @@ class TaskAssignmentRuleCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(subtitle),
-          const SizedBox(height: 8),
+          SizedBox(height: LayoutTokens.gapSm),
           SummaryFieldWrap(
             isMobile: BreakpointsUtil.isMobile(context),
             children: [

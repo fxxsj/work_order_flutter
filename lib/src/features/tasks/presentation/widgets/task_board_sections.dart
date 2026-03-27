@@ -21,7 +21,12 @@ class TaskBoardFilterDrawerContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+          padding: EdgeInsets.fromLTRB(
+            LayoutTokens.gapLg,
+            LayoutTokens.gapMd,
+            LayoutTokens.gapSm,
+            LayoutTokens.gapSm,
+          ),
           child: Row(
             children: [
               Expanded(
@@ -147,7 +152,7 @@ class TaskBoardColumn extends StatelessWidget {
         final highlight = candidates.isNotEmpty;
         return Container(
           width: resolvedWidth,
-          padding: const EdgeInsets.all(12),
+          padding: LayoutTokens.cardPadding(context),
           decoration: BoxDecoration(
             color: colors.surface,
             borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
@@ -162,7 +167,7 @@ class TaskBoardColumn extends StatelessWidget {
               Row(
                 children: [
                   Icon(data.icon, size: 18, color: colors.subtleText),
-                  const SizedBox(width: 6),
+                  SizedBox(width: LayoutTokens.gapSm),
                   Expanded(
                     child: Text(
                       data.title,
@@ -181,10 +186,10 @@ class TaskBoardColumn extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: LayoutTokens.gapMd),
               if (data.tasks.isEmpty)
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: EdgeInsets.symmetric(vertical: LayoutTokens.gapMd),
                   child: Text(
                     '暂无任务',
                     style: theme.textTheme.bodySmall?.copyWith(
@@ -206,7 +211,8 @@ class TaskBoardColumn extends StatelessWidget {
                         useLongPress: useLongPress,
                         feedbackWidth: resolvedFeedbackWidth,
                       ),
-                      if (i != data.tasks.length - 1) const SizedBox(height: 8),
+                      if (i != data.tasks.length - 1)
+                        SizedBox(height: LayoutTokens.gapSm),
                     ],
                   ],
                 ),
@@ -256,7 +262,12 @@ class TaskTimelineList extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+                padding: EdgeInsets.fromLTRB(
+                  LayoutTokens.gapMd,
+                  LayoutTokens.gapSm,
+                  LayoutTokens.gapMd,
+                  LayoutTokens.gapSm,
+                ),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary.withValues(alpha: 0.05),
                   border: Border(bottom: BorderSide(color: colors.borderColor)),
@@ -274,9 +285,9 @@ class TaskTimelineList extends StatelessWidget {
                     ),
                     if (overdue)
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: LayoutTokens.gapSm,
+                          vertical: LayoutTokens.gapXs,
                         ),
                         decoration: BoxDecoration(
                           color: theme.colorScheme.error.withValues(alpha: 0.1),
@@ -296,7 +307,7 @@ class TaskTimelineList extends StatelessWidget {
                           ),
                         ),
                       ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: LayoutTokens.gapSm),
                     Text(
                       '${group.tasks.length} 项',
                       style: theme.textTheme.bodySmall?.copyWith(

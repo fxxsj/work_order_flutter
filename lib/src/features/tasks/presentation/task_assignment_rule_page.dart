@@ -382,7 +382,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
   }) {
     final spacing = LayoutTokens.formSectionSpacing(context);
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      padding: LayoutTokens.pagePadding(context),
       children: [
         SearchableDropdownFormField<int?>(
           key: ValueKey<int?>(viewModel.processId),
@@ -468,9 +468,9 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
     return ListView(
       children: [
         _buildGlobalToggle(),
-        const SizedBox(height: 12),
+        SizedBox(height: LayoutTokens.gapMd),
         _buildPreviewSection(),
-        const SizedBox(height: 12),
+        SizedBox(height: LayoutTokens.gapMd),
         DetailSectionCard(
           title: '规则列表',
           trailing: canReorder
@@ -491,7 +491,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
                     final rule = displayedRules[index];
                     return Padding(
                       key: ValueKey(rule.id),
-                      padding: const EdgeInsets.only(bottom: 12),
+                      padding: EdgeInsets.only(bottom: LayoutTokens.gapMd),
                       child: TaskAssignmentRuleCard(
                         rule: rule,
                         onEdit: _reordering
@@ -518,7 +518,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
                   children: [
                     if (!canReorder)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
+                        padding: EdgeInsets.only(bottom: LayoutTokens.gapMd),
                         child: Text(
                           '选择单个工序后可拖拽调整优先级。',
                           style: Theme.of(context).textTheme.bodySmall,
@@ -526,7 +526,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
                       ),
                     ...displayedRules.map(
                       (rule) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
+                        padding: EdgeInsets.only(bottom: LayoutTokens.gapMd),
                         child: TaskAssignmentRuleCard(
                           rule: rule,
                           onEdit: () =>
@@ -583,7 +583,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
                     item['operator_selection_strategy']?.toString() ?? '-';
                 final load = item['current_load']?.toString() ?? '0';
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
+                  padding: EdgeInsets.only(bottom: LayoutTokens.gapMd),
                   child: DetailSectionCard(
                     title: process,
                     child: SummaryFieldWrap(

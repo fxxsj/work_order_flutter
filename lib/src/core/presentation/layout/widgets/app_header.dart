@@ -161,7 +161,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                 child: Badge(
                   isLabelVisible: unread > 0,
                   label: Text(label),
-                  backgroundColor: semantic?.danger ?? Colors.redAccent,
+                  backgroundColor: semantic?.danger ?? ColorTokens.danger,
                   offset: const Offset(6, -6),
                   child: const Icon(Icons.notifications_none_outlined),
                 ),

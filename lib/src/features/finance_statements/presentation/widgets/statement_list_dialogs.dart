@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/action_decision_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
@@ -89,7 +90,7 @@ Future<StatementCreateResult?> showStatementCreateDialog(
                   onChanged: (value) =>
                       setState(() => statementType = value as String),
                 ).build(context),
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 if (showCustomer)
                   SearchableDropdownFormField<int?>(
                     initialValue: selectedCustomerId,
@@ -136,7 +137,7 @@ Future<StatementCreateResult?> showStatementCreateDialog(
                         setState(() => selectedSupplierId = value),
                     validator: (value) => value == null ? '请选择供应商' : null,
                   ),
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 TextFormField(
                   controller: periodController,
                   decoration: const InputDecoration(
@@ -147,7 +148,7 @@ Future<StatementCreateResult?> showStatementCreateDialog(
                       ? '请输入对账周期'
                       : null,
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 CrudFormField.dateRange(
                   label: '对账日期范围',
                   startController: startDateController,
@@ -156,7 +157,7 @@ Future<StatementCreateResult?> showStatementCreateDialog(
                   helperText: '会自动回填开始日期和结束日期',
                   validator: (range) => range == null ? '请选择对账日期范围' : null,
                 ).build(context),
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 TextFormField(
                   controller: openingBalanceController,
                   keyboardType: const TextInputType.numberWithOptions(
@@ -167,7 +168,7 @@ Future<StatementCreateResult?> showStatementCreateDialog(
                     border: OutlineInputBorder(),
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 TextFormField(
                   controller: notesController,
                   decoration: const InputDecoration(
@@ -249,7 +250,7 @@ Future<StatementGenerateResult?> showStatementGenerateDialog(
                   onChanged: (value) =>
                       setState(() => statementType = value as String),
                 ).build(context),
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 if (showCustomer)
                   SearchableDropdownFormField<int?>(
                     initialValue: selectedCustomerId,
@@ -296,7 +297,7 @@ Future<StatementGenerateResult?> showStatementGenerateDialog(
                         setState(() => selectedSupplierId = value),
                     validator: (value) => value == null ? '请选择供应商' : null,
                   ),
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 TextFormField(
                   controller: periodController,
                   decoration: const InputDecoration(

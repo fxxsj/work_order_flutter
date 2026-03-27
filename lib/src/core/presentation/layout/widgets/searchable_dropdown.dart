@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/constants/breakpoints.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 
 class SearchableDropdownFormField<T> extends FormField<T> {
   SearchableDropdownFormField({
@@ -145,8 +146,10 @@ class _SearchableDropdownFieldBody<T> extends StatelessWidget {
       context: context,
       builder: (dialogContext) {
         return Dialog(
-          insetPadding:
-              const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: LayoutTokens.gapXl,
+            vertical: LayoutTokens.gapXl,
+          ),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 520, maxHeight: 560),
             child: _PickerSheet<T>(
@@ -208,7 +211,12 @@ class _PickerSheetState<T> extends State<_PickerSheet<T>> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+          padding: EdgeInsets.fromLTRB(
+            LayoutTokens.gapLg,
+            LayoutTokens.gapMd,
+            LayoutTokens.gapSm,
+            LayoutTokens.gapSm,
+          ),
           child: Row(
             children: [
               Expanded(
@@ -228,7 +236,12 @@ class _PickerSheetState<T> extends State<_PickerSheet<T>> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          padding: EdgeInsets.fromLTRB(
+            LayoutTokens.gapLg,
+            0,
+            LayoutTokens.gapLg,
+            LayoutTokens.gapMd,
+          ),
           child: TextField(
             controller: _controller,
             decoration: InputDecoration(

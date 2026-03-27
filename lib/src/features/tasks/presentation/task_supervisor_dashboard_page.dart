@@ -237,17 +237,17 @@ class _TaskSupervisorDashboardViewState
               },
               constraints:
                   BoxConstraints(minHeight: _controlHeight, minWidth: 88),
-              children: const [
+              children: [
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
                   child: Text('统计视图'),
                 ),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
                   child: Text('任务列表'),
                 ),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
                   child: Text('拖拽分派'),
                 ),
               ],
@@ -269,7 +269,7 @@ class _TaskSupervisorDashboardViewState
   }) {
     final spacing = LayoutTokens.formSectionSpacing(context);
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      padding: LayoutTokens.pagePadding(context),
       children: [
         SearchableDropdownFormField<int?>(
           key: ValueKey<int?>(_departmentId),
@@ -331,7 +331,7 @@ class _TaskSupervisorDashboardViewState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildTaskStatusFilters(_departmentTasks),
-        const SizedBox(height: 12),
+        SizedBox(height: LayoutTokens.gapMd),
         Expanded(
           child: filteredTasks.isEmpty
               ? const EmptyStateCard(
@@ -341,7 +341,8 @@ class _TaskSupervisorDashboardViewState
               : isMobile
                   ? ListView.separated(
                       itemCount: filteredTasks.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      separatorBuilder: (_, __) =>
+                          SizedBox(height: LayoutTokens.gapSm),
                       itemBuilder: (context, index) {
                         final task = filteredTasks[index];
                         return TaskSupervisorTaskCard(
@@ -493,19 +494,19 @@ class _TaskSupervisorDashboardViewState
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           DetailSectionCard(
             title: '主管待办',
             child: Wrap(
-              spacing: 12,
-              runSpacing: 12,
+              spacing: LayoutTokens.gapMd,
+              runSpacing: LayoutTokens.gapMd,
               children: [
                 TaskSupervisorFocusCard(
                   label: '逾期任务',
                   value: overdueCount,
                   hint: overdueCount > 0 ? '优先排查超期工序与堵点' : '当前部门暂无逾期任务',
                   icon: Icons.warning_amber_rounded,
-                  color: Colors.redAccent,
+                  color: ColorTokens.danger,
                   actionLabel: '查看任务',
                   onPressed: () => _openTaskFocus('overdue'),
                 ),
@@ -514,7 +515,7 @@ class _TaskSupervisorDashboardViewState
                   value: dueSoonCount,
                   hint: dueSoonCount > 0 ? '2 天内到期，建议主管提前协调' : '当前没有临近交期任务',
                   icon: Icons.schedule_outlined,
-                  color: Colors.orangeAccent,
+                  color: ColorTokens.warning,
                   actionLabel: '查看任务',
                   onPressed: () => _openTaskFocus('due_soon'),
                 ),
@@ -523,7 +524,7 @@ class _TaskSupervisorDashboardViewState
                   value: unassignedCount,
                   hint: unassignedCount > 0 ? '仍未落到操作员的生产任务' : '当前部门没有待分派任务',
                   icon: Icons.person_add_alt_1_outlined,
-                  color: Colors.blueAccent,
+                  color: ColorTokens.info,
                   actionLabel: '进入分派',
                   onPressed: () => _openTaskFocus('unassigned'),
                 ),
@@ -532,19 +533,19 @@ class _TaskSupervisorDashboardViewState
                   value: handoffCount,
                   hint: handoffCount > 0 ? '已完工，建议尽快推进质检或入库' : '暂无待交接下游任务',
                   icon: Icons.compare_arrows_outlined,
-                  color: Colors.teal,
+                  color: ColorTokens.success,
                   actionLabel: '看已完工',
                   onPressed: () => _openTaskFocus('completed'),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           DetailSectionCard(
             title: '跨环节提醒',
             child: Wrap(
-              spacing: 12,
-              runSpacing: 12,
+              spacing: LayoutTokens.gapMd,
+              runSpacing: LayoutTokens.gapMd,
               children: [
                 TaskSupervisorFocusCard(
                   label: '待完成检验',
@@ -553,7 +554,7 @@ class _TaskSupervisorDashboardViewState
                       ? '质检未收口时，下游仓库与交付会继续等待'
                       : '当前没有待完成检验单',
                   icon: Icons.fact_check_outlined,
-                  color: Colors.indigo,
+                  color: ColorTokens.infoDark,
                   actionLabel: '查看质检',
                   onPressed: () => context.go(
                     '/inventory/quality?result=pending&department_id=${_departmentId ?? 0}',
@@ -566,7 +567,7 @@ class _TaskSupervisorDashboardViewState
                       ? '包含不合格与条件接收，需尽快决定返工或放行'
                       : '当前没有质检异常待跟进',
                   icon: Icons.report_problem_outlined,
-                  color: Colors.deepOrange,
+                  color: ColorTokens.warningDark,
                   actionLabel: '查看质检',
                   onPressed: () => context.go(
                     '/inventory/quality?department_id=${_departmentId ?? 0}',
@@ -579,7 +580,7 @@ class _TaskSupervisorDashboardViewState
                       ? '已发货但尚未签收，建议同步交付风险'
                       : '当前没有待签收交付',
                   icon: Icons.local_shipping_outlined,
-                  color: Colors.lightBlue,
+                  color: ColorTokens.info,
                   actionLabel: '查看发货',
                   onPressed: () => context.go(
                     '/inventory/delivery?department_id=${_departmentId ?? 0}',
@@ -592,7 +593,7 @@ class _TaskSupervisorDashboardViewState
                       ? '已发生拒收，建议尽快确认补发或终止交付'
                       : '当前没有拒收单待处理',
                   icon: Icons.assignment_late_outlined,
-                  color: Colors.pinkAccent,
+                  color: ColorTokens.dangerDark,
                   actionLabel: '查看拒收',
                   onPressed: () => context.go(
                     '/inventory/delivery?status=rejected&department_id=${_departmentId ?? 0}',
@@ -601,25 +602,25 @@ class _TaskSupervisorDashboardViewState
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           DetailSectionCard(
             title: '优先级分布',
             child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: LayoutTokens.gapSm,
+              runSpacing: LayoutTokens.gapSm,
               children: [
                 TaskSupervisorPriorityChip(
                     label: '紧急',
                     value: _toInt(priority['urgent']),
-                    color: Colors.redAccent),
+                    color: ColorTokens.danger),
                 TaskSupervisorPriorityChip(
                     label: '高',
                     value: _toInt(priority['high']),
-                    color: Colors.orangeAccent),
+                    color: ColorTokens.warning),
                 TaskSupervisorPriorityChip(
                     label: '普通',
                     value: _toInt(priority['normal']),
-                    color: Colors.blueAccent),
+                    color: ColorTokens.info),
                 TaskSupervisorPriorityChip(
                     label: '低',
                     value: _toInt(priority['low']),
@@ -627,7 +628,7 @@ class _TaskSupervisorDashboardViewState
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           DetailSectionCard(
             title: '操作员工作负载',
             child: operators.isEmpty
@@ -680,7 +681,7 @@ class _TaskSupervisorDashboardViewState
                 onDrop: null,
                 assigningTaskId: _assigningTaskId,
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: LayoutTokens.gapLg),
               for (final operator in _operators) ...[
                 TaskSupervisorDragColumn(
                   title: operator.name,
@@ -693,7 +694,7 @@ class _TaskSupervisorDashboardViewState
                   onDrop: (task) => _assignToOperator(task, operator),
                   assigningTaskId: _assigningTaskId,
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: LayoutTokens.gapLg),
               ],
             ],
           ),

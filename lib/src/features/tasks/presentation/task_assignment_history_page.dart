@@ -319,7 +319,7 @@ class _TaskAssignmentHistoryViewState
   }) {
     final spacing = LayoutTokens.formSectionSpacing(context);
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      padding: LayoutTokens.pagePadding(context),
       children: [
         DateRangeFilterField(
           label: '日期范围',
@@ -402,7 +402,7 @@ class _TaskAssignmentHistoryViewState
 
     return ListView.separated(
       itemCount: _items.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, __) => SizedBox(height: LayoutTokens.gapMd),
       itemBuilder: (context, index) {
         final item = _items[index];
         return _HistoryCard(
@@ -507,7 +507,12 @@ class _FilterDrawerContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+          padding: EdgeInsets.fromLTRB(
+            LayoutTokens.gapLg,
+            LayoutTokens.gapMd,
+            LayoutTokens.gapSm,
+            LayoutTokens.gapSm,
+          ),
           child: Row(
             children: [
               Expanded(
@@ -574,7 +579,7 @@ class _HistoryCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(content, style: theme.textTheme.bodyMedium),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           SummaryFieldWrap(
             isMobile: BreakpointsUtil.isMobile(context),
             children: [
@@ -585,7 +590,7 @@ class _HistoryCard extends StatelessWidget {
           ),
           if (workOrderId > 0 && workOrderNumber != null)
             Padding(
-              padding: const EdgeInsets.only(top: 12),
+              padding: EdgeInsets.only(top: LayoutTokens.gapMd),
               child: OutlinedButton.icon(
                 onPressed: () => onOpenWorkOrder(workOrderId),
                 icon: const Icon(Icons.open_in_new, size: 16),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/features/departments/domain/department.dart';
@@ -89,9 +90,9 @@ class _TaskQuantityDialogState extends State<_TaskQuantityDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(task.workContent ?? '任务 #${task.id}'),
-          const SizedBox(height: 8),
+          SizedBox(height: LayoutTokens.gapSm),
           Text('已完成 $completed / $total · 剩余 $remaining'),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           TextFormField(
             initialValue: _quantityIncrement.toString(),
             decoration: const InputDecoration(labelText: '本次完成数量'),
@@ -107,7 +108,7 @@ class _TaskQuantityDialogState extends State<_TaskQuantityDialog> {
               _quantityIncrement = int.tryParse(value) ?? 0;
             },
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           TextFormField(
             initialValue: _quantityDefective.toString(),
             decoration: const InputDecoration(labelText: '不良品数量'),
@@ -116,7 +117,7 @@ class _TaskQuantityDialogState extends State<_TaskQuantityDialog> {
               _quantityDefective = int.tryParse(value) ?? 0;
             },
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           TextFormField(
             decoration: const InputDecoration(labelText: '备注（可选）'),
             onChanged: (value) => _notes = value,
@@ -176,7 +177,7 @@ class _TaskCompleteDialogState extends State<_TaskCompleteDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(task.workContent ?? '任务 #${task.id}'),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           TextFormField(
             initialValue: _quantityDefective.toString(),
             decoration: const InputDecoration(labelText: '不良品数量'),
@@ -185,12 +186,12 @@ class _TaskCompleteDialogState extends State<_TaskCompleteDialog> {
               _quantityDefective = int.tryParse(value) ?? 0;
             },
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           TextFormField(
             decoration: const InputDecoration(labelText: '完成理由（可选）'),
             onChanged: (value) => _completionReason = value,
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           TextFormField(
             decoration: const InputDecoration(labelText: '备注（可选）'),
             onChanged: (value) => _notes = value,
@@ -289,7 +290,7 @@ class _TaskAssignDialogState extends State<_TaskAssignDialog> {
             },
             validator: (value) => value == null ? '请选择部门' : null,
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           if (_loadingOperators) const LinearProgressIndicator(minHeight: 2),
           SearchableDropdownFormField<int?>(
             key: ValueKey<int?>(_operatorId),
@@ -306,14 +307,14 @@ class _TaskAssignDialogState extends State<_TaskAssignDialog> {
             onChanged: (value) => setState(() => _operatorId = value),
             validator: (value) => value == null ? '请选择操作员' : null,
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           TextFormField(
             decoration: const InputDecoration(labelText: '备注（可选）'),
             onChanged: (value) => _notes = value,
           ),
           if (_operators.isEmpty && !_loadingOperators)
-            const Padding(
-              padding: EdgeInsets.only(top: 8),
+            Padding(
+              padding: EdgeInsets.only(top: LayoutTokens.gapSm),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text('当前部门暂无可分派操作员'),

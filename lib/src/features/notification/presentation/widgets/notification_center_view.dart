@@ -33,7 +33,7 @@ class NotificationCenterView extends StatelessWidget {
 
         final theme = Theme.of(context);
         return Container(
-          padding: const EdgeInsets.all(18),
+          padding: LayoutTokens.cardPadding(context),
           decoration: BoxDecoration(
             color: surface,
             borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
@@ -57,14 +57,14 @@ class NotificationCenterView extends StatelessWidget {
               if (controller.isLoading)
                 Center(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    padding: EdgeInsets.symmetric(vertical: LayoutTokens.gapXl),
                     child: CircularProgressIndicator(color: primary),
                   ),
                 )
               else if (items.isEmpty)
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  padding: EdgeInsets.symmetric(vertical: LayoutTokens.gapXl),
                   decoration: BoxDecoration(
                     color: primary.withAlpha(10),
                     borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
@@ -139,8 +139,8 @@ class _NotificationToolbar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Wrap(
-      spacing: 12,
-      runSpacing: 12,
+      spacing: LayoutTokens.gapMd,
+      runSpacing: LayoutTokens.gapMd,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         Text(
@@ -197,8 +197,8 @@ class _NotificationListItem extends StatelessWidget {
     final theme = Theme.of(context);
     final levelColor = _levelColorFor(item.level, primary, semantic);
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
+      margin: EdgeInsets.only(bottom: LayoutTokens.gapMd),
+      padding: LayoutTokens.cardPadding(context),
       decoration: BoxDecoration(
         color: surface,
         borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
@@ -218,13 +218,13 @@ class _NotificationListItem extends StatelessWidget {
           Container(
             width: 10,
             height: 10,
-            margin: const EdgeInsets.only(top: 6),
+            margin: EdgeInsets.only(top: LayoutTokens.gapSm),
             decoration: BoxDecoration(
               color: item.isRead ? Colors.transparent : levelColor,
               shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: LayoutTokens.gapMd),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

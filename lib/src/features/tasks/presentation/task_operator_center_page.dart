@@ -217,7 +217,7 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
         final isNarrow = isMobile || constraints.maxWidth < 960;
         final children = [
           _buildMyTasksSection(isNarrow, filteredMyTasks),
-          const SizedBox(height: 16, width: 16),
+          SizedBox(height: LayoutTokens.gapLg, width: LayoutTokens.gapLg),
           _buildClaimableSection(isNarrow, filteredClaimableTasks),
         ];
         return SingleChildScrollView(
@@ -227,7 +227,7 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     children[0],
-                    const SizedBox(height: 16),
+                    SizedBox(height: LayoutTokens.gapLg),
                     children[2]
                   ],
                 )
@@ -235,7 +235,7 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(child: children[0]),
-                    const SizedBox(width: 16),
+                    SizedBox(width: LayoutTokens.gapLg),
                     Expanded(child: children[2]),
                   ],
                 ),
@@ -261,10 +261,11 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
           children: [
             TabBar(
               isScrollable: true,
-              labelPadding: const EdgeInsets.symmetric(horizontal: 12),
+              labelPadding:
+                  EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
               tabs: tabs.map((tab) => Tab(text: tab.label)).toList(),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: LayoutTokens.gapMd),
             SizedBox(
               height: 420,
               child: TabBarView(
@@ -336,10 +337,14 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
     bool showUpdateActions = false,
   }) {
     if (tasks.isEmpty) {
+      final colors = Theme.of(context).extension<AppColors>();
       return Center(
         child: Text(
           emptyText,
-          style: const TextStyle(color: Colors.black54),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: colors?.subtleText ??
+                    Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
         ),
       );
     }
@@ -354,7 +359,7 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
 
     return ListView.separated(
       itemCount: tasks.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      separatorBuilder: (_, __) => SizedBox(height: LayoutTokens.gapSm),
       itemBuilder: (context, index) {
         final task = tasks[index];
         return _TaskCard(
@@ -419,8 +424,8 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
                 DataCell(
                     Text(TaskUiHelper.followUpText(task), style: textStyle)),
                 DataCell(Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
+                  spacing: LayoutTokens.gapSm,
+                  runSpacing: LayoutTokens.gapXs,
                   children: [
                     RowActionGroup(
                       actions: [
@@ -543,7 +548,7 @@ class _TaskCard extends StatelessWidget {
     final colors = theme.extension<AppColors>()!;
     final isCompleted = task.status == 'completed';
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: LayoutTokens.cardPadding(context),
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
@@ -565,10 +570,10 @@ class _TaskCard extends StatelessWidget {
               if (trailing != null) trailing!,
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: LayoutTokens.gapSm),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: LayoutTokens.gapSm,
+            runSpacing: LayoutTokens.gapSm,
             children: [
               OutlinedButton.icon(
                 onPressed: isCompleted ? null : onUpdate,
@@ -642,28 +647,28 @@ class _TaskUpdateDialogState extends State<_TaskUpdateDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(task.workContent ?? '任务 #${task.id}'),
-          const SizedBox(height: 8),
+          SizedBox(height: LayoutTokens.gapSm),
           LinearProgressIndicator(value: total > 0 ? completed / total : 0),
-          const SizedBox(height: 6),
+          SizedBox(height: LayoutTokens.gapSm),
           Text('$completed / $total · $progress%'),
-          const SizedBox(height: 16),
+          SizedBox(height: LayoutTokens.gapLg),
           ToggleButtons(
             isSelected: [_completeMode == false, _completeMode == true],
             onPressed: (index) {
               setState(() => _completeMode = index == 1);
             },
-            children: const [
+            children: [
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12),
+                padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
                 child: Text('增量更新'),
               ),
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12),
+                padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
                 child: Text('直接完成'),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           if (!_completeMode) ...[
             TextFormField(
               initialValue: _quantityIncrement.toString(),
@@ -680,7 +685,7 @@ class _TaskUpdateDialogState extends State<_TaskUpdateDialog> {
                 _quantityIncrement = int.tryParse(value) ?? 0;
               },
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: LayoutTokens.gapMd),
           ],
           TextFormField(
             initialValue: _quantityDefective.toString(),
@@ -691,13 +696,13 @@ class _TaskUpdateDialogState extends State<_TaskUpdateDialog> {
             },
           ),
           if (_completeMode) ...[
-            const SizedBox(height: 12),
+            SizedBox(height: LayoutTokens.gapMd),
             TextFormField(
               decoration: const InputDecoration(labelText: '完成理由（可选）'),
               onChanged: (value) => _completionReason = value,
             ),
           ],
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           TextFormField(
             decoration: const InputDecoration(labelText: '备注（可选）'),
             onChanged: (value) => _notes = value,

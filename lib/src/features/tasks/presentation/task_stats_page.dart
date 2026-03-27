@@ -251,7 +251,7 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
   }) {
     final spacing = LayoutTokens.formSectionSpacing(context);
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      padding: LayoutTokens.pagePadding(context),
       children: [
         DateRangeFilterField(
           label: '日期范围',
@@ -322,7 +322,7 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
 
     return ListView.separated(
       itemCount: _stats.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, __) => SizedBox(height: LayoutTokens.gapMd),
       itemBuilder: (context, index) {
         final item = _stats[index];
         return _StatsCard(item: item);
@@ -422,7 +422,12 @@ class _FilterDrawerContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+          padding: EdgeInsets.fromLTRB(
+            LayoutTokens.gapLg,
+            LayoutTokens.gapMd,
+            LayoutTokens.gapSm,
+            LayoutTokens.gapSm,
+          ),
           child: Row(
             children: [
               Expanded(
@@ -487,7 +492,7 @@ class _StatsCard extends StatelessWidget {
               style:
                   theme.textTheme.bodySmall?.copyWith(color: colors.subtleText),
             ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           SummaryFieldWrap(
             isMobile: BreakpointsUtil.isMobile(context),
             children: [

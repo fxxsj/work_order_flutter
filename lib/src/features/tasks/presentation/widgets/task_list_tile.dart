@@ -35,7 +35,12 @@ class TaskListTile extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Container(
-          padding: EdgeInsets.fromLTRB(16, isXs ? 12 : 14, 16, isXs ? 12 : 14),
+          padding: EdgeInsets.fromLTRB(
+            LayoutTokens.gapLg,
+            isXs ? LayoutTokens.gapMd : LayoutTokens.gapSm + LayoutTokens.gapXs,
+            LayoutTokens.gapLg,
+            isXs ? LayoutTokens.gapMd : LayoutTokens.gapSm + LayoutTokens.gapXs,
+          ),
           decoration: BoxDecoration(
             color: colors.surface,
             border: showDivider
@@ -62,7 +67,9 @@ class TaskListTile extends StatelessWidget {
                     ),
                   ),
                   if (progressText != '-') ...[
-                    SizedBox(width: isXs ? 8 : 12),
+                    SizedBox(
+                      width: isXs ? LayoutTokens.gapSm : LayoutTokens.gapMd,
+                    ),
                     Flexible(
                       child: Text(
                         progressText,
@@ -78,10 +85,14 @@ class TaskListTile extends StatelessWidget {
                   ],
                 ],
               ),
-              SizedBox(height: isXs ? 8 : 10),
+              SizedBox(
+                height: isXs
+                    ? LayoutTokens.gapSm
+                    : LayoutTokens.gapSm + LayoutTokens.gapXs,
+              ),
               Wrap(
-                spacing: isXs ? 6 : 8,
-                runSpacing: isXs ? 6 : 8,
+                spacing: isXs ? LayoutTokens.gapSm : LayoutTokens.gapSm,
+                runSpacing: isXs ? LayoutTokens.gapSm : LayoutTokens.gapSm,
                 children: [
                   if (task.customerName?.isNotEmpty == true)
                     _MetaChip(label: '客户', value: task.customerName!),

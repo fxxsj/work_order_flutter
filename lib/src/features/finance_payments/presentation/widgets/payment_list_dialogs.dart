@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
@@ -91,7 +92,7 @@ Future<PaymentCreateResult?> showPaymentCreateDialog(
                       setState(() => selectedCustomerId = value),
                   validator: (value) => value == null ? '请选择客户' : null,
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 SearchableDropdownFormField<int?>(
                   initialValue: selectedSalesOrderId,
                   decoration: const InputDecoration(
@@ -113,7 +114,7 @@ Future<PaymentCreateResult?> showPaymentCreateDialog(
                   onChanged: (value) =>
                       setState(() => selectedSalesOrderId = value),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 SearchableDropdownFormField<int?>(
                   initialValue: selectedInvoiceId,
                   decoration: const InputDecoration(
@@ -137,7 +138,7 @@ Future<PaymentCreateResult?> showPaymentCreateDialog(
                   onChanged: (value) =>
                       setState(() => selectedInvoiceId = value),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 CrudFormField.radioGroup(
                   label: '收款方式',
                   value: paymentMethod,
@@ -153,7 +154,7 @@ Future<PaymentCreateResult?> showPaymentCreateDialog(
                   onChanged: (value) =>
                       setState(() => paymentMethod = value as String),
                 ).build(context),
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 TextFormField(
                   controller: amountController,
                   keyboardType: const TextInputType.numberWithOptions(
@@ -166,7 +167,7 @@ Future<PaymentCreateResult?> showPaymentCreateDialog(
                   validator: (value) =>
                       (value == null || value.trim().isEmpty) ? '请输入金额' : null,
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 TextFormField(
                   controller: paymentDateController,
                   decoration: const InputDecoration(
@@ -174,7 +175,7 @@ Future<PaymentCreateResult?> showPaymentCreateDialog(
                     border: OutlineInputBorder(),
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 TextFormField(
                   controller: bankController,
                   decoration: const InputDecoration(
@@ -182,7 +183,7 @@ Future<PaymentCreateResult?> showPaymentCreateDialog(
                     border: OutlineInputBorder(),
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 TextFormField(
                   controller: transactionController,
                   decoration: const InputDecoration(
@@ -190,7 +191,7 @@ Future<PaymentCreateResult?> showPaymentCreateDialog(
                     border: OutlineInputBorder(),
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 TextFormField(
                   controller: notesController,
                   decoration: const InputDecoration(

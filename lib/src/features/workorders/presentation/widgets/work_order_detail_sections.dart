@@ -303,7 +303,7 @@ class WorkOrderMultiApprovalSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(approvalErrorMessage!, style: theme.textTheme.bodyMedium),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           FilledButton(
             onPressed: onRetry,
             child: const Text('重试'),
@@ -317,7 +317,7 @@ class WorkOrderMultiApprovalSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('尚未启动多级审批', style: theme.textTheme.bodyMedium),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           Wrap(
             spacing: LayoutTokens.gapSm,
             runSpacing: LayoutTokens.gapSm,
@@ -382,7 +382,7 @@ class WorkOrderMultiApprovalSection extends StatelessWidget {
             _InfoRow(label: '负责人', value: assignedTo),
           ],
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: LayoutTokens.gapMd),
         Wrap(
           spacing: LayoutTokens.gapSm,
           runSpacing: LayoutTokens.gapSm,
@@ -432,14 +432,14 @@ class WorkOrderMultiApprovalSection extends StatelessWidget {
               ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: LayoutTokens.gapLg),
         Text(
           '审批步骤',
           style: theme.textTheme.titleSmall?.copyWith(
             color: colors?.sidebarText,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: LayoutTokens.gapSm),
         if (!isMobile)
           AppDataTable(
             columns: const [
@@ -475,7 +475,7 @@ class WorkOrderMultiApprovalSection extends StatelessWidget {
             children: steps
                 .map(
                   (step) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
+                    padding: EdgeInsets.only(bottom: LayoutTokens.gapMd),
                     child: DetailSectionCard(
                       title: step['step_name']?.toString() ?? emptyText,
                       child: Wrap(
