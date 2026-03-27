@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
 
@@ -95,7 +96,7 @@ Future<void> showWorkOrderSyncPreviewDialog(
                     ),
                   ),
                   if (!canSync) ...[
-                    const SizedBox(height: 8),
+                    SizedBox(height: LayoutTokens.gapSm),
                     Text(
                       '已审核的施工单不能同步任务。',
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -103,7 +104,7 @@ Future<void> showWorkOrderSyncPreviewDialog(
                       ),
                     ),
                   ],
-                  const SizedBox(height: 12),
+                  SizedBox(height: LayoutTokens.gapMd),
                   Row(
                     children: [
                       TextButton(
@@ -121,7 +122,7 @@ Future<void> showWorkOrderSyncPreviewDialog(
                     ],
                   ),
                   const Divider(height: 1),
-                  const SizedBox(height: 8),
+                  SizedBox(height: LayoutTokens.gapSm),
                   if (processes.isEmpty)
                     Text('暂无工序可同步', style: theme.textTheme.bodyMedium)
                   else
@@ -155,11 +156,11 @@ Future<void> showWorkOrderSyncPreviewDialog(
                       ],
                     ),
                   if (loading) ...[
-                    const SizedBox(height: 12),
+                    SizedBox(height: LayoutTokens.gapMd),
                     const LinearProgressIndicator(minHeight: 2),
                   ],
                   if (warningMessage != null) ...[
-                    const SizedBox(height: 12),
+                    SizedBox(height: LayoutTokens.gapMd),
                     Text(
                       warningMessage!,
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -168,7 +169,7 @@ Future<void> showWorkOrderSyncPreviewDialog(
                     ),
                   ],
                   if (previewData != null) ...[
-                    const SizedBox(height: 16),
+                    SizedBox(height: LayoutTokens.gapLg),
                     Text(
                       '预览结果',
                       style: theme.textTheme.titleSmall?.copyWith(
@@ -176,7 +177,7 @@ Future<void> showWorkOrderSyncPreviewDialog(
                         color: colors?.sidebarText,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: LayoutTokens.gapSm),
                     _InfoRow(label: '将删除草稿任务', value: '$tasksToRemove'),
                     _InfoRow(label: '预计新增草稿任务', value: '$tasksToAdd'),
                     _InfoRow(

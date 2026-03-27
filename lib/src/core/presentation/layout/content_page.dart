@@ -132,10 +132,12 @@ class _DashboardPageState extends State<_DashboardPage> {
 
         return SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(
-            narrow ? 16 : 24,
-            narrow ? 16 : 20,
-            narrow ? 16 : 24,
-            32,
+            narrow ? LayoutTokens.gapLg : LayoutTokens.gapXl,
+            narrow
+                ? LayoutTokens.gapLg
+                : LayoutTokens.gapLg + LayoutTokens.gapXs,
+            narrow ? LayoutTokens.gapLg : LayoutTokens.gapXl,
+            LayoutTokens.gapXl + LayoutTokens.gapSm,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,7 +150,7 @@ class _DashboardPageState extends State<_DashboardPage> {
                 borderColor: colors.borderColor,
                 surface: colors.surface,
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: LayoutTokens.gapMd),
               _DashboardStatsSection(
                 stats: _stats,
                 loading: _loadingStats,
@@ -160,7 +162,7 @@ class _DashboardPageState extends State<_DashboardPage> {
                 accent: colors.sidebarText,
                 primary: scheme.primary,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: LayoutTokens.gapLg),
               _DashboardChartsSection(
                 stats: _stats,
                 surface: colors.surface,
@@ -169,7 +171,7 @@ class _DashboardPageState extends State<_DashboardPage> {
                 accent: colors.sidebarText,
                 primary: scheme.primary,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: LayoutTokens.gapLg),
               if (compact) ...[
                 _QuickEntrySection(
                   entries: quickEntries,
@@ -179,7 +181,7 @@ class _DashboardPageState extends State<_DashboardPage> {
                   subtleText: colors.subtleText,
                   primary: scheme.primary,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: LayoutTokens.gapLg),
                 _SimpleModuleSection(
                   entries: spotlightEntries,
                   surface: colors.surface,
@@ -203,7 +205,7 @@ class _DashboardPageState extends State<_DashboardPage> {
                         primary: scheme.primary,
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    SizedBox(width: LayoutTokens.gapLg),
                     Expanded(
                       flex: 7,
                       child: _SimpleModuleSection(
@@ -217,7 +219,7 @@ class _DashboardPageState extends State<_DashboardPage> {
                     ),
                   ],
                 ),
-              const SizedBox(height: 16),
+              SizedBox(height: LayoutTokens.gapLg),
               _GroupPanel(
                 groups: groups,
                 surface: colors.surface,
@@ -298,7 +300,7 @@ class _DashboardStatsSection extends StatelessWidget {
                 : width < 1280
                     ? 3
                     : 4;
-        final spacing = 12.0;
+        final spacing = LayoutTokens.gapMd;
         final cardWidth =
             (width - spacing * (columns - 1)) / columns.clamp(1, 6);
 
@@ -493,7 +495,7 @@ class _DashboardChartsSection extends StatelessWidget {
             : width < 1080
                 ? 2
                 : 3;
-        final spacing = 12.0;
+        final spacing = LayoutTokens.gapMd;
         final cardWidth =
             (width - spacing * (columns - 1)) / columns.clamp(1, 6);
 
@@ -720,7 +722,12 @@ class _ChartCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      padding: EdgeInsets.fromLTRB(
+        LayoutTokens.gapMd,
+        LayoutTokens.gapMd,
+        LayoutTokens.gapMd,
+        LayoutTokens.gapMd,
+      ),
       decoration: BoxDecoration(
         color: surface,
         border: Border.all(color: borderColor.withValues(alpha: 0.6)),
@@ -735,7 +742,7 @@ class _ChartCard extends StatelessWidget {
                   color: accent,
                 ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           _ChartBarList(
             items: items,
             totalOverride: totalOverride,
@@ -796,7 +803,9 @@ class _ChartBarList extends StatelessWidget {
       children: [
         for (final item in items)
           Padding(
-            padding: const EdgeInsets.only(bottom: 10),
+            padding: EdgeInsets.only(
+              bottom: LayoutTokens.gapSm + LayoutTokens.gapXs,
+            ),
             child: _ChartBarRow(
               item: item,
               total: total,
@@ -854,7 +863,7 @@ class _ChartBarRow extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: LayoutTokens.gapSm),
             Text(
               item.valueText,
               style: textTheme.bodySmall?.copyWith(
@@ -863,7 +872,7 @@ class _ChartBarRow extends StatelessWidget {
               ),
             ),
             if (showPercent) ...[
-              const SizedBox(width: 8),
+              SizedBox(width: LayoutTokens.gapSm),
               Text(
                 percentText,
                 style: textTheme.bodySmall?.copyWith(
@@ -874,7 +883,7 @@ class _ChartBarRow extends StatelessWidget {
           ],
         ),
         if (item.subtitle != null) ...[
-          const SizedBox(height: 2),
+          SizedBox(height: LayoutTokens.gapXs / 2),
           Text(
             item.subtitle!,
             style: textTheme.labelSmall?.copyWith(
@@ -882,12 +891,12 @@ class _ChartBarRow extends StatelessWidget {
             ),
           ),
         ],
-        const SizedBox(height: 6),
+        SizedBox(height: LayoutTokens.gapSm),
         Container(
-          height: 8,
+          height: LayoutTokens.gapSm,
           decoration: BoxDecoration(
             color: borderColor.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(LayoutTokens.radiusXs),
           ),
           child: FractionallySizedBox(
             alignment: Alignment.centerLeft,
@@ -895,7 +904,7 @@ class _ChartBarRow extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 color: primary.withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(LayoutTokens.radiusXs),
               ),
             ),
           ),
@@ -917,7 +926,7 @@ class _DashboardErrorCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(LayoutTokens.gapLg),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         border: Border.all(color: Theme.of(context).dividerColor),
@@ -925,7 +934,7 @@ class _DashboardErrorCard extends StatelessWidget {
       child: Row(
         children: [
           Expanded(child: Text(message)),
-          const SizedBox(width: 12),
+          SizedBox(width: LayoutTokens.gapMd),
           FilledButton(
             onPressed: onRetry,
             child: const Text('重试'),
@@ -972,7 +981,12 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      padding: EdgeInsets.fromLTRB(
+        LayoutTokens.gapMd,
+        LayoutTokens.gapMd,
+        LayoutTokens.gapMd,
+        LayoutTokens.gapMd,
+      ),
       decoration: BoxDecoration(
         color: surface,
         border: Border.all(color: borderColor.withValues(alpha: 0.6)),
@@ -987,7 +1001,7 @@ class _StatCard extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: LayoutTokens.gapSm),
           Text(
             value,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -996,7 +1010,7 @@ class _StatCard extends StatelessWidget {
                 ),
           ),
           if (subtitle != null) ...[
-            const SizedBox(height: 4),
+            SizedBox(height: LayoutTokens.gapXs),
             Text(
               subtitle!,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -1033,7 +1047,12 @@ class _DashboardHero extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+      padding: EdgeInsets.fromLTRB(
+        LayoutTokens.gapLg + LayoutTokens.gapXs,
+        LayoutTokens.gapLg,
+        LayoutTokens.gapLg + LayoutTokens.gapXs,
+        LayoutTokens.gapLg,
+      ),
       decoration: BoxDecoration(
         color: surface,
         borderRadius: BorderRadius.circular(LayoutTokens.radiusXl),
@@ -1043,8 +1062,8 @@ class _DashboardHero extends StatelessWidget {
         builder: (context, constraints) {
           final compact = constraints.maxWidth < 720;
           final badgeWrap = Wrap(
-            spacing: 10,
-            runSpacing: 10,
+            spacing: LayoutTokens.gapSm + LayoutTokens.gapXs,
+            runSpacing: LayoutTokens.gapSm + LayoutTokens.gapXs,
             children: [
               _TinyBadge(
                 label: subtitle,
@@ -1078,12 +1097,15 @@ class _DashboardHero extends StatelessWidget {
                     color: primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
                   ),
-                  child:
-                      Icon(Icons.dashboard_outlined, color: primary, size: 18),
+                  child: Icon(
+                    Icons.dashboard_outlined,
+                    color: primary,
+                    size: LayoutTokens.iconMd,
+                  ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 titleBlock,
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 badgeWrap,
               ],
             );
@@ -1099,11 +1121,15 @@ class _DashboardHero extends StatelessWidget {
                   color: primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
                 ),
-                child: Icon(Icons.dashboard_outlined, color: primary, size: 18),
+                child: Icon(
+                  Icons.dashboard_outlined,
+                  color: primary,
+                  size: LayoutTokens.iconMd,
+                ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: LayoutTokens.gapMd),
               Expanded(child: titleBlock),
-              const SizedBox(width: 10),
+              SizedBox(width: LayoutTokens.gapSm + LayoutTokens.gapXs),
               badgeWrap,
             ],
           );
@@ -1141,15 +1167,15 @@ class _QuickEntrySection extends StatelessWidget {
         builder: (context, constraints) {
           final compact = constraints.maxWidth < 560;
           return Wrap(
-            spacing: 12,
-            runSpacing: 12,
+            spacing: LayoutTokens.gapMd,
+            runSpacing: LayoutTokens.gapMd,
             children: [
               for (final item in entries)
                 _QuickEntryCard(
                   item: item,
                   width: compact
                       ? constraints.maxWidth
-                      : (constraints.maxWidth - 12) / 2,
+                      : (constraints.maxWidth - LayoutTokens.gapMd) / 2,
                   accent: accent,
                   subtleText: subtleText,
                   primary: primary,
@@ -1361,7 +1387,7 @@ class _PanelShell extends StatelessWidget {
             ),
           ),
           if (subtitle.trim().isNotEmpty) ...[
-            const SizedBox(height: 3),
+            SizedBox(height: LayoutTokens.gapXs / 2 + 1),
             Text(
               subtitle,
               style: theme.textTheme.bodySmall?.copyWith(
@@ -1369,9 +1395,9 @@ class _PanelShell extends StatelessWidget {
                 height: 1.35,
               ),
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: LayoutTokens.gapMd + LayoutTokens.gapXs / 2),
           ] else
-            const SizedBox(height: 12),
+            SizedBox(height: LayoutTokens.gapMd),
           child,
         ],
       ),
@@ -1405,7 +1431,7 @@ class _QuickEntryCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(LayoutTokens.radiusXl),
       child: Container(
         width: width,
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(LayoutTokens.gapLg),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
           border: Border.all(color: borderColor),
@@ -1420,9 +1446,9 @@ class _QuickEntryCard extends StatelessWidget {
                 color: primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
               ),
-              child: Icon(item.icon, color: primary, size: 18),
+              child: Icon(item.icon, color: primary, size: LayoutTokens.iconMd),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: LayoutTokens.gapMd),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1442,7 +1468,11 @@ class _QuickEntryCard extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: subtleText, size: 18),
+            Icon(
+              Icons.chevron_right,
+              color: subtleText,
+              size: LayoutTokens.iconMd,
+            ),
           ],
         ),
       ),
@@ -1469,11 +1499,11 @@ class _SimpleNavRow extends StatelessWidget {
       onTap: item.path == null ? null : () => context.go(item.path!),
       borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: EdgeInsets.symmetric(vertical: LayoutTokens.gapXs),
         child: Row(
           children: [
-            Icon(item.icon, size: 18, color: primary),
-            const SizedBox(width: 10),
+            Icon(item.icon, size: LayoutTokens.iconMd, color: primary),
+            SizedBox(width: LayoutTokens.gapSm + LayoutTokens.gapXs),
             Expanded(
               child: Text(
                 item.label,
@@ -1514,8 +1544,8 @@ class _GroupRow extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(group.icon, size: 18, color: primary),
-            const SizedBox(width: 10),
+            Icon(group.icon, size: LayoutTokens.iconMd, color: primary),
+            SizedBox(width: LayoutTokens.gapSm + LayoutTokens.gapXs),
             Text(
               group.label,
               style: TextStyle(
@@ -1525,10 +1555,10 @@ class _GroupRow extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: LayoutTokens.gapMd),
         Wrap(
-          spacing: 10,
-          runSpacing: 10,
+          spacing: LayoutTokens.gapSm + LayoutTokens.gapXs,
+          runSpacing: LayoutTokens.gapSm + LayoutTokens.gapXs,
           children: [
             for (final child in group.children)
               _RoutePill(
@@ -1561,7 +1591,10 @@ class _RoutePill extends StatelessWidget {
       onTap: item.path == null ? null : () => context.go(item.path!),
       borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: EdgeInsets.symmetric(
+          horizontal: LayoutTokens.gapMd,
+          vertical: LayoutTokens.gapSm,
+        ),
         decoration: BoxDecoration(
           color: primary.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
@@ -1593,7 +1626,10 @@ class _TinyBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: LayoutTokens.gapMd,
+        vertical: LayoutTokens.gapSm,
+      ),
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),

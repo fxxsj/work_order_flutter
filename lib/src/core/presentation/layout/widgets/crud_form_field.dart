@@ -813,7 +813,7 @@ class _CrudDateRangeFieldBody extends StatelessWidget {
 
     return InkWell(
       onTap: enabled ? () => _pickDateRange(context, currentValue) : null,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: label,
@@ -833,7 +833,7 @@ class _CrudDateRangeFieldBody extends StatelessWidget {
                   icon: const Icon(Icons.clear, size: 18),
                 ),
               const Icon(Icons.date_range_outlined),
-              const SizedBox(width: 12),
+              SizedBox(width: LayoutTokens.gapMd),
             ],
           ),
         ).applyDefaults(theme.inputDecorationTheme).copyWith(enabled: enabled),
@@ -1003,7 +1003,7 @@ class _CrudFileUploadFieldBody extends StatelessWidget {
               color: hasValue ? null : theme.hintColor,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -1192,7 +1192,7 @@ class _CrudMultiSelectFieldBody extends StatelessWidget {
 
     return InkWell(
       onTap: enabled ? () => _openPicker(context, currentValues) : null,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
       child: InputDecorator(
         decoration: decoration.copyWith(enabled: enabled),
         isEmpty: selectedItems.isEmpty,
@@ -1261,7 +1261,7 @@ class _CrudMultiSelectFieldBody extends StatelessWidget {
                       onChanged: (value) =>
                           setDialogState(() => query = value.trim()),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: LayoutTokens.gapMd),
                     Expanded(
                       child: filtered.isEmpty
                           ? Center(
@@ -1470,7 +1470,7 @@ class _CrudTagsFieldBodyState extends State<_CrudTagsFieldBody> {
                 color: theme.hintColor,
               ),
             ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           if (widget.enabled)
             TextField(
               controller: _inputController,
@@ -1892,7 +1892,7 @@ class _CrudColorFieldBody extends StatelessWidget {
 
     return InkWell(
       onTap: enabled ? () => _openPicker(context, currentValue) : null,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: label,
@@ -1908,11 +1908,11 @@ class _CrudColorFieldBody extends StatelessWidget {
               height: 20,
               decoration: BoxDecoration(
                 color: currentValue ?? Colors.transparent,
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
                 border: Border.all(color: theme.dividerColor),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: LayoutTokens.gapMd),
             Expanded(
               child: Text(
                 currentValue == null

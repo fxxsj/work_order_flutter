@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 
 class DateRangeFilterField extends StatelessWidget {
   const DateRangeFilterField({
@@ -34,7 +35,7 @@ class DateRangeFilterField extends StatelessWidget {
 
     return InkWell(
       onTap: () => _pickRange(context),
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: label,
@@ -49,7 +50,7 @@ class DateRangeFilterField extends StatelessWidget {
                   icon: const Icon(Icons.close, size: 16),
                 ),
               const Icon(Icons.date_range_outlined, size: 18),
-              const SizedBox(width: 12),
+              SizedBox(width: LayoutTokens.gapMd),
             ],
           ),
         ).applyDefaults(theme.inputDecorationTheme),

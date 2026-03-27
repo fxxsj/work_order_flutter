@@ -198,13 +198,16 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                 ),
               ),
             ],
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 6),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapSm),
               child: Icon(Icons.more_vert),
             ),
           ),
         Padding(
-          padding: const EdgeInsets.only(right: 10, left: 2),
+          padding: EdgeInsets.only(
+            right: LayoutTokens.gapMd,
+            left: LayoutTokens.gapXs,
+          ),
           child: _AvatarMenu(
             primary: primary,
             onProfileTap: onProfileTap,
@@ -235,7 +238,12 @@ List<PopupMenuEntry<String>> _buildNotificationMenuItems(
   items.add(
     PopupMenuItem<String>(
       enabled: false,
-      padding: const EdgeInsets.fromLTRB(14, 10, 10, 4),
+      padding: EdgeInsets.fromLTRB(
+        LayoutTokens.gapMd,
+        LayoutTokens.gapSm,
+        LayoutTokens.gapSm,
+        LayoutTokens.gapXs,
+      ),
       child: Row(
         children: [
           Text(
@@ -250,7 +258,10 @@ List<PopupMenuEntry<String>> _buildNotificationMenuItems(
             },
             style: TextButton.styleFrom(
               visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: EdgeInsets.symmetric(
+                horizontal: LayoutTokens.gapSm,
+                vertical: LayoutTokens.gapXs,
+              ),
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
@@ -265,7 +276,7 @@ List<PopupMenuEntry<String>> _buildNotificationMenuItems(
     items.add(
       PopupMenuItem<String>(
         enabled: false,
-        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        padding: EdgeInsets.all(LayoutTokens.gapMd),
         child: Text(
           '暂无通知',
           style: emptyStyle,
@@ -309,7 +320,12 @@ List<PopupMenuEntry<String>> _buildNotificationMenuItems(
   items.add(
     PopupMenuItem<String>(
       enabled: false,
-      padding: const EdgeInsets.fromLTRB(14, 6, 14, 10),
+      padding: EdgeInsets.fromLTRB(
+        LayoutTokens.gapMd,
+        LayoutTokens.gapSm,
+        LayoutTokens.gapMd,
+        LayoutTokens.gapSm,
+      ),
       child: Align(
         alignment: Alignment.centerRight,
         child: TextButton(
@@ -319,7 +335,10 @@ List<PopupMenuEntry<String>> _buildNotificationMenuItems(
           },
           style: TextButton.styleFrom(
             visualDensity: VisualDensity.compact,
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            padding: EdgeInsets.symmetric(
+              horizontal: LayoutTokens.gapSm,
+              vertical: LayoutTokens.gapXs,
+            ),
             minimumSize: Size.zero,
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
@@ -366,7 +385,12 @@ class _NotificationListItem extends StatelessWidget {
     );
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      padding: EdgeInsets.fromLTRB(
+        LayoutTokens.gapMd,
+        LayoutTokens.gapSm,
+        LayoutTokens.gapMd,
+        LayoutTokens.gapSm,
+      ),
       decoration: BoxDecoration(
         color:
             item.isRead ? Colors.transparent : primary.withValues(alpha: 0.14),
@@ -385,7 +409,7 @@ class _NotificationListItem extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: LayoutTokens.gapSm),
               Expanded(
                 child: Text(
                   item.title,
@@ -393,12 +417,12 @@ class _NotificationListItem extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const SizedBox(width: 6),
+              SizedBox(width: LayoutTokens.gapSm),
               Text(
                 timeLabel,
                 style: timeStyle,
               ),
-              const SizedBox(width: 6),
+              SizedBox(width: LayoutTokens.gapSm),
               IconButton(
                 tooltip: '标为已读',
                 icon: const Icon(Icons.done_all, size: 16),
@@ -407,7 +431,7 @@ class _NotificationListItem extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: LayoutTokens.gapSm),
           Text(
             item.content,
             style: contentStyle,
@@ -416,7 +440,7 @@ class _NotificationListItem extends StatelessWidget {
           ),
           if (showDivider)
             Padding(
-              padding: const EdgeInsets.only(top: 8),
+              padding: EdgeInsets.only(top: LayoutTokens.gapSm),
               child:
                   Divider(height: 1, color: subtleText.withValues(alpha: 0.2)),
             ),

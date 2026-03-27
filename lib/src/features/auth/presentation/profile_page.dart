@@ -190,14 +190,14 @@ class _ProfilePageState extends State<ProfilePage> {
         side: BorderSide(color: borderColor),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(LayoutTokens.gapLg + LayoutTokens.gapXs),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('个人信息',
                 style: theme.textTheme.titleLarge
                     ?.copyWith(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 16),
+            SizedBox(height: LayoutTokens.gapLg),
             Wrap(
               spacing: 8,
               children: [
@@ -213,7 +213,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: LayoutTokens.gapLg),
             IndexedStack(
               index: _activeTab,
               children: [
@@ -239,7 +239,7 @@ class _ProfilePageState extends State<ProfilePage> {
             enabled: false,
             decoration: const InputDecoration(labelText: '用户名'),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           TextFormField(
             controller: _emailController,
             decoration: const InputDecoration(labelText: '邮箱'),
@@ -252,17 +252,17 @@ class _ProfilePageState extends State<ProfilePage> {
               return null;
             },
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           TextFormField(
             controller: _lastNameController,
             decoration: const InputDecoration(labelText: '姓'),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           TextFormField(
             controller: _firstNameController,
             decoration: const InputDecoration(labelText: '名'),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           Wrap(
             spacing: 8,
             children: [
@@ -270,17 +270,17 @@ class _ProfilePageState extends State<ProfilePage> {
               if (_isSuperUser()) const Chip(label: Text('超级管理员')),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           Text(
             '所属部门：${_departments().isEmpty ? '未配置' : _departments().join('、')}',
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: LayoutTokens.gapSm),
           Text(
             _isSuperUser()
                 ? '权限范围：超级管理员，默认可见全部菜单'
                 : '权限范围：已同步 ${_permissionCount()} 项权限，侧边栏会按当前账号能力收敛显示',
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: LayoutTokens.gapLg),
           Row(
             children: [
               FilledButton(
@@ -301,7 +301,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       )
                     : const Text('保存修改'),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: LayoutTokens.gapMd),
               TextButton(onPressed: _resetProfileForm, child: const Text('重置')),
             ],
           ),
@@ -324,7 +324,7 @@ class _ProfilePageState extends State<ProfilePage> {
             validator: (value) =>
                 value == null || value.isEmpty ? '请输入旧密码' : null,
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           TextFormField(
             controller: _newPasswordController,
             obscureText: true,
@@ -335,7 +335,7 @@ class _ProfilePageState extends State<ProfilePage> {
               return null;
             },
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           TextFormField(
             controller: _confirmPasswordController,
             obscureText: true,
@@ -346,7 +346,7 @@ class _ProfilePageState extends State<ProfilePage> {
               return null;
             },
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: LayoutTokens.gapLg),
           FilledButton(
             onPressed: _changingPassword ? null : _handleChangePassword,
             style: FilledButton.styleFrom(

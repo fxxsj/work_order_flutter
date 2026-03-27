@@ -91,7 +91,7 @@ class _SearchableDropdownFieldBody<T> extends StatelessWidget {
 
     return InkWell(
       onTap: enabled ? () => _openPicker(context) : null,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
       child: InputDecorator(
         decoration: effectiveDecoration.copyWith(
           enabled: enabled,
