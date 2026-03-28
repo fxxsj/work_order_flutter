@@ -4,6 +4,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_loading_indicator.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/date_range_filter_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
@@ -186,7 +187,9 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
             context: context,
             barrierDismissible: true,
             barrierLabel: '筛选',
-            barrierColor: Colors.black.withValues(alpha: 0.3),
+            barrierColor: Theme.of(context)
+                .shadowColor
+                .withValues(alpha: OpacityTokens.scrim),
             transitionDuration: const Duration(milliseconds: 220),
             pageBuilder: (dialogContext, animation, secondaryAnimation) {
               return Align(
@@ -300,7 +303,7 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
   Widget _buildBody(BuildContext context) {
     final isMobile = BreakpointsUtil.isMobile(context);
     if (_loading && _stats.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppLoadingIndicator();
     }
     if (_errorMessage != null && !_loading) {
       return ErrorStateCard(

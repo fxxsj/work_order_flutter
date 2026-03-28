@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_loading_indicator.dart';
 
 /// 增强的按钮组件，内置动画效果
 class AnimatedButton extends StatefulWidget {
@@ -54,15 +55,10 @@ class _AnimatedButtonState extends State<AnimatedButton> {
         height: effectiveHeight,
         width: widget.width,
         child: Center(
-          child: SizedBox(
-            width: sizeConfig.iconSize,
-            height: sizeConfig.iconSize,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                _getTextColor(context),
-              ),
-            ),
+          child: AppLoadingIndicator(
+            centered: false,
+            size: sizeConfig.iconSize,
+            color: _getTextColor(context),
           ),
         ),
       );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_loading_indicator.dart';
 import 'package:work_order_app/src/features/notification/application/notification_view_model.dart';
 import 'package:work_order_app/src/features/notification/domain/notification_model.dart';
 
@@ -58,7 +59,7 @@ class NotificationCenterView extends StatelessWidget {
                 Center(
                   child: Padding(
                     padding: EdgeInsets.symmetric(vertical: LayoutTokens.gapXl),
-                    child: CircularProgressIndicator(color: primary),
+                    child: AppLoadingIndicator(color: primary),
                   ),
                 )
               else if (items.isEmpty)
@@ -95,11 +96,10 @@ class NotificationCenterView extends StatelessWidget {
                       onPressed:
                           controller.isLoadingMore ? null : controller.loadMore,
                       child: controller.isLoadingMore
-                          ? SizedBox(
-                              width: LayoutTokens.iconXl,
-                              height: LayoutTokens.iconXl,
-                              child: const CircularProgressIndicator(
-                                  strokeWidth: 2))
+                          ? const AppLoadingIndicator(
+                              centered: false,
+                              size: LayoutTokens.iconXl,
+                            )
                           : const Text('加载更多'),
                     ),
                   ),
@@ -203,10 +203,15 @@ class _NotificationListItem extends StatelessWidget {
         color: surface,
         borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
         border: Border.all(
-            color: item.isRead ? Colors.transparent : levelColor.withAlpha(77)),
+          color: item.isRead
+              ? levelColor.withValues(alpha: OpacityTokens.invisible)
+              : levelColor.withValues(alpha: OpacityTokens.scrim),
+        ),
         boxShadow: [
           BoxShadow(
-            color: (semantic?.shadowStrong ?? Colors.black).withAlpha(10),
+            color: (semantic?.shadowStrong ?? theme.shadowColor).withValues(
+              alpha: OpacityTokens.faint,
+            ),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -220,7 +225,9 @@ class _NotificationListItem extends StatelessWidget {
             height: 10,
             margin: EdgeInsets.only(top: LayoutTokens.gapSm),
             decoration: BoxDecoration(
-              color: item.isRead ? Colors.transparent : levelColor,
+              color: item.isRead
+                  ? levelColor.withValues(alpha: OpacityTokens.invisible)
+                  : levelColor,
               shape: BoxShape.circle,
             ),
           ),

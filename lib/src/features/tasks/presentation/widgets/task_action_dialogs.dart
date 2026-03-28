@@ -2,8 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
-import 'package:work_order_app/src/features/departments/domain/department.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
+
+class TaskDepartmentOption {
+  const TaskDepartmentOption({
+    required this.id,
+    required this.name,
+  });
+
+  final int id;
+  final String name;
+}
 
 Future<void> showTaskQuantityDialog(
   BuildContext context, {
@@ -36,7 +45,7 @@ Future<void> showTaskCompleteDialog(
 Future<void> showTaskAssignDialog(
   BuildContext context, {
   required Task task,
-  required List<Department> departments,
+  required List<TaskDepartmentOption> departments,
   required Future<List<Map<String, dynamic>>> Function(int departmentId)
       loadOperators,
   required Future<void> Function(int operatorId, String notes) onSubmit,
@@ -225,7 +234,7 @@ class _TaskAssignDialog extends StatefulWidget {
   });
 
   final Task task;
-  final List<Department> departments;
+  final List<TaskDepartmentOption> departments;
   final Future<List<Map<String, dynamic>>> Function(int departmentId)
       loadOperators;
   final Future<void> Function(int operatorId, String notes) onSubmit;

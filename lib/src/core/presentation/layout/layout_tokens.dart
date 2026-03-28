@@ -25,10 +25,13 @@ class LayoutTokens {
   static const double navItemHeight = 40;
 
   static const double gapXs = 4;
+  static const double gapXxs = 6;
   static const double gapSm = 8;
   static const double gapMd = 12;
   static const double gapLg = 16;
   static const double gapXl = 24;
+  static const double cardPaddingSm = 10;
+  static const double progressStrokeWidth = 2.5;
 
   /// 统一图标大小规范
   static const double iconXs = 14;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_loading_indicator.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 
 class PageHeaderBar extends StatelessWidget {
@@ -177,16 +178,15 @@ class PageActionButton extends StatelessWidget {
 
     final effectiveOnPressed = loading ? null : onPressed;
     final buttonChild = SizedBox(
-      width: 16,
-      height: 16,
+      width: LayoutTokens.iconSm,
+      height: LayoutTokens.iconSm,
       child: loading
-          ? CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                variant == PageActionVariant.filled
-                    ? Theme.of(context).colorScheme.onPrimary
-                    : Theme.of(context).colorScheme.primary,
-              ),
+          ? AppLoadingIndicator(
+              centered: false,
+              size: LayoutTokens.iconSm,
+              color: variant == PageActionVariant.filled
+                  ? Theme.of(context).colorScheme.onPrimary
+                  : Theme.of(context).colorScheme.primary,
             )
           : icon ?? Text(label ?? ''),
     );
@@ -433,8 +433,8 @@ class WorkbenchStatChip extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLowest.withValues(alpha: 0.92),
-        borderRadius:
-            BorderRadius.circular(isXs ? LayoutTokens.radiusMd : LayoutTokens.radiusLg),
+        borderRadius: BorderRadius.circular(
+            isXs ? LayoutTokens.radiusMd : LayoutTokens.radiusLg),
         border: Border.all(color: colors.borderColor),
       ),
       child: Column(

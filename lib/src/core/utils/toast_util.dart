@@ -5,7 +5,8 @@ import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/router/app_router.dart';
 
 class ToastUtil {
-  static final ValueNotifier<List<_ToastItem>> _items = ValueNotifier<List<_ToastItem>>([]);
+  static final ValueNotifier<List<_ToastItem>> _items =
+      ValueNotifier<List<_ToastItem>>([]);
   static OverlayEntry? _entry;
   static int _nextId = 0;
 
@@ -16,7 +17,8 @@ class ToastUtil {
     _ensureEntry(context);
 
     final id = _nextId++;
-    final item = _ToastItem(id: id, message: message, isError: isError, closing: false);
+    final item =
+        _ToastItem(id: id, message: message, isError: isError, closing: false);
     _items.value = [..._items.value, item];
 
     Timer(const Duration(seconds: 3), () {
@@ -115,7 +117,10 @@ class _ToastHost extends StatelessWidget {
           child: Align(
             alignment: Alignment.bottomRight,
             child: Padding(
-              padding: const EdgeInsets.only(right: 20, bottom: 24),
+              padding: EdgeInsets.only(
+                right: LayoutTokens.gapLg + LayoutTokens.gapXs,
+                bottom: LayoutTokens.gapXl,
+              ),
               child: ValueListenableBuilder<List<_ToastItem>>(
                 valueListenable: items,
                 builder: (context, list, _) {
@@ -148,7 +153,8 @@ class _ToastCard extends StatefulWidget {
   State<_ToastCard> createState() => _ToastCardState();
 }
 
-class _ToastCardState extends State<_ToastCard> with SingleTickerProviderStateMixin {
+class _ToastCardState extends State<_ToastCard>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _progressController;
   bool _visible = false;
 
@@ -200,14 +206,18 @@ class _ToastCardState extends State<_ToastCard> with SingleTickerProviderStateMi
         opacity: _visible ? 1 : 0,
         child: Container(
           constraints: const BoxConstraints(maxWidth: 320),
-          margin: const EdgeInsets.only(top: 10),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          margin: EdgeInsets.only(top: LayoutTokens.cardPaddingSm),
+          padding: EdgeInsets.symmetric(
+            horizontal: LayoutTokens.gapMd + (LayoutTokens.gapXs / 2),
+            vertical: LayoutTokens.cardPaddingSm,
+          ),
           decoration: BoxDecoration(
             color: background,
             borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withAlpha(51),
+                color:
+                    theme.shadowColor.withValues(alpha: OpacityTokens.distinct),
                 blurRadius: 14,
                 offset: const Offset(0, 6),
               ),
@@ -217,11 +227,13 @@ class _ToastCardState extends State<_ToastCard> with SingleTickerProviderStateMi
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Icon(
-                widget.item.isError ? Icons.error_outline : Icons.check_circle_outline,
+                widget.item.isError
+                    ? Icons.error_outline
+                    : Icons.check_circle_outline,
                 color: foreground,
                 size: 22,
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: LayoutTokens.gapSm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,17 +245,21 @@ class _ToastCardState extends State<_ToastCard> with SingleTickerProviderStateMi
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: LayoutTokens.gapSm),
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
+                      borderRadius:
+                          BorderRadius.circular(LayoutTokens.radiusPill),
                       child: AnimatedBuilder(
                         animation: _progressController,
                         builder: (context, _) {
                           return LinearProgressIndicator(
                             value: 1 - _progressController.value,
                             minHeight: 3,
-                            backgroundColor: foreground.withAlpha(51),
-                            valueColor: AlwaysStoppedAnimation<Color>(foreground),
+                            backgroundColor: foreground.withValues(
+                              alpha: OpacityTokens.distinct,
+                            ),
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(foreground),
                           );
                         },
                       ),

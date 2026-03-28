@@ -280,7 +280,7 @@ class _DieEditPageState extends State<DieEditPage> {
                         },
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: LayoutTokens.gapMd),
                     Expanded(
                       child: TextFormField(
                         controller: item.quantityController,
@@ -289,7 +289,7 @@ class _DieEditPageState extends State<DieEditPage> {
                         keyboardType: TextInputType.number,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: LayoutTokens.gapSm),
                     IconButton(
                       tooltip: '移除',
                       icon: Icon(

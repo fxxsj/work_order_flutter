@@ -8,6 +8,7 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/action_decision_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_loading_indicator.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/file_upload_dialog.dart';
@@ -313,7 +314,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                                     () => invoiceType = value ?? 'vat_normal',
                                   ),
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: LayoutTokens.gapMd),
                         SearchableDropdownFormField<int?>(
                           initialValue: selectedCustomerId,
                           decoration: const InputDecoration(
@@ -339,7 +340,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                                   ),
                           validator: (value) => value == null ? '请选择客户' : null,
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: LayoutTokens.gapMd),
                         SearchableDropdownFormField<int?>(
                           initialValue: selectedSalesOrderId,
                           decoration: const InputDecoration(
@@ -364,7 +365,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                                     () => selectedSalesOrderId = value,
                                   ),
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: LayoutTokens.gapMd),
                         SearchableDropdownFormField<int?>(
                           initialValue: selectedWorkOrderId,
                           decoration: const InputDecoration(
@@ -389,7 +390,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                                     () => selectedWorkOrderId = value,
                                   ),
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: LayoutTokens.gapMd),
                         TextFormField(
                           controller: amountController,
                           keyboardType: const TextInputType.numberWithOptions(
@@ -403,7 +404,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                                   ? '请输入金额'
                                   : null,
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: LayoutTokens.gapMd),
                         TextFormField(
                           controller: taxRateController,
                           keyboardType: const TextInputType.numberWithOptions(
@@ -413,7 +414,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                             border: OutlineInputBorder(),
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: LayoutTokens.gapMd),
                         TextFormField(
                           controller: issueDateController,
                           decoration: const InputDecoration(
@@ -421,7 +422,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                             border: OutlineInputBorder(),
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: LayoutTokens.gapMd),
                         TextFormField(
                           controller: notesController,
                           decoration: const InputDecoration(
@@ -653,7 +654,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
   ) {
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
     if (viewModel.loading && invoices.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppLoadingIndicator();
     }
     if (viewModel.errorMessage != null && !viewModel.loading) {
       return ErrorStateCard(

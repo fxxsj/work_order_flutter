@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
+import 'package:work_order_app/src/core/controllers/theme_controller.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class Utils {
   static getThemeData({Color? themeColor, Brightness? brightness}) {
-    final resolvedThemeColor = themeColor ?? const Color(0xFF14B8A6);
+    final resolvedThemeColor = themeColor ?? ThemeController.defaultSeed;
     final resolvedBrightness = brightness ?? Brightness.light;
     final baseScheme = ColorScheme.fromSeed(
       seedColor: resolvedThemeColor,
@@ -256,7 +257,8 @@ class Utils {
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
-          side: BorderSide(color: appColors.borderColor.withValues(alpha: 0.45)),
+          side:
+              BorderSide(color: appColors.borderColor.withValues(alpha: 0.45)),
         ),
       ),
       scrollbarTheme: ScrollbarThemeData(
@@ -272,7 +274,8 @@ class Utils {
           foregroundColor: WidgetStateProperty.all(scheme.primary),
           mouseCursor: WidgetStateProperty.all(SystemMouseCursors.click),
           textStyle: WidgetStateProperty.all(
-            TextStyle(fontSize: fontSizeLabelMedium, fontWeight: FontWeight.w500),
+            TextStyle(
+                fontSize: fontSizeLabelMedium, fontWeight: FontWeight.w500),
           ),
         ),
       ),
@@ -283,7 +286,8 @@ class Utils {
           foregroundColor: WidgetStateProperty.all(scheme.primary),
           mouseCursor: WidgetStateProperty.all(SystemMouseCursors.click),
           textStyle: WidgetStateProperty.all(
-            TextStyle(fontSize: fontSizeLabelMedium, fontWeight: FontWeight.w500),
+            TextStyle(
+                fontSize: fontSizeLabelMedium, fontWeight: FontWeight.w500),
           ),
         ),
       ),

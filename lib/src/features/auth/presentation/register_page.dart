@@ -3,6 +3,7 @@ import 'package:work_order_app/src/core/common/api_exception.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_loading_indicator.dart';
 import 'package:work_order_app/src/core/utils/validators.dart';
 import 'package:work_order_app/src/features/auth/application/auth_view_model.dart';
 import 'package:work_order_app/src/features/auth/domain/user.dart';
@@ -112,7 +113,7 @@ class _RegisterState extends State {
                 ),
               ]),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: LayoutTokens.gapLg + LayoutTokens.gapXs),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
@@ -120,19 +121,16 @@ class _RegisterState extends State {
                 style: FilledButton.styleFrom(
                   backgroundColor: theme.colorScheme.primary,
                   foregroundColor: theme.colorScheme.onPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: EdgeInsets.symmetric(vertical: LayoutTokens.gapLg),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
                   ),
                 ),
                 child: _isLoading
-                    ? SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: theme.colorScheme.onPrimary,
-                        ),
+                    ? AppLoadingIndicator(
+                        centered: false,
+                        size: LayoutTokens.iconLg,
+                        color: theme.colorScheme.onPrimary,
                       )
                     : const Text('注册'),
               ),

@@ -273,7 +273,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                         },
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: LayoutTokens.gapMd),
                     Expanded(
                       child: TextFormField(
                         controller: item.quantityController,
@@ -282,7 +282,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                         keyboardType: TextInputType.number,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: LayoutTokens.gapSm),
                     IconButton(
                       tooltip: '移除',
                       icon: Icon(

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_loading_indicator.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
@@ -198,7 +199,7 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
     bool isMobile,
   ) {
     if (viewModel.loading && tasks.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppLoadingIndicator();
     }
     if (viewModel.errorMessage != null && !viewModel.loading) {
       return ErrorStateCard(
@@ -310,7 +311,9 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
               context: context,
               barrierDismissible: true,
               barrierLabel: '筛选',
-              barrierColor: Colors.black.withValues(alpha: 0.3),
+              barrierColor: Theme.of(context)
+                  .shadowColor
+                  .withValues(alpha: OpacityTokens.scrim),
               transitionDuration: const Duration(milliseconds: 220),
               pageBuilder: (dialogContext, animation, secondaryAnimation) {
                 return Align(

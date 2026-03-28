@@ -864,7 +864,14 @@ class _TaskListViewState extends State<_TaskListView> {
     await showTaskAssignDialog(
       context,
       task: task,
-      departments: _departments,
+      departments: _departments
+          .map(
+            (item) => TaskDepartmentOption(
+              id: item.id,
+              name: item.name,
+            ),
+          )
+          .toList(),
       loadOperators: (departmentId) =>
           _supportService!.loadOperators(departmentId),
       onSubmit: (operatorId, notes) =>

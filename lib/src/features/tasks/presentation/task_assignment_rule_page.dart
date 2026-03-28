@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_loading_indicator.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -292,7 +293,9 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
             context: context,
             barrierDismissible: true,
             barrierLabel: '筛选',
-            barrierColor: Colors.black.withValues(alpha: 0.3),
+            barrierColor: Theme.of(context)
+                .shadowColor
+                .withValues(alpha: OpacityTokens.scrim),
             transitionDuration: const Duration(milliseconds: 220),
             pageBuilder: (dialogContext, animation, secondaryAnimation) {
               return Align(
@@ -445,7 +448,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
     bool isMobile,
   ) {
     if (viewModel.loading && rules.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppLoadingIndicator();
     }
     if (viewModel.errorMessage != null && !viewModel.loading) {
       return ErrorStateCard(
@@ -563,10 +566,9 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
       trailing: TextButton.icon(
         onPressed: _previewLoading ? null : _loadPreview,
         icon: _previewLoading
-            ? const SizedBox(
-                width: 14,
-                height: 14,
-                child: CircularProgressIndicator(strokeWidth: 2),
+            ? const AppLoadingIndicator(
+                centered: false,
+                size: LayoutTokens.iconXs,
               )
             : const Icon(Icons.refresh, size: 16),
         label: const Text('刷新预览'),
