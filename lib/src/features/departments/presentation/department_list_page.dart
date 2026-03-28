@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
@@ -173,8 +175,10 @@ class DepartmentListPage extends StatelessWidget {
   }
 
   static Widget _buildProcessesCell(
-      BuildContext context, Department department) {
-    return _buildBodyText(context, _processesText(department));
+    BuildContext context,
+    Department department,
+  ) {
+    return _DepartmentProcessesCell(processNames: department.processNames);
   }
 
   static Widget _buildSortOrderCell(
@@ -287,5 +291,143 @@ class DepartmentListPage extends StatelessWidget {
 
   static String _buildDeleteAuditHint(Department department) {
     return '若只是停用部门，优先考虑调整状态或迁移人员归属，而不是直接删除。';
+  }
+}
+
+class _DepartmentProcessesCell extends StatefulWidget {
+  const _DepartmentProcessesCell({
+    required this.processNames,
+  });
+
+  final List<String> processNames;
+
+  @override
+  State<_DepartmentProcessesCell> createState() =>
+      _DepartmentProcessesCellState();
+}
+
+class _DepartmentProcessesCellState extends State<_DepartmentProcessesCell> {
+  static const int _collapsedVisibleCount = 1;
+
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final processNames = widget.processNames;
+    if (processNames.isEmpty) {
+      final theme = Theme.of(context);
+      final colors = theme.extension<AppColors>();
+      return Text(
+        CrudValueFormatter.empty,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: colors?.subtleText ?? theme.hintColor,
+        ),
+      );
+    }
+
+    final visibleProcesses =
+        _expanded || processNames.length <= _collapsedVisibleCount
+            ? processNames
+            : processNames.take(_collapsedVisibleCount).toList();
+    final remainingCount = processNames.length - _collapsedVisibleCount;
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (final processName in visibleProcesses) ...[
+            _ProcessTag(label: processName),
+            const SizedBox(width: LayoutTokens.gapXxs),
+          ],
+          if (processNames.length > _collapsedVisibleCount)
+            _ProcessToggleTag(
+              expanded: _expanded,
+              hiddenCount: remainingCount,
+              onPressed: () => setState(() => _expanded = !_expanded),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProcessTag extends StatelessWidget {
+  const _ProcessTag({
+    required this.label,
+  });
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>();
+    final semantic = theme.extension<AppSemanticColors>();
+    return Tooltip(
+      message: label,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 140),
+        padding: const EdgeInsets.symmetric(
+          horizontal: LayoutTokens.gapSm,
+          vertical: LayoutTokens.gapXxs,
+        ),
+        decoration: BoxDecoration(
+          color:
+              semantic?.surfaceAlt ?? theme.colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(LayoutTokens.radiusXs),
+          border: Border.all(color: colors?.borderColor ?? theme.dividerColor),
+        ),
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: colors?.sidebarText,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ProcessToggleTag extends StatelessWidget {
+  const _ProcessToggleTag({
+    required this.expanded,
+    required this.hiddenCount,
+    required this.onPressed,
+  });
+
+  final bool expanded;
+  final int hiddenCount;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>();
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(LayoutTokens.radiusXs),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: LayoutTokens.gapSm,
+          vertical: LayoutTokens.gapXxs,
+        ),
+        decoration: BoxDecoration(
+          color:
+              theme.colorScheme.primary.withValues(alpha: OpacityTokens.faint),
+          borderRadius: BorderRadius.circular(LayoutTokens.radiusXs),
+          border: Border.all(color: colors?.borderColor ?? theme.dividerColor),
+        ),
+        child: Text(
+          expanded ? '收起' : '+$hiddenCount',
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.primary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
   }
 }
