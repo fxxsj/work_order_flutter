@@ -304,8 +304,6 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
 
     return {
       'customer': _customerId,
-      'status': _status,
-      'payment_status': _paymentStatus,
       'order_date': orderDate.isEmpty ? null : orderDate,
       'delivery_date': deliveryDate.isEmpty ? null : deliveryDate,
       'tax_rate': double.tryParse(_taxRateController.text.trim()) ?? 0,
@@ -394,35 +392,18 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
             children: [
               SizedBox(
                 width: fieldWidth,
-                child: SearchableDropdownFormField<String>(
-                  initialValue: _status,
+                child: TextFormField(
+                  initialValue: _statusLabel(_status),
+                  readOnly: true,
                   decoration: const InputDecoration(labelText: '状态'),
-                  items: const [
-                    DropdownMenuItem(value: 'draft', child: Text('草稿')),
-                    DropdownMenuItem(value: 'submitted', child: Text('已提交')),
-                    DropdownMenuItem(value: 'approved', child: Text('已审核')),
-                    DropdownMenuItem(value: 'rejected', child: Text('已拒绝')),
-                    DropdownMenuItem(
-                        value: 'in_production', child: Text('生产中')),
-                    DropdownMenuItem(value: 'completed', child: Text('已完成')),
-                    DropdownMenuItem(value: 'cancelled', child: Text('已取消')),
-                  ],
-                  onChanged: (value) =>
-                      setState(() => _status = value ?? 'draft'),
                 ),
               ),
               SizedBox(
                 width: fieldWidth,
-                child: SearchableDropdownFormField<String>(
-                  initialValue: _paymentStatus,
+                child: TextFormField(
+                  initialValue: _paymentStatusLabel(_paymentStatus),
+                  readOnly: true,
                   decoration: const InputDecoration(labelText: '付款状态'),
-                  items: const [
-                    DropdownMenuItem(value: 'unpaid', child: Text('未付款')),
-                    DropdownMenuItem(value: 'partial', child: Text('部分付款')),
-                    DropdownMenuItem(value: 'paid', child: Text('已付款')),
-                  ],
-                  onChanged: (value) =>
-                      setState(() => _paymentStatus = value ?? 'unpaid'),
                 ),
               ),
               SizedBox(
@@ -515,6 +496,40 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
         ],
       ),
     );
+  }
+
+  String _statusLabel(String value) {
+    switch (value) {
+      case 'draft':
+        return '草稿';
+      case 'submitted':
+        return '已提交';
+      case 'approved':
+        return '已审核';
+      case 'rejected':
+        return '已拒绝';
+      case 'in_production':
+        return '生产中';
+      case 'completed':
+        return '已完成';
+      case 'cancelled':
+        return '已取消';
+      default:
+        return value;
+    }
+  }
+
+  String _paymentStatusLabel(String value) {
+    switch (value) {
+      case 'unpaid':
+        return '未付款';
+      case 'partial':
+        return '部分付款';
+      case 'paid':
+        return '已付款';
+      default:
+        return value;
+    }
   }
 
   Widget _buildContactSection() {

@@ -42,7 +42,12 @@ class DeliveryOrderSupportService {
     return DeliveryOrderSupportData(
       customers: List<CustomerDto>.from(customerPage.items),
       salesOrders: List<SalesOrderDto>.from(salesOrderPage.items)
-          .where((order) => order.status == 'completed')
+          .where(
+            (order) =>
+                order.status == 'approved' ||
+                order.status == 'in_production' ||
+                order.status == 'completed',
+          )
           .toList(),
       products: products,
     );

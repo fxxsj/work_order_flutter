@@ -124,8 +124,12 @@ class SalesOrderApiService {
     return _detailFromResponse(response.data);
   }
 
-  Future<SalesOrderDetailDto> complete(int id) async {
-    final response = await _client.post('/sales-orders/$id/complete/');
+  Future<SalesOrderDetailDto> complete(
+    int id, [
+    Map<String, dynamic>? payload,
+  ]) async {
+    final response =
+        await _client.post('/sales-orders/$id/complete/', data: payload);
     return _detailFromResponse(response.data);
   }
 

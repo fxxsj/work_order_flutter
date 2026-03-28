@@ -27,8 +27,18 @@ class SalesOrderActionService {
     });
   }
 
-  Future<void> complete(int orderId) {
-    return SalesOrderApiService(_client).complete(orderId);
+  Future<void> complete(
+    int orderId, {
+    String completionReason = '',
+  }) {
+    final payload = <String, dynamic>{};
+    if (completionReason.trim().isNotEmpty) {
+      payload['completion_reason'] = completionReason.trim();
+    }
+    return SalesOrderApiService(_client).complete(
+      orderId,
+      payload.isEmpty ? null : payload,
+    );
   }
 
   Future<void> cancel(int orderId, {required String reason}) {

@@ -26,6 +26,7 @@ import 'package:work_order_app/src/features/sales_orders/data/sales_order_action
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_api_service.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_repository_impl.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order.dart';
+import 'package:work_order_app/src/features/sales_orders/domain/sales_order_detail.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order_repository.dart';
 import 'package:work_order_app/src/features/sales_orders/presentation/widgets/sales_order_list_dialogs.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_flow_api_service.dart';
@@ -89,16 +90,6 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     confirmText: '确认提交',
     successMessageBuilder: _submitSuccessMessage,
     errorMessagePrefix: '提交失败: ',
-  );
-  static const CrudActionConfig<SalesOrder> _completeOrderConfig =
-      CrudActionConfig(
-    title: '完成订单',
-    summaryBuilder: _completeSummary,
-    impactsBuilder: _completeImpacts,
-    auditHintBuilder: _completeAuditHint,
-    confirmText: '确认完成',
-    successMessageBuilder: _completeSuccessMessage,
-    errorMessagePrefix: '完成失败: ',
   );
 
   final TextEditingController _searchController = TextEditingController();
@@ -240,15 +231,23 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     SalesOrderViewModel viewModel,
     SalesOrder order,
   ) async {
-    await confirmCrudAction(
-      context,
-      item: order,
-      onConfirm: (item) async {
-        await _actionService!.complete(item.id);
-        await viewModel.loadSalesOrders(resetPage: false);
-      },
-      config: _completeOrderConfig,
-    );
+    try {
+      final detail = await viewModel.fetchDetail(order.id);
+      if (!mounted) return;
+      final result = await showSalesOrderCompleteDialog(
+        context,
+        requireReason: !_isAllItemsDelivered(detail.items),
+      );
+      if (result == null) return;
+      await _actionService!.complete(
+        order.id,
+        completionReason: result.completionReason,
+      );
+      ToastUtil.showSuccess('已完成');
+      await viewModel.loadSalesOrders(resetPage: false);
+    } catch (err) {
+      ToastUtil.showError('完成失败: $err');
+    }
   }
 
   void _goToCreateDeliveryOrder(SalesOrder order) {
@@ -320,33 +319,35 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     SalesOrderViewModel viewModel,
     SalesOrder order,
   ) async {
-    final result = await showSalesOrderCreateWorkOrderDialog(
-      context,
-      initialDeliveryDate:
-          order.deliveryDate == null ? '' : _formatDate(order.deliveryDate),
-    );
-    if (result == null) return;
-
-    final payload = <String, dynamic>{
-      'sales_order_id': order.id,
-      'priority': result.priority,
-      'notes': result.notes,
-    };
-    final quantityText = result.quantityText;
-    if (quantityText.isNotEmpty) {
-      final quantity = int.tryParse(quantityText);
-      if (quantity == null || quantity <= 0) {
-        ToastUtil.showError('请输入正确的生产数量');
-        return;
-      }
-      payload['production_quantity'] = quantity;
-    }
-    final deliveryDate = result.deliveryDateText;
-    if (deliveryDate.isNotEmpty) {
-      payload['delivery_date'] = deliveryDate;
-    }
-
     try {
+      final detail = await viewModel.fetchDetail(order.id);
+      if (!mounted) return;
+      final result = await showSalesOrderCreateWorkOrderDialog(
+        context,
+        initialDeliveryDate:
+            order.deliveryDate == null ? '' : _formatDate(order.deliveryDate),
+        orderItems: detail.items,
+      );
+      if (result == null) return;
+
+      final payload = <String, dynamic>{
+        'sales_order_id': order.id,
+        'priority': result.priority,
+        'notes': result.notes,
+        'selected_items': result.selectedItems
+            .map(
+              (item) => {
+                'sales_order_item_id': item.salesOrderItemId,
+                'production_quantity': item.productionQuantity,
+              },
+            )
+            .toList(growable: false),
+      };
+      final deliveryDate = result.deliveryDateText;
+      if (deliveryDate.isNotEmpty) {
+        payload['delivery_date'] = deliveryDate;
+      }
+
       final workOrderId =
           await viewModel.createWorkOrderFromSalesOrder(payload);
       ToastUtil.showSuccess('施工单已生成');
@@ -533,21 +534,20 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     required bool canCreateDeliveryOrder,
   }) {
     final viewModel = context.read<SalesOrderViewModel>();
+    final status = order.status ?? '';
     final actions = <RowAction>[
       RowAction(
         label: '查看',
         icon: Icons.visibility_outlined,
         onPressed: () => context.go('/sales-orders/${order.id}'),
       ),
-      if (canChangeSalesOrder)
+      if (canChangeSalesOrder && (status == 'draft' || status == 'rejected'))
         RowAction(
           label: '编辑',
           icon: Icons.edit_outlined,
           onPressed: () => context.go('/sales-orders/${order.id}/edit'),
         ),
     ];
-
-    final status = order.status ?? '';
     if (canChangeSalesOrder && status == 'draft') {
       actions.add(RowAction(
         label: '提交',
@@ -594,7 +594,10 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         onPressed: () => _cancelOrder(viewModel, order),
       ));
     }
-    if (canCreateDeliveryOrder && status == 'completed') {
+    if (canCreateDeliveryOrder &&
+        (status == 'approved' ||
+            status == 'in_production' ||
+            status == 'completed')) {
       actions.add(RowAction(
         label: '生成送货单',
         icon: Icons.local_shipping_outlined,
@@ -608,7 +611,8 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         onPressed: () => _updatePayment(viewModel, order),
       ));
     }
-    if (canCreateWorkOrder && status == 'approved') {
+    if (canCreateWorkOrder &&
+        (status == 'approved' || status == 'in_production')) {
       actions.add(RowAction(
         label: '生成施工单',
         icon: Icons.assignment_outlined,
@@ -649,23 +653,6 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
 
   static String _submitSuccessMessage(SalesOrder order) => '已提交';
 
-  static String _completeSummary(SalesOrder order) {
-    return '即将完成客户订单 ${_orderLabel(order)}。完成后，该订单会进入后续发货和结算阶段。';
-  }
-
-  static List<String> _completeImpacts(SalesOrder order) {
-    return [
-      '客户：${_customerLabel(order)}',
-      '请确认生产和交付条件已满足，避免过早完结影响后续跟踪',
-    ];
-  }
-
-  static String _completeAuditHint(SalesOrder order) {
-    return '完成操作会影响后续发货与经营统计，建议先核对履约状态。';
-  }
-
-  static String _completeSuccessMessage(SalesOrder order) => '已完成';
-
   static String _workOrderText(SalesOrder order) {
     final count = order.workOrderCount ?? 0;
     if (count <= 0) return '未生成';
@@ -683,11 +670,11 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
       case 'rejected':
         return '待修改后重提';
       case 'approved':
-        return workOrderCount > 0 ? '已转施工单，跟进生产进度' : '待生成施工单';
+        return workOrderCount > 0 ? '可继续补施工单或直接发货' : '可生成施工单或直接发货';
       case 'in_production':
-        return workOrderCount > 0 ? '跟进生产进度' : '待补施工单';
+        return workOrderCount > 0 ? '跟进生产进度，也可分批发货' : '待补施工单或直接发货';
       case 'completed':
-        return '可生成送货单';
+        return '订单已完结';
       case 'cancelled':
         return '订单已取消';
       default:
@@ -707,6 +694,13 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
   String _formatAmount(double? value) {
     if (value == null) return _SalesOrderSummaryCard._emptyCellText;
     return value.toStringAsFixed(2);
+  }
+
+  bool _isAllItemsDelivered(List<SalesOrderItem> items) {
+    if (items.isEmpty) return false;
+    return items.every(
+      (item) => (item.deliveredQuantity ?? 0) >= (item.quantity ?? 0),
+    );
   }
 
   Widget _buildPageHeader(

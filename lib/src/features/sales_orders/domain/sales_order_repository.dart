@@ -27,7 +27,7 @@ abstract class SalesOrderRepository {
 
   Future<SalesOrderDetailDto> startProduction(int id);
 
-  Future<SalesOrderDetailDto> complete(int id);
+  Future<SalesOrderDetailDto> complete(int id, [Map<String, dynamic>? payload]);
 
   Future<SalesOrderDetailDto> cancel(int id, Map<String, dynamic> payload);
 

@@ -63,8 +63,11 @@ class SalesOrderViewModel extends PaginatedViewModel<SalesOrder> {
     return detail.toEntity();
   }
 
-  Future<SalesOrderDetail> complete(int id) async {
-    final detail = await _repository.complete(id);
+  Future<SalesOrderDetail> complete(
+    int id, [
+    Map<String, dynamic>? payload,
+  ]) async {
+    final detail = await _repository.complete(id, payload);
     return detail.toEntity();
   }
 

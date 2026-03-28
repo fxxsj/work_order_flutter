@@ -227,16 +227,19 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
   }
 
   Future<void> _showCompleteDialog() async {
-    final confirmed = await showRiskActionConfirmDialog(
+    final detail = _detail;
+    if (detail == null) return;
+    final result = await showSalesOrderCompleteDialog(
       context,
-      title: '完成订单',
-      summary: '确认标记该订单为已完成吗？',
-      confirmText: '完成',
+      requireReason: !_isAllItemsDelivered(detail.items),
     );
-    if (confirmed != true) return;
+    if (result == null) return;
     final viewModel = context.read<SalesOrderViewModel>();
     await _runDetailAction(
-      () => viewModel.complete(widget.orderId),
+      () => viewModel.complete(widget.orderId, {
+        if (result.completionReason.trim().isNotEmpty)
+          'completion_reason': result.completionReason.trim(),
+      }),
       successMessage: '已完成',
     );
   }
@@ -322,9 +325,12 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
   }
 
   Future<void> _showCreateWorkOrderDialog() async {
+    final detail = _detail;
+    if (detail == null) return;
     final result = await showSalesOrderCreateWorkOrderDialog(
       context,
       initialDeliveryDate: _formatDate(_detail?.deliveryDate),
+      orderItems: detail.items,
     );
     if (result == null) return;
 
@@ -332,16 +338,15 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
       'sales_order_id': widget.orderId,
       'priority': result.priority,
       'notes': result.notes,
+      'selected_items': result.selectedItems
+          .map(
+            (item) => {
+              'sales_order_item_id': item.salesOrderItemId,
+              'production_quantity': item.productionQuantity,
+            },
+          )
+          .toList(growable: false),
     };
-    final quantityText = result.quantityText.trim();
-    if (quantityText.isNotEmpty) {
-      final quantity = int.tryParse(quantityText);
-      if (quantity == null || quantity <= 0) {
-        ToastUtil.showError('请输入正确的生产数量');
-        return;
-      }
-      payload['production_quantity'] = quantity;
-    }
     final deliveryDate = result.deliveryDateText.trim();
     if (deliveryDate.isNotEmpty) {
       payload['delivery_date'] = deliveryDate;
@@ -435,7 +440,10 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
           onTap: _showCancelDialog,
           destructive: true,
         ),
-      if (canCreateDeliveryOrder && status == 'completed')
+      if (canCreateDeliveryOrder &&
+          (status == 'approved' ||
+              status == 'in_production' ||
+              status == 'completed'))
         SalesOrderActionItem(
           label: '生成送货单',
           icon: Icons.local_shipping_outlined,
@@ -447,7 +455,8 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
           icon: Icons.payments_outlined,
           onTap: _showUpdatePaymentDialog,
         ),
-      if (canCreateWorkOrder && status == 'approved')
+      if (canCreateWorkOrder &&
+          (status == 'approved' || status == 'in_production'))
         SalesOrderActionItem(
           label: '生成施工单',
           icon: Icons.assignment_outlined,
@@ -466,6 +475,9 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
     final canChangeSalesOrder =
         PermissionUtil.hasPermission(context, 'workorder.change_salesorder');
+    final canEdit = canChangeSalesOrder &&
+        ((detail?.status ?? '') == 'draft' ||
+            (detail?.status ?? '') == 'rejected');
     final canViewAudit = AuditLogNavigation.canView(context);
 
     return ListPageScaffold(
@@ -485,7 +497,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
               label: '返回',
             ),
             PageActionButton.filled(
-              onPressed: canChangeSalesOrder
+              onPressed: canEdit
                   ? () => context.go('/sales-orders/${widget.orderId}/edit')
                   : null,
               icon: const Icon(Icons.edit, size: 16),
@@ -691,6 +703,13 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
                         ),
                       ],
                     ),
+    );
+  }
+
+  bool _isAllItemsDelivered(List<SalesOrderItem> items) {
+    if (items.isEmpty) return false;
+    return items.every(
+      (item) => (item.deliveredQuantity ?? 0) >= (item.quantity ?? 0),
     );
   }
 
