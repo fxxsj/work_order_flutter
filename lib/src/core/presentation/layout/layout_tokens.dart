@@ -14,6 +14,18 @@ class LayoutTokens {
 
   static const double maxContentWidth = 1440;
   static const double maxContentWidthWide = 1680;
+  static const double dialogWidthXs = 360;
+  static const double dialogWidthSm = 420;
+  static const double dialogWidthMd = 540;
+  static const double dialogWidthLg = 720;
+  static const double dialogWidthXl = 860;
+  static const double sidebarWidth = 220;
+  static const double sidebarWidthWide = 280;
+  static const double searchWidth = 320;
+  static const double pageWidthNarrow = 520;
+  static const double pageWidthWide = 700;
+  static const double pageWidthXwide = 760;
+  static const double barrierOpacity = 0.3;
 
   /// 统一圆角规范: 8/12/16/20
   static const double radiusXs = 8;
@@ -25,6 +37,7 @@ class LayoutTokens {
   static const double navItemHeight = 40;
 
   static const double gapXs = 4;
+  static const double gapXxxs = 2;
   static const double gapXxs = 6;
   static const double gapSm = 8;
   static const double gapMd = 12;

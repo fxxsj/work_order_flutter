@@ -93,7 +93,7 @@ class _TaskQuantityDialogState extends State<_TaskQuantityDialog> {
       formKey: _formKey,
       submitText: '确认更新',
       submitting: _submitting,
-      maxWidth: 420,
+      maxWidth: LayoutTokens.dialogWidthSm,
       onSubmit: _submit,
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -180,7 +180,7 @@ class _TaskCompleteDialogState extends State<_TaskCompleteDialog> {
       formKey: _formKey,
       submitText: '确认完成',
       submitting: _submitting,
-      maxWidth: 420,
+      maxWidth: LayoutTokens.dialogWidthSm,
       onSubmit: _submit,
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,7 +271,7 @@ class _TaskAssignDialogState extends State<_TaskAssignDialog> {
       formKey: _formKey,
       submitText: '确认分派',
       submitting: _submitting,
-      maxWidth: 420,
+      maxWidth: LayoutTokens.dialogWidthSm,
       onSubmit: _submit,
       content: Column(
         mainAxisSize: MainAxisSize.min,

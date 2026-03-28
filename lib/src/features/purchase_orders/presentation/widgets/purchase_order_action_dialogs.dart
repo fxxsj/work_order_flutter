@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 
 Future<String?> showPurchaseReasonDialog(
@@ -17,7 +18,7 @@ Future<String?> showPurchaseReasonDialog(
       formKey: formKey,
       submitText: confirmText,
       cancelText: cancelText,
-      maxWidth: 420,
+      maxWidth: LayoutTokens.dialogWidthSm,
       onSubmit: () async =>
           Navigator.of(dialogContext).pop(controller.text.trim()),
       content: TextFormField(

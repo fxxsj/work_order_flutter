@@ -47,7 +47,7 @@ class ApprovalRejectionNoticeCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(icon, color: warning, size: 22),
-              const SizedBox(width: 10),
+              SizedBox(width: LayoutTokens.cardPaddingSm),
               Expanded(
                 child: Text(
                   title,
@@ -59,16 +59,16 @@ class ApprovalRejectionNoticeCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: LayoutTokens.gapLg),
           _NoticeBlock(label: reasonLabel, value: reason),
           if ((comment ?? '').trim().isNotEmpty) ...[
-            const SizedBox(height: 12),
+            SizedBox(height: LayoutTokens.gapMd),
             _NoticeBlock(label: commentLabel, value: comment!.trim()),
           ],
-          const SizedBox(height: 12),
+          SizedBox(height: LayoutTokens.gapMd),
           _NoticeBlock(label: nextStepLabel, value: nextStep),
           if (primaryAction != null || secondaryAction != null) ...[
-            const SizedBox(height: 16),
+            SizedBox(height: LayoutTokens.gapLg),
             Wrap(
               spacing: LayoutTokens.gapSm,
               runSpacing: LayoutTokens.gapSm,
@@ -107,7 +107,7 @@ class _NoticeBlock extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: LayoutTokens.gapXs),
         Text(
           value,
           style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),

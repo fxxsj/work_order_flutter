@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 
 Future<void> showDeliveryShipDialog(
@@ -44,7 +45,7 @@ Future<void> showDeliveryShipDialog(
             formKey: formKey,
             submitText: submitText,
             submitting: submitting,
-            maxWidth: 420,
+            maxWidth: LayoutTokens.dialogWidthSm,
             onSubmit: () => submit(setState),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -53,7 +54,7 @@ Future<void> showDeliveryShipDialog(
                   controller: logisticsController,
                   decoration: const InputDecoration(labelText: '物流公司'),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 TextFormField(
                   controller: trackingController,
                   decoration: const InputDecoration(labelText: '运单号'),
@@ -105,7 +106,7 @@ Future<void> showDeliveryReceiveDialog(
             formKey: formKey,
             submitText: submitText,
             submitting: submitting,
-            maxWidth: 420,
+            maxWidth: LayoutTokens.dialogWidthSm,
             onSubmit: () => submit(setState),
             content: TextFormField(
               controller: notesController,
@@ -156,7 +157,7 @@ Future<void> showDeliveryRejectDialog(
             formKey: formKey,
             submitText: '确认拒收并回退库存',
             submitting: submitting,
-            maxWidth: 420,
+            maxWidth: LayoutTokens.dialogWidthSm,
             onSubmit: () => submit(setState),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -165,7 +166,7 @@ Future<void> showDeliveryRejectDialog(
                   '提交后会把发货数量回退到库存，并把发货单标记为拒收。',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 TextFormField(
                   controller: reasonController,
                   maxLines: 3,

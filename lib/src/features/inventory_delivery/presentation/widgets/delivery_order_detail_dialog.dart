@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/approval_rejection_notice_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/attachment_open_button.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
@@ -16,9 +17,9 @@ Future<void> showDeliveryOrderDetailDialog(
     context: context,
     builder: (dialogContext) => BaseDialog(
       title: title,
-      maxWidth: 700,
+      maxWidth: LayoutTokens.dialogWidthLg,
       content: SizedBox(
-        width: 700,
+        width: LayoutTokens.dialogWidthLg,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -57,7 +58,7 @@ Future<void> showDeliveryOrderDetailDialog(
                         label: const Text('查看客户订单'),
                       ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: LayoutTokens.gapLg),
             ],
             if (_isRejected(detail)) ...[
               ApprovalRejectionNoticeCard(
@@ -78,7 +79,7 @@ Future<void> showDeliveryOrderDetailDialog(
                         label: const Text('查看客户订单'),
                       ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: LayoutTokens.gapLg),
             ],
             _DetailRow(label: '发货单号', value: detail.orderNumber),
             _DetailRow(label: '客户', value: _displayText(detail.customerName)),
@@ -126,7 +127,7 @@ Future<void> showDeliveryOrderDetailDialog(
                 value: detail.exceptionResolutionNotes ?? '',
               ),
             if (_hasReceiverSignature(detail)) ...[
-              const SizedBox(height: 8),
+              SizedBox(height: LayoutTokens.gapSm),
               AttachmentOpenButton(
                 fileUrl: detail.receiverSignatureUrl,
                 label: '查看签收附件',
@@ -134,9 +135,9 @@ Future<void> showDeliveryOrderDetailDialog(
               ),
             ],
             if (detail.items.isNotEmpty) ...[
-              const SizedBox(height: 12),
+              SizedBox(height: LayoutTokens.gapMd),
               Text('发货明细', style: Theme.of(context).textTheme.titleSmall),
-              const SizedBox(height: 8),
+              SizedBox(height: LayoutTokens.gapSm),
               ...detail.items.map(
                 (item) => _DetailRow(
                   label: _displayText(item.productName),
@@ -146,7 +147,7 @@ Future<void> showDeliveryOrderDetailDialog(
               ),
             ],
             if ((detail.notes ?? '').trim().isNotEmpty) ...[
-              const SizedBox(height: 12),
+              SizedBox(height: LayoutTokens.gapMd),
               _DetailRow(label: '备注', value: detail.notes ?? ''),
             ],
           ],
@@ -216,7 +217,7 @@ class _DetailRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: EdgeInsets.only(bottom: LayoutTokens.gapSm),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

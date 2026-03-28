@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/risk_action_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 
@@ -33,7 +34,7 @@ Future<ActionDecisionResult<T>?> showActionDecisionDialog<T>(
   bool destructive = false,
   String cancelText = '取消',
   String submitText = '提交',
-  double maxWidth = 420,
+  double maxWidth = LayoutTokens.dialogWidthSm,
   String? selectionLabel,
   List<ActionDecisionOption<T>> options = const [],
   T? initialSelection,

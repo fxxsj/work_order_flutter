@@ -161,7 +161,7 @@ class _DieEditPageState extends State<DieEditPage> {
         context: context,
         builder: (context) => BaseDialog(
           title: '提示',
-          maxWidth: 420,
+          maxWidth: LayoutTokens.dialogWidthSm,
           scrollable: false,
           content: const Text('专用刀模只能关联1个产品，是否只保留第一个产品？'),
           actions: [

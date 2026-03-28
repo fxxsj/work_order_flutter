@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 
 /// Shared dialog shell for consistent width, scrolling and action layout.
 class BaseDialog extends StatelessWidget {
@@ -7,7 +8,7 @@ class BaseDialog extends StatelessWidget {
     required this.title,
     required this.content,
     required this.actions,
-    this.maxWidth = 720,
+    this.maxWidth = LayoutTokens.dialogWidthLg,
     this.scrollable = true,
   });
 
@@ -44,7 +45,7 @@ class FormDialog extends StatelessWidget {
     this.submitText = '提交',
     this.cancelText = '取消',
     this.submitting = false,
-    this.maxWidth = 720,
+    this.maxWidth = LayoutTokens.dialogWidthLg,
   });
 
   final String title;

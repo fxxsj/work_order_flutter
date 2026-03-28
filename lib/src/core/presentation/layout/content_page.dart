@@ -1092,7 +1092,7 @@ class _DashboardHero extends StatelessWidget {
               children: [
                 Container(
                   width: 40,
-                  height: 40,
+                  height: LayoutTokens.navItemHeight,
                   decoration: BoxDecoration(
                     color: primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
@@ -1116,7 +1116,7 @@ class _DashboardHero extends StatelessWidget {
             children: [
               Container(
                 width: 40,
-                height: 40,
+                height: LayoutTokens.navItemHeight,
                 decoration: BoxDecoration(
                   color: primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
@@ -1336,7 +1336,7 @@ class _ModulePlaceholder extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: LayoutTokens.gapXxs),
           Text(
             '当前模块入口已接入统一布局。',
             style: theme.textTheme.bodySmall?.copyWith(color: style.subtleText),

@@ -60,7 +60,7 @@ class _RegisterState extends State {
               ),
               validator: FormValidators.required('请输入账号'),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: LayoutTokens.gapLg),
             TextFormField(
               controller: passwordController,
               obscureText: _obscurePassword,
@@ -84,7 +84,7 @@ class _RegisterState extends State {
               ),
               validator: FormValidators.required('请输入密码'),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: LayoutTokens.gapLg),
             TextFormField(
               controller: confirmController,
               obscureText: _obscureConfirm,

@@ -641,7 +641,7 @@ class _TaskUpdateDialogState extends State<_TaskUpdateDialog> {
       formKey: _formKey,
       submitText: _completeMode ? '确认完成' : '确认更新',
       submitting: _submitting,
-      maxWidth: 420,
+      maxWidth: LayoutTokens.dialogWidthSm,
       onSubmit: _submit,
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 
@@ -12,7 +13,7 @@ Future<CrudPickedFile?> showFileUploadDialog(
   String? helperText,
   String? hintText,
   String submitText = '上传',
-  double maxWidth = 560,
+  double maxWidth = LayoutTokens.dialogWidthMd,
 }) async {
   final formKey = GlobalKey<FormState>();
   CrudPickedFile? pickedFile;

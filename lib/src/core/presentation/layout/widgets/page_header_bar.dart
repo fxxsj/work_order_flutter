@@ -13,7 +13,7 @@ class PageHeaderBar extends StatelessWidget {
     this.padding,
     this.useSurface = true,
     this.showDivider = true,
-    this.breadcrumbBottomSpacing = 4,
+    this.breadcrumbBottomSpacing = LayoutTokens.gapXs,
     this.breadcrumbStyle,
   });
 
@@ -138,8 +138,12 @@ class PageActionButton extends StatelessWidget {
     final isSquare = square || (!hasLabel && icon != null);
     final effectivePadding = padding ??
         EdgeInsets.symmetric(
-            horizontal:
-                hasLabel ? (variant == PageActionVariant.filled ? 12 : 10) : 0);
+          horizontal: hasLabel
+              ? (variant == PageActionVariant.filled
+                  ? LayoutTokens.gapMd
+                  : LayoutTokens.cardPaddingSm)
+              : 0,
+        );
 
     final style = variant == PageActionVariant.filled
         ? FilledButton.styleFrom(
@@ -428,8 +432,8 @@ class WorkbenchStatChip extends StatelessWidget {
 
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: isXs ? 10 : 12,
-        vertical: isXs ? 8 : 10,
+        horizontal: isXs ? LayoutTokens.cardPaddingSm : LayoutTokens.gapMd,
+        vertical: isXs ? LayoutTokens.gapSm : LayoutTokens.cardPaddingSm,
       ),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLowest.withValues(alpha: 0.92),
@@ -446,7 +450,7 @@ class WorkbenchStatChip extends StatelessWidget {
             style:
                 theme.textTheme.bodySmall?.copyWith(color: colors.subtleText),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: LayoutTokens.gapXs),
           Text(
             item.value,
             style:

@@ -632,7 +632,7 @@ class _MaterialCardState extends State<_MaterialCard> {
                         setState(() => draft.materialId = value),
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: LayoutTokens.gapSm),
                 IconButton(
                   onPressed: widget.onRemove,
                   icon: const Icon(Icons.delete_outline),
@@ -650,7 +650,7 @@ class _MaterialCardState extends State<_MaterialCard> {
                     decoration: const InputDecoration(labelText: '尺寸'),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: LayoutTokens.gapMd),
                 Expanded(
                   child: TextFormField(
                     controller: draft.materialUsageController,

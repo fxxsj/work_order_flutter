@@ -68,10 +68,14 @@ class AuthScaffold extends StatelessWidget {
             SafeArea(
               child: Center(
                 child: SingleChildScrollView(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: LayoutTokens.gapLg + LayoutTokens.gapXs,
+                    vertical: LayoutTokens.gapXl,
+                  ),
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 860),
+                    constraints: const BoxConstraints(
+                      maxWidth: LayoutTokens.dialogWidthXl,
+                    ),
                     child: _StaggeredEntrance(
                       child: LayoutBuilder(
                         builder: (context, constraints) {
@@ -200,9 +204,11 @@ class _HeroPanel extends StatelessWidget {
               color: colors.sidebarText,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: LayoutTokens.gapSm),
           ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 220),
+            constraints: const BoxConstraints(
+              maxWidth: LayoutTokens.sidebarWidth,
+            ),
             child: Text(
               heroTitle,
               style: theme.textTheme.titleMedium?.copyWith(
@@ -211,7 +217,9 @@ class _HeroPanel extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(height: compact ? 16 : 24),
+          SizedBox(
+            height: compact ? LayoutTokens.gapLg : LayoutTokens.gapXl,
+          ),
           Container(
             width: 36,
             height: 3,
@@ -242,7 +250,12 @@ class _FormPanel extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(28, 30, 28, 28),
+      padding: EdgeInsets.fromLTRB(
+        LayoutTokens.gapXl + LayoutTokens.gapXs,
+        LayoutTokens.gapXl + LayoutTokens.gapXxs,
+        LayoutTokens.gapXl + LayoutTokens.gapXs,
+        LayoutTokens.gapXl + LayoutTokens.gapXs,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -254,11 +267,11 @@ class _FormPanel extends StatelessWidget {
               color: theme.colorScheme.onSurface,
             ),
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: LayoutTokens.gapMd + LayoutTokens.gapXxs),
           form,
-          const SizedBox(height: 16),
+          SizedBox(height: LayoutTokens.gapLg),
           const Divider(height: 1),
-          const SizedBox(height: 16),
+          SizedBox(height: LayoutTokens.gapLg),
           footer,
         ],
       ),

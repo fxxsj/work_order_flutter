@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 
 class SalesOrderPaymentUpdateResult {
@@ -41,7 +42,7 @@ Future<SalesOrderPaymentUpdateResult?> showSalesOrderPaymentDialog(
         title: '更新付款信息',
         formKey: formKey,
         submitText: '更新',
-        maxWidth: 420,
+        maxWidth: LayoutTokens.dialogWidthSm,
         onSubmit: () async {
           result = SalesOrderPaymentUpdateResult(
             amountText: amountController.text.trim(),
@@ -58,7 +59,7 @@ Future<SalesOrderPaymentUpdateResult?> showSalesOrderPaymentDialog(
                   const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(labelText: '已付金额'),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: LayoutTokens.gapMd),
             TextFormField(
               controller: dateController,
               decoration: const InputDecoration(
@@ -95,7 +96,7 @@ Future<SalesOrderCreateWorkOrderResult?> showSalesOrderCreateWorkOrderDialog(
             title: '生成施工单',
             formKey: formKey,
             submitText: '生成',
-            maxWidth: 420,
+            maxWidth: LayoutTokens.dialogWidthSm,
             onSubmit: () async {
               result = SalesOrderCreateWorkOrderResult(
                 priority: priority,
@@ -113,19 +114,19 @@ Future<SalesOrderCreateWorkOrderResult?> showSalesOrderCreateWorkOrderDialog(
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(labelText: '生产数量（可选）'),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 TextFormField(
                   controller: deliveryController,
                   decoration: const InputDecoration(
                     labelText: '交货日期（YYYY-MM-DD，可选）',
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 SearchableDropdownButton(
                   value: priority,
                   onChanged: (value) => setState(() => priority = value),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 TextFormField(
                   controller: notesController,
                   decoration: const InputDecoration(labelText: '备注（可选）'),
@@ -152,7 +153,7 @@ Future<bool> showSalesOrderNavigateToWorkOrderDialog(
     context: context,
     builder: (context) => BaseDialog(
       title: '查看施工单',
-      maxWidth: 360,
+      maxWidth: LayoutTokens.dialogWidthXs,
       scrollable: false,
       content: const Text('施工单已生成，是否立即查看？'),
       actions: [

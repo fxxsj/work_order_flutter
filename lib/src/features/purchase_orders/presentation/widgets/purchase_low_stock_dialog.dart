@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 
@@ -14,9 +15,9 @@ Future<void> showPurchaseLowStockDialog(
     context: context,
     builder: (dialogContext) => BaseDialog(
       title: title,
-      maxWidth: 720,
+      maxWidth: LayoutTokens.dialogWidthLg,
       content: SizedBox(
-        width: 720,
+        width: LayoutTokens.dialogWidthLg,
         child: materials.isEmpty
             ? const EmptyStateCard(
                 icon: Icons.inventory_outlined,
@@ -26,7 +27,8 @@ Future<void> showPurchaseLowStockDialog(
                 height: 360,
                 child: ListView.separated(
                   itemCount: materials.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  separatorBuilder: (_, __) =>
+                      SizedBox(height: LayoutTokens.gapSm),
                   itemBuilder: (context, index) {
                     final item = materials[index];
                     final name = item['name']?.toString() ?? '-';
@@ -40,7 +42,7 @@ Future<void> showPurchaseLowStockDialog(
                     return Card(
                       margin: EdgeInsets.zero,
                       child: Padding(
-                        padding: const EdgeInsets.all(10),
+                        padding: EdgeInsets.all(LayoutTokens.cardPaddingSm),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -48,10 +50,10 @@ Future<void> showPurchaseLowStockDialog(
                               '$code $name',
                               style: Theme.of(context).textTheme.titleSmall,
                             ),
-                            const SizedBox(height: 6),
+                            SizedBox(height: LayoutTokens.gapXxs),
                             Wrap(
-                              spacing: 12,
-                              runSpacing: 4,
+                              spacing: LayoutTokens.gapMd,
+                              runSpacing: LayoutTokens.gapXs,
                               children: [
                                 _InlineMeta(label: '当前库存', value: stock),
                                 _InlineMeta(label: '最小库存', value: minStock),

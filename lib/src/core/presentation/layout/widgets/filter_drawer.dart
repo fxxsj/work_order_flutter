@@ -7,7 +7,7 @@ Future<void> showAdaptiveFilterDrawer(
   required bool isMobile,
   required Widget child,
   String title = '筛选',
-  double desktopWidth = 360,
+  double desktopWidth = LayoutTokens.dialogWidthXs,
 }) {
   if (isMobile) {
     return showModalBottomSheet<void>(
@@ -30,7 +30,9 @@ Future<void> showAdaptiveFilterDrawer(
     context: context,
     barrierDismissible: true,
     barrierLabel: title,
-    barrierColor: Colors.black.withValues(alpha: 0.3),
+    barrierColor: Theme.of(context).shadowColor.withValues(
+          alpha: LayoutTokens.barrierOpacity,
+        ),
     transitionDuration: const Duration(milliseconds: 220),
     pageBuilder: (dialogContext, animation, secondaryAnimation) {
       return Align(

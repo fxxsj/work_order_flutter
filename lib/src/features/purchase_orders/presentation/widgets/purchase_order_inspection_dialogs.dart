@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_loading_indicator.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -41,7 +43,7 @@ Future<void> showPurchaseInspectionDialog(
 
           return BaseDialog(
             title: title,
-            maxWidth: 720,
+            maxWidth: LayoutTokens.dialogWidthLg,
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(),
@@ -49,9 +51,9 @@ Future<void> showPurchaseInspectionDialog(
               ),
             ],
             content: SizedBox(
-              width: 720,
+              width: LayoutTokens.dialogWidthLg,
               child: loading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const AppLoadingIndicator()
                   : records.isEmpty
                       ? const EmptyStateCard(
                           icon: Icons.verified_outlined,
@@ -62,7 +64,7 @@ Future<void> showPurchaseInspectionDialog(
                           child: ListView.separated(
                             itemCount: records.length,
                             separatorBuilder: (_, __) =>
-                                const SizedBox(height: 8),
+                                SizedBox(height: LayoutTokens.gapSm),
                             itemBuilder: (context, index) {
                               final record = records[index];
                               final status =
@@ -83,7 +85,9 @@ Future<void> showPurchaseInspectionDialog(
                               return Card(
                                 margin: EdgeInsets.zero,
                                 child: Padding(
-                                  padding: const EdgeInsets.all(10),
+                                  padding: EdgeInsets.all(
+                                    LayoutTokens.cardPaddingSm,
+                                  ),
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -94,10 +98,10 @@ Future<void> showPurchaseInspectionDialog(
                                             .textTheme
                                             .titleSmall,
                                       ),
-                                      const SizedBox(height: 6),
+                                      SizedBox(height: LayoutTokens.gapXxs),
                                       Wrap(
-                                        spacing: 12,
-                                        runSpacing: 4,
+                                        spacing: LayoutTokens.gapMd,
+                                        runSpacing: LayoutTokens.gapXs,
                                         children: [
                                           _InlineMeta(
                                             label: '收货数量',
@@ -117,9 +121,9 @@ Future<void> showPurchaseInspectionDialog(
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: 8),
+                                      SizedBox(height: LayoutTokens.gapSm),
                                       Wrap(
-                                        spacing: 8,
+                                        spacing: LayoutTokens.gapSm,
                                         children: [
                                           if (canInspect)
                                             OutlinedButton(
@@ -146,7 +150,8 @@ Future<void> showPurchaseInspectionDialog(
                                                   builder: (confirmContext) =>
                                                       BaseDialog(
                                                     title: '确认入库',
-                                                    maxWidth: 360,
+                                                    maxWidth: LayoutTokens
+                                                        .dialogWidthXs,
                                                     scrollable: false,
                                                     content: Text(
                                                       '确定将 $qualified 件物料入库吗？',
@@ -258,7 +263,7 @@ Future<void> showPurchaseInspectionFormDialog(
             formKey: formKey,
             submitText: '确认',
             submitting: submitting,
-            maxWidth: 420,
+            maxWidth: LayoutTokens.dialogWidthSm,
             onSubmit: () => submit(setState),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -279,7 +284,7 @@ Future<void> showPurchaseInspectionFormDialog(
                     return null;
                   },
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 TextFormField(
                   controller: unqualifiedController,
                   keyboardType: const TextInputType.numberWithOptions(
@@ -292,7 +297,7 @@ Future<void> showPurchaseInspectionFormDialog(
                     return null;
                   },
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 TextFormField(
                   controller: reasonController,
                   maxLines: 3,

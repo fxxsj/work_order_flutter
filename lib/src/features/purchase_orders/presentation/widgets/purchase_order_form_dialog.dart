@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/features/materials/data/material_dto.dart';
@@ -67,7 +68,7 @@ Future<void> showPurchaseOrderFormDialog(
             submitText: submitText,
             cancelText: cancelText,
             submitting: submitting,
-            maxWidth: 720,
+            maxWidth: LayoutTokens.dialogWidthLg,
             onSubmit: submit,
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -95,7 +96,7 @@ Future<void> showPurchaseOrderFormDialog(
                     return null;
                   },
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 SearchableDropdownFormField<int>(
                   key: ValueKey<String>(
                     'purchase_workorder_${selectedWorkOrderId ?? 'none'}',
@@ -119,7 +120,7 @@ Future<void> showPurchaseOrderFormDialog(
                   ],
                   onChanged: submitting ? null : onWorkOrderChanged,
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: LayoutTokens.gapMd),
                 TextFormField(
                   controller: notesController,
                   maxLines: 3,
@@ -128,7 +129,7 @@ Future<void> showPurchaseOrderFormDialog(
                     border: OutlineInputBorder(),
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: LayoutTokens.gapLg),
                 Row(
                   children: [
                     Expanded(
@@ -159,7 +160,7 @@ Future<void> showPurchaseOrderFormDialog(
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: LayoutTokens.gapSm),
                 if (items.isEmpty)
                   const Text('暂无明细')
                 else

@@ -176,7 +176,9 @@ class _TaskSupervisorDashboardViewState
             context: context,
             barrierDismissible: true,
             barrierLabel: '筛选',
-            barrierColor: Colors.black.withValues(alpha: 0.3),
+            barrierColor: Theme.of(context).shadowColor.withValues(
+                  alpha: LayoutTokens.barrierOpacity,
+                ),
             transitionDuration: const Duration(milliseconds: 220),
             pageBuilder: (dialogContext, animation, secondaryAnimation) {
               return Align(
@@ -186,7 +188,7 @@ class _TaskSupervisorDashboardViewState
                   shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.zero),
                   child: SizedBox(
-                    width: 320,
+                    width: LayoutTokens.searchWidth,
                     height: double.infinity,
                     child: SafeArea(
                       child: TaskSupervisorFilterDrawerContent(

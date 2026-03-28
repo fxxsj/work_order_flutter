@@ -59,8 +59,10 @@ class AppSidebarDrawer extends StatelessWidget {
               key: PageStorageKey(item.id),
               initiallyExpanded: isExpanded,
               onExpansionChanged: (value) => onToggleExpand(item.id, value),
-              tilePadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+              tilePadding: EdgeInsets.symmetric(
+                horizontal: LayoutTokens.gapMd,
+                vertical: LayoutTokens.gapXxxs,
+              ),
               childrenPadding: EdgeInsets.zero,
               leading: Icon(item.icon, color: sidebarText, size: 18),
               title: Text(
@@ -91,7 +93,7 @@ class AppSidebarDrawer extends StatelessWidget {
           width: double.infinity,
           height: headerHeight,
           color: primary,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapLg),
           alignment: Alignment.centerLeft,
           child: _SidebarBrand(
             compact: false,
@@ -102,7 +104,8 @@ class AppSidebarDrawer extends StatelessWidget {
         ),
         Expanded(
           child: ScrollConfiguration(
-            behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+            behavior:
+                ScrollConfiguration.of(context).copyWith(scrollbars: false),
             child: ListView(
               padding: EdgeInsets.zero,
               children: tiles,
@@ -152,7 +155,7 @@ class AppSidebarRail extends StatelessWidget {
           width: double.infinity,
           height: headerHeight,
           color: primary,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+          padding: EdgeInsets.symmetric(horizontal: LayoutTokens.cardPaddingSm),
           alignment: Alignment.centerLeft,
           child: _SidebarBrand(
             compact: !railExtended,
@@ -163,10 +166,16 @@ class AppSidebarRail extends StatelessWidget {
         ),
         Expanded(
           child: ScrollConfiguration(
-            behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+            behavior:
+                ScrollConfiguration.of(context).copyWith(scrollbars: false),
             child: ListView(
               controller: controller,
-              padding: const EdgeInsets.fromLTRB(10, 6, 10, 16),
+              padding: EdgeInsets.fromLTRB(
+                LayoutTokens.cardPaddingSm,
+                LayoutTokens.gapXxs,
+                LayoutTokens.cardPaddingSm,
+                LayoutTokens.gapLg,
+              ),
               children: _buildRailItems(context),
             ),
           ),
@@ -242,7 +251,9 @@ class AppSidebarRail extends StatelessWidget {
       borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
       child: Container(
         height: LayoutTokens.navItemHeight,
-        padding: EdgeInsets.symmetric(horizontal: railExtended ? 10 : 0),
+        padding: EdgeInsets.symmetric(
+          horizontal: railExtended ? LayoutTokens.cardPaddingSm : 0,
+        ),
         decoration: BoxDecoration(
           color: background,
           borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
@@ -258,7 +269,7 @@ class AppSidebarRail extends StatelessWidget {
           children: [
             if (railExtended && indent > 0) SizedBox(width: indent),
             Icon(item.icon, color: iconColor, size: 20),
-            if (railExtended) const SizedBox(width: 12),
+            if (railExtended) SizedBox(width: LayoutTokens.gapMd),
             if (railExtended)
               Expanded(
                 child: Text(
@@ -285,7 +296,7 @@ class AppSidebarRail extends StatelessWidget {
     final content =
         railExtended ? tile : Tooltip(message: item.label, child: tile);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
+      padding: EdgeInsets.only(bottom: LayoutTokens.gapXs),
       child: content,
     );
   }
@@ -345,13 +356,17 @@ class _DrawerTile extends StatelessWidget {
     );
     return Padding(
       padding: EdgeInsets.symmetric(
-          horizontal: dense ? 18 : 12, vertical: dense ? 1 : 3),
+        horizontal: dense ? 18 : LayoutTokens.gapMd,
+        vertical: dense ? 1 : 3,
+      ),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
         child: Container(
-          padding:
-              EdgeInsets.symmetric(horizontal: 12, vertical: dense ? 7 : 9),
+          padding: EdgeInsets.symmetric(
+            horizontal: LayoutTokens.gapMd,
+            vertical: dense ? 7 : 9,
+          ),
           decoration: BoxDecoration(
             color: background,
             borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
@@ -365,7 +380,7 @@ class _DrawerTile extends StatelessWidget {
             children: [
               Icon(item.icon,
                   color: isSelected ? primary : sidebarText, size: 18),
-              const SizedBox(width: 10),
+              SizedBox(width: LayoutTokens.cardPaddingSm),
               Expanded(
                 child: Text(
                   item.label,
@@ -375,11 +390,14 @@ class _DrawerTile extends StatelessWidget {
               ),
               if (badgeText != null)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: LayoutTokens.gapSm,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
+                    borderRadius:
+                        BorderRadius.circular(LayoutTokens.radiusPill),
                   ),
                   child: Text(
                     badgeText!,
@@ -410,7 +428,10 @@ class _RailBadge extends StatelessWidget {
     }
     final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: EdgeInsets.symmetric(
+        horizontal: LayoutTokens.gapSm,
+        vertical: 3,
+      ),
       decoration: BoxDecoration(
         color: primary.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
@@ -443,9 +464,10 @@ class _SidebarBrand extends StatelessWidget {
   Widget build(BuildContext context) {
     if (compact) {
       return Container(
-        height: 40,
+        height: LayoutTokens.navItemHeight,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.18),
+          color:
+              Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.18),
           borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
         ),
         child: Icon(Icons.grid_view_rounded,
@@ -455,7 +477,10 @@ class _SidebarBrand extends StatelessWidget {
 
     final onPrimary = Theme.of(context).colorScheme.onPrimary;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      padding: EdgeInsets.symmetric(
+        horizontal: LayoutTokens.gapXs,
+        vertical: LayoutTokens.gapXxxs,
+      ),
       child: Row(
         children: [
           Container(
@@ -467,7 +492,7 @@ class _SidebarBrand extends StatelessWidget {
             ),
             child: Icon(Icons.grid_view_rounded, color: onPrimary, size: 18),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: LayoutTokens.cardPaddingSm),
           Expanded(
             child: Text(
               title,

@@ -151,7 +151,10 @@ class _SearchableDropdownFieldBody<T> extends StatelessWidget {
             vertical: LayoutTokens.gapXl,
           ),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520, maxHeight: 560),
+            constraints: const BoxConstraints(
+              maxWidth: LayoutTokens.dialogWidthMd,
+              maxHeight: 560,
+            ),
             child: _PickerSheet<T>(
               items: items,
               selectedValue: state.value,

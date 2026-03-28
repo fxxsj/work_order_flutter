@@ -83,9 +83,9 @@ Future<void> showWorkOrderSyncPreviewDialog(
 
           return BaseDialog(
             title: '任务同步预览',
-            maxWidth: 540,
+            maxWidth: LayoutTokens.dialogWidthMd,
             content: SizedBox(
-              width: 540,
+              width: LayoutTokens.dialogWidthMd,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

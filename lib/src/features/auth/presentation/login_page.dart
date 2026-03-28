@@ -76,7 +76,7 @@ class _LoginState extends State<Login> {
               onFieldSubmitted: (_) => focusNodePassword.requestFocus(),
               validator: FormValidators.required('请输入账号'),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: LayoutTokens.gapLg),
             TextFormField(
               focusNode: focusNodePassword,
               controller: passwordController,

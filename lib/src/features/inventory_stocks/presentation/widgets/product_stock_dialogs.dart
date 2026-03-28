@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 
 class ProductStockAdjustResult {
@@ -23,9 +24,9 @@ Future<void> showProductStockListDialog(
     context: context,
     builder: (dialogContext) => BaseDialog(
       title: title,
-      maxWidth: 640,
+      maxWidth: LayoutTokens.dialogWidthLg,
       scrollable: false,
-      content: SizedBox(width: 640, child: child),
+      content: SizedBox(width: LayoutTokens.dialogWidthLg, child: child),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(dialogContext).pop(),
@@ -45,9 +46,9 @@ Future<void> showProductStockDetailDialog(
     context: context,
     builder: (dialogContext) => BaseDialog(
       title: title,
-      maxWidth: 640,
+      maxWidth: LayoutTokens.dialogWidthLg,
       content: SizedBox(
-        width: 640,
+        width: LayoutTokens.dialogWidthLg,
         child: child,
       ),
       actions: [
@@ -97,7 +98,7 @@ Future<ProductStockAdjustResult?> showProductStockAdjustDialog(
               submitText: submitText,
               cancelText: cancelText,
               submitting: submitting,
-              maxWidth: 420,
+              maxWidth: LayoutTokens.dialogWidthSm,
               onSubmit: () async => submit(),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -117,7 +118,7 @@ Future<ProductStockAdjustResult?> showProductStockAdjustDialog(
                             setState(() => adjustType = value);
                           },
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: LayoutTokens.gapMd),
                   TextFormField(
                     controller: quantityController,
                     keyboardType: const TextInputType.numberWithOptions(
@@ -137,7 +138,7 @@ Future<ProductStockAdjustResult?> showProductStockAdjustDialog(
                       return null;
                     },
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: LayoutTokens.gapMd),
                   TextFormField(
                     controller: reasonController,
                     maxLines: 3,
@@ -176,7 +177,7 @@ class ProductStockDetailRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: EdgeInsets.only(bottom: LayoutTokens.gapSm),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

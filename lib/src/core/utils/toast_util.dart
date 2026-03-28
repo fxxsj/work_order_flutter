@@ -205,7 +205,7 @@ class _ToastCardState extends State<_ToastCard>
         duration: const Duration(milliseconds: 200),
         opacity: _visible ? 1 : 0,
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 320),
+          constraints: const BoxConstraints(maxWidth: LayoutTokens.searchWidth),
           margin: EdgeInsets.only(top: LayoutTokens.cardPaddingSm),
           padding: EdgeInsets.symmetric(
             horizontal: LayoutTokens.gapMd + (LayoutTokens.gapXs / 2),

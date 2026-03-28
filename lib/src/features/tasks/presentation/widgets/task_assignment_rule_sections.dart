@@ -66,7 +66,7 @@ Future<bool> showTaskAssignmentRuleDeleteDialog(
     context: context,
     builder: (context) => BaseDialog(
       title: '确认删除',
-      maxWidth: 420,
+      maxWidth: LayoutTokens.dialogWidthSm,
       scrollable: false,
       content: Text(content),
       actions: [
@@ -133,7 +133,7 @@ class _TaskAssignmentRuleDialogState extends State<TaskAssignmentRuleDialog> {
       formKey: _formKey,
       submitText: '保存',
       submitting: _submitting,
-      maxWidth: 420,
+      maxWidth: LayoutTokens.dialogWidthSm,
       onSubmit: _submit,
       content: Column(
         children: [

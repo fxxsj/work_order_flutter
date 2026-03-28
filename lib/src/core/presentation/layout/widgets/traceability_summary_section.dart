@@ -48,7 +48,7 @@ class TraceabilitySummarySection extends StatelessWidget {
               onItemTap: groups[i].onItemTap,
               emptyText: emptyText,
             ),
-            if (i != groups.length - 1) const SizedBox(height: 16),
+            if (i != groups.length - 1) SizedBox(height: LayoutTokens.gapLg),
           ],
         ],
       ),
@@ -92,13 +92,13 @@ class _TraceabilitySummaryGroup extends StatelessWidget {
               ),
           ],
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: LayoutTokens.gapSm),
         if (items.isEmpty)
           Text(emptyText, style: theme.textTheme.bodyMedium)
         else
           Wrap(
-            spacing: 10,
-            runSpacing: 10,
+            spacing: LayoutTokens.cardPaddingSm,
+            runSpacing: LayoutTokens.cardPaddingSm,
             children: items
                 .map(
                   (item) => _TraceabilitySummaryTile(
@@ -171,7 +171,7 @@ class _TraceabilitySummaryTile extends StatelessWidget {
                     ),
                 ],
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: LayoutTokens.cardPaddingSm),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -213,7 +213,10 @@ class _SummaryMetaPill extends StatelessWidget {
     final colors = theme.extension<AppColors>();
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: LayoutTokens.cardPaddingSm,
+        vertical: LayoutTokens.gapSm,
+      ),
       decoration: BoxDecoration(
         color:
             theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.52),
