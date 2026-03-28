@@ -14,10 +14,10 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widg
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
-import 'package:work_order_app/src/features/departments/domain/department.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
 import 'package:work_order_app/src/features/tasks/data/task_supervisor_support_service.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
+import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_ui_helper.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_supervisor_sections.dart';
 
@@ -59,7 +59,7 @@ class _TaskSupervisorDashboardViewState
 
   bool _loading = false;
   String? _errorMessage;
-  List<Department> _departments = [];
+  List<TaskDepartmentOption> _departments = [];
   int? _departmentId;
   Map<String, dynamic>? _workload;
   List<Task> _departmentTasks = [];

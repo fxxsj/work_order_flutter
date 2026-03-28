@@ -15,8 +15,8 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widg
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
-import 'package:work_order_app/src/features/departments/domain/department.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
+import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 
 class TaskStatsEntry extends StatelessWidget {
   const TaskStatsEntry({super.key});
@@ -56,7 +56,7 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
   String? _errorMessage;
   List<Map<String, dynamic>> _stats = [];
 
-  List<Department> _departments = [];
+  List<TaskDepartmentOption> _departments = [];
   int? _departmentId;
   DateTime? _startDate;
   DateTime? _endDate;
@@ -75,7 +75,14 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
       final page = await deptApi.fetchDepartments(page: 1, pageSize: 200);
       if (!mounted) return;
       setState(() {
-        _departments = page.items.map((dto) => dto.toEntity()).toList();
+        _departments = page.items
+            .map(
+              (dto) => TaskDepartmentOption(
+                id: dto.id,
+                name: dto.name,
+              ),
+            )
+            .toList();
       });
     } catch (_) {
       // ignore
@@ -199,7 +206,7 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
                   shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.zero),
                   child: SizedBox(
-                    width: 360,
+                    width: LayoutTokens.dialogWidthXs,
                     height: double.infinity,
                     child: SafeArea(
                       child: _FilterDrawerContent(

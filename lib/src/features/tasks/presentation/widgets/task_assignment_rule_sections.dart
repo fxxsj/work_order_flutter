@@ -5,10 +5,10 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/detail_secti
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
-import 'package:work_order_app/src/features/departments/domain/department.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/tasks/data/task_assignment_rule_dto.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_assignment_rule.dart';
+import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 
 class TaskAssignmentRuleFilterDrawerContent extends StatelessWidget {
   const TaskAssignmentRuleFilterDrawerContent({
@@ -95,7 +95,7 @@ class TaskAssignmentRuleDialog extends StatefulWidget {
 
   final TaskAssignmentRule? rule;
   final List<Process> processes;
-  final List<Department> departments;
+  final List<TaskDepartmentOption> departments;
   final Future<void> Function(TaskAssignmentRuleDto payload) onSubmit;
 
   @override
@@ -262,7 +262,7 @@ class TaskAssignmentRuleCard extends StatelessWidget {
         children: [
           if (dragHandle != null) ...[
             dragHandle!,
-            const SizedBox(width: 4),
+            const SizedBox(width: LayoutTokens.gapXs),
           ],
           Switch(value: rule.isActive, onChanged: onToggle),
           IconButton(onPressed: onEdit, icon: const Icon(Icons.edit)),

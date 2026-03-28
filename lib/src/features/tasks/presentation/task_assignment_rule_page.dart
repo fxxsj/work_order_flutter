@@ -15,7 +15,6 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widg
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
-import 'package:work_order_app/src/features/departments/domain/department.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/tasks/application/task_assignment_rule_view_model.dart';
 import 'package:work_order_app/src/features/tasks/data/task_assignment_rule_api_service.dart';
@@ -23,6 +22,7 @@ import 'package:work_order_app/src/features/tasks/data/task_assignment_rule_supp
 import 'package:work_order_app/src/features/tasks/data/task_assignment_rule_repository_impl.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_assignment_rule.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_assignment_rule_repository.dart';
+import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_assignment_rule_sections.dart';
 
 class TaskAssignmentRuleEntry extends StatelessWidget {
@@ -77,7 +77,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
   List<Process> _processes = [];
-  List<Department> _departments = [];
+  List<TaskDepartmentOption> _departments = [];
   bool _previewLoading = false;
   List<Map<String, dynamic>> _previewData = [];
   bool _globalEnabled = true;
@@ -305,7 +305,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
                   shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.zero),
                   child: SizedBox(
-                    width: 360,
+                    width: LayoutTokens.dialogWidthXs,
                     height: double.infinity,
                     child: SafeArea(
                       child: TaskAssignmentRuleFilterDrawerContent(

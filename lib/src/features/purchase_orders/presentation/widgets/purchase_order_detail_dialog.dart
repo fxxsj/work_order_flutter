@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/features/purchase_orders/domain/purchase_order_detail.dart';
 
@@ -12,9 +13,9 @@ Future<void> showPurchaseOrderDetailDialog(
     context: context,
     builder: (dialogContext) => BaseDialog(
       title: title,
-      maxWidth: 700,
+      maxWidth: LayoutTokens.pageWidthWide,
       content: SizedBox(
-        width: 700,
+        width: LayoutTokens.pageWidthWide,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -50,16 +51,16 @@ Future<void> showPurchaseOrderDetailDialog(
             if ((detail.rejectionReason ?? '').trim().isNotEmpty)
               _DetailRow(label: '拒绝原因', value: detail.rejectionReason ?? ''),
             if (detail.items.isNotEmpty) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: LayoutTokens.gapMd),
               Text('采购明细', style: Theme.of(context).textTheme.titleSmall),
-              const SizedBox(height: 8),
+              const SizedBox(height: LayoutTokens.gapSm),
               ...detail.items.map((item) {
                 final quantity =
                     '${_formatAmount(item.quantity)} ${_displayText(item.materialUnit)}';
                 return Card(
-                  margin: const EdgeInsets.only(bottom: 8),
+                  margin: const EdgeInsets.only(bottom: LayoutTokens.gapSm),
                   child: Padding(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(LayoutTokens.cardPaddingSm),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -67,10 +68,10 @@ Future<void> showPurchaseOrderDetailDialog(
                           '${_displayText(item.materialCode)} ${_displayText(item.materialName)}',
                           style: Theme.of(context).textTheme.titleSmall,
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: LayoutTokens.gapXxs),
                         Wrap(
-                          spacing: 12,
-                          runSpacing: 4,
+                          spacing: LayoutTokens.gapMd,
+                          runSpacing: LayoutTokens.gapXs,
                           children: [
                             _InlineMeta(label: '采购数量', value: quantity),
                             _InlineMeta(
@@ -93,7 +94,7 @@ Future<void> showPurchaseOrderDetailDialog(
                           ],
                         ),
                         if ((item.notes ?? '').trim().isNotEmpty) ...[
-                          const SizedBox(height: 6),
+                          const SizedBox(height: LayoutTokens.gapXxs),
                           Text('备注: ${item.notes}'),
                         ],
                       ],

@@ -21,7 +21,6 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_d
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/file_download.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
-import 'package:work_order_app/src/features/departments/domain/department.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/tasks/application/task_view_model.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
@@ -29,6 +28,7 @@ import 'package:work_order_app/src/features/tasks/data/task_list_support_service
 import 'package:work_order_app/src/features/tasks/data/task_repository_impl.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_ui_helper.dart';
+import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_repository.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_action_dialogs.dart';
 
@@ -67,7 +67,7 @@ class _TaskListView extends StatefulWidget {
 
 class _TaskListViewState extends State<_TaskListView> {
   static const _searchDebounceDuration = Duration(milliseconds: 450);
-  static const double _searchWidth = 320;
+  static const double _searchWidth = LayoutTokens.searchWidth;
   static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
   static const String _emptyCellText = '-';
@@ -92,7 +92,7 @@ class _TaskListViewState extends State<_TaskListView> {
   int? _processFilterId;
 
   bool _loadingOptions = false;
-  List<Department> _departments = [];
+  List<TaskDepartmentOption> _departments = [];
   List<Process> _processes = [];
   bool _exporting = false;
   TaskListSupportService? _supportService;
@@ -864,14 +864,7 @@ class _TaskListViewState extends State<_TaskListView> {
     await showTaskAssignDialog(
       context,
       task: task,
-      departments: _departments
-          .map(
-            (item) => TaskDepartmentOption(
-              id: item.id,
-              name: item.name,
-            ),
-          )
-          .toList(),
+      departments: _departments,
       loadOperators: (departmentId) =>
           _supportService!.loadOperators(departmentId),
       onSubmit: (operatorId, notes) =>

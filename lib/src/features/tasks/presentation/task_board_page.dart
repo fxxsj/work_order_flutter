@@ -14,13 +14,13 @@ import 'package:work_order_app/src/core/presentation/providers/feature_entry.dar
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
-import 'package:work_order_app/src/features/departments/domain/department.dart';
 import 'package:work_order_app/src/features/tasks/application/task_view_model.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
 import 'package:work_order_app/src/features/tasks/data/task_board_support_service.dart';
 import 'package:work_order_app/src/features/tasks/data/task_repository_impl.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_repository.dart';
+import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_action_dialogs.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_board_sections.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_list_tile.dart';
@@ -66,7 +66,7 @@ class _TaskBoardView extends StatefulWidget {
 
 class _TaskBoardViewState extends State<_TaskBoardView> {
   static const _searchDebounceDuration = Duration(milliseconds: 450);
-  static const double _searchWidth = 320;
+  static const double _searchWidth = LayoutTokens.searchWidth;
   static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
   static const double _columnMinWidth = 260;
@@ -91,7 +91,7 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
   int? _departmentFilterId;
 
   bool _loadingDepartments = false;
-  List<Department> _departments = [];
+  List<TaskDepartmentOption> _departments = [];
   TaskBoardSupportService? _supportService;
   bool _departmentsRequested = false;
 
@@ -323,7 +323,7 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
                     shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.zero),
                     child: SizedBox(
-                      width: 360,
+                      width: LayoutTokens.dialogWidthXs,
                       height: double.infinity,
                       child: SafeArea(
                         child: TaskBoardFilterDrawerContent(

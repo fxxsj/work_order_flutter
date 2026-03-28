@@ -1,10 +1,10 @@
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
-import 'package:work_order_app/src/features/departments/domain/department.dart';
 import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_api_service.dart';
 import 'package:work_order_app/src/features/inventory_quality/data/quality_inspection_api_service.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
+import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 
 class TaskSupervisorFlowSummary {
   const TaskSupervisorFlowSummary({
@@ -66,11 +66,18 @@ class TaskSupervisorSupportService {
 
   final ApiClient _client;
 
-  Future<List<Department>> fetchDepartments() async {
+  Future<List<TaskDepartmentOption>> fetchDepartments() async {
     final page = await DepartmentApiService(
       _client,
     ).fetchDepartments(page: 1, pageSize: 200);
-    return page.items.map((dto) => dto.toEntity()).toList();
+    return page.items
+        .map(
+          (dto) => TaskDepartmentOption(
+            id: dto.id,
+            name: dto.name,
+          ),
+        )
+        .toList();
   }
 
   Future<TaskSupervisorDashboardData> loadDepartmentDashboard(

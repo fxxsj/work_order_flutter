@@ -2,10 +2,10 @@ import 'dart:typed_data';
 
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
-import 'package:work_order_app/src/features/departments/domain/department.dart';
 import 'package:work_order_app/src/features/processes/data/process_api_service.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
+import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 
 class TaskListFilterOptions {
   const TaskListFilterOptions({
@@ -13,7 +13,7 @@ class TaskListFilterOptions {
     required this.processes,
   });
 
-  final List<Department> departments;
+  final List<TaskDepartmentOption> departments;
   final List<Process> processes;
 }
 
@@ -42,7 +42,14 @@ class TaskListSupportService {
     final processPage = await processFuture;
 
     return TaskListFilterOptions(
-      departments: departmentPage.items.map((item) => item.toEntity()).toList(),
+      departments: departmentPage.items
+          .map(
+            (item) => TaskDepartmentOption(
+              id: item.id,
+              name: item.name,
+            ),
+          )
+          .toList(),
       processes: processPage.items.map((item) => item.toEntity()).toList(),
     );
   }

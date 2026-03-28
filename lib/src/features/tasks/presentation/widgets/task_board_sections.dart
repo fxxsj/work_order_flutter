@@ -405,7 +405,7 @@ class _DraggableTaskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
     final card = Container(
-      padding: const EdgeInsets.all(2),
+      padding: const EdgeInsets.all(LayoutTokens.gapXxxs),
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),

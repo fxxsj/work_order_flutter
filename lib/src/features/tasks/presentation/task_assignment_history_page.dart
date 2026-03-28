@@ -16,8 +16,8 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_d
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/auth/data/auth_api.dart';
 import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
-import 'package:work_order_app/src/features/departments/domain/department.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
+import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 
 class TaskAssignmentHistoryEntry extends StatelessWidget {
   const TaskAssignmentHistoryEntry({super.key});
@@ -71,7 +71,7 @@ class _TaskAssignmentHistoryViewState
   int _pageSize = 20;
   int _total = 0;
 
-  List<Department> _departments = [];
+  List<TaskDepartmentOption> _departments = [];
   List<Map<String, dynamic>> _users = [];
   int? _departmentId;
   int? _operatorId;
@@ -95,7 +95,14 @@ class _TaskAssignmentHistoryViewState
       final users = usersResponse.data ?? const [];
       if (!mounted) return;
       setState(() {
-        _departments = deptPage.items.map((dto) => dto.toEntity()).toList();
+        _departments = deptPage.items
+            .map(
+              (dto) => TaskDepartmentOption(
+                id: dto.id,
+                name: dto.name,
+              ),
+            )
+            .toList();
         _users = users
             .whereType<Map>()
             .map((e) => Map<String, dynamic>.from(e))
@@ -264,7 +271,7 @@ class _TaskAssignmentHistoryViewState
                   shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.zero),
                   child: SizedBox(
-                    width: 360,
+                    width: LayoutTokens.dialogWidthXs,
                     height: double.infinity,
                     child: SafeArea(
                       child: _FilterDrawerContent(

@@ -66,7 +66,7 @@ class _WorkOrderMultiSelectChipsState extends State<WorkOrderMultiSelectChips> {
       decoration: InputDecoration(
         filled: true,
         fillColor: theme.colorScheme.primary.withValues(alpha: 0.03),
-        contentPadding: const EdgeInsets.all(12),
+        contentPadding: const EdgeInsets.all(LayoutTokens.gapMd),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,10 +99,10 @@ class _WorkOrderMultiSelectChipsState extends State<WorkOrderMultiSelectChips> {
             ],
           ),
           if (_expanded && hasSelected) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: LayoutTokens.gapSm),
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: LayoutTokens.gapSm,
+              runSpacing: LayoutTokens.gapSm,
               children: selectedItems
                   .map(
                     (item) => InputChip(
@@ -140,12 +140,16 @@ class _WorkOrderMultiSelectChipsState extends State<WorkOrderMultiSelectChips> {
                 .toList();
             return AlertDialog(
               insetPadding: EdgeInsets.symmetric(
-                horizontal: media.width < Breakpoints.md ? 16 : 40,
-                vertical: 24,
+                horizontal:
+                    media.width < Breakpoints.md ? LayoutTokens.gapLg : 40,
+                vertical: LayoutTokens.gapXl,
               ),
               title: Text(widget.title),
               content: SizedBox(
-                width: media.width < Breakpoints.md ? media.width - 64 : 520,
+                width: media.width < Breakpoints.md
+                    ? media.width -
+                        (LayoutTokens.gapXl * 2 + LayoutTokens.gapLg * 2)
+                    : LayoutTokens.pageWidthNarrow,
                 height: media.height < 720 ? media.height * 0.62 : 420,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -158,7 +162,7 @@ class _WorkOrderMultiSelectChipsState extends State<WorkOrderMultiSelectChips> {
                       onChanged: (value) =>
                           setDialogState(() => query = value.trim()),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: LayoutTokens.gapMd),
                     Expanded(
                       child: filtered.isEmpty
                           ? Center(

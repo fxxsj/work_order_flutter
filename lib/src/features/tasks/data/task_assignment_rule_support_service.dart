@@ -1,9 +1,9 @@
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
-import 'package:work_order_app/src/features/departments/domain/department.dart';
 import 'package:work_order_app/src/features/processes/data/process_api_service.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/tasks/data/task_assignment_rule_api_service.dart';
+import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 
 class TaskAssignmentRuleLookupData {
   const TaskAssignmentRuleLookupData({
@@ -12,7 +12,7 @@ class TaskAssignmentRuleLookupData {
   });
 
   final List<Process> processes;
-  final List<Department> departments;
+  final List<TaskDepartmentOption> departments;
 }
 
 class TaskAssignmentRulePreviewData {
@@ -39,7 +39,14 @@ class TaskAssignmentRuleSupportService {
     ).fetchDepartments(page: 1, pageSize: 200);
     return TaskAssignmentRuleLookupData(
       processes: processPage.items.map((dto) => dto.toEntity()).toList(),
-      departments: departmentPage.items.map((dto) => dto.toEntity()).toList(),
+      departments: departmentPage.items
+          .map(
+            (dto) => TaskDepartmentOption(
+              id: dto.id,
+              name: dto.name,
+            ),
+          )
+          .toList(),
     );
   }
 

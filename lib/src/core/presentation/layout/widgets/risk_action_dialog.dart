@@ -29,7 +29,7 @@ class RiskActionHintPanel extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(LayoutTokens.gapLg),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
@@ -47,7 +47,7 @@ class RiskActionHintPanel extends StatelessWidget {
                 color: tone,
                 size: LayoutTokens.iconLg,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: LayoutTokens.gapMd),
               Expanded(
                 child: Text(
                   summary,
@@ -61,10 +61,10 @@ class RiskActionHintPanel extends StatelessWidget {
             ],
           ),
           if (impacts.isNotEmpty) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: LayoutTokens.gapMd),
             ...impacts.map(
               (item) => Padding(
-                padding: const EdgeInsets.only(top: 6),
+                padding: const EdgeInsets.only(top: LayoutTokens.gapXxs),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -87,7 +87,7 @@ class RiskActionHintPanel extends StatelessWidget {
             ),
           ],
           if ((auditHint ?? '').trim().isNotEmpty) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: LayoutTokens.gapMd),
             Text(
               auditHint!.trim(),
               style: theme.textTheme.bodySmall?.copyWith(

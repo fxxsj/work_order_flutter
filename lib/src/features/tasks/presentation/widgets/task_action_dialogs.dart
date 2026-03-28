@@ -3,16 +3,7 @@ import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
-
-class TaskDepartmentOption {
-  const TaskDepartmentOption({
-    required this.id,
-    required this.name,
-  });
-
-  final int id;
-  final String name;
-}
+import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 
 Future<void> showTaskQuantityDialog(
   BuildContext context, {

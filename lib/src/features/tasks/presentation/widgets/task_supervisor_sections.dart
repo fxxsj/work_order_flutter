@@ -426,7 +426,7 @@ class TaskSupervisorDragColumn extends StatelessWidget {
             color: colors.sidebarText,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: LayoutTokens.gapXs),
         Text(
           subtitle,
           style: theme.textTheme.bodySmall?.copyWith(color: colors.subtleText),
