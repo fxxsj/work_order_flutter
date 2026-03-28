@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/action_decision_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/approval_rejection_notice_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
@@ -161,171 +162,259 @@ class _QualityInspectionListViewState
   }
 
   Future<void> _openDetailDialog(QualityInspection inspection) async {
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text(_detailTitle),
-          content: SizedBox(
-            width: 640,
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (_needsExceptionFollowUp(inspection) ||
-                      _hasRecordedExceptionAction(inspection)) ...[
-                    ApprovalRejectionNoticeCard(
-                      title: inspection.result == 'failed'
-                          ? '质检未通过，需要处理'
-                          : '质检为条件接收，需要跟进',
-                      icon: Icons.report_problem_outlined,
-                      reasonLabel: '问题摘要',
-                      reason: _qualityIssueSummary(inspection),
-                      commentLabel: '处理意见',
-                      comment: _qualityDispositionComment(inspection),
-                      nextStepLabel: '建议动作',
-                      nextStep: _qualityNextStep(inspection),
-                      primaryAction: FilledButton.icon(
-                        onPressed: () => _openExceptionFollowUpDialog(
-                          context,
-                          context.read<QualityInspectionViewModel>(),
-                          inspection,
-                        ),
-                        icon: const Icon(Icons.assignment_turned_in_outlined,
-                            size: 18),
-                        label: Text(
-                          _hasRecordedExceptionAction(inspection)
-                              ? '更新处理'
-                              : '处理异常',
+    await showAdaptiveFilterDrawer(
+      context,
+      isMobile: BreakpointsUtil.isMobile(context),
+      title: _detailTitle,
+      desktopWidth: LayoutTokens.dialogWidthLg,
+      child: Column(
+        children: [
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.all(LayoutTokens.gapLg),
+              children: [
+                AppCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        inspection.inspectionNumber,
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: LayoutTokens.gapXxs),
+                      Text(
+                        '在当前列表上下文中查看质检细节，并直接处理异常、附件和施工单跳转。',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: LayoutTokens.gapMd),
+                      Wrap(
+                        spacing: LayoutTokens.gapMd,
+                        runSpacing: LayoutTokens.gapSm,
+                        children: [
+                          _buildDetailSummaryItem(
+                            context,
+                            '客户',
+                            _displayText(inspection.customerName),
+                          ),
+                          _buildDetailSummaryItem(
+                            context,
+                            '结果',
+                            _displayText(
+                              inspection.resultDisplay ?? inspection.result,
+                            ),
+                          ),
+                          _buildDetailSummaryItem(
+                            context,
+                            '下一步',
+                            _qualityFollowUpText(inspection),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: LayoutTokens.gapLg),
+                if (_needsExceptionFollowUp(inspection) ||
+                    _hasRecordedExceptionAction(inspection)) ...[
+                  ApprovalRejectionNoticeCard(
+                    title: inspection.result == 'failed'
+                        ? '质检未通过，需要处理'
+                        : '质检为条件接收，需要跟进',
+                    icon: Icons.report_problem_outlined,
+                    reasonLabel: '问题摘要',
+                    reason: _qualityIssueSummary(inspection),
+                    commentLabel: '处理意见',
+                    comment: _qualityDispositionComment(inspection),
+                    nextStepLabel: '建议动作',
+                    nextStep: _qualityNextStep(inspection),
+                    primaryAction: FilledButton.icon(
+                      onPressed: () => _openExceptionFollowUpDialog(
+                        context,
+                        context.read<QualityInspectionViewModel>(),
+                        inspection,
+                      ),
+                      icon: const Icon(
+                        Icons.assignment_turned_in_outlined,
+                        size: 18,
+                      ),
+                      label: Text(
+                        _hasRecordedExceptionAction(inspection)
+                            ? '更新处理'
+                            : '处理异常',
+                      ),
+                    ),
+                    secondaryAction: inspection.workOrderId == null
+                        ? null
+                        : OutlinedButton.icon(
+                            onPressed: () {
+                              Navigator.of(context).maybePop();
+                              context
+                                  .go('/workorders/${inspection.workOrderId}');
+                            },
+                            icon: const Icon(Icons.open_in_new, size: 18),
+                            label: const Text('查看施工单'),
+                          ),
+                  ),
+                  const SizedBox(height: LayoutTokens.gapLg),
+                ],
+                AppCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '基础信息',
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: LayoutTokens.gapMd),
+                      _DetailRow(
+                        label: '客户',
+                        value: _displayText(inspection.customerName),
+                      ),
+                      _DetailRow(
+                          label: '质检单号', value: inspection.inspectionNumber),
+                      _DetailRow(
+                        label: '检验类型',
+                        value: _displayText(
+                          inspection.inspectionTypeDisplay ??
+                              inspection.inspectionType,
                         ),
                       ),
-                      secondaryAction: inspection.workOrderId == null
-                          ? null
-                          : OutlinedButton.icon(
-                              onPressed: () {
-                                Navigator.of(dialogContext).pop();
-                                context.go(
-                                    '/workorders/${inspection.workOrderId}');
-                              },
-                              icon: const Icon(Icons.open_in_new, size: 18),
-                              label: const Text('查看施工单'),
-                            ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  _DetailRow(
-                    label: '客户',
-                    value: _displayText(inspection.customerName),
+                      _DetailRow(
+                        label: '产品',
+                        value: _displayText(inspection.productName),
+                      ),
+                      _DetailRow(
+                        label: '批次号',
+                        value: _displayText(inspection.batchNo),
+                      ),
+                      _DetailRow(
+                        label: '施工单号',
+                        value: _displayText(inspection.workOrderNumber),
+                      ),
+                      _DetailRow(
+                        label: '检验员',
+                        value: _displayText(inspection.inspectorName),
+                      ),
+                      _DetailRow(
+                        label: '检验日期',
+                        value: _formatDate(inspection.inspectionDate),
+                      ),
+                    ],
                   ),
-                  _DetailRow(label: '质检单号', value: inspection.inspectionNumber),
-                  _DetailRow(
-                    label: '检验类型',
-                    value: _displayText(inspection.inspectionTypeDisplay ??
-                        inspection.inspectionType),
+                ),
+                const SizedBox(height: LayoutTokens.gapLg),
+                AppCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '结果与处置',
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: LayoutTokens.gapMd),
+                      _DetailRow(
+                        label: '检验数量',
+                        value: _formatAmount(inspection.inspectionQuantity),
+                      ),
+                      _DetailRow(
+                        label: '合格数量',
+                        value: _formatAmount(inspection.passedQuantity),
+                      ),
+                      _DetailRow(
+                        label: '不合格数量',
+                        value: _formatAmount(inspection.failedQuantity),
+                      ),
+                      _DetailRow(
+                        label: '检验结果',
+                        value: _displayText(
+                          inspection.resultDisplay ?? inspection.result,
+                        ),
+                      ),
+                      _DetailRow(
+                        label: '下一步',
+                        value: _qualityFollowUpText(inspection),
+                      ),
+                      _DetailRow(
+                        label: '检验附件',
+                        value:
+                            _hasAttachment(inspection) ? '已上传' : _emptyCellText,
+                      ),
+                      if ((inspection.inspectionStandard ?? '')
+                          .trim()
+                          .isNotEmpty)
+                        _DetailRow(
+                          label: '检验标准',
+                          value: inspection.inspectionStandard ?? '',
+                        ),
+                      if (inspection.inspectionItems.isNotEmpty)
+                        _DetailRow(
+                          label: '检验项目',
+                          value: inspection.inspectionItems.join('、'),
+                        ),
+                      if (inspection.defects.isNotEmpty)
+                        _DetailRow(
+                          label: '缺陷',
+                          value: inspection.defects.join('、'),
+                        ),
+                      if ((inspection.defectDescription ?? '')
+                          .trim()
+                          .isNotEmpty)
+                        _DetailRow(
+                          label: '缺陷描述',
+                          value: inspection.defectDescription ?? '',
+                        ),
+                      if ((inspection.disposition ?? '').trim().isNotEmpty)
+                        _DetailRow(
+                          label: '处理意见',
+                          value: inspection.disposition ?? '',
+                        ),
+                      if ((inspection.dispositionNotes ?? '').trim().isNotEmpty)
+                        _DetailRow(
+                          label: '处理备注',
+                          value: inspection.dispositionNotes ?? '',
+                        ),
+                      if ((inspection.notes ?? '').trim().isNotEmpty)
+                        _DetailRow(label: '备注', value: inspection.notes ?? ''),
+                    ],
                   ),
-                  _DetailRow(
-                    label: '产品',
-                    value: _displayText(inspection.productName),
-                  ),
-                  _DetailRow(
-                    label: '批次号',
-                    value: _displayText(inspection.batchNo),
-                  ),
-                  _DetailRow(
-                    label: '施工单号',
-                    value: _displayText(inspection.workOrderNumber),
-                  ),
-                  _DetailRow(
-                    label: '检验员',
-                    value: _displayText(inspection.inspectorName),
-                  ),
-                  _DetailRow(
-                    label: '检验日期',
-                    value: _formatDate(inspection.inspectionDate),
-                  ),
-                  _DetailRow(
-                    label: '检验数量',
-                    value: _formatAmount(inspection.inspectionQuantity),
-                  ),
-                  _DetailRow(
-                    label: '合格数量',
-                    value: _formatAmount(inspection.passedQuantity),
-                  ),
-                  _DetailRow(
-                    label: '不合格数量',
-                    value: _formatAmount(inspection.failedQuantity),
-                  ),
-                  _DetailRow(
-                    label: '检验结果',
-                    value: _displayText(
-                        inspection.resultDisplay ?? inspection.result),
-                  ),
-                  _DetailRow(
-                    label: '下一步',
-                    value: _qualityFollowUpText(inspection),
-                  ),
-                  _DetailRow(
-                    label: '检验附件',
-                    value: _hasAttachment(inspection) ? '已上传' : _emptyCellText,
-                  ),
-                  if ((inspection.inspectionStandard ?? '').trim().isNotEmpty)
-                    _DetailRow(
-                      label: '检验标准',
-                      value: inspection.inspectionStandard ?? '',
-                    ),
-                  if (inspection.inspectionItems.isNotEmpty)
-                    _DetailRow(
-                      label: '检验项目',
-                      value: inspection.inspectionItems.join('、'),
-                    ),
-                  if (inspection.defects.isNotEmpty)
-                    _DetailRow(
-                      label: '缺陷',
-                      value: inspection.defects.join('、'),
-                    ),
-                  if ((inspection.defectDescription ?? '').trim().isNotEmpty)
-                    _DetailRow(
-                      label: '缺陷描述',
-                      value: inspection.defectDescription ?? '',
-                    ),
-                  if ((inspection.disposition ?? '').trim().isNotEmpty)
-                    _DetailRow(
-                      label: '处理意见',
-                      value: inspection.disposition ?? '',
-                    ),
-                  if ((inspection.dispositionNotes ?? '').trim().isNotEmpty)
-                    _DetailRow(
-                      label: '处理备注',
-                      value: inspection.dispositionNotes ?? '',
-                    ),
-                  if ((inspection.notes ?? '').trim().isNotEmpty)
-                    _DetailRow(label: '备注', value: inspection.notes ?? ''),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-          actions: [
-            TextButton.icon(
-              onPressed: () => _uploadAttachment(
-                context.read<QualityInspectionViewModel>(),
-                inspection,
-              ),
-              icon: const Icon(Icons.upload_file_outlined, size: 18),
-              label: Text(_hasAttachment(inspection) ? '更新附件' : '上传附件'),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              LayoutTokens.gapLg,
+              LayoutTokens.gapMd,
+              LayoutTokens.gapLg,
+              LayoutTokens.gapLg,
             ),
-            if (_hasAttachment(inspection))
-              AttachmentOpenButton(
-                fileUrl: inspection.attachmentUrl,
-                label: '查看附件',
-                errorPrefix: '打开检验附件失败',
-              ),
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text(_cancelText),
+            child: Row(
+              children: [
+                TextButton.icon(
+                  onPressed: () => _uploadAttachment(
+                    context.read<QualityInspectionViewModel>(),
+                    inspection,
+                  ),
+                  icon: const Icon(Icons.upload_file_outlined, size: 18),
+                  label: Text(_hasAttachment(inspection) ? '更新附件' : '上传附件'),
+                ),
+                const SizedBox(width: LayoutTokens.gapSm),
+                if (_hasAttachment(inspection))
+                  AttachmentOpenButton(
+                    fileUrl: inspection.attachmentUrl,
+                    label: '查看附件',
+                    errorPrefix: '打开检验附件失败',
+                  ),
+                const Spacer(),
+                TextButton(
+                  onPressed: () => Navigator.of(context).maybePop(),
+                  child: const Text(_cancelText),
+                ),
+              ],
             ),
-          ],
-        );
-      },
+          ),
+        ],
+      ),
     );
   }
 
@@ -1237,6 +1326,28 @@ class _QualityInspectionListViewState
 
 typedef _SummaryField = SummaryField;
 typedef _SummaryChip = SummaryChip;
+
+Widget _buildDetailSummaryItem(
+  BuildContext context,
+  String label,
+  String value,
+) {
+  final theme = Theme.of(context);
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(label, style: theme.textTheme.bodySmall),
+      const SizedBox(height: LayoutTokens.gapXxxs),
+      Text(
+        value,
+        style: theme.textTheme.titleSmall?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    ],
+  );
+}
 
 class _DetailRow extends StatelessWidget {
   const _DetailRow({required this.label, required this.value});

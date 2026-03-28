@@ -8,10 +8,12 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/action_decision_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_loading_indicator.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/file_upload_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
@@ -225,239 +227,331 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     int? selectedWorkOrderId;
     bool submitting = false;
 
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            Future<void> submit() async {
-              if (submitting) return;
-              if (!(formKey.currentState?.validate() ?? false)) {
-                return;
-              }
-              final amountText = amountController.text.trim();
-              final amount = double.tryParse(amountText);
-              if (amount == null || amount <= 0) {
-                ToastUtil.showError('请输入正确的金额');
-                return;
-              }
-              final taxRate =
-                  double.tryParse(taxRateController.text.trim()) ?? 0;
-              if (taxRate < 0 || taxRate > 100) {
-                ToastUtil.showError('税率应在 0-100 之间');
-                return;
-              }
-              if (selectedCustomerId == null) {
-                ToastUtil.showError('请选择客户');
-                return;
-              }
-
-              setState(() => submitting = true);
-              try {
-                final payload = <String, dynamic>{
-                  'invoice_type': invoiceType,
-                  'customer': selectedCustomerId,
-                  'amount': amount,
-                  'tax_rate': taxRate,
-                  'notes': notesController.text.trim(),
-                };
-                final issueDate = issueDateController.text.trim();
-                if (issueDate.isNotEmpty) {
-                  payload['issue_date'] = issueDate;
-                }
-                if (selectedSalesOrderId != null) {
-                  payload['sales_order'] = selectedSalesOrderId;
-                }
-                if (selectedWorkOrderId != null) {
-                  payload['work_order'] = selectedWorkOrderId;
-                }
-
-                await viewModel.createInvoice(payload);
-                if (!mounted) return;
-                Navigator.of(dialogContext).pop();
-                ToastUtil.showSuccess('发票已创建');
-                await viewModel.loadInvoices(resetPage: false);
-              } catch (err) {
-                if (!mounted) return;
-                setState(() => submitting = false);
-                ToastUtil.showError('提交失败: $err');
-              }
+    await showAdaptiveFilterDrawer(
+      context,
+      isMobile: BreakpointsUtil.isMobile(context),
+      title: '新建发票',
+      desktopWidth: LayoutTokens.dialogWidthLg,
+      child: StatefulBuilder(
+        builder: (context, setState) {
+          Future<void> submit() async {
+            if (submitting) return;
+            if (!(formKey.currentState?.validate() ?? false)) {
+              return;
+            }
+            final amountText = amountController.text.trim();
+            final amount = double.tryParse(amountText);
+            if (amount == null || amount <= 0) {
+              ToastUtil.showError('请输入正确的金额');
+              return;
+            }
+            final taxRate = double.tryParse(taxRateController.text.trim()) ?? 0;
+            if (taxRate < 0 || taxRate > 100) {
+              ToastUtil.showError('税率应在 0-100 之间');
+              return;
+            }
+            if (selectedCustomerId == null) {
+              ToastUtil.showError('请选择客户');
+              return;
             }
 
-            return AlertDialog(
-              title: const Text('新建发票'),
-              content: SizedBox(
-                width: 720,
-                child: SingleChildScrollView(
-                  child: Form(
-                    key: formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SearchableDropdownFormField<String>(
-                          initialValue: invoiceType,
-                          decoration: const InputDecoration(
-                            labelText: '发票类型',
-                            border: OutlineInputBorder(),
+            setState(() => submitting = true);
+            try {
+              final payload = <String, dynamic>{
+                'invoice_type': invoiceType,
+                'customer': selectedCustomerId,
+                'amount': amount,
+                'tax_rate': taxRate,
+                'notes': notesController.text.trim(),
+              };
+              final issueDate = issueDateController.text.trim();
+              if (issueDate.isNotEmpty) {
+                payload['issue_date'] = issueDate;
+              }
+              if (selectedSalesOrderId != null) {
+                payload['sales_order'] = selectedSalesOrderId;
+              }
+              if (selectedWorkOrderId != null) {
+                payload['work_order'] = selectedWorkOrderId;
+              }
+
+              await viewModel.createInvoice(payload);
+              if (!mounted) return;
+              Navigator.of(context).maybePop();
+              ToastUtil.showSuccess('发票已创建');
+              await viewModel.loadInvoices(resetPage: false);
+            } catch (err) {
+              if (!mounted) return;
+              setState(() => submitting = false);
+              ToastUtil.showError('提交失败: $err');
+            }
+          }
+
+          String customerLabel = '未选择';
+          if (selectedCustomerId != null) {
+            for (final customer in _customers) {
+              if (customer.id == selectedCustomerId) {
+                customerLabel = customer.name;
+                break;
+              }
+            }
+          }
+
+          String salesOrderLabel = '不关联';
+          if (selectedSalesOrderId != null) {
+            for (final order in _salesOrders) {
+              if (order.id == selectedSalesOrderId) {
+                salesOrderLabel = order.orderNumber;
+                break;
+              }
+            }
+          }
+
+          String workOrderLabel = '不关联';
+          if (selectedWorkOrderId != null) {
+            for (final order in _workOrders) {
+              if (order.id == selectedWorkOrderId) {
+                workOrderLabel = order.orderNumber;
+                break;
+              }
+            }
+          }
+
+          return AdaptiveFormPanel(
+            formKey: formKey,
+            submitText: '创建',
+            cancelText: '取消',
+            submitting: submitting,
+            onSubmit: submit,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '新建发票',
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: LayoutTokens.gapXxs),
+                      Text(
+                        '把客户、来源单据和金额信息放在同一面板里录入，减少离开当前列表的成本。',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: LayoutTokens.gapMd),
+                      Wrap(
+                        spacing: LayoutTokens.gapMd,
+                        runSpacing: LayoutTokens.gapSm,
+                        children: [
+                          _buildInvoiceSummaryItem('客户', customerLabel),
+                          _buildInvoiceSummaryItem('客户订单', salesOrderLabel),
+                          _buildInvoiceSummaryItem('施工单', workOrderLabel),
+                          _buildInvoiceSummaryItem(
+                            '默认税率',
+                            '${taxRateController.text.trim().isEmpty ? '13' : taxRateController.text.trim()}%',
                           ),
-                          items: const [
-                            DropdownMenuItem(
-                                value: 'vat_special', child: Text('增值税专用发票')),
-                            DropdownMenuItem(
-                                value: 'vat_normal', child: Text('增值税普通发票')),
-                            DropdownMenuItem(
-                                value: 'electronic', child: Text('电子发票')),
-                          ],
-                          onChanged: submitting
-                              ? null
-                              : (value) => setState(
-                                    () => invoiceType = value ?? 'vat_normal',
-                                  ),
-                        ),
-                        SizedBox(height: LayoutTokens.gapMd),
-                        SearchableDropdownFormField<int?>(
-                          initialValue: selectedCustomerId,
-                          decoration: const InputDecoration(
-                            labelText: '客户',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: [
-                            const DropdownMenuItem<int?>(
-                              value: null,
-                              child: Text('请选择客户'),
-                            ),
-                            ..._customers.map(
-                              (customer) => DropdownMenuItem<int?>(
-                                value: customer.id,
-                                child: Text(customer.name),
-                              ),
-                            ),
-                          ],
-                          onChanged: submitting
-                              ? null
-                              : (value) => setState(
-                                    () => selectedCustomerId = value,
-                                  ),
-                          validator: (value) => value == null ? '请选择客户' : null,
-                        ),
-                        SizedBox(height: LayoutTokens.gapMd),
-                        SearchableDropdownFormField<int?>(
-                          initialValue: selectedSalesOrderId,
-                          decoration: const InputDecoration(
-                            labelText: '关联客户订单（可选）',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: [
-                            const DropdownMenuItem<int?>(
-                              value: null,
-                              child: Text('不关联客户订单'),
-                            ),
-                            ..._salesOrders.map(
-                              (order) => DropdownMenuItem<int?>(
-                                value: order.id,
-                                child: Text(order.orderNumber),
-                              ),
-                            ),
-                          ],
-                          onChanged: submitting
-                              ? null
-                              : (value) => setState(
-                                    () => selectedSalesOrderId = value,
-                                  ),
-                        ),
-                        SizedBox(height: LayoutTokens.gapMd),
-                        SearchableDropdownFormField<int?>(
-                          initialValue: selectedWorkOrderId,
-                          decoration: const InputDecoration(
-                            labelText: '关联施工单（可选）',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: [
-                            const DropdownMenuItem<int?>(
-                              value: null,
-                              child: Text('不关联施工单'),
-                            ),
-                            ..._workOrders.map(
-                              (order) => DropdownMenuItem<int?>(
-                                value: order.id,
-                                child: Text(order.orderNumber),
-                              ),
-                            ),
-                          ],
-                          onChanged: submitting
-                              ? null
-                              : (value) => setState(
-                                    () => selectedWorkOrderId = value,
-                                  ),
-                        ),
-                        SizedBox(height: LayoutTokens.gapMd),
-                        TextFormField(
-                          controller: amountController,
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
-                          decoration: const InputDecoration(
-                            labelText: '金额（不含税）',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) =>
-                              (value == null || value.trim().isEmpty)
-                                  ? '请输入金额'
-                                  : null,
-                        ),
-                        SizedBox(height: LayoutTokens.gapMd),
-                        TextFormField(
-                          controller: taxRateController,
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
-                          decoration: const InputDecoration(
-                            labelText: '税率(%)',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        SizedBox(height: LayoutTokens.gapMd),
-                        TextFormField(
-                          controller: issueDateController,
-                          decoration: const InputDecoration(
-                            labelText: '开票日期（YYYY-MM-DD，可选）',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        SizedBox(height: LayoutTokens.gapMd),
-                        TextFormField(
-                          controller: notesController,
-                          decoration: const InputDecoration(
-                            labelText: '备注（可选）',
-                            border: OutlineInputBorder(),
-                          ),
-                          maxLines: 3,
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: submitting
-                      ? null
-                      : () => Navigator.of(dialogContext).pop(),
-                  child: const Text('取消'),
+                const SizedBox(height: LayoutTokens.gapLg),
+                AppCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '单据信息',
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: LayoutTokens.gapMd),
+                      SearchableDropdownFormField<String>(
+                        initialValue: invoiceType,
+                        decoration: const InputDecoration(
+                          labelText: '发票类型',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'vat_special',
+                            child: Text('增值税专用发票'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'vat_normal',
+                            child: Text('增值税普通发票'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'electronic',
+                            child: Text('电子发票'),
+                          ),
+                        ],
+                        onChanged: submitting
+                            ? null
+                            : (value) => setState(
+                                  () => invoiceType = value ?? 'vat_normal',
+                                ),
+                      ),
+                      const SizedBox(height: LayoutTokens.gapMd),
+                      SearchableDropdownFormField<int?>(
+                        initialValue: selectedCustomerId,
+                        decoration: const InputDecoration(
+                          labelText: '客户',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: [
+                          const DropdownMenuItem<int?>(
+                            value: null,
+                            child: Text('请选择客户'),
+                          ),
+                          ..._customers.map(
+                            (customer) => DropdownMenuItem<int?>(
+                              value: customer.id,
+                              child: Text(customer.name),
+                            ),
+                          ),
+                        ],
+                        onChanged: submitting
+                            ? null
+                            : (value) =>
+                                setState(() => selectedCustomerId = value),
+                        validator: (value) => value == null ? '请选择客户' : null,
+                      ),
+                      const SizedBox(height: LayoutTokens.gapMd),
+                      SearchableDropdownFormField<int?>(
+                        initialValue: selectedSalesOrderId,
+                        decoration: const InputDecoration(
+                          labelText: '关联客户订单（可选）',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: [
+                          const DropdownMenuItem<int?>(
+                            value: null,
+                            child: Text('不关联客户订单'),
+                          ),
+                          ..._salesOrders.map(
+                            (order) => DropdownMenuItem<int?>(
+                              value: order.id,
+                              child: Text(order.orderNumber),
+                            ),
+                          ),
+                        ],
+                        onChanged: submitting
+                            ? null
+                            : (value) =>
+                                setState(() => selectedSalesOrderId = value),
+                      ),
+                      const SizedBox(height: LayoutTokens.gapMd),
+                      SearchableDropdownFormField<int?>(
+                        initialValue: selectedWorkOrderId,
+                        decoration: const InputDecoration(
+                          labelText: '关联施工单（可选）',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: [
+                          const DropdownMenuItem<int?>(
+                            value: null,
+                            child: Text('不关联施工单'),
+                          ),
+                          ..._workOrders.map(
+                            (order) => DropdownMenuItem<int?>(
+                              value: order.id,
+                              child: Text(order.orderNumber),
+                            ),
+                          ),
+                        ],
+                        onChanged: submitting
+                            ? null
+                            : (value) =>
+                                setState(() => selectedWorkOrderId = value),
+                      ),
+                    ],
+                  ),
                 ),
-                FilledButton(
-                  onPressed: submitting ? null : submit,
-                  child: Text(submitting ? '提交中' : '创建'),
+                const SizedBox(height: LayoutTokens.gapLg),
+                AppCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '开票金额',
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: LayoutTokens.gapMd),
+                      TextFormField(
+                        controller: amountController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        decoration: const InputDecoration(
+                          labelText: '金额（不含税）',
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) =>
+                            (value == null || value.trim().isEmpty)
+                                ? '请输入金额'
+                                : null,
+                      ),
+                      const SizedBox(height: LayoutTokens.gapMd),
+                      TextFormField(
+                        controller: taxRateController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        decoration: const InputDecoration(
+                          labelText: '税率(%)',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: LayoutTokens.gapMd),
+                      TextFormField(
+                        controller: issueDateController,
+                        decoration: const InputDecoration(
+                          labelText: '开票日期（YYYY-MM-DD，可选）',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: LayoutTokens.gapMd),
+                      TextFormField(
+                        controller: notesController,
+                        decoration: const InputDecoration(
+                          labelText: '备注（可选）',
+                          border: OutlineInputBorder(),
+                        ),
+                        maxLines: 3,
+                      ),
+                    ],
+                  ),
                 ),
               ],
-            );
-          },
-        );
-      },
+            ),
+          );
+        },
+      ),
     );
 
     amountController.dispose();
     taxRateController.dispose();
     issueDateController.dispose();
     notesController.dispose();
+  }
+
+  Widget _buildInvoiceSummaryItem(String label, String value) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label, style: theme.textTheme.bodySmall),
+        const SizedBox(height: LayoutTokens.gapXxxs),
+        Text(
+          value,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
   }
 
   Future<void> _submitInvoice(

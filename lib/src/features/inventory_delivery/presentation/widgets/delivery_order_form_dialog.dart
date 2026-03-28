@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_dto.dart';
 
@@ -39,241 +42,435 @@ Future<void> showDeliveryOrderFormDialog(
 }) {
   bool submitting = false;
 
-  return showDialog<void>(
-    context: context,
-    builder: (dialogContext) {
-      return StatefulBuilder(
-        builder: (context, setState) {
-          Future<void> submit() async {
-            if (submitting) return;
-            setState(() => submitting = true);
-            await onSubmit(setState);
-            if (dialogContext.mounted) {
-              setState(() => submitting = false);
+  return showAdaptiveFilterDrawer(
+    context,
+    isMobile: BreakpointsUtil.isMobile(context),
+    title: title,
+    desktopWidth: LayoutTokens.pageWidthXwide,
+    child: StatefulBuilder(
+      builder: (context, setState) {
+        final isCompact =
+            BreakpointsUtil.isXs(context) || BreakpointsUtil.isSm(context);
+        final totalQuantity = items.fold<double>(
+          0,
+          (sum, item) => sum + item.quantity,
+        );
+        String? salesOrderLabel;
+        if (selectedSalesOrderId != null) {
+          for (final order in salesOrders) {
+            if (order.id == selectedSalesOrderId) {
+              salesOrderLabel = order.orderNumber;
+              break;
             }
           }
+          salesOrderLabel ??= '客户订单 #$selectedSalesOrderId';
+        }
 
-          return AlertDialog(
-            title: Text(title),
-            content: SizedBox(
-              width: 720,
-              child: SingleChildScrollView(
-                child: Form(
-                  key: formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (!isEdit)
-                        SearchableDropdownFormField<int>(
-                          key: ValueKey<int?>(selectedSalesOrderId),
-                          initialValue: selectedSalesOrderId,
-                          decoration: const InputDecoration(
-                            labelText: '客户订单',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: salesOrders
-                              .map(
-                                (order) => DropdownMenuItem(
-                                  value: order.id,
-                                  child: Text(order.orderNumber),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: submitting
-                              ? null
-                              : (value) {
-                                  if (value == null) return;
-                                  onSalesOrderChanged(value,
-                                      setState: setState);
-                                },
-                          validator: (value) {
-                            if (!isEdit && (value == null || value == 0)) {
-                              return '请选择客户订单';
-                            }
-                            return null;
-                          },
-                        ),
-                      if (!isEdit) SizedBox(height: LayoutTokens.gapMd),
-                      TextFormField(
-                        controller: receiverNameController,
-                        decoration: const InputDecoration(
-                          labelText: '收货人',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) =>
-                            (value?.trim().isEmpty ?? true) ? '请输入收货人' : null,
-                      ),
-                      SizedBox(height: LayoutTokens.gapMd),
-                      TextFormField(
-                        controller: receiverPhoneController,
-                        decoration: const InputDecoration(
-                          labelText: '联系电话',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) =>
-                            (value?.trim().isEmpty ?? true) ? '请输入联系电话' : null,
-                      ),
-                      SizedBox(height: LayoutTokens.gapMd),
-                      TextFormField(
-                        controller: addressController,
-                        decoration: const InputDecoration(
-                          labelText: '送货地址',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) =>
-                            (value?.trim().isEmpty ?? true) ? '请输入送货地址' : null,
-                      ),
-                      SizedBox(height: LayoutTokens.gapMd),
-                      DeliveryDateField(
-                        label: '发货日期',
-                        value: deliveryDate,
-                        onPicked: onDatePicked,
-                      ),
-                      SizedBox(height: LayoutTokens.gapMd),
-                      TextFormField(
-                        controller: logisticsController,
-                        decoration: const InputDecoration(
-                          labelText: '物流公司',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      SizedBox(height: LayoutTokens.gapMd),
-                      TextFormField(
-                        controller: trackingController,
-                        decoration: const InputDecoration(
-                          labelText: '物流单号',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      SizedBox(height: LayoutTokens.gapMd),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: freightController,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                decimal: true,
-                              ),
-                              decoration: const InputDecoration(
-                                labelText: '运费',
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: LayoutTokens.gapMd),
-                          Expanded(
-                            child: TextFormField(
-                              controller: packageCountController,
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                labelText: '包裹数',
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: LayoutTokens.gapMd),
-                          Expanded(
-                            child: TextFormField(
-                              controller: packageWeightController,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                decimal: true,
-                              ),
-                              decoration: const InputDecoration(
-                                labelText: '总重量(kg)',
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: LayoutTokens.gapMd),
-                      TextFormField(
-                        controller: notesController,
-                        maxLines: 3,
-                        decoration: const InputDecoration(
-                          labelText: '备注',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      SizedBox(height: LayoutTokens.gapLg),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              '发货明细',
-                              style: Theme.of(context).textTheme.titleSmall,
-                            ),
-                          ),
-                          TextButton.icon(
-                            onPressed: submitting || productsLoading
-                                ? null
-                                : () {
-                                    setState(() {
-                                      items.add(
-                                        DeliveryItemDraft(
-                                          productId: 0,
-                                          productName: '-',
-                                          maxQuantity: 0,
-                                          initialQuantity: 1,
-                                        ),
-                                      );
-                                    });
-                                  },
-                            icon: const Icon(Icons.add, size: 16),
-                            label: const Text('添加明细'),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: LayoutTokens.gapSm),
-                      if (items.isEmpty)
-                        const Text('暂无明细')
-                      else
-                        Column(
-                          children: items
-                              .map(
-                                (item) => DeliveryItemRow(
-                                  item: item,
-                                  enabled: !submitting,
-                                  products: products,
-                                  onRemove: () {
-                                    setState(() {
-                                      items.remove(item);
-                                      item.dispose();
-                                    });
-                                  },
-                                  onProductChanged: (product) {
-                                    setState(() {
-                                      item.productId = product.id;
-                                      item.productName = product.displayLabel;
-                                    });
-                                  },
-                                ),
-                              )
-                              .toList(),
-                        ),
-                    ],
+        Future<void> submit() async {
+          if (submitting) return;
+          setState(() => submitting = true);
+          await onSubmit(setState);
+          if (context.mounted) {
+            setState(() => submitting = false);
+          }
+        }
+
+        Widget buildMetricsFields() {
+          if (isCompact) {
+            return Column(
+              children: [
+                TextFormField(
+                  controller: freightController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: '运费',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: LayoutTokens.gapMd),
+                TextFormField(
+                  controller: packageCountController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: '包裹数',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: LayoutTokens.gapMd),
+                TextFormField(
+                  controller: packageWeightController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: '总重量(kg)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            );
+          }
+
+          return Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: freightController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: '运费',
+                    border: OutlineInputBorder(),
                   ),
                 ),
               ),
-            ),
-            actions: [
-              TextButton(
-                onPressed:
-                    submitting ? null : () => Navigator.of(dialogContext).pop(),
-                child: Text(cancelText),
+              const SizedBox(width: LayoutTokens.gapMd),
+              Expanded(
+                child: TextFormField(
+                  controller: packageCountController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: '包裹数',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
               ),
-              FilledButton(
-                onPressed: submitting ? null : submit,
-                child: Text(submitting ? '提交中...' : submitText),
+              const SizedBox(width: LayoutTokens.gapMd),
+              Expanded(
+                child: TextFormField(
+                  controller: packageWeightController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: '总重量(kg)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
               ),
             ],
           );
-        },
-      );
-    },
+        }
+
+        return AdaptiveFormPanel(
+          formKey: formKey,
+          cancelText: cancelText,
+          submitText: submitText,
+          submitting: submitting,
+          onSubmit: submit,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _DeliveryOrderSummaryCard(
+                isEdit: isEdit,
+                salesOrderLabel: salesOrderLabel,
+                itemCount: items.length,
+                totalQuantity: totalQuantity,
+              ),
+              const SizedBox(height: LayoutTokens.gapLg),
+              if (!isEdit) ...[
+                _DeliveryFormSection(
+                  title: '关联单据',
+                  subtitle: '先选择客户订单，系统会回填收货信息并带出待发货明细。',
+                  child: SearchableDropdownFormField<int>(
+                    key: ValueKey<int?>(selectedSalesOrderId),
+                    initialValue: selectedSalesOrderId,
+                    decoration: const InputDecoration(
+                      labelText: '客户订单',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: salesOrders
+                        .map(
+                          (order) => DropdownMenuItem(
+                            value: order.id,
+                            child: Text(order.orderNumber),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: submitting
+                        ? null
+                        : (value) {
+                            if (value == null) return;
+                            onSalesOrderChanged(value, setState: setState);
+                          },
+                    validator: (value) {
+                      if (!isEdit && (value == null || value == 0)) {
+                        return '请选择客户订单';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(height: LayoutTokens.gapLg),
+              ],
+              _DeliveryFormSection(
+                title: '收货信息',
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: receiverNameController,
+                      decoration: const InputDecoration(
+                        labelText: '收货人',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) =>
+                          (value?.trim().isEmpty ?? true) ? '请输入收货人' : null,
+                    ),
+                    const SizedBox(height: LayoutTokens.gapMd),
+                    TextFormField(
+                      controller: receiverPhoneController,
+                      decoration: const InputDecoration(
+                        labelText: '联系电话',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) =>
+                          (value?.trim().isEmpty ?? true) ? '请输入联系电话' : null,
+                    ),
+                    const SizedBox(height: LayoutTokens.gapMd),
+                    TextFormField(
+                      controller: addressController,
+                      decoration: const InputDecoration(
+                        labelText: '送货地址',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) =>
+                          (value?.trim().isEmpty ?? true) ? '请输入送货地址' : null,
+                    ),
+                    const SizedBox(height: LayoutTokens.gapMd),
+                    DeliveryDateField(
+                      label: '发货日期',
+                      value: deliveryDate,
+                      onPicked: onDatePicked,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: LayoutTokens.gapLg),
+              _DeliveryFormSection(
+                title: '物流与备注',
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: logisticsController,
+                      decoration: const InputDecoration(
+                        labelText: '物流公司',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: LayoutTokens.gapMd),
+                    TextFormField(
+                      controller: trackingController,
+                      decoration: const InputDecoration(
+                        labelText: '物流单号',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: LayoutTokens.gapMd),
+                    buildMetricsFields(),
+                    const SizedBox(height: LayoutTokens.gapMd),
+                    TextFormField(
+                      controller: notesController,
+                      maxLines: 3,
+                      decoration: const InputDecoration(
+                        labelText: '备注',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: LayoutTokens.gapLg),
+              _DeliveryFormSection(
+                title: '发货明细',
+                subtitle: '支持逐行调整数量、单位、单价和批次。',
+                trailing: TextButton.icon(
+                  onPressed: submitting || productsLoading
+                      ? null
+                      : () {
+                          setState(() {
+                            items.add(
+                              DeliveryItemDraft(
+                                productId: 0,
+                                productName: '-',
+                                maxQuantity: 0,
+                                initialQuantity: 1,
+                              ),
+                            );
+                          });
+                        },
+                  icon: const Icon(Icons.add, size: 16),
+                  label: const Text('添加明细'),
+                ),
+                child: items.isEmpty
+                    ? Text(
+                        '暂无明细，请先选择客户订单或手动添加产品。',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      )
+                    : Column(
+                        children: items
+                            .map(
+                              (item) => DeliveryItemRow(
+                                item: item,
+                                enabled: !submitting,
+                                products: products,
+                                onRemove: () {
+                                  setState(() {
+                                    items.remove(item);
+                                    item.dispose();
+                                  });
+                                },
+                                onProductChanged: (product) {
+                                  setState(() {
+                                    item.productId = product.id;
+                                    item.productName = product.displayLabel;
+                                  });
+                                },
+                              ),
+                            )
+                            .toList(),
+                      ),
+              ),
+            ],
+          ),
+        );
+      },
+    ),
   );
+}
+
+class _DeliveryOrderSummaryCard extends StatelessWidget {
+  const _DeliveryOrderSummaryCard({
+    required this.isEdit,
+    required this.salesOrderLabel,
+    required this.itemCount,
+    required this.totalQuantity,
+  });
+
+  final bool isEdit;
+  final String? salesOrderLabel;
+  final int itemCount;
+  final double totalQuantity;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            isEdit ? '正在编辑发货单' : '新建发货单',
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          const SizedBox(height: LayoutTokens.gapXxs),
+          Text(
+            '在列表上下文中完成收货信息、物流信息和发货明细维护。',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: LayoutTokens.gapMd),
+          Wrap(
+            spacing: LayoutTokens.gapMd,
+            runSpacing: LayoutTokens.gapSm,
+            children: [
+              _DeliverySummaryItem(
+                label: '客户订单',
+                value: salesOrderLabel ?? '未选择',
+              ),
+              _DeliverySummaryItem(
+                label: '明细行数',
+                value: itemCount.toString(),
+              ),
+              _DeliverySummaryItem(
+                label: '发货数量',
+                value: totalQuantity.toStringAsFixed(2),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DeliverySummaryItem extends StatelessWidget {
+  const _DeliverySummaryItem({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label, style: theme.textTheme.bodySmall),
+        const SizedBox(height: LayoutTokens.gapXxxs),
+        Text(
+          value,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DeliveryFormSection extends StatelessWidget {
+  const _DeliveryFormSection({
+    required this.title,
+    required this.child,
+    this.subtitle,
+    this.trailing,
+  });
+
+  final String title;
+  final String? subtitle;
+  final Widget child;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: LayoutTokens.gapXxxs),
+                      Text(
+                        subtitle!,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (trailing != null) trailing!,
+            ],
+          ),
+          const SizedBox(height: LayoutTokens.gapMd),
+          child,
+        ],
+      ),
+    );
+  }
 }
 
 class DeliveryItemDraft {
@@ -331,114 +528,203 @@ class DeliveryItemRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isCompact =
+        BreakpointsUtil.isXs(context) || BreakpointsUtil.isSm(context);
     return Padding(
-      padding: EdgeInsets.only(bottom: LayoutTokens.gapSm),
-      child: Row(
-        children: [
-          Expanded(
-            child: SearchableDropdownFormField<int>(
-              key: ValueKey<int?>(item.productId),
-              initialValue: item.productId == 0 ? null : item.productId,
-              decoration: const InputDecoration(
-                labelText: '产品',
-                isDense: true,
-                border: OutlineInputBorder(),
-              ),
-              items: products
-                  .map(
-                    (product) => DropdownMenuItem<int>(
-                      value: product.id,
-                      child: Text(product.displayLabel),
+      padding: const EdgeInsets.only(bottom: LayoutTokens.gapSm),
+      child: AppCard(
+        padding: const EdgeInsets.all(LayoutTokens.gapMd),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: SearchableDropdownFormField<int>(
+                    key: ValueKey<int?>(item.productId),
+                    initialValue: item.productId == 0 ? null : item.productId,
+                    decoration: const InputDecoration(
+                      labelText: '产品',
+                      isDense: true,
+                      border: OutlineInputBorder(),
                     ),
-                  )
-                  .toList(),
-              onChanged: enabled
-                  ? (value) {
-                      if (value == null) return;
-                      final selected =
-                          products.firstWhere((p) => p.id == value);
-                      onProductChanged(selected);
-                    }
-                  : null,
-              validator: (value) {
-                if (value == null || value == 0) return '请选择产品';
-                return null;
-              },
+                    items: products
+                        .map(
+                          (product) => DropdownMenuItem<int>(
+                            value: product.id,
+                            child: Text(product.displayLabel),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: enabled
+                        ? (value) {
+                            if (value == null) return;
+                            final selected =
+                                products.firstWhere((p) => p.id == value);
+                            onProductChanged(selected);
+                          }
+                        : null,
+                    validator: (value) {
+                      if (value == null || value == 0) return '请选择产品';
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(width: LayoutTokens.gapSm),
+                IconButton(
+                  onPressed: enabled ? onRemove : null,
+                  icon: const Icon(Icons.delete_outline),
+                ),
+              ],
             ),
-          ),
-          SizedBox(width: LayoutTokens.gapSm),
-          SizedBox(
-            width: 90,
-            child: TextFormField(
-              controller: item.quantityController,
-              enabled: enabled,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: '数量',
-                isDense: true,
-                border: OutlineInputBorder(),
+            const SizedBox(height: LayoutTokens.gapSm),
+            if (isCompact) ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: _DeliveryDenseField(
+                      controller: item.quantityController,
+                      enabled: enabled,
+                      label: '数量',
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      validator: (value) {
+                        final parsed = double.tryParse(value?.trim() ?? '');
+                        if (parsed == null || parsed <= 0) {
+                          return '无效';
+                        }
+                        if (item.maxQuantity > 0 && parsed > item.maxQuantity) {
+                          return '最多${item.maxQuantity.toStringAsFixed(2)}';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: LayoutTokens.gapSm),
+                  Expanded(
+                    child: _DeliveryDenseField(
+                      controller: item.unitController,
+                      enabled: enabled,
+                      label: '单位',
+                    ),
+                  ),
+                ],
               ),
-              validator: (value) {
-                final parsed = double.tryParse(value?.trim() ?? '');
-                if (parsed == null || parsed <= 0) {
-                  return '无效';
-                }
-                if (item.maxQuantity > 0 && parsed > item.maxQuantity) {
-                  return '最多${item.maxQuantity.toStringAsFixed(2)}';
-                }
-                return null;
-              },
-            ),
-          ),
-          SizedBox(width: LayoutTokens.gapSm),
-          SizedBox(
-            width: 90,
-            child: TextFormField(
-              controller: item.unitController,
-              enabled: enabled,
-              decoration: const InputDecoration(
-                labelText: '单位',
-                isDense: true,
-                border: OutlineInputBorder(),
+              const SizedBox(height: LayoutTokens.gapSm),
+              Row(
+                children: [
+                  Expanded(
+                    child: _DeliveryDenseField(
+                      controller: item.unitPriceController,
+                      enabled: enabled,
+                      label: '单价',
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: LayoutTokens.gapSm),
+                  Expanded(
+                    child: _DeliveryDenseField(
+                      controller: item.stockBatchController,
+                      enabled: enabled,
+                      label: '批次',
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ),
-          SizedBox(width: LayoutTokens.gapSm),
-          SizedBox(
-            width: 110,
-            child: TextFormField(
-              controller: item.unitPriceController,
-              enabled: enabled,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: '单价',
-                isDense: true,
-                border: OutlineInputBorder(),
+            ] else
+              Row(
+                children: [
+                  SizedBox(
+                    width: 90,
+                    child: _DeliveryDenseField(
+                      controller: item.quantityController,
+                      enabled: enabled,
+                      label: '数量',
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      validator: (value) {
+                        final parsed = double.tryParse(value?.trim() ?? '');
+                        if (parsed == null || parsed <= 0) {
+                          return '无效';
+                        }
+                        if (item.maxQuantity > 0 && parsed > item.maxQuantity) {
+                          return '最多${item.maxQuantity.toStringAsFixed(2)}';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: LayoutTokens.gapSm),
+                  SizedBox(
+                    width: 90,
+                    child: _DeliveryDenseField(
+                      controller: item.unitController,
+                      enabled: enabled,
+                      label: '单位',
+                    ),
+                  ),
+                  const SizedBox(width: LayoutTokens.gapSm),
+                  SizedBox(
+                    width: 110,
+                    child: _DeliveryDenseField(
+                      controller: item.unitPriceController,
+                      enabled: enabled,
+                      label: '单价',
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: LayoutTokens.gapSm),
+                  SizedBox(
+                    width: 120,
+                    child: _DeliveryDenseField(
+                      controller: item.stockBatchController,
+                      enabled: enabled,
+                      label: '批次',
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ),
-          SizedBox(width: LayoutTokens.gapSm),
-          SizedBox(
-            width: 120,
-            child: TextFormField(
-              controller: item.stockBatchController,
-              enabled: enabled,
-              decoration: const InputDecoration(
-                labelText: '批次',
-                isDense: true,
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ),
-          SizedBox(width: LayoutTokens.gapSm),
-          IconButton(
-            onPressed: enabled ? onRemove : null,
-            icon: const Icon(Icons.delete_outline),
-          ),
-        ],
+          ],
+        ),
       ),
+    );
+  }
+}
+
+class _DeliveryDenseField extends StatelessWidget {
+  const _DeliveryDenseField({
+    required this.controller,
+    required this.enabled,
+    required this.label,
+    this.keyboardType,
+    this.validator,
+  });
+
+  final TextEditingController controller;
+  final bool enabled;
+  final String label;
+  final TextInputType? keyboardType;
+  final String? Function(String?)? validator;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: controller,
+      enabled: enabled,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        labelText: label,
+        isDense: true,
+        border: const OutlineInputBorder(),
+      ),
+      validator: validator,
     );
   }
 }
@@ -465,15 +751,9 @@ class DeliveryDateField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = TextEditingController(text: _formatDate(value));
-    return TextFormField(
-      controller: controller,
-      readOnly: true,
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
-        suffixIcon: const Icon(Icons.date_range_outlined),
-      ),
+    final text = _formatDate(value);
+    final theme = Theme.of(context);
+    return InkWell(
       onTap: () async {
         final now = DateTime.now();
         final picked = await showDatePicker(
@@ -486,6 +766,22 @@ class DeliveryDateField extends StatelessWidget {
           onPicked(picked);
         }
       },
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+          suffixIcon: const Icon(Icons.date_range_outlined),
+        ),
+        isEmpty: text.isEmpty,
+        child: Text(
+          text.isEmpty ? '请选择日期' : text,
+          style: text.isEmpty
+              ? theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.hintColor,
+                )
+              : theme.textTheme.bodyMedium,
+        ),
+      ),
     );
   }
 }

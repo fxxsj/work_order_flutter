@@ -171,3 +171,85 @@ class FilterPanelBody extends StatelessWidget {
     );
   }
 }
+
+class AdaptiveFormPanel extends StatelessWidget {
+  const AdaptiveFormPanel({
+    super.key,
+    required this.formKey,
+    required this.child,
+    required this.onSubmit,
+    this.onCancel,
+    this.submitText = '提交',
+    this.cancelText = '取消',
+    this.submitting = false,
+    this.padding = const EdgeInsets.fromLTRB(
+      LayoutTokens.gapLg,
+      LayoutTokens.gapLg,
+      LayoutTokens.gapLg,
+      LayoutTokens.gapLg + LayoutTokens.gapXs,
+    ),
+    this.footerPadding = const EdgeInsets.fromLTRB(
+      LayoutTokens.gapLg,
+      LayoutTokens.gapMd,
+      LayoutTokens.gapLg,
+      LayoutTokens.gapLg,
+    ),
+  });
+
+  final GlobalKey<FormState> formKey;
+  final Widget child;
+  final Future<void> Function() onSubmit;
+  final VoidCallback? onCancel;
+  final String submitText;
+  final String cancelText;
+  final bool submitting;
+  final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry footerPadding;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final dividerColor = theme.dividerColor.withValues(
+      alpha: OpacityTokens.border,
+    );
+
+    return Column(
+      children: [
+        Expanded(
+          child: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              padding: padding,
+              child: child,
+            ),
+          ),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            border: Border(top: BorderSide(color: dividerColor)),
+          ),
+          child: Padding(
+            padding: footerPadding,
+            child: Row(
+              children: [
+                const Spacer(),
+                TextButton(
+                  onPressed: submitting
+                      ? null
+                      : (onCancel ?? () => Navigator.of(context).maybePop()),
+                  child: Text(cancelText),
+                ),
+                const SizedBox(width: LayoutTokens.gapSm),
+                FilledButton(
+                  onPressed: submitting ? null : onSubmit,
+                  child: Text(submitting ? '$submitText中...' : submitText),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}

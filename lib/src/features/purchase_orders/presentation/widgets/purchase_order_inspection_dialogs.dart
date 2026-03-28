@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_loading_indicator.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
+import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 
 Future<void> showPurchaseInspectionDialog(
@@ -28,45 +31,77 @@ Future<void> showPurchaseInspectionDialog(
     }
   }
 
-  await showDialog<void>(
-    context: context,
-    builder: (dialogContext) {
-      return StatefulBuilder(
-        builder: (context, setState) {
-          if (loading && records.isEmpty) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (context.mounted) {
-                reload(setState);
-              }
-            });
-          }
+  await showAdaptiveFilterDrawer(
+    context,
+    isMobile: BreakpointsUtil.isMobile(context),
+    title: title,
+    desktopWidth: LayoutTokens.dialogWidthLg,
+    child: StatefulBuilder(
+      builder: (context, setState) {
+        if (loading && records.isEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) {
+              reload(setState);
+            }
+          });
+        }
 
-          return BaseDialog(
-            title: title,
-            maxWidth: LayoutTokens.dialogWidthLg,
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: Text(cancelText),
-              ),
-            ],
-            content: SizedBox(
-              width: LayoutTokens.dialogWidthLg,
+        final pendingCount = records
+            .where((record) =>
+                record['inspection_status']?.toString() == 'pending')
+            .length;
+
+        return Column(
+          children: [
+            Expanded(
               child: loading
                   ? const AppLoadingIndicator()
                   : records.isEmpty
-                      ? const EmptyStateCard(
-                          icon: Icons.verified_outlined,
-                          text: '暂无收货记录',
+                      ? const Padding(
+                          padding: EdgeInsets.all(LayoutTokens.gapLg),
+                          child: EmptyStateCard(
+                            icon: Icons.verified_outlined,
+                            text: '暂无收货记录',
+                          ),
                         )
-                      : SizedBox(
-                          height: 360,
-                          child: ListView.separated(
-                            itemCount: records.length,
-                            separatorBuilder: (_, __) =>
-                                SizedBox(height: LayoutTokens.gapSm),
-                            itemBuilder: (context, index) {
-                              final record = records[index];
+                      : ListView(
+                          padding: const EdgeInsets.all(LayoutTokens.gapLg),
+                          children: [
+                            AppCard(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '收货记录质检',
+                                    style:
+                                        Theme.of(context).textTheme.titleSmall,
+                                  ),
+                                  const SizedBox(height: LayoutTokens.gapXxs),
+                                  Text(
+                                    '在当前上下文里完成质检确认，避免弹窗叠弹窗。',
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall,
+                                  ),
+                                  const SizedBox(height: LayoutTokens.gapMd),
+                                  Wrap(
+                                    spacing: LayoutTokens.gapMd,
+                                    runSpacing: LayoutTokens.gapSm,
+                                    children: [
+                                      _InspectionSummaryItem(
+                                        label: '收货记录',
+                                        value: records.length.toString(),
+                                      ),
+                                      _InspectionSummaryItem(
+                                        label: '待质检',
+                                        value: pendingCount.toString(),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: LayoutTokens.gapLg),
+                            ...records.map((record) {
                               final status =
                                   record['inspection_status']?.toString() ?? '';
                               final statusDisplay =
@@ -82,10 +117,12 @@ Future<void> showPurchaseInspectionDialog(
                                   !isStocked &&
                                   qualified > 0;
 
-                              return Card(
-                                margin: EdgeInsets.zero,
-                                child: Padding(
-                                  padding: EdgeInsets.all(
+                              return Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: LayoutTokens.gapSm,
+                                ),
+                                child: AppCard(
+                                  padding: const EdgeInsets.all(
                                     LayoutTokens.cardPaddingSm,
                                   ),
                                   child: Column(
@@ -98,7 +135,9 @@ Future<void> showPurchaseInspectionDialog(
                                             .textTheme
                                             .titleSmall,
                                       ),
-                                      SizedBox(height: LayoutTokens.gapXxs),
+                                      const SizedBox(
+                                        height: LayoutTokens.gapXxs,
+                                      ),
                                       Wrap(
                                         spacing: LayoutTokens.gapMd,
                                         runSpacing: LayoutTokens.gapXs,
@@ -121,7 +160,9 @@ Future<void> showPurchaseInspectionDialog(
                                           ),
                                         ],
                                       ),
-                                      SizedBox(height: LayoutTokens.gapSm),
+                                      const SizedBox(
+                                        height: LayoutTokens.gapSm,
+                                      ),
                                       Wrap(
                                         spacing: LayoutTokens.gapSm,
                                         children: [
@@ -129,12 +170,12 @@ Future<void> showPurchaseInspectionDialog(
                                             OutlinedButton(
                                               onPressed: () async {
                                                 await showPurchaseInspectionFormDialog(
-                                                  dialogContext,
+                                                  context,
                                                   record: record,
                                                   confirmInspection:
                                                       confirmInspection,
                                                 );
-                                                if (!dialogContext.mounted) {
+                                                if (!context.mounted) {
                                                   return;
                                                 }
                                                 await reload(setState);
@@ -146,7 +187,7 @@ Future<void> showPurchaseInspectionDialog(
                                               onPressed: () async {
                                                 final confirmed =
                                                     await showDialog<bool>(
-                                                  context: dialogContext,
+                                                  context: context,
                                                   builder: (confirmContext) =>
                                                       BaseDialog(
                                                     title: '确认入库',
@@ -182,7 +223,7 @@ Future<void> showPurchaseInspectionDialog(
                                                   ToastUtil.showSuccess(
                                                     '入库成功',
                                                   );
-                                                  if (!dialogContext.mounted) {
+                                                  if (!context.mounted) {
                                                     return;
                                                   }
                                                   await reload(setState);
@@ -200,15 +241,61 @@ Future<void> showPurchaseInspectionDialog(
                                   ),
                                 ),
                               );
-                            },
-                          ),
+                            }),
+                          ],
                         ),
             ),
-          );
-        },
-      );
-    },
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                LayoutTokens.gapLg,
+                LayoutTokens.gapMd,
+                LayoutTokens.gapLg,
+                LayoutTokens.gapLg,
+              ),
+              child: Row(
+                children: [
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).maybePop(),
+                    child: Text(cancelText),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    ),
   );
+}
+
+class _InspectionSummaryItem extends StatelessWidget {
+  const _InspectionSummaryItem({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label, style: theme.textTheme.bodySmall),
+        const SizedBox(height: LayoutTokens.gapXxxs),
+        Text(
+          value,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 Future<void> showPurchaseInspectionFormDialog(

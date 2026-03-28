@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
+import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 
 typedef InventoryDocumentFieldsBuilder = List<Widget> Function(
   BuildContext context,
@@ -24,74 +26,74 @@ Future<void> showInventoryDocumentFormDialog(
   final formKey = GlobalKey<FormState>();
   bool submitting = false;
 
-  return showDialog<void>(
-    context: context,
-    builder: (dialogContext) {
-      return StatefulBuilder(
-        builder: (context, setState) {
-          Future<void> submit() async {
-            if (submitting) return;
-            setState(() => submitting = true);
-            await onSubmit();
-            if (dialogContext.mounted) {
-              setState(() => submitting = false);
-            }
+  return showAdaptiveFilterDrawer(
+    context,
+    isMobile: BreakpointsUtil.isMobile(context),
+    title: title,
+    desktopWidth: width,
+    child: StatefulBuilder(
+      builder: (context, setState) {
+        Future<void> submit() async {
+          if (submitting) return;
+          setState(() => submitting = true);
+          await onSubmit();
+          if (context.mounted) {
+            setState(() => submitting = false);
           }
+        }
 
-          final fields = fieldsBuilder(context, setState, submitting);
+        final fields = fieldsBuilder(context, setState, submitting);
 
-          return FormDialog(
-            title: title,
-            formKey: formKey,
-            submitText: submitText,
-            submitting: submitting,
-            maxWidth: width,
-            onSubmit: submit,
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ..._withSpacing(fields),
-                if (fields.isNotEmpty) const SizedBox(height: 12),
-                TextFormField(
-                  controller: dateController,
-                  readOnly: true,
-                  enabled: !submitting,
-                  decoration: InputDecoration(
-                    labelText: dateLabel,
-                    border: const OutlineInputBorder(),
-                    suffixIcon:
-                        const Icon(Icons.calendar_today_outlined, size: 18),
-                  ),
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate:
-                          _parseDate(dateController.text) ?? DateTime.now(),
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2100),
-                    );
-                    if (picked != null) {
-                      dateController.text = _formatDate(picked);
-                    }
-                  },
+        return AdaptiveFormPanel(
+          formKey: formKey,
+          submitText: submitText,
+          cancelText: cancelText,
+          submitting: submitting,
+          onSubmit: submit,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ..._withSpacing(fields),
+              if (fields.isNotEmpty) const SizedBox(height: LayoutTokens.gapMd),
+              TextFormField(
+                controller: dateController,
+                readOnly: true,
+                enabled: !submitting,
+                decoration: InputDecoration(
+                  labelText: dateLabel,
+                  border: const OutlineInputBorder(),
+                  suffixIcon:
+                      const Icon(Icons.calendar_today_outlined, size: 18),
                 ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: notesController,
-                  enabled: !submitting,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: '备注',
-                    border: OutlineInputBorder(),
-                    alignLabelWithHint: true,
-                  ),
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate:
+                        _parseDate(dateController.text) ?? DateTime.now(),
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime(2100),
+                  );
+                  if (picked != null) {
+                    dateController.text = _formatDate(picked);
+                  }
+                },
+              ),
+              const SizedBox(height: LayoutTokens.gapMd),
+              TextFormField(
+                controller: notesController,
+                enabled: !submitting,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: '备注',
+                  border: OutlineInputBorder(),
+                  alignLabelWithHint: true,
                 ),
-              ],
-            ),
-          );
-        },
-      );
-    },
+              ),
+            ],
+          ),
+        );
+      },
+    ),
   );
 }
 
@@ -100,7 +102,7 @@ List<Widget> _withSpacing(List<Widget> children) {
   final result = <Widget>[];
   for (var i = 0; i < children.length; i++) {
     if (i > 0) {
-      result.add(const SizedBox(height: 12));
+      result.add(const SizedBox(height: LayoutTokens.gapMd));
     }
     result.add(children[i]);
   }
