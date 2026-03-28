@@ -14,11 +14,16 @@ const shouldForceCpuOnly =
   (cpuOnlyParam == null && isLocalDebugHost);
 
 const rendererParam = searchParams.get('renderer');
-const loaderConfig = {
-  renderer: rendererParam || 'canvaskit',
-};
+const loaderConfig = {};
 
-if (shouldForceCpuOnly) {
+// Let Flutter choose the safest/default renderer unless explicitly overridden.
+// Forcing CanvasKit in local debug can trigger engine-level context-loss errors
+// during hot restart on web.
+if (rendererParam) {
+  loaderConfig.renderer = rendererParam;
+}
+
+if (shouldForceCpuOnly && loaderConfig.renderer === 'canvaskit') {
   loaderConfig.canvasKitForceCpuOnly = true;
   loaderConfig.canvasKitMaximumSurfaces = 1;
 }
