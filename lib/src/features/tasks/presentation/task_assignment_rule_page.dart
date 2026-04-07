@@ -12,7 +12,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
@@ -237,27 +237,27 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
     bool isMobile,
   ) {
     final processItems = [
-      const DropdownMenuItem<int?>(value: null, child: Text('全部工序')),
+      const DropdownOption<int?>(value: null, label: '全部工序'),
       ..._processes.map(
-        (process) => DropdownMenuItem<int?>(
+        (process) => DropdownOption<int?>(
           value: process.id,
-          child: Text('${process.code} ${process.name}'),
+          label: '${process.code} ${process.name}',
         ),
       ),
     ];
     final departmentItems = [
-      const DropdownMenuItem<int?>(value: null, child: Text('全部部门')),
+      const DropdownOption<int?>(value: null, label: '全部部门'),
       ..._departments.map(
-        (dept) => DropdownMenuItem<int?>(
+        (dept) => DropdownOption<int?>(
           value: dept.id,
-          child: Text(dept.name),
+          label: dept.name,
         ),
       ),
     ];
     final activeItems = const [
-      DropdownMenuItem<bool?>(value: null, child: Text('全部状态')),
-      DropdownMenuItem<bool?>(value: true, child: Text('仅启用')),
-      DropdownMenuItem<bool?>(value: false, child: Text('仅禁用')),
+      DropdownOption<bool?>(value: null, label: '全部状态'),
+      DropdownOption<bool?>(value: true, label: '仅启用'),
+      DropdownOption<bool?>(value: false, label: '仅禁用'),
     ];
 
     return LayoutBuilder(
@@ -379,44 +379,41 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
   Widget _buildFilterPanel(
     BuildContext context,
     TaskAssignmentRuleViewModel viewModel, {
-    required List<DropdownMenuItem<int?>> processItems,
-    required List<DropdownMenuItem<int?>> departmentItems,
-    required List<DropdownMenuItem<bool?>> activeItems,
+    required List<DropdownOption<int?>> processItems,
+    required List<DropdownOption<int?>> departmentItems,
+    required List<DropdownOption<bool?>> activeItems,
   }) {
     final spacing = LayoutTokens.formSectionSpacing(context);
     return ListView(
       padding: LayoutTokens.pagePadding(context),
       children: [
-        SearchableDropdownFormField<int?>(
+        UnifiedDropdown<int?>(
           key: ValueKey<int?>(viewModel.processId),
-          initialValue: viewModel.processId,
-          isExpanded: true,
+          value: viewModel.processId,
           decoration: const InputDecoration(labelText: '工序'),
-          items: processItems,
+          options: processItems,
           onChanged: (value) {
             viewModel.setProcessId(value);
             viewModel.loadRules(resetPage: true);
           },
         ),
         SizedBox(height: spacing),
-        SearchableDropdownFormField<int?>(
+        UnifiedDropdown<int?>(
           key: ValueKey<int?>(viewModel.departmentId),
-          initialValue: viewModel.departmentId,
-          isExpanded: true,
+          value: viewModel.departmentId,
           decoration: const InputDecoration(labelText: '部门'),
-          items: departmentItems,
+          options: departmentItems,
           onChanged: (value) {
             viewModel.setDepartmentId(value);
             viewModel.loadRules(resetPage: true);
           },
         ),
         SizedBox(height: spacing),
-        SearchableDropdownFormField<bool?>(
+        UnifiedDropdown<bool?>(
           key: ValueKey<bool?>(viewModel.isActive),
-          initialValue: viewModel.isActive,
-          isExpanded: true,
+          value: viewModel.isActive,
           decoration: const InputDecoration(labelText: '状态'),
-          items: activeItems,
+          options: activeItems,
           onChanged: (value) {
             viewModel.setIsActive(value);
             viewModel.loadRules(resetPage: true);

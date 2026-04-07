@@ -16,9 +16,8 @@ const shouldForceCpuOnly =
 const rendererParam = searchParams.get('renderer');
 const loaderConfig = {};
 
-// Let Flutter choose the safest/default renderer unless explicitly overridden.
-// Forcing CanvasKit in local debug can trigger engine-level context-loss errors
-// during hot restart on web.
+// Let Flutter choose the default renderer unless explicitly overridden.
+// CanvasKit-specific tuning remains opt-in through the renderer URL param.
 if (rendererParam) {
   loaderConfig.renderer = rendererParam;
 }

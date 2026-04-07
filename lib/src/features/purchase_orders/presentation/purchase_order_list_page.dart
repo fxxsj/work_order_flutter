@@ -15,7 +15,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -687,22 +687,22 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
               viewModel.statusFilter.isEmpty ? '' : viewModel.statusFilter;
           final statusField = SizedBox(
             width: isMobile ? constraints.maxWidth : 150,
-            child: SearchableDropdownFormField<String>(
+            child: UnifiedDropdown<String>(
               key: ValueKey<String>(statusValue),
-              initialValue: statusValue,
+              value: statusValue,
               decoration: const InputDecoration(
                 labelText: _statusFilterLabel,
                 isDense: true,
                 border: OutlineInputBorder(),
               ),
-              items: const [
-                DropdownMenuItem(value: '', child: Text('全部状态')),
-                DropdownMenuItem(value: 'draft', child: Text('草稿')),
-                DropdownMenuItem(value: 'submitted', child: Text('已提交')),
-                DropdownMenuItem(value: 'approved', child: Text('已批准')),
-                DropdownMenuItem(value: 'ordered', child: Text('已下单')),
-                DropdownMenuItem(value: 'received', child: Text('已收货')),
-                DropdownMenuItem(value: 'cancelled', child: Text('已取消')),
+              options: const [
+                DropdownOption(value: '', label: '全部状态'),
+                DropdownOption(value: 'draft', label: '草稿'),
+                DropdownOption(value: 'submitted', label: '已提交'),
+                DropdownOption(value: 'approved', label: '已批准'),
+                DropdownOption(value: 'ordered', label: '已下单'),
+                DropdownOption(value: 'received', label: '已收货'),
+                DropdownOption(value: 'cancelled', label: '已取消'),
               ],
               onChanged: (value) => viewModel.setStatusFilter(value ?? ''),
             ),
@@ -711,23 +711,20 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
           final supplierValue = viewModel.supplierId;
           final supplierField = SizedBox(
             width: isMobile ? constraints.maxWidth : 180,
-            child: SearchableDropdownFormField<int>(
+            child: UnifiedDropdown<int>(
               key: ValueKey<int>(supplierValue),
-              initialValue: supplierValue,
+              value: supplierValue,
               decoration: const InputDecoration(
                 labelText: _supplierFilterLabel,
                 isDense: true,
                 border: OutlineInputBorder(),
               ),
-              items: [
-                const DropdownMenuItem<int>(
-                  value: 0,
-                  child: Text('全部供应商'),
-                ),
+              options: [
+                const DropdownOption<int>(value: 0, label: '全部供应商'),
                 ..._suppliers.map(
-                  (supplier) => DropdownMenuItem<int>(
+                  (supplier) => DropdownOption<int>(
                     value: supplier.id,
-                    child: Text(supplier.name),
+                    label: supplier.name,
                   ),
                 ),
               ],

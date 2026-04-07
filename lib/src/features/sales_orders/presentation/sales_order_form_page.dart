@@ -6,7 +6,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/detail_secti
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -371,14 +371,14 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SearchableDropdownFormField<int>(
-            initialValue: _customerId,
+          UnifiedDropdown<int>(
+            value: _customerId,
             decoration: const InputDecoration(labelText: '客户'),
-            items: _customers
+            options: _customers
                 .map(
-                  (item) => DropdownMenuItem(
+                  (item) => DropdownOption(
                     value: item.id,
-                    child: Text(item.name),
+                    label: item.name,
                   ),
                 )
                 .toList(),
@@ -706,18 +706,14 @@ class _ItemRowState extends State<_ItemRow> {
         children: [
           SizedBox(
             width: 220,
-            child: SearchableDropdownFormField<int>(
-              initialValue: widget.draft.productId,
+            child: UnifiedDropdown<int>(
+              value: widget.draft.productId,
               decoration: const InputDecoration(labelText: '产品'),
-              isExpanded: true,
-              items: widget.products
+              options: widget.products
                   .map(
-                    (item) => DropdownMenuItem(
+                    (item) => DropdownOption(
                       value: item.id,
-                      child: Text(
-                        item.displayLabel,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      label: item.displayLabel,
                     ),
                   )
                   .toList(),

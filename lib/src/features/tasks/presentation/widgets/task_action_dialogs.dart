@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 
@@ -267,16 +267,13 @@ class _TaskAssignDialogState extends State<_TaskAssignDialog> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SearchableDropdownFormField<int?>(
+          UnifiedDropdown<int?>(
             key: ValueKey<int?>(_departmentId),
-            initialValue: _departmentId,
+            value: _departmentId,
             decoration: const InputDecoration(labelText: '部门'),
-            items: [
+            options: [
               for (final dept in widget.departments)
-                DropdownMenuItem<int?>(
-                  value: dept.id,
-                  child: Text(dept.name),
-                ),
+                DropdownOption<int?>(value: dept.id, label: dept.name),
             ],
             onChanged: (value) {
               setState(() {
@@ -292,16 +289,13 @@ class _TaskAssignDialogState extends State<_TaskAssignDialog> {
           ),
           SizedBox(height: LayoutTokens.gapMd),
           if (_loadingOperators) const LinearProgressIndicator(minHeight: 2),
-          SearchableDropdownFormField<int?>(
+          UnifiedDropdown<int?>(
             key: ValueKey<int?>(_operatorId),
-            initialValue: _operatorId,
+            value: _operatorId,
             decoration: const InputDecoration(labelText: '操作员'),
-            items: _operators
+            options: _operators
                 .map(
-                  (op) => DropdownMenuItem<int?>(
-                    value: op.id,
-                    child: Text(op.name),
-                  ),
+                  (op) => DropdownOption<int?>(value: op.id, label: op.name),
                 )
                 .toList(),
             onChanged: (value) => setState(() => _operatorId = value),

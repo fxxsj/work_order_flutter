@@ -11,7 +11,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/tasks/application/task_view_model.dart';
@@ -243,22 +243,22 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
     bool isMobile,
   ) {
     final departmentItems = [
-      const DropdownMenuItem<int?>(
+      const DropdownOption<int?>(
         value: null,
-        child: Text('全部部门', overflow: TextOverflow.ellipsis),
+        label: '全部部门',
       ),
       ..._departments.map(
-        (item) => DropdownMenuItem<int?>(
+        (item) => DropdownOption<int?>(
           value: item.id,
-          child: Text(item.name, overflow: TextOverflow.ellipsis),
+          label: item.name,
         ),
       ),
     ];
     final statusItems = const [
-      DropdownMenuItem<String?>(value: null, child: Text('全部状态')),
-      DropdownMenuItem(value: 'pending', child: Text('待开始')),
-      DropdownMenuItem(value: 'in_progress', child: Text('进行中')),
-      DropdownMenuItem(value: 'completed', child: Text('已完成')),
+      DropdownOption<String?>(value: null, label: '全部状态'),
+      DropdownOption(value: 'pending', label: '待开始'),
+      DropdownOption(value: 'in_progress', label: '进行中'),
+      DropdownOption(value: 'completed', label: '已完成'),
     ];
 
     return PageHeaderBar(
@@ -416,32 +416,30 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
   Widget _buildFilterPanel(
     BuildContext context,
     TaskViewModel viewModel, {
-    required List<DropdownMenuItem<int?>> departmentItems,
-    required List<DropdownMenuItem<String?>> statusItems,
+    required List<DropdownOption<int?>> departmentItems,
+    required List<DropdownOption<String?>> statusItems,
   }) {
     final spacing = LayoutTokens.formSectionSpacing(context);
     return ListView(
       padding: LayoutTokens.pagePadding(context),
       children: [
         if (_loadingDepartments) const LinearProgressIndicator(minHeight: 2),
-        SearchableDropdownFormField<int?>(
+        UnifiedDropdown<int?>(
           key: ValueKey<int?>(_departmentFilterId),
-          initialValue: _departmentFilterId,
-          isExpanded: true,
+          value: _departmentFilterId,
           decoration: const InputDecoration(labelText: '部门'),
-          items: departmentItems,
+          options: departmentItems,
           onChanged: (value) {
             setState(() => _departmentFilterId = value);
             _applyFilters(viewModel);
           },
         ),
         SizedBox(height: spacing),
-        SearchableDropdownFormField<String?>(
+        UnifiedDropdown<String?>(
           key: ValueKey<String?>(_statusFilter),
-          initialValue: _statusFilter,
-          isExpanded: true,
+          value: _statusFilter,
           decoration: const InputDecoration(labelText: '状态'),
-          items: statusItems,
+          options: statusItems,
           onChanged: (value) {
             setState(() => _statusFilter = value);
             _applyFilters(viewModel);

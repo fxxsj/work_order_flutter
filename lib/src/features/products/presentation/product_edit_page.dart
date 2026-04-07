@@ -4,7 +4,7 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/materials/data/material_api_service.dart';
 import 'package:work_order_app/src/features/materials/domain/material.dart';
@@ -617,14 +617,14 @@ class _MaterialCardState extends State<_MaterialCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: SearchableDropdownFormField<int>(
-                    initialValue: draft.materialId,
+                  child: UnifiedDropdown<int>(
+                    value: draft.materialId,
                     decoration: const InputDecoration(labelText: '物料'),
-                    items: widget.materials
+                    options: widget.materials
                         .map(
-                          (material) => DropdownMenuItem(
+                          (material) => DropdownOption(
                             value: material.id,
-                            child: Text('${material.code} ${material.name}'),
+                            label: '${material.code} ${material.name}',
                           ),
                         )
                         .toList(),

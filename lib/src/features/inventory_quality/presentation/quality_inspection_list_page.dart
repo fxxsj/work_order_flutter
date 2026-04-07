@@ -22,7 +22,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/attachment_open_button.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/file_link_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -479,17 +479,14 @@ class _QualityInspectionListViewState
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        SearchableDropdownFormField<String>(
+                        UnifiedDropdown<String>(
                           key: ValueKey<String>(result),
-                          initialValue: result,
+                          value: result,
                           decoration: const InputDecoration(labelText: '检验结果'),
-                          items: const [
-                            DropdownMenuItem(
-                                value: 'passed', child: Text('合格')),
-                            DropdownMenuItem(
-                                value: 'failed', child: Text('不合格')),
-                            DropdownMenuItem(
-                                value: 'conditional', child: Text('条件接收')),
+                          options: const [
+                            DropdownOption(value: 'passed', label: '合格'),
+                            DropdownOption(value: 'failed', label: '不合格'),
+                            DropdownOption(value: 'conditional', label: '条件接收'),
                           ],
                           onChanged: submitting
                               ? null
@@ -917,31 +914,29 @@ class _QualityInspectionListViewState
       resetLabel: _resetButtonText,
       onReset: () => _resetFilters(viewModel),
       fields: [
-        SearchableDropdownFormField<String>(
+        UnifiedDropdown<String>(
           key: ValueKey<String>(typeValue),
-          initialValue: typeValue,
-          isExpanded: true,
+          value: typeValue.isEmpty ? null : typeValue,
           decoration: const InputDecoration(labelText: _typeFilterLabel),
-          items: const [
-            DropdownMenuItem(value: '', child: Text('全部类型')),
-            DropdownMenuItem(value: 'incoming', child: Text('来料检验')),
-            DropdownMenuItem(value: 'process', child: Text('过程检验')),
-            DropdownMenuItem(value: 'final', child: Text('成品检验')),
-            DropdownMenuItem(value: 'customer', child: Text('客诉检验')),
+          options: const [
+            DropdownOption<String>(value: '', label: '全部类型'),
+            DropdownOption<String>(value: 'incoming', label: '来料检验'),
+            DropdownOption<String>(value: 'process', label: '过程检验'),
+            DropdownOption<String>(value: 'final', label: '成品检验'),
+            DropdownOption<String>(value: 'customer', label: '客诉检验'),
           ],
           onChanged: (value) => viewModel.setTypeFilter(value ?? ''),
         ),
-        SearchableDropdownFormField<String>(
+        UnifiedDropdown<String>(
           key: ValueKey<String>(resultValue),
-          initialValue: resultValue,
-          isExpanded: true,
+          value: resultValue.isEmpty ? null : resultValue,
           decoration: const InputDecoration(labelText: _resultFilterLabel),
-          items: const [
-            DropdownMenuItem(value: '', child: Text('全部结果')),
-            DropdownMenuItem(value: 'pending', child: Text('待检验')),
-            DropdownMenuItem(value: 'passed', child: Text('合格')),
-            DropdownMenuItem(value: 'failed', child: Text('不合格')),
-            DropdownMenuItem(value: 'conditional', child: Text('条件接收')),
+          options: const [
+            DropdownOption<String>(value: '', label: '全部结果'),
+            DropdownOption<String>(value: 'pending', label: '待检验'),
+            DropdownOption<String>(value: 'passed', label: '合格'),
+            DropdownOption<String>(value: 'failed', label: '不合格'),
+            DropdownOption<String>(value: 'conditional', label: '条件接收'),
           ],
           onChanged: (value) => viewModel.setResultFilter(value ?? ''),
         ),

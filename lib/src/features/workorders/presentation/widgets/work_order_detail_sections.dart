@@ -5,7 +5,7 @@ import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/attachment_open_button.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/file_link_util.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
@@ -39,7 +39,7 @@ class WorkOrderDetailOverviewSection extends StatelessWidget {
   });
 
   final WorkOrderDetail detail;
-  final List<DropdownMenuItem<String>> statusOptions;
+  final List<DropdownOption<String>> statusOptions;
   final String? statusSelection;
   final bool actionLoading;
   final VoidCallback? onUploadDesignFile;
@@ -128,7 +128,7 @@ class WorkOrderActionPanel extends StatelessWidget {
   });
 
   final WorkOrderDetail detail;
-  final List<DropdownMenuItem<String>> statusOptions;
+  final List<DropdownOption<String>> statusOptions;
   final String? statusSelection;
   final bool actionLoading;
   final bool hasMultiApproval;
@@ -213,11 +213,10 @@ class WorkOrderActionPanel extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SearchableDropdownFormField<String>(
-              initialValue: statusSelection,
-              isExpanded: true,
+            UnifiedDropdown<String>(
+              value: statusSelection,
               decoration: const InputDecoration(labelText: '状态'),
-              items: statusOptions,
+              options: statusOptions,
               onChanged: actionLoading || onStatusChanged == null
                   ? null
                   : onStatusChanged,

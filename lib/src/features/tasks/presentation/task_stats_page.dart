@@ -12,7 +12,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
@@ -153,14 +153,14 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
 
   Widget _buildFilters(bool isMobile) {
     final departmentItems = [
-      const DropdownMenuItem<int?>(
+      const DropdownOption<int?>(
         value: null,
-        child: Text('全部部门', overflow: TextOverflow.ellipsis),
+        label: '全部部门',
       ),
       ..._departments.map(
-        (dept) => DropdownMenuItem<int?>(
+        (dept) => DropdownOption<int?>(
           value: dept.id,
-          child: Text(dept.name, overflow: TextOverflow.ellipsis),
+          label: dept.name,
         ),
       ),
     ];
@@ -257,7 +257,7 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
 
   Widget _buildFilterPanel(
     BuildContext context, {
-    required List<DropdownMenuItem<int?>> departmentItems,
+    required List<DropdownOption<int?>> departmentItems,
   }) {
     final spacing = LayoutTokens.formSectionSpacing(context);
     return ListView(
@@ -277,12 +277,11 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
           },
         ),
         SizedBox(height: spacing),
-        SearchableDropdownFormField<int?>(
+        UnifiedDropdown<int?>(
           key: ValueKey<int?>(_departmentId),
-          initialValue: _departmentId,
-          isExpanded: true,
+          value: _departmentId,
           decoration: const InputDecoration(labelText: '部门'),
-          items: departmentItems,
+          options: departmentItems,
           onChanged: (value) {
             setState(() => _departmentId = value);
             _loadStats();

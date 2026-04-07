@@ -3,6 +3,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dar
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order_detail.dart';
 
@@ -199,34 +200,6 @@ Future<bool> showSalesOrderNavigateToWorkOrderDialog(
     ),
   );
   return confirmed == true;
-}
-
-class SearchableDropdownButton extends StatelessWidget {
-  const SearchableDropdownButton({
-    super.key,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final String value;
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return DropdownButtonFormField<String>(
-      initialValue: value,
-      decoration: const InputDecoration(labelText: '优先级'),
-      items: const [
-        DropdownMenuItem(value: 'low', child: Text('低')),
-        DropdownMenuItem(value: 'normal', child: Text('普通')),
-        DropdownMenuItem(value: 'high', child: Text('高')),
-        DropdownMenuItem(value: 'urgent', child: Text('紧急')),
-      ],
-      onChanged: (next) {
-        if (next != null) onChanged(next);
-      },
-    );
-  }
 }
 
 class _SalesOrderWorkOrderItemDraft {
@@ -499,9 +472,16 @@ class _SalesOrderCreateWorkOrderPanelState
                         ),
                       ),
                       SizedBox(height: LayoutTokens.gapMd),
-                      SearchableDropdownButton(
+                      UnifiedDropdown<String>(
+                        decoration: const InputDecoration(labelText: '优先级'),
                         value: _priority,
-                        onChanged: (value) => setState(() => _priority = value),
+                        options: const [
+                          DropdownOption(value: 'low', label: '低'),
+                          DropdownOption(value: 'normal', label: '普通'),
+                          DropdownOption(value: 'high', label: '高'),
+                          DropdownOption(value: 'urgent', label: '紧急'),
+                        ],
+                        onChanged: (value) => setState(() => _priority = value ?? 'normal'),
                       ),
                       SizedBox(height: LayoutTokens.gapMd),
                       TextFormField(

@@ -17,7 +17,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.
 import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/file_download.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -416,35 +416,35 @@ class _TaskListViewState extends State<_TaskListView> {
     bool isMobile,
   ) {
     final statusItems = const [
-      DropdownMenuItem(value: 'draft', child: Text('草稿')),
-      DropdownMenuItem(value: 'pending', child: Text('待开始')),
-      DropdownMenuItem(value: 'in_progress', child: Text('进行中')),
-      DropdownMenuItem(value: 'completed', child: Text('已完成')),
-      DropdownMenuItem(value: 'cancelled', child: Text('已取消')),
+      DropdownOption(value: 'draft', label: '草稿'),
+      DropdownOption(value: 'pending', label: '待开始'),
+      DropdownOption(value: 'in_progress', label: '进行中'),
+      DropdownOption(value: 'completed', label: '已完成'),
+      DropdownOption(value: 'cancelled', label: '已取消'),
     ];
     final priorityItems = const [
-      DropdownMenuItem(value: 'low', child: Text('低')),
-      DropdownMenuItem(value: 'normal', child: Text('普通')),
-      DropdownMenuItem(value: 'high', child: Text('高')),
-      DropdownMenuItem(value: 'urgent', child: Text('紧急')),
+      DropdownOption(value: 'low', label: '低'),
+      DropdownOption(value: 'normal', label: '普通'),
+      DropdownOption(value: 'high', label: '高'),
+      DropdownOption(value: 'urgent', label: '紧急'),
     ];
     final departmentItems = [
-      const DropdownMenuItem<int?>(
-          value: null, child: Text('全部部门', overflow: TextOverflow.ellipsis)),
+      const DropdownOption<int?>(
+          value: null, label: '全部部门'),
       ..._departments.map(
-        (item) => DropdownMenuItem<int?>(
+        (item) => DropdownOption<int?>(
           value: item.id,
-          child: Text(item.name, overflow: TextOverflow.ellipsis),
+          label: item.name,
         ),
       ),
     ];
     final processItems = [
-      const DropdownMenuItem<int?>(
-          value: null, child: Text('全部工序', overflow: TextOverflow.ellipsis)),
+      const DropdownOption<int?>(
+          value: null, label: '全部工序'),
       ..._processes.map(
-        (item) => DropdownMenuItem<int?>(
+        (item) => DropdownOption<int?>(
           value: item.id,
-          child: Text(item.name, overflow: TextOverflow.ellipsis),
+          label: item.name,
         ),
       ),
     ];
@@ -554,10 +554,10 @@ class _TaskListViewState extends State<_TaskListView> {
   Widget _buildFilterPanel(
     BuildContext context,
     TaskViewModel viewModel, {
-    required List<DropdownMenuItem<String>> statusItems,
-    required List<DropdownMenuItem<String>> priorityItems,
-    required List<DropdownMenuItem<int?>> departmentItems,
-    required List<DropdownMenuItem<int?>> processItems,
+    required List<DropdownOption<String>> statusItems,
+    required List<DropdownOption<String>> priorityItems,
+    required List<DropdownOption<int?>> departmentItems,
+    required List<DropdownOption<int?>> processItems,
   }) {
     return FilterPanelBody(
       bottomSpacing: LayoutTokens.formSectionSpacing(context),
@@ -565,41 +565,37 @@ class _TaskListViewState extends State<_TaskListView> {
       onReset: () => _resetFilters(viewModel),
       fields: [
         if (_loadingOptions) const LinearProgressIndicator(minHeight: 2),
-        SearchableDropdownFormField<String>(
-          initialValue: _statusFilter,
-          isExpanded: true,
+        UnifiedDropdown<String>(
+          value: _statusFilter,
           decoration: const InputDecoration(labelText: '状态'),
-          items: statusItems,
+          options: statusItems,
           onChanged: (value) {
             setState(() => _statusFilter = value);
             _applyFilters(viewModel);
           },
         ),
-        SearchableDropdownFormField<String>(
-          initialValue: _priorityFilter,
-          isExpanded: true,
+        UnifiedDropdown<String>(
+          value: _priorityFilter,
           decoration: const InputDecoration(labelText: '优先级'),
-          items: priorityItems,
+          options: priorityItems,
           onChanged: (value) {
             setState(() => _priorityFilter = value);
             _applyFilters(viewModel);
           },
         ),
-        SearchableDropdownFormField<int?>(
-          initialValue: _departmentFilterId,
-          isExpanded: true,
+        UnifiedDropdown<int?>(
+          value: _departmentFilterId,
           decoration: const InputDecoration(labelText: '部门'),
-          items: departmentItems,
+          options: departmentItems,
           onChanged: (value) {
             setState(() => _departmentFilterId = value);
             _applyFilters(viewModel);
           },
         ),
-        SearchableDropdownFormField<int?>(
-          initialValue: _processFilterId,
-          isExpanded: true,
+        UnifiedDropdown<int?>(
+          value: _processFilterId,
           decoration: const InputDecoration(labelText: '工序'),
-          items: processItems,
+          options: processItems,
           onChanged: (value) {
             setState(() => _processFilterId = value);
             _applyFilters(viewModel);

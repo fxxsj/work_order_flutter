@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/risk_action_dialog.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 
 class ActionDecisionOption<T> {
   const ActionDecisionOption({
@@ -109,18 +109,18 @@ Future<ActionDecisionResult<T>?> showActionDecisionDialog<T>(
                       const SizedBox(height: 12),
                     ],
                     if (showSelection) ...[
-                      SearchableDropdownFormField<T>(
+                      UnifiedDropdown<T>(
                         key: ValueKey<T?>(selection),
-                        initialValue: selection,
-                        decoration: InputDecoration(labelText: selectionLabel),
-                        items: options
+                        value: selection,
+                        options: options
                             .map(
-                              (option) => DropdownMenuItem<T>(
+                              (option) => DropdownOption<T>(
                                 value: option.value,
-                                child: Text(option.label),
+                                label: option.label,
                               ),
                             )
                             .toList(),
+                        decoration: InputDecoration(labelText: selectionLabel),
                         onChanged: submitting
                             ? null
                             : (value) => setState(() => selection = value),

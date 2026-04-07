@@ -16,7 +16,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -555,17 +555,16 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
       resetLabel: _resetButtonText,
       onReset: () => _resetFilters(context, viewModel),
       fields: [
-        SearchableDropdownFormField<String>(
+        UnifiedDropdown<String>(
           key: ValueKey<String>(statusValue),
-          initialValue: statusValue,
-          isExpanded: true,
+          value: statusValue,
           decoration: const InputDecoration(labelText: _statusFilterLabel),
-          items: const [
-            DropdownMenuItem(value: '', child: Text('全部状态')),
-            DropdownMenuItem(value: 'in_stock', child: Text('在库')),
-            DropdownMenuItem(value: 'reserved', child: Text('已预留')),
-            DropdownMenuItem(value: 'quality_check', child: Text('质检中')),
-            DropdownMenuItem(value: 'defective', child: Text('次品')),
+          options: const [
+            DropdownOption(value: '', label: '全部状态'),
+            DropdownOption(value: 'in_stock', label: '在库'),
+            DropdownOption(value: 'reserved', label: '已预留'),
+            DropdownOption(value: 'quality_check', label: '质检中'),
+            DropdownOption(value: 'defective', label: '次品'),
           ],
           onChanged: (value) => viewModel.setStatusFilter(value ?? ''),
         ),

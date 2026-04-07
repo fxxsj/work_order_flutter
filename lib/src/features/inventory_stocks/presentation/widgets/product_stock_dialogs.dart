@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 
 class ProductStockAdjustResult {
   const ProductStockAdjustResult({
@@ -103,13 +104,14 @@ Future<ProductStockAdjustResult?> showProductStockAdjustDialog(
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  DropdownButtonFormField<String>(
-                    initialValue: adjustType,
+                  UnifiedDropdown<String>(
                     decoration: const InputDecoration(labelText: '调整方式'),
-                    items: const [
-                      DropdownMenuItem(value: 'add', child: Text('增加库存')),
-                      DropdownMenuItem(value: 'subtract', child: Text('减少库存')),
-                      DropdownMenuItem(value: 'set', child: Text('设定库存')),
+                    value: adjustType,
+                    enabled: !submitting,
+                    options: const [
+                      DropdownOption(value: 'add', label: '增加库存'),
+                      DropdownOption(value: 'subtract', label: '减少库存'),
+                      DropdownOption(value: 'set', label: '设定库存'),
                     ],
                     onChanged: submitting
                         ? null

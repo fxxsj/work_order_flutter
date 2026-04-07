@@ -19,7 +19,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -1048,35 +1048,30 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       resetLabel: _resetButtonText,
       onReset: () => _resetFilters(viewModel),
       fields: [
-        SearchableDropdownFormField<String>(
+        UnifiedDropdown<String>(
           key: ValueKey<String>(statusValue),
-          initialValue: statusValue,
-          isExpanded: true,
+          value: statusValue.isEmpty ? null : statusValue,
           decoration: const InputDecoration(labelText: _statusFilterLabel),
-          items: const [
-            DropdownMenuItem(value: '', child: Text('全部状态')),
-            DropdownMenuItem(value: 'pending', child: Text('待发货')),
-            DropdownMenuItem(value: 'shipped', child: Text('已发货')),
-            DropdownMenuItem(value: 'in_transit', child: Text('运输中')),
-            DropdownMenuItem(value: 'received', child: Text('已签收')),
-            DropdownMenuItem(value: 'rejected', child: Text('拒收')),
+          options: const [
+            DropdownOption<String>(value: '', label: '全部状态'),
+            DropdownOption<String>(value: 'pending', label: '待发货'),
+            DropdownOption<String>(value: 'shipped', label: '已发货'),
+            DropdownOption<String>(value: 'in_transit', label: '运输中'),
+            DropdownOption<String>(value: 'received', label: '已签收'),
+            DropdownOption<String>(value: 'rejected', label: '拒收'),
           ],
           onChanged: (value) => viewModel.setStatusFilter(value ?? ''),
         ),
-        SearchableDropdownFormField<int>(
+        UnifiedDropdown<int>(
           key: ValueKey<int>(customerValue),
-          initialValue: customerValue,
-          isExpanded: true,
+          value: customerValue == 0 ? null : customerValue,
           decoration: const InputDecoration(labelText: _customerFilterLabel),
-          items: [
-            const DropdownMenuItem<int>(
-              value: 0,
-              child: Text('全部客户'),
-            ),
+          options: [
+            const DropdownOption<int>(value: 0, label: '全部客户'),
             ..._customers.map(
-              (customer) => DropdownMenuItem<int>(
+              (customer) => DropdownOption<int>(
                 value: customer.id,
-                child: Text(customer.name),
+                label: customer.name,
               ),
             ),
           ],

@@ -12,7 +12,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/auth/data/auth_api.dart';
 import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
@@ -214,18 +214,18 @@ class _TaskAssignmentHistoryViewState
 
   Widget _buildFilters(bool isMobile) {
     final deptItems = [
-      const DropdownMenuItem<int?>(value: null, child: Text('全部部门')),
+      const DropdownOption<int?>(value: null, label: '全部部门'),
       ..._departments.map(
         (dept) =>
-            DropdownMenuItem<int?>(value: dept.id, child: Text(dept.name)),
+            DropdownOption<int?>(value: dept.id, label: dept.name),
       ),
     ];
     final userItems = [
-      const DropdownMenuItem<int?>(value: null, child: Text('全部操作员')),
+      const DropdownOption<int?>(value: null, label: '全部操作员'),
       ..._users.map((user) {
         final id = _toInt(user['id']);
         final name = user['username']?.toString() ?? '用户 $id';
-        return DropdownMenuItem<int?>(value: id, child: Text(name));
+        return DropdownOption<int?>(value: id, label: name);
       }),
     ];
 
@@ -323,8 +323,8 @@ class _TaskAssignmentHistoryViewState
 
   Widget _buildFilterPanel(
     BuildContext context, {
-    required List<DropdownMenuItem<int?>> deptItems,
-    required List<DropdownMenuItem<int?>> userItems,
+    required List<DropdownOption<int?>> deptItems,
+    required List<DropdownOption<int?>> userItems,
   }) {
     final spacing = LayoutTokens.formSectionSpacing(context);
     return ListView(
@@ -344,24 +344,22 @@ class _TaskAssignmentHistoryViewState
           },
         ),
         SizedBox(height: spacing),
-        SearchableDropdownFormField<int?>(
+        UnifiedDropdown<int?>(
           key: ValueKey<int?>(_departmentId),
-          initialValue: _departmentId,
-          isExpanded: true,
+          value: _departmentId,
           decoration: const InputDecoration(labelText: '部门'),
-          items: deptItems,
+          options: deptItems,
           onChanged: (value) {
             setState(() => _departmentId = value);
             _loadData(resetPage: true);
           },
         ),
         SizedBox(height: spacing),
-        SearchableDropdownFormField<int?>(
+        UnifiedDropdown<int?>(
           key: ValueKey<int?>(_operatorId),
-          initialValue: _operatorId,
-          isExpanded: true,
+          value: _operatorId,
           decoration: const InputDecoration(labelText: '操作员'),
-          items: userItems,
+          options: userItems,
           onChanged: (value) {
             setState(() => _operatorId = value);
             _loadData(resetPage: true);

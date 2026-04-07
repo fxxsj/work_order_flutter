@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/materials/data/material_dto.dart';
 import 'package:work_order_app/src/features/suppliers/data/supplier_dto.dart';
@@ -106,48 +106,44 @@ Future<void> showPurchaseOrderFormDialog(
                 title: '基础信息',
                 child: Column(
                   children: [
-                    SearchableDropdownFormField<int>(
+                    UnifiedDropdown<int>(
                       key: ValueKey<String>(
                         'purchase_supplier_${selectedSupplierId ?? 'none'}',
                       ),
-                      initialValue: selectedSupplierId,
+                      value: selectedSupplierId,
                       decoration: const InputDecoration(
                         labelText: '供应商',
                         border: OutlineInputBorder(),
                       ),
-                      items: suppliers
+                      options: suppliers
                           .map(
-                            (supplier) => DropdownMenuItem<int>(
+                            (supplier) => DropdownOption<int>(
                               value: supplier.id,
-                              child: Text(supplier.name),
+                              label: supplier.name,
                             ),
                           )
                           .toList(),
                       onChanged: submitting ? null : onSupplierChanged,
                       validator: (value) {
-                        if (value == null || value == 0) return '请选择供应商';
-                        return null;
+                        if (value == null || value == 0) return '请选择供应商';                        return null;
                       },
                     ),
                     const SizedBox(height: LayoutTokens.gapMd),
-                    SearchableDropdownFormField<int>(
+                    UnifiedDropdown<int>(
                       key: ValueKey<String>(
                         'purchase_workorder_${selectedWorkOrderId ?? 'none'}',
                       ),
-                      initialValue: selectedWorkOrderId,
+                      value: selectedWorkOrderId,
                       decoration: const InputDecoration(
                         labelText: '关联施工单',
                         border: OutlineInputBorder(),
                       ),
-                      items: [
-                        const DropdownMenuItem<int>(
-                          value: 0,
-                          child: Text('不关联'),
-                        ),
+                      options: [
+                        const DropdownOption<int>(value: 0, label: '不关联'),
                         ...workOrderOptions.map(
-                          (order) => DropdownMenuItem<int>(
+                          (order) => DropdownOption<int>(
                             value: order.id,
-                            child: Text(order.orderNumber),
+                            label: order.orderNumber,
                           ),
                         ),
                       ],
@@ -443,21 +439,20 @@ class PurchaseItemRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: SearchableDropdownFormField<int>(
+                  child: UnifiedDropdown<int>(
                     key: ValueKey<int?>(item.materialId),
-                    initialValue: item.materialId == 0 ? null : item.materialId,
+                    value: item.materialId == 0 ? null : item.materialId,
                     decoration: const InputDecoration(
                       labelText: '物料',
                       isDense: true,
                       border: OutlineInputBorder(),
                     ),
-                    items: materials
+                    options: materials
                         .map(
-                          (material) => DropdownMenuItem<int>(
+                          (material) => DropdownOption<int>(
                             value: material.id,
-                            child: Text(
-                              '${material.code.isEmpty ? '-' : material.code} ${material.name}',
-                            ),
+                            label:
+                                '${material.code.isEmpty ? '-' : material.code} ${material.name}',
                           ),
                         )
                         .toList(),

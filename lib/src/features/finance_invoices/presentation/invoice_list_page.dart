@@ -18,7 +18,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
@@ -366,24 +366,24 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      SearchableDropdownFormField<String>(
-                        initialValue: invoiceType,
+                      UnifiedDropdown<String>(
+                        value: invoiceType,
                         decoration: const InputDecoration(
                           labelText: '发票类型',
                           border: OutlineInputBorder(),
                         ),
-                        items: const [
-                          DropdownMenuItem(
+                        options: const [
+                          DropdownOption(
                             value: 'vat_special',
-                            child: Text('增值税专用发票'),
+                            label: '增值税专用发票',
                           ),
-                          DropdownMenuItem(
+                          DropdownOption(
                             value: 'vat_normal',
-                            child: Text('增值税普通发票'),
+                            label: '增值税普通发票',
                           ),
-                          DropdownMenuItem(
+                          DropdownOption(
                             value: 'electronic',
-                            child: Text('电子发票'),
+                            label: '电子发票',
                           ),
                         ],
                         onChanged: submitting
@@ -393,21 +393,21 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                                 ),
                       ),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      SearchableDropdownFormField<int?>(
-                        initialValue: selectedCustomerId,
+                      UnifiedDropdown<int?>(
+                        value: selectedCustomerId,
                         decoration: const InputDecoration(
                           labelText: '客户',
                           border: OutlineInputBorder(),
                         ),
-                        items: [
-                          const DropdownMenuItem<int?>(
+                        options: [
+                          const DropdownOption<int?>(
                             value: null,
-                            child: Text('请选择客户'),
+                            label: '请选择客户',
                           ),
                           ..._customers.map(
-                            (customer) => DropdownMenuItem<int?>(
+                            (customer) => DropdownOption<int?>(
                               value: customer.id,
-                              child: Text(customer.name),
+                              label: customer.name,
                             ),
                           ),
                         ],
@@ -418,21 +418,21 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                         validator: (value) => value == null ? '请选择客户' : null,
                       ),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      SearchableDropdownFormField<int?>(
-                        initialValue: selectedSalesOrderId,
+                      UnifiedDropdown<int?>(
+                        value: selectedSalesOrderId,
                         decoration: const InputDecoration(
                           labelText: '关联客户订单（可选）',
                           border: OutlineInputBorder(),
                         ),
-                        items: [
-                          const DropdownMenuItem<int?>(
+                        options: [
+                          const DropdownOption<int?>(
                             value: null,
-                            child: Text('不关联客户订单'),
+                            label: '不关联客户订单',
                           ),
                           ..._salesOrders.map(
-                            (order) => DropdownMenuItem<int?>(
+                            (order) => DropdownOption<int?>(
                               value: order.id,
-                              child: Text(order.orderNumber),
+                              label: order.orderNumber,
                             ),
                           ),
                         ],
@@ -442,21 +442,21 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                                 setState(() => selectedSalesOrderId = value),
                       ),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      SearchableDropdownFormField<int?>(
-                        initialValue: selectedWorkOrderId,
+                      UnifiedDropdown<int?>(
+                        value: selectedWorkOrderId,
                         decoration: const InputDecoration(
                           labelText: '关联施工单（可选）',
                           border: OutlineInputBorder(),
                         ),
-                        items: [
-                          const DropdownMenuItem<int?>(
+                        options: [
+                          const DropdownOption<int?>(
                             value: null,
-                            child: Text('不关联施工单'),
+                            label: '不关联施工单',
                           ),
                           ..._workOrders.map(
-                            (order) => DropdownMenuItem<int?>(
+                            (order) => DropdownOption<int?>(
                               value: order.id,
-                              child: Text(order.orderNumber),
+                              label: order.orderNumber,
                             ),
                           ),
                         ],

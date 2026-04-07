@@ -11,7 +11,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
@@ -147,7 +147,7 @@ class _TaskSupervisorDashboardViewState
   Widget _buildActions(bool isMobile) {
     final deptItems = _departments
         .map((dept) =>
-            DropdownMenuItem<int?>(value: dept.id, child: Text(dept.name)))
+            DropdownOption<int?>(value: dept.id, label: dept.name))
         .toList();
 
     return LayoutBuilder(
@@ -267,18 +267,17 @@ class _TaskSupervisorDashboardViewState
 
   Widget _buildFilterPanel(
     BuildContext context, {
-    required List<DropdownMenuItem<int?>> deptItems,
+    required List<DropdownOption<int?>> deptItems,
   }) {
     final spacing = LayoutTokens.formSectionSpacing(context);
     return ListView(
       padding: LayoutTokens.pagePadding(context),
       children: [
-        SearchableDropdownFormField<int?>(
+        UnifiedDropdown<int?>(
           key: ValueKey<int?>(_departmentId),
-          initialValue: _departmentId,
-          isExpanded: true,
+          value: _departmentId,
           decoration: const InputDecoration(labelText: '部门'),
-          items: deptItems,
+          options: deptItems,
           onChanged: (value) {
             setState(() => _departmentId = value);
             _loadWorkload();

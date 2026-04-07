@@ -7,7 +7,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.
 import 'package:work_order_app/src/core/presentation/layout/widgets/generic_resource_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
@@ -272,18 +272,17 @@ class StockOutListEntry extends StatelessWidget {
       dateController: dateController,
       notesController: notesController,
       fieldsBuilder: (context, setState, submitting) => [
-        SearchableDropdownFormField<String>(
-          initialValue: outTypeController.text,
-          isExpanded: true,
+        UnifiedDropdown<String>(
+          value: outTypeController.text,
           decoration: const InputDecoration(
             labelText: '出库类型',
             border: OutlineInputBorder(),
           ),
-          items: _outTypeOptions
+          options: _outTypeOptions
               .map(
-                (option) => DropdownMenuItem(
+                (option) => DropdownOption(
                   value: option.value,
-                  child: Text(option.label),
+                  label: option.label,
                 ),
               )
               .toList(),

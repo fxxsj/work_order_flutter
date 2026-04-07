@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_dto.dart';
@@ -175,18 +175,18 @@ Future<void> showDeliveryOrderFormDialog(
                 _DeliveryFormSection(
                   title: '关联单据',
                   subtitle: '先选择客户订单，系统会回填收货信息并带出待发货明细。',
-                  child: SearchableDropdownFormField<int>(
+                  child: UnifiedDropdown<int>(
                     key: ValueKey<int?>(selectedSalesOrderId),
-                    initialValue: selectedSalesOrderId,
+                    value: selectedSalesOrderId,
                     decoration: const InputDecoration(
                       labelText: '客户订单',
                       border: OutlineInputBorder(),
                     ),
-                    items: salesOrders
+                    options: salesOrders
                         .map(
-                          (order) => DropdownMenuItem(
+                          (order) => DropdownOption<int>(
                             value: order.id,
-                            child: Text(order.orderNumber),
+                            label: order.orderNumber,
                           ),
                         )
                         .toList(),
@@ -541,19 +541,19 @@ class DeliveryItemRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: SearchableDropdownFormField<int>(
+                  child: UnifiedDropdown<int>(
                     key: ValueKey<int?>(item.productId),
-                    initialValue: item.productId == 0 ? null : item.productId,
+                    value: item.productId == 0 ? null : item.productId,
                     decoration: const InputDecoration(
                       labelText: '产品',
                       isDense: true,
                       border: OutlineInputBorder(),
                     ),
-                    items: products
+                    options: products
                         .map(
-                          (product) => DropdownMenuItem<int>(
+                          (product) => DropdownOption<int>(
                             value: product.id,
-                            child: Text(product.displayLabel),
+                            label: product.displayLabel,
                           ),
                         )
                         .toList(),

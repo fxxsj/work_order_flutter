@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
@@ -137,15 +137,15 @@ class _TaskAssignmentRuleDialogState extends State<TaskAssignmentRuleDialog> {
       onSubmit: _submit,
       content: Column(
         children: [
-          SearchableDropdownFormField<int>(
+          UnifiedDropdown<int>(
             key: ValueKey<int>(_processId),
-            initialValue: _processId,
+            value: _processId,
             decoration: const InputDecoration(labelText: '工序'),
-            items: widget.processes
+            options: widget.processes
                 .map(
-                  (p) => DropdownMenuItem(
+                  (p) => DropdownOption(
                     value: p.id,
-                    child: Text('${p.code} ${p.name}'),
+                    label: '${p.code} ${p.name}',
                   ),
                 )
                 .toList(),
@@ -154,13 +154,13 @@ class _TaskAssignmentRuleDialogState extends State<TaskAssignmentRuleDialog> {
                 : (value) => setState(() => _processId = value ?? _processId),
           ),
           SizedBox(height: LayoutTokens.gapMd),
-          SearchableDropdownFormField<int>(
+          UnifiedDropdown<int>(
             key: ValueKey<int>(_departmentId),
-            initialValue: _departmentId,
+            value: _departmentId,
             decoration: const InputDecoration(labelText: '分派部门'),
-            items: widget.departments
+            options: widget.departments
                 .map(
-                  (d) => DropdownMenuItem(value: d.id, child: Text(d.name)),
+                  (d) => DropdownOption(value: d.id, label: d.name),
                 )
                 .toList(),
             onChanged: isEdit
@@ -183,15 +183,15 @@ class _TaskAssignmentRuleDialogState extends State<TaskAssignmentRuleDialog> {
             onChanged: (value) => _priority = int.tryParse(value) ?? _priority,
           ),
           SizedBox(height: LayoutTokens.gapMd),
-          SearchableDropdownFormField<String>(
+          UnifiedDropdown<String>(
             key: ValueKey<String>(_strategy),
-            initialValue: _strategy,
+            value: _strategy,
             decoration: const InputDecoration(labelText: '操作员选择策略'),
-            items: const [
-              DropdownMenuItem(value: 'least_tasks', child: Text('任务最少')),
-              DropdownMenuItem(value: 'random', child: Text('随机选择')),
-              DropdownMenuItem(value: 'round_robin', child: Text('轮询分配')),
-              DropdownMenuItem(value: 'first_available', child: Text('第一个可用')),
+            options: const [
+              DropdownOption(value: 'least_tasks', label: '任务最少'),
+              DropdownOption(value: 'random', label: '随机选择'),
+              DropdownOption(value: 'round_robin', label: '轮询分配'),
+              DropdownOption(value: 'first_available', label: '第一个可用'),
             ],
             onChanged: (value) =>
                 setState(() => _strategy = value ?? _strategy),

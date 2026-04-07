@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/features/tasks/data/task_supervisor_support_service.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_list_tile.dart';
@@ -590,13 +590,13 @@ class _TaskSupervisorAssignDialogState
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SearchableDropdownFormField<int>(
+          UnifiedDropdown<int>(
             key: ValueKey<int>(_operatorId),
-            initialValue: _operatorId,
+            value: _operatorId,
             decoration: const InputDecoration(labelText: '操作员'),
-            items: widget.operators
+            options: widget.operators
                 .map(
-                  (op) => DropdownMenuItem(value: op.id, child: Text(op.name)),
+                  (op) => DropdownOption(value: op.id, label: op.name),
                 )
                 .toList(),
             onChanged: (value) =>

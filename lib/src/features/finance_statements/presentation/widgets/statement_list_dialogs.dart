@@ -5,7 +5,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dar
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/suppliers/domain/supplier.dart';
@@ -164,21 +164,21 @@ Future<StatementCreateResult?> showStatementCreateDialog(
                       ).build(context),
                       const SizedBox(height: LayoutTokens.gapMd),
                       if (showCustomer)
-                        SearchableDropdownFormField<int?>(
-                          initialValue: selectedCustomerId,
+                        UnifiedDropdown<int?>(
+                          value: selectedCustomerId,
                           decoration: const InputDecoration(
                             labelText: '客户',
                             border: OutlineInputBorder(),
                           ),
-                          items: [
-                            const DropdownMenuItem<int?>(
+                          options: [
+                            const DropdownOption<int?>(
                               value: null,
-                              child: Text('请选择客户'),
+                              label: '请选择客户',
                             ),
                             ...customers.map(
-                              (customer) => DropdownMenuItem<int?>(
+                              (customer) => DropdownOption<int?>(
                                 value: customer.id,
-                                child: Text(customer.name),
+                                label: customer.name,
                               ),
                             ),
                           ],
@@ -187,21 +187,21 @@ Future<StatementCreateResult?> showStatementCreateDialog(
                           validator: (value) => value == null ? '请选择客户' : null,
                         ),
                       if (!showCustomer)
-                        SearchableDropdownFormField<int?>(
-                          initialValue: selectedSupplierId,
+                        UnifiedDropdown<int?>(
+                          value: selectedSupplierId,
                           decoration: const InputDecoration(
                             labelText: '供应商',
                             border: OutlineInputBorder(),
                           ),
-                          items: [
-                            const DropdownMenuItem<int?>(
+                          options: [
+                            const DropdownOption<int?>(
                               value: null,
-                              child: Text('请选择供应商'),
+                              label: '请选择供应商',
                             ),
                             ...suppliers.map(
-                              (supplier) => DropdownMenuItem<int?>(
+                              (supplier) => DropdownOption<int?>(
                                 value: supplier.id,
-                                child: Text(supplier.name),
+                                label: supplier.name,
                               ),
                             ),
                           ],
@@ -363,21 +363,21 @@ Future<StatementGenerateResult?> showStatementGenerateDialog(
                 ).build(context),
                 SizedBox(height: LayoutTokens.gapMd),
                 if (showCustomer)
-                  SearchableDropdownFormField<int?>(
-                    initialValue: selectedCustomerId,
+                  UnifiedDropdown<int?>(
+                    value: selectedCustomerId,
                     decoration: const InputDecoration(
                       labelText: '客户',
                       border: OutlineInputBorder(),
                     ),
-                    items: [
-                      const DropdownMenuItem<int?>(
+                    options: [
+                      const DropdownOption<int?>(
                         value: null,
-                        child: Text('请选择客户'),
+                        label: '请选择客户',
                       ),
                       ...customers.map(
-                        (customer) => DropdownMenuItem<int?>(
+                        (customer) => DropdownOption<int?>(
                           value: customer.id,
-                          child: Text(customer.name),
+                          label: customer.name,
                         ),
                       ),
                     ],
@@ -386,21 +386,21 @@ Future<StatementGenerateResult?> showStatementGenerateDialog(
                     validator: (value) => value == null ? '请选择客户' : null,
                   ),
                 if (!showCustomer)
-                  SearchableDropdownFormField<int?>(
-                    initialValue: selectedSupplierId,
+                  UnifiedDropdown<int?>(
+                    value: selectedSupplierId,
                     decoration: const InputDecoration(
                       labelText: '供应商',
                       border: OutlineInputBorder(),
                     ),
-                    items: [
-                      const DropdownMenuItem<int?>(
+                    options: [
+                      const DropdownOption<int?>(
                         value: null,
-                        child: Text('请选择供应商'),
+                        label: '请选择供应商',
                       ),
                       ...suppliers.map(
-                        (supplier) => DropdownMenuItem<int?>(
+                        (supplier) => DropdownOption<int?>(
                           value: supplier.id,
-                          child: Text(supplier.name),
+                          label: supplier.name,
                         ),
                       ),
                     ],

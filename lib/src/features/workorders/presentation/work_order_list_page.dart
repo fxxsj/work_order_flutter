@@ -18,7 +18,7 @@ import 'package:work_order_app/src/core/presentation/providers/feature_entry.dar
 import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart'
     show StatusHintChip, StatusChipVariant;
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/file_download.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
@@ -599,51 +599,39 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     final canCreateWorkOrder =
         PermissionUtil.hasPermission(context, 'workorder.add_workorder');
     final statusItems = const [
-      DropdownMenuItem(value: 'pending', child: Text('待开始')),
-      DropdownMenuItem(value: 'in_progress', child: Text('进行中')),
-      DropdownMenuItem(value: 'paused', child: Text('已暂停')),
-      DropdownMenuItem(value: 'completed', child: Text('已完成')),
-      DropdownMenuItem(value: 'cancelled', child: Text('已取消')),
+      DropdownOption(value: 'pending', label: '待开始'),
+      DropdownOption(value: 'in_progress', label: '进行中'),
+      DropdownOption(value: 'paused', label: '已暂停'),
+      DropdownOption(value: 'completed', label: '已完成'),
+      DropdownOption(value: 'cancelled', label: '已取消'),
     ];
     final priorityItems = const [
-      DropdownMenuItem(value: 'low', child: Text('低')),
-      DropdownMenuItem(value: 'normal', child: Text('普通')),
-      DropdownMenuItem(value: 'high', child: Text('高')),
-      DropdownMenuItem(value: 'urgent', child: Text('紧急')),
+      DropdownOption(value: 'low', label: '低'),
+      DropdownOption(value: 'normal', label: '普通'),
+      DropdownOption(value: 'high', label: '高'),
+      DropdownOption(value: 'urgent', label: '紧急'),
     ];
     final approvalItems = const [
-      DropdownMenuItem(value: 'pending', child: Text('待审核')),
-      DropdownMenuItem(value: 'approved', child: Text('已通过')),
-      DropdownMenuItem(value: 'rejected', child: Text('已拒绝')),
+      DropdownOption(value: 'pending', label: '待审核'),
+      DropdownOption(value: 'approved', label: '已通过'),
+      DropdownOption(value: 'rejected', label: '已拒绝'),
     ];
     final customerItems = [
-      const DropdownMenuItem<int?>(
-          value: null, child: Text('全部客户', overflow: TextOverflow.ellipsis)),
+      const DropdownOption<int?>(value: null, label: '全部客户'),
       ..._customers.map(
-        (item) => DropdownMenuItem<int?>(
-          value: item.id,
-          child: Text(item.name, overflow: TextOverflow.ellipsis),
-        ),
+        (item) => DropdownOption<int?>(value: item.id, label: item.name),
       ),
     ];
     final productItems = [
-      const DropdownMenuItem<int?>(
-          value: null, child: Text('全部产品', overflow: TextOverflow.ellipsis)),
+      const DropdownOption<int?>(value: null, label: '全部产品'),
       ..._products.map(
-        (item) => DropdownMenuItem<int?>(
-          value: item.id,
-          child: Text(item.displayLabel, overflow: TextOverflow.ellipsis),
-        ),
+        (item) => DropdownOption<int?>(value: item.id, label: item.displayLabel),
       ),
     ];
     final processItems = [
-      const DropdownMenuItem<int?>(
-          value: null, child: Text('全部工序', overflow: TextOverflow.ellipsis)),
+      const DropdownOption<int?>(value: null, label: '全部工序'),
       ..._processes.map(
-        (item) => DropdownMenuItem<int?>(
-          value: item.id,
-          child: Text(item.name, overflow: TextOverflow.ellipsis),
-        ),
+        (item) => DropdownOption<int?>(value: item.id, label: item.name),
       ),
     ];
 
@@ -762,12 +750,12 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
   Widget _buildFilterPanel(
     BuildContext context,
     WorkOrderViewModel viewModel, {
-    required List<DropdownMenuItem<String>> statusItems,
-    required List<DropdownMenuItem<String>> priorityItems,
-    required List<DropdownMenuItem<String>> approvalItems,
-    required List<DropdownMenuItem<int?>> customerItems,
-    required List<DropdownMenuItem<int?>> productItems,
-    required List<DropdownMenuItem<int?>> processItems,
+    required List<DropdownOption<String>> statusItems,
+    required List<DropdownOption<String>> priorityItems,
+    required List<DropdownOption<String>> approvalItems,
+    required List<DropdownOption<int?>> customerItems,
+    required List<DropdownOption<int?>> productItems,
+    required List<DropdownOption<int?>> processItems,
     required double bottomSpacing,
   }) {
     return FilterPanelBody(
@@ -776,61 +764,55 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
       onReset: () => _resetFilters(viewModel),
       fields: [
         if (_loadingOptions) const LinearProgressIndicator(minHeight: 2),
-        SearchableDropdownFormField<String>(
-          initialValue: _statusFilter,
-          isExpanded: true,
+        UnifiedDropdown<String>(
+          value: _statusFilter,
           decoration: const InputDecoration(labelText: '状态'),
-          items: statusItems,
+          options: statusItems,
           onChanged: (value) {
             setState(() => _statusFilter = value);
             _applyFilters(viewModel);
           },
         ),
-        SearchableDropdownFormField<String>(
-          initialValue: _priorityFilter,
-          isExpanded: true,
+        UnifiedDropdown<String>(
+          value: _priorityFilter,
           decoration: const InputDecoration(labelText: '优先级'),
-          items: priorityItems,
+          options: priorityItems,
           onChanged: (value) {
             setState(() => _priorityFilter = value);
             _applyFilters(viewModel);
           },
         ),
-        SearchableDropdownFormField<String>(
-          initialValue: _approvalStatusFilter,
-          isExpanded: true,
+        UnifiedDropdown<String>(
+          value: _approvalStatusFilter,
           decoration: const InputDecoration(labelText: '审核状态'),
-          items: approvalItems,
+          options: approvalItems,
           onChanged: (value) {
             setState(() => _approvalStatusFilter = value);
             _applyFilters(viewModel);
           },
         ),
-        SearchableDropdownFormField<int?>(
-          initialValue: _customerFilterId,
-          isExpanded: true,
+        UnifiedDropdown<int?>(
+          value: _customerFilterId,
           decoration: const InputDecoration(labelText: '客户'),
-          items: customerItems,
+          options: customerItems,
           onChanged: (value) {
             setState(() => _customerFilterId = value);
             _applyFilters(viewModel);
           },
         ),
-        SearchableDropdownFormField<int?>(
-          initialValue: _productFilterId,
-          isExpanded: true,
+        UnifiedDropdown<int?>(
+          value: _productFilterId,
           decoration: const InputDecoration(labelText: '产品'),
-          items: productItems,
+          options: productItems,
           onChanged: (value) {
             setState(() => _productFilterId = value);
             _applyFilters(viewModel);
           },
         ),
-        SearchableDropdownFormField<int?>(
-          initialValue: _processFilterId,
-          isExpanded: true,
+        UnifiedDropdown<int?>(
+          value: _processFilterId,
           decoration: const InputDecoration(labelText: '工序'),
-          items: processItems,
+          options: processItems,
           onChanged: (value) {
             setState(() => _processFilterId = value);
             _applyFilters(viewModel);

@@ -3,7 +3,7 @@ import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/finance_invoices/domain/invoice.dart';
@@ -152,21 +152,21 @@ Future<PaymentCreateResult?> showPaymentCreateDialog(
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      SearchableDropdownFormField<int?>(
-                        initialValue: selectedCustomerId,
+                      UnifiedDropdown<int?>(
+                        value: selectedCustomerId,
                         decoration: const InputDecoration(
                           labelText: '客户',
                           border: OutlineInputBorder(),
                         ),
-                        items: [
-                          const DropdownMenuItem<int?>(
+                        options: [
+                          const DropdownOption<int?>(
                             value: null,
-                            child: Text('请选择客户'),
+                            label: '请选择客户',
                           ),
                           ...customers.map(
-                            (customer) => DropdownMenuItem<int?>(
+                            (customer) => DropdownOption<int?>(
                               value: customer.id,
-                              child: Text(customer.name),
+                              label: customer.name,
                             ),
                           ),
                         ],
@@ -175,21 +175,21 @@ Future<PaymentCreateResult?> showPaymentCreateDialog(
                         validator: (value) => value == null ? '请选择客户' : null,
                       ),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      SearchableDropdownFormField<int?>(
-                        initialValue: selectedSalesOrderId,
+                      UnifiedDropdown<int?>(
+                        value: selectedSalesOrderId,
                         decoration: const InputDecoration(
                           labelText: '关联客户订单（可选）',
                           border: OutlineInputBorder(),
                         ),
-                        items: [
-                          const DropdownMenuItem<int?>(
+                        options: [
+                          const DropdownOption<int?>(
                             value: null,
-                            child: Text('不关联客户订单'),
+                            label: '不关联客户订单',
                           ),
                           ...salesOrders.map(
-                            (order) => DropdownMenuItem<int?>(
+                            (order) => DropdownOption<int?>(
                               value: order.id,
-                              child: Text(order.orderNumber),
+                              label: order.orderNumber,
                             ),
                           ),
                         ],
@@ -197,23 +197,22 @@ Future<PaymentCreateResult?> showPaymentCreateDialog(
                             setState(() => selectedSalesOrderId = value),
                       ),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      SearchableDropdownFormField<int?>(
-                        initialValue: selectedInvoiceId,
+                      UnifiedDropdown<int?>(
+                        value: selectedInvoiceId,
                         decoration: const InputDecoration(
                           labelText: '关联发票（可选）',
                           border: OutlineInputBorder(),
                         ),
-                        items: [
-                          const DropdownMenuItem<int?>(
+                        options: [
+                          const DropdownOption<int?>(
                             value: null,
-                            child: Text('不关联发票'),
+                            label: '不关联发票',
                           ),
                           ...invoices.map(
-                            (invoice) => DropdownMenuItem<int?>(
+                            (invoice) => DropdownOption<int?>(
                               value: invoice.id,
-                              child: Text(
-                                invoice.invoiceNumber ?? '发票 #${invoice.id}',
-                              ),
+                              label:
+                                  invoice.invoiceNumber ?? '发票 #${invoice.id}',
                             ),
                           ),
                         ],

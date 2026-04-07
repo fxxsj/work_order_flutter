@@ -8,6 +8,7 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/approval_rejection_notice_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/file_upload_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
@@ -685,11 +686,11 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     final canViewAudit = AuditLogNavigation.canView(context);
 
     final statusOptions = const [
-      DropdownMenuItem(value: 'pending', child: Text('待开始')),
-      DropdownMenuItem(value: 'in_progress', child: Text('进行中')),
-      DropdownMenuItem(value: 'paused', child: Text('已暂停')),
-      DropdownMenuItem(value: 'completed', child: Text('已完成')),
-      DropdownMenuItem(value: 'cancelled', child: Text('已取消')),
+      DropdownOption(value: 'pending', label: '待开始'),
+      DropdownOption(value: 'in_progress', label: '进行中'),
+      DropdownOption(value: 'paused', label: '已暂停'),
+      DropdownOption(value: 'completed', label: '已完成'),
+      DropdownOption(value: 'cancelled', label: '已取消'),
     ];
 
     return ListPageScaffold(

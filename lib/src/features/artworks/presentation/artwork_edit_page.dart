@@ -5,7 +5,7 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/artworks/application/artwork_view_model.dart';
 import 'package:work_order_app/src/features/artworks/domain/artwork.dart';
@@ -255,16 +255,15 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                   children: [
                     Expanded(
                       flex: 3,
-                      child: SearchableDropdownFormField<int>(
-                        initialValue: item.productId,
-                        isExpanded: true,
+                      child: UnifiedDropdown<int>(
+                        value: item.productId,
                         decoration:
                             const InputDecoration(labelText: _productLabel),
-                        items: _productOptions
+                        options: _productOptions
                             .map(
-                              (product) => DropdownMenuItem<int>(
+                              (product) => DropdownOption<int>(
                                 value: product.id,
-                                child: Text(product.displayLabel),
+                                label: product.displayLabel,
                               ),
                             )
                             .toList(),
