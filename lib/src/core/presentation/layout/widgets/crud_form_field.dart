@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/file_upload_picker.dart';
 
 enum CrudFieldType {
@@ -80,6 +80,10 @@ class CrudFormField {
     this.firstDate,
     this.lastDate,
     this.builder,
+    // 新增 UnifiedDropdown 配置参数
+    this.minOptionsForSearch = 7,
+    this.isMultiSelect = false,
+    this.selectHintText = '请选择',
   });
 
   CrudFormField.text({
@@ -182,6 +186,16 @@ class CrudFormField {
     bool enabled = true,
     String? hintText,
     String? helperText,
+    // 新增：UnifiedDropdown 配置参数
+    bool isMultiSelect = false,
+    int minOptionsForSearch = 7,
+    String? searchHintText,
+    String emptyText = '暂无可选项',
+    String noResultsText = '无匹配结果',
+    String selectHintText = '请选择',
+    String clearText = '清空',
+    String confirmText = '确定',
+    String cancelText = '取消',
   }) : this._(
           label: label,
           type: CrudFieldType.dropdown,
@@ -193,6 +207,15 @@ class CrudFormField {
           enabled: enabled,
           hintText: hintText,
           helperText: helperText,
+          emptyText: emptyText,
+          searchHintText: searchHintText,
+          noResultsText: noResultsText,
+          clearText: clearText,
+          confirmText: confirmText,
+          cancelText: cancelText,
+          minOptionsForSearch: minOptionsForSearch,
+          isMultiSelect: isMultiSelect,
+          selectHintText: selectHintText,
         );
 
   CrudFormField.date({
@@ -513,6 +536,10 @@ class CrudFormField {
   final DateTime? firstDate;
   final DateTime? lastDate;
   final Widget Function(BuildContext context)? builder;
+  // 新增 UnifiedDropdown 配置字段
+  final int minOptionsForSearch;
+  final bool isMultiSelect;
+  final String selectHintText;
 
   Widget build(BuildContext context) {
     if (builder != null) {
@@ -521,25 +548,39 @@ class CrudFormField {
 
     switch (type) {
       case CrudFieldType.dropdown:
-        return SearchableDropdownFormField<dynamic>(
+        final dropdownOptions = options
+            .map((opt) => DropdownOption<dynamic>(
+                  value: opt.value,
+                  label: opt.label,
+                  enabled: opt.enabled,
+                ))
+            .toList();
+        return UnifiedDropdown<dynamic>(
           key: fieldKey,
-          initialValue: value,
+          options: dropdownOptions,
+          value: value,
           decoration: InputDecoration(
             labelText: label,
             hintText: hintText,
             helperText: helperText,
           ),
-          items: options
-              .map(
-                (option) => DropdownMenuItem<dynamic>(
-                  value: option.value,
-                  enabled: option.enabled,
-                  child: Text(option.label),
-                ),
-              )
-              .toList(),
           onChanged: enabled ? onChanged : null,
           validator: validator,
+          enabled: enabled,
+          isMultiSelect: isMultiSelect,
+          minOptionsForSearch: minOptionsForSearch,
+          searchConfig: searchHintText != null
+              ? DropdownSearchConfig(
+                  hintText: searchHintText,
+                  enabled: true,
+                )
+              : const DropdownSearchConfig(),
+          emptyText: emptyText ?? '暂无可选项',
+          noResultsText: noResultsText ?? '无匹配结果',
+          selectHintText: selectHintText,
+          clearText: clearText ?? '清空',
+          confirmText: confirmText ?? '确定',
+          cancelText: cancelText ?? '取消',
         );
       case CrudFieldType.dateRange:
         return _CrudDateRangeFormField(
@@ -587,23 +628,29 @@ class CrudFormField {
           fallbackFilename: fallbackFilename ?? 'upload.bin',
         );
       case CrudFieldType.multiSelect:
-        return _CrudMultiSelectFormField(
-          fieldKey: fieldKey,
-          label: label,
-          options: options,
-          selectedValues:
-              (value as Set<dynamic>? ?? <dynamic>{}).cast<dynamic>(),
+        final multiOptions = options
+            .map((opt) => DropdownOption<dynamic>(
+                  value: opt.value,
+                  label: opt.label,
+                  enabled: opt.enabled,
+                ))
+            .toList();
+        return UnifiedDropdown<dynamic>(
+          key: fieldKey,
+          options: multiOptions,
+          value: (value is Set<dynamic> ? value : null) ?? const {},
+          decoration: InputDecoration(
+            labelText: label,
+            hintText: hintText,
+            helperText: helperText,
+          ),
           onChanged: enabled ? onChanged : null,
-          validator: validator as String? Function(Set<dynamic>?)?,
+          validator: validator,
           enabled: enabled,
-          hintText: hintText,
-          helperText: helperText,
+          isMultiSelect: true,
           emptyText: emptyText ?? '暂无可选项',
-          searchHintText: searchHintText ?? '搜索名称或编码',
           noResultsText: noResultsText ?? '无匹配项',
-          clearText: clearText ?? '清空',
-          confirmText: confirmText ?? '确定',
-          cancelText: cancelText ?? '取消',
+          selectHintText: hintText ?? '请选择',
         );
       case CrudFieldType.tags:
         return _CrudTagsFormField(
@@ -1055,288 +1102,6 @@ class _CrudFileUploadFieldBody extends StatelessWidget {
   void _clearFile() {
     state.didChange(null);
     onChanged?.call(null);
-  }
-}
-
-class _CrudMultiSelectFormField extends FormField<Set<dynamic>> {
-  _CrudMultiSelectFormField({
-    Key? fieldKey,
-    required this.label,
-    required this.options,
-    required this.selectedValues,
-    required this.onChanged,
-    required this.enabled,
-    required this.hintText,
-    required this.helperText,
-    required this.emptyText,
-    required this.searchHintText,
-    required this.noResultsText,
-    required this.clearText,
-    required this.confirmText,
-    required this.cancelText,
-    String? Function(Set<dynamic>?)? validator,
-  }) : super(
-          key: fieldKey,
-          initialValue: Set<dynamic>.from(selectedValues),
-          validator: validator,
-          builder: (state) {
-            return _CrudMultiSelectFieldBody(
-              state: state,
-              label: label,
-              options: options,
-              selectedValues: selectedValues,
-              onChanged: onChanged,
-              enabled: enabled,
-              hintText: hintText,
-              helperText: helperText,
-              emptyText: emptyText,
-              searchHintText: searchHintText,
-              noResultsText: noResultsText,
-              clearText: clearText,
-              confirmText: confirmText,
-              cancelText: cancelText,
-            );
-          },
-        );
-
-  final String label;
-  final List<CrudFieldOption<dynamic>> options;
-  final Set<dynamic> selectedValues;
-  final ValueChanged<dynamic>? onChanged;
-  final bool enabled;
-  final String? hintText;
-  final String? helperText;
-  final String emptyText;
-  final String searchHintText;
-  final String noResultsText;
-  final String clearText;
-  final String confirmText;
-  final String cancelText;
-
-  @override
-  FormFieldState<Set<dynamic>> createState() =>
-      _CrudMultiSelectFormFieldState();
-}
-
-class _CrudMultiSelectFormFieldState extends FormFieldState<Set<dynamic>> {
-  @override
-  _CrudMultiSelectFormField get widget =>
-      super.widget as _CrudMultiSelectFormField;
-
-  @override
-  void didUpdateWidget(covariant _CrudMultiSelectFormField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!setEquals(widget.selectedValues, value ?? const {})) {
-      setValue(Set<dynamic>.from(widget.selectedValues));
-    }
-  }
-}
-
-class _CrudMultiSelectFieldBody extends StatelessWidget {
-  const _CrudMultiSelectFieldBody({
-    required this.state,
-    required this.label,
-    required this.options,
-    required this.selectedValues,
-    required this.onChanged,
-    required this.enabled,
-    required this.hintText,
-    required this.helperText,
-    required this.emptyText,
-    required this.searchHintText,
-    required this.noResultsText,
-    required this.clearText,
-    required this.confirmText,
-    required this.cancelText,
-  });
-
-  final FormFieldState<Set<dynamic>> state;
-  final String label;
-  final List<CrudFieldOption<dynamic>> options;
-  final Set<dynamic> selectedValues;
-  final ValueChanged<dynamic>? onChanged;
-  final bool enabled;
-  final String? hintText;
-  final String? helperText;
-  final String emptyText;
-  final String searchHintText;
-  final String noResultsText;
-  final String clearText;
-  final String confirmText;
-  final String cancelText;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final decoration = InputDecoration(
-      labelText: label,
-      hintText: hintText,
-      helperText: helperText,
-      errorText: state.errorText,
-      suffixIcon: const Icon(Icons.arrow_drop_down),
-    ).applyDefaults(theme.inputDecorationTheme);
-    final currentValues = state.value ?? Set<dynamic>.from(selectedValues);
-    final selectedItems = options
-        .where((option) => currentValues.contains(option.value))
-        .toList();
-
-    if (options.isEmpty) {
-      return InputDecorator(
-        decoration: decoration.copyWith(enabled: false),
-        child: Text(
-          emptyText,
-          style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
-        ),
-      );
-    }
-
-    return InkWell(
-      onTap: enabled ? () => _openPicker(context, currentValues) : null,
-      borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-      child: InputDecorator(
-        decoration: decoration.copyWith(enabled: enabled),
-        isEmpty: selectedItems.isEmpty,
-        child: selectedItems.isEmpty
-            ? Text(
-                hintText ?? '请选择',
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: theme.hintColor),
-              )
-            : Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: selectedItems
-                    .map(
-                      (item) => InputChip(
-                        label: Text(item.label),
-                        onDeleted: enabled
-                            ? () {
-                                final nextValues =
-                                    Set<dynamic>.from(currentValues)
-                                      ..remove(item.value);
-                                state.didChange(nextValues);
-                                onChanged?.call(nextValues);
-                              }
-                            : null,
-                      ),
-                    )
-                    .toList(),
-              ),
-      ),
-    );
-  }
-
-  Future<void> _openPicker(
-    BuildContext context,
-    Set<dynamic> currentValues,
-  ) async {
-    final original = Set<dynamic>.from(currentValues);
-    var query = '';
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            final filtered = options.where((item) {
-              if (query.isEmpty) {
-                return true;
-              }
-              return item.label.toLowerCase().contains(query.toLowerCase());
-            }).toList();
-
-            return AlertDialog(
-              title: Text(label),
-              content: SizedBox(
-                width: 520,
-                height: 420,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextField(
-                      decoration: InputDecoration(
-                        hintText: searchHintText,
-                        prefixIcon: const Icon(Icons.search),
-                      ),
-                      onChanged: (value) =>
-                          setDialogState(() => query = value.trim()),
-                    ),
-                    SizedBox(height: LayoutTokens.gapMd),
-                    Expanded(
-                      child: filtered.isEmpty
-                          ? Center(
-                              child: Text(
-                                noResultsText,
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            )
-                          : Scrollbar(
-                              child: ListView.builder(
-                                itemCount: filtered.length,
-                                itemBuilder: (context, index) {
-                                  final item = filtered[index];
-                                  final isSelected =
-                                      currentValues.contains(item.value);
-                                  return CheckboxListTile(
-                                    value: isSelected,
-                                    dense: true,
-                                    enabled: item.enabled,
-                                    controlAffinity:
-                                        ListTileControlAffinity.leading,
-                                    title: Text(item.label),
-                                    onChanged: (value) {
-                                      if (!item.enabled) {
-                                        return;
-                                      }
-                                      setDialogState(() {
-                                        if (value == true) {
-                                          currentValues.add(item.value);
-                                        } else {
-                                          currentValues.remove(item.value);
-                                        }
-                                      });
-                                      final nextValues =
-                                          Set<dynamic>.from(currentValues);
-                                      state.didChange(nextValues);
-                                      onChanged?.call(nextValues);
-                                    },
-                                  );
-                                },
-                              ),
-                            ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    state.didChange(original);
-                    onChanged?.call(Set<dynamic>.from(original));
-                    Navigator.of(dialogContext).pop();
-                  },
-                  child: Text(cancelText),
-                ),
-                TextButton(
-                  onPressed: () {
-                    currentValues.clear();
-                    final nextValues = <dynamic>{};
-                    state.didChange(nextValues);
-                    onChanged?.call(nextValues);
-                    setDialogState(() {});
-                  },
-                  child: Text(clearText),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: Text(confirmText),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
   }
 }
 

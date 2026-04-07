@@ -47,31 +47,41 @@ class ResponsivePaginationBar extends StatelessWidget {
             final compact = constraints.maxWidth < Breakpoints.sm;
             final infoStyle =
                 theme.textTheme.bodySmall?.copyWith(color: colors.subtleText);
+            final effectivePageSize = pageSizeOptions.contains(pageSize)
+                ? pageSize
+                : (pageSizeOptions.isNotEmpty ? pageSizeOptions.first : null);
             final pagerControls = Wrap(
               spacing: LayoutTokens.gapXs,
               runSpacing: LayoutTokens.gapXs,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                DropdownButton<int>(
-                  value: pageSize,
-                  style: infoStyle,
-                  iconSize: 18,
-                  items: pageSizeOptions
-                      .map(
-                        (size) => DropdownMenuItem<int>(
-                          value: size,
-                          child: Text(
-                            pageSizeLabelBuilder?.call(size) ?? '$size',
-                            style: infoStyle,
+                if (effectivePageSize != null)
+                  DropdownMenu<int>(
+                    key: ValueKey<int>(effectivePageSize),
+                    initialSelection: effectivePageSize,
+                    width: compact ? 88 : 96,
+                    textStyle: infoStyle,
+                    menuStyle: const MenuStyle(
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    inputDecorationTheme: const InputDecorationTheme(
+                      isDense: true,
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    dropdownMenuEntries: pageSizeOptions
+                        .map(
+                          (size) => DropdownMenuEntry<int>(
+                            value: size,
+                            label: pageSizeLabelBuilder?.call(size) ?? '$size',
                           ),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    if (value == null) return;
-                    onPageSizeChanged(value);
-                  },
-                ),
+                        )
+                        .toList(),
+                    onSelected: (value) {
+                      if (value == null) return;
+                      onPageSizeChanged(value);
+                    },
+                  ),
                 IconButton(
                   onPressed: hasPrev ? onPrev : null,
                   icon: const Icon(Icons.chevron_left, size: 18),
@@ -164,8 +174,10 @@ class EmptyStateCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final semantic = theme.extension<AppSemanticColors>();
-    final background = (semantic?.info ?? theme.colorScheme.primary).withValues(alpha: 0.05);
-    final border = (semantic?.info ?? theme.colorScheme.primary).withValues(alpha: 0.15);
+    final background =
+        (semantic?.info ?? theme.colorScheme.primary).withValues(alpha: 0.05);
+    final border =
+        (semantic?.info ?? theme.colorScheme.primary).withValues(alpha: 0.15);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -180,7 +192,9 @@ class EmptyStateCard extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, color: semantic?.info ?? theme.colorScheme.primary, size: LayoutTokens.iconXxxl),
+                Icon(icon,
+                    color: semantic?.info ?? theme.colorScheme.primary,
+                    size: LayoutTokens.iconXxxl),
                 const SizedBox(height: LayoutTokens.gapSm),
                 Text(
                   text,
@@ -253,7 +267,8 @@ class ErrorStateCard extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, color: danger, size: LayoutTokens.iconXxl),
+            Icon(Icons.error_outline,
+                color: danger, size: LayoutTokens.iconXxl),
             const SizedBox(height: LayoutTokens.gapSm),
             Text(
               message,
@@ -325,7 +340,8 @@ class ListSearchField extends StatelessWidget {
                     ? null
                     : IconButton(
                         tooltip: '清空',
-                        icon: const Icon(Icons.close, size: LayoutTokens.iconMd),
+                        icon:
+                            const Icon(Icons.close, size: LayoutTokens.iconMd),
                         onPressed: onClear,
                       ),
                 isDense: true,

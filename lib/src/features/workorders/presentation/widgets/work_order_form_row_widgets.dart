@@ -3,18 +3,17 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/constants/breakpoints.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/features/materials/domain/material.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_form_sections.dart';
 
-class WorkOrderMultiSelectChips extends StatefulWidget {
-  const WorkOrderMultiSelectChips({
+class WorkOrderMultiSelectField extends StatelessWidget {
+  const WorkOrderMultiSelectField({
     super.key,
     required this.items,
     required this.selected,
     required this.emptyText,
-    required this.title,
     required this.placeholder,
     required this.onChanged,
   });
@@ -22,213 +21,53 @@ class WorkOrderMultiSelectChips extends StatefulWidget {
   final List<WorkOrderOptionItem> items;
   final Set<int> selected;
   final String emptyText;
-  final String title;
   final String placeholder;
   final VoidCallback onChanged;
-
-  @override
-  State<WorkOrderMultiSelectChips> createState() =>
-      _WorkOrderMultiSelectChipsState();
-}
-
-class _WorkOrderMultiSelectChipsState extends State<WorkOrderMultiSelectChips> {
-  var _expanded = false;
-
-  @override
-  void didUpdateWidget(covariant WorkOrderMultiSelectChips oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.selected.isEmpty && _expanded) {
-      _expanded = false;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
-    if (widget.items.isEmpty) {
+    if (items.isEmpty) {
       return Text(
-        widget.emptyText,
+        emptyText,
         style: theme.textTheme.bodySmall?.copyWith(
           color: colors?.subtleText ?? theme.hintColor,
         ),
       );
     }
-    final resolvedColors = colors!;
-    final selectedItems = widget.items
-        .where((item) => widget.selected.contains(item.id))
-        .toList();
-    final hasSelected = selectedItems.isNotEmpty;
-    final summaryText =
-        hasSelected ? '已选 ${selectedItems.length} 项' : widget.placeholder;
 
-    return InputDecorator(
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: theme.colorScheme.primary.withValues(alpha: 0.03),
-        contentPadding: const EdgeInsets.all(LayoutTokens.gapMd),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  summaryText,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: hasSelected
-                        ? resolvedColors.sidebarText
-                        : resolvedColors.subtleText,
-                  ),
-                ),
-              ),
-              if (hasSelected)
-                IconButton(
-                  onPressed: () => setState(() => _expanded = !_expanded),
-                  icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more),
-                  tooltip: _expanded ? '收起' : '展开',
-                  visualDensity: VisualDensity.compact,
-                ),
-              IconButton(
-                onPressed: () => _openDialog(context),
-                icon: const Icon(Icons.edit_outlined),
-                tooltip: '选择',
-                visualDensity: VisualDensity.compact,
-              ),
-            ],
-          ),
-          if (_expanded && hasSelected) ...[
-            const SizedBox(height: LayoutTokens.gapSm),
-            Wrap(
-              spacing: LayoutTokens.gapSm,
-              runSpacing: LayoutTokens.gapSm,
-              children: selectedItems
-                  .map(
-                    (item) => InputChip(
-                      label: Text(item.label),
-                      visualDensity: VisualDensity.compact,
-                      onDeleted: () {
-                        widget.selected.remove(item.id);
-                        widget.onChanged();
-                        setState(() {});
-                      },
-                    ),
-                  )
-                  .toList(),
+    return UnifiedDropdown<dynamic>(
+      value: Set<dynamic>.from(selected),
+      isMultiSelect: true,
+      options: items
+          .map(
+            (item) => DropdownOption<dynamic>(
+              value: item.id,
+              label: item.label,
             ),
-          ],
-        ],
+          )
+          .toList(),
+      decoration: InputDecoration(
+        hintText: placeholder,
       ),
-    );
-  }
-
-  Future<void> _openDialog(BuildContext context) async {
-    final original = Set<int>.from(widget.selected);
-    var query = '';
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            final media = MediaQuery.of(context).size;
-            final filtered = widget.items
-                .where(
-                  (item) =>
-                      item.label.toLowerCase().contains(query.toLowerCase()),
-                )
-                .toList();
-            return AlertDialog(
-              insetPadding: EdgeInsets.symmetric(
-                horizontal:
-                    media.width < Breakpoints.md ? LayoutTokens.gapLg : 40,
-                vertical: LayoutTokens.gapXl,
-              ),
-              title: Text(widget.title),
-              content: SizedBox(
-                width: media.width < Breakpoints.md
-                    ? media.width -
-                        (LayoutTokens.gapXl * 2 + LayoutTokens.gapLg * 2)
-                    : LayoutTokens.pageWidthNarrow,
-                height: media.height < 720 ? media.height * 0.62 : 420,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextField(
-                      decoration: const InputDecoration(
-                        hintText: '搜索名称或编码',
-                        prefixIcon: Icon(Icons.search),
-                      ),
-                      onChanged: (value) =>
-                          setDialogState(() => query = value.trim()),
-                    ),
-                    const SizedBox(height: LayoutTokens.gapMd),
-                    Expanded(
-                      child: filtered.isEmpty
-                          ? Center(
-                              child: Text(
-                                '无匹配项',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            )
-                          : Scrollbar(
-                              child: ListView.builder(
-                                itemCount: filtered.length,
-                                itemBuilder: (context, index) {
-                                  final item = filtered[index];
-                                  final isSelected =
-                                      widget.selected.contains(item.id);
-                                  return CheckboxListTile(
-                                    value: isSelected,
-                                    dense: true,
-                                    controlAffinity:
-                                        ListTileControlAffinity.leading,
-                                    title: Text(item.label),
-                                    onChanged: (value) {
-                                      setDialogState(() {
-                                        if (value == true) {
-                                          widget.selected.add(item.id);
-                                        } else {
-                                          widget.selected.remove(item.id);
-                                        }
-                                      });
-                                      widget.onChanged();
-                                    },
-                                  );
-                                },
-                              ),
-                            ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    widget.selected
-                      ..clear()
-                      ..addAll(original);
-                    widget.onChanged();
-                    Navigator.of(dialogContext).pop();
-                  },
-                  child: const Text('取消'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    widget.selected.clear();
-                    widget.onChanged();
-                    setDialogState(() {});
-                  },
-                  child: const Text('清空'),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('确定'),
-                ),
-              ],
-            );
-          },
-        );
+      selectHintText: placeholder,
+      searchConfig: const DropdownSearchConfig(
+        enabled: true,
+        hintText: '搜索',
+        highlightMatches: true,
+      ),
+      emptyText: emptyText,
+      noResultsText: '无匹配结果',
+      clearText: '清空',
+      cancelText: '取消',
+      confirmText: '确定',
+      selectAllText: '全选',
+      onChanged: (value) {
+        selected
+          ..clear()
+          ..addAll((value as Set<dynamic>? ?? const <dynamic>{}).cast<int>());
+        onChanged();
       },
     );
   }
@@ -271,18 +110,14 @@ class _WorkOrderProductRowState extends State<WorkOrderProductRow> {
               children: [
                 SizedBox(
                   width: productWidth,
-                  child: SearchableDropdownFormField<int>(
-                    initialValue: widget.draft.productId,
-                    isExpanded: true,
+                  child: UnifiedDropdown<int>(
+                    value: widget.draft.productId,
                     decoration: const InputDecoration(labelText: '产品'),
-                    items: widget.products
+                    options: widget.products
                         .map(
-                          (item) => DropdownMenuItem(
+                          (item) => DropdownOption(
                             value: item.id,
-                            child: Text(
-                              item.displayLabel,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            label: item.displayLabel,
                           ),
                         )
                         .toList(),
@@ -373,18 +208,14 @@ class _WorkOrderMaterialRowState extends State<WorkOrderMaterialRow> {
               children: [
                 SizedBox(
                   width: productWidth,
-                  child: SearchableDropdownFormField<int>(
-                    initialValue: widget.draft.materialId,
-                    isExpanded: true,
+                  child: UnifiedDropdown<int>(
+                    value: widget.draft.materialId,
                     decoration: const InputDecoration(labelText: '物料'),
-                    items: widget.materials
+                    options: widget.materials
                         .map(
-                          (item) => DropdownMenuItem(
+                          (item) => DropdownOption(
                             value: item.id,
-                            child: Text(
-                              '${item.name} (${item.code})',
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            label: '${item.name} (${item.code})',
                           ),
                         )
                         .toList(),

@@ -3,7 +3,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/constants/breakpoints.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/searchable_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/features/artworks/domain/artwork.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/dies/domain/die.dart';
@@ -180,40 +180,31 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: fieldWidth,
-                    child: SearchableDropdownFormField<String>(
-                      initialValue: status,
-                      decoration: const InputDecoration(labelText: '状态'),
-                      items: const [
-                        DropdownMenuItem(value: 'pending', child: Text('待开始')),
-                        DropdownMenuItem(
-                          value: 'in_progress',
-                          child: Text('进行中'),
-                        ),
-                        DropdownMenuItem(value: 'paused', child: Text('已暂停')),
-                        DropdownMenuItem(
-                          value: 'completed',
-                          child: Text('已完成'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'cancelled',
-                          child: Text('已取消'),
-                        ),
+                    child: UnifiedDropdown<String>(
+                      value: status,
+                      options: const [
+                        DropdownOption(value: 'pending', label: '待开始'),
+                        DropdownOption(value: 'in_progress', label: '进行中'),
+                        DropdownOption(value: 'paused', label: '已暂停'),
+                        DropdownOption(value: 'completed', label: '已完成'),
+                        DropdownOption(value: 'cancelled', label: '已取消'),
                       ],
-                      onChanged: onStatusChanged,
+                      decoration: const InputDecoration(labelText: '状态'),
+                      onChanged: (value) => onStatusChanged(value),
                     ),
                   ),
                   SizedBox(
                     width: fieldWidth,
-                    child: SearchableDropdownFormField<String>(
-                      initialValue: priority,
-                      decoration: const InputDecoration(labelText: '优先级'),
-                      items: const [
-                        DropdownMenuItem(value: 'low', child: Text('低')),
-                        DropdownMenuItem(value: 'normal', child: Text('普通')),
-                        DropdownMenuItem(value: 'high', child: Text('高')),
-                        DropdownMenuItem(value: 'urgent', child: Text('紧急')),
+                    child: UnifiedDropdown<String>(
+                      value: priority,
+                      options: const [
+                        DropdownOption(value: 'low', label: '低'),
+                        DropdownOption(value: 'normal', label: '普通'),
+                        DropdownOption(value: 'high', label: '高'),
+                        DropdownOption(value: 'urgent', label: '紧急'),
                       ],
-                      onChanged: onPriorityChanged,
+                      decoration: const InputDecoration(labelText: '优先级'),
+                      onChanged: (value) => onPriorityChanged(value),
                     ),
                   ),
                   SizedBox(
@@ -310,20 +301,22 @@ class WorkOrderCustomerSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final options = customers
+        .map(
+          (item) => DropdownOption<int>(
+            value: item.id,
+            label: item.name,
+          ),
+        )
+        .toList();
+
     return WorkOrderFormSectionCard(
       title: '客户信息',
-      child: SearchableDropdownFormField<int>(
-        initialValue: customerId,
+      child: UnifiedDropdown<int>(
+        value: customerId,
+        options: options,
         decoration: const InputDecoration(labelText: '客户'),
-        items: customers
-            .map(
-              (item) => DropdownMenuItem(
-                value: item.id,
-                child: Text(item.name),
-              ),
-            )
-            .toList(),
-        onChanged: onCustomerChanged,
+        onChanged: (value) => onCustomerChanged(value),
         validator: (value) => value == null ? '请选择客户' : null,
       ),
     );
@@ -426,14 +419,13 @@ class WorkOrderProcessConfigSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return WorkOrderFormSectionCard(
       title: '工序配置',
-      child: WorkOrderMultiSelectChips(
+      child: WorkOrderMultiSelectField(
         items: processes
             .map((item) => WorkOrderOptionItem(item.id, item.name))
             .toList(),
         selected: processIds,
         emptyText: '暂无工序数据',
-        title: '工序选择',
-        placeholder: '请选择工序（可多选）',
+        placeholder: '请选择（可多选）',
         onChanged: onSelectionChanged,
       ),
     );
@@ -485,24 +477,18 @@ class WorkOrderResourcesSection extends StatelessWidget {
           final leftColumn = Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SearchableDropdownFormField<String>(
-                initialValue: printingType,
-                decoration: const InputDecoration(labelText: '印刷形式'),
-                items: const [
-                  DropdownMenuItem(value: 'none', child: Text('不需要印刷')),
-                  DropdownMenuItem(value: 'front', child: Text('正面印刷')),
-                  DropdownMenuItem(value: 'back', child: Text('背面印刷')),
-                  DropdownMenuItem(
-                    value: 'self_reverse',
-                    child: Text('自反印刷'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'reverse_gripper',
-                    child: Text('反咬口印刷'),
-                  ),
-                  DropdownMenuItem(value: 'register', child: Text('套版印刷')),
+              UnifiedDropdown<String>(
+                value: printingType,
+                options: const [
+                  DropdownOption(value: 'none', label: '不需要印刷'),
+                  DropdownOption(value: 'front', label: '正面印刷'),
+                  DropdownOption(value: 'back', label: '背面印刷'),
+                  DropdownOption(value: 'self_reverse', label: '自反印刷'),
+                  DropdownOption(value: 'reverse_gripper', label: '反咬口印刷'),
+                  DropdownOption(value: 'register', label: '套版印刷'),
                 ],
-                onChanged: onPrintingTypeChanged,
+                decoration: const InputDecoration(labelText: '印刷形式'),
+                onChanged: (value) => onPrintingTypeChanged(value),
               ),
               SizedBox(height: LayoutTokens.gapMd),
               const WorkOrderFormSubsectionTitle(title: 'CMYK 颜色'),
@@ -532,7 +518,7 @@ class WorkOrderResourcesSection extends StatelessWidget {
             children: [
               const WorkOrderFormSubsectionTitle(title: '图稿'),
               SizedBox(height: LayoutTokens.gapSm),
-              WorkOrderMultiSelectChips(
+              WorkOrderMultiSelectField(
                 items: artworks
                     .map(
                       (item) => WorkOrderOptionItem(
@@ -543,14 +529,13 @@ class WorkOrderResourcesSection extends StatelessWidget {
                     .toList(),
                 selected: artworkIds,
                 emptyText: '暂无图稿数据',
-                title: '图稿',
-                placeholder: '请选择图稿（可多选）',
+                placeholder: '请选择（可多选）',
                 onChanged: onSelectionChanged,
               ),
               SizedBox(height: LayoutTokens.gapMd),
               const WorkOrderFormSubsectionTitle(title: '刀模'),
               SizedBox(height: LayoutTokens.gapSm),
-              WorkOrderMultiSelectChips(
+              WorkOrderMultiSelectField(
                 items: dies
                     .map(
                       (item) => WorkOrderOptionItem(
@@ -563,14 +548,13 @@ class WorkOrderResourcesSection extends StatelessWidget {
                     .toList(),
                 selected: dieIds,
                 emptyText: '暂无刀模数据',
-                title: '刀模',
-                placeholder: '请选择刀模（可多选）',
+                placeholder: '请选择（可多选）',
                 onChanged: onSelectionChanged,
               ),
               SizedBox(height: LayoutTokens.gapMd),
               const WorkOrderFormSubsectionTitle(title: '烫金版'),
               SizedBox(height: LayoutTokens.gapSm),
-              WorkOrderMultiSelectChips(
+              WorkOrderMultiSelectField(
                 items: foilingPlates
                     .map(
                       (item) => WorkOrderOptionItem(
@@ -583,14 +567,13 @@ class WorkOrderResourcesSection extends StatelessWidget {
                     .toList(),
                 selected: foilingPlateIds,
                 emptyText: '暂无烫金版数据',
-                title: '烫金版',
-                placeholder: '请选择烫金版（可多选）',
+                placeholder: '请选择（可多选）',
                 onChanged: onSelectionChanged,
               ),
               SizedBox(height: LayoutTokens.gapMd),
               const WorkOrderFormSubsectionTitle(title: '压凸版'),
               SizedBox(height: LayoutTokens.gapSm),
-              WorkOrderMultiSelectChips(
+              WorkOrderMultiSelectField(
                 items: embossingPlates
                     .map(
                       (item) => WorkOrderOptionItem(
@@ -603,8 +586,7 @@ class WorkOrderResourcesSection extends StatelessWidget {
                     .toList(),
                 selected: embossingPlateIds,
                 emptyText: '暂无压凸版数据',
-                title: '压凸版',
-                placeholder: '请选择压凸版（可多选）',
+                placeholder: '请选择（可多选）',
                 onChanged: onSelectionChanged,
               ),
             ],
