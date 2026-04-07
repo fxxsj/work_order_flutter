@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:work_order_app/src/core/common/api_exception.dart';
 import 'package:work_order_app/src/core/common/app_config.dart';
 import 'package:work_order_app/src/core/common/app_dio_interceptors.dart';
@@ -29,7 +28,8 @@ class HttpClient {
     _isRefreshing = value;
   }
 
-  static void enqueueRetry(RequestOptions requestOptions, ErrorInterceptorHandler handler) {
+  static void enqueueRetry(
+      RequestOptions requestOptions, ErrorInterceptorHandler handler) {
     _requestQueue.add(_RetryRequest(requestOptions, handler));
   }
 
@@ -37,7 +37,8 @@ class HttpClient {
     for (final retry in _requestQueue) {
       try {
         final token = _accessToken;
-        retry.requestOptions.headers[HttpHeaders.authorizationHeader] = 'Bearer $token';
+        retry.requestOptions.headers[HttpHeaders.authorizationHeader] =
+            'Bearer $token';
         final response = await _dio.fetch(retry.requestOptions);
         retry.handler.resolve(response);
       } catch (e) {
@@ -102,9 +103,6 @@ class HttpClient {
   /// 刷新 access token
   static Future<bool> refreshAccessToken() async {
     if (_refreshToken == null) {
-      if (kDebugMode) {
-        debugPrint('[auth] refresh skipped: no refresh token');
-      }
       return false;
     }
 
@@ -119,26 +117,17 @@ class HttpClient {
       );
 
       final payload = response.data;
-      if (kDebugMode) {
-        debugPrint('[auth] refresh response status=${response.statusCode} '
-            'payloadType=${payload.runtimeType}');
-      }
-        if (payload is Map<String, dynamic>) {
-          // simplejwt refresh endpoint returns tokens at top-level
-          if (payload['access'] != null) {
-            final access = payload['access']?.toString();
-            final refresh = payload['refresh']?.toString();
-            if (access != null && access.isNotEmpty) {
-              updateTokens(access, refresh);
-              if (kDebugMode) {
-                final head = access.length >= 12 ? access.substring(0, 12) : access;
-                final tail = access.length >= 6 ? access.substring(access.length - 6) : access;
-                debugPrint('[auth] refresh success accessLen=${access.length} token=${head}...${tail}');
-              }
-              return true;
-            }
+      if (payload is Map<String, dynamic>) {
+        // simplejwt refresh endpoint returns tokens at top-level
+        if (payload['access'] != null) {
+          final access = payload['access']?.toString();
+          final refresh = payload['refresh']?.toString();
+          if (access != null && access.isNotEmpty) {
+            updateTokens(access, refresh);
+            return true;
           }
         }
+      }
 
       final apiResponse = ApiResponse.fromJson(payload);
       if (apiResponse.success && apiResponse.data != null) {
@@ -148,22 +137,11 @@ class HttpClient {
 
         if (access != null && access.isNotEmpty) {
           updateTokens(access, refresh);
-          if (kDebugMode) {
-            final head = access.length >= 12 ? access.substring(0, 12) : access;
-            final tail = access.length >= 6 ? access.substring(access.length - 6) : access;
-            debugPrint('[auth] refresh success (wrapped) accessLen=${access.length} token=${head}...${tail}');
-          }
           return true;
         }
       }
-      if (kDebugMode) {
-        debugPrint('[auth] refresh failed: missing access token in response');
-      }
       return false;
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('[auth] refresh exception: $e');
-      }
       return false;
     }
   }
@@ -194,7 +172,8 @@ class HttpClient {
     if (exp is! int) {
       return false;
     }
-    final expTime = DateTime.fromMillisecondsSinceEpoch(exp * 1000, isUtc: true);
+    final expTime =
+        DateTime.fromMillisecondsSinceEpoch(exp * 1000, isUtc: true);
     final now = DateTime.now().toUtc();
     return now.isAfter(expTime.subtract(Duration(seconds: leewaySeconds)));
   }
@@ -248,7 +227,8 @@ class HttpClient {
     }
   }
 
-  static Future<ApiResponse> get(String path, {Map<String, dynamic>? queryParameters}) async {
+  static Future<ApiResponse> get(String path,
+      {Map<String, dynamic>? queryParameters}) async {
     try {
       final response = await _dio.get(path, queryParameters: queryParameters);
       final apiResponse = ApiResponse.fromJson(response.data);
@@ -266,9 +246,11 @@ class HttpClient {
     }
   }
 
-  static Future<ApiResponse> post(String path, {dynamic data, Map<String, dynamic>? queryParameters}) async {
+  static Future<ApiResponse> post(String path,
+      {dynamic data, Map<String, dynamic>? queryParameters}) async {
     try {
-      final response = await _dio.post(path, data: data, queryParameters: queryParameters);
+      final response =
+          await _dio.post(path, data: data, queryParameters: queryParameters);
       final apiResponse = ApiResponse.fromJson(response.data);
       if (!apiResponse.success) {
         throw ApiException(
@@ -284,9 +266,11 @@ class HttpClient {
     }
   }
 
-  static Future<ApiResponse> put(String path, {dynamic data, Map<String, dynamic>? queryParameters}) async {
+  static Future<ApiResponse> put(String path,
+      {dynamic data, Map<String, dynamic>? queryParameters}) async {
     try {
-      final response = await _dio.put(path, data: data, queryParameters: queryParameters);
+      final response =
+          await _dio.put(path, data: data, queryParameters: queryParameters);
       final apiResponse = ApiResponse.fromJson(response.data);
       if (!apiResponse.success) {
         throw ApiException(
@@ -302,9 +286,11 @@ class HttpClient {
     }
   }
 
-  static Future<ApiResponse> patch(String path, {dynamic data, Map<String, dynamic>? queryParameters}) async {
+  static Future<ApiResponse> patch(String path,
+      {dynamic data, Map<String, dynamic>? queryParameters}) async {
     try {
-      final response = await _dio.patch(path, data: data, queryParameters: queryParameters);
+      final response =
+          await _dio.patch(path, data: data, queryParameters: queryParameters);
       final apiResponse = ApiResponse.fromJson(response.data);
       if (!apiResponse.success) {
         throw ApiException(
@@ -320,9 +306,11 @@ class HttpClient {
     }
   }
 
-  static Future<ApiResponse> delete(String path, {dynamic data, Map<String, dynamic>? queryParameters}) async {
+  static Future<ApiResponse> delete(String path,
+      {dynamic data, Map<String, dynamic>? queryParameters}) async {
     try {
-      final response = await _dio.delete(path, data: data, queryParameters: queryParameters);
+      final response =
+          await _dio.delete(path, data: data, queryParameters: queryParameters);
       final apiResponse = ApiResponse.fromJson(response.data);
       if (!apiResponse.success) {
         throw ApiException(

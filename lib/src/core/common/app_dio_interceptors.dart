@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:work_order_app/src/core/common/app_events.dart';
 import 'package:work_order_app/src/core/common/http_client.dart';
 import 'package:work_order_app/src/core/constants/response_code_constant.dart';
@@ -9,7 +8,8 @@ import 'package:work_order_app/src/core/models/api_response.dart';
 
 class AppDioInterceptors extends InterceptorsWrapper {
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+  void onRequest(
+      RequestOptions options, RequestInterceptorHandler handler) async {
     final path = options.path;
     final skipRefresh = options.extra['skipAuthRefresh'] == true ||
         path.contains('/auth/login') ||
@@ -24,14 +24,6 @@ class AppDioInterceptors extends InterceptorsWrapper {
     final token = HttpClient.accessToken;
     if (token != null && token.isNotEmpty) {
       options.headers[HttpHeaders.authorizationHeader] = 'Bearer $token';
-    }
-    if (kDebugMode && options.path.contains('/notifications/unread_count/')) {
-      final hasAuth = options.headers.containsKey(HttpHeaders.authorizationHeader);
-      final access = token ?? '';
-      final head = access.length >= 12 ? access.substring(0, 12) : access;
-      final tail = access.length >= 6 ? access.substring(access.length - 6) : access;
-      debugPrint('[auth] unread_count request authHeader=$hasAuth '
-          'tokenLen=${access.length} token=${head}...${tail}');
     }
     handler.next(options);
   }
@@ -50,13 +42,6 @@ class AppDioInterceptors extends InterceptorsWrapper {
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     // 401 错误处理：尝试刷新 token
     if (err.response?.statusCode == 401) {
-      if (kDebugMode) {
-        debugPrint('[auth] 401 response data: ${err.response?.data}');
-        debugPrint('[auth] 401 on ${err.requestOptions.path} '
-            'hasAccess=${(HttpClient.accessToken ?? '').isNotEmpty} '
-            'hasRefresh=${(HttpClient.refreshToken ?? '').isNotEmpty} '
-            'isRefreshing=${HttpClient.isRefreshing}');
-      }
       if (err.requestOptions.path.contains('/auth/refresh')) {
         HttpClient.clearTokens();
         AppEvents.emit(const AuthExpiredEvent());
@@ -86,7 +71,8 @@ class AppDioInterceptors extends InterceptorsWrapper {
 
         // 重试当前请求
         final token = HttpClient.accessToken;
-        err.requestOptions.headers[HttpHeaders.authorizationHeader] = 'Bearer $token';
+        err.requestOptions.headers[HttpHeaders.authorizationHeader] =
+            'Bearer $token';
         final response = await HttpClient.dio.fetch(err.requestOptions);
         handler.resolve(response);
         return;
