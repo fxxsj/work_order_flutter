@@ -357,22 +357,38 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                   return null;
                 },
               ),
-              CrudFormField.checkboxGroup(
-                label: _cmykLabel,
-                options: _cmykColors
-                    .map((color) => CrudFieldOption<dynamic>(
-                          value: color,
-                          label: color,
-                        ))
-                    .toList(),
-                values: _selectedCmyk,
-                helperText: '可选择多个 CMYK 色值',
-                onChanged: (values) {
-                  setState(() {
-                    _selectedCmyk
-                      ..clear()
-                      ..addAll(values.cast<String>());
-                  });
+              CrudFormField.custom(
+                builder: (context) {
+                  return InputDecorator(
+                    decoration: InputDecoration(
+                      labelText: _cmykLabel,
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      contentPadding: EdgeInsets.only(
+                        bottom: LayoutTokens.gapSm,
+                      ),
+                    ),
+                    child: Wrap(
+                      spacing: 8,
+                      children: _cmykColors
+                          .map(
+                            (color) => FilterChip(
+                              label: Text(color),
+                              selected: _selectedCmyk.contains(color),
+                              onSelected: (_) {
+                                setState(() {
+                                  if (_selectedCmyk.contains(color)) {
+                                    _selectedCmyk.remove(color);
+                                  } else {
+                                    _selectedCmyk.add(color);
+                                  }
+                                });
+                              },
+                            ),
+                        )
+                        .toList(),
+                    ),
+                  );
                 },
               ),
               CrudFormField.tags(
