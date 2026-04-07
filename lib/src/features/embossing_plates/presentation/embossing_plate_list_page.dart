@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
@@ -116,12 +117,12 @@ class EmbossingPlateListPage extends StatelessWidget {
         return;
       }
     }
-    final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => ChangeNotifierProvider.value(
-          value: viewModel,
-          child: EmbossingPlateEditPage(plate: target),
-        ),
+    final result = await context.pushNamed<bool>(
+      plate == null ? 'embossing_create' : 'embossing_edit',
+      pathParameters: plate == null ? const {} : {'id': plate.id.toString()},
+      extra: ChangeNotifierProvider.value(
+        value: viewModel,
+        child: EmbossingPlateEditPage(plate: target),
       ),
     );
     if (result == true) {

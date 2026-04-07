@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/constants/breakpoints.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/features/artworks/domain/artwork.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
@@ -209,30 +211,29 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
                   ),
                   SizedBox(
                     width: fieldWidth,
-                    child: TextFormField(
-                      readOnly: true,
+                    child: CrudFormField.text(
+                      label: '下单日期',
                       controller: orderDateController,
-                      decoration: const InputDecoration(labelText: '下单日期'),
+                      readOnly: true,
                       onTap: onPickOrderDate,
-                    ),
+                    ).build(context),
                   ),
                   SizedBox(
                     width: fieldWidth,
-                    child: TextFormField(
-                      readOnly: true,
+                    child: CrudFormField.text(
+                      label: '交货日期',
                       controller: deliveryDateController,
-                      decoration: const InputDecoration(labelText: '交货日期'),
+                      readOnly: true,
                       onTap: onPickDeliveryDate,
                       validator: (value) =>
                           (value == null || value.isEmpty) ? '请选择交货日期' : null,
-                    ),
+                    ).build(context),
                   ),
                   SizedBox(
                     width: fieldWidth,
-                    child: TextFormField(
+                    child: CrudFormField.number(
+                      label: '生产数量',
                       controller: productionQuantityController,
-                      decoration: const InputDecoration(labelText: '生产数量'),
-                      keyboardType: TextInputType.number,
                       validator: (value) {
                         final text = value?.trim() ?? '';
                         if (text.isEmpty) return null;
@@ -242,14 +243,13 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
                         }
                         return null;
                       },
-                    ),
+                    ).build(context),
                   ),
                   SizedBox(
                     width: fieldWidth,
-                    child: TextFormField(
+                    child: CrudFormField.number(
+                      label: '预损数量',
                       controller: defectiveQuantityController,
-                      decoration: const InputDecoration(labelText: '预损数量'),
-                      keyboardType: TextInputType.number,
                       validator: (value) {
                         final text = value?.trim() ?? '';
                         if (text.isEmpty) return null;
@@ -259,28 +259,28 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
                         }
                         return null;
                       },
-                    ),
+                    ).build(context),
                   ),
                   if (mode == WorkOrderFormMode.edit)
                     SizedBox(
                       width: fieldWidth,
-                      child: TextFormField(
-                        readOnly: true,
+                      child: CrudFormField.text(
+                        label: '实际交货日期',
                         controller: actualDeliveryDateController,
-                        decoration: const InputDecoration(labelText: '实际交货日期'),
+                        readOnly: true,
                         onTap: onPickActualDeliveryDate,
-                      ),
+                      ).build(context),
                     ),
                 ],
               );
             },
           ),
           SizedBox(height: LayoutTokens.gapMd),
-          TextFormField(
+          CrudFormField.textarea(
+            label: '备注',
             controller: notesController,
-            decoration: const InputDecoration(labelText: '备注'),
             maxLines: 3,
-          ),
+          ).build(context),
         ],
       ),
     );
@@ -351,10 +351,10 @@ class WorkOrderProductListSection extends StatelessWidget {
             ),
           Align(
             alignment: Alignment.centerLeft,
-            child: TextButton.icon(
+            child: PageActionButton.outlined(
               onPressed: onAdd,
-              icon: const Icon(Icons.add),
-              label: const Text('新增产品'),
+              icon: const Icon(Icons.add, size: 16),
+              label: '新增产品',
             ),
           ),
         ],
@@ -391,10 +391,10 @@ class WorkOrderMaterialListSection extends StatelessWidget {
             ),
           Align(
             alignment: Alignment.centerLeft,
-            child: TextButton.icon(
+            child: PageActionButton.outlined(
               onPressed: onAdd,
-              icon: const Icon(Icons.add),
-              label: const Text('新增物料'),
+              icon: const Icon(Icons.add, size: 16),
+              label: '新增物料',
             ),
           ),
         ],
@@ -506,10 +506,10 @@ class WorkOrderResourcesSection extends StatelessWidget {
                     .toList(),
               ),
               SizedBox(height: LayoutTokens.gapMd),
-              TextFormField(
+              CrudFormField.text(
+                label: '其他颜色（逗号分隔）',
                 controller: printingOtherColorsController,
-                decoration: const InputDecoration(labelText: '其他颜色（逗号分隔）'),
-              ),
+              ).build(context),
             ],
           );
 

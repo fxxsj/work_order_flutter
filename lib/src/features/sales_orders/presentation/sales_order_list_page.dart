@@ -69,7 +69,7 @@ class _SalesOrderListView extends StatefulWidget {
 }
 
 class _SalesOrderListViewState extends State<_SalesOrderListView> {
-  static const _searchDebounceDuration = Duration(milliseconds: 450);
+  static const _searchDebounceDuration = AnimationTokens.slower;
   static const double _searchWidth = 320;
   static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
@@ -402,12 +402,11 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     List<SalesOrder> orders,
     bool isMobile,
   ) {
-    final canChangeSalesOrder =
-        PermissionUtil.hasPermission(context, 'workorder.change_salesorder');
-    final canCreateWorkOrder =
-        PermissionUtil.hasPermission(context, 'workorder.add_workorder');
+    final permissions = PermissionUtil.snapshot(context);
+    final canChangeSalesOrder = permissions.has('workorder.change_salesorder');
+    final canCreateWorkOrder = permissions.has('workorder.add_workorder');
     final canCreateDeliveryOrder =
-        PermissionUtil.hasPermission(context, 'workorder.add_deliveryorder');
+        permissions.has('workorder.add_deliveryorder');
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
     if (viewModel.loading && orders.isEmpty) {
       return const Center(child: CircularProgressIndicator());
@@ -708,8 +707,8 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     SalesOrderViewModel viewModel,
     bool isMobile,
   ) {
-    final canCreateSalesOrder =
-        PermissionUtil.hasPermission(context, 'workorder.add_salesorder');
+    final permissions = PermissionUtil.snapshot(context);
+    final canCreateSalesOrder = permissions.has('workorder.add_salesorder');
     return PageHeaderBar(
       breadcrumb: null,
       useSurface: false,
@@ -904,7 +903,7 @@ class _SalesOrderSummaryCard extends StatelessWidget {
                 SizedBox(height: sectionSpacing),
                 AnimatedRotation(
                   turns: expanded ? 0.5 : 0.0,
-                  duration: const Duration(milliseconds: 200),
+                  duration: AnimationTokens.expandDuration,
                   child: Icon(
                     Icons.expand_more,
                     size: 20,

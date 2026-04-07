@@ -5,6 +5,7 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/artworks/application/artwork_view_model.dart';
@@ -229,11 +230,11 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
   }
 
   Widget _buildVersionField(BuildContext context) {
-    return TextFormField(
+    return CrudFormField.text(
+      label: _versionLabel,
       initialValue: widget.artwork?.version?.toString() ?? '1',
-      decoration: const InputDecoration(labelText: _versionLabel),
       enabled: false,
-    );
+    ).build(context);
   }
 
   Widget _buildProductSection(BuildContext context) {
@@ -274,12 +275,10 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                     ),
                     SizedBox(width: LayoutTokens.gapMd),
                     Expanded(
-                      child: TextFormField(
+                      child: CrudFormField.number(
+                        label: _quantityLabel,
                         controller: item.quantityController,
-                        decoration:
-                            const InputDecoration(labelText: _quantityLabel),
-                        keyboardType: TextInputType.number,
-                      ),
+                      ).build(context),
                     ),
                     SizedBox(width: LayoutTokens.gapSm),
                     IconButton(
@@ -314,10 +313,10 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
         SizedBox(height: sectionSpacing),
         Align(
           alignment: Alignment.centerLeft,
-          child: TextButton.icon(
+          child: PageActionButton.outlined(
             onPressed: _addProductItem,
-            icon: const Icon(Icons.add),
-            label: const Text(_addProductText),
+            icon: const Icon(Icons.add, size: 16),
+            label: _addProductText,
           ),
         ),
       ],

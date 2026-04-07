@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
+import 'package:work_order_app/src/core/utils/toast_util.dart';
 
 class UrgentOrderPage extends StatefulWidget {
   const UrgentOrderPage({super.key});
@@ -71,7 +72,8 @@ class _UrgentOrderPageState extends State<UrgentOrderPage> {
   Future<void> _loadUrgentOrders() async {
     setState(() => _loadingList = true);
     try {
-      final response = await _apiClient!.get('/urgent-orders/get_urgent_orders/');
+      final response =
+          await _apiClient!.get('/urgent-orders/get_urgent_orders/');
       setState(() => _listResult = _asMap(response.data));
     } catch (err) {
       _showError('获取失败: $err');
@@ -83,7 +85,8 @@ class _UrgentOrderPageState extends State<UrgentOrderPage> {
   Future<void> _loadEscalations() async {
     setState(() => _loadingEscalations = true);
     try {
-      final response = await _apiClient!.get('/urgent-orders/get_escalation_history/');
+      final response =
+          await _apiClient!.get('/urgent-orders/get_escalation_history/');
       setState(() => _escalationResult = _asMap(response.data));
     } catch (err) {
       _showError('获取失败: $err');
@@ -104,7 +107,7 @@ class _UrgentOrderPageState extends State<UrgentOrderPage> {
 
   void _showError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ToastUtil.showError(message);
   }
 
   @override
@@ -231,7 +234,8 @@ class _UrgentOrderPageState extends State<UrgentOrderPage> {
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
       ),
-      child: SelectableText(pretty, style: Theme.of(context).textTheme.bodySmall),
+      child:
+          SelectableText(pretty, style: Theme.of(context).textTheme.bodySmall),
     );
   }
 }

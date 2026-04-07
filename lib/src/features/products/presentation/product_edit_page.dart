@@ -645,17 +645,17 @@ class _MaterialCardState extends State<_MaterialCard> {
             Row(
               children: [
                 Expanded(
-                  child: TextFormField(
+                  child: CrudFormField.text(
+                    label: '尺寸',
                     controller: draft.materialSizeController,
-                    decoration: const InputDecoration(labelText: '尺寸'),
-                  ),
+                  ).build(context),
                 ),
                 SizedBox(width: LayoutTokens.gapMd),
                 Expanded(
-                  child: TextFormField(
+                  child: CrudFormField.text(
+                    label: '用量',
                     controller: draft.materialUsageController,
-                    decoration: const InputDecoration(labelText: '用量'),
-                  ),
+                  ).build(context),
                 ),
               ],
             ),
@@ -667,11 +667,11 @@ class _MaterialCardState extends State<_MaterialCard> {
               onChanged: (value) => setState(() => draft.needCutting = value),
             ),
             SizedBox(height: sectionSpacing),
-            TextFormField(
+            CrudFormField.textarea(
+              label: '备注',
               controller: draft.notesController,
-              decoration: const InputDecoration(labelText: '备注'),
               maxLines: 2,
-            ),
+            ).build(context),
           ],
         ),
       ),

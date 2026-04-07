@@ -26,6 +26,13 @@ class LayoutTokens {
   static const double pageWidthWide = 700;
   static const double pageWidthXwide = 760;
   static const double barrierOpacity = 0.3;
+  static const double timelineChartMinWidth = 560;
+  static const double timelineLabelWidth = 140;
+  static const double timelineRowHeight = 36;
+  static const double timelineBarHeight = 12;
+  static const double infoItemWidth = 132;
+  static const double statItemWidth = 180;
+  static const double minContentRailWidth = 320;
 
   /// 统一圆角规范: 8/12/16/20
   static const double radiusXs = 8;

@@ -197,7 +197,7 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
             barrierColor: Theme.of(context)
                 .shadowColor
                 .withValues(alpha: OpacityTokens.scrim),
-            transitionDuration: const Duration(milliseconds: 220),
+            transitionDuration: AnimationTokens.slide,
             pageBuilder: (dialogContext, animation, secondaryAnimation) {
               return Align(
                 alignment: Alignment.centerRight,

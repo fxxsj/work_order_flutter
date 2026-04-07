@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
@@ -86,12 +87,13 @@ class CustomerListPage extends StatelessWidget {
     CustomerViewModel viewModel,
     Customer? customer,
   ) async {
-    final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => ChangeNotifierProvider.value(
-          value: viewModel,
-          child: CustomerEditPage(customer: customer),
-        ),
+    final result = await context.pushNamed<bool>(
+      customer == null ? 'customers_create' : 'customers_edit',
+      pathParameters:
+          customer == null ? const {} : {'id': customer.id.toString()},
+      extra: ChangeNotifierProvider.value(
+        value: viewModel,
+        child: CustomerEditPage(customer: customer),
       ),
     );
     if (result == true) {
@@ -116,10 +118,10 @@ class CustomerListPage extends StatelessWidget {
     BuildContext context,
     Customer customer,
   ) {
-    return Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        builder: (_) => CustomerDetailPage(customer: customer),
-      ),
+    return context.pushNamed<void>(
+      'customers_detail',
+      pathParameters: {'id': customer.id.toString()},
+      extra: CustomerDetailPage(customer: customer),
     );
   }
 
@@ -127,8 +129,8 @@ class CustomerListPage extends StatelessWidget {
     BuildContext context,
     CustomerViewModel viewModel,
   ) {
-    final canCreateCustomer =
-        PermissionUtil.hasPermission(context, 'workorder.add_customer');
+    final permissions = PermissionUtil.snapshot(context);
+    final canCreateCustomer = permissions.has('workorder.add_customer');
     if (!canCreateCustomer) {
       return const [];
     }
@@ -146,10 +148,9 @@ class CustomerListPage extends StatelessWidget {
     CustomerViewModel viewModel,
     Customer customer,
   ) {
-    final canChangeCustomer =
-        PermissionUtil.hasPermission(context, 'workorder.change_customer');
-    final canDeleteCustomer =
-        PermissionUtil.hasPermission(context, 'workorder.delete_customer');
+    final permissions = PermissionUtil.snapshot(context);
+    final canChangeCustomer = permissions.has('workorder.change_customer');
+    final canDeleteCustomer = permissions.has('workorder.delete_customer');
 
     return [
       RowAction(

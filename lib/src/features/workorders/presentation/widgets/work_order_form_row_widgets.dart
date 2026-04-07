@@ -3,6 +3,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/constants/breakpoints.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/features/materials/domain/material.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
@@ -128,33 +129,31 @@ class _WorkOrderProductRowState extends State<WorkOrderProductRow> {
                 ),
                 SizedBox(
                   width: smallWidth,
-                  child: TextFormField(
+                  child: CrudFormField.number(
+                    label: '数量',
                     controller: widget.draft.quantityController,
-                    decoration: const InputDecoration(labelText: '数量'),
-                    keyboardType: TextInputType.number,
-                  ),
+                  ).build(context),
                 ),
                 SizedBox(
                   width: smallWidth,
-                  child: TextFormField(
+                  child: CrudFormField.text(
+                    label: '单位',
                     controller: widget.draft.unitController,
-                    decoration: const InputDecoration(labelText: '单位'),
-                  ),
+                  ).build(context),
                 ),
                 SizedBox(
                   width: specWidth,
-                  child: TextFormField(
+                  child: CrudFormField.text(
+                    label: '规格',
                     controller: widget.draft.specController,
-                    decoration: const InputDecoration(labelText: '规格'),
-                  ),
+                  ).build(context),
                 ),
                 SizedBox(
                   width: smallWidth,
-                  child: TextFormField(
+                  child: CrudFormField.number(
+                    label: '排序',
                     controller: widget.draft.sortOrderController,
-                    decoration: const InputDecoration(labelText: '排序'),
-                    keyboardType: TextInputType.number,
-                  ),
+                  ).build(context),
                 ),
                 if (widget.onRemove != null)
                   IconButton(
@@ -225,17 +224,17 @@ class _WorkOrderMaterialRowState extends State<WorkOrderMaterialRow> {
                 ),
                 SizedBox(
                   width: mediumWidth,
-                  child: TextFormField(
+                  child: CrudFormField.text(
+                    label: '规格',
                     controller: widget.draft.sizeController,
-                    decoration: const InputDecoration(labelText: '规格'),
-                  ),
+                  ).build(context),
                 ),
                 SizedBox(
                   width: mediumWidth,
-                  child: TextFormField(
+                  child: CrudFormField.text(
+                    label: '用量',
                     controller: widget.draft.usageController,
-                    decoration: const InputDecoration(labelText: '用量'),
-                  ),
+                  ).build(context),
                 ),
                 Row(
                   mainAxisSize: MainAxisSize.min,
@@ -251,10 +250,10 @@ class _WorkOrderMaterialRowState extends State<WorkOrderMaterialRow> {
                 ),
                 SizedBox(
                   width: notesWidth,
-                  child: TextFormField(
+                  child: CrudFormField.text(
+                    label: '备注',
                     controller: widget.draft.notesController,
-                    decoration: const InputDecoration(labelText: '备注'),
-                  ),
+                  ).build(context),
                 ),
                 IconButton(
                   onPressed: widget.onRemove,

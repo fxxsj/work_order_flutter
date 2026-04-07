@@ -3,8 +3,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/file_upload_picker.dart';
+import 'package:work_order_app/src/core/utils/toast_util.dart';
 
 enum CrudFieldType {
   text,
@@ -66,6 +68,13 @@ class CrudFormField {
     this.minLines,
     this.maxLines = 1,
     this.keyboardType,
+    this.initialValue,
+    this.prefixIcon,
+    this.suffixIcon,
+    this.textInputAction,
+    this.obscureText = false,
+    this.onFieldSubmitted,
+    this.isDense = false,
     this.readOnly = false,
     this.onTap,
     this.emptyText,
@@ -95,6 +104,14 @@ class CrudFormField {
     String? hintText,
     String? helperText,
     TextInputType? keyboardType,
+    String? initialValue,
+    Widget? prefixIcon,
+    Widget? suffixIcon,
+    TextInputAction? textInputAction,
+    bool obscureText = false,
+    ValueChanged<String>? onChanged,
+    ValueChanged<String>? onFieldSubmitted,
+    bool isDense = false,
     bool readOnly = false,
     VoidCallback? onTap,
   }) : this._(
@@ -108,6 +125,15 @@ class CrudFormField {
           hintText: hintText,
           helperText: helperText,
           keyboardType: keyboardType,
+          initialValue: initialValue,
+          prefixIcon: prefixIcon,
+          suffixIcon: suffixIcon,
+          textInputAction: textInputAction,
+          obscureText: obscureText,
+          onChanged:
+              onChanged == null ? null : (value) => onChanged(value as String),
+          onFieldSubmitted: onFieldSubmitted,
+          isDense: isDense,
           readOnly: readOnly,
           onTap: onTap,
         );
@@ -121,6 +147,13 @@ class CrudFormField {
     String? hintText,
     String? helperText,
     bool decimal = false,
+    String? initialValue,
+    Widget? prefixIcon,
+    Widget? suffixIcon,
+    TextInputAction? textInputAction,
+    ValueChanged<String>? onChanged,
+    ValueChanged<String>? onFieldSubmitted,
+    bool isDense = false,
   }) : this._(
           label: label,
           type: CrudFieldType.number,
@@ -131,6 +164,14 @@ class CrudFormField {
           enabled: enabled,
           hintText: hintText,
           helperText: helperText,
+          initialValue: initialValue,
+          prefixIcon: prefixIcon,
+          suffixIcon: suffixIcon,
+          textInputAction: textInputAction,
+          onChanged:
+              onChanged == null ? null : (value) => onChanged(value as String),
+          onFieldSubmitted: onFieldSubmitted,
+          isDense: isDense,
           keyboardType: TextInputType.numberWithOptions(decimal: decimal),
         );
 
@@ -142,6 +183,11 @@ class CrudFormField {
     bool enabled = true,
     String? hintText,
     String? helperText,
+    Widget? prefixIcon,
+    Widget? suffixIcon,
+    TextInputAction? textInputAction,
+    ValueChanged<String>? onChanged,
+    ValueChanged<String>? onFieldSubmitted,
   }) : this._(
           label: label,
           type: CrudFieldType.email,
@@ -152,6 +198,12 @@ class CrudFormField {
           enabled: enabled,
           hintText: hintText,
           helperText: helperText,
+          prefixIcon: prefixIcon,
+          suffixIcon: suffixIcon,
+          textInputAction: textInputAction,
+          onChanged:
+              onChanged == null ? null : (value) => onChanged(value as String),
+          onFieldSubmitted: onFieldSubmitted,
           keyboardType: TextInputType.emailAddress,
         );
 
@@ -163,6 +215,11 @@ class CrudFormField {
     bool enabled = true,
     String? hintText,
     String? helperText,
+    Widget? prefixIcon,
+    Widget? suffixIcon,
+    TextInputAction? textInputAction,
+    ValueChanged<String>? onChanged,
+    ValueChanged<String>? onFieldSubmitted,
   }) : this._(
           label: label,
           type: CrudFieldType.phone,
@@ -173,6 +230,12 @@ class CrudFormField {
           enabled: enabled,
           hintText: hintText,
           helperText: helperText,
+          prefixIcon: prefixIcon,
+          suffixIcon: suffixIcon,
+          textInputAction: textInputAction,
+          onChanged:
+              onChanged == null ? null : (value) => onChanged(value as String),
+          onFieldSubmitted: onFieldSubmitted,
           keyboardType: TextInputType.phone,
         );
 
@@ -286,6 +349,10 @@ class CrudFormField {
     String? helperText,
     int minLines = 2,
     int maxLines = 3,
+    Widget? prefixIcon,
+    Widget? suffixIcon,
+    ValueChanged<String>? onChanged,
+    bool isDense = false,
   }) : this._(
           label: label,
           type: CrudFieldType.textarea,
@@ -298,6 +365,11 @@ class CrudFormField {
           helperText: helperText,
           minLines: minLines,
           maxLines: maxLines,
+          prefixIcon: prefixIcon,
+          suffixIcon: suffixIcon,
+          onChanged:
+              onChanged == null ? null : (value) => onChanged(value as String),
+          isDense: isDense,
         );
 
   CrudFormField.toggle({
@@ -522,6 +594,13 @@ class CrudFormField {
   final int? minLines;
   final int maxLines;
   final TextInputType? keyboardType;
+  final String? initialValue;
+  final Widget? prefixIcon;
+  final Widget? suffixIcon;
+  final TextInputAction? textInputAction;
+  final bool obscureText;
+  final ValueChanged<String>? onFieldSubmitted;
+  final bool isDense;
   final bool readOnly;
   final VoidCallback? onTap;
   final String? emptyText;
@@ -709,14 +788,19 @@ class CrudFormField {
         return TextFormField(
           key: fieldKey,
           controller: controller,
+          initialValue: controller == null ? initialValue : null,
           validator: validator as String? Function(String?)?,
           enabled: enabled,
           minLines: minLines,
           maxLines: maxLines,
+          onChanged: onChanged as ValueChanged<String>?,
           decoration: InputDecoration(
             labelText: label,
             hintText: hintText,
             helperText: helperText,
+            prefixIcon: prefixIcon,
+            suffixIcon: suffixIcon,
+            isDense: isDense,
           ),
         );
       case CrudFieldType.text:
@@ -727,9 +811,14 @@ class CrudFormField {
         return TextFormField(
           key: fieldKey,
           controller: controller,
+          initialValue: controller == null ? initialValue : null,
           validator: validator as String? Function(String?)?,
           enabled: enabled,
           keyboardType: keyboardType,
+          obscureText: obscureText,
+          textInputAction: textInputAction,
+          onChanged: onChanged as ValueChanged<String>?,
+          onFieldSubmitted: onFieldSubmitted,
           readOnly: readOnly,
           onTap: onTap,
           maxLines: maxLines,
@@ -737,6 +826,9 @@ class CrudFormField {
             labelText: label,
             hintText: hintText,
             helperText: helperText,
+            prefixIcon: prefixIcon,
+            suffixIcon: suffixIcon,
+            isDense: isDense,
           ),
         );
       case CrudFieldType.custom:
@@ -1089,13 +1181,9 @@ class _CrudFileUploadFieldBody extends StatelessWidget {
       state.didChange(picked);
       onChanged?.call(picked);
     } on FileUploadPickException catch (err) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(err.message)));
+      ToastUtil.showError(err.message);
     } catch (_) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('读取文件失败')));
+      ToastUtil.showError('读取文件失败');
     }
   }
 
@@ -1699,8 +1787,10 @@ class _CrudColorFieldBody extends StatelessWidget {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(label),
+        return BaseDialog(
+          title: label,
+          maxWidth: LayoutTokens.dialogWidthSm,
+          scrollable: false,
           content: SizedBox(
             width: 320,
             child: BlockPicker(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 
 class AppDataTable extends StatelessWidget {
@@ -33,10 +34,10 @@ class AppDataTable extends StatelessWidget {
       color: colors?.subtleText ?? theme.hintColor,
       fontWeight: FontWeight.w600,
       letterSpacing: 0.2,
-      fontSize: 14,
+      fontSize: TextTokens.fontSizeBodyMedium,
     );
     final dataStyle = theme.textTheme.bodyMedium?.copyWith(
-      fontSize: 14,
+      fontSize: TextTokens.fontSizeBodyMedium,
       height: 1.4,
     );
 

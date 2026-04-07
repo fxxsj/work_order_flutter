@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
+import 'package:work_order_app/src/core/utils/toast_util.dart';
 
 class ApprovalReportPage extends StatefulWidget {
   const ApprovalReportPage({super.key});
@@ -59,7 +60,8 @@ class _ApprovalReportPageState extends State<ApprovalReportPage> {
   Future<void> _loadStats() async {
     setState(() => _loadingStats = true);
     try {
-      final response = await _apiClient!.get('/approval-reports/get_statistics/');
+      final response =
+          await _apiClient!.get('/approval-reports/get_statistics/');
       setState(() => _statsResult = _asMap(response.data));
     } catch (err) {
       _showError('获取统计失败: $err');
@@ -161,7 +163,8 @@ class _ApprovalReportPageState extends State<ApprovalReportPage> {
   Future<void> _updateSkillProfile() async {
     setState(() => _loadingUpdateSkill = true);
     try {
-      final response = await _apiClient!.post('/approval-reports/update_skill_profile/');
+      final response =
+          await _apiClient!.post('/approval-reports/update_skill_profile/');
       setState(() => _updateSkillResult = _asMap(response.data));
     } catch (err) {
       _showError('更新失败: $err');
@@ -182,7 +185,7 @@ class _ApprovalReportPageState extends State<ApprovalReportPage> {
 
   void _showError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ToastUtil.showError(message);
   }
 
   @override
@@ -350,7 +353,8 @@ class _ApprovalReportPageState extends State<ApprovalReportPage> {
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
       ),
-      child: SelectableText(pretty, style: Theme.of(context).textTheme.bodySmall),
+      child:
+          SelectableText(pretty, style: Theme.of(context).textTheme.bodySmall),
     );
   }
 }

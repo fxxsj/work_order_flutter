@@ -71,7 +71,7 @@ class _WorkOrderListView extends StatefulWidget {
 
 class _WorkOrderListViewState extends State<_WorkOrderListView>
     with SingleTickerProviderStateMixin {
-  static const _searchDebounceDuration = Duration(milliseconds: 450);
+  static const _searchDebounceDuration = AnimationTokens.slower;
   static const double _searchWidth = 320;
   static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
@@ -288,10 +288,9 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     List<WorkOrder> workOrders,
     bool isMobile,
   ) {
-    final canChangeWorkOrder =
-        PermissionUtil.hasPermission(context, 'workorder.change_workorder');
-    final canDeleteWorkOrder =
-        PermissionUtil.hasPermission(context, 'workorder.delete_workorder');
+    final permissions = PermissionUtil.snapshot(context);
+    final canChangeWorkOrder = permissions.has('workorder.change_workorder');
+    final canDeleteWorkOrder = permissions.has('workorder.delete_workorder');
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
 
     if (viewModel.loading && workOrders.isEmpty) {
@@ -523,7 +522,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
                 SizedBox(height: sectionSpacing),
                 AnimatedRotation(
                   turns: expanded ? 0.5 : 0.0,
-                  duration: const Duration(milliseconds: 200),
+                  duration: AnimationTokens.expandDuration,
                   child: Icon(
                     Icons.expand_more,
                     size: 20,
@@ -596,8 +595,8 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     WorkOrderViewModel viewModel,
     bool isMobile,
   ) {
-    final canCreateWorkOrder =
-        PermissionUtil.hasPermission(context, 'workorder.add_workorder');
+    final permissions = PermissionUtil.snapshot(context);
+    final canCreateWorkOrder = permissions.has('workorder.add_workorder');
     final statusItems = const [
       DropdownOption(value: 'pending', label: '待开始'),
       DropdownOption(value: 'in_progress', label: '进行中'),
@@ -625,7 +624,8 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     final productItems = [
       const DropdownOption<int?>(value: null, label: '全部产品'),
       ..._products.map(
-        (item) => DropdownOption<int?>(value: item.id, label: item.displayLabel),
+        (item) =>
+            DropdownOption<int?>(value: item.id, label: item.displayLabel),
       ),
     ];
     final processItems = [

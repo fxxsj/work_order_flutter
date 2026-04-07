@@ -49,8 +49,8 @@ class _ExpandableSummaryCardState extends State<ExpandableSummaryCard>
     final resolvedRadius = widget.radius ?? LayoutTokens.radiusLg;
     final resolvedBorderColor = widget.borderColor ??
         (colors?.borderColor ?? theme.dividerColor.withValues(alpha: 0.6));
-    final resolvedBackground =
-        widget.backgroundColor ?? (colors?.surface ?? theme.colorScheme.surface);
+    final resolvedBackground = widget.backgroundColor ??
+        (colors?.surface ?? theme.colorScheme.surface);
     final resolvedHeaderPadding =
         (widget.headerPadding ?? LayoutTokens.cardPadding(context))
             .resolve(Directionality.of(context));
@@ -64,7 +64,7 @@ class _ExpandableSummaryCardState extends State<ExpandableSummaryCard>
         );
 
     return AnimatedSize(
-      duration: const Duration(milliseconds: 220),
+      duration: AnimationTokens.slide,
       curve: Curves.easeInOut,
       alignment: Alignment.topCenter,
       child: Container(

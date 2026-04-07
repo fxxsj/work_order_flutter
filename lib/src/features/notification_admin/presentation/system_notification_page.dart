@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
+import 'package:work_order_app/src/core/utils/toast_util.dart';
 
 class SystemNotificationPage extends StatefulWidget {
   const SystemNotificationPage({super.key});
@@ -131,7 +132,8 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
   Future<void> _loadSettings() async {
     setState(() => _loadingSettings = true);
     try {
-      final response = await _apiClient!.get('/system-notifications/notification_settings/');
+      final response =
+          await _apiClient!.get('/system-notifications/notification_settings/');
       final data = _asMap(response.data);
       setState(() {
         _settingsResult = data;
@@ -169,7 +171,8 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
   Future<void> _loadStatus() async {
     setState(() => _loadingStatus = true);
     try {
-      final response = await _apiClient!.get('/system-notifications/system_status/');
+      final response =
+          await _apiClient!.get('/system-notifications/system_status/');
       setState(() => _statusResult = _asMap(response.data));
     } catch (err) {
       _showError('获取状态失败: $err');
@@ -198,7 +201,7 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
 
   void _showError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ToastUtil.showError(message);
   }
 
   @override
@@ -264,7 +267,8 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
           const SizedBox(height: LayoutTokens.gapSm),
           SwitchListTile(
             value: _announcementOnlyStaff,
-            onChanged: (value) => setState(() => _announcementOnlyStaff = value),
+            onChanged: (value) =>
+                setState(() => _announcementOnlyStaff = value),
             title: const Text('仅发送给员工'),
             contentPadding: EdgeInsets.zero,
           ),
@@ -444,7 +448,8 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
       ),
-      child: SelectableText(pretty, style: Theme.of(context).textTheme.bodySmall),
+      child:
+          SelectableText(pretty, style: Theme.of(context).textTheme.bodySmall),
     );
   }
 }

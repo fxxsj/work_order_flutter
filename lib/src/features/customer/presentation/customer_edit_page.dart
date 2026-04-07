@@ -86,7 +86,8 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
     final requiredPermission = widget.customer == null
         ? 'workorder.add_customer'
         : 'workorder.change_customer';
-    if (!PermissionUtil.hasPermission(context, requiredPermission)) {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has(requiredPermission)) {
       ToastUtil.showError('当前账号无权执行该操作');
       return;
     }
@@ -195,6 +196,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
     final customer = widget.customer;
     final viewModel = context.watch<CustomerViewModel>();
     final salespersons = viewModel.salespersons;
+    final permissions = PermissionUtil.snapshot(context);
 
     return CrudEditPage<Customer, CustomerViewModel>(
       item: customer,
@@ -202,8 +204,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
         submitText: _submitText,
         submittingText: '保存中',
         errorMessagePrefix: _submitErrorText,
-        canSave: (context, viewModel, item) => PermissionUtil.hasPermission(
-          context,
+        canSave: (_, __, item) => permissions.has(
           item == null ? 'workorder.add_customer' : 'workorder.change_customer',
         ),
         sectionsBuilder: (context, isMobile) {

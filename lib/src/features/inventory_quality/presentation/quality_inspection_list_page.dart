@@ -10,6 +10,8 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/action_decis
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/approval_rejection_notice_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/file_upload_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
@@ -73,7 +75,7 @@ class _QualityInspectionListView extends StatefulWidget {
 
 class _QualityInspectionListViewState
     extends State<_QualityInspectionListView> {
-  static const _searchDebounceDuration = Duration(milliseconds: 450);
+  static const _searchDebounceDuration = AnimationTokens.slower;
   static const double _searchWidth = 320;
   static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
@@ -469,77 +471,62 @@ class _QualityInspectionListViewState
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setState) {
-            return AlertDialog(
-              title: const Text(_completeTitle),
-              content: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: SingleChildScrollView(
-                  child: Form(
-                    key: formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        UnifiedDropdown<String>(
-                          key: ValueKey<String>(result),
-                          value: result,
-                          decoration: const InputDecoration(labelText: '检验结果'),
-                          options: const [
-                            DropdownOption(value: 'passed', label: '合格'),
-                            DropdownOption(value: 'failed', label: '不合格'),
-                            DropdownOption(value: 'conditional', label: '条件接收'),
-                          ],
-                          onChanged: submitting
-                              ? null
-                              : (value) {
-                                  if (value == null) return;
-                                  setState(() => result = value);
-                                },
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: passedController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: '合格数量'),
-                          validator: (value) {
-                            final text = value?.trim() ?? '';
-                            final parsed = int.tryParse(text);
-                            if (parsed == null || parsed < 0) {
-                              return '请输入有效数量';
-                            }
-                            return null;
+            return FormDialog(
+              title: _completeTitle,
+              formKey: formKey,
+              submitting: submitting,
+              submitText: _submitText,
+              cancelText: _cancelText,
+              maxWidth: LayoutTokens.dialogWidthSm,
+              onCancel: () => Navigator.of(dialogContext).pop(),
+              onSubmit: () => submit(setState),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  UnifiedDropdown<String>(
+                    key: ValueKey<String>(result),
+                    value: result,
+                    decoration: const InputDecoration(labelText: '检验结果'),
+                    options: const [
+                      DropdownOption(value: 'passed', label: '合格'),
+                      DropdownOption(value: 'failed', label: '不合格'),
+                      DropdownOption(value: 'conditional', label: '条件接收'),
+                    ],
+                    onChanged: submitting
+                        ? null
+                        : (value) {
+                            if (value == null) return;
+                            setState(() => result = value);
                           },
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: failedController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: '不合格数量'),
-                          validator: (value) {
-                            final text = value?.trim() ?? '';
-                            final parsed = int.tryParse(text);
-                            if (parsed == null || parsed < 0) {
-                              return '请输入有效数量';
-                            }
-                            return null;
-                          },
-                        ),
-                      ],
-                    ),
                   ),
-                ),
+                  const SizedBox(height: 12),
+                  CrudFormField.number(
+                    label: '合格数量',
+                    controller: passedController,
+                    validator: (value) {
+                      final text = value?.trim() ?? '';
+                      final parsed = int.tryParse(text);
+                      if (parsed == null || parsed < 0) {
+                        return '请输入有效数量';
+                      }
+                      return null;
+                    },
+                  ).build(context),
+                  const SizedBox(height: 12),
+                  CrudFormField.number(
+                    label: '不合格数量',
+                    controller: failedController,
+                    validator: (value) {
+                      final text = value?.trim() ?? '';
+                      final parsed = int.tryParse(text);
+                      if (parsed == null || parsed < 0) {
+                        return '请输入有效数量';
+                      }
+                      return null;
+                    },
+                  ).build(context),
+                ],
               ),
-              actions: [
-                TextButton(
-                  onPressed: submitting
-                      ? null
-                      : () => Navigator.of(dialogContext).pop(),
-                  child: const Text(_cancelText),
-                ),
-                FilledButton(
-                  onPressed: submitting ? null : () => submit(setState),
-                  child: Text(submitting ? '提交中...' : _submitText),
-                ),
-              ],
             );
           },
         );
@@ -1106,7 +1093,7 @@ class _QualityInspectionListViewState
                 SizedBox(height: sectionSpacing),
                 AnimatedRotation(
                   turns: expanded ? 0.5 : 0.0,
-                  duration: const Duration(milliseconds: 200),
+                  duration: AnimationTokens.expandDuration,
                   child: Icon(
                     Icons.expand_more,
                     size: 20,

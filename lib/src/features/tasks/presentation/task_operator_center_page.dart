@@ -6,6 +6,7 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -670,10 +671,9 @@ class _TaskUpdateDialogState extends State<_TaskUpdateDialog> {
           ),
           SizedBox(height: LayoutTokens.gapMd),
           if (!_completeMode) ...[
-            TextFormField(
+            CrudFormField.number(
+              label: '本次完成数量',
               initialValue: _quantityIncrement.toString(),
-              decoration: const InputDecoration(labelText: '本次完成数量'),
-              keyboardType: TextInputType.number,
               validator: (value) {
                 final parsed = int.tryParse(value ?? '');
                 if (parsed == null || parsed <= 0) {
@@ -684,29 +684,28 @@ class _TaskUpdateDialogState extends State<_TaskUpdateDialog> {
               onChanged: (value) {
                 _quantityIncrement = int.tryParse(value) ?? 0;
               },
-            ),
+            ).build(context),
             SizedBox(height: LayoutTokens.gapMd),
           ],
-          TextFormField(
+          CrudFormField.number(
+            label: '不良品数量',
             initialValue: _quantityDefective.toString(),
-            decoration: const InputDecoration(labelText: '不良品数量'),
-            keyboardType: TextInputType.number,
             onChanged: (value) {
               _quantityDefective = int.tryParse(value) ?? 0;
             },
-          ),
+          ).build(context),
           if (_completeMode) ...[
             SizedBox(height: LayoutTokens.gapMd),
-            TextFormField(
-              decoration: const InputDecoration(labelText: '完成理由（可选）'),
+            CrudFormField.text(
+              label: '完成理由（可选）',
               onChanged: (value) => _completionReason = value,
-            ),
+            ).build(context),
           ],
           SizedBox(height: LayoutTokens.gapMd),
-          TextFormField(
-            decoration: const InputDecoration(labelText: '备注（可选）'),
+          CrudFormField.text(
+            label: '备注（可选）',
             onChanged: (value) => _notes = value,
-          ),
+          ).build(context),
         ],
       ),
     );

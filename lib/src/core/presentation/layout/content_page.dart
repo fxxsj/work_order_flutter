@@ -1463,7 +1463,7 @@ class _QuickEntryCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     '进入处理',
-                    style: TextStyle(color: subtleText, fontSize: 12),
+                    style: TextStyle(color: subtleText, fontSize: TextTokens.fontSizeLabelMedium),
                   ),
                 ],
               ),

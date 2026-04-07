@@ -66,7 +66,7 @@ class _TaskListView extends StatefulWidget {
 }
 
 class _TaskListViewState extends State<_TaskListView> {
-  static const _searchDebounceDuration = Duration(milliseconds: 450);
+  static const _searchDebounceDuration = AnimationTokens.slower;
   static const double _searchWidth = LayoutTokens.searchWidth;
   static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
@@ -759,7 +759,7 @@ class _TaskListViewState extends State<_TaskListView> {
             SizedBox(width: sectionSpacing),
             AnimatedRotation(
               turns: expanded ? 0.5 : 0.0,
-              duration: const Duration(milliseconds: 200),
+              duration: AnimationTokens.expandDuration,
               child: Icon(
                 Icons.expand_more,
                 size: 20,

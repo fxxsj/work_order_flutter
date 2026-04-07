@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/app_loading_indicator.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/animated_button.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/utils/validators.dart';
 import 'package:work_order_app/src/features/auth/application/auth_view_model.dart';
 import 'package:work_order_app/src/features/auth/domain/user.dart';
@@ -64,38 +65,32 @@ class _LoginState extends State<Login> {
         key: formKey,
         child: Column(
           children: [
-            TextFormField(
-              focusNode: focusNodeUserName,
+            CrudFormField.text(
+              label: '账号',
               controller: userNameController,
               textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(
-                labelText: '账号',
-                hintText: '请输入用户名或工号',
-                prefixIcon: Icon(Icons.person_outline),
-              ),
+              hintText: '请输入用户名或工号',
+              prefixIcon: const Icon(Icons.person_outline),
               onFieldSubmitted: (_) => focusNodePassword.requestFocus(),
               validator: FormValidators.required('请输入账号'),
-            ),
+            ).build(context),
             SizedBox(height: LayoutTokens.gapLg),
-            TextFormField(
-              focusNode: focusNodePassword,
+            CrudFormField.text(
+              label: '密码',
               controller: passwordController,
               obscureText: _obscurePassword,
-              decoration: InputDecoration(
-                labelText: '密码',
-                hintText: '请输入登录密码',
-                prefixIcon: const Icon(Icons.lock_outline),
-                suffixIcon: IconButton(
-                  onPressed: () {
-                    setState(() {
-                      _obscurePassword = !_obscurePassword;
-                    });
-                  },
-                  icon: Icon(
-                    _obscurePassword
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                  ),
+              hintText: '请输入登录密码',
+              prefixIcon: const Icon(Icons.lock_outline),
+              suffixIcon: IconButton(
+                onPressed: () {
+                  setState(() {
+                    _obscurePassword = !_obscurePassword;
+                  });
+                },
+                icon: Icon(
+                  _obscurePassword
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
                 ),
               ),
               onFieldSubmitted: (_) {
@@ -104,27 +99,16 @@ class _LoginState extends State<Login> {
                 }
               },
               validator: FormValidators.required('请输入密码'),
-            ),
+            ).build(context),
             SizedBox(height: LayoutTokens.gapLg + LayoutTokens.gapXs),
             SizedBox(
               width: double.infinity,
-              child: FilledButton(
-                onPressed: _isLoading ? null : _login,
-                style: FilledButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primary,
-                  foregroundColor: theme.colorScheme.onPrimary,
-                  padding: EdgeInsets.symmetric(vertical: LayoutTokens.gapLg),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
-                  ),
-                ),
-                child: _isLoading
-                    ? AppLoadingIndicator(
-                        centered: false,
-                        size: LayoutTokens.iconLg,
-                        color: theme.colorScheme.onPrimary,
-                      )
-                    : const Text('登录'),
+              child: AnimatedButton(
+                onPressed: _login,
+                loading: _isLoading,
+                width: double.infinity,
+                size: AnimatedButtonSize.large,
+                child: const Text('登录'),
               ),
             ),
           ],
@@ -147,7 +131,11 @@ class _LoginState extends State<Login> {
           TextButton.icon(
             onPressed: () {},
             style: TextButton.styleFrom(padding: EdgeInsets.zero),
-            icon: Icon(Icons.help_outline, size: 18, color: colors.subtleText),
+            icon: Icon(
+              Icons.help_outline,
+              size: LayoutTokens.iconMd,
+              color: colors.subtleText,
+            ),
             label: Text(
               '忘记密码请联系管理员',
               style: theme.textTheme.bodyMedium

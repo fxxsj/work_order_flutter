@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/features/tasks/data/task_supervisor_support_service.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
@@ -603,10 +604,10 @@ class _TaskSupervisorAssignDialogState
                 setState(() => _operatorId = value ?? _operatorId),
           ),
           SizedBox(height: LayoutTokens.gapMd),
-          TextFormField(
-            decoration: const InputDecoration(labelText: '备注（可选）'),
+          CrudFormField.text(
+            label: '备注（可选）',
             onChanged: (value) => _notes = value,
-          ),
+          ).build(context),
         ],
       ),
     );

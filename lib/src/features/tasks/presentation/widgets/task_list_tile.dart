@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/meta_chip.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/utils/extensions/datetime_extensions.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_ui_helper.dart';
 
@@ -95,24 +97,24 @@ class TaskListTile extends StatelessWidget {
                 runSpacing: isXs ? LayoutTokens.gapSm : LayoutTokens.gapSm,
                 children: [
                   if (task.customerName?.isNotEmpty == true)
-                    _MetaChip(label: '客户', value: task.customerName!),
+                    MetaChip(label: '客户', value: task.customerName!),
                   if (task.workOrderNumber?.isNotEmpty == true)
-                    _MetaChip(label: '施工单', value: task.workOrderNumber!),
+                    MetaChip(label: '施工单', value: task.workOrderNumber!),
                   if (task.processName?.isNotEmpty == true)
-                    _MetaChip(label: '工序', value: task.processName!),
+                    MetaChip(label: '工序', value: task.processName!),
                   if (task.statusDisplay?.isNotEmpty == true)
-                    _MetaChip(label: '状态', value: task.statusDisplay!),
+                    MetaChip(label: '状态', value: task.statusDisplay!),
                   if (task.priorityDisplay?.isNotEmpty == true)
-                    _MetaChip(label: '优先级', value: task.priorityDisplay!),
+                    MetaChip(label: '优先级', value: task.priorityDisplay!),
                   if (deliveryDate != null)
-                    _MetaChip(label: '交付', value: _formatDate(deliveryDate)),
+                    MetaChip(label: '交付', value: deliveryDate.toYMD),
                   if (deadlineRisk != null)
-                    _MetaChip(label: '风险', value: deadlineRisk),
+                    MetaChip(label: '风险', value: deadlineRisk),
                   if (followUp.isNotEmpty && followUp != '-')
-                    _MetaChip(label: '下一步', value: followUp),
+                    MetaChip(label: '下一步', value: followUp),
                   if (showAssignee &&
                       task.assignedOperatorName?.isNotEmpty == true)
-                    _MetaChip(label: '执行人', value: task.assignedOperatorName!),
+                    MetaChip(label: '执行人', value: task.assignedOperatorName!),
                 ],
               ),
             ],
@@ -122,56 +124,4 @@ class TaskListTile extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime date) {
-    final month = date.month.toString().padLeft(2, '0');
-    final day = date.day.toString().padLeft(2, '0');
-    return '${date.year}-$month-$day';
-  }
-}
-
-class _MetaChip extends StatelessWidget {
-  const _MetaChip({
-    required this.label,
-    required this.value,
-  });
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>()!;
-    final labelStyle = theme.textTheme.labelSmall?.copyWith(
-      color: colors.subtleText,
-    );
-    final valueStyle = theme.textTheme.labelSmall?.copyWith(
-      color: colors.sidebarText,
-      fontWeight: FontWeight.w700,
-    );
-
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: BreakpointsUtil.isXs(context) ? 8 : 10,
-        vertical: BreakpointsUtil.isXs(context) ? 5 : 6,
-      ),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
-        border: Border.all(color: colors.borderColor),
-      ),
-      child: RichText(
-        text: TextSpan(
-          style: labelStyle,
-          children: [
-            TextSpan(text: '$label '),
-            TextSpan(
-              text: value,
-              style: valueStyle,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

@@ -3,6 +3,30 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/constants/constant.dart';
 import 'package:work_order_app/src/core/storage/app_storage.dart';
 
+class PermissionSnapshot {
+  const PermissionSnapshot._({
+    required this.permissions,
+    required this.isSuperuser,
+    required this.fallbackToUnrestricted,
+  });
+
+  final Set<String> permissions;
+  final bool isSuperuser;
+  final bool fallbackToUnrestricted;
+
+  bool has(String permission) => hasAny([permission]);
+
+  bool hasAny(List<String> requiredPermissions) {
+    if (isSuperuser || permissions.contains('*')) {
+      return true;
+    }
+    if (permissions.isEmpty) {
+      return fallbackToUnrestricted;
+    }
+    return requiredPermissions.any(permissions.contains);
+  }
+}
+
 class PermissionUtil {
   const PermissionUtil._();
 
@@ -19,16 +43,39 @@ class PermissionUtil {
     return user?['is_superuser'] == true;
   }
 
+  static PermissionSnapshot snapshot(
+    BuildContext context, {
+    bool fallbackToUnrestricted = true,
+  }) {
+    final user = currentUser(context);
+    if (user == null || user.isEmpty) {
+      return PermissionSnapshot._(
+        permissions: const {},
+        isSuperuser: false,
+        fallbackToUnrestricted: fallbackToUnrestricted,
+      );
+    }
+
+    final raw = user['permissions'];
+    final permissions =
+        raw is List ? raw.map((item) => item.toString()).toSet() : <String>{};
+
+    return PermissionSnapshot._(
+      permissions: permissions,
+      isSuperuser: user['is_superuser'] == true,
+      fallbackToUnrestricted: fallbackToUnrestricted,
+    );
+  }
+
   static bool hasPermission(
     BuildContext context,
     String permission, {
     bool fallbackToUnrestricted = true,
   }) {
-    return hasAnyPermission(
+    return snapshot(
       context,
-      [permission],
       fallbackToUnrestricted: fallbackToUnrestricted,
-    );
+    ).has(permission);
   }
 
   static bool hasAnyPermission(
@@ -36,28 +83,9 @@ class PermissionUtil {
     List<String> permissions, {
     bool fallbackToUnrestricted = true,
   }) {
-    final user = currentUser(context);
-    if (user == null || user.isEmpty) {
-      return fallbackToUnrestricted;
-    }
-
-    if (user['is_superuser'] == true) {
-      return true;
-    }
-
-    final raw = user['permissions'];
-    if (raw is! List) {
-      return fallbackToUnrestricted;
-    }
-
-    final granted = raw.map((item) => item.toString()).toSet();
-    if (granted.contains('*')) {
-      return true;
-    }
-    if (granted.isEmpty) {
-      return fallbackToUnrestricted;
-    }
-
-    return permissions.any(granted.contains);
+    return snapshot(
+      context,
+      fallbackToUnrestricted: fallbackToUnrestricted,
+    ).hasAny(permissions);
   }
 }

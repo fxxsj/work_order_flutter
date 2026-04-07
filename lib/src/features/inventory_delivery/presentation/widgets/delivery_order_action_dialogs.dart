@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 
 Future<void> showDeliveryShipDialog(
   BuildContext context, {
@@ -50,15 +51,15 @@ Future<void> showDeliveryShipDialog(
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextFormField(
+                CrudFormField.text(
+                  label: '物流公司',
                   controller: logisticsController,
-                  decoration: const InputDecoration(labelText: '物流公司'),
-                ),
+                ).build(dialogContext),
                 SizedBox(height: LayoutTokens.gapMd),
-                TextFormField(
+                CrudFormField.text(
+                  label: '运单号',
                   controller: trackingController,
-                  decoration: const InputDecoration(labelText: '运单号'),
-                ),
+                ).build(dialogContext),
               ],
             ),
           );
@@ -108,11 +109,11 @@ Future<void> showDeliveryReceiveDialog(
             submitting: submitting,
             maxWidth: LayoutTokens.dialogWidthSm,
             onSubmit: () => submit(setState),
-            content: TextFormField(
+            content: CrudFormField.textarea(
+              label: '签收备注',
               controller: notesController,
               maxLines: 3,
-              decoration: const InputDecoration(labelText: '签收备注'),
-            ),
+            ).build(dialogContext),
           );
         },
       );
@@ -167,20 +168,18 @@ Future<void> showDeliveryRejectDialog(
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 SizedBox(height: LayoutTokens.gapMd),
-                TextFormField(
+                CrudFormField.textarea(
+                  label: '拒收原因',
                   controller: reasonController,
                   maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: '拒收原因',
-                    hintText: '例如：地址错误、包装破损、数量不符',
-                  ),
+                  hintText: '例如：地址错误、包装破损、数量不符',
                   validator: (value) {
                     if ((value?.trim() ?? '').isEmpty) {
                       return '请输入拒收原因';
                     }
                     return null;
                   },
-                ),
+                ).build(dialogContext),
               ],
             ),
           );

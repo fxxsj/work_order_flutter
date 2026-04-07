@@ -210,17 +210,14 @@ Future<StatementCreateResult?> showStatementCreateDialog(
                           validator: (value) => value == null ? '请选择供应商' : null,
                         ),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      TextFormField(
+                      CrudFormField.text(
+                        label: '对账周期（YYYY-MM）',
                         controller: periodController,
-                        decoration: const InputDecoration(
-                          labelText: '对账周期（YYYY-MM）',
-                          border: OutlineInputBorder(),
-                        ),
                         validator: (value) =>
                             (value == null || value.trim().isEmpty)
                                 ? '请输入对账周期'
                                 : null,
-                      ),
+                      ).build(context),
                       const SizedBox(height: LayoutTokens.gapMd),
                       CrudFormField.dateRange(
                         label: '对账日期范围',
@@ -244,25 +241,17 @@ Future<StatementCreateResult?> showStatementCreateDialog(
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      TextFormField(
+                      CrudFormField.number(
+                        label: '期初余额',
                         controller: openingBalanceController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: '期初余额',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
+                        decimal: true,
+                      ).build(context),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      TextFormField(
+                      CrudFormField.textarea(
+                        label: '备注（可选）',
                         controller: notesController,
-                        decoration: const InputDecoration(
-                          labelText: '备注（可选）',
-                          border: OutlineInputBorder(),
-                        ),
                         maxLines: 3,
-                      ),
+                      ).build(context),
                     ],
                   ),
                 ),
@@ -409,16 +398,13 @@ Future<StatementGenerateResult?> showStatementGenerateDialog(
                     validator: (value) => value == null ? '请选择供应商' : null,
                   ),
                 SizedBox(height: LayoutTokens.gapMd),
-                TextFormField(
+                CrudFormField.text(
+                  label: '对账周期（YYYY-MM）',
                   controller: periodController,
-                  decoration: const InputDecoration(
-                    labelText: '对账周期（YYYY-MM）',
-                    border: OutlineInputBorder(),
-                  ),
                   validator: (value) => (value == null || value.trim().isEmpty)
                       ? '请输入对账周期'
                       : null,
-                ),
+                ).build(context),
               ],
             ),
           );

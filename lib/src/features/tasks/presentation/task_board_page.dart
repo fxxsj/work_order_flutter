@@ -65,7 +65,7 @@ class _TaskBoardView extends StatefulWidget {
 }
 
 class _TaskBoardViewState extends State<_TaskBoardView> {
-  static const _searchDebounceDuration = Duration(milliseconds: 450);
+  static const _searchDebounceDuration = AnimationTokens.slower;
   static const double _searchWidth = LayoutTokens.searchWidth;
   static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
@@ -314,7 +314,7 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
               barrierColor: Theme.of(context)
                   .shadowColor
                   .withValues(alpha: OpacityTokens.scrim),
-              transitionDuration: const Duration(milliseconds: 220),
+              transitionDuration: AnimationTokens.slide,
               pageBuilder: (dialogContext, animation, secondaryAnimation) {
                 return Align(
                   alignment: Alignment.centerRight,
@@ -755,9 +755,7 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
       context.go('/workorders/${task.workOrderId}');
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('该任务暂无施工单详情可查看。')),
-    );
+    ToastUtil.showError('该任务暂无施工单详情可查看。');
   }
 
   void _handleDragStart(Task task) {

@@ -170,7 +170,8 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     final requiredPermission = widget.mode == WorkOrderFormMode.create
         ? 'workorder.add_workorder'
         : 'workorder.change_workorder';
-    if (!PermissionUtil.hasPermission(context, requiredPermission)) {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has(requiredPermission)) {
       ToastUtil.showError('当前账号无权执行该操作');
       return;
     }
@@ -244,8 +245,8 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
 
   @override
   Widget build(BuildContext context) {
-    final canSubmit = PermissionUtil.hasPermission(
-      context,
+    final permissions = PermissionUtil.snapshot(context);
+    final canSubmit = permissions.has(
       widget.mode == WorkOrderFormMode.create
           ? 'workorder.add_workorder'
           : 'workorder.change_workorder',

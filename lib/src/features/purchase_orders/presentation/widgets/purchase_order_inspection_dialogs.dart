@@ -3,6 +3,7 @@ import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_loading_indicator.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
@@ -359,36 +360,32 @@ Future<void> showPurchaseInspectionFormDialog(
                   label: '收货数量',
                   value: received.toStringAsFixed(2),
                 ),
-                TextFormField(
+                CrudFormField.number(
+                  label: '合格数量',
                   controller: qualifiedController,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: const InputDecoration(labelText: '合格数量'),
+                  decimal: true,
                   validator: (value) {
                     final parsed = double.tryParse(value?.trim() ?? '');
                     if (parsed == null || parsed < 0) return '请输入有效数量';
                     return null;
                   },
-                ),
+                ).build(dialogContext),
                 SizedBox(height: LayoutTokens.gapMd),
-                TextFormField(
+                CrudFormField.number(
+                  label: '不合格数量',
                   controller: unqualifiedController,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: const InputDecoration(labelText: '不合格数量'),
+                  decimal: true,
                   validator: (value) {
                     final parsed = double.tryParse(value?.trim() ?? '');
                     if (parsed == null || parsed < 0) return '请输入有效数量';
                     return null;
                   },
-                ),
+                ).build(dialogContext),
                 SizedBox(height: LayoutTokens.gapMd),
-                TextFormField(
+                CrudFormField.textarea(
+                  label: '不合格原因',
                   controller: reasonController,
                   maxLines: 3,
-                  decoration: const InputDecoration(labelText: '不合格原因'),
                   validator: (value) {
                     final unqualified = double.tryParse(
                           unqualifiedController.text.trim(),
@@ -399,7 +396,7 @@ Future<void> showPurchaseInspectionFormDialog(
                     }
                     return null;
                   },
-                ),
+                ).build(dialogContext),
               ],
             ),
           );

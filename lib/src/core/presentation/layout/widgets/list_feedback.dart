@@ -450,7 +450,7 @@ class ExpandableFilters extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedSize(
-      duration: const Duration(milliseconds: 200),
+      duration: AnimationTokens.expandDuration,
       curve: Curves.easeOut,
       child: expanded
           ? Padding(

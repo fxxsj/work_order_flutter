@@ -64,7 +64,7 @@ class _PaymentListView extends StatefulWidget {
 }
 
 class _PaymentListViewState extends State<_PaymentListView> {
-  static const _searchDebounceDuration = Duration(milliseconds: 450);
+  static const _searchDebounceDuration = AnimationTokens.slower;
   static const double _searchWidth = 320;
   static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
@@ -149,7 +149,8 @@ class _PaymentListViewState extends State<_PaymentListView> {
   }
 
   Future<void> _openCreateDialog(PaymentViewModel viewModel) async {
-    if (!PermissionUtil.hasPermission(context, 'workorder.add_payment')) {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.add_payment')) {
       ToastUtil.showError('当前账号无权新建收款');
       return;
     }
@@ -307,6 +308,7 @@ class _PaymentListViewState extends State<_PaymentListView> {
     PaymentViewModel viewModel,
     bool isMobile,
   ) {
+    final permissions = PermissionUtil.snapshot(context);
     return PageHeaderBar(
       breadcrumb: null,
       useSurface: false,
@@ -354,7 +356,7 @@ class _PaymentListViewState extends State<_PaymentListView> {
                 icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
                 label: '清除筛选',
               ),
-            if (PermissionUtil.hasPermission(context, 'workorder.add_payment'))
+            if (permissions.has('workorder.add_payment'))
               PageActionButton.filled(
                 onPressed: () => _openCreateDialog(viewModel),
                 icon: const Icon(Icons.add, size: 16),
@@ -460,7 +462,7 @@ class _PaymentListViewState extends State<_PaymentListView> {
                 SizedBox(height: sectionSpacing),
                 AnimatedRotation(
                   turns: expanded ? 0.5 : 0.0,
-                  duration: const Duration(milliseconds: 200),
+                  duration: AnimationTokens.expandDuration,
                   child: Icon(
                     Icons.expand_more,
                     size: 20,

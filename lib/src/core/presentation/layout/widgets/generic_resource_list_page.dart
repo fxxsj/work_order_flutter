@@ -13,6 +13,7 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -181,7 +182,7 @@ class GenericResourceListPage extends StatefulWidget {
 }
 
 class _GenericResourceListPageState extends State<GenericResourceListPage> {
-  static const _searchDebounceDuration = Duration(milliseconds: 450);
+  static const _searchDebounceDuration = AnimationTokens.slower;
   static const double _searchWidth = 320;
   static const double _spacingSm = LayoutTokens.gapSm;
 
@@ -496,31 +497,27 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
 
     await showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: SizedBox(
-          width: 520,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (final field in detailFields) ...[
-                  Text(
-                    field.label,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: colors?.subtleText ?? theme.hintColor,
-                    ),
-                  ),
-                  const SizedBox(height: LayoutTokens.gapXs),
-                  Text(
-                    field.value(record),
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: LayoutTokens.gapSm),
-                ],
-              ],
-            ),
-          ),
+      builder: (context) => BaseDialog(
+        title: title,
+        maxWidth: 520,
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final field in detailFields) ...[
+              Text(
+                field.label,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: colors?.subtleText ?? theme.hintColor,
+                ),
+              ),
+              const SizedBox(height: LayoutTokens.gapXs),
+              Text(
+                field.value(record),
+                style: theme.textTheme.bodyMedium,
+              ),
+              const SizedBox(height: LayoutTokens.gapSm),
+            ],
+          ],
         ),
         actions: [
           TextButton(

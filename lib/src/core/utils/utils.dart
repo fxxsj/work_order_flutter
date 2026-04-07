@@ -30,33 +30,33 @@ class Utils {
       secondaryContainer:
           resolvedBrightness == Brightness.dark ? seedDark : seedLight,
       surface: resolvedBrightness == Brightness.dark
-          ? const Color(0xFF111827)
-          : const Color(0xFFFCFCFD),
+          ? ColorTokens.surfaceDark
+          : ColorTokens.surfaceLight,
       surfaceTint: Colors.transparent,
       shadow: resolvedBrightness == Brightness.dark
-          ? const Color(0xFF000000)
-          : const Color(0xFF0B1220),
+          ? ColorTokens.shadowDark
+          : ColorTokens.shadowLight,
     );
     final semantic = resolvedBrightness == Brightness.dark
         ? const AppSemanticColors(
-            success: Color(0xFF22C55E),
-            warning: Color(0xFFF59E0B),
-            danger: Color(0xFFEF4444),
-            info: Color(0xFF38BDF8),
-            surfaceAlt: Color(0xFF0C1626),
-            shadowStrong: Color(0xFF000000),
-            successBg: Color(0x1A22C55E),
-            warningBg: Color(0x1AF59E0B),
-            dangerBg: Color(0x1AEF4444),
+            success: ColorTokens.success,
+            warning: ColorTokens.warning,
+            danger: ColorTokens.danger,
+            info: ColorTokens.infoLight,
+            surfaceAlt: ColorTokens.surfaceAltDark,
+            shadowStrong: ColorTokens.shadowDark,
+            successBg: ColorTokens.successBg,
+            warningBg: ColorTokens.warningBg,
+            dangerBg: ColorTokens.dangerBg,
             infoBg: Color(0x1A38BDF8),
           )
         : const AppSemanticColors(
-            success: Color(0xFF16A34A),
-            warning: Color(0xFFD97706),
-            danger: Color(0xFFDC2626),
-            info: Color(0xFF0284C7),
-            surfaceAlt: Color(0xFFEFF3F8),
-            shadowStrong: Color(0xFF0B1220),
+            success: ColorTokens.successDark,
+            warning: ColorTokens.warningDark,
+            danger: ColorTokens.dangerDark,
+            info: ColorTokens.infoDark,
+            surfaceAlt: ColorTokens.surfaceAltLight,
+            shadowStrong: ColorTokens.shadowLight,
             successBg: Color(0x1A16A34A),
             warningBg: Color(0x1AD97706),
             dangerBg: Color(0x1ADC2626),
@@ -78,93 +78,80 @@ class Utils {
 
     final appColors = resolvedBrightness == Brightness.dark
         ? AppColors(
-            background: mix(const Color(0xFF0B1220), seedDeep, 0.22),
-            surface: mix(const Color(0xFF111827), seedDeep, 0.18),
-            sidebar: mix(const Color(0xFF0F172A), seedDeep, 0.2),
+            background: mix(ColorTokens.backgroundBaseDark, seedDeep, 0.22),
+            surface: mix(ColorTokens.surfaceDark, seedDeep, 0.18),
+            sidebar: mix(ColorTokens.sidebarBaseDark, seedDeep, 0.2),
             subtleText: const Color(0xFF9AA4B2),
             sidebarText: const Color(0xFFE2E8F0),
-            borderColor: mix(const Color(0xFF1F2937), seedDeep, 0.24),
+            borderColor: mix(ColorTokens.borderDark, seedDeep, 0.24),
           )
         : AppColors(
-            background: mix(const Color(0xFFF2F4F8), seedSoft2, 0.12),
-            surface: mix(const Color(0xFFFFFFFF), seedSoft, 0.04),
-            sidebar: mix(const Color(0xFFF6F8FB), seedSoft, 0.08),
-            subtleText: const Color(0xFF64748B),
-            sidebarText: const Color(0xFF334155),
-            borderColor: mix(const Color(0xFFD8DEE8), seedSoft, 0.14),
+            background: mix(ColorTokens.backgroundBaseLight, seedSoft2, 0.12),
+            surface: mix(ColorTokens.textLight, seedSoft, 0.04),
+            sidebar: mix(ColorTokens.sidebarBaseLight, seedSoft, 0.08),
+            subtleText: ColorTokens.textSecondary,
+            sidebarText: ColorTokens.sidebarTextLight,
+            borderColor: mix(ColorTokens.borderLight, seedSoft, 0.14),
           );
     final baseTextTheme = ThemeData(brightness: resolvedBrightness).textTheme;
     const headingFont = 'AGENCYR';
 
-    // 增强的字体大小配置
-    const fontSizeDisplaySmall = 40.0;
-    const fontSizeHeadlineSmall = 28.0;
-    const fontSizeTitleLarge = 18.0;
-    const fontSizeTitleMedium = 15.0;
-    const fontSizeTitleSmall = 14.0;
-    const fontSizeBodyLarge = 16.0;
-    const fontSizeBodyMedium = 14.5;
-    const fontSizeBodySmall = 13.0;
-    const fontSizeLabelLarge = 15.0;
-    const fontSizeLabelMedium = 13.0;
-    const fontSizeLabelSmall = 12.0;
-
     final textTheme = baseTextTheme.copyWith(
       displaySmall: baseTextTheme.displaySmall?.copyWith(
         fontFamily: headingFont,
-        fontSize: fontSizeDisplaySmall,
+        fontSize: TextTokens.fontSizeDisplaySmall,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.4,
         height: 1.2,
       ),
       headlineSmall: baseTextTheme.headlineSmall?.copyWith(
         fontFamily: headingFont,
-        fontSize: fontSizeHeadlineSmall,
+        fontSize: TextTokens.fontSizeHeadlineMedium,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.3,
         height: 1.3,
       ),
       titleLarge: baseTextTheme.titleLarge?.copyWith(
         fontFamily: headingFont,
-        fontSize: fontSizeTitleLarge,
+        fontSize: TextTokens.fontSizeTitleLarge,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.2,
         height: 1.3,
       ),
       titleMedium: baseTextTheme.titleMedium?.copyWith(
-        fontSize: fontSizeTitleMedium,
+        fontSize: TextTokens.fontSizeTitleMedium,
         fontWeight: FontWeight.w600,
         height: 1.3,
       ),
       titleSmall: baseTextTheme.titleSmall?.copyWith(
-        fontSize: fontSizeTitleSmall,
+        fontSize: TextTokens.fontSizeTitleSmall,
         fontWeight: FontWeight.w600,
         height: 1.3,
       ),
       bodyLarge: baseTextTheme.bodyLarge?.copyWith(
-        fontSize: fontSizeBodyLarge,
+        fontSize: TextTokens.fontSizeBodyLarge,
         height: 1.5,
       ),
       bodyMedium: baseTextTheme.bodyMedium?.copyWith(
-        fontSize: fontSizeBodyMedium,
+        fontSize: TextTokens.fontSizeBodyMedium,
         height: 1.5,
       ),
       bodySmall: baseTextTheme.bodySmall?.copyWith(
-        fontSize: fontSizeBodySmall,
+        fontSize: TextTokens.fontSizeBodySmall,
         height: 1.45,
       ),
       labelLarge: baseTextTheme.labelLarge?.copyWith(
-        fontSize: fontSizeLabelLarge,
+        fontSize: TextTokens.fontSizeLabelLarge,
         fontWeight: FontWeight.w500,
         height: 1.3,
       ),
       labelMedium: baseTextTheme.labelMedium?.copyWith(
-        fontSize: fontSizeLabelMedium,
+        fontSize: TextTokens.fontSizeLabelMedium,
         fontWeight: FontWeight.w500,
         height: 1.3,
       ),
       labelSmall: baseTextTheme.labelSmall?.copyWith(
-        fontSize: fontSizeLabelSmall,
+        fontSize: TextTokens.fontSizeLabelSmall,
         fontWeight: FontWeight.w500,
         height: 1.3,
       ),
@@ -214,35 +201,35 @@ class Utils {
         ),
         errorStyle: TextStyle(
           color: semantic.danger,
-          fontSize: fontSizeLabelSmall,
+          fontSize: TextTokens.fontSizeLabelSmall,
           height: 1.4,
         ),
         hintStyle: TextStyle(
-          fontSize: fontSizeBodyMedium,
+          fontSize: TextTokens.fontSizeBodyMedium,
           color: appColors.subtleText,
         ),
         labelStyle: TextStyle(
-          fontSize: fontSizeBodyMedium,
+          fontSize: TextTokens.fontSizeBodyMedium,
         ),
         floatingLabelStyle: TextStyle(
-          fontSize: fontSizeLabelMedium,
+          fontSize: TextTokens.fontSizeLabelMedium,
         ),
         floatingLabelBehavior: FloatingLabelBehavior.auto,
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: appColors.surface,
         foregroundColor: resolvedBrightness == Brightness.dark
-            ? const Color(0xFFE5E7EB)
-            : const Color(0xFF111827),
+            ? ColorTokens.textOnDark
+            : ColorTokens.textDark,
         elevation: 0,
         scrolledUnderElevation: 1.5,
         surfaceTintColor: Colors.transparent,
         titleTextStyle: TextStyle(
-          fontSize: fontSizeTitleMedium,
+          fontSize: TextTokens.fontSizeTitleMedium,
           fontWeight: FontWeight.w600,
           color: resolvedBrightness == Brightness.dark
-              ? const Color(0xFFE5E7EB)
-              : const Color(0xFF111827),
+              ? ColorTokens.textOnDark
+              : ColorTokens.textDark,
         ),
       ),
       iconTheme: IconThemeData(color: scheme.primary),
@@ -263,7 +250,7 @@ class Utils {
       ),
       scrollbarTheme: ScrollbarThemeData(
         thumbColor: WidgetStateProperty.all(scheme.primary.withAlpha(153)),
-        radius: const Radius.circular(8),
+        radius: const Radius.circular(LayoutTokens.radiusXs),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: scheme.primary,
@@ -275,7 +262,9 @@ class Utils {
           mouseCursor: WidgetStateProperty.all(SystemMouseCursors.click),
           textStyle: WidgetStateProperty.all(
             TextStyle(
-                fontSize: fontSizeLabelMedium, fontWeight: FontWeight.w500),
+              fontSize: TextTokens.fontSizeLabelMedium,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ),
@@ -287,7 +276,9 @@ class Utils {
           mouseCursor: WidgetStateProperty.all(SystemMouseCursors.click),
           textStyle: WidgetStateProperty.all(
             TextStyle(
-                fontSize: fontSizeLabelMedium, fontWeight: FontWeight.w500),
+              fontSize: TextTokens.fontSizeLabelMedium,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ),
@@ -298,9 +289,9 @@ class Utils {
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: resolvedBrightness == Brightness.dark
-            ? const Color(0xFF111827)
-            : const Color(0xFF0F172A),
-        contentTextStyle: const TextStyle(color: Colors.white),
+            ? ColorTokens.surfaceDark
+            : ColorTokens.sidebarBaseDark,
+        contentTextStyle: TextStyle(color: ColorTokens.textLight),
       ),
       extensions: [semantic, appColors],
     );

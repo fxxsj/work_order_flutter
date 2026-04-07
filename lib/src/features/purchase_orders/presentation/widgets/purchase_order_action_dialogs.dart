@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 
 Future<String?> showPurchaseReasonDialog(
   BuildContext context, {
@@ -21,11 +22,11 @@ Future<String?> showPurchaseReasonDialog(
       maxWidth: LayoutTokens.dialogWidthSm,
       onSubmit: () async =>
           Navigator.of(dialogContext).pop(controller.text.trim()),
-      content: TextFormField(
+      content: CrudFormField.textarea(
+        label: fieldLabel,
         controller: controller,
         maxLines: 3,
-        decoration: InputDecoration(labelText: fieldLabel),
-      ),
+      ).build(dialogContext),
     ),
   );
   controller.dispose();

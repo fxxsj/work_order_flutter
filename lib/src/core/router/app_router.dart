@@ -17,7 +17,8 @@ GoRouter createAppRouter(AuthController authController) {
     initialLocation: '/dashboard',
     refreshListenable: authController,
     redirect: (context, state) {
-      final goingToLogin = state.matchedLocation == '/login' || state.matchedLocation == '/register';
+      final goingToLogin = state.matchedLocation == '/login' ||
+          state.matchedLocation == '/register';
       final loggedIn = authController.isLoggedIn;
 
       if (loggedIn) {
@@ -63,6 +64,25 @@ GoRouter createAppRouter(AuthController authController) {
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final List<NavItem> _leafItems = leafNavItemsByBranch();
+
+const Set<String> _resourceEditRouteIds = {
+  'customers',
+  'products',
+  'materials',
+  'product_groups',
+  'suppliers',
+  'departments',
+  'processes',
+  'artworks',
+  'dies',
+  'foiling',
+  'embossing',
+};
+
+const Set<String> _resourceDetailRouteIds = {
+  'customers',
+  'suppliers',
+};
 
 List<GoRoute> _buildBranchRoutes(NavItem item) {
   if (item.id == 'workorders') {
@@ -164,6 +184,33 @@ List<GoRoute> _buildBranchRoutes(NavItem item) {
       pageBuilder: (context, state) => NoTransitionPage(
         child: ContentPage(selectedId: item.id),
       ),
+      routes: [
+        if (_resourceEditRouteIds.contains(item.id))
+          GoRoute(
+            path: 'create',
+            name: '${item.id}_create',
+            pageBuilder: (context, state) => _buildExtraPage(state, item.id),
+          ),
+        if (_resourceEditRouteIds.contains(item.id))
+          GoRoute(
+            path: ':id/edit',
+            name: '${item.id}_edit',
+            pageBuilder: (context, state) => _buildExtraPage(state, item.id),
+          ),
+        if (_resourceDetailRouteIds.contains(item.id))
+          GoRoute(
+            path: ':id',
+            name: '${item.id}_detail',
+            pageBuilder: (context, state) => _buildExtraPage(state, item.id),
+          ),
+      ],
     ),
   ];
+}
+
+NoTransitionPage _buildExtraPage(GoRouterState state, String fallbackId) {
+  final extra = state.extra;
+  return NoTransitionPage(
+    child: extra is Widget ? extra : ContentPage(selectedId: fallbackId),
+  );
 }

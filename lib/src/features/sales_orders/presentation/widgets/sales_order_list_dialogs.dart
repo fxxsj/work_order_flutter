@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order_detail.dart';
 
 class SalesOrderPaymentUpdateResult {
@@ -76,19 +78,16 @@ Future<SalesOrderPaymentUpdateResult?> showSalesOrderPaymentDialog(
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextFormField(
+            CrudFormField.number(
+              label: '已付金额',
               controller: amountController,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(labelText: '已付金额'),
-            ),
+              decimal: true,
+            ).build(dialogContext),
             SizedBox(height: LayoutTokens.gapMd),
-            TextFormField(
+            CrudFormField.text(
+              label: '付款日期（YYYY-MM-DD）',
               controller: dateController,
-              decoration: const InputDecoration(
-                labelText: '付款日期（YYYY-MM-DD）',
-              ),
-            ),
+            ).build(dialogContext),
           ],
         ),
       ),
@@ -154,18 +153,16 @@ Future<SalesOrderCompleteResult?> showSalesOrderCompleteDialog(
             ),
             if (requireReason) ...[
               SizedBox(height: LayoutTokens.gapMd),
-              TextFormField(
+              CrudFormField.textarea(
+                label: '人工完结原因',
                 controller: reasonController,
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: '人工完结原因',
-                  hintText: '例如：客户确认尾差不再补发，按已交付数量结案',
-                ),
+                hintText: '例如：客户确认尾差不再补发，按已交付数量结案',
                 validator: (value) {
                   if (!requireReason) return null;
                   return (value?.trim().isEmpty ?? true) ? '请填写人工完结原因' : null;
                 },
-              ),
+              ).build(dialogContext),
             ],
           ],
         ),
@@ -284,14 +281,11 @@ class _SalesOrderWorkOrderItemList extends StatelessWidget {
                             : '${item.productCode} · 订单数量 ${item.orderedQuantity}，已发货 ${item.deliveredQuantity}',
                       ),
                     ),
-                    TextFormField(
+                    CrudFormField.number(
+                      label: '生产数量',
                       controller: item.quantityController,
                       enabled: item.selected,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: '生产数量',
-                        helperText: '建议按待交付数量填写，当前剩余 ${item.remainingQuantity}',
-                      ),
+                      helperText: '建议按待交付数量填写，当前剩余 ${item.remainingQuantity}',
                       validator: (_) {
                         if (!item.selected) return null;
                         final value =
@@ -304,7 +298,7 @@ class _SalesOrderWorkOrderItemList extends StatelessWidget {
                         }
                         return null;
                       },
-                    ),
+                    ).build(context),
                   ],
                 ),
               ),
@@ -388,9 +382,7 @@ class _SalesOrderCreateWorkOrderPanelState
         )
         .toList(growable: false);
     if (selectedItems.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请至少选择一个需要转施工单的订单产品')),
-      );
+      ToastUtil.showError('请至少选择一个需要转施工单的订单产品');
       return;
     }
     widget.onSubmit(
@@ -465,12 +457,10 @@ class _SalesOrderCreateWorkOrderPanelState
                             ),
                       ),
                       SizedBox(height: spacing),
-                      TextFormField(
+                      CrudFormField.text(
+                        label: '交货日期（YYYY-MM-DD，可选）',
                         controller: _deliveryController,
-                        decoration: const InputDecoration(
-                          labelText: '交货日期（YYYY-MM-DD，可选）',
-                        ),
-                      ),
+                      ).build(context),
                       SizedBox(height: LayoutTokens.gapMd),
                       UnifiedDropdown<String>(
                         decoration: const InputDecoration(labelText: '优先级'),
@@ -481,17 +471,16 @@ class _SalesOrderCreateWorkOrderPanelState
                           DropdownOption(value: 'high', label: '高'),
                           DropdownOption(value: 'urgent', label: '紧急'),
                         ],
-                        onChanged: (value) => setState(() => _priority = value ?? 'normal'),
+                        onChanged: (value) =>
+                            setState(() => _priority = value ?? 'normal'),
                       ),
                       SizedBox(height: LayoutTokens.gapMd),
-                      TextFormField(
+                      CrudFormField.textarea(
+                        label: '备注（可选）',
                         controller: _notesController,
-                        decoration: const InputDecoration(
-                          labelText: '备注（可选）',
-                          hintText: '补充说明本次排产、拼版或图稿要求',
-                        ),
                         maxLines: 4,
-                      ),
+                        hintText: '补充说明本次排产、拼版或图稿要求',
+                      ).build(context),
                     ],
                   ),
                 ),

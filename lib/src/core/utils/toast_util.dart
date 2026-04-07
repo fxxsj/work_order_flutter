@@ -61,7 +61,8 @@ class ToastUtil {
     updated[index] = updated[index].copyWith(closing: true);
     _items.value = updated;
 
-    Timer(const Duration(milliseconds: 220), () {
+    Timer(AnimationTokens.expandDuration + const Duration(milliseconds: 20),
+        () {
       _remove(id);
     });
   }
@@ -198,11 +199,11 @@ class _ToastCardState extends State<_ToastCard>
     final foreground = widget.item.isError ? scheme.onError : scheme.onPrimary;
 
     return AnimatedSlide(
-      duration: const Duration(milliseconds: 200),
+      duration: AnimationTokens.expandDuration,
       offset: _visible ? Offset.zero : const Offset(0.2, 0),
       curve: Curves.easeOut,
       child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 200),
+        duration: AnimationTokens.expandDuration,
         opacity: _visible ? 1 : 0,
         child: Container(
           constraints: const BoxConstraints(maxWidth: LayoutTokens.searchWidth),

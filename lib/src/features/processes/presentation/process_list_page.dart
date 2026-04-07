@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
@@ -83,12 +84,13 @@ class ProcessListPage extends StatelessWidget {
     ProcessViewModel viewModel,
     Process? process,
   ) async {
-    final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => ChangeNotifierProvider.value(
-          value: viewModel,
-          child: ProcessEditPage(process: process),
-        ),
+    final result = await context.pushNamed<bool>(
+      process == null ? 'processes_create' : 'processes_edit',
+      pathParameters:
+          process == null ? const {} : {'id': process.id.toString()},
+      extra: ChangeNotifierProvider.value(
+        value: viewModel,
+        child: ProcessEditPage(process: process),
       ),
     );
     if (result == true) {

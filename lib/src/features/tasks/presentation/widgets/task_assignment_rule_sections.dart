@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
@@ -169,10 +170,9 @@ class _TaskAssignmentRuleDialogState extends State<TaskAssignmentRuleDialog> {
                     setState(() => _departmentId = value ?? _departmentId),
           ),
           SizedBox(height: LayoutTokens.gapMd),
-          TextFormField(
+          CrudFormField.number(
+            label: '优先级 (0-100)',
             initialValue: _priority.toString(),
-            decoration: const InputDecoration(labelText: '优先级 (0-100)'),
-            keyboardType: TextInputType.number,
             validator: (value) {
               final parsed = int.tryParse(value ?? '');
               if (parsed == null || parsed < 0 || parsed > 100) {
@@ -181,7 +181,7 @@ class _TaskAssignmentRuleDialogState extends State<TaskAssignmentRuleDialog> {
               return null;
             },
             onChanged: (value) => _priority = int.tryParse(value) ?? _priority,
-          ),
+          ).build(context),
           SizedBox(height: LayoutTokens.gapMd),
           UnifiedDropdown<String>(
             key: ValueKey<String>(_strategy),
@@ -203,11 +203,11 @@ class _TaskAssignmentRuleDialogState extends State<TaskAssignmentRuleDialog> {
             title: const Text('启用规则'),
             contentPadding: EdgeInsets.zero,
           ),
-          TextFormField(
+          CrudFormField.text(
+            label: '备注（可选）',
             initialValue: _notes,
-            decoration: const InputDecoration(labelText: '备注（可选）'),
             onChanged: (value) => _notes = value,
-          ),
+          ).build(context),
         ],
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
@@ -86,12 +87,12 @@ class ProductGroupListPage extends StatelessWidget {
     ProductGroupViewModel viewModel,
     ProductGroup? group,
   ) async {
-    final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => ChangeNotifierProvider.value(
-          value: viewModel,
-          child: ProductGroupEditPage(group: group),
-        ),
+    final result = await context.pushNamed<bool>(
+      group == null ? 'product_groups_create' : 'product_groups_edit',
+      pathParameters: group == null ? const {} : {'id': group.id.toString()},
+      extra: ChangeNotifierProvider.value(
+        value: viewModel,
+        child: ProductGroupEditPage(group: group),
       ),
     );
     if (result == true) {

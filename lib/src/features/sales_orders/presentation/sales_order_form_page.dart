@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
@@ -324,7 +325,8 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
     final requiredPermission = widget.mode == SalesOrderFormMode.create
         ? 'workorder.add_salesorder'
         : 'workorder.change_salesorder';
-    if (!PermissionUtil.hasPermission(context, requiredPermission)) {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has(requiredPermission)) {
       ToastUtil.showError('当前账号无权执行该操作');
       return;
     }
@@ -392,39 +394,39 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
             children: [
               SizedBox(
                 width: fieldWidth,
-                child: TextFormField(
+                child: CrudFormField.text(
+                  label: '状态',
                   initialValue: _statusLabel(_status),
-                  readOnly: true,
-                  decoration: const InputDecoration(labelText: '状态'),
-                ),
+                  enabled: false,
+                ).build(context),
               ),
               SizedBox(
                 width: fieldWidth,
-                child: TextFormField(
+                child: CrudFormField.text(
+                  label: '付款状态',
                   initialValue: _paymentStatusLabel(_paymentStatus),
-                  readOnly: true,
-                  decoration: const InputDecoration(labelText: '付款状态'),
-                ),
+                  enabled: false,
+                ).build(context),
               ),
               SizedBox(
                 width: fieldWidth,
-                child: TextFormField(
-                  readOnly: true,
-                  decoration: const InputDecoration(labelText: '下单日期'),
+                child: CrudFormField.text(
+                  label: '下单日期',
                   controller: _orderDateController,
+                  readOnly: true,
                   onTap: () => _pickDate(isOrderDate: true),
-                ),
+                ).build(context),
               ),
               SizedBox(
                 width: fieldWidth,
-                child: TextFormField(
-                  readOnly: true,
-                  decoration: const InputDecoration(labelText: '交货日期'),
+                child: CrudFormField.text(
+                  label: '交货日期',
                   controller: _deliveryDateController,
+                  readOnly: true,
                   onTap: () => _pickDate(isOrderDate: false),
                   validator: (value) =>
                       (value == null || value.isEmpty) ? '请选择交货日期' : null,
-                ),
+                ).build(context),
               ),
             ],
           ),
@@ -435,35 +437,35 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
             children: [
               SizedBox(
                 width: fieldWidth,
-                child: TextFormField(
+                child: CrudFormField.number(
+                  label: '税率 (%)',
                   controller: _taxRateController,
-                  decoration: const InputDecoration(labelText: '税率 (%)'),
-                  keyboardType: TextInputType.number,
-                ),
+                  decimal: true,
+                ).build(context),
               ),
               SizedBox(
                 width: fieldWidth,
-                child: TextFormField(
+                child: CrudFormField.number(
+                  label: '折扣金额',
                   controller: _discountAmountController,
-                  decoration: const InputDecoration(labelText: '折扣金额'),
-                  keyboardType: TextInputType.number,
-                ),
+                  decimal: true,
+                ).build(context),
               ),
               SizedBox(
                 width: fieldWidth,
-                child: TextFormField(
+                child: CrudFormField.number(
+                  label: '定金',
                   controller: _depositAmountController,
-                  decoration: const InputDecoration(labelText: '定金'),
-                  keyboardType: TextInputType.number,
-                ),
+                  decimal: true,
+                ).build(context),
               ),
               SizedBox(
                 width: fieldWidth,
-                child: TextFormField(
+                child: CrudFormField.number(
+                  label: '已付金额',
                   controller: _paidAmountController,
-                  decoration: const InputDecoration(labelText: '已付金额'),
-                  keyboardType: TextInputType.number,
-                ),
+                  decimal: true,
+                ).build(context),
               ),
             ],
           ),
@@ -487,10 +489,10 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
             ),
           Align(
             alignment: Alignment.centerLeft,
-            child: TextButton.icon(
+            child: PageActionButton.outlined(
               onPressed: () => setState(() => _itemDrafts.add(_ItemDraft())),
-              icon: const Icon(Icons.add),
-              label: const Text('新增明细'),
+              icon: const Icon(Icons.add, size: 16),
+              label: '新增明细',
             ),
           ),
         ],
@@ -537,26 +539,26 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
       '联系与备注',
       Column(
         children: [
-          TextFormField(
+          CrudFormField.text(
+            label: '联系人',
             controller: _contactPersonController,
-            decoration: const InputDecoration(labelText: '联系人'),
-          ),
+          ).build(context),
           const SizedBox(height: 12),
-          TextFormField(
+          CrudFormField.text(
+            label: '联系电话',
             controller: _contactPhoneController,
-            decoration: const InputDecoration(labelText: '联系电话'),
-          ),
+          ).build(context),
           const SizedBox(height: 12),
-          TextFormField(
+          CrudFormField.text(
+            label: '送货地址',
             controller: _shippingAddressController,
-            decoration: const InputDecoration(labelText: '送货地址'),
-          ),
+          ).build(context),
           const SizedBox(height: 12),
-          TextFormField(
+          CrudFormField.textarea(
+            label: '备注',
             controller: _notesController,
-            decoration: const InputDecoration(labelText: '备注'),
             maxLines: 3,
-          ),
+          ).build(context),
         ],
       ),
     );
@@ -564,8 +566,8 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
 
   @override
   Widget build(BuildContext context) {
-    final canSubmit = PermissionUtil.hasPermission(
-      context,
+    final permissions = PermissionUtil.snapshot(context);
+    final canSubmit = permissions.has(
       widget.mode == SalesOrderFormMode.create
           ? 'workorder.add_salesorder'
           : 'workorder.change_salesorder',
@@ -724,49 +726,48 @@ class _ItemRowState extends State<_ItemRow> {
           ),
           SizedBox(
             width: 120,
-            child: TextFormField(
+            child: CrudFormField.number(
+              label: '数量',
               controller: widget.draft.quantityController,
-              decoration: const InputDecoration(labelText: '数量'),
-              keyboardType: TextInputType.number,
-            ),
+            ).build(context),
           ),
           SizedBox(
             width: 120,
-            child: TextFormField(
+            child: CrudFormField.text(
+              label: '单位',
               controller: widget.draft.unitController,
-              decoration: const InputDecoration(labelText: '单位'),
-            ),
+            ).build(context),
           ),
           SizedBox(
             width: 140,
-            child: TextFormField(
+            child: CrudFormField.number(
+              label: '单价',
               controller: widget.draft.unitPriceController,
-              decoration: const InputDecoration(labelText: '单价'),
-              keyboardType: TextInputType.number,
-            ),
+              decimal: true,
+            ).build(context),
           ),
           SizedBox(
             width: 140,
-            child: TextFormField(
+            child: CrudFormField.number(
+              label: '税率',
               controller: widget.draft.taxRateController,
-              decoration: const InputDecoration(labelText: '税率'),
-              keyboardType: TextInputType.number,
-            ),
+              decimal: true,
+            ).build(context),
           ),
           SizedBox(
             width: 140,
-            child: TextFormField(
+            child: CrudFormField.number(
+              label: '折扣',
               controller: widget.draft.discountAmountController,
-              decoration: const InputDecoration(labelText: '折扣'),
-              keyboardType: TextInputType.number,
-            ),
+              decimal: true,
+            ).build(context),
           ),
           SizedBox(
             width: 220,
-            child: TextFormField(
+            child: CrudFormField.text(
+              label: '备注',
               controller: widget.draft.notesController,
-              decoration: const InputDecoration(labelText: '备注'),
-            ),
+            ).build(context),
           ),
           if (widget.onRemove != null)
             IconButton(

@@ -249,53 +249,36 @@ Future<PaymentCreateResult?> showPaymentCreateDialog(
                             setState(() => paymentMethod = value as String),
                       ).build(context),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      TextFormField(
+                      CrudFormField.number(
+                        label: '收款金额',
                         controller: amountController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: '收款金额',
-                          border: OutlineInputBorder(),
-                        ),
+                        decimal: true,
                         validator: (value) =>
                             (value == null || value.trim().isEmpty)
                                 ? '请输入金额'
                                 : null,
-                      ),
+                      ).build(context),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      TextFormField(
+                      CrudFormField.text(
+                        label: '收款日期（YYYY-MM-DD）',
                         controller: paymentDateController,
-                        decoration: const InputDecoration(
-                          labelText: '收款日期（YYYY-MM-DD）',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
+                      ).build(context),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      TextFormField(
+                      CrudFormField.text(
+                        label: '收款账户（可选）',
                         controller: bankController,
-                        decoration: const InputDecoration(
-                          labelText: '收款账户（可选）',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
+                      ).build(context),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      TextFormField(
+                      CrudFormField.text(
+                        label: '交易流水号（可选）',
                         controller: transactionController,
-                        decoration: const InputDecoration(
-                          labelText: '交易流水号（可选）',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
+                      ).build(context),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      TextFormField(
+                      CrudFormField.textarea(
+                        label: '备注（可选）',
                         controller: notesController,
-                        decoration: const InputDecoration(
-                          labelText: '备注（可选）',
-                          border: OutlineInputBorder(),
-                        ),
                         maxLines: 3,
-                      ),
+                      ).build(context),
                     ],
                   ),
                 ),

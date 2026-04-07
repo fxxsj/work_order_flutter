@@ -679,10 +679,9 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   Widget build(BuildContext context) {
     final detail = _detail;
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
-    final canChangeWorkOrder =
-        PermissionUtil.hasPermission(context, 'workorder.change_workorder');
-    final canDeleteWorkOrder =
-        PermissionUtil.hasPermission(context, 'workorder.delete_workorder');
+    final permissions = PermissionUtil.snapshot(context);
+    final canChangeWorkOrder = permissions.has('workorder.change_workorder');
+    final canDeleteWorkOrder = permissions.has('workorder.delete_workorder');
     final canViewAudit = AuditLogNavigation.canView(context);
 
     final statusOptions = const [

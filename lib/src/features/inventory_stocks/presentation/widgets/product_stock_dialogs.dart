@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 
 class ProductStockAdjustResult {
@@ -121,12 +122,10 @@ Future<ProductStockAdjustResult?> showProductStockAdjustDialog(
                           },
                   ),
                   SizedBox(height: LayoutTokens.gapMd),
-                  TextFormField(
+                  CrudFormField.number(
+                    label: '调整数量',
                     controller: quantityController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: const InputDecoration(labelText: '调整数量'),
+                    decimal: true,
                     validator: (value) {
                       final text = value?.trim() ?? '';
                       final parsed = double.tryParse(text);
@@ -139,19 +138,19 @@ Future<ProductStockAdjustResult?> showProductStockAdjustDialog(
                       }
                       return null;
                     },
-                  ),
+                  ).build(context),
                   SizedBox(height: LayoutTokens.gapMd),
-                  TextFormField(
+                  CrudFormField.textarea(
+                    label: '调整原因',
                     controller: reasonController,
                     maxLines: 3,
-                    decoration: const InputDecoration(labelText: '调整原因'),
                     validator: (value) {
                       if ((value?.trim() ?? '').isEmpty) {
                         return '请输入调整原因';
                       }
                       return null;
                     },
-                  ),
+                  ).build(context),
                 ],
               ),
             );

@@ -27,6 +27,7 @@ class ColorTokens {
   static const Color info = Color(0xFF3B82F6);
   static const Color infoDark = Color(0xFF0284C7);
   static const Color infoBg = Color(0x1A3B82F6);
+  static const Color infoLight = Color(0xFF38BDF8);
 
   // ==================== 状态色映射 ====================
 
@@ -36,18 +37,15 @@ class ColorTokens {
     'completed': successDark,
     'approved': successDark,
     'done': success,
-
     'warning': warning,
     'pending': warning,
     'waiting': warning,
     'in_progress': warning,
-
     'danger': danger,
     'failed': dangerDark,
     'rejected': dangerDark,
     'cancelled': danger,
     'error': danger,
-
     'info': info,
     'processing': info,
     'new': info,
@@ -83,6 +81,9 @@ class ColorTokens {
   /// 深色文本（用于浅色背景）
   static const Color textDark = Color(0xFF111827);
 
+  /// 深色模式主文本
+  static const Color textOnDark = Color(0xFFE5E7EB);
+
   /// 浅色文本（用于深色背景）
   static const Color textLight = Color(0xFFFFFFFF);
 
@@ -97,6 +98,19 @@ class ColorTokens {
 
   /// 分割线
   static const Color divider = Color(0xFFE5E7EB);
+
+  /// 主题表面色
+  static const Color surfaceLight = Color(0xFFFCFCFD);
+  static const Color surfaceDark = Color(0xFF111827);
+  static const Color surfaceAltLight = Color(0xFFEFF3F8);
+  static const Color surfaceAltDark = Color(0xFF0C1626);
+  static const Color backgroundBaseLight = Color(0xFFF2F4F8);
+  static const Color backgroundBaseDark = Color(0xFF0B1220);
+  static const Color sidebarBaseLight = Color(0xFFF6F8FB);
+  static const Color sidebarBaseDark = Color(0xFF0F172A);
+  static const Color borderDark = Color(0xFF1F2937);
+  static const Color borderLight = Color(0xFFD8DEE8);
+  static const Color sidebarTextLight = Color(0xFF334155);
 
   // ==================== 阴影色 ====================
 
@@ -117,12 +131,16 @@ extension ColorExtension on Color {
   /// 将颜色调亮
   Color lighten([double amount = 0.1]) {
     final hsl = HSLColor.fromColor(this);
-    return hsl.withLightness((hsl.lightness + amount).clamp(0.0, 1.0)).toColor();
+    return hsl
+        .withLightness((hsl.lightness + amount).clamp(0.0, 1.0))
+        .toColor();
   }
 
   /// 将颜色调暗
   Color darken([double amount = 0.1]) {
     final hsl = HSLColor.fromColor(this);
-    return hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0)).toColor();
+    return hsl
+        .withLightness((hsl.lightness - amount).clamp(0.0, 1.0))
+        .toColor();
   }
 }

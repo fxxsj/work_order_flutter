@@ -33,7 +33,7 @@ class WorkOrderProductsSection extends StatelessWidget {
       children: [
         for (final item in items)
           Padding(
-            padding: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.only(bottom: LayoutTokens.cardPaddingSm),
             child: _DetailListCard(
               title: item.productName ?? emptyText,
               subtitle: item.productCode ?? emptyText,
@@ -72,7 +72,7 @@ class WorkOrderProcessesSection extends StatelessWidget {
       children: [
         for (final item in items)
           Padding(
-            padding: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.only(bottom: LayoutTokens.cardPaddingSm),
             child: _DetailListCard(
               title: item.processName ?? emptyText,
               subtitle: item.processCode ?? emptyText,
@@ -130,15 +130,12 @@ class WorkOrderProcessGanttSection extends StatelessWidget {
     final totalMs = end.millisecondsSinceEpoch - start.millisecondsSinceEpoch;
     final safeTotalMs = totalMs <= 0 ? 1 : totalMs;
 
-    const labelWidth = 140.0;
-    const rowHeight = 36.0;
-    const barHeight = 12.0;
-
     return LayoutBuilder(
       builder: (context, constraints) {
-        final minChartWidth = 560.0;
-        final chartWidth = (constraints.maxWidth - labelWidth - 12)
-            .clamp(320.0, double.infinity);
+        final chartWidth = (constraints.maxWidth -
+                LayoutTokens.timelineLabelWidth -
+                LayoutTokens.gapMd)
+            .clamp(LayoutTokens.minContentRailWidth, double.infinity);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,20 +150,23 @@ class WorkOrderProcessGanttSection extends StatelessWidget {
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: ConstrainedBox(
-                constraints:
-                    BoxConstraints(minWidth: labelWidth + minChartWidth),
+                constraints: BoxConstraints(
+                  minWidth: LayoutTokens.timelineLabelWidth +
+                      LayoutTokens.timelineChartMinWidth,
+                ),
                 child: SizedBox(
-                  width: labelWidth + chartWidth,
+                  width: LayoutTokens.timelineLabelWidth + chartWidth,
                   child: Column(
                     children: [
                       for (final row in rows)
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.only(
+                              bottom: LayoutTokens.cardPaddingSm),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               SizedBox(
-                                width: labelWidth,
+                                width: LayoutTokens.timelineLabelWidth,
                                 child: Text(
                                   row.label,
                                   maxLines: 1,
@@ -177,10 +177,10 @@ class WorkOrderProcessGanttSection extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: LayoutTokens.gapMd),
                               Expanded(
                                 child: SizedBox(
-                                  height: rowHeight,
+                                  height: LayoutTokens.timelineRowHeight,
                                   child: Stack(
                                     children: [
                                       Positioned.fill(
@@ -188,8 +188,9 @@ class WorkOrderProcessGanttSection extends StatelessWidget {
                                           decoration: BoxDecoration(
                                             color: borderColor.withValues(
                                                 alpha: 0.12),
-                                            borderRadius:
-                                                BorderRadius.circular(6),
+                                            borderRadius: BorderRadius.circular(
+                                              LayoutTokens.radiusXs,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -201,7 +202,10 @@ class WorkOrderProcessGanttSection extends StatelessWidget {
                                                   safeTotalMs,
                                             ) *
                                             chartWidth,
-                                        top: (rowHeight - barHeight) / 2,
+                                        top: (LayoutTokens.timelineRowHeight -
+                                                LayoutTokens
+                                                    .timelineBarHeight) /
+                                            2,
                                         child: Container(
                                           width: _resolveBarWidth(
                                             row,
@@ -209,15 +213,17 @@ class WorkOrderProcessGanttSection extends StatelessWidget {
                                             safeTotalMs,
                                             chartWidth,
                                           ),
-                                          height: barHeight,
+                                          height:
+                                              LayoutTokens.timelineBarHeight,
                                           decoration: BoxDecoration(
                                             color: _statusColor(
                                               row.status,
                                               theme,
                                               semantic,
                                             ),
-                                            borderRadius:
-                                                BorderRadius.circular(6),
+                                            borderRadius: BorderRadius.circular(
+                                              LayoutTokens.radiusXs,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -337,7 +343,7 @@ class WorkOrderMaterialsSection extends StatelessWidget {
       children: [
         for (final item in items)
           Padding(
-            padding: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.only(bottom: LayoutTokens.cardPaddingSm),
             child: _DetailListCard(
               title: item.materialName ?? emptyText,
               subtitle: item.materialCode ?? emptyText,
@@ -440,35 +446,45 @@ class WorkOrderFinanceSummarySection extends StatelessWidget {
         children: [
           Wrap(
             spacing: 20,
-            runSpacing: 12,
+            runSpacing: LayoutTokens.gapMd,
             children: items
                 .map(
                   (item) => SizedBox(
-                    width:
-                        BreakpointsUtil.isXs(context) ? double.infinity : 180,
+                    width: BreakpointsUtil.isXs(context)
+                        ? double.infinity
+                        : LayoutTokens.statItemWidth,
                     child: _InfoRow(label: item.label, value: item.value),
                   ),
                 )
                 .toList(),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: LayoutTokens.gapLg),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: LayoutTokens.gapSm,
+            runSpacing: LayoutTokens.gapSm,
             children: [
               OutlinedButton.icon(
                 onPressed: onOpenSalesOrderPage,
-                icon: const Icon(Icons.point_of_sale_outlined, size: 16),
+                icon: const Icon(
+                  Icons.point_of_sale_outlined,
+                  size: LayoutTokens.iconSm,
+                ),
                 label: const Text('客户订单列表'),
               ),
               OutlinedButton.icon(
                 onPressed: onOpenInvoicePage,
-                icon: const Icon(Icons.receipt_long_outlined, size: 16),
+                icon: const Icon(
+                  Icons.receipt_long_outlined,
+                  size: LayoutTokens.iconSm,
+                ),
                 label: const Text('发票列表'),
               ),
               OutlinedButton.icon(
                 onPressed: onOpenPaymentPage,
-                icon: const Icon(Icons.payments_outlined, size: 16),
+                icon: const Icon(
+                  Icons.payments_outlined,
+                  size: LayoutTokens.iconSm,
+                ),
                 label: const Text('收款列表'),
               ),
             ],
@@ -500,8 +516,8 @@ class WorkOrderApprovalLogsSection extends StatelessWidget {
     return Column(
       children: logs.map((log) {
         return Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.all(12),
+          margin: const EdgeInsets.only(bottom: LayoutTokens.gapSm),
+          padding: const EdgeInsets.all(LayoutTokens.gapMd),
           decoration: BoxDecoration(
             color: theme.colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
@@ -571,7 +587,7 @@ class _DetailListCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
     final isXs = BreakpointsUtil.isXs(context);
-    final itemWidth = isXs ? double.infinity : 132.0;
+    final itemWidth = isXs ? double.infinity : LayoutTokens.infoItemWidth;
     final basePadding = LayoutTokens.cardPadding(context);
     final radius = isXs ? LayoutTokens.radiusMd : LayoutTokens.radiusLg;
 
@@ -599,10 +615,12 @@ class _DetailListCard extends StatelessWidget {
             style:
                 theme.textTheme.bodySmall?.copyWith(color: colors.subtleText),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: LayoutTokens.gapMd),
           Wrap(
-            spacing: isXs ? 12 : 20,
-            runSpacing: 10,
+            spacing: isXs
+                ? LayoutTokens.gapMd
+                : LayoutTokens.gapXl - LayoutTokens.gapXs,
+            runSpacing: LayoutTokens.cardPaddingSm,
             children: fields
                 .map(
                   (field) => SizedBox(
@@ -635,7 +653,7 @@ class _InfoRow extends StatelessWidget {
           label,
           style: theme.textTheme.bodySmall?.copyWith(color: colors?.subtleText),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: LayoutTokens.gapXs),
         Text(
           value,
           style: theme.textTheme.bodyMedium?.copyWith(

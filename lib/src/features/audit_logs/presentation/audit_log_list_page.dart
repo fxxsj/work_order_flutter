@@ -56,7 +56,7 @@ class _AuditLogListView extends StatefulWidget {
 }
 
 class _AuditLogListViewState extends State<_AuditLogListView> {
-  static const _searchDebounceDuration = Duration(milliseconds: 450);
+  static const _searchDebounceDuration = AnimationTokens.slower;
   static const double _searchWidth = 320;
   static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
@@ -348,7 +348,7 @@ class _AuditLogListViewState extends State<_AuditLogListView> {
                 SizedBox(height: sectionSpacing),
                 AnimatedRotation(
                   turns: expanded ? 0.5 : 0.0,
-                  duration: const Duration(milliseconds: 200),
+                  duration: AnimationTokens.expandDuration,
                   child: Icon(
                     Icons.expand_more,
                     size: 20,

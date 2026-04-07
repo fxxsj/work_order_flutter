@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/meta_chip.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/utils/extensions/datetime_extensions.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order.dart';
 
 class WorkOrderListTile extends StatelessWidget {
@@ -28,7 +30,12 @@ class WorkOrderListTile extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          padding: EdgeInsets.fromLTRB(
+            LayoutTokens.gapLg,
+            LayoutTokens.gapSm + LayoutTokens.gapXxs,
+            LayoutTokens.gapLg,
+            LayoutTokens.gapSm + LayoutTokens.gapXxs,
+          ),
           decoration: BoxDecoration(
             color: colors.surface,
             border: Border(
@@ -53,10 +60,11 @@ class WorkOrderListTile extends StatelessWidget {
                     ),
                   ),
                   if (workOrder.deliveryDate != null) ...[
-                    SizedBox(width: isXs ? LayoutTokens.gapSm : LayoutTokens.gapMd),
+                    SizedBox(
+                        width: isXs ? LayoutTokens.gapSm : LayoutTokens.gapMd),
                     Flexible(
                       child: Text(
-                        _formatDate(workOrder.deliveryDate),
+                        workOrder.deliveryDate.toYMD,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.right,
@@ -75,68 +83,15 @@ class WorkOrderListTile extends StatelessWidget {
                 runSpacing: LayoutTokens.gapSm,
                 children: [
                   if (workOrder.customerName?.isNotEmpty == true)
-                    _MetaChip(label: '客户', value: workOrder.customerName!),
+                    MetaChip(label: '客户', value: workOrder.customerName!),
                   if (workOrder.productName?.isNotEmpty == true)
-                    _MetaChip(label: '产品', value: workOrder.productName!),
+                    MetaChip(label: '产品', value: workOrder.productName!),
                   if (workOrder.statusDisplay?.isNotEmpty == true)
-                    _MetaChip(label: '状态', value: workOrder.statusDisplay!),
+                    MetaChip(label: '状态', value: workOrder.statusDisplay!),
                 ],
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  String _formatDate(DateTime? value) {
-    if (value == null) return '-';
-    final local = value.toLocal();
-    final year = local.year.toString().padLeft(4, '0');
-    final month = local.month.toString().padLeft(2, '0');
-    final day = local.day.toString().padLeft(2, '0');
-    return '$year-$month-$day';
-  }
-}
-
-class _MetaChip extends StatelessWidget {
-  const _MetaChip({
-    required this.label,
-    required this.value,
-  });
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>()!;
-    final labelStyle = theme.textTheme.labelSmall?.copyWith(
-      color: colors.subtleText,
-    );
-    final valueStyle = theme.textTheme.labelSmall?.copyWith(
-      color: colors.sidebarText,
-      fontWeight: FontWeight.w700,
-    );
-
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd, vertical: LayoutTokens.gapXs),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withValues(alpha: OpacityTokens.faint),
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
-        border: Border.all(color: colors.borderColor),
-      ),
-      child: RichText(
-        text: TextSpan(
-          style: labelStyle,
-          children: [
-            TextSpan(text: '$label '),
-            TextSpan(
-              text: value,
-              style: valueStyle,
-            ),
-          ],
         ),
       ),
     );

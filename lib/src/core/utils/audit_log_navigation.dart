@@ -6,7 +6,7 @@ class AuditLogNavigation {
   const AuditLogNavigation._();
 
   static bool canView(BuildContext context) {
-    return PermissionUtil.hasPermission(context, 'workorder.view_auditlog');
+    return PermissionUtil.snapshot(context).has('workorder.view_auditlog');
   }
 
   static void open(

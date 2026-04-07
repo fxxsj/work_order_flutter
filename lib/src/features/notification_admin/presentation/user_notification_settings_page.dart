@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
+import 'package:work_order_app/src/core/utils/toast_util.dart';
 
 class UserNotificationSettingsPage extends StatefulWidget {
   const UserNotificationSettingsPage({super.key});
@@ -122,7 +123,7 @@ class _UserNotificationSettingsPageState
 
   void _showError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ToastUtil.showError(message);
   }
 
   @override
@@ -155,7 +156,8 @@ class _UserNotificationSettingsPageState
                 ),
                 SwitchListTile(
                   value: _taskAssignments,
-                  onChanged: (value) => setState(() => _taskAssignments = value),
+                  onChanged: (value) =>
+                      setState(() => _taskAssignments = value),
                   title: const Text('任务分配通知'),
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -276,7 +278,8 @@ class _UserNotificationSettingsPageState
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
       ),
-      child: SelectableText(pretty, style: Theme.of(context).textTheme.bodySmall),
+      child:
+          SelectableText(pretty, style: Theme.of(context).textTheme.bodySmall),
     );
   }
 }

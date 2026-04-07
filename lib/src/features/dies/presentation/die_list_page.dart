@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
@@ -99,12 +100,12 @@ class DieListPage extends StatelessWidget {
         return;
       }
     }
-    final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => ChangeNotifierProvider.value(
-          value: viewModel,
-          child: DieEditPage(die: target),
-        ),
+    final result = await context.pushNamed<bool>(
+      die == null ? 'dies_create' : 'dies_edit',
+      pathParameters: die == null ? const {} : {'id': die.id.toString()},
+      extra: ChangeNotifierProvider.value(
+        value: viewModel,
+        child: DieEditPage(die: target),
       ),
     );
     if (result == true) {

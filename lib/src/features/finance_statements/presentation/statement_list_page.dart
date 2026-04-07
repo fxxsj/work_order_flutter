@@ -66,7 +66,7 @@ class _StatementListView extends StatefulWidget {
 }
 
 class _StatementListViewState extends State<_StatementListView> {
-  static const _searchDebounceDuration = Duration(milliseconds: 450);
+  static const _searchDebounceDuration = AnimationTokens.slower;
   static const double _searchWidth = 320;
   static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
@@ -151,7 +151,8 @@ class _StatementListViewState extends State<_StatementListView> {
   }
 
   Future<void> _openCreateDialog(StatementViewModel viewModel) async {
-    if (!PermissionUtil.hasPermission(context, 'workorder.add_statement')) {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.add_statement')) {
       ToastUtil.showError('当前账号无权新建对账单');
       return;
     }
@@ -176,7 +177,8 @@ class _StatementListViewState extends State<_StatementListView> {
   }
 
   Future<void> _openGenerateDialog() async {
-    if (!PermissionUtil.hasPermission(context, 'workorder.add_statement')) {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.add_statement')) {
       ToastUtil.showError('当前账号无权生成对账数据');
       return;
     }
@@ -201,7 +203,8 @@ class _StatementListViewState extends State<_StatementListView> {
     Statement statement, {
     required bool confirmed,
   }) async {
-    if (!PermissionUtil.hasPermission(context, 'workorder.change_statement')) {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.change_statement')) {
       ToastUtil.showError('当前账号无权处理对账状态');
       return;
     }
@@ -352,6 +355,7 @@ class _StatementListViewState extends State<_StatementListView> {
     StatementViewModel viewModel,
     bool isMobile,
   ) {
+    final permissions = PermissionUtil.snapshot(context);
     return PageHeaderBar(
       breadcrumb: null,
       useSurface: false,
@@ -401,15 +405,13 @@ class _StatementListViewState extends State<_StatementListView> {
                 icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
                 label: '清除筛选',
               ),
-            if (PermissionUtil.hasPermission(
-                context, 'workorder.add_statement'))
+            if (permissions.has('workorder.add_statement'))
               PageActionButton.filled(
                 onPressed: () => _openCreateDialog(viewModel),
                 icon: const Icon(Icons.add, size: 16),
                 label: '新建对账单',
               ),
-            if (PermissionUtil.hasPermission(
-                context, 'workorder.add_statement'))
+            if (permissions.has('workorder.add_statement'))
               PageActionButton.outlined(
                 onPressed: _openGenerateDialog,
                 icon: const Icon(Icons.auto_fix_high_outlined, size: 16),
@@ -434,8 +436,8 @@ class _StatementListViewState extends State<_StatementListView> {
   }
 
   Widget _buildRowActions(StatementViewModel viewModel, Statement statement) {
-    final canChangeStatement =
-        PermissionUtil.hasPermission(context, 'workorder.change_statement');
+    final permissions = PermissionUtil.snapshot(context);
+    final canChangeStatement = permissions.has('workorder.change_statement');
     final canViewAudit = AuditLogNavigation.canView(context);
     final actions = <RowAction>[];
     final status = statement.status ?? '';
@@ -497,8 +499,8 @@ class _StatementListViewState extends State<_StatementListView> {
 
   Widget _buildSummaryCard(
       BuildContext context, Statement statement, bool isMobile) {
-    final canChangeStatement =
-        PermissionUtil.hasPermission(context, 'workorder.change_statement');
+    final permissions = PermissionUtil.snapshot(context);
+    final canChangeStatement = permissions.has('workorder.change_statement');
     final canViewAudit = AuditLogNavigation.canView(context);
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
@@ -603,7 +605,7 @@ class _StatementListViewState extends State<_StatementListView> {
                 SizedBox(height: sectionSpacing),
                 AnimatedRotation(
                   turns: expanded ? 0.5 : 0.0,
-                  duration: const Duration(milliseconds: 200),
+                  duration: AnimationTokens.expandDuration,
                   child: Icon(
                     Icons.expand_more,
                     size: 20,

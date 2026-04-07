@@ -209,12 +209,10 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
                     ),
                     SizedBox(width: LayoutTokens.gapMd),
                     Expanded(
-                      child: TextFormField(
+                      child: CrudFormField.number(
+                        label: _quantityLabel,
                         controller: item.quantityController,
-                        decoration:
-                            const InputDecoration(labelText: _quantityLabel),
-                        keyboardType: TextInputType.number,
-                      ),
+                      ).build(context),
                     ),
                     SizedBox(width: LayoutTokens.gapSm),
                     IconButton(

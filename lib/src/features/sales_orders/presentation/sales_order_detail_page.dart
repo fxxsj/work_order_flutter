@@ -5,6 +5,7 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/approval_rejection_notice_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
@@ -149,11 +150,11 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
         submitText: '通过',
         maxWidth: 420,
         onSubmit: () async => Navigator.of(dialogContext).pop(true),
-        content: TextFormField(
+        content: CrudFormField.textarea(
+          label: '审核意见（可选）',
           controller: _approvalCommentController,
-          decoration: const InputDecoration(labelText: '审核意见（可选）'),
           maxLines: 3,
-        ),
+        ).build(dialogContext),
       ),
     );
     if (confirmed != true) return;
@@ -191,25 +192,21 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
               destructive: true,
             ),
             const SizedBox(height: 12),
-            TextFormField(
+            CrudFormField.textarea(
+              label: '退回原因',
               controller: _rejectionReasonController,
-              decoration: const InputDecoration(
-                labelText: '退回原因',
-                hintText: '请明确写清需要补充或修改的内容',
-              ),
+              hintText: '请明确写清需要补充或修改的内容',
               maxLines: 3,
               validator: (value) =>
                   (value?.trim().isEmpty ?? true) ? '请填写拒绝原因' : null,
-            ),
+            ).build(dialogContext),
             const SizedBox(height: 12),
-            TextFormField(
+            CrudFormField.textarea(
+              label: '补充说明（可选）',
               controller: _approvalCommentController,
-              decoration: const InputDecoration(
-                labelText: '补充说明（可选）',
-                hintText: '例如：客户信息不完整，需补充联系人和交期',
-              ),
+              hintText: '例如：客户信息不完整，需补充联系人和交期',
               maxLines: 3,
-            ),
+            ).build(dialogContext),
           ],
         ),
       ),
@@ -272,11 +269,11 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
               destructive: true,
             ),
             const SizedBox(height: 12),
-            TextFormField(
+            CrudFormField.textarea(
+              label: '取消原因（可选）',
               controller: _cancelReasonController,
-              decoration: const InputDecoration(labelText: '取消原因（可选）'),
               maxLines: 3,
-            ),
+            ).build(dialogContext),
           ],
         ),
       ),
@@ -392,12 +389,11 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
 
   List<SalesOrderActionItem> _buildActions(SalesOrderDetail? detail) {
     final status = detail?.status ?? '';
-    final canChangeSalesOrder =
-        PermissionUtil.hasPermission(context, 'workorder.change_salesorder');
-    final canCreateWorkOrder =
-        PermissionUtil.hasPermission(context, 'workorder.add_workorder');
+    final permissions = PermissionUtil.snapshot(context);
+    final canChangeSalesOrder = permissions.has('workorder.change_salesorder');
+    final canCreateWorkOrder = permissions.has('workorder.add_workorder');
     final canCreateDeliveryOrder =
-        PermissionUtil.hasPermission(context, 'workorder.add_deliveryorder');
+        permissions.has('workorder.add_deliveryorder');
     final actions = <SalesOrderActionItem>[
       if (canChangeSalesOrder && status == 'draft')
         SalesOrderActionItem(
@@ -473,8 +469,8 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
         ? '客户订单 ${detail!.orderNumber}'
         : '客户订单 #${widget.orderId}';
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
-    final canChangeSalesOrder =
-        PermissionUtil.hasPermission(context, 'workorder.change_salesorder');
+    final permissions = PermissionUtil.snapshot(context);
+    final canChangeSalesOrder = permissions.has('workorder.change_salesorder');
     final canEdit = canChangeSalesOrder &&
         ((detail?.status ?? '') == 'draft' ||
             (detail?.status ?? '') == 'rejected');

@@ -33,7 +33,7 @@ Future<void> showAdaptiveFilterDrawer(
     barrierColor: Theme.of(context).shadowColor.withValues(
           alpha: LayoutTokens.barrierOpacity,
         ),
-    transitionDuration: const Duration(milliseconds: 220),
+    transitionDuration: AnimationTokens.slide,
     pageBuilder: (dialogContext, animation, secondaryAnimation) {
       return Align(
         alignment: Alignment.centerRight,

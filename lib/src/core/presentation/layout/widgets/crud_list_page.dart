@@ -173,7 +173,7 @@ class CrudListPage<T, VM extends PaginatedViewModel<T>> extends StatefulWidget {
 
 class _CrudListPageState<T, VM extends PaginatedViewModel<T>>
     extends State<CrudListPage<T, VM>> {
-  static const _searchDebounceDuration = Duration(milliseconds: 450);
+  static const _searchDebounceDuration = AnimationTokens.slower;
 
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
@@ -386,7 +386,7 @@ class _CrudListPageState<T, VM extends PaginatedViewModel<T>>
               SizedBox(width: sectionSpacing),
               AnimatedRotation(
                 turns: expanded ? 0.5 : 0.0,
-                duration: const Duration(milliseconds: 200),
+                duration: AnimationTokens.expandDuration,
                 child: Icon(
                   Icons.expand_more,
                   size: 20,

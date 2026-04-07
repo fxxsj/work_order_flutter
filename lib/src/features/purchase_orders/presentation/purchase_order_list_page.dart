@@ -72,7 +72,7 @@ class _PurchaseOrderListView extends StatefulWidget {
 }
 
 class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
-  static const _searchDebounceDuration = Duration(milliseconds: 450);
+  static const _searchDebounceDuration = AnimationTokens.slower;
   static const double _searchWidth = 320;
   static const double _spacingSm = LayoutTokens.gapSm;
   static const String _emptyCellText = '-';
@@ -852,7 +852,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
             SizedBox(width: sectionSpacing),
             AnimatedRotation(
               turns: expanded ? 0.5 : 0.0,
-              duration: const Duration(milliseconds: 200),
+              duration: AnimationTokens.expandDuration,
               child: Icon(
                 Icons.expand_more,
                 size: 20,

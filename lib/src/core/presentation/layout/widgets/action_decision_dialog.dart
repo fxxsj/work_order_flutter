@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/risk_action_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
+import 'package:work_order_app/src/core/utils/toast_util.dart';
 
 class ActionDecisionOption<T> {
   const ActionDecisionOption({
@@ -91,71 +94,62 @@ Future<ActionDecisionResult<T>?> showActionDecisionDialog<T>(
               impacts.isNotEmpty ||
               (auditHint ?? '').trim().isNotEmpty;
 
-          return AlertDialog(
-            title: Text(title),
-            content: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: maxWidth),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (showDecisionHint) ...[
-                      RiskActionHintPanel(
-                        summary: (summary ?? '').trim(),
-                        impacts: impacts,
-                        auditHint: auditHint,
-                        destructive: destructive,
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-                    if (showSelection) ...[
-                      UnifiedDropdown<T>(
-                        key: ValueKey<T?>(selection),
-                        value: selection,
-                        options: options
-                            .map(
-                              (option) => DropdownOption<T>(
-                                value: option.value,
-                                label: option.label,
-                              ),
-                            )
-                            .toList(),
-                        decoration: InputDecoration(labelText: selectionLabel),
-                        onChanged: submitting
-                            ? null
-                            : (value) => setState(() => selection = value),
-                        validator: requireSelection
-                            ? (value) =>
-                                value == null ? selectionErrorText : null
-                            : null,
-                      ),
-                      if (showNotes) const SizedBox(height: 12),
-                    ],
-                    if (showNotes)
-                      TextFormField(
-                        controller: notesController,
-                        enabled: !submitting,
-                        maxLines: notesMaxLines,
-                        decoration: InputDecoration(
-                          labelText: notesLabel,
-                          hintText: notesHint,
-                        ),
-                      ),
-                    if (showExtraNotes) ...[
-                      if (showNotes) const SizedBox(height: 12),
-                      TextFormField(
-                        controller: extraNotesController,
-                        enabled: !submitting,
-                        maxLines: extraNotesMaxLines,
-                        decoration: InputDecoration(
-                          labelText: extraNotesLabel,
-                          hintText: extraNotesHint,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
+          return BaseDialog(
+            title: title,
+            maxWidth: maxWidth,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (showDecisionHint) ...[
+                  RiskActionHintPanel(
+                    summary: (summary ?? '').trim(),
+                    impacts: impacts,
+                    auditHint: auditHint,
+                    destructive: destructive,
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                if (showSelection) ...[
+                  UnifiedDropdown<T>(
+                    key: ValueKey<T?>(selection),
+                    value: selection,
+                    options: options
+                        .map(
+                          (option) => DropdownOption<T>(
+                            value: option.value,
+                            label: option.label,
+                          ),
+                        )
+                        .toList(),
+                    decoration: InputDecoration(labelText: selectionLabel),
+                    onChanged: submitting
+                        ? null
+                        : (value) => setState(() => selection = value),
+                    validator: requireSelection
+                        ? (value) => value == null ? selectionErrorText : null
+                        : null,
+                  ),
+                  if (showNotes) const SizedBox(height: 12),
+                ],
+                if (showNotes)
+                  CrudFormField.textarea(
+                    label: notesLabel,
+                    controller: notesController,
+                    enabled: !submitting,
+                    maxLines: notesMaxLines,
+                    hintText: notesHint,
+                  ).build(dialogContext),
+                if (showExtraNotes) ...[
+                  if (showNotes) const SizedBox(height: 12),
+                  CrudFormField.textarea(
+                    label: extraNotesLabel,
+                    controller: extraNotesController,
+                    enabled: !submitting,
+                    maxLines: extraNotesMaxLines,
+                    hintText: extraNotesHint,
+                  ).build(dialogContext),
+                ],
+              ],
             ),
             actions: [
               TextButton(
@@ -171,21 +165,15 @@ Future<ActionDecisionResult<T>?> showActionDecisionDialog<T>(
                         final trimmedExtraNotes =
                             extraNotesController.text.trim();
                         if (requireSelection && selection == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(selectionErrorText)),
-                          );
+                          ToastUtil.showError(selectionErrorText);
                           return;
                         }
                         if (requireNotes && trimmedNotes.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(notesErrorText)),
-                          );
+                          ToastUtil.showError(notesErrorText);
                           return;
                         }
                         if (requireExtraNotes && trimmedExtraNotes.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(extraNotesErrorText)),
-                          );
+                          ToastUtil.showError(extraNotesErrorText);
                           return;
                         }
                         setState(() => submitting = true);

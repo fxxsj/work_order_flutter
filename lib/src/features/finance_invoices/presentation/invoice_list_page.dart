@@ -10,6 +10,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_tab
 import 'package:work_order_app/src/core/presentation/layout/widgets/action_decision_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_loading_indicator.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/file_upload_dialog.dart';
@@ -72,7 +73,7 @@ class _InvoiceListView extends StatefulWidget {
 }
 
 class _InvoiceListViewState extends State<_InvoiceListView> {
-  static const _searchDebounceDuration = Duration(milliseconds: 450);
+  static const _searchDebounceDuration = AnimationTokens.slower;
   static const double _searchWidth = 320;
   static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
@@ -138,7 +139,8 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     _searchController.text = routeSearch;
 
     if (salesOrderId != null && (createFlag == '1' || createFlag == 'true')) {
-      if (!PermissionUtil.hasPermission(context, 'workorder.add_invoice')) {
+      final permissions = PermissionUtil.snapshot(context);
+      if (!permissions.has('workorder.add_invoice')) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
           context.read<InvoiceViewModel>().applyRoutePrefill(
@@ -198,7 +200,8 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     int? prefillSalesOrderId,
     int? prefillCustomerId,
   }) async {
-    if (!PermissionUtil.hasPermission(context, 'workorder.add_invoice')) {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.add_invoice')) {
       ToastUtil.showError('当前账号无权新建发票');
       return;
     }
@@ -478,48 +481,32 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      TextFormField(
+                      CrudFormField.number(
+                        label: '金额（不含税）',
                         controller: amountController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: '金额（不含税）',
-                          border: OutlineInputBorder(),
-                        ),
+                        decimal: true,
                         validator: (value) =>
                             (value == null || value.trim().isEmpty)
                                 ? '请输入金额'
                                 : null,
-                      ),
+                      ).build(context),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      TextFormField(
+                      CrudFormField.number(
+                        label: '税率(%)',
                         controller: taxRateController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: '税率(%)',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
+                        decimal: true,
+                      ).build(context),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      TextFormField(
+                      CrudFormField.text(
+                        label: '开票日期（YYYY-MM-DD，可选）',
                         controller: issueDateController,
-                        decoration: const InputDecoration(
-                          labelText: '开票日期（YYYY-MM-DD，可选）',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
+                      ).build(context),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      TextFormField(
+                      CrudFormField.textarea(
+                        label: '备注（可选）',
                         controller: notesController,
-                        decoration: const InputDecoration(
-                          labelText: '备注（可选）',
-                          border: OutlineInputBorder(),
-                        ),
                         maxLines: 3,
-                      ),
+                      ).build(context),
                     ],
                   ),
                 ),
@@ -845,6 +832,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     InvoiceViewModel viewModel,
     bool isMobile,
   ) {
+    final permissions = PermissionUtil.snapshot(context);
     return PageHeaderBar(
       breadcrumb: null,
       useSurface: false,
@@ -912,7 +900,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                 icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
                 label: '清除筛选',
               ),
-            if (PermissionUtil.hasPermission(context, 'workorder.add_invoice'))
+            if (permissions.has('workorder.add_invoice'))
               PageActionButton.filled(
                 onPressed: () => _openCreateDialog(viewModel),
                 icon: const Icon(Icons.add, size: 16),
@@ -937,8 +925,8 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
   }
 
   Widget _buildRowActions(InvoiceViewModel viewModel, Invoice invoice) {
-    final canChangeInvoice =
-        PermissionUtil.hasPermission(context, 'workorder.change_invoice');
+    final permissions = PermissionUtil.snapshot(context);
+    final canChangeInvoice = permissions.has('workorder.change_invoice');
     final canViewAudit = AuditLogNavigation.canView(context);
     final actions = <RowAction>[];
     final status = invoice.status ?? '';
@@ -1043,8 +1031,8 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
 
   Widget _buildSummaryCard(
       BuildContext context, Invoice invoice, bool isMobile) {
-    final canChangeInvoice =
-        PermissionUtil.hasPermission(context, 'workorder.change_invoice');
+    final permissions = PermissionUtil.snapshot(context);
+    final canChangeInvoice = permissions.has('workorder.change_invoice');
     final canViewAudit = AuditLogNavigation.canView(context);
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
@@ -1178,7 +1166,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                 SizedBox(height: sectionSpacing),
                 AnimatedRotation(
                   turns: expanded ? 0.5 : 0.0,
-                  duration: const Duration(milliseconds: 200),
+                  duration: AnimationTokens.expandDuration,
                   child: Icon(
                     Icons.expand_more,
                     size: 20,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
@@ -85,12 +86,13 @@ class SupplierListPage extends StatelessWidget {
     SupplierViewModel viewModel,
     Supplier? supplier,
   ) async {
-    final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => ChangeNotifierProvider.value(
-          value: viewModel,
-          child: SupplierEditPage(supplier: supplier),
-        ),
+    final result = await context.pushNamed<bool>(
+      supplier == null ? 'suppliers_create' : 'suppliers_edit',
+      pathParameters:
+          supplier == null ? const {} : {'id': supplier.id.toString()},
+      extra: ChangeNotifierProvider.value(
+        value: viewModel,
+        child: SupplierEditPage(supplier: supplier),
       ),
     );
     if (result == true) {
@@ -115,10 +117,10 @@ class SupplierListPage extends StatelessWidget {
     BuildContext context,
     Supplier supplier,
   ) {
-    return Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        builder: (_) => SupplierDetailPage(supplier: supplier),
-      ),
+    return context.pushNamed<void>(
+      'suppliers_detail',
+      pathParameters: {'id': supplier.id.toString()},
+      extra: SupplierDetailPage(supplier: supplier),
     );
   }
 

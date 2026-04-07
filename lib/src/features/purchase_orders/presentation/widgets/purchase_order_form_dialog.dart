@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/materials/data/material_dto.dart';
@@ -125,7 +127,8 @@ Future<void> showPurchaseOrderFormDialog(
                           .toList(),
                       onChanged: submitting ? null : onSupplierChanged,
                       validator: (value) {
-                        if (value == null || value == 0) return '请选择供应商';                        return null;
+                        if (value == null || value == 0) return '请选择供应商';
+                        return null;
                       },
                     ),
                     const SizedBox(height: LayoutTokens.gapMd),
@@ -150,14 +153,11 @@ Future<void> showPurchaseOrderFormDialog(
                       onChanged: submitting ? null : onWorkOrderChanged,
                     ),
                     const SizedBox(height: LayoutTokens.gapMd),
-                    TextFormField(
+                    CrudFormField.textarea(
+                      label: '备注',
                       controller: notesController,
                       maxLines: 3,
-                      decoration: const InputDecoration(
-                        labelText: '备注',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
+                    ).build(context),
                   ],
                 ),
               ),
@@ -165,7 +165,7 @@ Future<void> showPurchaseOrderFormDialog(
               _PurchaseFormSection(
                 title: '采购明细',
                 subtitle: '支持逐行选择物料、调整数量和单价。',
-                trailing: TextButton.icon(
+                trailing: PageActionButton.outlined(
                   onPressed: submitting || materialsLoading
                       ? null
                       : () {
@@ -183,7 +183,7 @@ Future<void> showPurchaseOrderFormDialog(
                           });
                         },
                   icon: const Icon(Icons.add, size: 16),
-                  label: const Text('添加明细'),
+                  label: '添加明细',
                 ),
                 child: items.isEmpty
                     ? Text(
@@ -597,17 +597,14 @@ class _PurchaseDenseField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
+    return CrudFormField.text(
+      label: label,
       controller: controller,
       enabled: enabled,
       keyboardType: keyboardType,
-      decoration: InputDecoration(
-        labelText: label,
-        isDense: true,
-        border: const OutlineInputBorder(),
-      ),
+      isDense: true,
       onChanged: onChanged,
       validator: validator,
-    );
+    ).build(context);
   }
 }

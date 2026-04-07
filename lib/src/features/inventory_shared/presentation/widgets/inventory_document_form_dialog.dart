@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 
@@ -55,16 +56,11 @@ Future<void> showInventoryDocumentFormDialog(
             children: [
               ..._withSpacing(fields),
               if (fields.isNotEmpty) const SizedBox(height: LayoutTokens.gapMd),
-              TextFormField(
+              CrudFormField.text(
+                label: dateLabel,
                 controller: dateController,
-                readOnly: true,
                 enabled: !submitting,
-                decoration: InputDecoration(
-                  labelText: dateLabel,
-                  border: const OutlineInputBorder(),
-                  suffixIcon:
-                      const Icon(Icons.calendar_today_outlined, size: 18),
-                ),
+                readOnly: true,
                 onTap: () async {
                   final picked = await showDatePicker(
                     context: context,
@@ -77,18 +73,14 @@ Future<void> showInventoryDocumentFormDialog(
                     dateController.text = _formatDate(picked);
                   }
                 },
-              ),
+              ).build(context),
               const SizedBox(height: LayoutTokens.gapMd),
-              TextFormField(
+              CrudFormField.textarea(
+                label: '备注',
                 controller: notesController,
                 enabled: !submitting,
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: '备注',
-                  border: OutlineInputBorder(),
-                  alignLabelWithHint: true,
-                ),
-              ),
+              ).build(context),
             ],
           ),
         );

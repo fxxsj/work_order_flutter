@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/purchase_orders/domain/purchase_order_detail.dart';
@@ -182,13 +183,10 @@ Future<bool?> showPurchaseReceiveDialog(
                               setState(() => receivedDate.value = picked),
                         ),
                         const SizedBox(height: LayoutTokens.gapMd),
-                        TextFormField(
+                        CrudFormField.text(
+                          label: '送货单号',
                           controller: deliveryNoteController,
-                          decoration: const InputDecoration(
-                            labelText: '送货单号',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
+                        ).build(context),
                       ] else
                         Row(
                           children: [
@@ -202,13 +200,10 @@ Future<bool?> showPurchaseReceiveDialog(
                             ),
                             const SizedBox(width: LayoutTokens.gapMd),
                             Expanded(
-                              child: TextFormField(
+                              child: CrudFormField.text(
+                                label: '送货单号',
                                 controller: deliveryNoteController,
-                                decoration: const InputDecoration(
-                                  labelText: '送货单号',
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
+                              ).build(context),
                             ),
                           ],
                         ),
@@ -374,16 +369,12 @@ class _ReceiveItemRow extends StatelessWidget {
             if (isCompact)
               Column(
                 children: [
-                  TextFormField(
+                  CrudFormField.number(
+                    label: '本次收货',
                     controller: item.receiveController,
                     enabled: !isDisabled,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(
-                      labelText: '本次收货',
-                      isDense: true,
-                      border: OutlineInputBorder(),
-                    ),
+                    decimal: true,
+                    isDense: true,
                     onChanged: (_) => onChanged?.call(),
                     validator: (value) {
                       if (isDisabled) {
@@ -398,17 +389,14 @@ class _ReceiveItemRow extends StatelessWidget {
                       }
                       return null;
                     },
-                  ),
+                  ).build(context),
                   const SizedBox(height: LayoutTokens.gapSm),
-                  TextFormField(
+                  CrudFormField.text(
+                    label: '备注',
                     controller: item.notesController,
                     enabled: !isDisabled,
-                    decoration: const InputDecoration(
-                      labelText: '备注',
-                      isDense: true,
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
+                    isDense: true,
+                  ).build(context),
                 ],
               )
             else
@@ -416,17 +404,12 @@ class _ReceiveItemRow extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: 120,
-                    child: TextFormField(
+                    child: CrudFormField.number(
+                      label: '本次收货',
                       controller: item.receiveController,
                       enabled: !isDisabled,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      decoration: const InputDecoration(
-                        labelText: '本次收货',
-                        isDense: true,
-                        border: OutlineInputBorder(),
-                      ),
+                      decimal: true,
+                      isDense: true,
                       onChanged: (_) => onChanged?.call(),
                       validator: (value) {
                         if (isDisabled) {
@@ -441,19 +424,16 @@ class _ReceiveItemRow extends StatelessWidget {
                         }
                         return null;
                       },
-                    ),
+                    ).build(context),
                   ),
                   const SizedBox(width: LayoutTokens.gapMd),
                   Expanded(
-                    child: TextFormField(
+                    child: CrudFormField.text(
+                      label: '备注',
                       controller: item.notesController,
                       enabled: !isDisabled,
-                      decoration: const InputDecoration(
-                        labelText: '备注',
-                        isDense: true,
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
+                      isDense: true,
+                    ).build(context),
                   ),
                 ],
               ),

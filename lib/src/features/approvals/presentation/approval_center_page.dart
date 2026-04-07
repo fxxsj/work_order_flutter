@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
+import 'package:work_order_app/src/core/utils/toast_util.dart';
 
 class ApprovalCenterPage extends StatefulWidget {
   const ApprovalCenterPage({super.key});
@@ -130,7 +131,7 @@ class _ApprovalCenterPageState extends State<ApprovalCenterPage> {
 
   void _showError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ToastUtil.showError(message);
   }
 
   @override
@@ -246,7 +247,8 @@ class _ApprovalCenterPageState extends State<ApprovalCenterPage> {
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
       ),
-      child: SelectableText(pretty, style: Theme.of(context).textTheme.bodySmall),
+      child:
+          SelectableText(pretty, style: Theme.of(context).textTheme.bodySmall),
     );
   }
 }

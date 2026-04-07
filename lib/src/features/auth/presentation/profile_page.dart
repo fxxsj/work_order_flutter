@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/api_exception.dart';
 import 'package:go_router/go_router.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/animated_button.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/features/auth/application/auth_controller.dart';
 import 'package:work_order_app/src/features/auth/application/auth_view_model.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -228,21 +230,20 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildProfileForm(BuildContext context) {
-    final theme = Theme.of(context);
     return Form(
       key: _profileFormKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextFormField(
+          CrudFormField.text(
+            label: '用户名',
             initialValue: _username(),
             enabled: false,
-            decoration: const InputDecoration(labelText: '用户名'),
-          ),
+          ).build(context),
           SizedBox(height: LayoutTokens.gapMd),
-          TextFormField(
+          CrudFormField.email(
+            label: '邮箱',
             controller: _emailController,
-            decoration: const InputDecoration(labelText: '邮箱'),
             validator: (value) {
               if (value == null || value.isEmpty) return null;
               final emailRegex = RegExp(r'^\S+@\S+\.\S+$');
@@ -251,17 +252,13 @@ class _ProfilePageState extends State<ProfilePage> {
               }
               return null;
             },
-          ),
+          ).build(context),
           SizedBox(height: LayoutTokens.gapMd),
-          TextFormField(
-            controller: _lastNameController,
-            decoration: const InputDecoration(labelText: '姓'),
-          ),
+          CrudFormField.text(label: '姓', controller: _lastNameController)
+              .build(context),
           SizedBox(height: LayoutTokens.gapMd),
-          TextFormField(
-            controller: _firstNameController,
-            decoration: const InputDecoration(labelText: '名'),
-          ),
+          CrudFormField.text(label: '名', controller: _firstNameController)
+              .build(context),
           SizedBox(height: LayoutTokens.gapMd),
           Wrap(
             spacing: 8,
@@ -283,23 +280,10 @@ class _ProfilePageState extends State<ProfilePage> {
           SizedBox(height: LayoutTokens.gapLg),
           Row(
             children: [
-              FilledButton(
-                onPressed: _updatingProfile ? null : _handleUpdateProfile,
-                style: FilledButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primary,
-                  foregroundColor: theme.colorScheme.onPrimary,
-                ),
-                child: _updatingProfile
-                    ? SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                              theme.colorScheme.onPrimary),
-                        ),
-                      )
-                    : const Text('保存修改'),
+              AnimatedButton(
+                onPressed: _handleUpdateProfile,
+                loading: _updatingProfile,
+                child: const Text('保存修改'),
               ),
               SizedBox(width: LayoutTokens.gapMd),
               TextButton(onPressed: _resetProfileForm, child: const Text('重置')),
@@ -311,59 +295,45 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildPasswordForm(BuildContext context) {
-    final theme = Theme.of(context);
     return Form(
       key: _passwordFormKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextFormField(
+          CrudFormField.text(
+            label: '旧密码',
             controller: _oldPasswordController,
             obscureText: true,
-            decoration: const InputDecoration(labelText: '旧密码'),
             validator: (value) =>
                 value == null || value.isEmpty ? '请输入旧密码' : null,
-          ),
+          ).build(context),
           SizedBox(height: LayoutTokens.gapMd),
-          TextFormField(
+          CrudFormField.text(
+            label: '新密码',
             controller: _newPasswordController,
             obscureText: true,
-            decoration: const InputDecoration(labelText: '新密码'),
             validator: (value) {
               if (value == null || value.isEmpty) return '请输入新密码';
               if (value.length < 6) return '密码长度至少为6位';
               return null;
             },
-          ),
+          ).build(context),
           SizedBox(height: LayoutTokens.gapMd),
-          TextFormField(
+          CrudFormField.text(
+            label: '确认密码',
             controller: _confirmPasswordController,
             obscureText: true,
-            decoration: const InputDecoration(labelText: '确认密码'),
             validator: (value) {
               if (value == null || value.isEmpty) return '请再次输入新密码';
               if (value != _newPasswordController.text) return '两次输入的密码不一致';
               return null;
             },
-          ),
+          ).build(context),
           SizedBox(height: LayoutTokens.gapLg),
-          FilledButton(
-            onPressed: _changingPassword ? null : _handleChangePassword,
-            style: FilledButton.styleFrom(
-              backgroundColor: theme.colorScheme.primary,
-              foregroundColor: theme.colorScheme.onPrimary,
-            ),
-            child: _changingPassword
-                ? SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                          theme.colorScheme.onPrimary),
-                    ),
-                  )
-                : const Text('修改密码'),
+          AnimatedButton(
+            onPressed: _handleChangePassword,
+            loading: _changingPassword,
+            child: const Text('修改密码'),
           ),
         ],
       ),
