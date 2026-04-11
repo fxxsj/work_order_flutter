@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_pa
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
+import 'package:work_order_app/src/core/utils/file_upload_picker.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/artworks/application/artwork_view_model.dart';
 import 'package:work_order_app/src/features/artworks/domain/artwork.dart';
@@ -74,6 +75,8 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
   final Set<int> _selectedFoilingIds = {};
   final Set<int> _selectedEmbossingIds = {};
   final List<_ArtworkProductItem> _productItems = [];
+  final List<ArtworkImage> _images = [];
+  bool _uploadingImage = false;
 
   @override
   void initState() {
@@ -89,6 +92,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
     _selectedDieIds.addAll(artwork?.dieIds ?? const []);
     _selectedFoilingIds.addAll(artwork?.foilingPlateIds ?? const []);
     _selectedEmbossingIds.addAll(artwork?.embossingPlateIds ?? const []);
+    _images.addAll(artwork?.images ?? const []);
     for (final product in artwork?.products ?? const <ArtworkProduct>[]) {
       _productItems.add(
         _ArtworkProductItem(
@@ -229,6 +233,47 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
     }
   }
 
+  Future<void> _pickAndUploadImage(ArtworkViewModel viewModel) async {
+    if (widget.artwork == null) return;
+    setState(() => _uploadingImage = true);
+    try {
+      final multipartFile = await pickMultipartFile(
+        allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+        fallbackFilename: 'artwork_image.jpg',
+      );
+      if (multipartFile == null) {
+        if (mounted) setState(() => _uploadingImage = false);
+        return;
+      }
+      final image = await viewModel.uploadArtworkImage(
+        widget.artwork!.id,
+        multipartFile,
+        sortOrder: _images.length,
+      );
+      if (mounted) {
+        setState(() => _images.add(image));
+        ToastUtil.showSuccess('图片上传成功');
+      }
+    } catch (err) {
+      if (mounted) ToastUtil.showError('上传失败: $err');
+    } finally {
+      if (mounted) setState(() => _uploadingImage = false);
+    }
+  }
+
+  Future<void> _removeImage(ArtworkViewModel viewModel, ArtworkImage image) async {
+    if (widget.artwork == null) return;
+    try {
+      await viewModel.deleteArtworkImage(widget.artwork!.id, image.id);
+      if (mounted) {
+        setState(() => _images.remove(image));
+        ToastUtil.showSuccess('图片已删除');
+      }
+    } catch (err) {
+      if (mounted) ToastUtil.showError('删除失败: $err');
+    }
+  }
+
   Widget _buildVersionField(BuildContext context) {
     return CrudFormField.text(
       label: _versionLabel,
@@ -323,6 +368,106 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
     );
   }
 
+  Widget _buildImageSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final sectionSpacing = LayoutTokens.formSectionSpacing(context);
+    final colors = theme.extension<AppColors>();
+    final subtleText = colors?.subtleText ?? theme.hintColor;
+
+    if (widget.artwork == null) {
+      return Text(
+        '请先保存图稿后再上传图片',
+        style: theme.textTheme.bodySmall?.copyWith(color: subtleText),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (_images.isEmpty)
+          Text(
+            '暂无图片，点击下方按钮上传',
+            style: theme.textTheme.bodySmall?.copyWith(color: subtleText),
+          )
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _images.map((img) {
+              return Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      img.imageUrl,
+                      width: 100,
+                      height: 100,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(Icons.broken_image, color: subtleText),
+                      ),
+                    ),
+                  ),
+                  if (img.description != null && img.description!.isNotEmpty)
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        color: Colors.black54,
+                        child: Text(
+                          img.description!,
+                          style: TextStyle(color: Colors.white, fontSize: 10),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                  Positioned(
+                    top: 2,
+                    right: 2,
+                    child: GestureDetector(
+                      onTap: () => _removeImage(
+                        context.read<ArtworkViewModel>(),
+                        img,
+                      ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.error,
+                          shape: BoxShape.circle,
+                        ),
+                        padding: EdgeInsets.all(2),
+                        child: Icon(Icons.close, color: Colors.white, size: 14),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }).toList(),
+          ),
+        SizedBox(height: sectionSpacing),
+        if (_uploadingImage)
+          const Center(child: CircularProgressIndicator())
+        else
+          Align(
+            alignment: Alignment.centerLeft,
+            child: PageActionButton.outlined(
+              onPressed: () => _pickAndUploadImage(context.read<ArtworkViewModel>()),
+              icon: const Icon(Icons.add_photo_alternate, size: 16),
+              label: '上传图片',
+            ),
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return CrudEditPage<Artwork, ArtworkViewModel>(
@@ -410,6 +555,16 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                 ),
             ],
           ),
+          if (widget.artwork != null)
+            CrudFormSection(
+              title: '图稿图片',
+              column: 0,
+              fields: [
+                CrudFormField.custom(
+                  builder: _buildImageSection,
+                ),
+              ],
+            ),
           CrudFormSection(
             title: _extraSectionTitle,
             column: isMobile ? 0 : 1,

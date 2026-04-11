@@ -22,6 +22,7 @@ class ArtworkDto {
     this.embossingPlateCodes = const [],
     this.embossingPlateNames = const [],
     this.products = const [],
+    this.images = const [],
     this.notes,
     this.createdAt,
     this.dieIds = const [],
@@ -48,6 +49,7 @@ class ArtworkDto {
   final List<String> embossingPlateCodes;
   final List<String> embossingPlateNames;
   final List<ArtworkProduct> products;
+  final List<ArtworkImage> images;
   final String? notes;
   final DateTime? createdAt;
   final List<int> dieIds;
@@ -69,6 +71,22 @@ class ArtworkDto {
               impositionQuantity: toInt(item['imposition_quantity']),
             ),
           );
+        }
+      }
+    }
+
+    final images = <ArtworkImage>[];
+    final rawImages = json['images'];
+    if (rawImages is List) {
+      for (final item in rawImages) {
+        if (item is Map) {
+          images.add(ArtworkImage(
+            id: toInt(item['id']) ?? 0,
+            imageUrl: toStringOrNull(item['image']) ?? '',
+            sortOrder: toInt(item['sort_order']) ?? 0,
+            description: toStringOrNull(item['description']),
+            createdAt: toDateTime(item['created_at']),
+          ));
         }
       }
     }
@@ -119,6 +137,7 @@ class ArtworkDto {
       embossingPlateCodes: parseStringList(json['embossing_plate_codes']),
       embossingPlateNames: parseStringList(json['embossing_plate_names']),
       products: products,
+      images: images,
       notes: toStringOrNull(json['notes']),
       createdAt: toDateTime(json['created_at']),
       dieIds: parseIdList(json['dies']),
@@ -148,6 +167,7 @@ class ArtworkDto {
       embossingPlateCodes: entity.embossingPlateCodes,
       embossingPlateNames: entity.embossingPlateNames,
       products: entity.products,
+      images: entity.images,
       notes: entity.notes,
       createdAt: entity.createdAt,
       dieIds: entity.dieIds,
@@ -177,6 +197,7 @@ class ArtworkDto {
       embossingPlateCodes: embossingPlateCodes,
       embossingPlateNames: embossingPlateNames,
       products: products,
+      images: images,
       notes: notes,
       createdAt: createdAt,
       dieIds: dieIds,

@@ -1,6 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/artworks/data/artwork_dto.dart';
+import 'package:work_order_app/src/features/artworks/domain/artwork.dart';
 
 class ArtworkApiService {
   ArtworkApiService(this._client);
@@ -74,5 +76,36 @@ class ArtworkApiService {
 
   Future<void> createVersion(int id) async {
     await _client.post('/artworks/$id/create_version/');
+  }
+
+  /// 上传图片到指定图稿
+  Future<ArtworkImage> uploadImage(int artworkId, MultipartFile imageFile, {int sortOrder = 0, String? description}) async {
+    final formData = FormData.fromMap({
+      'image': imageFile,
+      'sort_order': sortOrder,
+      if (description != null && description.isNotEmpty) 'description': description,
+    });
+    final response = await _client.post('/artworks/$artworkId/upload_image/', data: formData);
+    final payload = response.data;
+    // ApiResponse.data 已经是解包后的数据，但后端可能嵌套了 data 字段
+    final map = payload is Map
+        ? (payload['data'] is Map ? Map<String, dynamic>.from(payload['data']) : Map<String, dynamic>.from(payload))
+        : <String, dynamic>{};
+    return _parseArtworkImage(map);
+  }
+
+  /// 删除图稿指定图片
+  Future<void> deleteImage(int artworkId, int imageId) async {
+    await _client.delete('/artworks/$artworkId/images/$imageId/');
+  }
+
+  ArtworkImage _parseArtworkImage(Map<String, dynamic> json) {
+    return ArtworkImage(
+      id: toInt(json['id']) ?? 0,
+      imageUrl: json['image']?.toString() ?? '',
+      sortOrder: toInt(json['sort_order']) ?? 0,
+      description: toStringOrNull(json['description']),
+      createdAt: toDateTime(json['created_at']),
+    );
   }
 }

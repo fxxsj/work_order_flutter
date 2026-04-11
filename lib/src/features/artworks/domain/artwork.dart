@@ -12,6 +12,22 @@ class ArtworkProduct {
   final int? impositionQuantity;
 }
 
+class ArtworkImage {
+  const ArtworkImage({
+    required this.id,
+    required this.imageUrl,
+    this.sortOrder = 0,
+    this.description,
+    this.createdAt,
+  });
+
+  final int id;
+  final String imageUrl;
+  final int sortOrder;
+  final String? description;
+  final DateTime? createdAt;
+}
+
 /// 图稿领域模型。
 class Artwork {
   const Artwork({
@@ -34,6 +50,7 @@ class Artwork {
     this.embossingPlateCodes = const [],
     this.embossingPlateNames = const [],
     this.products = const [],
+    this.images = const [],
     this.notes,
     this.createdAt,
     this.dieIds = const [],
@@ -60,6 +77,7 @@ class Artwork {
   final List<String> embossingPlateCodes;
   final List<String> embossingPlateNames;
   final List<ArtworkProduct> products;
+  final List<ArtworkImage> images;
   final String? notes;
   final DateTime? createdAt;
   final List<int> dieIds;

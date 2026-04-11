@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/core.dart';
 import 'package:work_order_app/src/features/artworks/domain/artwork.dart';
 import 'package:work_order_app/src/features/artworks/domain/artwork_repository.dart';
@@ -45,6 +46,15 @@ class ArtworkViewModel extends PaginatedViewModel<Artwork> {
 
   Future<void> createVersion(int id) async {
     await _repository.createVersion(id);
+    await loadItems();
+  }
+
+  Future<ArtworkImage> uploadArtworkImage(int artworkId, MultipartFile imageFile, {int sortOrder = 0, String? description}) async {
+    return await _repository.uploadArtworkImage(artworkId, imageFile, sortOrder: sortOrder, description: description);
+  }
+
+  Future<void> deleteArtworkImage(int artworkId, int imageId) async {
+    await _repository.deleteArtworkImage(artworkId, imageId);
     await loadItems();
   }
 }

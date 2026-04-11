@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/core.dart';
 import 'package:work_order_app/src/features/artworks/domain/artwork.dart';
 
@@ -17,4 +18,8 @@ abstract class ArtworkRepository {
   Future<void> confirmArtwork(int id);
 
   Future<void> createVersion(int id);
+
+  Future<ArtworkImage> uploadArtworkImage(int artworkId, MultipartFile imageFile, {int sortOrder = 0, String? description});
+
+  Future<void> deleteArtworkImage(int artworkId, int imageId);
 }

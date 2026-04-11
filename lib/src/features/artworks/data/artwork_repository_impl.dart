@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/core.dart';
 import 'package:work_order_app/src/features/artworks/data/artwork_api_service.dart';
 import 'package:work_order_app/src/features/artworks/data/artwork_dto.dart';
@@ -51,5 +52,15 @@ class ArtworkRepositoryImpl implements ArtworkRepository {
   @override
   Future<void> createVersion(int id) async {
     await _api.createVersion(id);
+  }
+
+  @override
+  Future<ArtworkImage> uploadArtworkImage(int artworkId, MultipartFile imageFile, {int sortOrder = 0, String? description}) async {
+    return await _api.uploadImage(artworkId, imageFile, sortOrder: sortOrder, description: description);
+  }
+
+  @override
+  Future<void> deleteArtworkImage(int artworkId, int imageId) async {
+    await _api.deleteImage(artworkId, imageId);
   }
 }
