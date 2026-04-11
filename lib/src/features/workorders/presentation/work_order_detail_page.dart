@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/api_exception.dart';
-import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/core/constants/breakpoints.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/approval_rejection_notice_card.dart';
@@ -512,69 +510,8 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     );
   }
 
-  Widget _buildInfoGrid(List<WorkOrderInfoItem> items) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final maxWidth = constraints.maxWidth;
-        final itemWidth = maxWidth < Breakpoints.sm
-            ? maxWidth
-            : maxWidth < Breakpoints.lg
-                ? (maxWidth - 24) / 2
-                : 240.0;
-        return Wrap(
-          spacing: LayoutTokens.gapLg,
-          runSpacing: LayoutTokens.gapMd,
-          children: items
-              .map(
-                (item) => SizedBox(
-                  width: itemWidth,
-                  child: _InfoRow(label: item.label, value: item.value),
-                ),
-              )
-              .toList(),
-        );
-      },
-    );
-  }
-
   Widget _buildSection(String title, Widget child) {
     return DetailSectionCard(title: title, child: child);
-  }
-
-  Widget _buildResourceGroup(String title, List<String> items) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: theme.textTheme.titleSmall?.copyWith(
-            color: colors?.sidebarText,
-          ),
-        ),
-        const SizedBox(height: 6),
-        _buildChipGroup(items),
-      ],
-    );
-  }
-
-  Widget _buildChipGroup(List<String> items) {
-    if (items.isEmpty) {
-      return Text(_emptyText, style: Theme.of(context).textTheme.bodyMedium);
-    }
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: items
-          .map(
-            (text) => Chip(
-              label: Text(text),
-              visualDensity: VisualDensity.compact,
-            ),
-          )
-          .toList(),
-    );
   }
 
   Future<void> _showSyncPreviewDialog(WorkOrderDetail detail) async {
@@ -788,9 +725,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                               canChangeWorkOrder ? _handleResubmit : null,
                           onRequestReapproval:
                               canChangeWorkOrder ? _showReapprovalDialog : null,
-                          buildInfoGrid: _buildInfoGrid,
                           buildSection: _buildSection,
-                          buildResourceGroup: _buildResourceGroup,
                           emptyText: _emptyText,
                         ),
                         if ((detail.approvalStatus ?? '') == 'rejected' &&
@@ -956,37 +891,6 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                         ),
                       ],
                     ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: colors?.subtleText,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
     );
   }
 }

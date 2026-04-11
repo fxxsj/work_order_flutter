@@ -80,11 +80,13 @@ class WorkOrderProductRow extends StatefulWidget {
     required this.draft,
     required this.products,
     this.onRemove,
+    this.onProductChanged,
   });
 
   final WorkOrderProductDraft draft;
   final List<ProductOption> products;
   final VoidCallback? onRemove;
+  final VoidCallback? onProductChanged;
 
   @override
   State<WorkOrderProductRow> createState() => _WorkOrderProductRowState();
@@ -122,8 +124,10 @@ class _WorkOrderProductRowState extends State<WorkOrderProductRow> {
                           ),
                         )
                         .toList(),
-                    onChanged: (value) =>
-                        setState(() => widget.draft.productId = value),
+                    onChanged: (value) {
+                      setState(() => widget.draft.productId = value);
+                      widget.onProductChanged?.call();
+                    },
                     validator: (value) => value == null ? '请选择产品' : null,
                   ),
                 ),

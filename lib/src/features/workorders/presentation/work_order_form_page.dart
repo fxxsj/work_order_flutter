@@ -67,6 +67,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
 
   List<Customer> _customers = [];
   List<ProductOption> _products = [];
+  List<Product> _fullProducts = [];
   List<MaterialItem> _materials = [];
   List<Process> _processes = [];
   List<Artwork> _artworks = [];
@@ -102,6 +103,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
       setState(() {
         _customers = options.customers;
         _products = options.products;
+        _fullProducts = options.fullProducts;
         _materials = options.materials;
         _processes = options.processes;
         _artworks = options.artworks;
@@ -343,7 +345,21 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                     }
                   });
                 },
-                onResourceSelectionChanged: () => setState(() {}),
+                onResourceSelectionChanged: () {
+                  setState(() {
+                    _draft.autoFillFromArtworks(
+                      _artworks
+                          .where((a) => _draft.artworkIds.contains(a.id))
+                          .toList(),
+                      _fullProducts,
+                    );
+                  });
+                },
+                onProductSelectionChanged: () {
+                  setState(() {
+                    _draft.autoFillFromProducts(_fullProducts);
+                  });
+                },
               ),
             ),
     );

@@ -249,7 +249,9 @@ class _TaskAssignDialogState extends State<_TaskAssignDialog> {
       _departmentId = widget.departments.first.id;
     }
     if (_departmentId != null) {
-      _loadOperators(_departmentId!);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _loadOperators(_departmentId!);
+      });
     }
   }
 
@@ -262,57 +264,62 @@ class _TaskAssignDialogState extends State<_TaskAssignDialog> {
       submitting: _submitting,
       maxWidth: LayoutTokens.dialogWidthSm,
       onSubmit: _submit,
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          UnifiedDropdown<int?>(
-            key: ValueKey<int?>(_departmentId),
-            value: _departmentId,
-            decoration: const InputDecoration(labelText: '部门'),
-            options: [
-              for (final dept in widget.departments)
-                DropdownOption<int?>(value: dept.id, label: dept.name),
-            ],
-            onChanged: (value) {
-              setState(() {
-                _departmentId = value;
-                _operatorId = null;
-                _operators = [];
-              });
-              if (value != null) {
-                _loadOperators(value);
-              }
-            },
-            validator: (value) => value == null ? '请选择部门' : null,
-          ),
-          SizedBox(height: LayoutTokens.gapMd),
-          if (_loadingOperators) const LinearProgressIndicator(minHeight: 2),
-          UnifiedDropdown<int?>(
-            key: ValueKey<int?>(_operatorId),
-            value: _operatorId,
-            decoration: const InputDecoration(labelText: '操作员'),
-            options: _operators
-                .map(
-                  (op) => DropdownOption<int?>(value: op.id, label: op.name),
-                )
-                .toList(),
-            onChanged: (value) => setState(() => _operatorId = value),
-            validator: (value) => value == null ? '请选择操作员' : null,
-          ),
-          SizedBox(height: LayoutTokens.gapMd),
-          CrudFormField.text(
-            label: '备注（可选）',
-            onChanged: (value) => _notes = value,
-          ).build(context),
-          if (_operators.isEmpty && !_loadingOperators)
-            Padding(
-              padding: EdgeInsets.only(top: LayoutTokens.gapSm),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text('当前部门暂无可分派操作员'),
-              ),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            UnifiedDropdown<int?>(
+              value: _departmentId,
+              decoration: const InputDecoration(labelText: '部门'),
+              options: [
+                for (final dept in widget.departments)
+                  DropdownOption<int?>(value: dept.id, label: dept.name),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _departmentId = value;
+                  _operatorId = null;
+                  _operators = [];
+                });
+                if (value != null) {
+                  _loadOperators(value);
+                }
+              },
+              validator: (value) => value == null ? '请选择部门' : null,
             ),
-        ],
+            SizedBox(height: LayoutTokens.gapMd),
+            if (_loadingOperators) ...[
+              const LinearProgressIndicator(minHeight: 2),
+              SizedBox(height: LayoutTokens.gapMd),
+            ],
+            UnifiedDropdown<int?>(
+              value: _operatorId,
+              decoration: const InputDecoration(labelText: '操作员'),
+              options: _operators
+                  .map(
+                    (op) => DropdownOption<int?>(value: op.id, label: op.name),
+                  )
+                  .toList(),
+              onChanged: (value) => setState(() => _operatorId = value),
+              validator: (value) => value == null ? '请选择操作员' : null,
+            ),
+            SizedBox(height: LayoutTokens.gapMd),
+            CrudFormField.text(
+              label: '备注（可选）',
+              onChanged: (value) => _notes = value,
+            ).build(context),
+            if (_operators.isEmpty && !_loadingOperators)
+              Padding(
+                padding: EdgeInsets.only(top: LayoutTokens.gapSm),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('当前部门暂无可分派操作员'),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

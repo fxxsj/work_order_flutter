@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/features/artworks/domain/artwork.dart';
+import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_form_submission.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_form_sections.dart';
@@ -153,6 +155,113 @@ class WorkOrderFormDraftState {
       foilingPlateIds: foilingPlateIds,
       embossingPlateIds: embossingPlateIds,
     );
+  }
+
+  void autoFillFromArtworks(
+    List<Artwork> selectedArtworks,
+    List<Product> fullProducts,
+  ) {
+    if (selectedArtworks.isEmpty) return;
+
+    // 1. Merge CMYK colors
+    for (final artwork in selectedArtworks) {
+      for (final color in artwork.cmykColors) {
+        printingCmyk.add(color);
+      }
+    }
+
+    // 2. Merge other colors
+    final existingOther = printingOtherColorsController.text
+        .split(',')
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toSet();
+    for (final artwork in selectedArtworks) {
+      for (final color in artwork.otherColors) {
+        existingOther.add(color);
+      }
+    }
+    printingOtherColorsController.text = existingOther.join(', ');
+
+    // 3. Merge die IDs
+    for (final artwork in selectedArtworks) {
+      dieIds.addAll(artwork.dieIds);
+    }
+
+    // 4. Merge foiling plate IDs
+    for (final artwork in selectedArtworks) {
+      foilingPlateIds.addAll(artwork.foilingPlateIds);
+    }
+
+    // 5. Merge embossing plate IDs
+    for (final artwork in selectedArtworks) {
+      embossingPlateIds.addAll(artwork.embossingPlateIds);
+    }
+
+    // 6. Auto-add products from artworks
+    final existingProductIds = productDrafts
+        .map((d) => d.productId)
+        .whereType<int>()
+        .toSet();
+    for (final artwork in selectedArtworks) {
+      for (final ap in artwork.products) {
+        if (!existingProductIds.contains(ap.productId)) {
+          final draft = WorkOrderProductDraft()..productId = ap.productId;
+          productDrafts.add(draft);
+          existingProductIds.add(ap.productId);
+        }
+      }
+    }
+
+    // 7. Auto-fill processes & materials from all current products
+    _autoFillProcessesAndMaterials(fullProducts);
+  }
+
+  void autoFillFromProducts(List<Product> fullProducts) {
+    _autoFillProcessesAndMaterials(fullProducts);
+  }
+
+  void _autoFillProcessesAndMaterials(List<Product> fullProducts) {
+    final selectedProductIds = productDrafts
+        .map((d) => d.productId)
+        .whereType<int>()
+        .toSet();
+
+    final productMap = <int, Product>{};
+    for (final p in fullProducts) {
+      productMap[p.id] = p;
+    }
+
+    // Merge process IDs
+    for (final pid in selectedProductIds) {
+      final product = productMap[pid];
+      if (product != null) {
+        processIds.addAll(product.defaultProcessIds);
+      }
+    }
+
+    // Merge material drafts
+    final existingMaterialIds = materialDrafts
+        .map((d) => d.materialId)
+        .whereType<int>()
+        .toSet();
+    for (final pid in selectedProductIds) {
+      final product = productMap[pid];
+      if (product != null) {
+        for (final dm in product.defaultMaterials) {
+          if (!existingMaterialIds.contains(dm.materialId)) {
+            final draft = WorkOrderMaterialDraft()
+              ..materialId = dm.materialId
+              ..sizeController.text = dm.materialSize ?? ''
+              ..usageController.text = dm.materialUsage ?? ''
+              ..needCutting = dm.needCutting ?? false
+              ..notesController.text = dm.notes ?? '';
+            materialDrafts.add(draft);
+            existingMaterialIds.add(dm.materialId);
+          }
+        }
+      }
+    }
   }
 
   bool hasProcessChanges() {

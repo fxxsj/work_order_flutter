@@ -20,6 +20,7 @@ class WorkOrderFormOptionsData {
   const WorkOrderFormOptionsData({
     required this.customers,
     required this.products,
+    required this.fullProducts,
     required this.materials,
     required this.processes,
     required this.artworks,
@@ -30,6 +31,7 @@ class WorkOrderFormOptionsData {
 
   final List<Customer> customers;
   final List<ProductOption> products;
+  final List<Product> fullProducts;
   final List<MaterialItem> materials;
   final List<Process> processes;
   final List<Artwork> artworks;
@@ -56,6 +58,8 @@ class WorkOrderFormOptionsLoader {
     final customerFuture = customerApi.fetchCustomers(page: 1, pageSize: 200);
     final productFuture =
         productApi.fetchProducts(pageSize: 200, isActive: true);
+    final productPageFuture =
+        productApi.fetchProductPage(pageSize: 200);
     final materialFuture = materialApi.fetchMaterials(page: 1, pageSize: 200);
     final processFuture = processApi.fetchProcesses(page: 1, pageSize: 200);
     final artworkFuture = artworkApi.fetchArtworks(page: 1, pageSize: 200);
@@ -66,6 +70,7 @@ class WorkOrderFormOptionsLoader {
 
     final customerPage = await customerFuture;
     final productOptions = await productFuture;
+    final productPage = await productPageFuture;
     final materialPage = await materialFuture;
     final processPage = await processFuture;
     final artworkPage = await artworkFuture;
@@ -76,6 +81,7 @@ class WorkOrderFormOptionsLoader {
     return WorkOrderFormOptionsData(
       customers: customerPage.items.map((item) => item.toEntity()).toList(),
       products: productOptions,
+      fullProducts: productPage.items.map((dto) => dto.toEntity()).toList(),
       materials: materialPage.items.map((item) => item.toEntity()).toList(),
       processes: processPage.items.map((item) => item.toEntity()).toList(),
       artworks: artworkPage.items.map((item) => item.toEntity()).toList(),

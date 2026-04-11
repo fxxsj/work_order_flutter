@@ -330,12 +330,14 @@ class WorkOrderProductListSection extends StatelessWidget {
     required this.products,
     required this.onAdd,
     required this.onRemove,
+    this.onProductSelectionChanged,
   });
 
   final List<WorkOrderProductDraft> drafts;
   final List<ProductOption> products;
   final VoidCallback onAdd;
   final ValueChanged<int> onRemove;
+  final VoidCallback? onProductSelectionChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -348,6 +350,7 @@ class WorkOrderProductListSection extends StatelessWidget {
               draft: drafts[index],
               products: products,
               onRemove: drafts.length > 1 ? () => onRemove(index) : null,
+              onProductChanged: onProductSelectionChanged,
             ),
           Align(
             alignment: Alignment.centerLeft,
@@ -468,6 +471,7 @@ class WorkOrderResourcesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final showPrintingDetails = printingType != 'none';
     return WorkOrderFormSectionCard(
       title: '印刷与版信息',
       child: LayoutBuilder(
@@ -490,49 +494,53 @@ class WorkOrderResourcesSection extends StatelessWidget {
                 decoration: const InputDecoration(labelText: '印刷形式'),
                 onChanged: (value) => onPrintingTypeChanged(value),
               ),
-              SizedBox(height: LayoutTokens.gapMd),
-              const WorkOrderFormSubsectionTitle(title: 'CMYK 颜色'),
-              SizedBox(height: LayoutTokens.gapSm),
-              Wrap(
-                spacing: 8,
-                children: ['C', 'M', 'Y', 'K']
-                    .map(
-                      (color) => FilterChip(
-                        label: Text(color),
-                        selected: printingCmyk.contains(color),
-                        onSelected: (_) => onToggleCmyk(color),
-                      ),
-                    )
-                    .toList(),
-              ),
-              SizedBox(height: LayoutTokens.gapMd),
-              CrudFormField.text(
-                label: '其他颜色（逗号分隔）',
-                controller: printingOtherColorsController,
-              ).build(context),
+              if (showPrintingDetails) ...[
+                SizedBox(height: LayoutTokens.gapMd),
+                const WorkOrderFormSubsectionTitle(title: 'CMYK 颜色'),
+                SizedBox(height: LayoutTokens.gapSm),
+                Wrap(
+                  spacing: 8,
+                  children: ['C', 'M', 'Y', 'K']
+                      .map(
+                        (color) => FilterChip(
+                          label: Text(color),
+                          selected: printingCmyk.contains(color),
+                          onSelected: (_) => onToggleCmyk(color),
+                        ),
+                      )
+                      .toList(),
+                ),
+                SizedBox(height: LayoutTokens.gapMd),
+                CrudFormField.text(
+                  label: '其他颜色（逗号分隔）',
+                  controller: printingOtherColorsController,
+                ).build(context),
+              ],
             ],
           );
 
           final rightColumn = Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const WorkOrderFormSubsectionTitle(title: '图稿'),
-              SizedBox(height: LayoutTokens.gapSm),
-              WorkOrderMultiSelectField(
-                items: artworks
-                    .map(
-                      (item) => WorkOrderOptionItem(
-                        item.id,
-                        item.fullCode.isNotEmpty ? item.fullCode : item.name,
-                      ),
-                    )
-                    .toList(),
-                selected: artworkIds,
-                emptyText: '暂无图稿数据',
-                placeholder: '请选择（可多选）',
-                onChanged: onSelectionChanged,
-              ),
-              SizedBox(height: LayoutTokens.gapMd),
+              if (showPrintingDetails) ...[
+                const WorkOrderFormSubsectionTitle(title: '图稿'),
+                SizedBox(height: LayoutTokens.gapSm),
+                WorkOrderMultiSelectField(
+                  items: artworks
+                      .map(
+                        (item) => WorkOrderOptionItem(
+                          item.id,
+                          item.fullCode.isNotEmpty ? item.fullCode : item.name,
+                        ),
+                      )
+                      .toList(),
+                  selected: artworkIds,
+                  emptyText: '暂无图稿数据',
+                  placeholder: '请选择（可多选）',
+                  onChanged: onSelectionChanged,
+                ),
+                SizedBox(height: LayoutTokens.gapMd),
+              ],
               const WorkOrderFormSubsectionTitle(title: '刀模'),
               SizedBox(height: LayoutTokens.gapSm),
               WorkOrderMultiSelectField(
@@ -661,6 +669,7 @@ class WorkOrderFormContent extends StatelessWidget {
     required this.onPrintingTypeChanged,
     required this.onToggleCmyk,
     required this.onResourceSelectionChanged,
+    this.onProductSelectionChanged,
     this.sectionSpacing = LayoutTokens.gapLg,
   });
 
@@ -706,6 +715,7 @@ class WorkOrderFormContent extends StatelessWidget {
   final ValueChanged<String?> onPrintingTypeChanged;
   final ValueChanged<String> onToggleCmyk;
   final VoidCallback onResourceSelectionChanged;
+  final VoidCallback? onProductSelectionChanged;
   final double sectionSpacing;
 
   @override
@@ -740,6 +750,7 @@ class WorkOrderFormContent extends StatelessWidget {
           products: products,
           onAdd: onAddProduct,
           onRemove: onRemoveProduct,
+          onProductSelectionChanged: onProductSelectionChanged,
         ),
         SizedBox(height: sectionSpacing),
         WorkOrderProcessConfigSection(

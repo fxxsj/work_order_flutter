@@ -32,9 +32,7 @@ class WorkOrderDetailOverviewSection extends StatelessWidget {
     required this.onReject,
     required this.onResubmit,
     required this.onRequestReapproval,
-    required this.buildInfoGrid,
     required this.buildSection,
-    required this.buildResourceGroup,
     required this.emptyText,
   });
 
@@ -50,9 +48,7 @@ class WorkOrderDetailOverviewSection extends StatelessWidget {
   final VoidCallback? onReject;
   final VoidCallback? onResubmit;
   final VoidCallback? onRequestReapproval;
-  final Widget Function(List<WorkOrderInfoItem> items) buildInfoGrid;
   final Widget Function(String title, Widget child) buildSection;
-  final Widget Function(String title, List<String> items) buildResourceGroup;
   final String emptyText;
 
   @override
@@ -66,8 +62,6 @@ class WorkOrderDetailOverviewSection extends StatelessWidget {
           emptyText: emptyText,
           actionLoading: actionLoading,
           onUploadDesignFile: onUploadDesignFile,
-          buildInfoGrid: buildInfoGrid,
-          buildResourceGroup: buildResourceGroup,
         ));
     final actions = buildSection(
       '流程操作',
@@ -525,6 +519,8 @@ class WorkOrderMultiApprovalSection extends StatelessWidget {
   }
 }
 
+// ---- Summary Content (描述列表风格) ----
+
 class _SummaryContent extends StatelessWidget {
   const _SummaryContent({
     required this.detail,
@@ -532,8 +528,6 @@ class _SummaryContent extends StatelessWidget {
     required this.emptyText,
     required this.actionLoading,
     required this.onUploadDesignFile,
-    required this.buildInfoGrid,
-    required this.buildResourceGroup,
   });
 
   final WorkOrderDetail detail;
@@ -541,161 +535,218 @@ class _SummaryContent extends StatelessWidget {
   final String emptyText;
   final bool actionLoading;
   final VoidCallback? onUploadDesignFile;
-  final Widget Function(List<WorkOrderInfoItem> items) buildInfoGrid;
-  final Widget Function(String title, List<String> items) buildResourceGroup;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final dividerColor = colors?.borderColor.withValues(alpha: 0.6);
+    final showPrinting = detail.printingType != null &&
+        detail.printingType != 'none';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        buildInfoGrid([
-          WorkOrderInfoItem('客户', detail.customerName ?? emptyText),
-          WorkOrderInfoItem('业务员', detail.salespersonName ?? emptyText),
-          WorkOrderInfoItem('负责人', detail.managerName ?? emptyText),
-          WorkOrderInfoItem('创建人', detail.createdByName ?? emptyText),
-          WorkOrderInfoItem('审核人', detail.approvedByName ?? emptyText),
-          WorkOrderInfoItem(
-              '状态', detail.statusDisplay ?? detail.status ?? emptyText),
-          WorkOrderInfoItem(
+        // 基本信息描述列表
+        _buildDescriptionGrid(context, [
+          _DescItem('客户', detail.customerName ?? emptyText),
+          _DescItem('业务员', detail.salespersonName ?? emptyText),
+          _DescItem('负责人', detail.managerName ?? emptyText),
+          _DescItem('创建人', detail.createdByName ?? emptyText),
+          _DescItem('审核人', detail.approvedByName ?? emptyText),
+          _DescItem(
+            '状态',
+            detail.statusDisplay ?? detail.status ?? emptyText,
+            isStatus: true,
+            statusType: 'status',
+            statusValue: detail.status,
+          ),
+          _DescItem(
+            '审核状态',
+            detail.approvalStatusDisplay ??
+                detail.approvalStatus ??
+                emptyText,
+            isStatus: true,
+            statusType: 'approval',
+            statusValue: detail.approvalStatus,
+          ),
+          _DescItem(
             '优先级',
             detail.priorityDisplay ?? detail.priority ?? emptyText,
+            isStatus: true,
+            statusType: 'priority',
+            statusValue: detail.priority,
           ),
-          WorkOrderInfoItem(
-            '审批状态',
-            detail.approvalStatusDisplay ?? detail.approvalStatus ?? emptyText,
+          _DescItem(
+            '进度',
+            '${detail.progressPercentage ?? 0}%',
+            isProgress: true,
+            progressValue: (detail.progressPercentage ?? 0).toDouble(),
           ),
-          WorkOrderInfoItem('审批说明', detail.approvalComment ?? emptyText),
-          WorkOrderInfoItem('下单日期', _formatDate(detail.orderDate, emptyText)),
-          WorkOrderInfoItem(
-              '交货日期', _formatDate(detail.deliveryDate, emptyText)),
-          WorkOrderInfoItem(
-              '实际交货', _formatDate(detail.actualDeliveryDate, emptyText)),
-          WorkOrderInfoItem(
+          _DescItem('下单日期', _formatDate(detail.orderDate)),
+          _DescItem('交货日期', _formatDate(detail.deliveryDate)),
+          _DescItem('实际交货', _formatDate(detail.actualDeliveryDate)),
+          _DescItem(
             '生产数量',
             detail.productionQuantity?.toString() ?? emptyText,
           ),
-          WorkOrderInfoItem(
+          _DescItem(
             '不良数量',
             detail.defectiveQuantity?.toString() ?? emptyText,
           ),
-          WorkOrderInfoItem(
-            '任务数',
-            detail.totalTaskCount?.toString() ?? emptyText,
-          ),
-          WorkOrderInfoItem(
-            '草稿任务',
-            detail.draftTaskCount?.toString() ?? emptyText,
-          ),
-          WorkOrderInfoItem(
+          _DescItem(
             '总金额',
             detail.totalAmount == null
                 ? emptyText
-                : detail.totalAmount!.toStringAsFixed(2),
+                : '¥${detail.totalAmount!.toStringAsFixed(2)}',
           ),
-          WorkOrderInfoItem(
-            '进度',
-            detail.progressPercentage == null
-                ? emptyText
-                : '${detail.progressPercentage}%',
+          _DescItem(
+            '任务数',
+            detail.totalTaskCount?.toString() ?? emptyText,
           ),
-          WorkOrderInfoItem(
+          _DescItem(
+            '草稿任务',
+            detail.draftTaskCount?.toString() ?? emptyText,
+          ),
+          _DescItem(
             '印刷形式',
             detail.printingTypeDisplay ?? detail.printingType ?? emptyText,
           ),
-          WorkOrderInfoItem('印刷色数', detail.printingColorsDisplay ?? emptyText),
+          _DescItem('印刷色数', detail.printingColorsDisplay ?? emptyText),
+          _DescItem(
+            '审批说明',
+            detail.approvalComment ?? emptyText,
+            spanFull: true,
+          ),
         ]),
         SizedBox(height: sectionSpacing),
         Divider(height: sectionSpacing, color: dividerColor),
         SizedBox(height: sectionSpacing),
-        buildInfoGrid([
-          WorkOrderInfoItem('备注', detail.notes ?? emptyText),
-          WorkOrderInfoItem(
-            'CMYK 颜色',
-            detail.printingCmykColors.isEmpty
-                ? emptyText
-                : detail.printingCmykColors.join(', '),
+
+        // 图稿和版信息
+        Text(
+          '图稿和版信息',
+          style: theme.textTheme.titleSmall?.copyWith(
+            color: colors?.sidebarText,
           ),
-          WorkOrderInfoItem(
-            '其他颜色',
-            detail.printingOtherColors.isEmpty
-                ? emptyText
-                : detail.printingOtherColors.join(', '),
+        ),
+        SizedBox(height: LayoutTokens.gapSm),
+        _buildDescriptionGrid(context, [
+          _DescItem(
+            '图稿（CTP版）',
+            _joinResourceItems(detail.artworkCodes, detail.artworkNames),
           ),
-          WorkOrderInfoItem(
-            '设计文件',
-            _hasDesignFile ? '已上传' : emptyText,
+          if (showPrinting)
+            _DescItem(
+              '印刷要求',
+              [
+                detail.printingColorsDisplay,
+                detail.printingTypeDisplay ?? detail.printingType,
+              ].where((s) => s != null && s.isNotEmpty).join(' '),
+            ),
+          _DescItem(
+            '刀模',
+            _joinResourceItems(detail.dieCodes, detail.dieNames),
+          ),
+          _DescItem(
+            '烫金版',
+            _joinResourceItems(
+                detail.foilingPlateCodes, detail.foilingPlateNames),
+          ),
+          _DescItem(
+            '压凸版',
+            _joinResourceItems(
+                detail.embossingPlateCodes, detail.embossingPlateNames),
           ),
         ]),
+        SizedBox(height: sectionSpacing),
+        Divider(height: sectionSpacing, color: dividerColor),
+        SizedBox(height: sectionSpacing),
+
+        // 设计文件
         if (_hasDesignFile) ...[
-          SizedBox(height: sectionSpacing),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Wrap(
-              spacing: LayoutTokens.gapSm,
-              runSpacing: LayoutTokens.gapSm,
-              children: [
-                AttachmentOpenButton(
-                  fileUrl: detail.designFileUrl,
-                  label: '查看设计文件',
-                  errorPrefix: '打开设计文件失败',
+          Wrap(
+            spacing: LayoutTokens.gapSm,
+            runSpacing: LayoutTokens.gapSm,
+            children: [
+              AttachmentOpenButton(
+                fileUrl: detail.designFileUrl,
+                label: '查看设计文件',
+                errorPrefix: '打开设计文件失败',
+              ),
+              if (onUploadDesignFile != null)
+                OutlinedButton.icon(
+                  onPressed: actionLoading ? null : onUploadDesignFile,
+                  icon: const Icon(Icons.upload_file_outlined, size: 18),
+                  label: const Text('重新上传'),
                 ),
-                if (onUploadDesignFile != null)
-                  OutlinedButton.icon(
-                    onPressed: actionLoading ? null : onUploadDesignFile,
-                    icon: const Icon(Icons.upload_file_outlined, size: 18),
-                    label: const Text('重新上传'),
-                  ),
-              ],
-            ),
+            ],
           ),
-        ] else if (onUploadDesignFile != null) ...[
           SizedBox(height: sectionSpacing),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: OutlinedButton.icon(
-              onPressed: actionLoading ? null : onUploadDesignFile,
-              icon: const Icon(Icons.upload_file_outlined, size: 18),
-              label: const Text('上传设计文件'),
-            ),
+        ] else if (onUploadDesignFile != null) ...[
+          OutlinedButton.icon(
+            onPressed: actionLoading ? null : onUploadDesignFile,
+            icon: const Icon(Icons.upload_file_outlined, size: 18),
+            label: const Text('上传设计文件'),
           ),
+          SizedBox(height: sectionSpacing),
         ],
-        SizedBox(height: sectionSpacing),
-        buildResourceGroup(
-          '图稿',
-          detail.artworkNames.isNotEmpty
-              ? detail.artworkNames
-              : detail.artworkCodes,
-        ),
-        SizedBox(height: sectionSpacing),
-        buildResourceGroup(
-          '刀模',
-          detail.dieNames.isNotEmpty ? detail.dieNames : detail.dieCodes,
-        ),
-        SizedBox(height: sectionSpacing),
-        buildResourceGroup(
-          '烫金版',
-          detail.foilingPlateNames.isNotEmpty
-              ? detail.foilingPlateNames
-              : detail.foilingPlateCodes,
-        ),
-        SizedBox(height: sectionSpacing),
-        buildResourceGroup(
-          '压凸版',
-          detail.embossingPlateNames.isNotEmpty
-              ? detail.embossingPlateNames
-              : detail.embossingPlateCodes,
-        ),
+
+        // 备注
+        _buildDescriptionGrid(context, [
+          _DescItem('备注', detail.notes ?? emptyText, spanFull: true),
+        ]),
       ],
     );
   }
 
-  String _formatDate(DateTime? value, String fallback) {
-    if (value == null) return fallback;
+  Widget _buildDescriptionGrid(
+      BuildContext context, List<_DescItem> items) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth;
+        final columns = maxWidth < Breakpoints.sm
+            ? 1
+            : maxWidth < Breakpoints.lg
+                ? 2
+                : 3;
+        final rows = <Widget>[];
+        for (var i = 0; i < items.length;) {
+          final rowItems = <_DescItem>[];
+          var rowSpan = 0;
+          while (i < items.length && rowSpan < columns) {
+            final item = items[i];
+            if (item.spanFull && rowSpan > 0) break;
+            rowItems.add(item);
+            rowSpan += item.spanFull ? columns : 1;
+            i++;
+          }
+          rows.add(Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: rowItems.map((item) {
+              final flex = item.spanFull ? columns : 1;
+              return Expanded(
+                flex: flex,
+                child: _DescriptionCell(
+                  label: item.label,
+                  value: item.value,
+                  isStatus: item.isStatus,
+                  statusType: item.statusType,
+                  statusValue: item.statusValue,
+                  isProgress: item.isProgress,
+                  progressValue: item.progressValue,
+                ),
+              );
+            }).toList(),
+          ));
+        }
+        return Column(children: rows);
+      },
+    );
+  }
+
+  String _formatDate(DateTime? value) {
+    if (value == null) return emptyText;
     final local = value.toLocal();
     final year = local.year.toString().padLeft(4, '0');
     final month = local.month.toString().padLeft(2, '0');
@@ -706,7 +757,196 @@ class _SummaryContent extends StatelessWidget {
   bool get _hasDesignFile {
     return FileLinkUtil.hasLink(detail.designFileUrl);
   }
+
+  String _joinResourceItems(List<String> codes, List<String> names) {
+    if (codes.isEmpty && names.isEmpty) return emptyText;
+    if (codes.isEmpty) return names.join('、');
+    if (names.isEmpty) return codes.join('、');
+    final parts = <String>[];
+    for (var i = 0; i < codes.length; i++) {
+      final name = i < names.length ? names[i] : '';
+      parts.add(name.isNotEmpty ? '${codes[i]} - $name' : codes[i]);
+    }
+    return parts.join('、');
+  }
 }
+
+class _DescItem {
+  const _DescItem(
+    this.label,
+    this.value, {
+    this.isStatus = false,
+    this.statusType,
+    this.statusValue,
+    this.isProgress = false,
+    this.progressValue,
+    this.spanFull = false,
+  });
+
+  final String label;
+  final String value;
+  final bool isStatus;
+  final String? statusType;
+  final String? statusValue;
+  final bool isProgress;
+  final double? progressValue;
+  final bool spanFull;
+}
+
+class _DescriptionCell extends StatelessWidget {
+  const _DescriptionCell({
+    required this.label,
+    required this.value,
+    this.isStatus = false,
+    this.statusType,
+    this.statusValue,
+    this.isProgress = false,
+    this.progressValue,
+  });
+
+  final String label;
+  final String value;
+  final bool isStatus;
+  final String? statusType;
+  final String? statusValue;
+  final bool isProgress;
+  final double? progressValue;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>();
+    final dividerColor = colors?.borderColor.withValues(alpha: 0.4);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: dividerColor ?? Colors.grey.shade200),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colors?.subtleText,
+            ),
+          ),
+          const SizedBox(height: 4),
+          if (isProgress && progressValue != null)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: progressValue! / 100,
+                backgroundColor:
+                    colors?.borderColor.withValues(alpha: 0.3),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  progressValue! >= 100
+                      ? Colors.green
+                      : theme.colorScheme.primary,
+                ),
+              ),
+            )
+          else if (isStatus && statusValue != null)
+            _StatusBadge(
+              text: value,
+              type: statusType ?? '',
+              statusValue: statusValue!,
+            )
+          else
+            Text(
+              value,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({
+    required this.text,
+    required this.type,
+    required this.statusValue,
+  });
+
+  final String text;
+  final String type;
+  final String statusValue;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _badgeColor;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Text(
+        text,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+      ),
+    );
+  }
+
+  Color get _badgeColor {
+    switch (type) {
+      case 'status':
+        switch (statusValue) {
+          case 'pending':
+            return Colors.grey;
+          case 'in_progress':
+            return Colors.blue;
+          case 'paused':
+            return Colors.orange;
+          case 'completed':
+            return Colors.green;
+          case 'cancelled':
+            return Colors.red;
+          default:
+            return Colors.grey;
+        }
+      case 'approval':
+        switch (statusValue) {
+          case 'pending':
+            return Colors.orange;
+          case 'approved':
+            return Colors.green;
+          case 'rejected':
+            return Colors.red;
+          default:
+            return Colors.grey;
+        }
+      case 'priority':
+        switch (statusValue) {
+          case 'low':
+            return Colors.grey;
+          case 'normal':
+            return Colors.blue;
+          case 'high':
+            return Colors.orange;
+          case 'urgent':
+            return Colors.red;
+          default:
+            return Colors.grey;
+        }
+      default:
+        return Colors.grey;
+    }
+  }
+}
+
+// ---- Shared Info Row (used by WorkOrderMultiApprovalSection) ----
 
 class _InfoRow extends StatelessWidget {
   const _InfoRow({required this.label, required this.value});
