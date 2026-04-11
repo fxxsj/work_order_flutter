@@ -11,6 +11,7 @@ class EmbossingPlateDto {
     this.thickness,
     this.confirmed = false,
     this.products = const [],
+    this.images = const [],
     this.notes,
     this.createdAt,
   });
@@ -23,6 +24,7 @@ class EmbossingPlateDto {
   final String? thickness;
   final bool confirmed;
   final List<EmbossingPlateProduct> products;
+  final List<EmbossingPlateImage> images;
   final String? notes;
   final DateTime? createdAt;
 
@@ -45,6 +47,22 @@ class EmbossingPlateDto {
       }
     }
 
+    final images = <EmbossingPlateImage>[];
+    final rawImages = json['images'];
+    if (rawImages is List) {
+      for (final item in rawImages) {
+        if (item is Map) {
+          images.add(EmbossingPlateImage(
+            id: toInt(item['id']) ?? 0,
+            imageUrl: toStringOrNull(item['image']) ?? '',
+            sortOrder: toInt(item['sort_order']) ?? 0,
+            description: toStringOrNull(item['description']),
+            createdAt: toDateTime(item['created_at']),
+          ));
+        }
+      }
+    }
+
     return EmbossingPlateDto(
       id: toInt(json['id']) ?? 0,
       code: toStringOrNull(json['code']),
@@ -54,6 +72,7 @@ class EmbossingPlateDto {
       thickness: toStringOrNull(json['thickness']),
       confirmed: json['confirmed'] == true,
       products: products,
+      images: images,
       notes: toStringOrNull(json['notes']),
       createdAt: toDateTime(json['created_at']),
     );
@@ -69,6 +88,7 @@ class EmbossingPlateDto {
       thickness: entity.thickness,
       confirmed: entity.confirmed,
       products: entity.products,
+      images: entity.images,
       notes: entity.notes,
       createdAt: entity.createdAt,
     );
@@ -84,6 +104,7 @@ class EmbossingPlateDto {
       thickness: thickness,
       confirmed: confirmed,
       products: products,
+      images: images,
       notes: notes,
       createdAt: createdAt,
     );

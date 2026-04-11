@@ -1,6 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/foiling_plates/data/foiling_plate_dto.dart';
+import 'package:work_order_app/src/features/foiling_plates/domain/foiling_plate.dart';
 
 class FoilingPlateApiService {
   FoilingPlateApiService(this._client);
@@ -70,5 +72,37 @@ class FoilingPlateApiService {
 
   Future<void> confirmFoilingPlate(int id) async {
     await _client.post('/foiling-plates/$id/confirm/');
+  }
+
+  Future<FoilingPlateImage> uploadImage(int plateId, MultipartFile imageFile, {int sortOrder = 0, String? description}) async {
+    final formData = FormData.fromMap({
+      'image': imageFile,
+      'sort_order': sortOrder,
+      if (description != null && description.isNotEmpty) 'description': description,
+    });
+    final response = await _client.requestRaw(
+      '/foiling-plates/$plateId/upload_image/',
+      method: 'post',
+      data: formData,
+    );
+    final body = response.data;
+    final map = body is Map
+        ? (body['data'] is Map ? Map<String, dynamic>.from(body['data']) : Map<String, dynamic>.from(body))
+        : <String, dynamic>{};
+    return _parseFoilingPlateImage(map);
+  }
+
+  Future<void> deleteImage(int plateId, int imageId) async {
+    await _client.delete('/foiling-plates/$plateId/images/$imageId/');
+  }
+
+  FoilingPlateImage _parseFoilingPlateImage(Map<String, dynamic> json) {
+    return FoilingPlateImage(
+      id: toInt(json['id']) ?? 0,
+      imageUrl: json['image']?.toString() ?? '',
+      sortOrder: toInt(json['sort_order']) ?? 0,
+      description: toStringOrNull(json['description']),
+      createdAt: toDateTime(json['created_at']),
+    );
   }
 }

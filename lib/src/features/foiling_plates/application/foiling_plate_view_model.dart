@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/core.dart';
 import 'package:work_order_app/src/features/foiling_plates/domain/foiling_plate.dart';
 import 'package:work_order_app/src/features/foiling_plates/domain/foiling_plate_repository.dart';
@@ -40,6 +41,15 @@ class FoilingPlateViewModel extends PaginatedViewModel<FoilingPlate> {
 
   Future<void> confirmFoilingPlate(int id) async {
     await _repository.confirmFoilingPlate(id);
+    await loadItems();
+  }
+
+  Future<FoilingPlateImage> uploadFoilingPlateImage(int plateId, MultipartFile imageFile, {int sortOrder = 0, String? description}) async {
+    return await _repository.uploadFoilingPlateImage(plateId, imageFile, sortOrder: sortOrder, description: description);
+  }
+
+  Future<void> deleteFoilingPlateImage(int plateId, int imageId) async {
+    await _repository.deleteFoilingPlateImage(plateId, imageId);
     await loadItems();
   }
 }

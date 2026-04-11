@@ -14,6 +14,22 @@ class DieProduct {
   final String? relationType;
 }
 
+class DieImage {
+  const DieImage({
+    required this.id,
+    required this.imageUrl,
+    this.sortOrder = 0,
+    this.description,
+    this.createdAt,
+  });
+
+  final int id;
+  final String imageUrl;
+  final int sortOrder;
+  final String? description;
+  final DateTime? createdAt;
+}
+
 class Die {
   const Die({
     required this.id,
@@ -26,6 +42,7 @@ class Die {
     this.thickness,
     this.confirmed = false,
     this.products = const [],
+    this.images = const [],
     this.notes,
     this.createdAt,
   });
@@ -40,6 +57,7 @@ class Die {
   final String? thickness;
   final bool confirmed;
   final List<DieProduct> products;
+  final List<DieImage> images;
   final String? notes;
   final DateTime? createdAt;
 
@@ -55,6 +73,7 @@ class Die {
       thickness: toStringOrNull(json['thickness']),
       confirmed: json['confirmed'] == true,
       products: const [],
+      images: const [],
       notes: toStringOrNull(json['notes']),
       createdAt: toDateTime(json['createdAt']),
     );

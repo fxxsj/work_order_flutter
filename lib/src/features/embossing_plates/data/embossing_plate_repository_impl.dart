@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/core.dart';
 import 'package:work_order_app/src/features/embossing_plates/data/embossing_plate_api_service.dart';
 import 'package:work_order_app/src/features/embossing_plates/data/embossing_plate_dto.dart';
@@ -46,5 +47,15 @@ class EmbossingPlateRepositoryImpl implements EmbossingPlateRepository {
   @override
   Future<void> confirmEmbossingPlate(int id) async {
     await _api.confirmEmbossingPlate(id);
+  }
+
+  @override
+  Future<EmbossingPlateImage> uploadEmbossingPlateImage(int plateId, MultipartFile imageFile, {int sortOrder = 0, String? description}) async {
+    return await _api.uploadImage(plateId, imageFile, sortOrder: sortOrder, description: description);
+  }
+
+  @override
+  Future<void> deleteEmbossingPlateImage(int plateId, int imageId) async {
+    await _api.deleteImage(plateId, imageId);
   }
 }

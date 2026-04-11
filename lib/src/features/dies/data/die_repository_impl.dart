@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/core.dart';
 import 'package:work_order_app/src/features/dies/data/die_api_service.dart';
 import 'package:work_order_app/src/features/dies/data/die_dto.dart';
@@ -46,5 +47,15 @@ class DieRepositoryImpl implements DieRepository {
   @override
   Future<void> confirmDie(int id) async {
     await _api.confirmDie(id);
+  }
+
+  @override
+  Future<DieImage> uploadDieImage(int dieId, MultipartFile imageFile, {int sortOrder = 0, String? description}) async {
+    return await _api.uploadImage(dieId, imageFile, sortOrder: sortOrder, description: description);
+  }
+
+  @override
+  Future<void> deleteDieImage(int dieId, int imageId) async {
+    await _api.deleteImage(dieId, imageId);
   }
 }

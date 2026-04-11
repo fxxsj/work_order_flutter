@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/core.dart';
 import 'package:work_order_app/src/features/foiling_plates/data/foiling_plate_api_service.dart';
 import 'package:work_order_app/src/features/foiling_plates/data/foiling_plate_dto.dart';
@@ -46,5 +47,15 @@ class FoilingPlateRepositoryImpl implements FoilingPlateRepository {
   @override
   Future<void> confirmFoilingPlate(int id) async {
     await _api.confirmFoilingPlate(id);
+  }
+
+  @override
+  Future<FoilingPlateImage> uploadFoilingPlateImage(int plateId, MultipartFile imageFile, {int sortOrder = 0, String? description}) async {
+    return await _api.uploadImage(plateId, imageFile, sortOrder: sortOrder, description: description);
+  }
+
+  @override
+  Future<void> deleteFoilingPlateImage(int plateId, int imageId) async {
+    await _api.deleteImage(plateId, imageId);
   }
 }

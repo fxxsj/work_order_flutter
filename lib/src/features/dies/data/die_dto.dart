@@ -13,6 +13,7 @@ class DieDto {
     this.thickness,
     this.confirmed = false,
     this.products = const [],
+    this.images = const [],
     this.notes,
     this.createdAt,
   });
@@ -27,6 +28,7 @@ class DieDto {
   final String? thickness;
   final bool confirmed;
   final List<DieProduct> products;
+  final List<DieImage> images;
   final String? notes;
   final DateTime? createdAt;
 
@@ -50,6 +52,22 @@ class DieDto {
       }
     }
 
+    final images = <DieImage>[];
+    final rawImages = json['images'];
+    if (rawImages is List) {
+      for (final item in rawImages) {
+        if (item is Map) {
+          images.add(DieImage(
+            id: toInt(item['id']) ?? 0,
+            imageUrl: toStringOrNull(item['image']) ?? '',
+            sortOrder: toInt(item['sort_order']) ?? 0,
+            description: toStringOrNull(item['description']),
+            createdAt: toDateTime(item['created_at']),
+          ));
+        }
+      }
+    }
+
     return DieDto(
       id: toInt(json['id']) ?? 0,
       code: toStringOrNull(json['code']),
@@ -61,6 +79,7 @@ class DieDto {
       thickness: toStringOrNull(json['thickness']),
       confirmed: json['confirmed'] == true,
       products: products,
+      images: images,
       notes: toStringOrNull(json['notes']),
       createdAt: toDateTime(json['created_at']),
     );
@@ -78,6 +97,7 @@ class DieDto {
       thickness: entity.thickness,
       confirmed: entity.confirmed,
       products: entity.products,
+      images: entity.images,
       notes: entity.notes,
       createdAt: entity.createdAt,
     );
@@ -95,6 +115,7 @@ class DieDto {
       thickness: thickness,
       confirmed: confirmed,
       products: products,
+      images: images,
       notes: notes,
       createdAt: createdAt,
     );
@@ -119,7 +140,7 @@ class DieDto {
           (item) => {
             'product': item.productId,
             'quantity': item.quantity ?? 1,
-            'relation_type': item.relationType ?? 'exclusive',
+            'relation_type': item.relationType,
           },
         )
         .toList();

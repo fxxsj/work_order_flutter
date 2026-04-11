@@ -12,6 +12,22 @@ class EmbossingPlateProduct {
   final int? quantity;
 }
 
+class EmbossingPlateImage {
+  const EmbossingPlateImage({
+    required this.id,
+    required this.imageUrl,
+    this.sortOrder = 0,
+    this.description,
+    this.createdAt,
+  });
+
+  final int id;
+  final String imageUrl;
+  final int sortOrder;
+  final String? description;
+  final DateTime? createdAt;
+}
+
 class EmbossingPlate {
   const EmbossingPlate({
     required this.id,
@@ -22,6 +38,7 @@ class EmbossingPlate {
     this.thickness,
     this.confirmed = false,
     this.products = const [],
+    this.images = const [],
     this.notes,
     this.createdAt,
   });
@@ -34,6 +51,7 @@ class EmbossingPlate {
   final String? thickness;
   final bool confirmed;
   final List<EmbossingPlateProduct> products;
+  final List<EmbossingPlateImage> images;
   final String? notes;
   final DateTime? createdAt;
 
@@ -47,6 +65,7 @@ class EmbossingPlate {
       thickness: toStringOrNull(json['thickness']),
       confirmed: json['confirmed'] == true,
       products: const [],
+      images: const [],
       notes: toStringOrNull(json['notes']),
       createdAt: toDateTime(json['createdAt']),
     );

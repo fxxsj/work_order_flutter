@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/core.dart';
 import 'package:work_order_app/src/features/embossing_plates/domain/embossing_plate.dart';
 import 'package:work_order_app/src/features/embossing_plates/domain/embossing_plate_repository.dart';
@@ -40,6 +41,15 @@ class EmbossingPlateViewModel extends PaginatedViewModel<EmbossingPlate> {
 
   Future<void> confirmEmbossingPlate(int id) async {
     await _repository.confirmEmbossingPlate(id);
+    await loadItems();
+  }
+
+  Future<EmbossingPlateImage> uploadEmbossingPlateImage(int plateId, MultipartFile imageFile, {int sortOrder = 0, String? description}) async {
+    return await _repository.uploadEmbossingPlateImage(plateId, imageFile, sortOrder: sortOrder, description: description);
+  }
+
+  Future<void> deleteEmbossingPlateImage(int plateId, int imageId) async {
+    await _repository.deleteEmbossingPlateImage(plateId, imageId);
     await loadItems();
   }
 }

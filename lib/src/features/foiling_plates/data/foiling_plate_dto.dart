@@ -12,6 +12,7 @@ class FoilingPlateDto {
     this.thickness,
     this.confirmed = false,
     this.products = const [],
+    this.images = const [],
     this.notes,
     this.createdAt,
   });
@@ -25,6 +26,7 @@ class FoilingPlateDto {
   final String? thickness;
   final bool confirmed;
   final List<FoilingPlateProduct> products;
+  final List<FoilingPlateImage> images;
   final String? notes;
   final DateTime? createdAt;
 
@@ -47,6 +49,22 @@ class FoilingPlateDto {
       }
     }
 
+    final images = <FoilingPlateImage>[];
+    final rawImages = json['images'];
+    if (rawImages is List) {
+      for (final item in rawImages) {
+        if (item is Map) {
+          images.add(FoilingPlateImage(
+            id: toInt(item['id']) ?? 0,
+            imageUrl: toStringOrNull(item['image']) ?? '',
+            sortOrder: toInt(item['sort_order']) ?? 0,
+            description: toStringOrNull(item['description']),
+            createdAt: toDateTime(item['created_at']),
+          ));
+        }
+      }
+    }
+
     return FoilingPlateDto(
       id: toInt(json['id']) ?? 0,
       code: toStringOrNull(json['code']),
@@ -57,6 +75,7 @@ class FoilingPlateDto {
       thickness: toStringOrNull(json['thickness']),
       confirmed: json['confirmed'] == true,
       products: products,
+      images: images,
       notes: toStringOrNull(json['notes']),
       createdAt: toDateTime(json['created_at']),
     );
@@ -73,6 +92,7 @@ class FoilingPlateDto {
       thickness: entity.thickness,
       confirmed: entity.confirmed,
       products: entity.products,
+      images: entity.images,
       notes: entity.notes,
       createdAt: entity.createdAt,
     );
@@ -89,6 +109,7 @@ class FoilingPlateDto {
       thickness: thickness,
       confirmed: confirmed,
       products: products,
+      images: images,
       notes: notes,
       createdAt: createdAt,
     );

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/core.dart';
 import 'package:work_order_app/src/features/foiling_plates/domain/foiling_plate.dart';
 
@@ -15,4 +16,8 @@ abstract class FoilingPlateRepository {
   Future<void> deleteFoilingPlate(int id);
 
   Future<void> confirmFoilingPlate(int id);
+
+  Future<FoilingPlateImage> uploadFoilingPlateImage(int plateId, MultipartFile imageFile, {int sortOrder = 0, String? description});
+
+  Future<void> deleteFoilingPlateImage(int plateId, int imageId);
 }

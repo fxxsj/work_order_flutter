@@ -1,6 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/dies/data/die_dto.dart';
+import 'package:work_order_app/src/features/dies/domain/die.dart';
 
 class DieApiService {
   DieApiService(this._client);
@@ -70,5 +72,40 @@ class DieApiService {
 
   Future<void> confirmDie(int id) async {
     await _client.post('/dies/$id/confirm/');
+  }
+
+  /// 上传图片到指定刀模
+  /// 使用 requestRaw 发送 FormData，避免 HttpClient.post 的 contentType 强制覆盖
+  Future<DieImage> uploadImage(int dieId, MultipartFile imageFile, {int sortOrder = 0, String? description}) async {
+    final formData = FormData.fromMap({
+      'image': imageFile,
+      'sort_order': sortOrder,
+      if (description != null && description.isNotEmpty) 'description': description,
+    });
+    final response = await _client.requestRaw(
+      '/dies/$dieId/upload_image/',
+      method: 'post',
+      data: formData,
+    );
+    final body = response.data;
+    final map = body is Map
+        ? (body['data'] is Map ? Map<String, dynamic>.from(body['data']) : Map<String, dynamic>.from(body))
+        : <String, dynamic>{};
+    return _parseDieImage(map);
+  }
+
+  /// 删除刀模指定图片
+  Future<void> deleteImage(int dieId, int imageId) async {
+    await _client.delete('/dies/$dieId/images/$imageId/');
+  }
+
+  DieImage _parseDieImage(Map<String, dynamic> json) {
+    return DieImage(
+      id: toInt(json['id']) ?? 0,
+      imageUrl: json['image']?.toString() ?? '',
+      sortOrder: toInt(json['sort_order']) ?? 0,
+      description: toStringOrNull(json['description']),
+      createdAt: toDateTime(json['created_at']),
+    );
   }
 }
