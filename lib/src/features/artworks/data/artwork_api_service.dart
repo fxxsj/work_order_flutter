@@ -79,17 +79,22 @@ class ArtworkApiService {
   }
 
   /// 上传图片到指定图稿
+  /// 使用 requestRaw 发送 FormData，避免 HttpClient.post 的 contentType 强制覆盖
   Future<ArtworkImage> uploadImage(int artworkId, MultipartFile imageFile, {int sortOrder = 0, String? description}) async {
     final formData = FormData.fromMap({
       'image': imageFile,
       'sort_order': sortOrder,
       if (description != null && description.isNotEmpty) 'description': description,
     });
-    final response = await _client.post('/artworks/$artworkId/upload_image/', data: formData);
-    final payload = response.data;
-    // ApiResponse.data 已经是解包后的数据，但后端可能嵌套了 data 字段
-    final map = payload is Map
-        ? (payload['data'] is Map ? Map<String, dynamic>.from(payload['data']) : Map<String, dynamic>.from(payload))
+    final response = await _client.requestRaw(
+      '/artworks/$artworkId/upload_image/',
+      method: 'post',
+      data: formData,
+    );
+    final body = response.data;
+    // 后端返回 {"success": true, "data": {...}, ...}
+    final map = body is Map
+        ? (body['data'] is Map ? Map<String, dynamic>.from(body['data']) : Map<String, dynamic>.from(body))
         : <String, dynamic>{};
     return _parseArtworkImage(map);
   }
