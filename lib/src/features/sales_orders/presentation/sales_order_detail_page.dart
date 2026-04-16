@@ -715,6 +715,12 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
       items: [
         SalesOrderInfoItem('客户', detail.customerName ?? _emptyText),
         SalesOrderInfoItem(
+          '合同号',
+          (detail.contractNumber ?? '').trim().isEmpty
+              ? _emptyText
+              : detail.contractNumber!.trim(),
+        ),
+        SalesOrderInfoItem(
           '状态',
           detail.statusDisplay ?? detail.status ?? _emptyText,
         ),

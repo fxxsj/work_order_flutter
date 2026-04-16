@@ -32,6 +32,9 @@ class ProductApiService {
                 id: toInt(map['id']) ?? 0,
                 name: map['name']?.toString() ?? '',
                 code: map['code']?.toString() ?? '',
+                specification: toStringOrNull(map['specification']),
+                unit: toStringOrNull(map['unit']),
+                unitPrice: _toDouble(map['unit_price']),
               ),
             );
           }
@@ -48,12 +51,21 @@ class ProductApiService {
               id: toInt(map['id']) ?? 0,
               name: map['name']?.toString() ?? '',
               code: map['code']?.toString() ?? '',
+              specification: toStringOrNull(map['specification']),
+              unit: toStringOrNull(map['unit']),
+              unitPrice: _toDouble(map['unit_price']),
             ),
           );
         }
       }
     }
     return items.where((item) => item.id > 0).toList();
+  }
+
+  static double? _toDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString());
   }
 
   Future<ProductPageDto> fetchProductPage({

@@ -22,6 +22,8 @@ class SalesOrderDetail with _$SalesOrderDetail {
     String? customerPhone,
     @JsonKey(name: 'customer_address', fromJson: _stringOrNullFromJson)
     String? customerAddress,
+    @JsonKey(name: 'contract_number', fromJson: _stringOrNullFromJson)
+    String? contractNumber,
     @JsonKey(fromJson: _stringOrNullFromJson) String? status,
     @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
     String? statusDisplay,

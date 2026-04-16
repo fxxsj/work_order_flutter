@@ -69,6 +69,8 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
   final TextEditingController _contactPersonController =
       TextEditingController();
   final TextEditingController _contactPhoneController = TextEditingController();
+  final TextEditingController _contractNumberController =
+      TextEditingController();
   final TextEditingController _shippingAddressController =
       TextEditingController();
   final TextEditingController _notesController = TextEditingController();
@@ -120,6 +122,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
     _deliveryDateController.dispose();
     _contactPersonController.dispose();
     _contactPhoneController.dispose();
+    _contractNumberController.dispose();
     _shippingAddressController.dispose();
     _notesController.dispose();
     _taxRateController.dispose();
@@ -177,6 +180,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
     _deliveryDateController.text = _formatDate(_deliveryDate);
     _contactPersonController.text = detail.contactPerson ?? '';
     _contactPhoneController.text = detail.contactPhone ?? '';
+    _contractNumberController.text = detail.contractNumber ?? '';
     _shippingAddressController.text = detail.shippingAddress ?? '';
     _notesController.text = detail.notes ?? '';
     if (detail.taxRate != null) {
@@ -301,6 +305,9 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
       id: created.id,
       name: created.name,
       code: created.code,
+      specification: created.specification,
+      unit: created.unit,
+      unitPrice: created.unitPrice,
     );
     setState(() {
       _products = List<ProductOption>.from(_products)
@@ -366,6 +373,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
       'customer': _customerId,
       'order_date': orderDate.isEmpty ? null : orderDate,
       'delivery_date': deliveryDate.isEmpty ? null : deliveryDate,
+      'contract_number': _contractNumberController.text.trim(),
       'tax_rate': double.tryParse(_taxRateController.text.trim()) ?? 0,
       'discount_amount':
           double.tryParse(_discountAmountController.text.trim()) ?? 0,
@@ -519,6 +527,13 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
             spacing: 16,
             runSpacing: 12,
             children: [
+              SizedBox(
+                width: fieldWidth,
+                child: CrudFormField.text(
+                  label: '合同号',
+                  controller: _contractNumberController,
+                ).build(context),
+              ),
               SizedBox(
                 width: fieldWidth,
                 child: CrudFormField.number(
@@ -784,16 +799,52 @@ class _ItemRow extends StatefulWidget {
 }
 
 class _ItemRowState extends State<_ItemRow> {
+  ProductOption? get _selectedProduct {
+    final productId = widget.draft.productId;
+    if (productId == null) {
+      return null;
+    }
+    return widget.products.cast<ProductOption?>().firstWhere(
+          (item) => item?.id == productId,
+          orElse: () => null,
+        );
+  }
+
+  void _applyProductDefaults(ProductOption product) {
+    widget.draft.unitController.text = (product.unit?.trim().isNotEmpty ?? false)
+        ? product.unit!.trim()
+        : '件';
+    widget.draft.unitPriceController.text =
+        (product.unitPrice ?? 0).toStringAsFixed(2);
+  }
+
+  void _handleProductChanged(int? value) {
+    setState(() => widget.draft.productId = value);
+    if (value == null) {
+      return;
+    }
+    final product = widget.products.cast<ProductOption?>().firstWhere(
+          (item) => item?.id == value,
+          orElse: () => null,
+        );
+    if (product == null) {
+      return;
+    }
+    _applyProductDefaults(product);
+  }
+
   Future<void> _handleCreateProduct() async {
     final created = await widget.onCreateProduct();
     if (created == null || !mounted) {
       return;
     }
     setState(() => widget.draft.productId = created.id);
+    _applyProductDefaults(created);
   }
 
   @override
   Widget build(BuildContext context) {
+    final selectedProduct = _selectedProduct;
     final productOptions = widget.products
         .map(
           (item) => DropdownOption<int>(
@@ -826,8 +877,7 @@ class _ItemRowState extends State<_ItemRow> {
               options: productOptions,
               selectHintText: widget.products.isEmpty ? '新增产品' : '请选择',
               minOptionsForSearch: 1,
-              onChanged: (value) =>
-                  setState(() => widget.draft.productId = value),
+              onChanged: _handleProductChanged,
               validator: (value) => value == null ? '请选择产品' : null,
             ),
           ),
@@ -837,6 +887,14 @@ class _ItemRowState extends State<_ItemRow> {
               icon: const Icon(Icons.add, size: 18),
               label: const Text('新增产品'),
             ),
+          SizedBox(
+            width: 220,
+            child: CrudFormField.text(
+              label: '规格',
+              initialValue: selectedProduct?.specification ?? '',
+              enabled: false,
+            ).build(context),
+          ),
           SizedBox(
             width: 120,
             child: CrudFormField.number(

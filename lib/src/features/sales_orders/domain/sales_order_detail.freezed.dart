@@ -34,6 +34,8 @@ mixin _$SalesOrderDetail {
   String? get customerPhone => throw _privateConstructorUsedError;
   @JsonKey(name: 'customer_address', fromJson: _stringOrNullFromJson)
   String? get customerAddress => throw _privateConstructorUsedError;
+  @JsonKey(name: 'contract_number', fromJson: _stringOrNullFromJson)
+  String? get contractNumber => throw _privateConstructorUsedError;
   @JsonKey(fromJson: _stringOrNullFromJson)
   String? get status => throw _privateConstructorUsedError;
   @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
@@ -143,6 +145,8 @@ abstract class $SalesOrderDetailCopyWith<$Res> {
       String? customerPhone,
       @JsonKey(name: 'customer_address', fromJson: _stringOrNullFromJson)
       String? customerAddress,
+      @JsonKey(name: 'contract_number', fromJson: _stringOrNullFromJson)
+      String? contractNumber,
       @JsonKey(fromJson: _stringOrNullFromJson) String? status,
       @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
       String? statusDisplay,
@@ -242,6 +246,7 @@ class _$SalesOrderDetailCopyWithImpl<$Res, $Val extends SalesOrderDetail>
     Object? customerContact = freezed,
     Object? customerPhone = freezed,
     Object? customerAddress = freezed,
+    Object? contractNumber = freezed,
     Object? status = freezed,
     Object? statusDisplay = freezed,
     Object? approvalComment = freezed,
@@ -303,6 +308,10 @@ class _$SalesOrderDetailCopyWithImpl<$Res, $Val extends SalesOrderDetail>
       customerAddress: freezed == customerAddress
           ? _value.customerAddress
           : customerAddress // ignore: cast_nullable_to_non_nullable
+              as String?,
+      contractNumber: freezed == contractNumber
+          ? _value.contractNumber
+          : contractNumber // ignore: cast_nullable_to_non_nullable
               as String?,
       status: freezed == status
           ? _value.status
@@ -457,6 +466,8 @@ abstract class _$$SalesOrderDetailImplCopyWith<$Res>
       String? customerPhone,
       @JsonKey(name: 'customer_address', fromJson: _stringOrNullFromJson)
       String? customerAddress,
+      @JsonKey(name: 'contract_number', fromJson: _stringOrNullFromJson)
+      String? contractNumber,
       @JsonKey(fromJson: _stringOrNullFromJson) String? status,
       @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
       String? statusDisplay,
@@ -554,6 +565,7 @@ class __$$SalesOrderDetailImplCopyWithImpl<$Res>
     Object? customerContact = freezed,
     Object? customerPhone = freezed,
     Object? customerAddress = freezed,
+    Object? contractNumber = freezed,
     Object? status = freezed,
     Object? statusDisplay = freezed,
     Object? approvalComment = freezed,
@@ -615,6 +627,10 @@ class __$$SalesOrderDetailImplCopyWithImpl<$Res>
       customerAddress: freezed == customerAddress
           ? _value.customerAddress
           : customerAddress // ignore: cast_nullable_to_non_nullable
+              as String?,
+      contractNumber: freezed == contractNumber
+          ? _value.contractNumber
+          : contractNumber // ignore: cast_nullable_to_non_nullable
               as String?,
       status: freezed == status
           ? _value.status
@@ -764,6 +780,8 @@ class _$SalesOrderDetailImpl implements _SalesOrderDetail {
       this.customerPhone,
       @JsonKey(name: 'customer_address', fromJson: _stringOrNullFromJson)
       this.customerAddress,
+      @JsonKey(name: 'contract_number', fromJson: _stringOrNullFromJson)
+      this.contractNumber,
       @JsonKey(fromJson: _stringOrNullFromJson) this.status,
       @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
       this.statusDisplay,
@@ -870,6 +888,9 @@ class _$SalesOrderDetailImpl implements _SalesOrderDetail {
   @override
   @JsonKey(name: 'customer_address', fromJson: _stringOrNullFromJson)
   final String? customerAddress;
+  @override
+  @JsonKey(name: 'contract_number', fromJson: _stringOrNullFromJson)
+  final String? contractNumber;
   @override
   @JsonKey(fromJson: _stringOrNullFromJson)
   final String? status;
@@ -1027,7 +1048,7 @@ class _$SalesOrderDetailImpl implements _SalesOrderDetail {
 
   @override
   String toString() {
-    return 'SalesOrderDetail(id: $id, orderNumber: $orderNumber, customerId: $customerId, customerName: $customerName, customerContact: $customerContact, customerPhone: $customerPhone, customerAddress: $customerAddress, status: $status, statusDisplay: $statusDisplay, approvalComment: $approvalComment, rejectionReason: $rejectionReason, paymentStatus: $paymentStatus, paymentStatusDisplay: $paymentStatusDisplay, orderDate: $orderDate, deliveryDate: $deliveryDate, actualDeliveryDate: $actualDeliveryDate, subtotal: $subtotal, taxRate: $taxRate, taxAmount: $taxAmount, discountAmount: $discountAmount, totalAmount: $totalAmount, depositAmount: $depositAmount, paidAmount: $paidAmount, paymentDate: $paymentDate, contactPerson: $contactPerson, contactPhone: $contactPhone, shippingAddress: $shippingAddress, notes: $notes, paymentCount: $paymentCount, pendingPaymentPlanCount: $pendingPaymentPlanCount, pendingPaymentPlanAmount: $pendingPaymentPlanAmount, unpaidAmount: $unpaidAmount, workOrderNumbers: $workOrderNumbers, deliveryOrderNumbers: $deliveryOrderNumbers, invoiceNumbers: $invoiceNumbers, workOrderSummaries: $workOrderSummaries, deliveryOrderSummaries: $deliveryOrderSummaries, invoiceSummaries: $invoiceSummaries, items: $items)';
+    return 'SalesOrderDetail(id: $id, orderNumber: $orderNumber, customerId: $customerId, customerName: $customerName, customerContact: $customerContact, customerPhone: $customerPhone, customerAddress: $customerAddress, contractNumber: $contractNumber, status: $status, statusDisplay: $statusDisplay, approvalComment: $approvalComment, rejectionReason: $rejectionReason, paymentStatus: $paymentStatus, paymentStatusDisplay: $paymentStatusDisplay, orderDate: $orderDate, deliveryDate: $deliveryDate, actualDeliveryDate: $actualDeliveryDate, subtotal: $subtotal, taxRate: $taxRate, taxAmount: $taxAmount, discountAmount: $discountAmount, totalAmount: $totalAmount, depositAmount: $depositAmount, paidAmount: $paidAmount, paymentDate: $paymentDate, contactPerson: $contactPerson, contactPhone: $contactPhone, shippingAddress: $shippingAddress, notes: $notes, paymentCount: $paymentCount, pendingPaymentPlanCount: $pendingPaymentPlanCount, pendingPaymentPlanAmount: $pendingPaymentPlanAmount, unpaidAmount: $unpaidAmount, workOrderNumbers: $workOrderNumbers, deliveryOrderNumbers: $deliveryOrderNumbers, invoiceNumbers: $invoiceNumbers, workOrderSummaries: $workOrderSummaries, deliveryOrderSummaries: $deliveryOrderSummaries, invoiceSummaries: $invoiceSummaries, items: $items)';
   }
 
   @override
@@ -1048,6 +1069,8 @@ class _$SalesOrderDetailImpl implements _SalesOrderDetail {
                 other.customerPhone == customerPhone) &&
             (identical(other.customerAddress, customerAddress) ||
                 other.customerAddress == customerAddress) &&
+            (identical(other.contractNumber, contractNumber) ||
+                other.contractNumber == contractNumber) &&
             (identical(other.status, status) || other.status == status) &&
             (identical(other.statusDisplay, statusDisplay) ||
                 other.statusDisplay == statusDisplay) &&
@@ -1123,6 +1146,7 @@ class _$SalesOrderDetailImpl implements _SalesOrderDetail {
         customerContact,
         customerPhone,
         customerAddress,
+        contractNumber,
         status,
         statusDisplay,
         approvalComment,
@@ -1189,6 +1213,8 @@ abstract class _SalesOrderDetail implements SalesOrderDetail {
       final String? customerPhone,
       @JsonKey(name: 'customer_address', fromJson: _stringOrNullFromJson)
       final String? customerAddress,
+      @JsonKey(name: 'contract_number', fromJson: _stringOrNullFromJson)
+      final String? contractNumber,
       @JsonKey(fromJson: _stringOrNullFromJson) final String? status,
       @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
       final String? statusDisplay,
@@ -1289,6 +1315,9 @@ abstract class _SalesOrderDetail implements SalesOrderDetail {
   @override
   @JsonKey(name: 'customer_address', fromJson: _stringOrNullFromJson)
   String? get customerAddress;
+  @override
+  @JsonKey(name: 'contract_number', fromJson: _stringOrNullFromJson)
+  String? get contractNumber;
   @override
   @JsonKey(fromJson: _stringOrNullFromJson)
   String? get status;

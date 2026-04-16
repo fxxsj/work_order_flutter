@@ -5,11 +5,17 @@ class ProductOption {
     required this.id,
     required this.name,
     required this.code,
+    this.specification,
+    this.unit,
+    this.unitPrice,
   });
 
   final int id;
   final String name;
   final String code;
+  final String? specification;
+  final String? unit;
+  final double? unitPrice;
 
   String get displayLabel => code.isNotEmpty ? '$name ($code)' : name;
 }
