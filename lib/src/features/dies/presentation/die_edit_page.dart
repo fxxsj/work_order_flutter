@@ -4,10 +4,13 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_drawer_edit_panel.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
+import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/file_upload_picker.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -17,10 +20,33 @@ import 'package:work_order_app/src/features/products/data/product_api_service.da
 import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/products/presentation/widgets/quick_product_create_dialog.dart';
 
+Future<bool> showDieEditDrawer(
+  BuildContext context, {
+  required DieViewModel viewModel,
+  Die? die,
+}) async {
+  var saved = false;
+  await showAdaptiveFilterDrawer(
+    context,
+    isMobile: BreakpointsUtil.isMobile(context),
+    title: die == null ? '新建刀模' : '编辑刀模',
+    desktopWidth: LayoutTokens.pageWidthXwide,
+    child: ChangeNotifierProvider<DieViewModel>.value(
+      value: viewModel,
+      child: DieEditPage(
+        die: die,
+        onSaved: () => saved = true,
+      ),
+    ),
+  );
+  return saved;
+}
+
 class DieEditPage extends StatefulWidget {
-  const DieEditPage({super.key, this.die});
+  const DieEditPage({super.key, this.die, this.onSaved});
 
   final Die? die;
+  final VoidCallback? onSaved;
 
   @override
   State<DieEditPage> createState() => _DieEditPageState();
@@ -544,8 +570,9 @@ class _DieEditPageState extends State<DieEditPage> {
   Widget build(BuildContext context) {
     final isConfirmed = widget.die?.confirmed == true;
 
-    return CrudEditPage<Die, DieViewModel>(
+    return CrudDrawerEditPanel<Die, DieViewModel>(
       item: widget.die,
+      onSaved: widget.onSaved,
       config: CrudEditConfig<Die, DieViewModel>(
         submitText: _submitText,
         submittingText: '保存中',

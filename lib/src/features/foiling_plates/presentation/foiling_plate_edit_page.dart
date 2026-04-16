@@ -3,10 +3,13 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_drawer_edit_panel.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
+import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/file_upload_picker.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -16,10 +19,33 @@ import 'package:work_order_app/src/features/products/data/product_api_service.da
 import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/products/presentation/widgets/quick_product_create_dialog.dart';
 
+Future<bool> showFoilingPlateEditDrawer(
+  BuildContext context, {
+  required FoilingPlateViewModel viewModel,
+  FoilingPlate? plate,
+}) async {
+  var saved = false;
+  await showAdaptiveFilterDrawer(
+    context,
+    isMobile: BreakpointsUtil.isMobile(context),
+    title: plate == null ? '新建烫金版' : '编辑烫金版',
+    desktopWidth: LayoutTokens.pageWidthXwide,
+    child: ChangeNotifierProvider<FoilingPlateViewModel>.value(
+      value: viewModel,
+      child: FoilingPlateEditPage(
+        plate: plate,
+        onSaved: () => saved = true,
+      ),
+    ),
+  );
+  return saved;
+}
+
 class FoilingPlateEditPage extends StatefulWidget {
-  const FoilingPlateEditPage({super.key, this.plate});
+  const FoilingPlateEditPage({super.key, this.plate, this.onSaved});
 
   final FoilingPlate? plate;
+  final VoidCallback? onSaved;
 
   @override
   State<FoilingPlateEditPage> createState() => _FoilingPlateEditPageState();
@@ -470,8 +496,9 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
   Widget build(BuildContext context) {
     final isConfirmed = widget.plate?.confirmed == true;
 
-    return CrudEditPage<FoilingPlate, FoilingPlateViewModel>(
+    return CrudDrawerEditPanel<FoilingPlate, FoilingPlateViewModel>(
       item: widget.plate,
+      onSaved: widget.onSaved,
       config: CrudEditConfig<FoilingPlate, FoilingPlateViewModel>(
         submitText: _submitText,
         submittingText: '保存中',

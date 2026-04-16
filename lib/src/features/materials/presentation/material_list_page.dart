@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
@@ -86,16 +85,12 @@ class MaterialListPage extends StatelessWidget {
     MaterialViewModel viewModel,
     MaterialItem? material,
   ) async {
-    final result = await context.pushNamed<bool>(
-      material == null ? 'materials_create' : 'materials_edit',
-      pathParameters:
-          material == null ? const {} : {'id': material.id.toString()},
-      extra: ChangeNotifierProvider.value(
-        value: viewModel,
-        child: MaterialEditPage(material: material),
-      ),
+    final result = await showMaterialEditDrawer(
+      context,
+      viewModel: viewModel,
+      material: material,
     );
-    if (result == true) {
+    if (result) {
       ToastUtil.showSuccess(material == null ? '创建成功' : '更新成功');
     }
   }

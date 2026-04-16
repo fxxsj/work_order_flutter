@@ -87,16 +87,12 @@ class CustomerListPage extends StatelessWidget {
     CustomerViewModel viewModel,
     Customer? customer,
   ) async {
-    final result = await context.pushNamed<bool>(
-      customer == null ? 'customers_create' : 'customers_edit',
-      pathParameters:
-          customer == null ? const {} : {'id': customer.id.toString()},
-      extra: ChangeNotifierProvider.value(
-        value: viewModel,
-        child: CustomerEditPage(customer: customer),
-      ),
+    final result = await showCustomerEditDrawer(
+      context,
+      viewModel: viewModel,
+      customer: customer,
     );
-    if (result == true) {
+    if (result) {
       ToastUtil.showSuccess(customer == null ? '创建成功' : '更新成功');
     }
   }

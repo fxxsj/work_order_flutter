@@ -1,14 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_drawer_edit_panel.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
+import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/processes/application/process_view_model.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 
+Future<bool> showProcessEditDrawer(
+  BuildContext context, {
+  required ProcessViewModel viewModel,
+  Process? process,
+}) async {
+  var saved = false;
+  await showAdaptiveFilterDrawer(
+    context,
+    isMobile: BreakpointsUtil.isMobile(context),
+    title: process == null ? '新建工序' : '编辑工序',
+    desktopWidth: LayoutTokens.pageWidthXwide,
+    child: ChangeNotifierProvider<ProcessViewModel>.value(
+      value: viewModel,
+      child: ProcessEditPage(
+        process: process,
+        onSaved: () => saved = true,
+      ),
+    ),
+  );
+  return saved;
+}
+
 /// 工序编辑页，支持新增与编辑。
 class ProcessEditPage extends StatefulWidget {
-  const ProcessEditPage({super.key, this.process});
+  const ProcessEditPage({super.key, this.process, this.onSaved});
 
   final Process? process;
+  final VoidCallback? onSaved;
 
   @override
   State<ProcessEditPage> createState() => _ProcessEditPageState();
@@ -86,8 +114,9 @@ class _ProcessEditPageState extends State<ProcessEditPage> {
 
   @override
   Widget build(BuildContext context) {
-    return CrudEditPage<Process, ProcessViewModel>(
+    return CrudDrawerEditPanel<Process, ProcessViewModel>(
       item: widget.process,
+      onSaved: widget.onSaved,
       config: CrudEditConfig<Process, ProcessViewModel>(
         submitText: _submitText,
         submittingText: '保存中',

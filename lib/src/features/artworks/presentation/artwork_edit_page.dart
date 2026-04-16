@@ -3,10 +3,13 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_drawer_edit_panel.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
+import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/file_upload_picker.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -22,10 +25,33 @@ import 'package:work_order_app/src/features/products/data/product_api_service.da
 import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/products/presentation/widgets/quick_product_create_dialog.dart';
 
+Future<bool> showArtworkEditDrawer(
+  BuildContext context, {
+  required ArtworkViewModel viewModel,
+  Artwork? artwork,
+}) async {
+  var saved = false;
+  await showAdaptiveFilterDrawer(
+    context,
+    isMobile: BreakpointsUtil.isMobile(context),
+    title: artwork == null ? '新建图稿' : '编辑图稿',
+    desktopWidth: LayoutTokens.pageWidthXwide,
+    child: ChangeNotifierProvider<ArtworkViewModel>.value(
+      value: viewModel,
+      child: ArtworkEditPage(
+        artwork: artwork,
+        onSaved: () => saved = true,
+      ),
+    ),
+  );
+  return saved;
+}
+
 class ArtworkEditPage extends StatefulWidget {
-  const ArtworkEditPage({super.key, this.artwork});
+  const ArtworkEditPage({super.key, this.artwork, this.onSaved});
 
   final Artwork? artwork;
+  final VoidCallback? onSaved;
 
   @override
   State<ArtworkEditPage> createState() => _ArtworkEditPageState();
@@ -540,8 +566,9 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
 
   @override
   Widget build(BuildContext context) {
-    return CrudEditPage<Artwork, ArtworkViewModel>(
+    return CrudDrawerEditPanel<Artwork, ArtworkViewModel>(
       item: widget.artwork,
+      onSaved: widget.onSaved,
       config: CrudEditConfig<Artwork, ArtworkViewModel>(
         submitText: _submitText,
         submittingText: '保存中',

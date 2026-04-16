@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
@@ -90,16 +89,12 @@ class DepartmentListPage extends StatelessWidget {
     DepartmentViewModel viewModel,
     Department? department,
   ) async {
-    final result = await context.pushNamed<bool>(
-      department == null ? 'departments_create' : 'departments_edit',
-      pathParameters:
-          department == null ? const {} : {'id': department.id.toString()},
-      extra: ChangeNotifierProvider.value(
-        value: viewModel,
-        child: DepartmentEditPage(department: department),
-      ),
+    final result = await showDepartmentEditDrawer(
+      context,
+      viewModel: viewModel,
+      department: department,
     );
-    if (result == true) {
+    if (result) {
       ToastUtil.showSuccess(department == null ? '创建成功' : '更新成功');
     }
   }

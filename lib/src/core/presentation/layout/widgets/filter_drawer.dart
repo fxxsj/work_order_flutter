@@ -182,6 +182,7 @@ class AdaptiveFormPanel extends StatelessWidget {
     this.submitText = '提交',
     this.cancelText = '取消',
     this.submitting = false,
+    this.submitEnabled = true,
     this.padding = const EdgeInsets.fromLTRB(
       LayoutTokens.gapLg,
       LayoutTokens.gapLg,
@@ -203,6 +204,7 @@ class AdaptiveFormPanel extends StatelessWidget {
   final String submitText;
   final String cancelText;
   final bool submitting;
+  final bool submitEnabled;
   final EdgeInsetsGeometry padding;
   final EdgeInsetsGeometry footerPadding;
 
@@ -242,7 +244,7 @@ class AdaptiveFormPanel extends StatelessWidget {
                 ),
                 const SizedBox(width: LayoutTokens.gapSm),
                 FilledButton(
-                  onPressed: submitting ? null : onSubmit,
+                  onPressed: submitting || !submitEnabled ? null : onSubmit,
                   child: Text(submitting ? '$submitText中...' : submitText),
                 ),
               ],

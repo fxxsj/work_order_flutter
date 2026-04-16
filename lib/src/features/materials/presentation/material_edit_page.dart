@@ -1,13 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_drawer_edit_panel.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
+import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/materials/application/material_view_model.dart';
 import 'package:work_order_app/src/features/materials/domain/material.dart';
 
+Future<bool> showMaterialEditDrawer(
+  BuildContext context, {
+  required MaterialViewModel viewModel,
+  MaterialItem? material,
+}) async {
+  var saved = false;
+  await showAdaptiveFilterDrawer(
+    context,
+    isMobile: BreakpointsUtil.isMobile(context),
+    title: material == null ? '新建物料' : '编辑物料',
+    desktopWidth: LayoutTokens.pageWidthXwide,
+    child: ChangeNotifierProvider<MaterialViewModel>.value(
+      value: viewModel,
+      child: MaterialEditPage(
+        material: material,
+        onSaved: () => saved = true,
+      ),
+    ),
+  );
+  return saved;
+}
+
 class MaterialEditPage extends StatefulWidget {
-  const MaterialEditPage({super.key, this.material});
+  const MaterialEditPage({super.key, this.material, this.onSaved});
 
   final MaterialItem? material;
+  final VoidCallback? onSaved;
 
   @override
   State<MaterialEditPage> createState() => _MaterialEditPageState();
@@ -96,8 +124,9 @@ class _MaterialEditPageState extends State<MaterialEditPage> {
 
   @override
   Widget build(BuildContext context) {
-    return CrudEditPage<MaterialItem, MaterialViewModel>(
+    return CrudDrawerEditPanel<MaterialItem, MaterialViewModel>(
       item: widget.material,
+      onSaved: widget.onSaved,
       config: CrudEditConfig<MaterialItem, MaterialViewModel>(
         submitText: _submitText,
         submittingText: '保存中',

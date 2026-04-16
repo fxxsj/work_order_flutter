@@ -86,16 +86,12 @@ class SupplierListPage extends StatelessWidget {
     SupplierViewModel viewModel,
     Supplier? supplier,
   ) async {
-    final result = await context.pushNamed<bool>(
-      supplier == null ? 'suppliers_create' : 'suppliers_edit',
-      pathParameters:
-          supplier == null ? const {} : {'id': supplier.id.toString()},
-      extra: ChangeNotifierProvider.value(
-        value: viewModel,
-        child: SupplierEditPage(supplier: supplier),
-      ),
+    final result = await showSupplierEditDrawer(
+      context,
+      viewModel: viewModel,
+      supplier: supplier,
     );
-    if (result == true) {
+    if (result) {
       ToastUtil.showSuccess(supplier == null ? '创建成功' : '更新成功');
     }
   }

@@ -1,13 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_drawer_edit_panel.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
+import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/product_groups/application/product_group_view_model.dart';
 import 'package:work_order_app/src/features/product_groups/domain/product_group.dart';
 
+Future<bool> showProductGroupEditDrawer(
+  BuildContext context, {
+  required ProductGroupViewModel viewModel,
+  ProductGroup? group,
+}) async {
+  var saved = false;
+  await showAdaptiveFilterDrawer(
+    context,
+    isMobile: BreakpointsUtil.isMobile(context),
+    title: group == null ? '新建产品组' : '编辑产品组',
+    desktopWidth: LayoutTokens.pageWidthXwide,
+    child: ChangeNotifierProvider<ProductGroupViewModel>.value(
+      value: viewModel,
+      child: ProductGroupEditPage(
+        group: group,
+        onSaved: () => saved = true,
+      ),
+    ),
+  );
+  return saved;
+}
+
 class ProductGroupEditPage extends StatefulWidget {
-  const ProductGroupEditPage({super.key, this.group});
+  const ProductGroupEditPage({super.key, this.group, this.onSaved});
 
   final ProductGroup? group;
+  final VoidCallback? onSaved;
 
   @override
   State<ProductGroupEditPage> createState() => _ProductGroupEditPageState();
@@ -72,8 +100,9 @@ class _ProductGroupEditPageState extends State<ProductGroupEditPage> {
 
   @override
   Widget build(BuildContext context) {
-    return CrudEditPage<ProductGroup, ProductGroupViewModel>(
+    return CrudDrawerEditPanel<ProductGroup, ProductGroupViewModel>(
       item: widget.group,
+      onSaved: widget.onSaved,
       config: CrudEditConfig<ProductGroup, ProductGroupViewModel>(
         submitText: _submitText,
         submittingText: '保存中',

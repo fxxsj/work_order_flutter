@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
+import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/extensions/datetime_extensions.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -11,11 +13,38 @@ import 'package:work_order_app/src/core/utils/validators.dart';
 import 'package:work_order_app/src/features/customer/application/customer_view_model.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 
+Future<bool> showCustomerEditDrawer(
+  BuildContext context, {
+  required CustomerViewModel viewModel,
+  Customer? customer,
+}) async {
+  var saved = false;
+  await showAdaptiveFilterDrawer(
+    context,
+    isMobile: BreakpointsUtil.isMobile(context),
+    title: customer == null ? '新建客户' : '编辑客户',
+    desktopWidth: LayoutTokens.pageWidthXwide,
+    child: ChangeNotifierProvider<CustomerViewModel>.value(
+      value: viewModel,
+      child: CustomerEditPage(
+        customer: customer,
+        onSaved: () => saved = true,
+      ),
+    ),
+  );
+  return saved;
+}
+
 /// 客户编辑页，支持新增与编辑。
 class CustomerEditPage extends StatefulWidget {
-  const CustomerEditPage({super.key, this.customer});
+  const CustomerEditPage({
+    super.key,
+    this.customer,
+    this.onSaved,
+  });
 
   final Customer? customer;
+  final VoidCallback? onSaved;
 
   @override
   State<CustomerEditPage> createState() => _CustomerEditPageState();
@@ -26,28 +55,10 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
   static const double _indicatorStrokeWidth = 2;
   static const double _inlineSpacing = 8;
 
-  static const String _nameLabel = '客户名称';
-  static const String _contactLabel = '联系人';
-  static const String _phoneLabel = '联系电话';
-  static const String _emailLabel = '邮箱';
-  static const String _salespersonLabel = '业务员';
-  static const String _addressLabel = '地址';
-  static const String _notesLabel = '备注';
-  static const String _noSalespersonText = '不指定';
   static const String _loadingSalespersonsText = '正在加载业务员列表...';
-  static const String _submitText = '保存';
   static const String _submitErrorText = '操作失败: ';
-  static const String _nameRequiredText = '请输入客户名称';
-  static const String _nameLengthText = '客户名称至少需要2个字符';
-  static const String _phoneInvalidText = '电话号码格式不正确';
-  static const String _emailInvalidText = '请输入正确的邮箱地址';
-  static const String _basicSectionTitle = '基本信息';
-  static const String _contactSectionTitle = '联系信息';
-  static const String _extraSectionTitle = '补充信息';
-  static const String _systemSectionTitle = '系统信息';
-  static const String _createdAtLabel = '创建时间';
-  static const String _updatedAtLabel = '更新时间';
 
+  final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   late final TextEditingController _contactController;
   late final TextEditingController _phoneController;
@@ -56,6 +67,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
   late final TextEditingController _notesController;
 
   int? _salespersonId;
+  bool _submitting = false;
 
   @override
   void initState() {
@@ -82,14 +94,21 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
     super.dispose();
   }
 
-  Future<void> _handleSubmit(CustomerViewModel viewModel) async {
+  bool _canSave(BuildContext context) {
+    final requiredPermission = widget.customer == null
+        ? 'workorder.add_customer'
+        : 'workorder.change_customer';
+    return PermissionUtil.snapshot(context).has(requiredPermission);
+  }
+
+  Future<bool> _handleSubmit(CustomerViewModel viewModel) async {
     final requiredPermission = widget.customer == null
         ? 'workorder.add_customer'
         : 'workorder.change_customer';
     final permissions = PermissionUtil.snapshot(context);
     if (!permissions.has(requiredPermission)) {
       ToastUtil.showError('当前账号无权执行该操作');
-      return;
+      return false;
     }
 
     String? salespersonName;
@@ -121,6 +140,30 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
     } else {
       await viewModel.updateCustomer(payload);
     }
+    return true;
+  }
+
+  Future<void> _submit(CustomerViewModel viewModel) async {
+    final form = _formKey.currentState;
+    if (form == null || !form.validate()) {
+      return;
+    }
+    if (_submitting) return;
+
+    setState(() => _submitting = true);
+    try {
+      final saved = await _handleSubmit(viewModel);
+      if (!mounted || !saved) return;
+      widget.onSaved?.call();
+      Navigator.of(context).pop(true);
+    } catch (err) {
+      if (!mounted) return;
+      ToastUtil.showError('$_submitErrorText$err');
+    } finally {
+      if (mounted) {
+        setState(() => _submitting = false);
+      }
+    }
   }
 
   Widget _readonlyField(ThemeData theme, String label, String value) {
@@ -145,46 +188,39 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
     ThemeData theme,
   ) {
     final salespersonsError = viewModel.salespersonsError;
-    final sectionSpacing = LayoutTokens.formSectionSpacing(context);
 
     if (viewModel.loadingSalespersons) {
-      return Padding(
-        padding: EdgeInsets.only(top: sectionSpacing),
-        child: Row(
-          children: [
-            const SizedBox(
-              width: _loadingIndicatorSize,
-              height: _loadingIndicatorSize,
-              child: CircularProgressIndicator(
-                strokeWidth: _indicatorStrokeWidth,
-              ),
+      return Row(
+        children: [
+          const SizedBox(
+            width: _loadingIndicatorSize,
+            height: _loadingIndicatorSize,
+            child: CircularProgressIndicator(
+              strokeWidth: _indicatorStrokeWidth,
             ),
-            const SizedBox(width: _inlineSpacing),
-            const Text(_loadingSalespersonsText),
-          ],
-        ),
+          ),
+          const SizedBox(width: _inlineSpacing),
+          const Text(_loadingSalespersonsText),
+        ],
       );
     }
 
     if (salespersonsError != null && salespersonsError.isNotEmpty) {
-      return Padding(
-        padding: EdgeInsets.only(top: sectionSpacing),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                salespersonsError,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.error,
-                ),
+      return Row(
+        children: [
+          Expanded(
+            child: Text(
+              salespersonsError,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.error,
               ),
             ),
-            TextButton(
-              onPressed: viewModel.loadSalespersons,
-              child: const Text('重试'),
-            ),
-          ],
-        ),
+          ),
+          TextButton(
+            onPressed: viewModel.loadSalespersons,
+            child: const Text('重试'),
+          ),
+        ],
       );
     }
 
@@ -193,125 +229,246 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
 
   @override
   Widget build(BuildContext context) {
-    final customer = widget.customer;
-    final viewModel = context.watch<CustomerViewModel>();
-    final salespersons = viewModel.salespersons;
-    final permissions = PermissionUtil.snapshot(context);
+    return Consumer<CustomerViewModel>(
+      builder: (context, viewModel, _) {
+        return AdaptiveFormPanel(
+          formKey: _formKey,
+          submitText: '保存',
+          cancelText: '取消',
+          submitting: _submitting,
+          submitEnabled: _canSave(context),
+          onSubmit: () => _submit(viewModel),
+          child: _CustomerFormBody(
+            customer: widget.customer,
+            viewModel: viewModel,
+            selectedSalespersonId: _salespersonId,
+            nameController: _nameController,
+            contactController: _contactController,
+            phoneController: _phoneController,
+            emailController: _emailController,
+            addressController: _addressController,
+            notesController: _notesController,
+            readonlyField: _readonlyField,
+            salespersonStateField: _salespersonStateField,
+            onSalespersonChanged: (value) {
+              setState(() => _salespersonId = value as int?);
+            },
+          ),
+        );
+      },
+    );
+  }
+}
 
-    return CrudEditPage<Customer, CustomerViewModel>(
-      item: customer,
-      config: CrudEditConfig<Customer, CustomerViewModel>(
-        submitText: _submitText,
-        submittingText: '保存中',
-        errorMessagePrefix: _submitErrorText,
-        canSave: (_, __, item) => permissions.has(
-          item == null ? 'workorder.add_customer' : 'workorder.change_customer',
+class _CustomerFormBody extends StatelessWidget {
+  const _CustomerFormBody({
+    required this.customer,
+    required this.viewModel,
+    required this.selectedSalespersonId,
+    required this.nameController,
+    required this.contactController,
+    required this.phoneController,
+    required this.emailController,
+    required this.addressController,
+    required this.notesController,
+    required this.readonlyField,
+    required this.salespersonStateField,
+    required this.onSalespersonChanged,
+  });
+
+  final Customer? customer;
+  final CustomerViewModel viewModel;
+  final int? selectedSalespersonId;
+  final TextEditingController nameController;
+  final TextEditingController contactController;
+  final TextEditingController phoneController;
+  final TextEditingController emailController;
+  final TextEditingController addressController;
+  final TextEditingController notesController;
+  final Widget Function(ThemeData theme, String label, String value)
+      readonlyField;
+  final Widget Function(
+    BuildContext context,
+    CustomerViewModel viewModel,
+    ThemeData theme,
+  ) salespersonStateField;
+  final ValueChanged<dynamic> onSalespersonChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final showSalespersonState = viewModel.loadingSalespersons ||
+        (viewModel.salespersonsError?.isNotEmpty ?? false);
+    final sections = <Widget>[
+      _CustomerFormSection(
+        title: _CustomerEditLabels.basicSection,
+        child: _CustomerFieldList(
+          children: [
+            CrudFormField.text(
+              label: _CustomerEditLabels.name,
+              controller: nameController,
+              validator: FormValidators.compose<String>([
+                FormValidators.required(_CustomerEditLabels.nameRequired),
+                FormValidators.minLength(2, _CustomerEditLabels.nameLength),
+              ]),
+            ).build(context),
+            CrudFormField.dropdown(
+              label: _CustomerEditLabels.salesperson,
+              value: selectedSalespersonId,
+              options: [
+                const CrudFieldOption<dynamic>(
+                  value: null,
+                  label: _CustomerEditLabels.none,
+                ),
+                ...viewModel.salespersons.map(
+                  (item) => CrudFieldOption<dynamic>(
+                    value: item.id,
+                    label: item.name,
+                  ),
+                ),
+              ],
+              onChanged: onSalespersonChanged,
+            ).build(context),
+            if (showSalespersonState)
+              salespersonStateField(context, viewModel, theme),
+          ],
         ),
-        sectionsBuilder: (context, isMobile) {
-          final theme = Theme.of(context);
-          return [
-            CrudFormSection(
-              title: _basicSectionTitle,
-              column: 0,
-              fields: [
-                CrudFormField.text(
-                  label: _nameLabel,
-                  controller: _nameController,
-                  validator: FormValidators.compose<String>([
-                    FormValidators.required(_nameRequiredText),
-                    FormValidators.minLength(2, _nameLengthText),
-                  ]),
-                ),
-                CrudFormField.dropdown(
-                  label: _salespersonLabel,
-                  value: _salespersonId,
-                  options: [
-                    const CrudFieldOption<dynamic>(
-                      value: null,
-                      label: _noSalespersonText,
-                    ),
-                    ...salespersons.map(
-                      (item) => CrudFieldOption<dynamic>(
-                        value: item.id,
-                        label: item.name,
-                      ),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    setState(() => _salespersonId = value as int?);
-                  },
-                ),
-                CrudFormField.custom(
-                  builder: (context) =>
-                      _salespersonStateField(context, viewModel, theme),
-                ),
-              ],
-            ),
-            CrudFormSection(
-              title: _contactSectionTitle,
-              column: 0,
-              fields: [
-                CrudFormField.text(
-                  label: _contactLabel,
-                  controller: _contactController,
-                ),
-                CrudFormField.phone(
-                  label: _phoneLabel,
-                  controller: _phoneController,
-                  validator: FormValidators.pattern(
-                    RegExp(r'^[\d\-+() ]+$'),
-                    _phoneInvalidText,
-                  ),
-                ),
-                CrudFormField.email(
-                  label: _emailLabel,
-                  controller: _emailController,
-                  validator: FormValidators.email(_emailInvalidText),
-                ),
-              ],
-            ),
-            CrudFormSection(
-              title: _extraSectionTitle,
-              column: isMobile ? 0 : 1,
-              fields: [
-                CrudFormField.textarea(
-                  label: _addressLabel,
-                  controller: _addressController,
-                  minLines: 2,
-                  maxLines: 2,
-                ),
-                CrudFormField.textarea(
-                  label: _notesLabel,
-                  controller: _notesController,
-                  maxLines: 3,
-                ),
-              ],
-            ),
-            CrudFormSection(
-              title: _systemSectionTitle,
-              column: isMobile ? 0 : 1,
-              visible: customer != null,
-              fields: [
-                CrudFormField.custom(
-                  builder: (context) => _readonlyField(
-                    theme,
-                    _createdAtLabel,
-                    customer?.createdAt.toYMDHM ?? '-',
-                  ),
-                ),
-                CrudFormField.custom(
-                  builder: (context) => _readonlyField(
-                    theme,
-                    _updatedAtLabel,
-                    customer?.updatedAt.toYMDHM ?? '-',
-                  ),
-                ),
-              ],
-            ),
-          ];
-        },
-        onSave: (context, viewModel, item) => _handleSubmit(viewModel),
+      ),
+      const SizedBox(height: LayoutTokens.gapLg),
+      _CustomerFormSection(
+        title: _CustomerEditLabels.contactSection,
+        child: _CustomerFieldList(
+          children: [
+            CrudFormField.text(
+              label: _CustomerEditLabels.contact,
+              controller: contactController,
+            ).build(context),
+            CrudFormField.phone(
+              label: _CustomerEditLabels.phone,
+              controller: phoneController,
+              validator: FormValidators.pattern(
+                RegExp(r'^[\d\-+() ]+$'),
+                _CustomerEditLabels.phoneInvalid,
+              ),
+            ).build(context),
+            CrudFormField.email(
+              label: _CustomerEditLabels.email,
+              controller: emailController,
+              validator: FormValidators.email(_CustomerEditLabels.emailInvalid),
+            ).build(context),
+          ],
+        ),
+      ),
+      const SizedBox(height: LayoutTokens.gapLg),
+      _CustomerFormSection(
+        title: _CustomerEditLabels.extraSection,
+        child: _CustomerFieldList(
+          children: [
+            CrudFormField.textarea(
+              label: _CustomerEditLabels.address,
+              controller: addressController,
+              minLines: 2,
+              maxLines: 2,
+            ).build(context),
+            CrudFormField.textarea(
+              label: _CustomerEditLabels.notes,
+              controller: notesController,
+              maxLines: 3,
+            ).build(context),
+          ],
+        ),
+      ),
+      if (customer != null) ...[
+        const SizedBox(height: LayoutTokens.gapLg),
+        _CustomerFormSection(
+          title: _CustomerEditLabels.systemSection,
+          child: _CustomerFieldList(
+            children: [
+              readonlyField(
+                theme,
+                _CustomerEditLabels.createdAt,
+                customer?.createdAt.toYMDHM ?? '-',
+              ),
+              readonlyField(
+                theme,
+                _CustomerEditLabels.updatedAt,
+                customer?.updatedAt.toYMDHM ?? '-',
+              ),
+            ],
+          ),
+        ),
+      ],
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: sections,
+    );
+  }
+}
+
+class _CustomerFormSection extends StatelessWidget {
+  const _CustomerFormSection({
+    required this.title,
+    required this.child,
+  });
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: LayoutTokens.gapMd),
+          child,
+        ],
       ),
     );
   }
+}
+
+class _CustomerFieldList extends StatelessWidget {
+  const _CustomerFieldList({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var index = 0; index < children.length; index++) ...[
+          if (index > 0) const SizedBox(height: LayoutTokens.gapMd),
+          children[index],
+        ],
+      ],
+    );
+  }
+}
+
+class _CustomerEditLabels {
+  const _CustomerEditLabels._();
+
+  static const String name = '客户名称';
+  static const String contact = '联系人';
+  static const String phone = '联系电话';
+  static const String email = '邮箱';
+  static const String salesperson = '业务员';
+  static const String address = '地址';
+  static const String notes = '备注';
+  static const String none = '不指定';
+  static const String basicSection = '基本信息';
+  static const String contactSection = '联系信息';
+  static const String extraSection = '补充信息';
+  static const String systemSection = '系统信息';
+  static const String createdAt = '创建时间';
+  static const String updatedAt = '更新时间';
+  static const String nameRequired = '请输入客户名称';
+  static const String nameLength = '客户名称至少需要2个字符';
+  static const String phoneInvalid = '电话号码格式不正确';
+  static const String emailInvalid = '请输入正确的邮箱地址';
 }

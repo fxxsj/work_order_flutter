@@ -290,36 +290,6 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
             }
           }
 
-          String customerLabel = '未选择';
-          if (selectedCustomerId != null) {
-            for (final customer in _customers) {
-              if (customer.id == selectedCustomerId) {
-                customerLabel = customer.name;
-                break;
-              }
-            }
-          }
-
-          String salesOrderLabel = '不关联';
-          if (selectedSalesOrderId != null) {
-            for (final order in _salesOrders) {
-              if (order.id == selectedSalesOrderId) {
-                salesOrderLabel = order.orderNumber;
-                break;
-              }
-            }
-          }
-
-          String workOrderLabel = '不关联';
-          if (selectedWorkOrderId != null) {
-            for (final order in _workOrders) {
-              if (order.id == selectedWorkOrderId) {
-                workOrderLabel = order.orderNumber;
-                break;
-              }
-            }
-          }
-
           return AdaptiveFormPanel(
             formKey: formKey,
             submitText: '创建',
@@ -329,37 +299,6 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AppCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '新建发票',
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                      const SizedBox(height: LayoutTokens.gapXxs),
-                      Text(
-                        '把客户、来源单据和金额信息放在同一面板里录入，减少离开当前列表的成本。',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      const SizedBox(height: LayoutTokens.gapMd),
-                      Wrap(
-                        spacing: LayoutTokens.gapMd,
-                        runSpacing: LayoutTokens.gapSm,
-                        children: [
-                          _buildInvoiceSummaryItem('客户', customerLabel),
-                          _buildInvoiceSummaryItem('客户订单', salesOrderLabel),
-                          _buildInvoiceSummaryItem('施工单', workOrderLabel),
-                          _buildInvoiceSummaryItem(
-                            '默认税率',
-                            '${taxRateController.text.trim().isEmpty ? '13' : taxRateController.text.trim()}%',
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: LayoutTokens.gapLg),
                 AppCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -521,24 +460,6 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     taxRateController.dispose();
     issueDateController.dispose();
     notesController.dispose();
-  }
-
-  Widget _buildInvoiceSummaryItem(String label, String value) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(label, style: theme.textTheme.bodySmall),
-        const SizedBox(height: LayoutTokens.gapXxxs),
-        Text(
-          value,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
   }
 
   Future<void> _submitInvoice(

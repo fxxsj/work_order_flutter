@@ -71,24 +71,6 @@ Future<StatementCreateResult?> showStatementCreateDialog(
             Navigator.of(context).maybePop();
           }
 
-          var targetLabel = '未选择';
-          if (showCustomer && selectedCustomerId != null) {
-            for (final customer in customers) {
-              if (customer.id == selectedCustomerId) {
-                targetLabel = customer.name;
-                break;
-              }
-            }
-          }
-          if (!showCustomer && selectedSupplierId != null) {
-            for (final supplier in suppliers) {
-              if (supplier.id == selectedSupplierId) {
-                targetLabel = supplier.name;
-                break;
-              }
-            }
-          }
-
           return AdaptiveFormPanel(
             formKey: formKey,
             onSubmit: submit,
@@ -96,47 +78,6 @@ Future<StatementCreateResult?> showStatementCreateDialog(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AppCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '新建对账单',
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                      const SizedBox(height: LayoutTokens.gapXxs),
-                      Text(
-                        '先确定对账对象和周期，再录入期初余额与备注。',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      const SizedBox(height: LayoutTokens.gapMd),
-                      Wrap(
-                        spacing: LayoutTokens.gapMd,
-                        runSpacing: LayoutTokens.gapSm,
-                        children: [
-                          _buildStatementSummaryItem(
-                            context,
-                            '类型',
-                            showCustomer ? '客户对账单' : '供应商对账单',
-                          ),
-                          _buildStatementSummaryItem(
-                            context,
-                            showCustomer ? '客户' : '供应商',
-                            targetLabel,
-                          ),
-                          _buildStatementSummaryItem(
-                            context,
-                            '期初余额',
-                            openingBalanceController.text.trim().isEmpty
-                                ? '0'
-                                : openingBalanceController.text.trim(),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: LayoutTokens.gapLg),
                 AppCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -269,28 +210,6 @@ Future<StatementCreateResult?> showStatementCreateDialog(
     openingBalanceController.dispose();
     notesController.dispose();
   }
-}
-
-Widget _buildStatementSummaryItem(
-  BuildContext context,
-  String label,
-  String value,
-) {
-  final theme = Theme.of(context);
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Text(label, style: theme.textTheme.bodySmall),
-      const SizedBox(height: LayoutTokens.gapXxxs),
-      Text(
-        value,
-        style: theme.textTheme.titleSmall?.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    ],
-  );
 }
 
 Future<StatementGenerateResult?> showStatementGenerateDialog(

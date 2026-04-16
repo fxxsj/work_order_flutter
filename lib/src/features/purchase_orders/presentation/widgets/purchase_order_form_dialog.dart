@@ -42,10 +42,6 @@ Future<void> showPurchaseOrderFormDialog(
     desktopWidth: LayoutTokens.pageWidthXwide,
     child: StatefulBuilder(
       builder: (context, setState) {
-        final totalAmount = items.fold<double>(
-          0,
-          (sum, item) => sum + item.quantity * item.unitPrice,
-        );
         final workOrderOptions = List<WorkOrderDto>.from(workOrders);
         if (selectedWorkOrderId != null &&
             selectedWorkOrderId != 0 &&
@@ -57,26 +53,6 @@ Future<void> showPurchaseOrderFormDialog(
                   fallbackWorkOrderNumber ?? '施工单 #$selectedWorkOrderId',
             ),
           );
-        }
-
-        String? supplierLabel;
-        if (selectedSupplierId != null) {
-          for (final supplier in suppliers) {
-            if (supplier.id == selectedSupplierId) {
-              supplierLabel = supplier.name;
-              break;
-            }
-          }
-        }
-
-        String workOrderLabel = '不关联';
-        if ((selectedWorkOrderId ?? 0) > 0) {
-          for (final order in workOrderOptions) {
-            if (order.id == selectedWorkOrderId) {
-              workOrderLabel = order.orderNumber;
-              break;
-            }
-          }
         }
 
         Future<void> submit() async {
@@ -97,14 +73,6 @@ Future<void> showPurchaseOrderFormDialog(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _PurchaseOrderSummaryCard(
-                isEdit: isEdit,
-                supplierLabel: supplierLabel,
-                workOrderLabel: workOrderLabel,
-                itemCount: items.length,
-                totalAmount: totalAmount,
-              ),
-              const SizedBox(height: LayoutTokens.gapLg),
               _PurchaseFormSection(
                 title: '基础信息',
                 child: Column(
@@ -228,94 +196,6 @@ Future<void> showPurchaseOrderFormDialog(
       },
     ),
   );
-}
-
-class _PurchaseOrderSummaryCard extends StatelessWidget {
-  const _PurchaseOrderSummaryCard({
-    required this.isEdit,
-    required this.supplierLabel,
-    required this.workOrderLabel,
-    required this.itemCount,
-    required this.totalAmount,
-  });
-
-  final bool isEdit;
-  final String? supplierLabel;
-  final String workOrderLabel;
-  final int itemCount;
-  final double totalAmount;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            isEdit ? '正在编辑采购单' : '新建采购单',
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const SizedBox(height: LayoutTokens.gapXxs),
-          Text(
-            '在当前列表上下文中维护供应商、关联施工单和采购明细。',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          const SizedBox(height: LayoutTokens.gapMd),
-          Wrap(
-            spacing: LayoutTokens.gapMd,
-            runSpacing: LayoutTokens.gapSm,
-            children: [
-              _PurchaseSummaryItem(
-                label: '供应商',
-                value: supplierLabel ?? '未选择',
-              ),
-              _PurchaseSummaryItem(
-                label: '关联施工单',
-                value: workOrderLabel,
-              ),
-              _PurchaseSummaryItem(
-                label: '明细行数',
-                value: itemCount.toString(),
-              ),
-              _PurchaseSummaryItem(
-                label: '合计金额',
-                value: totalAmount.toStringAsFixed(2),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PurchaseSummaryItem extends StatelessWidget {
-  const _PurchaseSummaryItem({
-    required this.label,
-    required this.value,
-  });
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(label, style: theme.textTheme.bodySmall),
-        const SizedBox(height: LayoutTokens.gapXxxs),
-        Text(
-          value,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
 }
 
 class _PurchaseFormSection extends StatelessWidget {

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
@@ -88,16 +87,12 @@ class ProductListPage extends StatelessWidget {
     ProductViewModel viewModel,
     Product? product,
   ) async {
-    final result = await context.pushNamed<bool>(
-      product == null ? 'products_create' : 'products_edit',
-      pathParameters:
-          product == null ? const {} : {'id': product.id.toString()},
-      extra: ChangeNotifierProvider.value(
-        value: viewModel,
-        child: ProductEditPage(product: product),
-      ),
+    final result = await showProductEditDrawer(
+      context,
+      viewModel: viewModel,
+      product: product,
     );
-    if (result == true) {
+    if (result) {
       ToastUtil.showSuccess(product == null ? '创建成功' : '更新成功');
     }
   }

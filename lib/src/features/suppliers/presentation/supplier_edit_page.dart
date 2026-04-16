@@ -1,15 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_drawer_edit_panel.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
+import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/validators.dart';
 import 'package:work_order_app/src/features/suppliers/application/supplier_view_model.dart';
 import 'package:work_order_app/src/features/suppliers/domain/supplier.dart';
 
+Future<bool> showSupplierEditDrawer(
+  BuildContext context, {
+  required SupplierViewModel viewModel,
+  Supplier? supplier,
+}) async {
+  var saved = false;
+  await showAdaptiveFilterDrawer(
+    context,
+    isMobile: BreakpointsUtil.isMobile(context),
+    title: supplier == null ? '新建供应商' : '编辑供应商',
+    desktopWidth: LayoutTokens.pageWidthXwide,
+    child: ChangeNotifierProvider<SupplierViewModel>.value(
+      value: viewModel,
+      child: SupplierEditPage(
+        supplier: supplier,
+        onSaved: () => saved = true,
+      ),
+    ),
+  );
+  return saved;
+}
+
 /// 供应商编辑页，支持新增与编辑。
 class SupplierEditPage extends StatefulWidget {
-  const SupplierEditPage({super.key, this.supplier});
+  const SupplierEditPage({super.key, this.supplier, this.onSaved});
 
   final Supplier? supplier;
+  final VoidCallback? onSaved;
 
   @override
   State<SupplierEditPage> createState() => _SupplierEditPageState();
@@ -101,8 +129,9 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
 
   @override
   Widget build(BuildContext context) {
-    return CrudEditPage<Supplier, SupplierViewModel>(
+    return CrudDrawerEditPanel<Supplier, SupplierViewModel>(
       item: widget.supplier,
+      onSaved: widget.onSaved,
       config: CrudEditConfig<Supplier, SupplierViewModel>(
         submitText: _submitText,
         submittingText: '保存中',

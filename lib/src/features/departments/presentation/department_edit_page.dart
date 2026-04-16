@@ -1,15 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_drawer_edit_panel.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
+import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/departments/application/department_view_model.dart';
 import 'package:work_order_app/src/features/departments/domain/department.dart';
 
+Future<bool> showDepartmentEditDrawer(
+  BuildContext context, {
+  required DepartmentViewModel viewModel,
+  Department? department,
+}) async {
+  var saved = false;
+  await showAdaptiveFilterDrawer(
+    context,
+    isMobile: BreakpointsUtil.isMobile(context),
+    title: department == null ? '新建部门' : '编辑部门',
+    desktopWidth: LayoutTokens.pageWidthXwide,
+    child: ChangeNotifierProvider<DepartmentViewModel>.value(
+      value: viewModel,
+      child: DepartmentEditPage(
+        department: department,
+        onSaved: () => saved = true,
+      ),
+    ),
+  );
+  return saved;
+}
+
 /// 部门编辑页，支持新增与编辑。
 class DepartmentEditPage extends StatefulWidget {
-  const DepartmentEditPage({super.key, this.department});
+  const DepartmentEditPage({super.key, this.department, this.onSaved});
 
   final Department? department;
+  final VoidCallback? onSaved;
 
   @override
   State<DepartmentEditPage> createState() => _DepartmentEditPageState();
@@ -105,8 +132,9 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
     final disableParent = widget.department != null &&
         (widget.department?.childrenCount ?? 0) > 0;
 
-    return CrudEditPage<Department, DepartmentViewModel>(
+    return CrudDrawerEditPanel<Department, DepartmentViewModel>(
       item: widget.department,
+      onSaved: widget.onSaved,
       config: CrudEditConfig<Department, DepartmentViewModel>(
         submitText: _submitText,
         submittingText: '保存中',

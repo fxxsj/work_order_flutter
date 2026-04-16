@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
@@ -123,16 +122,12 @@ class ArtworkListPage extends StatelessWidget {
         return;
       }
     }
-    final result = await context.pushNamed<bool>(
-      artwork == null ? 'artworks_create' : 'artworks_edit',
-      pathParameters:
-          artwork == null ? const {} : {'id': artwork.id.toString()},
-      extra: ChangeNotifierProvider.value(
-        value: viewModel,
-        child: ArtworkEditPage(artwork: target),
-      ),
+    final result = await showArtworkEditDrawer(
+      context,
+      viewModel: viewModel,
+      artwork: target,
     );
-    if (result == true) {
+    if (result) {
       ToastUtil.showSuccess(artwork == null ? '创建成功' : '更新成功');
     }
   }

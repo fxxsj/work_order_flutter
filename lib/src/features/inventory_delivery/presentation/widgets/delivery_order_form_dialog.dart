@@ -53,10 +53,6 @@ Future<void> showDeliveryOrderFormDialog(
       builder: (context, setState) {
         final isCompact =
             BreakpointsUtil.isXs(context) || BreakpointsUtil.isSm(context);
-        final totalQuantity = items.fold<double>(
-          0,
-          (sum, item) => sum + item.quantity,
-        );
         String? salesOrderLabel;
         if (selectedSalesOrderId != null) {
           for (final order in salesOrders) {
@@ -138,13 +134,6 @@ Future<void> showDeliveryOrderFormDialog(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _DeliveryOrderSummaryCard(
-                isEdit: isEdit,
-                salesOrderLabel: salesOrderLabel,
-                itemCount: items.length,
-                totalQuantity: totalQuantity,
-              ),
-              const SizedBox(height: LayoutTokens.gapLg),
               if (!isEdit) ...[
                 _DeliveryFormSection(
                   title: '关联单据',
@@ -295,88 +284,6 @@ Future<void> showDeliveryOrderFormDialog(
       },
     ),
   );
-}
-
-class _DeliveryOrderSummaryCard extends StatelessWidget {
-  const _DeliveryOrderSummaryCard({
-    required this.isEdit,
-    required this.salesOrderLabel,
-    required this.itemCount,
-    required this.totalQuantity,
-  });
-
-  final bool isEdit;
-  final String? salesOrderLabel;
-  final int itemCount;
-  final double totalQuantity;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            isEdit ? '正在编辑发货单' : '新建发货单',
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const SizedBox(height: LayoutTokens.gapXxs),
-          Text(
-            '在列表上下文中完成收货信息、物流信息和发货明细维护。',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          const SizedBox(height: LayoutTokens.gapMd),
-          Wrap(
-            spacing: LayoutTokens.gapMd,
-            runSpacing: LayoutTokens.gapSm,
-            children: [
-              _DeliverySummaryItem(
-                label: '客户订单',
-                value: salesOrderLabel ?? '未选择',
-              ),
-              _DeliverySummaryItem(
-                label: '明细行数',
-                value: itemCount.toString(),
-              ),
-              _DeliverySummaryItem(
-                label: '发货数量',
-                value: totalQuantity.toStringAsFixed(2),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DeliverySummaryItem extends StatelessWidget {
-  const _DeliverySummaryItem({
-    required this.label,
-    required this.value,
-  });
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(label, style: theme.textTheme.bodySmall),
-        const SizedBox(height: LayoutTokens.gapXxxs),
-        Text(
-          value,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
 }
 
 class _DeliveryFormSection extends StatelessWidget {

@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/crud_drawer_edit_panel.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
+import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/materials/data/material_api_service.dart';
@@ -19,10 +22,33 @@ import 'package:work_order_app/src/features/products/application/product_view_mo
 import 'package:work_order_app/src/features/products/data/product_api_service.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
 
+Future<bool> showProductEditDrawer(
+  BuildContext context, {
+  required ProductViewModel viewModel,
+  Product? product,
+}) async {
+  var saved = false;
+  await showAdaptiveFilterDrawer(
+    context,
+    isMobile: BreakpointsUtil.isMobile(context),
+    title: product == null ? '新建产品' : '编辑产品',
+    desktopWidth: LayoutTokens.pageWidthXwide,
+    child: ChangeNotifierProvider<ProductViewModel>.value(
+      value: viewModel,
+      child: ProductEditPage(
+        product: product,
+        onSaved: () => saved = true,
+      ),
+    ),
+  );
+  return saved;
+}
+
 class ProductEditPage extends StatefulWidget {
-  const ProductEditPage({super.key, this.product});
+  const ProductEditPage({super.key, this.product, this.onSaved});
 
   final Product? product;
+  final VoidCallback? onSaved;
 
   @override
   State<ProductEditPage> createState() => _ProductEditPageState();
@@ -407,8 +433,9 @@ class _ProductEditPageState extends State<ProductEditPage> {
 
   @override
   Widget build(BuildContext context) {
-    return CrudEditPage<Product, ProductViewModel>(
+    return CrudDrawerEditPanel<Product, ProductViewModel>(
       item: widget.product,
+      onSaved: widget.onSaved,
       config: CrudEditConfig<Product, ProductViewModel>(
         submitText: _submitText,
         submittingText: '保存中',

@@ -66,36 +66,6 @@ Future<PaymentCreateResult?> showPaymentCreateDialog(
             Navigator.of(context).maybePop();
           }
 
-          String customerLabel = '未选择';
-          if (selectedCustomerId != null) {
-            for (final customer in customers) {
-              if (customer.id == selectedCustomerId) {
-                customerLabel = customer.name;
-                break;
-              }
-            }
-          }
-
-          String salesOrderLabel = '不关联';
-          if (selectedSalesOrderId != null) {
-            for (final order in salesOrders) {
-              if (order.id == selectedSalesOrderId) {
-                salesOrderLabel = order.orderNumber;
-                break;
-              }
-            }
-          }
-
-          String invoiceLabel = '不关联';
-          if (selectedInvoiceId != null) {
-            for (final invoice in invoices) {
-              if (invoice.id == selectedInvoiceId) {
-                invoiceLabel = invoice.invoiceNumber ?? '发票 #${invoice.id}';
-                break;
-              }
-            }
-          }
-
           return AdaptiveFormPanel(
             formKey: formKey,
             onSubmit: submit,
@@ -103,46 +73,6 @@ Future<PaymentCreateResult?> showPaymentCreateDialog(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AppCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '新建收款',
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                      const SizedBox(height: LayoutTokens.gapXxs),
-                      Text(
-                        '把客户、来源订单和发票信息集中在一个面板里录入。',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      const SizedBox(height: LayoutTokens.gapMd),
-                      Wrap(
-                        spacing: LayoutTokens.gapMd,
-                        runSpacing: LayoutTokens.gapSm,
-                        children: [
-                          _PaymentSummaryItem(
-                            label: '客户',
-                            value: customerLabel,
-                          ),
-                          _PaymentSummaryItem(
-                            label: '客户订单',
-                            value: salesOrderLabel,
-                          ),
-                          _PaymentSummaryItem(
-                            label: '关联发票',
-                            value: invoiceLabel,
-                          ),
-                          _PaymentSummaryItem(
-                            label: '收款方式',
-                            value: _paymentMethodLabel(paymentMethod),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: LayoutTokens.gapLg),
                 AppCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -295,48 +225,5 @@ Future<PaymentCreateResult?> showPaymentCreateDialog(
     bankController.dispose();
     transactionController.dispose();
     notesController.dispose();
-  }
-}
-
-String _paymentMethodLabel(String value) {
-  switch (value) {
-    case 'cash':
-      return '现金';
-    case 'check':
-      return '支票';
-    case 'acceptance':
-      return '承兑汇票';
-    case 'transfer':
-    default:
-      return '转账';
-  }
-}
-
-class _PaymentSummaryItem extends StatelessWidget {
-  const _PaymentSummaryItem({
-    required this.label,
-    required this.value,
-  });
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(label, style: theme.textTheme.bodySmall),
-        const SizedBox(height: LayoutTokens.gapXxxs),
-        Text(
-          value,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
   }
 }
