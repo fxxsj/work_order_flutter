@@ -35,7 +35,9 @@ import 'package:work_order_app/src/features/purchase_orders/presentation/widgets
 import 'package:work_order_app/src/features/purchase_orders/presentation/widgets/purchase_order_receive_dialog.dart';
 import 'package:work_order_app/src/features/purchase_orders/presentation/widgets/purchase_low_stock_dialog.dart';
 import 'package:work_order_app/src/features/materials/presentation/widgets/quick_material_create_dialog.dart';
+import 'package:work_order_app/src/features/suppliers/data/supplier_api_service.dart';
 import 'package:work_order_app/src/features/suppliers/data/supplier_dto.dart';
+import 'package:work_order_app/src/features/suppliers/presentation/widgets/quick_supplier_create_dialog.dart';
 import 'package:work_order_app/src/features/materials/data/material_dto.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
 
@@ -419,6 +421,32 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
       return dto;
     }
 
+    Future<SupplierDto?> createSupplier() async {
+      final permissions = PermissionUtil.snapshot(context);
+      if (!permissions.has('workorder.add_supplier')) {
+        ToastUtil.showError('当前账号无权新增供应商');
+        return null;
+      }
+
+      final created = await showQuickSupplierCreateDialog(
+        context: context,
+        supplierApi: SupplierApiService(context.read<ApiClient>()),
+      );
+      if (created == null || !mounted) {
+        return null;
+      }
+
+      final dto = SupplierDto.fromEntity(created);
+      setState(() {
+        _suppliers = List<SupplierDto>.from(_suppliers)
+          ..removeWhere((item) => item.id == dto.id)
+          ..add(dto)
+          ..sort((left, right) => left.name.compareTo(right.name));
+      });
+      ToastUtil.showSuccess('供应商已新增');
+      return dto;
+    }
+
     await showPurchaseOrderFormDialog(
       context,
       isEdit: isEdit,
@@ -435,6 +463,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
       notesController: notesController,
       materials: _materials,
       items: items,
+      onCreateSupplier: createSupplier,
       onCreateMaterial: createMaterial,
       onSupplierChanged: (value) => supplierId = value,
       onWorkOrderChanged: (value) => workOrderId = value == 0 ? null : value,

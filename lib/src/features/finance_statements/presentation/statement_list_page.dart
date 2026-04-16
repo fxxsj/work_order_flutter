@@ -21,6 +21,8 @@ import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
+import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
+import 'package:work_order_app/src/features/customer/presentation/widgets/quick_customer_create_dialog.dart';
 import 'package:work_order_app/src/features/finance_statements/application/statement_view_model.dart';
 import 'package:work_order_app/src/features/finance_statements/data/statement_api_service.dart';
 import 'package:work_order_app/src/features/finance_statements/data/statement_repository_impl.dart';
@@ -28,7 +30,9 @@ import 'package:work_order_app/src/features/finance_statements/data/statement_su
 import 'package:work_order_app/src/features/finance_statements/domain/statement.dart';
 import 'package:work_order_app/src/features/finance_statements/domain/statement_repository.dart';
 import 'package:work_order_app/src/features/finance_statements/presentation/widgets/statement_list_dialogs.dart';
+import 'package:work_order_app/src/features/suppliers/data/supplier_api_service.dart';
 import 'package:work_order_app/src/features/suppliers/domain/supplier.dart';
+import 'package:work_order_app/src/features/suppliers/presentation/widgets/quick_supplier_create_dialog.dart';
 
 /// 对账单列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
 class StatementListEntry extends StatelessWidget {
@@ -157,14 +161,12 @@ class _StatementListViewState extends State<_StatementListView> {
       return;
     }
     await _loadOptions();
-    if (_customers.isEmpty && _suppliers.isEmpty) {
-      ToastUtil.showError('请先配置客户或供应商信息');
-      return;
-    }
     final result = await showStatementCreateDialog(
       context,
       customers: _customers,
       suppliers: _suppliers,
+      onCreateCustomer: _createCustomer,
+      onCreateSupplier: _createSupplier,
     );
     if (result == null) return;
     try {
@@ -187,6 +189,8 @@ class _StatementListViewState extends State<_StatementListView> {
       context,
       customers: _customers,
       suppliers: _suppliers,
+      onCreateCustomer: _createCustomer,
+      onCreateSupplier: _createSupplier,
     );
     if (result == null) return;
     try {
@@ -196,6 +200,58 @@ class _StatementListViewState extends State<_StatementListView> {
     } catch (err) {
       ToastUtil.showError('生成失败: $err');
     }
+  }
+
+  Future<Customer?> _createCustomer() async {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.add_customer')) {
+      ToastUtil.showError('当前账号无权新增客户');
+      return null;
+    }
+
+    final created = await showQuickCustomerCreateDialog(
+      context: context,
+      customerApi: CustomerApiService(context.read<ApiClient>()),
+    );
+    if (created == null || !mounted) {
+      return created;
+    }
+
+    setState(() {
+      _customers = List<Customer>.from(_customers)
+        ..removeWhere((item) => item.id == created.id)
+        ..add(created)
+        ..sort((left, right) => left.name.compareTo(right.name));
+      _optionsLoaded = true;
+    });
+    ToastUtil.showSuccess('客户已新增');
+    return created;
+  }
+
+  Future<Supplier?> _createSupplier() async {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.add_supplier')) {
+      ToastUtil.showError('当前账号无权新增供应商');
+      return null;
+    }
+
+    final created = await showQuickSupplierCreateDialog(
+      context: context,
+      supplierApi: SupplierApiService(context.read<ApiClient>()),
+    );
+    if (created == null || !mounted) {
+      return created;
+    }
+
+    setState(() {
+      _suppliers = List<Supplier>.from(_suppliers)
+        ..removeWhere((item) => item.id == created.id)
+        ..add(created)
+        ..sort((left, right) => left.name.compareTo(right.name));
+      _optionsLoaded = true;
+    });
+    ToastUtil.showSuccess('供应商已新增');
+    return created;
   }
 
   Future<void> _confirmStatement(

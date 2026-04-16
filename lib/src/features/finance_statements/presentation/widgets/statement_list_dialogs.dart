@@ -30,6 +30,8 @@ Future<StatementCreateResult?> showStatementCreateDialog(
   BuildContext context, {
   required List<Customer> customers,
   required List<Supplier> suppliers,
+  required Future<Customer?> Function() onCreateCustomer,
+  required Future<Supplier?> Function() onCreateSupplier,
 }) async {
   final formKey = GlobalKey<FormState>();
   final periodController = TextEditingController();
@@ -40,6 +42,8 @@ Future<StatementCreateResult?> showStatementCreateDialog(
   String statementType = 'customer';
   int? selectedCustomerId;
   int? selectedSupplierId;
+  var availableCustomers = List<Customer>.from(customers);
+  var availableSuppliers = List<Supplier>.from(suppliers);
   try {
     StatementCreateResult? result;
     await showAdaptiveFilterDrawer(
@@ -105,50 +109,150 @@ Future<StatementCreateResult?> showStatementCreateDialog(
                       ).build(context),
                       const SizedBox(height: LayoutTokens.gapMd),
                       if (showCustomer)
-                        UnifiedDropdown<int?>(
-                          value: selectedCustomerId,
-                          decoration: const InputDecoration(
-                            labelText: '客户',
-                            border: OutlineInputBorder(),
-                          ),
-                          options: [
-                            const DropdownOption<int?>(
-                              value: null,
-                              label: '请选择客户',
-                            ),
-                            ...customers.map(
-                              (customer) => DropdownOption<int?>(
-                                value: customer.id,
-                                label: customer.name,
-                              ),
-                            ),
-                          ],
-                          onChanged: (value) =>
-                              setState(() => selectedCustomerId = value),
-                          validator: (value) => value == null ? '请选择客户' : null,
+                        Builder(
+                          builder: (context) {
+                            Future<void> handleCreateCustomer() async {
+                              final created = await onCreateCustomer();
+                              if (created == null) return;
+                              setState(() {
+                                availableCustomers = List<Customer>.from(
+                                  availableCustomers,
+                                )..removeWhere((item) => item.id == created.id);
+                                availableCustomers.add(created);
+                                availableCustomers.sort(
+                                  (left, right) => left.name.compareTo(
+                                    right.name,
+                                  ),
+                                );
+                                selectedCustomerId = created.id;
+                              });
+                            }
+
+                            final customerOptions = availableCustomers
+                                .map(
+                                  (customer) => DropdownOption<int?>(
+                                    value: customer.id,
+                                    label: customer.name,
+                                  ),
+                                )
+                                .toList()
+                              ..add(
+                                DropdownOption<int?>(
+                                  value: -1,
+                                  label: '新增客户',
+                                  icon: Icons.add,
+                                  onSelected: handleCreateCustomer,
+                                ),
+                              );
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                UnifiedDropdown<int?>(
+                                  key: ValueKey<String>(
+                                    'statement_create_customer_${selectedCustomerId ?? 'none'}',
+                                  ),
+                                  value: selectedCustomerId,
+                                  decoration: const InputDecoration(
+                                    labelText: '客户',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  options: customerOptions,
+                                  selectHintText:
+                                      availableCustomers.isEmpty ? '新增客户' : '请选择',
+                                  onChanged: (value) => setState(
+                                    () => selectedCustomerId = value,
+                                  ),
+                                  validator: (value) =>
+                                      value == null ? '请选择客户' : null,
+                                ),
+                                if (availableCustomers.isEmpty) ...[
+                                  const SizedBox(height: LayoutTokens.gapSm),
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: TextButton.icon(
+                                      onPressed: handleCreateCustomer,
+                                      icon: const Icon(Icons.add, size: 18),
+                                      label: const Text('新增客户'),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            );
+                          },
                         ),
                       if (!showCustomer)
-                        UnifiedDropdown<int?>(
-                          value: selectedSupplierId,
-                          decoration: const InputDecoration(
-                            labelText: '供应商',
-                            border: OutlineInputBorder(),
-                          ),
-                          options: [
-                            const DropdownOption<int?>(
-                              value: null,
-                              label: '请选择供应商',
-                            ),
-                            ...suppliers.map(
-                              (supplier) => DropdownOption<int?>(
-                                value: supplier.id,
-                                label: supplier.name,
-                              ),
-                            ),
-                          ],
-                          onChanged: (value) =>
-                              setState(() => selectedSupplierId = value),
-                          validator: (value) => value == null ? '请选择供应商' : null,
+                        Builder(
+                          builder: (context) {
+                            Future<void> handleCreateSupplier() async {
+                              final created = await onCreateSupplier();
+                              if (created == null) return;
+                              setState(() {
+                                availableSuppliers = List<Supplier>.from(
+                                  availableSuppliers,
+                                )..removeWhere((item) => item.id == created.id);
+                                availableSuppliers.add(created);
+                                availableSuppliers.sort(
+                                  (left, right) => left.name.compareTo(
+                                    right.name,
+                                  ),
+                                );
+                                selectedSupplierId = created.id;
+                              });
+                            }
+
+                            final supplierOptions = availableSuppliers
+                                .map(
+                                  (supplier) => DropdownOption<int?>(
+                                    value: supplier.id,
+                                    label: supplier.name,
+                                  ),
+                                )
+                                .toList()
+                              ..add(
+                                DropdownOption<int?>(
+                                  value: -1,
+                                  label: '新增供应商',
+                                  icon: Icons.add,
+                                  onSelected: handleCreateSupplier,
+                                ),
+                              );
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                UnifiedDropdown<int?>(
+                                  key: ValueKey<String>(
+                                    'statement_create_supplier_${selectedSupplierId ?? 'none'}',
+                                  ),
+                                  value: selectedSupplierId,
+                                  decoration: const InputDecoration(
+                                    labelText: '供应商',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  options: supplierOptions,
+                                  selectHintText:
+                                      availableSuppliers.isEmpty ? '新增供应商' : '请选择',
+                                  onChanged: (value) => setState(
+                                    () => selectedSupplierId = value,
+                                  ),
+                                  validator: (value) =>
+                                      value == null ? '请选择供应商' : null,
+                                ),
+                                if (availableSuppliers.isEmpty) ...[
+                                  const SizedBox(height: LayoutTokens.gapSm),
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: TextButton.icon(
+                                      onPressed: handleCreateSupplier,
+                                      icon: const Icon(Icons.add, size: 18),
+                                      label: const Text('新增供应商'),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            );
+                          },
                         ),
                       const SizedBox(height: LayoutTokens.gapMd),
                       CrudFormField.text(
@@ -216,12 +320,16 @@ Future<StatementGenerateResult?> showStatementGenerateDialog(
   BuildContext context, {
   required List<Customer> customers,
   required List<Supplier> suppliers,
+  required Future<Customer?> Function() onCreateCustomer,
+  required Future<Supplier?> Function() onCreateSupplier,
 }) async {
   final formKey = GlobalKey<FormState>();
   final periodController = TextEditingController();
   String statementType = 'customer';
   int? selectedCustomerId;
   int? selectedSupplierId;
+  var availableCustomers = List<Customer>.from(customers);
+  var availableSuppliers = List<Supplier>.from(suppliers);
   try {
     StatementGenerateResult? result;
     await showDialog<void>(
@@ -271,50 +379,144 @@ Future<StatementGenerateResult?> showStatementGenerateDialog(
                 ).build(context),
                 SizedBox(height: LayoutTokens.gapMd),
                 if (showCustomer)
-                  UnifiedDropdown<int?>(
-                    value: selectedCustomerId,
-                    decoration: const InputDecoration(
-                      labelText: '客户',
-                      border: OutlineInputBorder(),
-                    ),
-                    options: [
-                      const DropdownOption<int?>(
-                        value: null,
-                        label: '请选择客户',
-                      ),
-                      ...customers.map(
-                        (customer) => DropdownOption<int?>(
-                          value: customer.id,
-                          label: customer.name,
-                        ),
-                      ),
-                    ],
-                    onChanged: (value) =>
-                        setState(() => selectedCustomerId = value),
-                    validator: (value) => value == null ? '请选择客户' : null,
+                  Builder(
+                    builder: (context) {
+                      Future<void> handleCreateCustomer() async {
+                        final created = await onCreateCustomer();
+                        if (created == null) return;
+                        setState(() {
+                          availableCustomers = List<Customer>.from(
+                            availableCustomers,
+                          )..removeWhere((item) => item.id == created.id);
+                          availableCustomers.add(created);
+                          availableCustomers.sort(
+                            (left, right) => left.name.compareTo(right.name),
+                          );
+                          selectedCustomerId = created.id;
+                        });
+                      }
+
+                      final customerOptions = availableCustomers
+                          .map(
+                            (customer) => DropdownOption<int?>(
+                              value: customer.id,
+                              label: customer.name,
+                            ),
+                          )
+                          .toList()
+                        ..add(
+                          DropdownOption<int?>(
+                            value: -1,
+                            label: '新增客户',
+                            icon: Icons.add,
+                            onSelected: handleCreateCustomer,
+                          ),
+                        );
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          UnifiedDropdown<int?>(
+                            key: ValueKey<String>(
+                              'statement_generate_customer_${selectedCustomerId ?? 'none'}',
+                            ),
+                            value: selectedCustomerId,
+                            decoration: const InputDecoration(
+                              labelText: '客户',
+                              border: OutlineInputBorder(),
+                            ),
+                            options: customerOptions,
+                            selectHintText:
+                                availableCustomers.isEmpty ? '新增客户' : '请选择',
+                            onChanged: (value) =>
+                                setState(() => selectedCustomerId = value),
+                            validator: (value) =>
+                                value == null ? '请选择客户' : null,
+                          ),
+                          if (availableCustomers.isEmpty) ...[
+                            const SizedBox(height: LayoutTokens.gapSm),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: TextButton.icon(
+                                onPressed: handleCreateCustomer,
+                                icon: const Icon(Icons.add, size: 18),
+                                label: const Text('新增客户'),
+                              ),
+                            ),
+                          ],
+                        ],
+                      );
+                    },
                   ),
                 if (!showCustomer)
-                  UnifiedDropdown<int?>(
-                    value: selectedSupplierId,
-                    decoration: const InputDecoration(
-                      labelText: '供应商',
-                      border: OutlineInputBorder(),
-                    ),
-                    options: [
-                      const DropdownOption<int?>(
-                        value: null,
-                        label: '请选择供应商',
-                      ),
-                      ...suppliers.map(
-                        (supplier) => DropdownOption<int?>(
-                          value: supplier.id,
-                          label: supplier.name,
-                        ),
-                      ),
-                    ],
-                    onChanged: (value) =>
-                        setState(() => selectedSupplierId = value),
-                    validator: (value) => value == null ? '请选择供应商' : null,
+                  Builder(
+                    builder: (context) {
+                      Future<void> handleCreateSupplier() async {
+                        final created = await onCreateSupplier();
+                        if (created == null) return;
+                        setState(() {
+                          availableSuppliers = List<Supplier>.from(
+                            availableSuppliers,
+                          )..removeWhere((item) => item.id == created.id);
+                          availableSuppliers.add(created);
+                          availableSuppliers.sort(
+                            (left, right) => left.name.compareTo(right.name),
+                          );
+                          selectedSupplierId = created.id;
+                        });
+                      }
+
+                      final supplierOptions = availableSuppliers
+                          .map(
+                            (supplier) => DropdownOption<int?>(
+                              value: supplier.id,
+                              label: supplier.name,
+                            ),
+                          )
+                          .toList()
+                        ..add(
+                          DropdownOption<int?>(
+                            value: -1,
+                            label: '新增供应商',
+                            icon: Icons.add,
+                            onSelected: handleCreateSupplier,
+                          ),
+                        );
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          UnifiedDropdown<int?>(
+                            key: ValueKey<String>(
+                              'statement_generate_supplier_${selectedSupplierId ?? 'none'}',
+                            ),
+                            value: selectedSupplierId,
+                            decoration: const InputDecoration(
+                              labelText: '供应商',
+                              border: OutlineInputBorder(),
+                            ),
+                            options: supplierOptions,
+                            selectHintText:
+                                availableSuppliers.isEmpty ? '新增供应商' : '请选择',
+                            onChanged: (value) =>
+                                setState(() => selectedSupplierId = value),
+                            validator: (value) =>
+                                value == null ? '请选择供应商' : null,
+                          ),
+                          if (availableSuppliers.isEmpty) ...[
+                            const SizedBox(height: LayoutTokens.gapSm),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: TextButton.icon(
+                                onPressed: handleCreateSupplier,
+                                icon: const Icon(Icons.add, size: 18),
+                                label: const Text('新增供应商'),
+                              ),
+                            ),
+                          ],
+                        ],
+                      );
+                    },
                   ),
                 SizedBox(height: LayoutTokens.gapMd),
                 CrudFormField.text(

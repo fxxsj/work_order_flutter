@@ -28,6 +28,7 @@ Future<void> showPurchaseOrderFormDialog(
   required TextEditingController notesController,
   required List<MaterialDto> materials,
   required List<PurchaseItemDraft> items,
+  required Future<SupplierDto?> Function() onCreateSupplier,
   required Future<MaterialDto?> Function() onCreateMaterial,
   required ValueChanged<int?> onSupplierChanged,
   required ValueChanged<int?> onWorkOrderChanged,
@@ -77,27 +78,67 @@ Future<void> showPurchaseOrderFormDialog(
                 title: '基础信息',
                 child: Column(
                   children: [
-                    UnifiedDropdown<int>(
-                      key: ValueKey<String>(
-                        'purchase_supplier_${selectedSupplierId ?? 'none'}',
-                      ),
-                      value: selectedSupplierId,
-                      decoration: const InputDecoration(
-                        labelText: '供应商',
-                        border: OutlineInputBorder(),
-                      ),
-                      options: suppliers
-                          .map(
-                            (supplier) => DropdownOption<int>(
-                              value: supplier.id,
-                              label: supplier.name,
+                    Builder(
+                      builder: (context) {
+                        Future<void> handleCreateSupplier() async {
+                          final created = await onCreateSupplier();
+                          if (created == null) return;
+                          onSupplierChanged(created.id);
+                        }
+
+                        final supplierOptions = suppliers
+                            .map(
+                              (supplier) => DropdownOption<int>(
+                                value: supplier.id,
+                                label: supplier.name,
+                              ),
+                            )
+                            .toList()
+                          ..add(
+                            DropdownOption<int>(
+                              value: -1,
+                              label: '新增供应商',
+                              icon: Icons.add,
+                              onSelected: handleCreateSupplier,
                             ),
-                          )
-                          .toList(),
-                      onChanged: submitting ? null : onSupplierChanged,
-                      validator: (value) {
-                        if (value == null || value == 0) return '请选择供应商';
-                        return null;
+                          );
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            UnifiedDropdown<int>(
+                              key: ValueKey<String>(
+                                'purchase_supplier_${selectedSupplierId ?? 'none'}',
+                              ),
+                              value: selectedSupplierId,
+                              decoration: const InputDecoration(
+                                labelText: '供应商',
+                                border: OutlineInputBorder(),
+                              ),
+                              options: supplierOptions,
+                              selectHintText:
+                                  suppliers.isEmpty ? '新增供应商' : '请选择',
+                              onChanged: submitting ? null : onSupplierChanged,
+                              validator: (value) {
+                                if (value == null || value == 0)
+                                  return '请选择供应商';
+                                return null;
+                              },
+                            ),
+                            if (suppliers.isEmpty) ...[
+                              const SizedBox(height: LayoutTokens.gapSm),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: TextButton.icon(
+                                  onPressed:
+                                      submitting ? null : handleCreateSupplier,
+                                  icon: const Icon(Icons.add, size: 18),
+                                  label: const Text('新增供应商'),
+                                ),
+                              ),
+                            ],
+                          ],
+                        );
                       },
                     ),
                     const SizedBox(height: LayoutTokens.gapMd),
