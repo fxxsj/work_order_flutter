@@ -8,6 +8,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_fi
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/file_upload_picker.dart';
+import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/artworks/application/artwork_view_model.dart';
 import 'package:work_order_app/src/features/artworks/domain/artwork.dart';
@@ -19,6 +20,7 @@ import 'package:work_order_app/src/features/foiling_plates/data/foiling_plate_ap
 import 'package:work_order_app/src/features/foiling_plates/domain/foiling_plate.dart';
 import 'package:work_order_app/src/features/products/data/product_api_service.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
+import 'package:work_order_app/src/features/products/presentation/widgets/quick_product_create_dialog.dart';
 
 class ArtworkEditPage extends StatefulWidget {
   const ArtworkEditPage({super.key, this.artwork});
@@ -171,6 +173,43 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
     });
   }
 
+  Future<ProductOption?> _handleCreateProduct() async {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.add_product')) {
+      ToastUtil.showError('当前账号无权新增产品');
+      return null;
+    }
+
+    final productApi = _productApi;
+    if (productApi == null) {
+      ToastUtil.showError('产品数据尚未初始化');
+      return null;
+    }
+
+    final created = await showQuickProductCreateDialog(
+      context: context,
+      productApi: productApi,
+    );
+    if (created == null || !mounted) {
+      return null;
+    }
+
+    final option = ProductOption(
+      id: created.id,
+      name: created.name,
+      code: created.code,
+    );
+    setState(() {
+      _productOptions
+        ..removeWhere((item) => item.id == option.id)
+        ..add(option)
+        ..sort(
+            (left, right) => left.displayLabel.compareTo(right.displayLabel));
+    });
+    ToastUtil.showSuccess('产品已新增');
+    return option;
+  }
+
   String _productNameFor(int? productId) {
     if (productId == null) return '';
     for (final product in _productOptions) {
@@ -261,7 +300,8 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
     }
   }
 
-  Future<void> _removeImage(ArtworkViewModel viewModel, ArtworkImage image) async {
+  Future<void> _removeImage(
+      ArtworkViewModel viewModel, ArtworkImage image) async {
     if (widget.artwork == null) return;
     try {
       await viewModel.deleteArtworkImage(widget.artwork!.id, image.id);
@@ -295,6 +335,26 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
         : Column(
             children: List.generate(_productItems.length, (index) {
               final item = _productItems[index];
+              final productOptions = _productOptions
+                  .map(
+                    (product) => DropdownOption<int>(
+                      value: product.id,
+                      label: product.displayLabel,
+                    ),
+                  )
+                  .toList()
+                ..add(
+                  DropdownOption<int>(
+                    value: -1,
+                    label: '新增产品',
+                    icon: Icons.add,
+                    onSelected: () async {
+                      final created = await _handleCreateProduct();
+                      if (created == null || !mounted) return;
+                      setState(() => item.productId = created.id);
+                    },
+                  ),
+                );
               return Padding(
                 padding: EdgeInsets.only(bottom: sectionSpacing),
                 child: Row(
@@ -305,19 +365,27 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                         value: item.productId,
                         decoration:
                             const InputDecoration(labelText: _productLabel),
-                        options: _productOptions
-                            .map(
-                              (product) => DropdownOption<int>(
-                                value: product.id,
-                                label: product.displayLabel,
-                              ),
-                            )
-                            .toList(),
+                        options: productOptions,
+                        selectHintText:
+                            _productOptions.isEmpty ? '新增产品' : '请选择',
                         onChanged: (value) {
                           setState(() => item.productId = value);
                         },
                       ),
                     ),
+                    if (_productOptions.isEmpty)
+                      Padding(
+                        padding: EdgeInsets.only(left: LayoutTokens.gapSm),
+                        child: TextButton.icon(
+                          onPressed: () async {
+                            final created = await _handleCreateProduct();
+                            if (created == null || !mounted) return;
+                            setState(() => item.productId = created.id);
+                          },
+                          icon: const Icon(Icons.add, size: 18),
+                          label: const Text('新增产品'),
+                        ),
+                      ),
                     SizedBox(width: LayoutTokens.gapMd),
                     Expanded(
                       child: CrudFormField.number(
@@ -420,7 +488,8 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                       left: 0,
                       right: 0,
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                         color: Colors.black54,
                         child: Text(
                           img.description!,
@@ -459,7 +528,8 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
           Align(
             alignment: Alignment.centerLeft,
             child: PageActionButton.outlined(
-              onPressed: () => _pickAndUploadImage(context.read<ArtworkViewModel>()),
+              onPressed: () =>
+                  _pickAndUploadImage(context.read<ArtworkViewModel>()),
               icon: const Icon(Icons.add_photo_alternate, size: 16),
               label: '上传图片',
             ),
@@ -530,8 +600,8 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                                 });
                               },
                             ),
-                        )
-                        .toList(),
+                          )
+                          .toList(),
                     ),
                   );
                 },

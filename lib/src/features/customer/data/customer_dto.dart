@@ -82,13 +82,15 @@ class CustomerDto {
 
   /// 转换为 API 提交 payload。
   Map<String, dynamic> toPayload() {
+    String textOrEmpty(String? value) => value?.trim() ?? '';
+
     return {
       'name': name.trim(),
-      'contact_person': contactPerson?.trim(),
-      'phone': phone?.trim(),
-      'email': email?.trim(),
-      'address': address?.trim(),
-      'notes': notes?.trim(),
+      'contact_person': textOrEmpty(contactPerson),
+      'phone': textOrEmpty(phone),
+      'email': textOrEmpty(email),
+      'address': textOrEmpty(address),
+      'notes': textOrEmpty(notes),
       'salesperson': salespersonId,
     };
   }

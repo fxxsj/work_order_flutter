@@ -81,20 +81,50 @@ class WorkOrderProductRow extends StatefulWidget {
     required this.products,
     this.onRemove,
     this.onProductChanged,
+    this.onCreateProduct,
   });
 
   final WorkOrderProductDraft draft;
   final List<ProductOption> products;
   final VoidCallback? onRemove;
   final VoidCallback? onProductChanged;
+  final Future<ProductOption?> Function()? onCreateProduct;
 
   @override
   State<WorkOrderProductRow> createState() => _WorkOrderProductRowState();
 }
 
 class _WorkOrderProductRowState extends State<WorkOrderProductRow> {
+  Future<void> _handleCreateProduct() async {
+    final created = await widget.onCreateProduct?.call();
+    if (created == null || !mounted) {
+      return;
+    }
+    setState(() => widget.draft.productId = created.id);
+    widget.onProductChanged?.call();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final productOptions = widget.products
+        .map(
+          (item) => DropdownOption<int>(
+            value: item.id,
+            label: item.displayLabel,
+          ),
+        )
+        .toList();
+    if (widget.onCreateProduct != null) {
+      productOptions.add(
+        DropdownOption<int>(
+          value: -1,
+          label: '新增产品',
+          icon: Icons.add,
+          onSelected: _handleCreateProduct,
+        ),
+      );
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxWidth = constraints.maxWidth;
@@ -116,14 +146,9 @@ class _WorkOrderProductRowState extends State<WorkOrderProductRow> {
                   child: UnifiedDropdown<int>(
                     value: widget.draft.productId,
                     decoration: const InputDecoration(labelText: '产品'),
-                    options: widget.products
-                        .map(
-                          (item) => DropdownOption(
-                            value: item.id,
-                            label: item.displayLabel,
-                          ),
-                        )
-                        .toList(),
+                    options: productOptions,
+                    selectHintText: widget.products.isEmpty ? '新增产品' : '请选择',
+                    minOptionsForSearch: 1,
                     onChanged: (value) {
                       setState(() => widget.draft.productId = value);
                       widget.onProductChanged?.call();
@@ -131,6 +156,12 @@ class _WorkOrderProductRowState extends State<WorkOrderProductRow> {
                     validator: (value) => value == null ? '请选择产品' : null,
                   ),
                 ),
+                if (widget.products.isEmpty && widget.onCreateProduct != null)
+                  TextButton.icon(
+                    onPressed: _handleCreateProduct,
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('新增产品'),
+                  ),
                 SizedBox(
                   width: smallWidth,
                   child: CrudFormField.number(
@@ -180,19 +211,48 @@ class WorkOrderMaterialRow extends StatefulWidget {
     required this.draft,
     required this.materials,
     required this.onRemove,
+    this.onCreateMaterial,
   });
 
   final WorkOrderMaterialDraft draft;
   final List<MaterialItem> materials;
   final VoidCallback onRemove;
+  final Future<MaterialItem?> Function()? onCreateMaterial;
 
   @override
   State<WorkOrderMaterialRow> createState() => _WorkOrderMaterialRowState();
 }
 
 class _WorkOrderMaterialRowState extends State<WorkOrderMaterialRow> {
+  Future<void> _handleCreateMaterial() async {
+    final created = await widget.onCreateMaterial?.call();
+    if (created == null || !mounted) {
+      return;
+    }
+    setState(() => widget.draft.materialId = created.id);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final materialOptions = widget.materials
+        .map(
+          (item) => DropdownOption<int>(
+            value: item.id,
+            label: '${item.name} (${item.code})',
+          ),
+        )
+        .toList();
+    if (widget.onCreateMaterial != null) {
+      materialOptions.add(
+        DropdownOption<int>(
+          value: -1,
+          label: '新增物料',
+          icon: Icons.add,
+          onSelected: _handleCreateMaterial,
+        ),
+      );
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxWidth = constraints.maxWidth;
@@ -214,18 +274,19 @@ class _WorkOrderMaterialRowState extends State<WorkOrderMaterialRow> {
                   child: UnifiedDropdown<int>(
                     value: widget.draft.materialId,
                     decoration: const InputDecoration(labelText: '物料'),
-                    options: widget.materials
-                        .map(
-                          (item) => DropdownOption(
-                            value: item.id,
-                            label: '${item.name} (${item.code})',
-                          ),
-                        )
-                        .toList(),
+                    options: materialOptions,
+                    selectHintText: widget.materials.isEmpty ? '新增物料' : '请选择',
+                    minOptionsForSearch: 1,
                     onChanged: (value) =>
                         setState(() => widget.draft.materialId = value),
                   ),
                 ),
+                if (widget.materials.isEmpty && widget.onCreateMaterial != null)
+                  TextButton.icon(
+                    onPressed: _handleCreateMaterial,
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('新增物料'),
+                  ),
                 SizedBox(
                   width: mediumWidth,
                   child: CrudFormField.text(

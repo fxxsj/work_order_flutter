@@ -12,6 +12,7 @@ class DropdownOption<T> {
     this.groupLabel,
     this.secondaryLabel,
     this.icon,
+    this.onSelected,
   });
 
   final T value;
@@ -20,6 +21,7 @@ class DropdownOption<T> {
   final String? groupLabel;
   final String? secondaryLabel;
   final IconData? icon;
+  final VoidCallback? onSelected;
 }
 
 /// 搜索配置
@@ -60,7 +62,7 @@ class UnifiedDropdown<T> extends FormField<T?> {
     this.cancelText = '取消',
     this.clearText = '清空',
     this.selectAllText = '全选',
-    this.minOptionsForSearch = 7,
+    this.minOptionsForSearch = 1,
   }) : super(
           initialValue: value,
           validator: validator,
@@ -242,12 +244,24 @@ class _SingleSelectDropdownFieldState<T>
                   value: entry,
                   label: entry.option.label,
                   enabled: entry.option.enabled,
+                  leadingIcon: entry.option.icon == null
+                      ? null
+                      : Icon(entry.option.icon),
                 ),
               )
               .toList(),
           onSelected: widget.enabled
               ? (selection) {
-                  final nextValue = selection?.option.value as T?;
+                  final option = selection?.option;
+                  if (option == null) {
+                    return;
+                  }
+                  final action = option.onSelected;
+                  if (action != null) {
+                    action();
+                    return;
+                  }
+                  final nextValue = option.value as T?;
                   widget.state.didChange(nextValue);
                   widget.onChanged?.call(nextValue);
                 }
@@ -262,7 +276,7 @@ class _SingleSelectDropdownFieldState<T>
     T? value,
   ) {
     for (final entry in entries) {
-      if (entry.option.value == value) {
+      if (entry.option.onSelected == null && entry.option.value == value) {
         return entry;
       }
     }
@@ -808,6 +822,9 @@ bool _matchesQuery(
 ) {
   final trimmedQuery = query.trim();
   if (trimmedQuery.isEmpty) {
+    return true;
+  }
+  if (option.onSelected != null) {
     return true;
   }
 

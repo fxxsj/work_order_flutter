@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:work_order_app/src/core/common/api_exception.dart';
 import 'package:work_order_app/src/core/common/app_config.dart';
 import 'package:work_order_app/src/core/common/app_dio_interceptors.dart';
@@ -212,6 +213,9 @@ class HttpClient {
     ResponseType responseType = ResponseType.json,
   }) async {
     try {
+      // 调试日志：打印完整的请求信息
+      debugPrint('[HttpClient.requestRaw] ${method.toUpperCase()} ${_dio.options.baseUrl}$path');
+      debugPrint('[HttpClient.requestRaw] data type: ${data.runtimeType}');
       final response = await _dio.request(
         path,
         data: data,
@@ -223,6 +227,10 @@ class HttpClient {
       );
       return response;
     } on DioException catch (err) {
+      debugPrint('[HttpClient.requestRaw] ERROR: statusCode=${err.response?.statusCode}, '
+          'type=${err.type}, realUri=${err.response?.realUri}, '
+          'requestUri=${err.requestOptions.uri}');
+      debugPrint('[HttpClient.requestRaw] ERROR responseData=${err.response?.data}');
       throw ApiException.fromDio(err);
     }
   }

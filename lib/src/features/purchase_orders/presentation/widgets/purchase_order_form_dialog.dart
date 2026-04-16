@@ -28,6 +28,7 @@ Future<void> showPurchaseOrderFormDialog(
   required TextEditingController notesController,
   required List<MaterialDto> materials,
   required List<PurchaseItemDraft> items,
+  required Future<MaterialDto?> Function() onCreateMaterial,
   required ValueChanged<int?> onSupplierChanged,
   required ValueChanged<int?> onWorkOrderChanged,
   required PurchaseFormSubmit onSubmit,
@@ -197,6 +198,7 @@ Future<void> showPurchaseOrderFormDialog(
                                 item: item,
                                 enabled: !submitting,
                                 materials: materials,
+                                onCreateMaterial: onCreateMaterial,
                                 onRemove: () {
                                   setState(() {
                                     items.remove(item);
@@ -412,6 +414,7 @@ class PurchaseItemRow extends StatelessWidget {
     required this.item,
     required this.enabled,
     required this.materials,
+    required this.onCreateMaterial,
     required this.onRemove,
     required this.onMaterialChanged,
     this.onChanged,
@@ -420,12 +423,36 @@ class PurchaseItemRow extends StatelessWidget {
   final PurchaseItemDraft item;
   final bool enabled;
   final List<MaterialDto> materials;
+  final Future<MaterialDto?> Function() onCreateMaterial;
   final VoidCallback onRemove;
   final ValueChanged<MaterialDto> onMaterialChanged;
   final VoidCallback? onChanged;
 
   @override
   Widget build(BuildContext context) {
+    Future<void> handleCreateMaterial() async {
+      final created = await onCreateMaterial();
+      if (created == null) return;
+      onMaterialChanged(created);
+    }
+
+    final materialOptions = materials
+        .map(
+          (material) => DropdownOption<int>(
+            value: material.id,
+            label:
+                '${material.code.isEmpty ? '-' : material.code} ${material.name}',
+          ),
+        )
+        .toList()
+      ..add(
+        DropdownOption<int>(
+          value: -1,
+          label: '新增物料',
+          icon: Icons.add,
+          onSelected: handleCreateMaterial,
+        ),
+      );
     final isCompact =
         BreakpointsUtil.isXs(context) || BreakpointsUtil.isSm(context);
     return Padding(
@@ -447,15 +474,8 @@ class PurchaseItemRow extends StatelessWidget {
                       isDense: true,
                       border: OutlineInputBorder(),
                     ),
-                    options: materials
-                        .map(
-                          (material) => DropdownOption<int>(
-                            value: material.id,
-                            label:
-                                '${material.code.isEmpty ? '-' : material.code} ${material.name}',
-                          ),
-                        )
-                        .toList(),
+                    options: materialOptions,
+                    selectHintText: materials.isEmpty ? '新增物料' : '请选择',
                     onChanged: enabled
                         ? (value) {
                             if (value == null || value == 0) return;
@@ -470,6 +490,15 @@ class PurchaseItemRow extends StatelessWidget {
                     },
                   ),
                 ),
+                if (materials.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(left: LayoutTokens.gapSm),
+                    child: TextButton.icon(
+                      onPressed: enabled ? handleCreateMaterial : null,
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text('新增物料'),
+                    ),
+                  ),
                 const SizedBox(width: LayoutTokens.gapSm),
                 IconButton(
                   onPressed: enabled ? onRemove : null,

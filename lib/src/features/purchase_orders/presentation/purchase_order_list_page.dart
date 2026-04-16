@@ -18,7 +18,9 @@ import 'package:work_order_app/src/core/presentation/providers/feature_entry.dar
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
+import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
+import 'package:work_order_app/src/features/materials/data/material_api_service.dart';
 import 'package:work_order_app/src/features/purchase_orders/application/purchase_order_view_model.dart';
 import 'package:work_order_app/src/features/purchase_orders/data/purchase_order_api_service.dart';
 import 'package:work_order_app/src/features/purchase_orders/data/purchase_order_repository_impl.dart';
@@ -32,6 +34,7 @@ import 'package:work_order_app/src/features/purchase_orders/presentation/widgets
 import 'package:work_order_app/src/features/purchase_orders/presentation/widgets/purchase_order_inspection_dialogs.dart';
 import 'package:work_order_app/src/features/purchase_orders/presentation/widgets/purchase_order_receive_dialog.dart';
 import 'package:work_order_app/src/features/purchase_orders/presentation/widgets/purchase_low_stock_dialog.dart';
+import 'package:work_order_app/src/features/materials/presentation/widgets/quick_material_create_dialog.dart';
 import 'package:work_order_app/src/features/suppliers/data/supplier_dto.dart';
 import 'package:work_order_app/src/features/materials/data/material_dto.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
@@ -386,6 +389,36 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
       }
     }
 
+    Future<MaterialDto?> createMaterial() async {
+      final permissions = PermissionUtil.snapshot(context);
+      if (!permissions.has('workorder.add_material')) {
+        ToastUtil.showError('当前账号无权新增物料');
+        return null;
+      }
+
+      final created = await showQuickMaterialCreateDialog(
+        context: context,
+        materialApi: MaterialApiService(context.read<ApiClient>()),
+      );
+      if (created == null || !mounted) {
+        return null;
+      }
+
+      final dto = created.toDto();
+      setState(() {
+        _materials = List<MaterialDto>.from(_materials)
+          ..removeWhere((item) => item.id == dto.id)
+          ..add(dto)
+          ..sort((left, right) {
+            final leftLabel = '${left.code} ${left.name}';
+            final rightLabel = '${right.code} ${right.name}';
+            return leftLabel.compareTo(rightLabel);
+          });
+      });
+      ToastUtil.showSuccess('物料已新增');
+      return dto;
+    }
+
     await showPurchaseOrderFormDialog(
       context,
       isEdit: isEdit,
@@ -402,6 +435,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
       notesController: notesController,
       materials: _materials,
       items: items,
+      onCreateMaterial: createMaterial,
       onSupplierChanged: (value) => supplierId = value,
       onWorkOrderChanged: (value) => workOrderId = value == 0 ? null : value,
       onSubmit: submit,

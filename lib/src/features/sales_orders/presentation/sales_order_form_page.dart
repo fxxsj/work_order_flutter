@@ -13,8 +13,10 @@ import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
+import 'package:work_order_app/src/features/customer/presentation/widgets/quick_customer_create_dialog.dart';
 import 'package:work_order_app/src/features/products/data/product_api_service.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
+import 'package:work_order_app/src/features/products/presentation/widgets/quick_product_create_dialog.dart';
 import 'package:work_order_app/src/features/sales_orders/application/sales_order_view_model.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_api_service.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_repository_impl.dart';
@@ -254,6 +256,63 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
     _applyCustomerContactInfo(customer);
   }
 
+  Future<void> _handleCreateCustomer() async {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.add_customer')) {
+      ToastUtil.showError('当前账号无权新增客户');
+      return;
+    }
+
+    final created = await showQuickCustomerCreateDialog(
+      context: context,
+      customerApi: CustomerApiService(context.read<ApiClient>()),
+    );
+    if (created == null || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _customers = List<Customer>.from(_customers)
+        ..removeWhere((item) => item.id == created.id)
+        ..add(created)
+        ..sort((left, right) => left.name.compareTo(right.name));
+      _customerId = created.id;
+      _applyCustomerContactInfo(created);
+    });
+    ToastUtil.showSuccess('客户已新增');
+  }
+
+  Future<ProductOption?> _handleCreateProduct() async {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.add_product')) {
+      ToastUtil.showError('当前账号无权新增产品');
+      return null;
+    }
+
+    final created = await showQuickProductCreateDialog(
+      context: context,
+      productApi: ProductApiService(context.read<ApiClient>()),
+    );
+    if (created == null || !mounted) {
+      return null;
+    }
+
+    final option = ProductOption(
+      id: created.id,
+      name: created.name,
+      code: created.code,
+    );
+    setState(() {
+      _products = List<ProductOption>.from(_products)
+        ..removeWhere((item) => item.id == option.id)
+        ..add(option)
+        ..sort(
+            (left, right) => left.displayLabel.compareTo(right.displayLabel));
+    });
+    ToastUtil.showSuccess('产品已新增');
+    return option;
+  }
+
   String _formatDate(DateTime? value) {
     if (value == null) return '';
     final local = value.toLocal();
@@ -368,6 +427,25 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
   }
 
   Widget _buildBasicSection(double fieldWidth) {
+    final customerOptions = _customers
+        .map(
+          (item) => DropdownOption<int>(
+            value: item.id,
+            label: item.name,
+          ),
+        )
+        .toList();
+    customerOptions.add(
+      DropdownOption<int>(
+        value: -1,
+        label: '新增客户',
+        icon: Icons.add,
+        onSelected: () {
+          _handleCreateCustomer();
+        },
+      ),
+    );
+
     return _buildSection(
       '基本信息',
       Column(
@@ -376,17 +454,23 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
           UnifiedDropdown<int>(
             value: _customerId,
             decoration: const InputDecoration(labelText: '客户'),
-            options: _customers
-                .map(
-                  (item) => DropdownOption(
-                    value: item.id,
-                    label: item.name,
-                  ),
-                )
-                .toList(),
+            options: customerOptions,
+            selectHintText: _customers.isEmpty ? '新增客户' : '请选择',
+            minOptionsForSearch: 1,
             onChanged: _handleCustomerChanged,
             validator: (value) => value == null ? '请选择客户' : null,
           ),
+          if (_customers.isEmpty) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: _handleCreateCustomer,
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('新增客户'),
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           Wrap(
             spacing: 16,
@@ -483,6 +567,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
             _ItemRow(
               draft: _itemDrafts[index],
               products: _products,
+              onCreateProduct: _handleCreateProduct,
               onRemove: _itemDrafts.length > 1
                   ? () => setState(() => _itemDrafts.removeAt(index))
                   : null,
@@ -685,11 +770,13 @@ class _ItemRow extends StatefulWidget {
   const _ItemRow({
     required this.draft,
     required this.products,
+    required this.onCreateProduct,
     this.onRemove,
   });
 
   final _ItemDraft draft;
   final List<ProductOption> products;
+  final Future<ProductOption?> Function() onCreateProduct;
   final VoidCallback? onRemove;
 
   @override
@@ -697,8 +784,33 @@ class _ItemRow extends StatefulWidget {
 }
 
 class _ItemRowState extends State<_ItemRow> {
+  Future<void> _handleCreateProduct() async {
+    final created = await widget.onCreateProduct();
+    if (created == null || !mounted) {
+      return;
+    }
+    setState(() => widget.draft.productId = created.id);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final productOptions = widget.products
+        .map(
+          (item) => DropdownOption<int>(
+            value: item.id,
+            label: item.displayLabel,
+          ),
+        )
+        .toList();
+    productOptions.add(
+      DropdownOption<int>(
+        value: -1,
+        label: '新增产品',
+        icon: Icons.add,
+        onSelected: _handleCreateProduct,
+      ),
+    );
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Wrap(
@@ -711,19 +823,20 @@ class _ItemRowState extends State<_ItemRow> {
             child: UnifiedDropdown<int>(
               value: widget.draft.productId,
               decoration: const InputDecoration(labelText: '产品'),
-              options: widget.products
-                  .map(
-                    (item) => DropdownOption(
-                      value: item.id,
-                      label: item.displayLabel,
-                    ),
-                  )
-                  .toList(),
+              options: productOptions,
+              selectHintText: widget.products.isEmpty ? '新增产品' : '请选择',
+              minOptionsForSearch: 1,
               onChanged: (value) =>
                   setState(() => widget.draft.productId = value),
               validator: (value) => value == null ? '请选择产品' : null,
             ),
           ),
+          if (widget.products.isEmpty)
+            TextButton.icon(
+              onPressed: _handleCreateProduct,
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('新增产品'),
+            ),
           SizedBox(
             width: 120,
             child: CrudFormField.number(

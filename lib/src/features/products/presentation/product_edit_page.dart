@@ -5,9 +5,11 @@ import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
+import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/materials/data/material_api_service.dart';
 import 'package:work_order_app/src/features/materials/domain/material.dart';
+import 'package:work_order_app/src/features/materials/presentation/widgets/quick_material_create_dialog.dart';
 import 'package:work_order_app/src/features/processes/data/process_api_service.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/product_groups/data/product_group_api_service.dart';
@@ -238,6 +240,35 @@ class _ProductEditPageState extends State<ProductEditPage> {
     });
   }
 
+  Future<MaterialItem?> _handleCreateMaterial() async {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.add_material')) {
+      ToastUtil.showError('当前账号无权新增物料');
+      return null;
+    }
+
+    final created = await showQuickMaterialCreateDialog(
+      context: context,
+      materialApi: _materialApi,
+    );
+    if (created == null || !mounted) {
+      return null;
+    }
+
+    setState(() {
+      _materials = List<MaterialItem>.from(_materials)
+        ..removeWhere((item) => item.id == created.id)
+        ..add(created)
+        ..sort((left, right) {
+          final leftLabel = '${left.code} ${left.name}';
+          final rightLabel = '${right.code} ${right.name}';
+          return leftLabel.compareTo(rightLabel);
+        });
+    });
+    ToastUtil.showSuccess('物料已新增');
+    return created;
+  }
+
   Future<bool> _saveProductMaterials(int productId) async {
     var hasError = false;
     try {
@@ -356,6 +387,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
                   key: ValueKey(_materialDrafts[index]),
                   draft: _materialDrafts[index],
                   materials: _materials,
+                  onCreateMaterial: _handleCreateMaterial,
                   onRemove: () => _removeMaterialDraft(index),
                 ),
             ],
@@ -589,11 +621,13 @@ class _MaterialCard extends StatefulWidget {
     super.key,
     required this.draft,
     required this.materials,
+    required this.onCreateMaterial,
     required this.onRemove,
   });
 
   final _MaterialDraft draft;
   final List<MaterialItem> materials;
+  final Future<MaterialItem?> Function() onCreateMaterial;
   final VoidCallback onRemove;
 
   @override
@@ -601,11 +635,36 @@ class _MaterialCard extends StatefulWidget {
 }
 
 class _MaterialCardState extends State<_MaterialCard> {
+  Future<void> _handleCreateMaterial() async {
+    final created = await widget.onCreateMaterial();
+    if (created == null || !mounted) {
+      return;
+    }
+    setState(() => widget.draft.materialId = created.id);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
     final draft = widget.draft;
+    final materialOptions = widget.materials
+        .map(
+          (material) => DropdownOption<int>(
+            value: material.id,
+            label: '${material.code} ${material.name}',
+          ),
+        )
+        .toList();
+    materialOptions.add(
+      DropdownOption<int>(
+        value: -1,
+        label: '新增物料',
+        icon: Icons.add,
+        onSelected: _handleCreateMaterial,
+      ),
+    );
+
     return Card(
       margin: EdgeInsets.only(bottom: sectionSpacing),
       child: Padding(
@@ -620,18 +679,22 @@ class _MaterialCardState extends State<_MaterialCard> {
                   child: UnifiedDropdown<int>(
                     value: draft.materialId,
                     decoration: const InputDecoration(labelText: '物料'),
-                    options: widget.materials
-                        .map(
-                          (material) => DropdownOption(
-                            value: material.id,
-                            label: '${material.code} ${material.name}',
-                          ),
-                        )
-                        .toList(),
+                    options: materialOptions,
+                    selectHintText: widget.materials.isEmpty ? '新增物料' : '请选择',
+                    minOptionsForSearch: 1,
                     onChanged: (value) =>
                         setState(() => draft.materialId = value),
                   ),
                 ),
+                if (widget.materials.isEmpty)
+                  Padding(
+                    padding: EdgeInsets.only(left: LayoutTokens.gapSm),
+                    child: TextButton.icon(
+                      onPressed: _handleCreateMaterial,
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text('新增物料'),
+                    ),
+                  ),
                 SizedBox(width: LayoutTokens.gapSm),
                 IconButton(
                   onPressed: widget.onRemove,

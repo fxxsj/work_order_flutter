@@ -293,11 +293,13 @@ class WorkOrderCustomerSection extends StatelessWidget {
     required this.customerId,
     required this.customers,
     required this.onCustomerChanged,
+    this.onCreateCustomer,
   });
 
   final int? customerId;
   final List<Customer> customers;
   final ValueChanged<int?> onCustomerChanged;
+  final VoidCallback? onCreateCustomer;
 
   @override
   Widget build(BuildContext context) {
@@ -309,15 +311,40 @@ class WorkOrderCustomerSection extends StatelessWidget {
           ),
         )
         .toList();
+    if (onCreateCustomer != null) {
+      options.add(
+        DropdownOption<int>(
+          value: -1,
+          label: '新增客户',
+          icon: Icons.add,
+          onSelected: onCreateCustomer,
+        ),
+      );
+    }
 
     return WorkOrderFormSectionCard(
       title: '客户信息',
-      child: UnifiedDropdown<int>(
-        value: customerId,
-        options: options,
-        decoration: const InputDecoration(labelText: '客户'),
-        onChanged: (value) => onCustomerChanged(value),
-        validator: (value) => value == null ? '请选择客户' : null,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          UnifiedDropdown<int>(
+            value: customerId,
+            options: options,
+            decoration: const InputDecoration(labelText: '客户'),
+            selectHintText: customers.isEmpty ? '新增客户' : '请选择',
+            minOptionsForSearch: 1,
+            onChanged: (value) => onCustomerChanged(value),
+            validator: (value) => value == null ? '请选择客户' : null,
+          ),
+          if (customers.isEmpty && onCreateCustomer != null) ...[
+            const SizedBox(height: LayoutTokens.gapSm),
+            TextButton.icon(
+              onPressed: onCreateCustomer,
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('新增客户'),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -331,6 +358,7 @@ class WorkOrderProductListSection extends StatelessWidget {
     required this.onAdd,
     required this.onRemove,
     this.onProductSelectionChanged,
+    this.onCreateProduct,
   });
 
   final List<WorkOrderProductDraft> drafts;
@@ -338,6 +366,7 @@ class WorkOrderProductListSection extends StatelessWidget {
   final VoidCallback onAdd;
   final ValueChanged<int> onRemove;
   final VoidCallback? onProductSelectionChanged;
+  final Future<ProductOption?> Function()? onCreateProduct;
 
   @override
   Widget build(BuildContext context) {
@@ -351,6 +380,7 @@ class WorkOrderProductListSection extends StatelessWidget {
               products: products,
               onRemove: drafts.length > 1 ? () => onRemove(index) : null,
               onProductChanged: onProductSelectionChanged,
+              onCreateProduct: onCreateProduct,
             ),
           Align(
             alignment: Alignment.centerLeft,
@@ -373,12 +403,14 @@ class WorkOrderMaterialListSection extends StatelessWidget {
     required this.materials,
     required this.onAdd,
     required this.onRemove,
+    this.onCreateMaterial,
   });
 
   final List<WorkOrderMaterialDraft> drafts;
   final List<MaterialItem> materials;
   final VoidCallback onAdd;
   final ValueChanged<int> onRemove;
+  final Future<MaterialItem?> Function()? onCreateMaterial;
 
   @override
   Widget build(BuildContext context) {
@@ -391,6 +423,7 @@ class WorkOrderMaterialListSection extends StatelessWidget {
               draft: drafts[index],
               materials: materials,
               onRemove: () => onRemove(index),
+              onCreateMaterial: onCreateMaterial,
             ),
           Align(
             alignment: Alignment.centerLeft,
@@ -656,6 +689,7 @@ class WorkOrderFormContent extends StatelessWidget {
     required this.embossingPlates,
     required this.embossingPlateIds,
     required this.onCustomerChanged,
+    this.onCreateCustomer,
     required this.onStatusChanged,
     required this.onPriorityChanged,
     required this.onPickOrderDate,
@@ -670,6 +704,8 @@ class WorkOrderFormContent extends StatelessWidget {
     required this.onToggleCmyk,
     required this.onResourceSelectionChanged,
     this.onProductSelectionChanged,
+    this.onCreateProduct,
+    this.onCreateMaterial,
     this.sectionSpacing = LayoutTokens.gapLg,
   });
 
@@ -702,6 +738,7 @@ class WorkOrderFormContent extends StatelessWidget {
   final List<EmbossingPlate> embossingPlates;
   final Set<int> embossingPlateIds;
   final ValueChanged<int?> onCustomerChanged;
+  final VoidCallback? onCreateCustomer;
   final ValueChanged<String?> onStatusChanged;
   final ValueChanged<String?> onPriorityChanged;
   final VoidCallback onPickOrderDate;
@@ -716,6 +753,8 @@ class WorkOrderFormContent extends StatelessWidget {
   final ValueChanged<String> onToggleCmyk;
   final VoidCallback onResourceSelectionChanged;
   final VoidCallback? onProductSelectionChanged;
+  final Future<ProductOption?> Function()? onCreateProduct;
+  final Future<MaterialItem?> Function()? onCreateMaterial;
   final double sectionSpacing;
 
   @override
@@ -726,6 +765,7 @@ class WorkOrderFormContent extends StatelessWidget {
           customerId: customerId,
           customers: customers,
           onCustomerChanged: onCustomerChanged,
+          onCreateCustomer: onCreateCustomer,
         ),
         SizedBox(height: sectionSpacing),
         WorkOrderBasicInfoSection(
@@ -751,6 +791,7 @@ class WorkOrderFormContent extends StatelessWidget {
           onAdd: onAddProduct,
           onRemove: onRemoveProduct,
           onProductSelectionChanged: onProductSelectionChanged,
+          onCreateProduct: onCreateProduct,
         ),
         SizedBox(height: sectionSpacing),
         WorkOrderProcessConfigSection(
@@ -764,6 +805,7 @@ class WorkOrderFormContent extends StatelessWidget {
           materials: materials,
           onAdd: onAddMaterial,
           onRemove: onRemoveMaterial,
+          onCreateMaterial: onCreateMaterial,
         ),
         SizedBox(height: sectionSpacing),
         WorkOrderResourcesSection(

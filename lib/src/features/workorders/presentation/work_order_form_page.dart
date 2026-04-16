@@ -9,14 +9,20 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
+import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
 import 'package:work_order_app/src/features/artworks/domain/artwork.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
+import 'package:work_order_app/src/features/customer/presentation/widgets/quick_customer_create_dialog.dart';
 import 'package:work_order_app/src/features/dies/domain/die.dart';
 import 'package:work_order_app/src/features/embossing_plates/domain/embossing_plate.dart';
 import 'package:work_order_app/src/features/foiling_plates/domain/foiling_plate.dart';
+import 'package:work_order_app/src/features/materials/data/material_api_service.dart';
 import 'package:work_order_app/src/features/materials/domain/material.dart';
+import 'package:work_order_app/src/features/materials/presentation/widgets/quick_material_create_dialog.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
+import 'package:work_order_app/src/features/products/data/product_api_service.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
+import 'package:work_order_app/src/features/products/presentation/widgets/quick_product_create_dialog.dart';
 import 'package:work_order_app/src/features/workorders/application/work_order_view_model.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_form_options_loader.dart';
@@ -132,6 +138,94 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     } finally {
       if (mounted) setState(() => _loadingDetail = false);
     }
+  }
+
+  Future<void> _handleCreateCustomer() async {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.add_customer')) {
+      ToastUtil.showError('当前账号无权新增客户');
+      return;
+    }
+
+    final created = await showQuickCustomerCreateDialog(
+      context: context,
+      customerApi: CustomerApiService(context.read<ApiClient>()),
+    );
+    if (created == null || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _customers = List<Customer>.from(_customers)
+        ..removeWhere((item) => item.id == created.id)
+        ..add(created)
+        ..sort((left, right) => left.name.compareTo(right.name));
+      _draft.customerId = created.id;
+    });
+    ToastUtil.showSuccess('客户已新增');
+  }
+
+  Future<ProductOption?> _handleCreateProduct() async {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.add_product')) {
+      ToastUtil.showError('当前账号无权新增产品');
+      return null;
+    }
+
+    final created = await showQuickProductCreateDialog(
+      context: context,
+      productApi: ProductApiService(context.read<ApiClient>()),
+    );
+    if (created == null || !mounted) {
+      return null;
+    }
+
+    final option = ProductOption(
+      id: created.id,
+      name: created.name,
+      code: created.code,
+    );
+    setState(() {
+      _products = List<ProductOption>.from(_products)
+        ..removeWhere((item) => item.id == option.id)
+        ..add(option)
+        ..sort(
+            (left, right) => left.displayLabel.compareTo(right.displayLabel));
+      _fullProducts = List<Product>.from(_fullProducts)
+        ..removeWhere((item) => item.id == created.id)
+        ..add(created);
+    });
+    ToastUtil.showSuccess('产品已新增');
+    return option;
+  }
+
+  Future<MaterialItem?> _handleCreateMaterial() async {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.add_material')) {
+      ToastUtil.showError('当前账号无权新增物料');
+      return null;
+    }
+
+    final created = await showQuickMaterialCreateDialog(
+      context: context,
+      materialApi: MaterialApiService(context.read<ApiClient>()),
+    );
+    if (created == null || !mounted) {
+      return null;
+    }
+
+    setState(() {
+      _materials = List<MaterialItem>.from(_materials)
+        ..removeWhere((item) => item.id == created.id)
+        ..add(created)
+        ..sort((left, right) {
+          final leftLabel = '${left.name} (${left.code})';
+          final rightLabel = '${right.name} (${right.code})';
+          return leftLabel.compareTo(rightLabel);
+        });
+    });
+    ToastUtil.showSuccess('物料已新增');
+    return created;
   }
 
   Future<void> _pickDate({required bool isOrderDate}) async {
@@ -320,6 +414,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                 embossingPlateIds: _draft.embossingPlateIds,
                 onCustomerChanged: (value) =>
                     setState(() => _draft.customerId = value),
+                onCreateCustomer: _handleCreateCustomer,
                 onStatusChanged: (value) =>
                     setState(() => _draft.status = value ?? 'pending'),
                 onPriorityChanged: (value) =>
@@ -360,6 +455,8 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                     _draft.autoFillFromProducts(_fullProducts);
                   });
                 },
+                onCreateProduct: _handleCreateProduct,
+                onCreateMaterial: _handleCreateMaterial,
               ),
             ),
     );
