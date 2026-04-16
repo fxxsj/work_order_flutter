@@ -565,16 +565,18 @@ List<NavItem> sidebarNavItems({Map<String, dynamic>? currentUser}) {
   return _filterNavItems(
     navItems,
     access: _NavAccessContext.fromUser(currentUser),
+    includeHidden: false,
   );
 }
 
 List<NavItem> _filterNavItems(
   List<NavItem> items, {
   required _NavAccessContext access,
+  required bool includeHidden,
 }) {
   final result = <NavItem>[];
   for (final item in items) {
-    if (!item.showInSidebar) {
+    if (!includeHidden && !item.showInSidebar) {
       continue;
     }
     if (item.children.isEmpty && !access.canAccess(item)) {
@@ -583,7 +585,11 @@ List<NavItem> _filterNavItems(
     if (item.children.isEmpty) {
       result.add(item);
     } else {
-      final children = _filterNavItems(item.children, access: access);
+      final children = _filterNavItems(
+        item.children,
+        access: access,
+        includeHidden: includeHidden,
+      );
       if (children.isEmpty) {
         continue;
       }
@@ -611,6 +617,7 @@ List<NavItem> leafNavItemsByBranch({Map<String, dynamic>? currentUser}) {
   final filtered = _filterNavItems(
     navItems,
     access: _NavAccessContext.fromUser(currentUser),
+    includeHidden: true,
   );
   final leaves = flattenNavItems(filtered);
   final byId = {for (final item in leaves) item.id: item};
