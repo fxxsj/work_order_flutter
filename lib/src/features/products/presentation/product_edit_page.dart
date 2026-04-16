@@ -431,6 +431,143 @@ class _ProductEditPageState extends State<ProductEditPage> {
     );
   }
 
+  Widget _buildFieldPair(
+    BuildContext context, {
+    required Widget first,
+    required Widget second,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: first),
+        const SizedBox(width: LayoutTokens.gapMd),
+        Expanded(child: second),
+      ],
+    );
+  }
+
+  Widget _buildBasicSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        CrudFormField.text(
+          label: _codeLabel,
+          controller: _codeController,
+          enabled: widget.product == null,
+          validator: (value) {
+            final text = value?.trim() ?? '';
+            if (text.isEmpty) return _codeRequiredText;
+            if (text.length < 2 || text.length > 50) {
+              return _codeLengthText;
+            }
+            if (!RegExp(r'^[A-Za-z0-9-]+$').hasMatch(text)) {
+              return _codeInvalidText;
+            }
+            return null;
+          },
+        ).build(context),
+        const SizedBox(height: LayoutTokens.gapMd),
+        _buildFieldPair(
+          context,
+          first: CrudFormField.text(
+            label: _nameLabel,
+            controller: _nameController,
+            validator: (value) {
+              final text = value?.trim() ?? '';
+              if (text.isEmpty) return _nameRequiredText;
+              return null;
+            },
+          ).build(context),
+          second: CrudFormField.dropdown(
+            fieldKey: ValueKey(_productType),
+            label: _productTypeLabel,
+            value: _productType,
+            options: _productTypeLabels.entries
+                .map(
+                  (entry) => CrudFieldOption(
+                    value: entry.key,
+                    label: entry.value,
+                  ),
+                )
+                .toList(),
+            onChanged: (value) => _handleProductTypeChange(value as String?),
+          ).build(context),
+        ),
+        if (_productType != 'single') ...[
+          const SizedBox(height: LayoutTokens.gapMd),
+          CrudFormField.dropdown(
+            fieldKey: ValueKey('${_productType}_${_productGroupId ?? ''}'),
+            label: _productGroupLabel,
+            value: _productGroupId,
+            options: _productGroups
+                .map(
+                  (group) => CrudFieldOption(
+                    value: group.id,
+                    label: '${group.code} ${group.name}',
+                  ),
+                )
+                .toList(),
+            onChanged: (value) => setState(() => _productGroupId = value as int?),
+            validator: (value) => _productType != 'single' && value == null
+                ? '请选择产品组'
+                : null,
+          ).build(context),
+        ],
+        const SizedBox(height: LayoutTokens.gapMd),
+        CrudFormField.text(
+          label: _specLabel,
+          controller: _specController,
+        ).build(context),
+      ],
+    );
+  }
+
+  Widget _buildExtraSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildFieldPair(
+          context,
+          first: CrudFormField.text(
+            label: _unitLabel,
+            controller: _unitController,
+          ).build(context),
+          second: CrudFormField.number(
+            label: _unitPriceLabel,
+            controller: _unitPriceController,
+            decimal: true,
+          ).build(context),
+        ),
+        const SizedBox(height: LayoutTokens.gapMd),
+        _buildFieldPair(
+          context,
+          first: CrudFormField.number(
+            label: _stockLabel,
+            controller: _stockController,
+            decimal: true,
+          ).build(context),
+          second: CrudFormField.number(
+            label: _minStockLabel,
+            controller: _minStockController,
+            decimal: true,
+          ).build(context),
+        ),
+        const SizedBox(height: LayoutTokens.gapMd),
+        CrudFormField.textarea(
+          label: _descriptionLabel,
+          controller: _descriptionController,
+          maxLines: 3,
+        ).build(context),
+        const SizedBox(height: LayoutTokens.gapMd),
+        CrudFormField.toggle(
+          label: _statusLabel,
+          value: _isActive,
+          onChanged: (value) => setState(() => _isActive = value),
+        ).build(context),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return CrudDrawerEditPanel<Product, ProductViewModel>(
@@ -460,106 +597,14 @@ class _ProductEditPageState extends State<ProductEditPage> {
               title: _basicSectionTitle,
               column: 0,
               fields: [
-                CrudFormField.text(
-                  label: _codeLabel,
-                  controller: _codeController,
-                  enabled: widget.product == null,
-                  validator: (value) {
-                    final text = value?.trim() ?? '';
-                    if (text.isEmpty) return _codeRequiredText;
-                    if (text.length < 2 || text.length > 50) {
-                      return _codeLengthText;
-                    }
-                    if (!RegExp(r'^[A-Za-z0-9-]+$').hasMatch(text)) {
-                      return _codeInvalidText;
-                    }
-                    return null;
-                  },
-                ),
-                CrudFormField.text(
-                  label: _nameLabel,
-                  controller: _nameController,
-                  validator: (value) {
-                    final text = value?.trim() ?? '';
-                    if (text.isEmpty) return _nameRequiredText;
-                    return null;
-                  },
-                ),
-                CrudFormField.dropdown(
-                  fieldKey: ValueKey(_productType),
-                  label: _productTypeLabel,
-                  value: _productType,
-                  options: _productTypeLabels.entries
-                      .map(
-                        (entry) => CrudFieldOption(
-                          value: entry.key,
-                          label: entry.value,
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) =>
-                      _handleProductTypeChange(value as String?),
-                ),
-                if (_productType != 'single')
-                  CrudFormField.dropdown(
-                    fieldKey:
-                        ValueKey('${_productType}_${_productGroupId ?? ''}'),
-                    label: _productGroupLabel,
-                    value: _productGroupId,
-                    options: _productGroups
-                        .map(
-                          (group) => CrudFieldOption(
-                            value: group.id,
-                            label: '${group.code} ${group.name}',
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (value) =>
-                        setState(() => _productGroupId = value as int?),
-                    validator: (value) =>
-                        _productType != 'single' && value == null
-                            ? '请选择产品组'
-                            : null,
-                  ),
-                CrudFormField.text(
-                  label: _specLabel,
-                  controller: _specController,
-                ),
+                CrudFormField.custom(builder: _buildBasicSection),
               ],
             ),
             CrudFormSection(
               title: _extraSectionTitle,
               column: isMobile ? 0 : 1,
               fields: [
-                CrudFormField.text(
-                  label: _unitLabel,
-                  controller: _unitController,
-                ),
-                CrudFormField.number(
-                  label: _unitPriceLabel,
-                  controller: _unitPriceController,
-                  decimal: true,
-                ),
-                CrudFormField.number(
-                  label: _stockLabel,
-                  controller: _stockController,
-                  decimal: true,
-                ),
-                CrudFormField.number(
-                  label: _minStockLabel,
-                  controller: _minStockController,
-                  decimal: true,
-                ),
-                CrudFormField.textarea(
-                  label: _descriptionLabel,
-                  controller: _descriptionController,
-                  maxLines: 3,
-                ),
-                CrudFormField.toggle(
-                  label: _statusLabel,
-                  value: _isActive,
-                  onChanged: (value) => setState(() => _isActive = value),
-                ),
+                CrudFormField.custom(builder: _buildExtraSection),
               ],
             ),
             CrudFormSection(
