@@ -13,6 +13,7 @@ class FileUploadPickException implements Exception {
 Future<MultipartFile?> pickMultipartFile({
   required List<String> allowedExtensions,
   required String fallbackFilename,
+  int? maxBytes,
 }) async {
   final result = await FilePicker.platform.pickFiles(
     type: FileType.custom,
@@ -27,6 +28,12 @@ Future<MultipartFile?> pickMultipartFile({
   final fileName =
       picked.name.trim().isEmpty ? fallbackFilename : picked.name.trim();
   final bytes = picked.bytes;
+  final fileSize = picked.size;
+
+  if (maxBytes != null && maxBytes > 0 && fileSize > maxBytes) {
+    final maxMb = (maxBytes / (1024 * 1024)).toStringAsFixed(0);
+    throw FileUploadPickException('所选文件过大，不能超过 ${maxMb}MB');
+  }
 
   if (bytes != null && bytes.isNotEmpty) {
     return MultipartFile.fromBytes(bytes, filename: fileName);

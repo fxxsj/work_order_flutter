@@ -6,8 +6,10 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/crud_drawer_
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/image_gallery_upload_section.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/utils/file_upload_picker.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/materials/data/material_api_service.dart';
@@ -55,6 +57,8 @@ class ProductEditPage extends StatefulWidget {
 }
 
 class _ProductEditPageState extends State<ProductEditPage> {
+  static const int _maxImageCount = 12;
+  static const int _maxImageBytes = 10 * 1024 * 1024;
   static const String _codeLabel = '产品编码';
   static const String _nameLabel = '产品名称';
   static const String _specLabel = '规格';
@@ -116,8 +120,12 @@ class _ProductEditPageState extends State<ProductEditPage> {
   bool _isActive = true;
   bool _loadingOptions = false;
   bool _loadingDetail = false;
+  bool _uploadingImage = false;
+  Product? _savedProduct;
+  final List<ProductImage> _images = [];
 
   bool get _isLoading => _loadingOptions || _loadingDetail;
+  Product? get _product => _savedProduct ?? widget.product;
 
   @override
   void initState() {
@@ -129,7 +137,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
     _materialApi = MaterialApiService(apiClient);
     _productMaterialApi = ProductMaterialApiService(apiClient);
 
-    final product = widget.product;
+    final product = _product;
     _codeController = TextEditingController(text: product?.code ?? '');
     _nameController = TextEditingController(text: product?.name ?? '');
     _specController = TextEditingController(text: product?.specification ?? '');
@@ -152,6 +160,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
       (product?.defaultMaterials ?? const [])
           .map((item) => _MaterialDraft.fromItem(item)),
     );
+    _images.addAll(product?.images ?? const []);
     _isActive = product?.isActive ?? true;
     _loadOptions();
     if (product != null) {
@@ -241,7 +250,11 @@ class _ProductEditPageState extends State<ProductEditPage> {
       ..addAll(
         detail.defaultMaterials.map((item) => _MaterialDraft.fromItem(item)),
       );
+    _images
+      ..clear()
+      ..addAll(detail.images);
     _isActive = detail.isActive ?? _isActive;
+    _savedProduct = detail;
     setState(() {});
   }
 
@@ -336,15 +349,11 @@ class _ProductEditPageState extends State<ProductEditPage> {
     return hasError;
   }
 
-  Future<void> _handleSubmit(ProductViewModel viewModel) async {
-    if (_productType != 'single' && _productGroupId == null) {
-      ToastUtil.showError('请选择产品组');
-      return;
-    }
-
+  Product _buildPayload() {
+    final currentProduct = _product;
     final description = _descriptionController.text.trim();
-    final payload = Product(
-      id: widget.product?.id ?? 0,
+    return Product(
+      id: currentProduct?.id ?? 0,
       code: _codeController.text.trim(),
       name: _nameController.text.trim(),
       productType: _productType,
@@ -361,16 +370,84 @@ class _ProductEditPageState extends State<ProductEditPage> {
       description: description.isEmpty ? null : description,
       isActive: _isActive,
       defaultProcessIds: _processIds,
-      productTypeDisplay: widget.product?.productTypeDisplay,
-      productGroupName: widget.product?.productGroupName,
+      productTypeDisplay: currentProduct?.productTypeDisplay,
+      productGroupName: currentProduct?.productGroupName,
+      productGroupCode: currentProduct?.productGroupCode,
+      defaultMaterials: currentProduct?.defaultMaterials ?? const [],
+      images: _images,
     );
+  }
 
-    final savedProduct = widget.product == null
+  Future<Product> _persistProduct(ProductViewModel viewModel) async {
+    if (_productType != 'single' && _productGroupId == null) {
+      throw StateError('请选择产品组');
+    }
+    final payload = _buildPayload();
+    final savedProduct = _product == null
         ? await viewModel.createProduct(payload)
         : await viewModel.updateProduct(payload);
     final materialErrors = await _saveProductMaterials(savedProduct.id);
     if (materialErrors) {
       ToastUtil.showError('部分物料保存失败');
+    }
+    if (mounted) {
+      setState(() => _savedProduct = savedProduct);
+    }
+    return savedProduct;
+  }
+
+  Future<void> _handleSubmit(ProductViewModel viewModel) async {
+    try {
+      await _persistProduct(viewModel);
+    } on StateError catch (err) {
+      ToastUtil.showError(err.toString().replaceFirst('Bad state: ', ''));
+    }
+  }
+
+  Future<void> _pickAndUploadImage(ProductViewModel viewModel) async {
+    if (_images.length >= _maxImageCount) {
+      ToastUtil.showError('图片最多上传 $_maxImageCount 张');
+      return;
+    }
+    setState(() => _uploadingImage = true);
+    try {
+      final multipartFile = await pickMultipartFile(
+        allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+        fallbackFilename: 'product_image.jpg',
+        maxBytes: _maxImageBytes,
+      );
+      if (multipartFile == null) {
+        if (mounted) setState(() => _uploadingImage = false);
+        return;
+      }
+      final savedProduct = await _persistProduct(viewModel);
+      final image = await viewModel.uploadProductImage(
+        savedProduct.id,
+        multipartFile,
+        sortOrder: _images.length,
+      );
+      if (mounted) {
+        setState(() => _images.add(image));
+        ToastUtil.showSuccess('图片上传成功');
+      }
+    } catch (err) {
+      if (mounted) ToastUtil.showError('上传失败: $err');
+    } finally {
+      if (mounted) setState(() => _uploadingImage = false);
+    }
+  }
+
+  Future<void> _removeImage(ProductViewModel viewModel, ProductImage image) async {
+    final product = _product;
+    if (product == null) return;
+    try {
+      await viewModel.deleteProductImage(product.id, image.id);
+      if (mounted) {
+        setState(() => _images.remove(image));
+        ToastUtil.showSuccess('图片已删除');
+      }
+    } catch (err) {
+      if (mounted) ToastUtil.showError('删除失败: $err');
     }
   }
 
@@ -568,10 +645,26 @@ class _ProductEditPageState extends State<ProductEditPage> {
     );
   }
 
+  Widget _buildImageSection(BuildContext context) {
+    return ImageGalleryUploadSection<ProductImage>(
+      images: _images,
+      canUpload: true,
+      uploading: _uploadingImage,
+      maxCount: _maxImageCount,
+      limitHintText: '支持 JPG、PNG、WebP、GIF，单张不超过 10MB，最多 $_maxImageCount 张',
+      unsavedHintText: '请先保存产品后再上传图片',
+      emptyText: '暂无图片，点击下方按钮上传',
+      imageUrlBuilder: (image) => image.imageUrl,
+      descriptionBuilder: (image) => image.description,
+      onUpload: () => _pickAndUploadImage(context.read<ProductViewModel>()),
+      onDelete: (image) => _removeImage(context.read<ProductViewModel>(), image),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return CrudDrawerEditPanel<Product, ProductViewModel>(
-      item: widget.product,
+      item: _product,
       onSaved: widget.onSaved,
       config: CrudEditConfig<Product, ProductViewModel>(
         submitText: _submitText,
@@ -605,6 +698,13 @@ class _ProductEditPageState extends State<ProductEditPage> {
               column: isMobile ? 0 : 1,
               fields: [
                 CrudFormField.custom(builder: _buildExtraSection),
+              ],
+            ),
+            CrudFormSection(
+              title: '图片管理',
+              column: isMobile ? 0 : 1,
+              fields: [
+                CrudFormField.custom(builder: _buildImageSection),
               ],
             ),
             CrudFormSection(

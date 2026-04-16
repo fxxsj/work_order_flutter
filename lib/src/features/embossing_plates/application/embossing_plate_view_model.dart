@@ -25,14 +25,16 @@ class EmbossingPlateViewModel extends PaginatedViewModel<EmbossingPlate> {
     return _repository.getEmbossingPlates(page: page, pageSize: pageSize, search: search);
   }
 
-  Future<void> createEmbossingPlate(EmbossingPlate plate) async {
-    await _repository.createEmbossingPlate(plate);
+  Future<EmbossingPlate> createEmbossingPlate(EmbossingPlate plate) async {
+    final saved = await _repository.createEmbossingPlate(plate);
     await loadItems(resetPage: true);
+    return saved;
   }
 
-  Future<void> updateEmbossingPlate(EmbossingPlate plate) async {
-    await _repository.updateEmbossingPlate(plate);
+  Future<EmbossingPlate> updateEmbossingPlate(EmbossingPlate plate) async {
+    final saved = await _repository.updateEmbossingPlate(plate);
     await loadItems();
+    return saved;
   }
 
   Future<void> deleteEmbossingPlate(int id) async {

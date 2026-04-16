@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/core.dart';
 import 'package:work_order_app/src/features/products/data/product_dto.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
@@ -28,6 +29,25 @@ class ProductViewModel extends PaginatedViewModel<Product> {
 
   Future<void> deleteProduct(int id) async {
     await deleteAndReload(() => _repository.deleteProduct(id));
+  }
+
+  Future<ProductImage> uploadProductImage(
+    int productId,
+    MultipartFile imageFile, {
+    int sortOrder = 0,
+    String? description,
+  }) {
+    return _repository.uploadProductImage(
+      productId,
+      imageFile,
+      sortOrder: sortOrder,
+      description: description,
+    );
+  }
+
+  Future<void> deleteProductImage(int productId, int imageId) async {
+    await _repository.deleteProductImage(productId, imageId);
+    await loadItems();
   }
 
   @override

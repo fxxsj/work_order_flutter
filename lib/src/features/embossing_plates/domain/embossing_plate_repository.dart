@@ -9,9 +9,9 @@ abstract class EmbossingPlateRepository {
     String? search,
   });
 
-  Future<void> createEmbossingPlate(EmbossingPlate plate);
+  Future<EmbossingPlate> createEmbossingPlate(EmbossingPlate plate);
 
-  Future<void> updateEmbossingPlate(EmbossingPlate plate);
+  Future<EmbossingPlate> updateEmbossingPlate(EmbossingPlate plate);
 
   Future<void> deleteEmbossingPlate(int id);
 

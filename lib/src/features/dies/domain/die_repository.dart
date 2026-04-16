@@ -9,9 +9,9 @@ abstract class DieRepository {
     String? search,
   });
 
-  Future<void> createDie(Die die);
+  Future<Die> createDie(Die die);
 
-  Future<void> updateDie(Die die);
+  Future<Die> updateDie(Die die);
 
   Future<void> deleteDie(int id);
 

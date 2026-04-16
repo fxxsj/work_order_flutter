@@ -58,6 +58,22 @@ class ProductMaterialItem {
   }
 }
 
+class ProductImage {
+  const ProductImage({
+    required this.id,
+    required this.imageUrl,
+    this.sortOrder = 0,
+    this.description,
+    this.createdAt,
+  });
+
+  final int id;
+  final String imageUrl;
+  final int sortOrder;
+  final String? description;
+  final DateTime? createdAt;
+}
+
 class Product {
   const Product({
     required this.id,
@@ -77,6 +93,7 @@ class Product {
     this.isActive,
     this.defaultProcessIds = const [],
     this.defaultMaterials = const [],
+    this.images = const [],
   });
 
   final int id;
@@ -96,4 +113,5 @@ class Product {
   final bool? isActive;
   final List<int> defaultProcessIds;
   final List<ProductMaterialItem> defaultMaterials;
+  final List<ProductImage> images;
 }

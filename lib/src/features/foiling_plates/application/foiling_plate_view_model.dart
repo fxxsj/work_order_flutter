@@ -25,14 +25,16 @@ class FoilingPlateViewModel extends PaginatedViewModel<FoilingPlate> {
     return _repository.getFoilingPlates(page: page, pageSize: pageSize, search: search);
   }
 
-  Future<void> createFoilingPlate(FoilingPlate plate) async {
-    await _repository.createFoilingPlate(plate);
+  Future<FoilingPlate> createFoilingPlate(FoilingPlate plate) async {
+    final saved = await _repository.createFoilingPlate(plate);
     await loadItems(resetPage: true);
+    return saved;
   }
 
-  Future<void> updateFoilingPlate(FoilingPlate plate) async {
-    await _repository.updateFoilingPlate(plate);
+  Future<FoilingPlate> updateFoilingPlate(FoilingPlate plate) async {
+    final saved = await _repository.updateFoilingPlate(plate);
     await loadItems();
+    return saved;
   }
 
   Future<void> deleteFoilingPlate(int id) async {

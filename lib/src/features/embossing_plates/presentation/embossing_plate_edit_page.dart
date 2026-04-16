@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/crud_drawer_
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/image_gallery_upload_section.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
@@ -52,6 +53,8 @@ class EmbossingPlateEditPage extends StatefulWidget {
 }
 
 class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
+  static const int _maxImageCount = 12;
+  static const int _maxImageBytes = 10 * 1024 * 1024;
   static const String _codeLabel = '压凸版编码';
   static const String _nameLabel = '压凸版名称';
   static const String _sizeLabel = '尺寸';
@@ -83,11 +86,14 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
   final List<_PlateProductItem> _productItems = [];
   final List<EmbossingPlateImage> _images = [];
   bool _uploadingImage = false;
+  EmbossingPlate? _savedPlate;
+
+  EmbossingPlate? get _plate => _savedPlate ?? widget.plate;
 
   @override
   void initState() {
     super.initState();
-    final plate = widget.plate;
+    final plate = _plate;
     _codeController = TextEditingController(text: plate?.code ?? '');
     _nameController = TextEditingController(text: plate?.name ?? '');
     _sizeController = TextEditingController(text: plate?.size ?? '');
@@ -204,6 +210,13 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
   }
 
   Future<void> _handleSubmit(EmbossingPlateViewModel viewModel) async {
+    await _persistPlate(viewModel);
+  }
+
+  Future<EmbossingPlate> _persistPlate(
+    EmbossingPlateViewModel viewModel,
+  ) async {
+    final currentPlate = _plate;
     final products = _productItems
         .where((item) => item.productId != null)
         .map(
@@ -216,7 +229,7 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
         .toList();
 
     final payload = EmbossingPlate(
-      id: widget.plate?.id ?? 0,
+      id: currentPlate?.id ?? 0,
       code: _codeController.text.trim().isEmpty
           ? null
           : _codeController.text.trim(),
@@ -225,17 +238,19 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
       material: _materialController.text.trim(),
       thickness: _thicknessController.text.trim(),
       notes: _notesController.text.trim(),
-      confirmed: widget.plate?.confirmed ?? false,
+      confirmed: currentPlate?.confirmed ?? false,
       products: products,
       images: _images,
-      createdAt: widget.plate?.createdAt,
+      createdAt: currentPlate?.createdAt,
     );
 
-    if (widget.plate == null) {
-      await viewModel.createEmbossingPlate(payload);
-    } else {
-      await viewModel.updateEmbossingPlate(payload);
+    final saved = currentPlate == null
+        ? await viewModel.createEmbossingPlate(payload)
+        : await viewModel.updateEmbossingPlate(payload);
+    if (mounted) {
+      setState(() => _savedPlate = saved);
     }
+    return saved;
   }
 
   Widget _buildProductSection(BuildContext context) {
@@ -345,121 +360,42 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
   }
 
   Widget _buildImageSection(BuildContext context) {
-    final theme = Theme.of(context);
-    final sectionSpacing = LayoutTokens.formSectionSpacing(context);
-    final colors = theme.extension<AppColors>();
-    final subtleText = colors?.subtleText ?? theme.hintColor;
-
-    if (widget.plate == null) {
-      return Text(
-        '请先保存压凸版后再上传图片',
-        style: theme.textTheme.bodySmall?.copyWith(color: subtleText),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (_images.isEmpty)
-          Text(
-            '暂无图片，点击下方按钮上传',
-            style: theme.textTheme.bodySmall?.copyWith(color: subtleText),
-          )
-        else
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _images.map((img) {
-              return Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      img.imageUrl,
-                      width: 100,
-                      height: 100,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(Icons.broken_image, color: subtleText),
-                      ),
-                    ),
-                  ),
-                  if (img.description != null && img.description!.isNotEmpty)
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                        color: Colors.black54,
-                        child: Text(
-                          img.description!,
-                          style: TextStyle(color: Colors.white, fontSize: 10),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
-                  Positioned(
-                    top: 2,
-                    right: 2,
-                    child: GestureDetector(
-                      onTap: () => _removeImage(
-                        context.read<EmbossingPlateViewModel>(),
-                        img,
-                      ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.error,
-                          shape: BoxShape.circle,
-                        ),
-                        padding: EdgeInsets.all(2),
-                        child: Icon(Icons.close, color: Colors.white, size: 14),
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            }).toList(),
-          ),
-        SizedBox(height: sectionSpacing),
-        if (_uploadingImage)
-          const Center(child: CircularProgressIndicator())
-        else
-          Align(
-            alignment: Alignment.centerLeft,
-            child: PageActionButton.outlined(
-              onPressed: () =>
-                  _pickAndUploadImage(context.read<EmbossingPlateViewModel>()),
-              icon: const Icon(Icons.add_photo_alternate, size: 16),
-              label: '上传图片',
-            ),
-          ),
-      ],
+    return ImageGalleryUploadSection<EmbossingPlateImage>(
+      images: _images,
+      canUpload: true,
+      uploading: _uploadingImage,
+      maxCount: _maxImageCount,
+      limitHintText: '支持 JPG、PNG、WebP、GIF，单张不超过 10MB，最多 $_maxImageCount 张',
+      unsavedHintText: '请先保存压凸版后再上传图片',
+      emptyText: '暂无图片，点击下方按钮上传',
+      imageUrlBuilder: (image) => image.imageUrl,
+      descriptionBuilder: (image) => image.description,
+      onUpload: () =>
+          _pickAndUploadImage(context.read<EmbossingPlateViewModel>()),
+      onDelete: (image) =>
+          _removeImage(context.read<EmbossingPlateViewModel>(), image),
     );
   }
 
   Future<void> _pickAndUploadImage(EmbossingPlateViewModel viewModel) async {
-    if (widget.plate == null) return;
+    if (_images.length >= _maxImageCount) {
+      ToastUtil.showError('图片最多上传 $_maxImageCount 张');
+      return;
+    }
     setState(() => _uploadingImage = true);
     try {
       final multipartFile = await pickMultipartFile(
         allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
         fallbackFilename: 'embossing_plate_image.jpg',
+        maxBytes: _maxImageBytes,
       );
       if (multipartFile == null) {
         if (mounted) setState(() => _uploadingImage = false);
         return;
       }
+      final savedPlate = await _persistPlate(viewModel);
       final image = await viewModel.uploadEmbossingPlateImage(
-        widget.plate!.id,
+        savedPlate.id,
         multipartFile,
         sortOrder: _images.length,
       );
@@ -476,9 +412,10 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
 
   Future<void> _removeImage(
       EmbossingPlateViewModel viewModel, EmbossingPlateImage image) async {
-    if (widget.plate == null) return;
+    final plate = _plate;
+    if (plate == null) return;
     try {
-      await viewModel.deleteEmbossingPlateImage(widget.plate!.id, image.id);
+      await viewModel.deleteEmbossingPlateImage(plate.id, image.id);
       if (mounted) {
         setState(() => _images.remove(image));
         ToastUtil.showSuccess('图片已删除');
@@ -490,10 +427,11 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isConfirmed = widget.plate?.confirmed == true;
+    final currentPlate = _plate;
+    final isConfirmed = currentPlate?.confirmed == true;
 
     return CrudDrawerEditPanel<EmbossingPlate, EmbossingPlateViewModel>(
-      item: widget.plate,
+      item: currentPlate,
       onSaved: widget.onSaved,
       config: CrudEditConfig<EmbossingPlate, EmbossingPlateViewModel>(
         submitText: _submitText,

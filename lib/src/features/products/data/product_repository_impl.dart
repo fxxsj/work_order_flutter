@@ -1,5 +1,7 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/features/products/data/product_api_service.dart';
 import 'package:work_order_app/src/features/products/data/product_dto.dart';
+import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/products/domain/product_repository.dart';
 
 class ProductRepositoryImpl implements ProductRepository {
@@ -29,5 +31,25 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<void> deleteProduct(int id) {
     return _apiService.deleteProduct(id);
+  }
+
+  @override
+  Future<ProductImage> uploadProductImage(
+    int productId,
+    MultipartFile imageFile, {
+    int sortOrder = 0,
+    String? description,
+  }) {
+    return _apiService.uploadImage(
+      productId,
+      imageFile,
+      sortOrder: sortOrder,
+      description: description,
+    );
+  }
+
+  @override
+  Future<void> deleteProductImage(int productId, int imageId) {
+    return _apiService.deleteImage(productId, imageId);
   }
 }

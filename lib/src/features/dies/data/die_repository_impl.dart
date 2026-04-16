@@ -30,13 +30,15 @@ class DieRepositoryImpl implements DieRepository {
   }
 
   @override
-  Future<void> createDie(Die die) async {
-    await _api.createDie(DieDto.fromEntity(die));
+  Future<Die> createDie(Die die) async {
+    final dto = await _api.createDie(DieDto.fromEntity(die));
+    return dto.toEntity();
   }
 
   @override
-  Future<void> updateDie(Die die) async {
-    await _api.updateDie(DieDto.fromEntity(die));
+  Future<Die> updateDie(Die die) async {
+    final dto = await _api.updateDie(DieDto.fromEntity(die));
+    return dto.toEntity();
   }
 
   @override

@@ -9,9 +9,9 @@ abstract class FoilingPlateRepository {
     String? search,
   });
 
-  Future<void> createFoilingPlate(FoilingPlate plate);
+  Future<FoilingPlate> createFoilingPlate(FoilingPlate plate);
 
-  Future<void> updateFoilingPlate(FoilingPlate plate);
+  Future<FoilingPlate> updateFoilingPlate(FoilingPlate plate);
 
   Future<void> deleteFoilingPlate(int id);
 

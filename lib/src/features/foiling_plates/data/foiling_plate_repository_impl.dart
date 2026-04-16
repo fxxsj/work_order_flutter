@@ -30,13 +30,15 @@ class FoilingPlateRepositoryImpl implements FoilingPlateRepository {
   }
 
   @override
-  Future<void> createFoilingPlate(FoilingPlate plate) async {
-    await _api.createFoilingPlate(FoilingPlateDto.fromEntity(plate));
+  Future<FoilingPlate> createFoilingPlate(FoilingPlate plate) async {
+    final dto = await _api.createFoilingPlate(FoilingPlateDto.fromEntity(plate));
+    return dto.toEntity();
   }
 
   @override
-  Future<void> updateFoilingPlate(FoilingPlate plate) async {
-    await _api.updateFoilingPlate(FoilingPlateDto.fromEntity(plate));
+  Future<FoilingPlate> updateFoilingPlate(FoilingPlate plate) async {
+    final dto = await _api.updateFoilingPlate(FoilingPlateDto.fromEntity(plate));
+    return dto.toEntity();
   }
 
   @override

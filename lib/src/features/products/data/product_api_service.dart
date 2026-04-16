@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/products/data/product_dto.dart';
@@ -128,5 +129,40 @@ class ProductApiService {
 
   Future<void> deleteProduct(int id) async {
     await _client.delete('/products/$id/');
+  }
+
+  Future<ProductImage> uploadImage(
+    int productId,
+    MultipartFile imageFile, {
+    int sortOrder = 0,
+    String? description,
+  }) async {
+    final formData = FormData.fromMap({
+      'image': imageFile,
+      'sort_order': sortOrder,
+      if (description != null && description.isNotEmpty) 'description': description,
+    });
+    final response = await _client.requestRaw(
+      '/products/$productId/upload_image/',
+      method: 'post',
+      data: formData,
+    );
+    final body = response.data;
+    final map = body is Map
+        ? (body['data'] is Map
+            ? Map<String, dynamic>.from(body['data'])
+            : Map<String, dynamic>.from(body))
+        : <String, dynamic>{};
+    return ProductImage(
+      id: toInt(map['id']) ?? 0,
+      imageUrl: map['image']?.toString() ?? '',
+      sortOrder: toInt(map['sort_order']) ?? 0,
+      description: toStringOrNull(map['description']),
+      createdAt: toDateTime(map['created_at']),
+    );
+  }
+
+  Future<void> deleteImage(int productId, int imageId) async {
+    await _client.delete('/products/$productId/images/$imageId/');
   }
 }

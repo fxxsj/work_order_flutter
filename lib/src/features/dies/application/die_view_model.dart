@@ -25,14 +25,16 @@ class DieViewModel extends PaginatedViewModel<Die> {
     return _repository.getDies(page: page, pageSize: pageSize, search: search);
   }
 
-  Future<void> createDie(Die die) async {
-    await _repository.createDie(die);
+  Future<Die> createDie(Die die) async {
+    final saved = await _repository.createDie(die);
     await loadItems(resetPage: true);
+    return saved;
   }
 
-  Future<void> updateDie(Die die) async {
-    await _repository.updateDie(die);
+  Future<Die> updateDie(Die die) async {
+    final saved = await _repository.updateDie(die);
     await loadItems();
+    return saved;
   }
 
   Future<void> deleteDie(int id) async {

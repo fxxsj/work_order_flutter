@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/crud_drawer_
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/image_gallery_upload_section.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
@@ -58,6 +59,8 @@ class ArtworkEditPage extends StatefulWidget {
 }
 
 class _ArtworkEditPageState extends State<ArtworkEditPage> {
+  static const int _maxImageCount = 12;
+  static const int _maxImageBytes = 10 * 1024 * 1024;
   static const String _baseCodeLabel = '图稿主编码';
   static const String _versionLabel = '版本号';
   static const String _nameLabel = '图稿名称';
@@ -105,11 +108,14 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
   final List<_ArtworkProductItem> _productItems = [];
   final List<ArtworkImage> _images = [];
   bool _uploadingImage = false;
+  Artwork? _savedArtwork;
+
+  Artwork? get _artwork => _savedArtwork ?? widget.artwork;
 
   @override
   void initState() {
     super.initState();
-    final artwork = widget.artwork;
+    final artwork = _artwork;
     _baseCodeController = TextEditingController(text: artwork?.baseCode ?? '');
     _nameController = TextEditingController(text: artwork?.name ?? '');
     _impositionController =
@@ -251,6 +257,11 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
   }
 
   Future<void> _handleSubmit(ArtworkViewModel viewModel) async {
+    await _persistArtwork(viewModel);
+  }
+
+  Future<Artwork> _persistArtwork(ArtworkViewModel viewModel) async {
+    final currentArtwork = _artwork;
     final products = _productItems
         .where((item) => item.productId != null)
         .map(
@@ -263,55 +274,62 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
         .toList();
 
     final payload = Artwork(
-      id: widget.artwork?.id ?? 0,
+      id: currentArtwork?.id ?? 0,
       baseCode: _baseCodeController.text.trim().isEmpty
           ? null
           : _baseCodeController.text.trim(),
-      version: widget.artwork?.version,
+      version: currentArtwork?.version,
       name: _nameController.text.trim(),
       cmykColors: _selectedCmyk.toList(),
       otherColors: List<String>.from(_otherColors),
       impositionSize: _impositionController.text.trim(),
       notes: _notesController.text.trim(),
-      confirmed: widget.artwork?.confirmed ?? false,
-      confirmedByName: widget.artwork?.confirmedByName,
-      confirmedAt: widget.artwork?.confirmedAt,
+      confirmed: currentArtwork?.confirmed ?? false,
+      confirmedByName: currentArtwork?.confirmedByName,
+      confirmedAt: currentArtwork?.confirmedAt,
       dieIds: _selectedDieIds.toList(),
       foilingPlateIds: _selectedFoilingIds.toList(),
       embossingPlateIds: _selectedEmbossingIds.toList(),
-      code: widget.artwork?.code,
-      colorDisplay: widget.artwork?.colorDisplay,
-      dieCodes: widget.artwork?.dieCodes ?? const [],
-      dieNames: widget.artwork?.dieNames ?? const [],
-      foilingPlateCodes: widget.artwork?.foilingPlateCodes ?? const [],
-      foilingPlateNames: widget.artwork?.foilingPlateNames ?? const [],
-      embossingPlateCodes: widget.artwork?.embossingPlateCodes ?? const [],
-      embossingPlateNames: widget.artwork?.embossingPlateNames ?? const [],
+      code: currentArtwork?.code,
+      colorDisplay: currentArtwork?.colorDisplay,
+      dieCodes: currentArtwork?.dieCodes ?? const [],
+      dieNames: currentArtwork?.dieNames ?? const [],
+      foilingPlateCodes: currentArtwork?.foilingPlateCodes ?? const [],
+      foilingPlateNames: currentArtwork?.foilingPlateNames ?? const [],
+      embossingPlateCodes: currentArtwork?.embossingPlateCodes ?? const [],
+      embossingPlateNames: currentArtwork?.embossingPlateNames ?? const [],
       products: products,
-      createdAt: widget.artwork?.createdAt,
+      createdAt: currentArtwork?.createdAt,
     );
 
-    if (widget.artwork == null) {
-      await viewModel.createArtwork(payload);
-    } else {
-      await viewModel.updateArtwork(payload);
+    final saved = currentArtwork == null
+        ? await viewModel.createArtwork(payload)
+        : await viewModel.updateArtwork(payload);
+    if (mounted) {
+      setState(() => _savedArtwork = saved);
     }
+    return saved;
   }
 
   Future<void> _pickAndUploadImage(ArtworkViewModel viewModel) async {
-    if (widget.artwork == null) return;
+    if (_images.length >= _maxImageCount) {
+      ToastUtil.showError('图片最多上传 $_maxImageCount 张');
+      return;
+    }
     setState(() => _uploadingImage = true);
     try {
       final multipartFile = await pickMultipartFile(
         allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
         fallbackFilename: 'artwork_image.jpg',
+        maxBytes: _maxImageBytes,
       );
       if (multipartFile == null) {
         if (mounted) setState(() => _uploadingImage = false);
         return;
       }
+      final savedArtwork = await _persistArtwork(viewModel);
       final image = await viewModel.uploadArtworkImage(
-        widget.artwork!.id,
+        savedArtwork.id,
         multipartFile,
         sortOrder: _images.length,
       );
@@ -328,9 +346,10 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
 
   Future<void> _removeImage(
       ArtworkViewModel viewModel, ArtworkImage image) async {
-    if (widget.artwork == null) return;
+    final artwork = _artwork;
+    if (artwork == null) return;
     try {
-      await viewModel.deleteArtworkImage(widget.artwork!.id, image.id);
+      await viewModel.deleteArtworkImage(artwork.id, image.id);
       if (mounted) {
         setState(() => _images.remove(image));
         ToastUtil.showSuccess('图片已删除');
@@ -343,7 +362,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
   Widget _buildVersionField(BuildContext context) {
     return CrudFormField.text(
       label: _versionLabel,
-      initialValue: widget.artwork?.version?.toString() ?? '1',
+      initialValue: _artwork?.version?.toString() ?? '1',
       enabled: false,
     ).build(context);
   }
@@ -463,111 +482,27 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
   }
 
   Widget _buildImageSection(BuildContext context) {
-    final theme = Theme.of(context);
-    final sectionSpacing = LayoutTokens.formSectionSpacing(context);
-    final colors = theme.extension<AppColors>();
-    final subtleText = colors?.subtleText ?? theme.hintColor;
-
-    if (widget.artwork == null) {
-      return Text(
-        '请先保存图稿后再上传图片',
-        style: theme.textTheme.bodySmall?.copyWith(color: subtleText),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (_images.isEmpty)
-          Text(
-            '暂无图片，点击下方按钮上传',
-            style: theme.textTheme.bodySmall?.copyWith(color: subtleText),
-          )
-        else
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _images.map((img) {
-              return Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      img.imageUrl,
-                      width: 100,
-                      height: 100,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(Icons.broken_image, color: subtleText),
-                      ),
-                    ),
-                  ),
-                  if (img.description != null && img.description!.isNotEmpty)
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                        color: Colors.black54,
-                        child: Text(
-                          img.description!,
-                          style: TextStyle(color: Colors.white, fontSize: 10),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
-                  Positioned(
-                    top: 2,
-                    right: 2,
-                    child: GestureDetector(
-                      onTap: () => _removeImage(
-                        context.read<ArtworkViewModel>(),
-                        img,
-                      ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.error,
-                          shape: BoxShape.circle,
-                        ),
-                        padding: EdgeInsets.all(2),
-                        child: Icon(Icons.close, color: Colors.white, size: 14),
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            }).toList(),
-          ),
-        SizedBox(height: sectionSpacing),
-        if (_uploadingImage)
-          const Center(child: CircularProgressIndicator())
-        else
-          Align(
-            alignment: Alignment.centerLeft,
-            child: PageActionButton.outlined(
-              onPressed: () =>
-                  _pickAndUploadImage(context.read<ArtworkViewModel>()),
-              icon: const Icon(Icons.add_photo_alternate, size: 16),
-              label: '上传图片',
-            ),
-          ),
-      ],
+    return ImageGalleryUploadSection<ArtworkImage>(
+      images: _images,
+      canUpload: true,
+      uploading: _uploadingImage,
+      maxCount: _maxImageCount,
+      limitHintText: '支持 JPG、PNG、WebP、GIF，单张不超过 10MB，最多 $_maxImageCount 张',
+      unsavedHintText: '请先保存图稿后再上传图片',
+      emptyText: '暂无图片，点击下方按钮上传',
+      imageUrlBuilder: (image) => image.imageUrl,
+      descriptionBuilder: (image) => image.description,
+      onUpload: () => _pickAndUploadImage(context.read<ArtworkViewModel>()),
+      onDelete: (image) =>
+          _removeImage(context.read<ArtworkViewModel>(), image),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final currentArtwork = _artwork;
     return CrudDrawerEditPanel<Artwork, ArtworkViewModel>(
-      item: widget.artwork,
+      item: currentArtwork,
       onSaved: widget.onSaved,
       config: CrudEditConfig<Artwork, ArtworkViewModel>(
         submitText: _submitText,
@@ -582,9 +517,9 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                 label: _baseCodeLabel,
                 controller: _baseCodeController,
                 hintText: '留空则系统自动生成',
-                enabled: widget.artwork == null,
+                enabled: currentArtwork == null,
               ),
-              if (widget.artwork != null)
+              if (currentArtwork != null)
                 CrudFormField.custom(
                   builder: _buildVersionField,
                 ),
@@ -652,16 +587,15 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                 ),
             ],
           ),
-          if (widget.artwork != null)
-            CrudFormSection(
-              title: '图稿图片',
-              column: 0,
-              fields: [
-                CrudFormField.custom(
-                  builder: _buildImageSection,
-                ),
-              ],
-            ),
+          CrudFormSection(
+            title: '图稿图片',
+            column: 0,
+            fields: [
+              CrudFormField.custom(
+                builder: _buildImageSection,
+              ),
+            ],
+          ),
           CrudFormSection(
             title: _extraSectionTitle,
             column: isMobile ? 0 : 1,

@@ -20,6 +20,7 @@ class ProductDto {
     this.isActive,
     this.defaultProcessIds = const [],
     this.defaultMaterials = const [],
+    this.images = const [],
   });
 
   final int id;
@@ -39,6 +40,7 @@ class ProductDto {
   final bool? isActive;
   final List<int> defaultProcessIds;
   final List<ProductMaterialItem> defaultMaterials;
+  final List<ProductImage> images;
 
   factory ProductDto.fromJson(Map<String, dynamic> json) {
     final processes = json['default_processes'];
@@ -56,6 +58,22 @@ class ProductDto {
                 ProductMaterialItem.fromJson(Map<String, dynamic>.from(item)))
             .toList()
         : const <ProductMaterialItem>[];
+    final images = json['images'];
+    final imageItems = images is List
+        ? images
+            .whereType<Map>()
+            .map((item) {
+              final map = Map<String, dynamic>.from(item);
+              return ProductImage(
+                id: toInt(map['id']) ?? 0,
+                imageUrl: toStringOrNull(map['image']) ?? '',
+                sortOrder: toInt(map['sort_order']) ?? 0,
+                description: toStringOrNull(map['description']),
+                createdAt: toDateTime(map['created_at']),
+              );
+            })
+            .toList()
+        : const <ProductImage>[];
     return ProductDto(
       id: toInt(json['id']) ?? 0,
       code: json['code']?.toString() ?? '',
@@ -74,6 +92,7 @@ class ProductDto {
       isActive: json['is_active'] == null ? null : json['is_active'] == true,
       defaultProcessIds: processIds,
       defaultMaterials: materialItems,
+      images: imageItems,
     );
   }
 
@@ -114,6 +133,7 @@ class ProductDto {
       isActive: isActive,
       defaultProcessIds: defaultProcessIds,
       defaultMaterials: defaultMaterials,
+      images: images,
     );
   }
 
@@ -144,6 +164,7 @@ extension ProductMapper on Product {
       isActive: isActive,
       defaultProcessIds: defaultProcessIds,
       defaultMaterials: defaultMaterials,
+      images: images,
     );
   }
 }

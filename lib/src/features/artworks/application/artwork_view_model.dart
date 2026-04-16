@@ -25,14 +25,16 @@ class ArtworkViewModel extends PaginatedViewModel<Artwork> {
     return _repository.getArtworks(page: page, pageSize: pageSize, search: search);
   }
 
-  Future<void> createArtwork(Artwork artwork) async {
-    await _repository.createArtwork(artwork);
+  Future<Artwork> createArtwork(Artwork artwork) async {
+    final saved = await _repository.createArtwork(artwork);
     await loadItems(resetPage: true);
+    return saved;
   }
 
-  Future<void> updateArtwork(Artwork artwork) async {
-    await _repository.updateArtwork(artwork);
+  Future<Artwork> updateArtwork(Artwork artwork) async {
+    final saved = await _repository.updateArtwork(artwork);
     await loadItems();
+    return saved;
   }
 
   Future<void> deleteArtwork(int id) async {

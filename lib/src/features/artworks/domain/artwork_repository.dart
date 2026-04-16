@@ -9,9 +9,9 @@ abstract class ArtworkRepository {
     String? search,
   });
 
-  Future<void> createArtwork(Artwork artwork);
+  Future<Artwork> createArtwork(Artwork artwork);
 
-  Future<void> updateArtwork(Artwork artwork);
+  Future<Artwork> updateArtwork(Artwork artwork);
 
   Future<void> deleteArtwork(int id);
 
