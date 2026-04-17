@@ -366,12 +366,23 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
           .map(
             (workOrder) => DataRow(
               cells: [
-                DataCell(Text(
-                  workOrder.orderNumber.isEmpty
-                      ? '施工单 #${workOrder.id}'
-                      : workOrder.orderNumber,
-                  style: theme.textTheme.bodyMedium,
-                )),
+                DataCell(
+                  InkWell(
+                    onTap: () => context.go('/workorders/${workOrder.id}'),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Text(
+                        workOrder.orderNumber.isEmpty
+                            ? '施工单 #${workOrder.id}'
+                            : workOrder.orderNumber,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
                 DataCell(Text(workOrder.customerName ?? _emptyCellText,
                     style: textStyle)),
                 DataCell(Text(workOrder.productName ?? _emptyCellText,
@@ -414,11 +425,6 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
                 )),
                 DataCell(RowActionGroup(
                   actions: [
-                    RowAction(
-                      label: '查看',
-                      onPressed: () =>
-                          context.go('/workorders/${workOrder.id}'),
-                    ),
                     if (canChangeWorkOrder)
                       RowAction(
                         label: '编辑',
@@ -481,11 +487,17 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: colors?.sidebarText,
+                  InkWell(
+                    onTap: () => context.go('/workorders/${workOrder.id}'),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Text(
+                        title,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
                     ),
                   ),
                   SizedBox(height: sectionSpacing),
@@ -561,11 +573,6 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
             spacing: 8,
             runSpacing: 8,
             children: [
-              OutlinedButton.icon(
-                onPressed: () => context.go('/workorders/${workOrder.id}'),
-                icon: const Icon(Icons.open_in_new, size: 16),
-                label: const Text('查看'),
-              ),
               if (canChangeWorkOrder)
                 OutlinedButton.icon(
                   onPressed: () =>

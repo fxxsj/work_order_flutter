@@ -482,12 +482,23 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
           .map(
             (order) => DataRow(
               cells: [
-                DataCell(Text(
-                  order.orderNumber.isEmpty
-                      ? '客户订单 #${order.id}'
-                      : order.orderNumber,
-                  style: theme.textTheme.bodyMedium,
-                )),
+                DataCell(
+                  InkWell(
+                    onTap: () => context.go('/sales-orders/${order.id}'),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Text(
+                        order.orderNumber.isEmpty
+                            ? '客户订单 #${order.id}'
+                            : order.orderNumber,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
                 DataCell(
                     Text(_displayText(order.customerName), style: textStyle)),
                 DataCell(Text(
@@ -535,11 +546,6 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     final viewModel = context.read<SalesOrderViewModel>();
     final status = order.status ?? '';
     final actions = <RowAction>[
-      RowAction(
-        label: '查看',
-        icon: Icons.visibility_outlined,
-        onPressed: () => context.go('/sales-orders/${order.id}'),
-      ),
       if (canChangeSalesOrder && (status == 'draft' || status == 'rejected'))
         RowAction(
           label: '编辑',
@@ -862,11 +868,17 @@ class _SalesOrderSummaryCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: colors?.sidebarText,
+                  InkWell(
+                    onTap: () => context.go('/sales-orders/${order.id}'),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Text(
+                        title,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
                     ),
                   ),
                   SizedBox(height: sectionSpacing),
