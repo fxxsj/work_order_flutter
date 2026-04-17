@@ -4,6 +4,7 @@
 .gradle/
 .packages
 /build/
+/dist/
 
 *.iml
 .metadata

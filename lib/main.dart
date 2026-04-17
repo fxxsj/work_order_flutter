@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:work_order_app/app.dart';
+import 'package:work_order_app/src/core/common/app_metadata.dart';
 import 'package:work_order_app/src/features/notification/data/notification_api.dart';
 import 'package:work_order_app/src/features/auth/application/auth_controller.dart';
 import 'package:work_order_app/src/features/notification/application/notification_view_model.dart';
@@ -55,7 +56,8 @@ class _MyAppState extends State<MyApp> {
     )..initialize();
     _appBadgeController = AppBadgeController();
     _router = createAppRouter(_authController);
-    _appEventController = AppEventController(_authController, _router)..initialize();
+    _appEventController = AppEventController(_authController, _router)
+      ..initialize();
   }
 
   @override
@@ -87,7 +89,7 @@ class _MyAppState extends State<MyApp> {
             routeInformationProvider: _router.routeInformationProvider,
             scrollBehavior: const AppScrollBehavior(),
             debugShowCheckedModeBanner: false,
-            title: '新西彩订单管理',
+            title: AppMetadata.displayName,
             theme: Utils.getThemeData(
               themeColor: theme.seedColor,
               brightness: Brightness.light,
