@@ -24,6 +24,7 @@ class PaymentPlanListEntry extends StatelessWidget {
         emptyText: '暂无收款计划',
         emptyIcon: Icons.event_note_outlined,
         enableSummary: true,
+        openDetailsOnPrimaryTap: true,
         columns: const [
           GenericColumn(label: '客户订单号', value: _salesOrderNumber),
           GenericColumn(label: '客户', value: _customerName),
@@ -48,11 +49,6 @@ class PaymentPlanListEntry extends StatelessWidget {
         headerActionsBuilder: _buildHeaderActions,
         rowActionsBuilder: (context, record, openDetails) {
           return [
-            RowAction(
-              label: '查看',
-              icon: Icons.visibility_outlined,
-              onPressed: openDetails,
-            ),
             RowAction(
               label: '更新状态',
               icon: Icons.refresh_outlined,

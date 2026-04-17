@@ -26,6 +26,7 @@ class StockInListEntry extends StatelessWidget {
         emptyText: '暂无入库单',
         emptyIcon: Icons.inventory_2_outlined,
         enableSummary: true,
+        openDetailsOnPrimaryTap: true,
         columns: const [
           GenericColumn(label: '入库单号', value: _orderNumber),
           GenericColumn(label: '客户', value: _customerName),
@@ -49,7 +50,6 @@ class StockInListEntry extends StatelessWidget {
         headerActionsBuilder: _buildHeaderActions,
         rowActionsBuilder: (context, record, openDetails) {
           final actions = <RowAction>[
-            RowAction(label: '查看', onPressed: openDetails),
             RowAction(
               label: '编辑',
               icon: Icons.edit_outlined,

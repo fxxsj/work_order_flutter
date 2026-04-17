@@ -839,12 +839,23 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
 
           return DataRow(
             cells: [
-              DataCell(Text(
-                order.orderNumber.isEmpty
-                    ? '发货单 #${order.id}'
-                    : order.orderNumber,
-                style: theme.textTheme.bodyMedium,
-              )),
+              DataCell(
+                InkWell(
+                  onTap: () => _openDetailDialog(order),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Text(
+                      order.orderNumber.isEmpty
+                          ? '发货单 #${order.id}'
+                          : order.orderNumber,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
               DataCell(
                   Text(_displayText(order.customerName), style: textStyle)),
               DataCell(
@@ -885,10 +896,6 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
                     label: '上传签收附件',
                     icon: Icons.upload_file_outlined,
                     onPressed: () => _uploadReceiverSignature(viewModel, order),
-                  ),
-                  RowAction(
-                    label: '查看',
-                    onPressed: () => _openDetailDialog(order),
                   ),
                   if (canEdit)
                     RowAction(
@@ -1206,11 +1213,17 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    number,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: colors?.sidebarText,
+                  InkWell(
+                    onTap: () => _openDetailDialog(order),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Text(
+                        number,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
                     ),
                   ),
                   SizedBox(height: sectionSpacing),
@@ -1307,11 +1320,6 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
                 onPressed: () => _uploadReceiverSignature(viewModel, order),
                 icon: const Icon(Icons.upload_file_outlined, size: 16),
                 label: const Text('上传签收附件'),
-              ),
-              OutlinedButton.icon(
-                onPressed: () => _openDetailDialog(order),
-                icon: const Icon(Icons.visibility_outlined, size: 16),
-                label: const Text('查看'),
               ),
               if (canEdit)
                 OutlinedButton.icon(

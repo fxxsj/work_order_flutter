@@ -726,10 +726,21 @@ class _QualityInspectionListViewState
           final canComplete = (inspection.result ?? 'pending') == 'pending';
           return DataRow(
             cells: [
-              DataCell(Text(
-                _displayText(inspection.inspectionNumber),
-                style: theme.textTheme.bodyMedium,
-              )),
+              DataCell(
+                InkWell(
+                  onTap: () => _openDetailDialog(inspection),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Text(
+                      _displayText(inspection.inspectionNumber),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
               DataCell(
                   Text(_qualitySourceSummary(inspection), style: textStyle)),
               DataCell(
@@ -765,10 +776,6 @@ class _QualityInspectionListViewState
                     label: _hasAttachment(inspection) ? '更新附件' : '上传附件',
                     icon: Icons.upload_file_outlined,
                     onPressed: () => _uploadAttachment(viewModel, inspection),
-                  ),
-                  RowAction(
-                    label: '查看',
-                    onPressed: () => _openDetailDialog(inspection),
                   ),
                   if ((inspection.workOrderNumber ?? '').trim().isNotEmpty &&
                       (inspection.result ?? '') != 'pending')
@@ -1053,11 +1060,17 @@ class _QualityInspectionListViewState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    number,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: colors?.sidebarText,
+                  InkWell(
+                    onTap: () => _openDetailDialog(inspection),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Text(
+                        number,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
                     ),
                   ),
                   SizedBox(height: sectionSpacing),
@@ -1153,11 +1166,6 @@ class _QualityInspectionListViewState
                 onPressed: () => _uploadAttachment(viewModel, inspection),
                 icon: const Icon(Icons.upload_file_outlined, size: 16),
                 label: Text(_hasAttachment(inspection) ? '更新附件' : '上传附件'),
-              ),
-              OutlinedButton.icon(
-                onPressed: () => _openDetailDialog(inspection),
-                icon: const Icon(Icons.visibility_outlined, size: 16),
-                label: const Text('查看'),
               ),
               if ((inspection.workOrderNumber ?? '').trim().isNotEmpty &&
                   (inspection.result ?? '') != 'pending')

@@ -676,12 +676,23 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
           .map(
             (order) => DataRow(
               cells: [
-                DataCell(Text(
-                  order.orderNumber.isEmpty
-                      ? '采购单 #${order.id}'
-                      : order.orderNumber,
-                  style: theme.textTheme.bodyMedium,
-                )),
+                DataCell(
+                  InkWell(
+                    onTap: () => _openDetailDialog(order),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Text(
+                        order.orderNumber.isEmpty
+                            ? '采购单 #${order.id}'
+                            : order.orderNumber,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
                 DataCell(
                     Text(_displayText(order.supplierName), style: textStyle)),
                 DataCell(Text(
@@ -702,10 +713,6 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
                     style: textStyle)),
                 DataCell(RowActionGroup(
                   actions: [
-                    RowAction(
-                      label: '查看',
-                      onPressed: () => _openDetailDialog(order),
-                    ),
                     if ((order.status ?? '') == 'draft')
                       RowAction(
                         label: '编辑',
@@ -886,11 +893,17 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    number,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: colors?.sidebarText,
+                  InkWell(
+                    onTap: () => _openDetailDialog(order),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Text(
+                        number,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
                     ),
                   ),
                   SizedBox(height: sectionSpacing),
@@ -948,11 +961,6 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              OutlinedButton.icon(
-                onPressed: () => _openDetailDialog(order),
-                icon: const Icon(Icons.visibility_outlined, size: 16),
-                label: const Text('查看'),
-              ),
               if (canEdit)
                 OutlinedButton.icon(
                   onPressed: () => _openFormDialog(viewModel, order: order),

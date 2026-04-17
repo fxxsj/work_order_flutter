@@ -29,6 +29,7 @@ class StockOutListEntry extends StatelessWidget {
         emptyText: '暂无出库单',
         emptyIcon: Icons.exit_to_app_outlined,
         enableSummary: true,
+        openDetailsOnPrimaryTap: true,
         columns: const [
           GenericColumn(label: '出库单号', value: _orderNumber),
           GenericColumn(label: '客户', value: _customerName),
@@ -52,7 +53,6 @@ class StockOutListEntry extends StatelessWidget {
         headerActionsBuilder: _buildHeaderActions,
         rowActionsBuilder: (context, record, openDetails) {
           final actions = <RowAction>[
-            RowAction(label: '查看', onPressed: openDetails),
             RowAction(
               label: '编辑',
               icon: Icons.edit_outlined,

@@ -389,10 +389,21 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
           .map(
             (stock) => DataRow(
               cells: [
-                DataCell(Text(
-                  _displayText(stock.productName),
-                  style: theme.textTheme.bodyMedium,
-                )),
+                DataCell(
+                  InkWell(
+                    onTap: () => _openDetailDialog(stock),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Text(
+                        _displayText(stock.productName),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
                 DataCell(Text(_sourceSummary(stock), style: textStyle)),
                 DataCell(Text(_displayText(stock.batchNo), style: textStyle)),
                 DataCell(Text(
@@ -417,10 +428,6 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
                         icon: Icons.local_shipping_outlined,
                         onPressed: () => _openDeliveryList(stock.customerName!),
                       ),
-                    RowAction(
-                      label: '查看',
-                      onPressed: () => _openDetailDialog(stock),
-                    ),
                     RowAction(
                       label: _adjustTitle,
                       onPressed: () =>
@@ -704,11 +711,17 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    productName,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: colors?.sidebarText,
+                  InkWell(
+                    onTap: () => _openDetailDialog(stock),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Text(
+                        productName,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
                     ),
                   ),
                   SizedBox(height: sectionSpacing),
@@ -773,11 +786,6 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
                   icon: const Icon(Icons.local_shipping_outlined, size: 16),
                   label: const Text('去发货'),
                 ),
-              OutlinedButton.icon(
-                onPressed: () => _openDetailDialog(stock),
-                icon: const Icon(Icons.visibility_outlined, size: 16),
-                label: const Text('查看'),
-              ),
               OutlinedButton.icon(
                 onPressed: () => _openAdjustDialog(context, viewModel, stock),
                 icon: const Icon(Icons.tune, size: 16),

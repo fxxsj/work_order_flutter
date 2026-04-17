@@ -48,6 +48,7 @@ class GenericResourceConfig {
     this.headerActionsBuilder,
     this.extraParamsBuilder,
     this.enableSummary = false,
+    this.openDetailsOnPrimaryTap = false,
   });
 
   final String id;
@@ -79,6 +80,7 @@ class GenericResourceConfig {
   )? headerActionsBuilder;
   final Map<String, dynamic> Function(Uri uri)? extraParamsBuilder;
   final bool enableSummary;
+  final bool openDetailsOnPrimaryTap;
 }
 
 class GenericColumn {
@@ -388,11 +390,27 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
         final actions = _resolveRowActions(context, record);
         return DataRow(
           cells: [
-            for (final column in widget.config.columns)
-              DataCell(Text(
-                column.value(record),
-                style: textStyle,
-              )),
+            for (var index = 0; index < widget.config.columns.length; index++)
+              DataCell(
+                index == 0 && widget.config.openDetailsOnPrimaryTap
+                    ? InkWell(
+                        onTap: () => _openDetails(context, record),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Text(
+                            widget.config.columns[index].value(record),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      )
+                    : Text(
+                        widget.config.columns[index].value(record),
+                        style: textStyle,
+                      ),
+              ),
             if (hasActions)
               DataCell(
                 actions.isEmpty
@@ -430,13 +448,27 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              titleBuilder(record),
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: colors?.sidebarText,
-              ),
-            ),
+            widget.config.openDetailsOnPrimaryTap
+                ? InkWell(
+                    onTap: () => _openDetails(context, record),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Text(
+                        titleBuilder(record),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  )
+                : Text(
+                    titleBuilder(record),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: colors?.sidebarText,
+                    ),
+                  ),
             if (widget.config.enableDetails) ...[
               const SizedBox(height: LayoutTokens.gapSm),
               Text(
