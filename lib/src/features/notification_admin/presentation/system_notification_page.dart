@@ -2,10 +2,12 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/common/api_exception.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
+import 'package:work_order_app/src/features/auth/application/auth_controller.dart';
 
 class SystemNotificationPage extends StatefulWidget {
   const SystemNotificationPage({super.key});
@@ -16,6 +18,8 @@ class SystemNotificationPage extends StatefulWidget {
 
 class _SystemNotificationPageState extends State<SystemNotificationPage> {
   ApiClient? _apiClient;
+  AuthController? _authController;
+  bool _initialized = false;
 
   final TextEditingController _announcementTitleController =
       TextEditingController();
@@ -50,6 +54,14 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _apiClient ??= context.read<ApiClient>();
+    _authController ??= context.read<AuthController>();
+    if (!_initialized) {
+      _initialized = true;
+      Future.microtask(() async {
+        await _loadSettings();
+        await _loadStatus();
+      });
+    }
   }
 
   @override
@@ -87,13 +99,15 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
       if (expires != null) {
         data['expires_in_days'] = expires;
       }
-      final response = await _apiClient!.post(
-        '/system-notifications/create_announcement/',
-        data: data,
+      final response = await _runAuthorized(
+        () => _apiClient!.post(
+          '/system-notifications/create_announcement/',
+          data: data,
+        ),
       );
       setState(() => _announcementResult = _asMap(response.data));
     } catch (err) {
-      _showError('发送失败: $err');
+      _showRequestError('发送失败', err);
     } finally {
       if (mounted) setState(() => _loadingAnnouncement = false);
     }
@@ -117,13 +131,15 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
       if (recipients.isNotEmpty) {
         data['recipient_ids'] = recipients;
       }
-      final response = await _apiClient!.post(
-        '/system-notifications/send_urgent_alert/',
-        data: data,
+      final response = await _runAuthorized(
+        () => _apiClient!.post(
+          '/system-notifications/send_urgent_alert/',
+          data: data,
+        ),
       );
       setState(() => _alertResult = _asMap(response.data));
     } catch (err) {
-      _showError('发送失败: $err');
+      _showRequestError('发送失败', err);
     } finally {
       if (mounted) setState(() => _loadingAlert = false);
     }
@@ -132,8 +148,9 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
   Future<void> _loadSettings() async {
     setState(() => _loadingSettings = true);
     try {
-      final response =
-          await _apiClient!.get('/system-notifications/notification_settings/');
+      final response = await _runAuthorized(
+        () => _apiClient!.get('/system-notifications/notification_settings/'),
+      );
       final data = _asMap(response.data);
       setState(() {
         _settingsResult = data;
@@ -141,7 +158,7 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
             const JsonEncoder.withIndent('  ').convert(data);
       });
     } catch (err) {
-      _showError('获取设置失败: $err');
+      _showRequestError('获取设置失败', err);
     } finally {
       if (mounted) setState(() => _loadingSettings = false);
     }
@@ -156,13 +173,15 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
     setState(() => _loadingUpdateSettings = true);
     try {
       final data = jsonDecode(raw);
-      final response = await _apiClient!.post(
-        '/system-notifications/update_notification_settings/',
-        data: data,
+      final response = await _runAuthorized(
+        () => _apiClient!.post(
+          '/system-notifications/update_notification_settings/',
+          data: data,
+        ),
       );
       setState(() => _settingsResult = _asMap(response.data));
     } catch (err) {
-      _showError('更新失败: $err');
+      _showRequestError('更新失败', err);
     } finally {
       if (mounted) setState(() => _loadingUpdateSettings = false);
     }
@@ -171,13 +190,32 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
   Future<void> _loadStatus() async {
     setState(() => _loadingStatus = true);
     try {
-      final response =
-          await _apiClient!.get('/system-notifications/system_status/');
+      final response = await _runAuthorized(
+        () => _apiClient!.get('/system-notifications/system_status/'),
+      );
       setState(() => _statusResult = _asMap(response.data));
     } catch (err) {
-      _showError('获取状态失败: $err');
+      _showRequestError('获取状态失败', err);
     } finally {
       if (mounted) setState(() => _loadingStatus = false);
+    }
+  }
+
+  Future<T> _runAuthorized<T>(Future<T> Function() action) async {
+    final auth = _authController;
+    if (auth != null) {
+      final valid = await auth.ensureValidSession();
+      if (!valid) {
+        throw const ApiException(message: '登录状态已失效，请重新登录', statusCode: 401);
+      }
+    }
+    try {
+      return await action();
+    } on ApiException catch (err) {
+      if (err.statusCode == 401 && await (_apiClient?.refreshAccessToken() ?? Future.value(false))) {
+        return action();
+      }
+      rethrow;
     }
   }
 
@@ -202,6 +240,14 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
   void _showError(String message) {
     if (!mounted) return;
     ToastUtil.showError(message);
+  }
+
+  void _showRequestError(String prefix, Object err) {
+    if (err is ApiException && err.statusCode == 401) {
+      _showError('登录状态已失效，请重新登录');
+      return;
+    }
+    _showError('$prefix: $err');
   }
 
   @override

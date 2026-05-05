@@ -49,6 +49,8 @@ class CrudListConfig<T, VM extends PaginatedViewModel<T>> {
     this.summaryChipsBuilder,
     this.headerActionsBuilder,
     this.rowActionsBuilder,
+    this.onItemTap,
+    this.mobileFieldsBuilder,
     this.enableSearch = true,
     this.searchWidth = 300,
     this.spacing = LayoutTokens.gapSm,
@@ -72,6 +74,9 @@ class CrudListConfig<T, VM extends PaginatedViewModel<T>> {
   final CrudSummaryChipsBuilder<T>? summaryChipsBuilder;
   final CrudHeaderActionsBuilder<VM>? headerActionsBuilder;
   final CrudRowActionsBuilder<T, VM>? rowActionsBuilder;
+  final void Function(BuildContext context, T item)? onItemTap;
+  /// 自定义移动端展开区域的字段渲染，优先于 summaryFieldsBuilder。
+  final Widget Function(BuildContext context, T item)? mobileFieldsBuilder;
   final bool enableSearch;
   final double searchWidth;
   final double spacing;
@@ -341,6 +346,7 @@ class _CrudListPageState<T, VM extends PaginatedViewModel<T>>
 
     return ExpandableSummaryCard(
       headerBuilder: (context, expanded) {
+        final onItemTap = _config.onItemTap;
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -348,11 +354,18 @@ class _CrudListPageState<T, VM extends PaginatedViewModel<T>>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    _config.titleBuilder(item),
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: colors?.sidebarText,
+                  GestureDetector(
+                    onTap: onItemTap != null
+                        ? () => onItemTap(context, item)
+                        : null,
+                    child: Text(
+                      _config.titleBuilder(item),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: onItemTap != null
+                            ? theme.colorScheme.primary
+                            : colors?.sidebarText,
+                      ),
                     ),
                   ),
                   if (subtitle.isNotEmpty) ...[
@@ -402,17 +415,19 @@ class _CrudListPageState<T, VM extends PaginatedViewModel<T>>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (fields.isNotEmpty)
-                  SummaryFieldWrap(
-                    isMobile: isMobile,
-                    children: fields
-                        .map(
-                          (field) => SummaryField(
-                            label: field.label,
-                            value: field.value,
-                          ),
-                        )
-                        .toList(),
-                  ),
+                  isMobile && _config.mobileFieldsBuilder != null
+                      ? _config.mobileFieldsBuilder!(context, item)
+                      : SummaryFieldWrap(
+                          isMobile: isMobile,
+                          children: fields
+                              .map(
+                                (field) => SummaryField(
+                                  label: field.label,
+                                  value: field.value,
+                                ),
+                              )
+                              .toList(),
+                        ),
                 if (actions.isNotEmpty) ...[
                   SizedBox(height: sectionSpacing),
                   Wrap(

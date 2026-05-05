@@ -623,13 +623,7 @@ List<NavItem> flattenNavItems(List<NavItem> items) {
 
 final List<NavItem> _flatNavItems = flattenNavItems(navItems);
 
-List<NavItem> leafNavItemsByBranch({Map<String, dynamic>? currentUser}) {
-  final filtered = _filterNavItems(
-    navItems,
-    access: _NavAccessContext.fromUser(currentUser),
-    includeHidden: true,
-  );
-  final leaves = flattenNavItems(filtered);
+List<NavItem> _orderLeaves(List<NavItem> leaves) {
   final byId = {for (final item in leaves) item.id: item};
   final ordered = <NavItem>[];
   for (final id in branchOrder) {
@@ -646,9 +640,22 @@ List<NavItem> leafNavItemsByBranch({Map<String, dynamic>? currentUser}) {
   return ordered;
 }
 
+List<NavItem> leafNavItemsByBranch({Map<String, dynamic>? currentUser}) {
+  final filtered = _filterNavItems(
+    navItems,
+    access: _NavAccessContext.fromUser(currentUser),
+    includeHidden: true,
+  );
+  return _orderLeaves(flattenNavItems(filtered));
+}
+
+List<NavItem> allLeafNavItemsByBranch() {
+  return _orderLeaves(_flatNavItems);
+}
+
 Map<String, int> buildIdToBranchIndex() {
   final map = <String, int>{};
-  final ordered = leafNavItemsByBranch();
+  final ordered = allLeafNavItemsByBranch();
   for (var i = 0; i < ordered.length; i++) {
     map[ordered[i].id] = i;
   }

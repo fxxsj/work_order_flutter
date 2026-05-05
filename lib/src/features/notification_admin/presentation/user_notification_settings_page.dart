@@ -2,10 +2,12 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/common/api_exception.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
+import 'package:work_order_app/src/features/auth/application/auth_controller.dart';
 
 class UserNotificationSettingsPage extends StatefulWidget {
   const UserNotificationSettingsPage({super.key});
@@ -18,6 +20,7 @@ class UserNotificationSettingsPage extends StatefulWidget {
 class _UserNotificationSettingsPageState
     extends State<UserNotificationSettingsPage> {
   ApiClient? _apiClient;
+  AuthController? _authController;
   bool _loading = false;
   bool _saving = false;
 
@@ -42,6 +45,7 @@ class _UserNotificationSettingsPageState
   void didChangeDependencies() {
     super.didChangeDependencies();
     _apiClient ??= context.read<ApiClient>();
+    _authController ??= context.read<AuthController>();
     if (_lastResult == null) {
       _loadSettings();
     }
@@ -58,8 +62,9 @@ class _UserNotificationSettingsPageState
   Future<void> _loadSettings() async {
     setState(() => _loading = true);
     try {
-      final response =
-          await _apiClient!.get('/user-notification-settings/get_settings/');
+      final response = await _runAuthorized(
+        () => _apiClient!.get('/user-notification-settings/get_settings/'),
+      );
       final data = _asMap(response.data);
       setState(() {
         _emailNotifications = data['email_notifications'] == true;
@@ -78,7 +83,7 @@ class _UserNotificationSettingsPageState
         _lastResult = data;
       });
     } catch (err) {
-      _showError('获取设置失败: $err');
+      _showRequestError('获取设置失败', err);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -99,15 +104,35 @@ class _UserNotificationSettingsPageState
         'quiet_hours_start': _quietStartController.text.trim(),
         'quiet_hours_end': _quietEndController.text.trim(),
       };
-      final response = await _apiClient!.post(
-        '/user-notification-settings/update_settings/',
-        data: payload,
+      final response = await _runAuthorized(
+        () => _apiClient!.post(
+          '/user-notification-settings/update_settings/',
+          data: payload,
+        ),
       );
       setState(() => _lastResult = _asMap(response.data));
     } catch (err) {
-      _showError('保存失败: $err');
+      _showRequestError('保存失败', err);
     } finally {
       if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<T> _runAuthorized<T>(Future<T> Function() action) async {
+    final auth = _authController;
+    if (auth != null) {
+      final valid = await auth.ensureValidSession();
+      if (!valid) {
+        throw const ApiException(message: '登录状态已失效，请重新登录', statusCode: 401);
+      }
+    }
+    try {
+      return await action();
+    } on ApiException catch (err) {
+      if (err.statusCode == 401 && await (_apiClient?.refreshAccessToken() ?? Future.value(false))) {
+        return action();
+      }
+      rethrow;
     }
   }
 
@@ -124,6 +149,14 @@ class _UserNotificationSettingsPageState
   void _showError(String message) {
     if (!mounted) return;
     ToastUtil.showError(message);
+  }
+
+  void _showRequestError(String prefix, Object err) {
+    if (err is ApiException && err.statusCode == 401) {
+      _showError('登录状态已失效，请重新登录');
+      return;
+    }
+    _showError('$prefix: $err');
   }
 
   @override

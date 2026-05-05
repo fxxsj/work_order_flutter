@@ -22,6 +22,11 @@ class CrudDetailAction {
   final bool visible;
 }
 
+enum CrudDetailItemLayout {
+  vertical,
+  horizontal,
+}
+
 class CrudDetailItem {
   const CrudDetailItem({
     required this.label,
@@ -29,6 +34,7 @@ class CrudDetailItem {
     this.child,
     this.emptyText = '-',
     this.visible = true,
+    this.layout = CrudDetailItemLayout.vertical,
   });
 
   final String label;
@@ -36,6 +42,7 @@ class CrudDetailItem {
   final Widget? child;
   final String emptyText;
   final bool visible;
+  final CrudDetailItemLayout layout;
 }
 
 class CrudDetailSection {
@@ -238,6 +245,35 @@ class _CrudDetailItemView extends StatelessWidget {
               : item.value!,
           style: theme.textTheme.bodyMedium,
         );
+
+    if (item.layout == CrudDetailItemLayout.horizontal) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final stack = constraints.maxWidth < 420;
+          if (stack) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(item.label, style: labelStyle),
+                const SizedBox(height: LayoutTokens.gapSm),
+                valueWidget,
+              ],
+            );
+          }
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 128,
+                child: Text(item.label, style: labelStyle),
+              ),
+              const SizedBox(width: LayoutTokens.gapLg),
+              Expanded(child: valueWidget),
+            ],
+          );
+        },
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

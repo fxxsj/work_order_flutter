@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
@@ -11,6 +14,7 @@ import 'package:work_order_app/src/features/products/data/product_api_service.da
 import 'package:work_order_app/src/features/products/data/product_repository_impl.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/products/domain/product_repository.dart';
+import 'package:work_order_app/src/features/products/presentation/product_detail_page.dart';
 import 'package:work_order_app/src/features/products/presentation/product_edit_page.dart';
 
 /// 产品列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
@@ -56,6 +60,8 @@ class ProductListPage extends StatelessWidget {
     summaryFieldsBuilder: _summaryFields,
     headerActionsBuilder: _headerActions,
     rowActionsBuilder: _rowActions,
+    onItemTap: _onItemTap,
+    mobileFieldsBuilder: _buildMobileFields,
     columns: [
       CrudTableColumn(label: '产品', cellBuilder: _buildNameCell),
       CrudTableColumn(label: '编码', cellBuilder: _buildCodeCell),
@@ -95,6 +101,17 @@ class ProductListPage extends StatelessWidget {
     if (result) {
       ToastUtil.showSuccess(product == null ? '创建成功' : '更新成功');
     }
+  }
+
+  static Future<void> _openDetailPage(
+    BuildContext context,
+    Product product,
+  ) {
+    return context.pushNamed<void>(
+      'products_detail',
+      pathParameters: {'id': product.id.toString()},
+      extra: ProductDetailPage(product: product),
+    );
   }
 
   static Future<void> _confirmDelete(
@@ -141,10 +158,96 @@ class ProductListPage extends StatelessWidget {
     ];
   }
 
+  static void _onItemTap(BuildContext context, Product product) {
+    _openDetailPage(context, product);
+  }
+
+  static Widget _buildMobileFields(BuildContext context, Product product) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>();
+    final labelStyle = theme.textTheme.bodySmall?.copyWith(
+      color: colors?.subtleText ?? theme.hintColor,
+    );
+    const fields = [
+      ('产品编码', _productCode),
+      ('产品类型', _productType),
+      ('产品组', _productGroup),
+      ('规格', _productSpec),
+      ('单位', _productUnit),
+      ('单价', _productPrice),
+      ('库存', _productStock),
+      ('最小库存', _productMinStock),
+      ('状态', _productStatus),
+      ('描述', _productDesc),
+    ];
+    return Column(
+      children: [
+        for (int i = 0; i < fields.length; i++)
+          _mobileRow(
+            context,
+            labelStyle,
+            fields[i].$1,
+            fields[i].$2(product),
+            last: i == fields.length - 1,
+          ),
+      ],
+    );
+  }
+
+  static Widget _mobileRow(
+    BuildContext context,
+    TextStyle? labelStyle,
+    String label,
+    String value, {
+    bool last = false,
+  }) {
+    final theme = Theme.of(context);
+    final spacing = LayoutTokens.sectionSpacing(context) * 0.6;
+    return Padding(
+      padding: EdgeInsets.only(bottom: last ? 0 : spacing),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 72,
+            child: Text(label, style: labelStyle),
+          ),
+          Expanded(
+            child: Text(
+              value.isEmpty ? CrudValueFormatter.empty : value,
+              style: theme.textTheme.bodyMedium,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _productCode(Product p) => CrudValueFormatter.text(p.code);
+  static String _productType(Product p) => _productTypeText(p);
+  static String _productGroup(Product p) => CrudValueFormatter.text(p.productGroupName);
+  static String _productSpec(Product p) => CrudValueFormatter.text(p.specification);
+  static String _productUnit(Product p) => CrudValueFormatter.text(p.unit);
+  static String _productPrice(Product p) => CrudValueFormatter.amount(p.unitPrice);
+  static String _productStock(Product p) => CrudValueFormatter.amount(p.stockQuantity);
+  static String _productMinStock(Product p) => CrudValueFormatter.amount(p.minStockQuantity);
+  static String _productStatus(Product p) => _statusText(p);
+  static String _productDesc(Product p) => CrudValueFormatter.text(p.description);
+
   static Widget _buildNameCell(BuildContext context, Product product) {
-    return Text(
-      _titleText(product),
-      style: Theme.of(context).textTheme.bodyMedium,
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: () => _openDetailPage(context, product),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Text(
+          _titleText(product),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.primary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
     );
   }
 

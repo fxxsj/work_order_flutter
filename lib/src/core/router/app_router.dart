@@ -63,7 +63,7 @@ GoRouter createAppRouter(AuthController authController) {
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
-final List<NavItem> _leafItems = leafNavItemsByBranch();
+final List<NavItem> _leafItems = allLeafNavItemsByBranch();
 
 const Set<String> _resourceEditRouteIds = {
   'customers',
@@ -81,6 +81,7 @@ const Set<String> _resourceEditRouteIds = {
 
 const Set<String> _resourceDetailRouteIds = {
   'customers',
+  'products',
   'suppliers',
 };
 

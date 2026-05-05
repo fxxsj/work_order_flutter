@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/common/api_exception.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
+import 'package:work_order_app/src/features/auth/application/auth_controller.dart';
 
 class NotificationTemplatePage extends StatefulWidget {
   const NotificationTemplatePage({super.key});
@@ -16,6 +18,7 @@ class NotificationTemplatePage extends StatefulWidget {
 
 class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
   ApiClient? _apiClient;
+  AuthController? _authController;
   bool _loading = false;
   bool _saving = false;
   bool _previewing = false;
@@ -33,6 +36,7 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _apiClient ??= context.read<ApiClient>();
+    _authController ??= context.read<AuthController>();
     if (_templates.isEmpty && !_loading) {
       _loadTemplates();
     }
@@ -53,8 +57,9 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
       _error = null;
     });
     try {
-      final response =
-          await _apiClient!.get('/notification-templates/get_templates/');
+      final response = await _runAuthorized(
+        () => _apiClient!.get('/notification-templates/get_templates/'),
+      );
       final data = response.data;
       final templates = <_TemplateItem>[];
       if (data is Map) {
@@ -91,7 +96,11 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
         }
       });
     } catch (err) {
-      setState(() => _error = err.toString());
+      if (err is ApiException && err.statusCode == 401) {
+        setState(() => _error = '登录状态已失效，请重新登录');
+      } else {
+        setState(() => _error = err.toString());
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -128,20 +137,22 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
           .map((item) => item.trim())
           .where((item) => item.isNotEmpty)
           .toList();
-      await _apiClient!.post(
-        '/notification-templates/update_template/',
-        data: {
-          'template_name': selected.key,
-          'title': _titleController.text.trim(),
-          'message': _messageController.text.trim(),
-          'variables': variables,
-          'is_active': _isActive,
-        },
+      await _runAuthorized(
+        () => _apiClient!.post(
+          '/notification-templates/update_template/',
+          data: {
+            'template_name': selected.key,
+            'title': _titleController.text.trim(),
+            'message': _messageController.text.trim(),
+            'variables': variables,
+            'is_active': _isActive,
+          },
+        ),
       );
       await _loadTemplates();
       ToastUtil.showSuccess('模板已保存');
     } catch (err) {
-      ToastUtil.showError('保存失败: $err');
+      _showRequestError('保存失败', err);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -155,12 +166,14 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
     setState(() => _previewing = true);
     try {
       final variables = _parsePreviewVariables(_previewController.text.trim());
-      final response = await _apiClient!.post(
-        '/notification-templates/preview_template/',
-        data: {
-          'template_name': selected.key,
-          'variables': variables,
-        },
+      final response = await _runAuthorized(
+        () => _apiClient!.post(
+          '/notification-templates/preview_template/',
+          data: {
+            'template_name': selected.key,
+            'variables': variables,
+          },
+        ),
       );
       final data = response.data;
       if (!mounted) {
@@ -171,9 +184,27 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
             '标题：${data['title'] ?? '-'}\n\n内容：${data['message'] ?? '-'}';
       });
     } catch (err) {
-      ToastUtil.showError('预览失败: $err');
+      _showRequestError('预览失败', err);
     } finally {
       if (mounted) setState(() => _previewing = false);
+    }
+  }
+
+  Future<T> _runAuthorized<T>(Future<T> Function() action) async {
+    final auth = _authController;
+    if (auth != null) {
+      final valid = await auth.ensureValidSession();
+      if (!valid) {
+        throw const ApiException(message: '登录状态已失效，请重新登录', statusCode: 401);
+      }
+    }
+    try {
+      return await action();
+    } on ApiException catch (err) {
+      if (err.statusCode == 401 && await (_apiClient?.refreshAccessToken() ?? Future.value(false))) {
+        return action();
+      }
+      rethrow;
     }
   }
 
@@ -202,6 +233,14 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
       return value.map((e) => e.toString()).toList();
     }
     return const [];
+  }
+
+  void _showRequestError(String prefix, Object err) {
+    if (err is ApiException && err.statusCode == 401) {
+      ToastUtil.showError('登录状态已失效，请重新登录');
+      return;
+    }
+    ToastUtil.showError('$prefix: $err');
   }
 
   @override
