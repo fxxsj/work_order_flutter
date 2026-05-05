@@ -477,22 +477,17 @@ class _PaymentListViewState extends State<_PaymentListView> {
       expandedChild: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SummaryFieldWrap(
-            isMobile: isMobile,
-            children: [
-              _SummaryField(label: '收款单号', value: number),
-              _SummaryField(label: '客户', value: customer),
-              _SummaryField(label: '来源单据', value: source),
-              _SummaryField(label: '收款方式', value: paymentMethod),
-              _SummaryField(label: '金额', value: amount),
-              _SummaryField(
-                label: '已核销 / 待核销',
-                value:
-                    '${_formatAmount(payment.appliedAmount)} / ${_formatAmount(payment.remainingAmount)}',
-              ),
-              _SummaryField(label: '收款日期', value: paymentDate),
-              _SummaryField(label: '下一步', value: followUp),
-            ],
+          _buildMobileFields(
+            context,
+            number: number,
+            customer: customer,
+            source: source,
+            paymentMethod: paymentMethod,
+            amount: amount,
+            appliedRemaining:
+                '${_formatAmount(payment.appliedAmount)} / ${_formatAmount(payment.remainingAmount)}',
+            paymentDate: paymentDate,
+            followUp: followUp,
           ),
           if (actions.isNotEmpty) ...[
             SizedBox(height: sectionSpacing),
@@ -603,7 +598,62 @@ class _PaymentListViewState extends State<_PaymentListView> {
     }
     return const {};
   }
+
+  static Widget _buildMobileFields(
+    BuildContext context, {
+    required String number,
+    required String customer,
+    required String source,
+    required String paymentMethod,
+    required String amount,
+    required String appliedRemaining,
+    required String paymentDate,
+    required String followUp,
+  }) {
+    final theme = Theme.of(context);
+    final labelStyle = theme.textTheme.bodySmall?.copyWith(
+      color: theme.extension<AppColors>()?.subtleText ?? theme.hintColor,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _mobileRow(context, labelStyle, '收款单号', number),
+        _mobileRow(context, labelStyle, '客户', customer),
+        _mobileRow(context, labelStyle, '来源单据', source),
+        _mobileRow(context, labelStyle, '收款方式', paymentMethod),
+        _mobileRow(context, labelStyle, '金额', amount),
+        _mobileRow(context, labelStyle, '已核销/待核销', appliedRemaining),
+        _mobileRow(context, labelStyle, '收款日期', paymentDate),
+        _mobileRow(context, labelStyle, '下一步', followUp, last: true),
+      ],
+    );
+  }
+
+  static Widget _mobileRow(
+    BuildContext context,
+    TextStyle? labelStyle,
+    String label,
+    String value, {
+    bool last = false,
+  }) {
+    final theme = Theme.of(context);
+    final spacing = LayoutTokens.sectionSpacing(context) * 0.6;
+    return Padding(
+      padding: EdgeInsets.only(bottom: last ? 0 : spacing),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(width: 72, child: Text(label, style: labelStyle)),
+          Expanded(
+            child: Text(
+              value.isEmpty ? _emptyCellText : value,
+              style: theme.textTheme.bodyMedium,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-typedef _SummaryField = SummaryField;
 typedef _SummaryChip = SummaryChip;

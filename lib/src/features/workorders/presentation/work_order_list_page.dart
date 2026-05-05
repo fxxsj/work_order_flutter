@@ -476,7 +476,6 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     final taskSummary = _taskSummaryText(workOrder);
     final followUp = _followUpText(workOrder);
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
-    final isCompact = BreakpointsUtil.isMobile(context);
 
     return ExpandableSummaryCard(
       headerBuilder: (context, expanded) {
@@ -549,24 +548,14 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
       expandedChild: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SummaryFieldWrap(
-            isMobile: isCompact,
-            desktopWidth: 180,
-            children: [
-              _SummaryField(label: '交货日期', value: deliveryDate),
-              _SummaryField(label: '进度', value: progress),
-              _SummaryField(label: '任务', value: taskSummary),
-              _SummaryField(label: '下一步', value: followUp),
-              _SummaryField(
-                  label: '负责人', value: workOrder.managerName ?? _emptyCellText),
-              _SummaryField(
-                  label: '业务员',
-                  value: workOrder.salespersonName ?? _emptyCellText),
-              _SummaryField(label: '优先级', value: priority),
-              _SummaryField(
-                  label: '数量',
-                  value: _formatQuantity(workOrder.quantity, workOrder.unit)),
-            ],
+          _buildMobileFields(
+            context,
+            workOrder,
+            deliveryDate: deliveryDate,
+            progress: progress,
+            taskSummary: taskSummary,
+            followUp: followUp,
+            priority: priority,
           ),
           SizedBox(height: sectionSpacing),
           Wrap(
@@ -955,7 +944,75 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     }
     return _emptyCellText;
   }
+
+  Widget _buildMobileFields(
+    BuildContext context,
+    WorkOrder workOrder, {
+    required String deliveryDate,
+    required String progress,
+    required String taskSummary,
+    required String followUp,
+    required String priority,
+  }) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>();
+    final labelStyle = theme.textTheme.bodySmall?.copyWith(
+      color: colors?.subtleText ?? theme.hintColor,
+    );
+    final fields = [
+      ('客户', workOrder.customerName ?? _emptyCellText),
+      ('产品', workOrder.productName ?? _emptyCellText),
+      ('交货日期', deliveryDate),
+      ('进度', progress),
+      ('任务', taskSummary),
+      ('下一步', followUp),
+      ('负责人', workOrder.managerName ?? _emptyCellText),
+      ('业务员', workOrder.salespersonName ?? _emptyCellText),
+      ('优先级', priority),
+      ('数量', _formatQuantity(workOrder.quantity, workOrder.unit)),
+    ];
+    return Column(
+      children: [
+        for (int i = 0; i < fields.length; i++)
+          _mobileRow(
+            context,
+            labelStyle,
+            fields[i].$1,
+            fields[i].$2,
+            last: i == fields.length - 1,
+          ),
+      ],
+    );
+  }
+
+  Widget _mobileRow(
+    BuildContext context,
+    TextStyle? labelStyle,
+    String label,
+    String value, {
+    bool last = false,
+  }) {
+    final theme = Theme.of(context);
+    final spacing = LayoutTokens.sectionSpacing(context) * 0.6;
+    return Padding(
+      padding: EdgeInsets.only(bottom: last ? 0 : spacing),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 72,
+            child: Text(label, style: labelStyle),
+          ),
+          Expanded(
+            child: Text(
+              value.isEmpty ? _emptyCellText : value,
+              style: theme.textTheme.bodyMedium,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-typedef _SummaryField = SummaryField;
 typedef _SummaryChip = SummaryChip;

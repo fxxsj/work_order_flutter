@@ -5,6 +5,9 @@ import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 class SummaryField extends StatelessWidget {
   const SummaryField({super.key, required this.label, required this.value});
 
+  static const double _mobileRowBreakpoint = 240;
+  static const double _mobileLabelWidth = 88;
+
   final String label;
   final String value;
 
@@ -12,24 +15,47 @@ class SummaryField extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: colors?.subtleText ?? theme.hintColor,
-          ),
-        ),
-        const SizedBox(height: LayoutTokens.gapXs),
-        Text(
-          value,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: colors?.sidebarText,
-          ),
-        ),
-      ],
+    final labelStyle = theme.textTheme.labelSmall?.copyWith(
+      color: colors?.subtleText ?? theme.hintColor,
+    );
+    final valueStyle = theme.textTheme.bodyMedium?.copyWith(
+      fontWeight: FontWeight.w600,
+      color: colors?.sidebarText,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth >= _mobileRowBreakpoint) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: _mobileLabelWidth,
+                child: Text(label, style: labelStyle),
+              ),
+              const SizedBox(width: LayoutTokens.gapMd),
+              Expanded(
+                child: Text(
+                  value,
+                  style: valueStyle,
+                ),
+              ),
+            ],
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: labelStyle),
+            const SizedBox(height: LayoutTokens.gapXs),
+            Text(
+              value,
+              style: valueStyle,
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -90,13 +116,25 @@ class SummaryFieldWrap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (isMobile) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (int i = 0; i < children.length; i++) ...[
+            SizedBox(width: double.infinity, child: children[i]),
+            if (i < children.length - 1) SizedBox(height: runSpacing),
+          ],
+        ],
+      );
+    }
+
     return Wrap(
       spacing: spacing,
       runSpacing: runSpacing,
       children: children
           .map(
             (child) => SizedBox(
-              width: isMobile ? double.infinity : desktopWidth,
+              width: desktopWidth,
               child: child,
             ),
           )

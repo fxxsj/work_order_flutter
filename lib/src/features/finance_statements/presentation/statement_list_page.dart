@@ -553,6 +553,63 @@ class _StatementListViewState extends State<_StatementListView> {
     return '$year-$month-$day';
   }
 
+  Widget _mobileRow(BuildContext context, TextStyle? labelStyle, String label,
+      String value,
+      {bool last = false}) {
+    final theme = Theme.of(context);
+    final spacing = LayoutTokens.sectionSpacing(context) * 0.6;
+    return Padding(
+      padding: EdgeInsets.only(bottom: last ? 0 : spacing),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(width: 72, child: Text(label, style: labelStyle)),
+          Expanded(
+              child: Text(value.isEmpty ? _emptyCellText : value,
+                  style: theme.textTheme.bodyMedium)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileFields(
+    BuildContext context,
+    TextStyle? labelStyle, {
+    required String number,
+    required String customer,
+    required String statementType,
+    required String period,
+    required String amount,
+    required String closingBalance,
+    required String status,
+    required String followUp,
+    String? confirmedByName,
+    String? confirmedAt,
+    String? confirmationNotes,
+  }) {
+    final rows = <Widget>[
+      _mobileRow(context, labelStyle, '对账单号', number),
+      _mobileRow(context, labelStyle, '对方单位', customer),
+      _mobileRow(context, labelStyle, '对账类型', statementType),
+      _mobileRow(context, labelStyle, '对账周期', period),
+      _mobileRow(context, labelStyle, '本期金额', amount),
+      _mobileRow(context, labelStyle, '期末余额', closingBalance),
+      _mobileRow(context, labelStyle, '状态', status),
+      _mobileRow(context, labelStyle, '下一步', followUp),
+      if (confirmedByName != null)
+        _mobileRow(context, labelStyle, '确认人', confirmedByName),
+      if (confirmedAt != null)
+        _mobileRow(context, labelStyle, '确认时间', confirmedAt),
+      if (confirmationNotes != null)
+        _mobileRow(context, labelStyle, '确认备注', confirmationNotes,
+            last: true),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: rows,
+    );
+  }
+
   Widget _buildSummaryCard(
       BuildContext context, Statement statement, bool isMobile) {
     final permissions = PermissionUtil.snapshot(context);
@@ -676,33 +733,29 @@ class _StatementListViewState extends State<_StatementListView> {
       expandedChild: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SummaryFieldWrap(
-            isMobile: isMobile,
-            children: [
-              _SummaryField(label: '对账单号', value: number),
-              _SummaryField(label: '对方单位', value: customer),
-              _SummaryField(label: '对账类型', value: statementType),
-              _SummaryField(label: '对账周期', value: period),
-              _SummaryField(label: '本期金额', value: amount),
-              _SummaryField(label: '期末余额', value: closingBalance),
-              _SummaryField(label: '状态', value: status),
-              _SummaryField(label: '下一步', value: followUp),
-              if ((statement.confirmedByName ?? '').trim().isNotEmpty)
-                _SummaryField(
-                  label: '确认人',
-                  value: _displayText(statement.confirmedByName),
-                ),
-              if (statement.confirmedAt != null)
-                _SummaryField(
-                  label: '确认时间',
-                  value: _formatDate(statement.confirmedAt),
-                ),
-              if ((statement.confirmationNotes ?? '').trim().isNotEmpty)
-                _SummaryField(
-                  label: '确认备注',
-                  value: _displayText(statement.confirmationNotes),
-                ),
-            ],
+          _buildMobileFields(
+            context,
+            theme.textTheme.labelSmall?.copyWith(
+              color: colors?.subtleText ?? theme.hintColor,
+            ),
+            number: number,
+            customer: customer,
+            statementType: statementType,
+            period: period,
+            amount: amount,
+            closingBalance: closingBalance,
+            status: status,
+            followUp: followUp,
+            confirmedByName: (statement.confirmedByName ?? '').trim().isNotEmpty
+                ? _displayText(statement.confirmedByName)
+                : null,
+            confirmedAt: statement.confirmedAt != null
+                ? _formatDate(statement.confirmedAt)
+                : null,
+            confirmationNotes:
+                (statement.confirmationNotes ?? '').trim().isNotEmpty
+                    ? _displayText(statement.confirmationNotes)
+                    : null,
           ),
           if (actions.isNotEmpty) ...[
             SizedBox(height: sectionSpacing),
@@ -782,5 +835,4 @@ class _StatementListViewState extends State<_StatementListView> {
   }
 }
 
-typedef _SummaryField = SummaryField;
 typedef _SummaryChip = SummaryChip;

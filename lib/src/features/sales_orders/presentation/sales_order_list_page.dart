@@ -930,19 +930,15 @@ class _SalesOrderSummaryCard extends StatelessWidget {
       expandedChild: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SummaryFieldWrap(
-            isMobile: isMobile,
-            desktopWidth: 180,
-            children: [
-              _SummaryField(label: '下单日期', value: orderDate),
-              _SummaryField(label: '交货日期', value: deliveryDate),
-              _SummaryField(label: '施工单', value: workOrderText),
-              _SummaryField(label: '下一步', value: followUpText),
-              _SummaryField(label: '付款状态', value: payment),
-              _SummaryField(label: '明细数量', value: itemsCount),
-              _SummaryField(
-                  label: '客户编码', value: order.customerCode ?? _emptyCellText),
-            ],
+          _buildMobileFields(
+            context,
+            order,
+            orderDate: orderDate,
+            deliveryDate: deliveryDate,
+            workOrderText: workOrderText,
+            followUpText: followUpText,
+            payment: payment,
+            itemsCount: itemsCount,
           ),
           SizedBox(height: sectionSpacing),
           if (actions.isNotEmpty)
@@ -965,7 +961,66 @@ class _SalesOrderSummaryCard extends StatelessWidget {
     if (value == null) return _emptyCellText;
     return value.toStringAsFixed(2);
   }
+
+  static Widget _buildMobileFields(
+    BuildContext context,
+    SalesOrder order, {
+    required String orderDate,
+    required String deliveryDate,
+    required String workOrderText,
+    required String followUpText,
+    required String payment,
+    required String itemsCount,
+  }) {
+    final theme = Theme.of(context);
+    final labelStyle = theme.textTheme.bodySmall?.copyWith(
+      color: theme.extension<AppColors>()?.subtleText ?? theme.hintColor,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _mobileRow(context, labelStyle, '下单日期', orderDate),
+        _mobileRow(context, labelStyle, '交货日期', deliveryDate),
+        _mobileRow(context, labelStyle, '施工单', workOrderText),
+        _mobileRow(context, labelStyle, '下一步', followUpText),
+        _mobileRow(context, labelStyle, '付款状态', payment),
+        _mobileRow(context, labelStyle, '明细数量', itemsCount),
+        _mobileRow(
+          context,
+          labelStyle,
+          '客户编码',
+          order.customerCode ?? _emptyCellText,
+          last: true,
+        ),
+      ],
+    );
+  }
+
+  static Widget _mobileRow(
+    BuildContext context,
+    TextStyle? labelStyle,
+    String label,
+    String value, {
+    bool last = false,
+  }) {
+    final theme = Theme.of(context);
+    final spacing = LayoutTokens.sectionSpacing(context) * 0.6;
+    return Padding(
+      padding: EdgeInsets.only(bottom: last ? 0 : spacing),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(width: 72, child: Text(label, style: labelStyle)),
+          Expanded(
+            child: Text(
+              value.isEmpty ? _emptyCellText : value,
+              style: theme.textTheme.bodyMedium,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-typedef _SummaryField = SummaryField;
 typedef _SummaryChip = SummaryChip;

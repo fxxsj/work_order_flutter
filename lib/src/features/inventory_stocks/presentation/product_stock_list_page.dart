@@ -760,20 +760,18 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
       expandedChild: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SummaryFieldWrap(
-            isMobile: isMobile,
-            children: [
-              _SummaryField(label: '产品编码', value: productCode),
-              _SummaryField(label: '客户', value: customer),
-              _SummaryField(label: '施工单', value: workOrder),
-              _SummaryField(label: '库存', value: quantity),
-              _SummaryField(label: '预留', value: reserved),
-              _SummaryField(label: '可用', value: available),
-              _SummaryField(label: '库存价值', value: totalValue),
-              _SummaryField(label: '状态', value: status),
-              _SummaryField(label: '下一步', value: _followUpText(stock)),
-              _SummaryField(label: '到期日', value: expiryDate),
-            ],
+          _buildMobileFields(
+            context,
+            productCode: productCode,
+            customer: customer,
+            workOrder: workOrder,
+            quantity: quantity,
+            reserved: reserved,
+            available: available,
+            totalValue: totalValue,
+            status: status,
+            followUp: _followUpText(stock),
+            expiryDate: expiryDate,
           ),
           SizedBox(height: sectionSpacing),
           Wrap(
@@ -871,7 +869,66 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
       ),
     );
   }
+
+  static Widget _buildMobileFields(
+    BuildContext context, {
+    required String productCode,
+    required String customer,
+    required String workOrder,
+    required String quantity,
+    required String reserved,
+    required String available,
+    required String totalValue,
+    required String status,
+    required String followUp,
+    required String expiryDate,
+  }) {
+    final theme = Theme.of(context);
+    final labelStyle = theme.textTheme.bodySmall?.copyWith(
+      color: theme.extension<AppColors>()?.subtleText ?? theme.hintColor,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _mobileRow(context, labelStyle, '产品编码', productCode),
+        _mobileRow(context, labelStyle, '客户', customer),
+        _mobileRow(context, labelStyle, '施工单', workOrder),
+        _mobileRow(context, labelStyle, '库存', quantity),
+        _mobileRow(context, labelStyle, '预留', reserved),
+        _mobileRow(context, labelStyle, '可用', available),
+        _mobileRow(context, labelStyle, '库存价值', totalValue),
+        _mobileRow(context, labelStyle, '状态', status),
+        _mobileRow(context, labelStyle, '下一步', followUp),
+        _mobileRow(context, labelStyle, '到期日', expiryDate, last: true),
+      ],
+    );
+  }
+
+  static Widget _mobileRow(
+    BuildContext context,
+    TextStyle? labelStyle,
+    String label,
+    String value, {
+    bool last = false,
+  }) {
+    final theme = Theme.of(context);
+    final spacing = LayoutTokens.sectionSpacing(context) * 0.6;
+    return Padding(
+      padding: EdgeInsets.only(bottom: last ? 0 : spacing),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(width: 72, child: Text(label, style: labelStyle)),
+          Expanded(
+            child: Text(
+              value.isEmpty ? _emptyCellText : value,
+              style: theme.textTheme.bodyMedium,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-typedef _SummaryField = SummaryField;
 typedef _SummaryChip = SummaryChip;

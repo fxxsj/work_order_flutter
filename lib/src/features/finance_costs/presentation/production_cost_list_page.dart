@@ -408,14 +408,12 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
       expandedChild: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SummaryFieldWrap(
-            isMobile: isMobile,
-            children: [
-              _SummaryField(label: '施工单号', value: workOrder),
-              _SummaryField(label: '总成本', value: totalCost),
-              _SummaryField(label: '状态', value: status),
-              _SummaryField(label: '计算时间', value: calculatedAt),
-            ],
+          _buildMobileFields(
+            context,
+            workOrder: workOrder,
+            totalCost: totalCost,
+            status: status,
+            calculatedAt: calculatedAt,
           ),
           SizedBox(height: sectionSpacing),
           RowActionGroup(actions: actions, primaryCount: 2),
@@ -423,7 +421,54 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
       ),
     );
   }
+
+  static Widget _buildMobileFields(
+    BuildContext context, {
+    required String workOrder,
+    required String totalCost,
+    required String status,
+    required String calculatedAt,
+  }) {
+    final theme = Theme.of(context);
+    final labelStyle = theme.textTheme.bodySmall?.copyWith(
+      color: theme.extension<AppColors>()?.subtleText ?? theme.hintColor,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _mobileRow(context, labelStyle, '施工单号', workOrder),
+        _mobileRow(context, labelStyle, '总成本', totalCost),
+        _mobileRow(context, labelStyle, '状态', status),
+        _mobileRow(context, labelStyle, '计算时间', calculatedAt, last: true),
+      ],
+    );
+  }
+
+  static Widget _mobileRow(
+    BuildContext context,
+    TextStyle? labelStyle,
+    String label,
+    String value, {
+    bool last = false,
+  }) {
+    final theme = Theme.of(context);
+    final spacing = LayoutTokens.sectionSpacing(context) * 0.6;
+    return Padding(
+      padding: EdgeInsets.only(bottom: last ? 0 : spacing),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(width: 72, child: Text(label, style: labelStyle)),
+          Expanded(
+            child: Text(
+              value.isEmpty ? _emptyCellText : value,
+              style: theme.textTheme.bodyMedium,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-typedef _SummaryField = SummaryField;
 typedef _SummaryChip = SummaryChip;

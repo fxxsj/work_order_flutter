@@ -691,6 +691,60 @@ class _TaskListViewState extends State<_TaskListView> {
     return '$year-$month-$day';
   }
 
+  Widget _mobileRow(BuildContext context, TextStyle? labelStyle, String label,
+      String value,
+      {bool last = false}) {
+    final theme = Theme.of(context);
+    final spacing = LayoutTokens.sectionSpacing(context) * 0.6;
+    return Padding(
+      padding: EdgeInsets.only(bottom: last ? 0 : spacing),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(width: 72, child: Text(label, style: labelStyle)),
+          Expanded(
+              child: Text(value.isEmpty ? _emptyCellText : value,
+                  style: theme.textTheme.bodyMedium)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileFields(
+    BuildContext context,
+    TextStyle? labelStyle, {
+    required String customer,
+    required String workOrder,
+    required String process,
+    required String title,
+    required String department,
+    required String operator,
+    required String quantity,
+    required String progress,
+    required String deliveryDate,
+    required String deadlineRisk,
+    required String status,
+    required String followUp,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _mobileRow(context, labelStyle, '客户', customer),
+        _mobileRow(context, labelStyle, '施工单号', workOrder),
+        _mobileRow(context, labelStyle, '工序', process),
+        _mobileRow(context, labelStyle, '任务内容', title),
+        _mobileRow(context, labelStyle, '分派部门', department),
+        _mobileRow(context, labelStyle, '分派操作员', operator),
+        _mobileRow(context, labelStyle, '数量', quantity),
+        _mobileRow(context, labelStyle, '进度', progress),
+        _mobileRow(context, labelStyle, '交付日期', deliveryDate),
+        _mobileRow(context, labelStyle, '交期风险', deadlineRisk),
+        _mobileRow(context, labelStyle, '状态', status),
+        _mobileRow(context, labelStyle, '下一步', followUp, last: true),
+      ],
+    );
+  }
+
   Widget _buildSummaryCard(
     BuildContext context,
     TaskViewModel viewModel,
@@ -772,22 +826,23 @@ class _TaskListViewState extends State<_TaskListView> {
       expandedChild: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SummaryFieldWrap(
-            isMobile: isMobile,
-            children: [
-              _SummaryField(label: '客户', value: customer),
-              _SummaryField(label: '施工单号', value: workOrder),
-              _SummaryField(label: '工序', value: process),
-              _SummaryField(label: '任务内容', value: title),
-              _SummaryField(label: '分派部门', value: department),
-              _SummaryField(label: '分派操作员', value: operator),
-              _SummaryField(label: '数量', value: quantity),
-              _SummaryField(label: '进度', value: progress),
-              _SummaryField(label: '交付日期', value: deliveryDate),
-              _SummaryField(label: '交期风险', value: deadlineRisk),
-              _SummaryField(label: '状态', value: status),
-              _SummaryField(label: '下一步', value: followUp),
-            ],
+          _buildMobileFields(
+            context,
+            theme.textTheme.labelSmall?.copyWith(
+              color: colors?.subtleText ?? theme.hintColor,
+            ),
+            customer: customer,
+            workOrder: workOrder,
+            process: process,
+            title: title,
+            department: department,
+            operator: operator,
+            quantity: quantity,
+            progress: progress,
+            deliveryDate: deliveryDate,
+            deadlineRisk: deadlineRisk,
+            status: status,
+            followUp: followUp,
           ),
           if (task.workOrderId != null) ...[
             SizedBox(height: sectionSpacing),
@@ -916,5 +971,4 @@ class _TaskListViewState extends State<_TaskListView> {
   }
 }
 
-typedef _SummaryField = SummaryField;
 typedef _SummaryChip = SummaryChip;

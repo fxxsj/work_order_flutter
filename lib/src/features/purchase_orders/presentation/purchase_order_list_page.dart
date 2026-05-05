@@ -850,6 +850,56 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
     return value.toStringAsFixed(2);
   }
 
+  Widget _mobileRow(BuildContext context, TextStyle? labelStyle, String label,
+      String value,
+      {bool last = false}) {
+    final theme = Theme.of(context);
+    final spacing = LayoutTokens.sectionSpacing(context) * 0.6;
+    return Padding(
+      padding: EdgeInsets.only(bottom: last ? 0 : spacing),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(width: 72, child: Text(label, style: labelStyle)),
+          Expanded(
+              child: Text(value.isEmpty ? _emptyCellText : value,
+                  style: theme.textTheme.bodyMedium)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileFields(
+    BuildContext context,
+    TextStyle? labelStyle, {
+    required String number,
+    required String supplier,
+    required String status,
+    required String totalAmount,
+    required String itemsCount,
+    required String receivedProgress,
+    required String workOrder,
+    required String submittedBy,
+    required String approvedBy,
+    required String createdAt,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _mobileRow(context, labelStyle, '采购单号', number),
+        _mobileRow(context, labelStyle, '供应商', supplier),
+        _mobileRow(context, labelStyle, '状态', status),
+        _mobileRow(context, labelStyle, '金额', totalAmount),
+        _mobileRow(context, labelStyle, '明细数', itemsCount),
+        _mobileRow(context, labelStyle, '收货进度', receivedProgress),
+        _mobileRow(context, labelStyle, '关联施工单', workOrder),
+        _mobileRow(context, labelStyle, '提交人', submittedBy),
+        _mobileRow(context, labelStyle, '审核人', approvedBy),
+        _mobileRow(context, labelStyle, '创建时间', createdAt, last: true),
+      ],
+    );
+  }
+
   Widget _buildSummaryCard(
     BuildContext context,
     PurchaseOrderViewModel viewModel,
@@ -941,20 +991,21 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
       expandedChild: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SummaryFieldWrap(
-            isMobile: isMobile,
-            children: [
-              _SummaryField(label: '采购单号', value: number),
-              _SummaryField(label: '供应商', value: supplier),
-              _SummaryField(label: '状态', value: status),
-              _SummaryField(label: '金额', value: totalAmount),
-              _SummaryField(label: '明细数', value: itemsCount),
-              _SummaryField(label: '收货进度', value: receivedProgress),
-              _SummaryField(label: '关联施工单', value: workOrder),
-              _SummaryField(label: '提交人', value: submittedBy),
-              _SummaryField(label: '审核人', value: approvedBy),
-              _SummaryField(label: '创建时间', value: createdAt),
-            ],
+          _buildMobileFields(
+            context,
+            theme.textTheme.labelSmall?.copyWith(
+              color: colors?.subtleText ?? theme.hintColor,
+            ),
+            number: number,
+            supplier: supplier,
+            status: status,
+            totalAmount: totalAmount,
+            itemsCount: itemsCount,
+            receivedProgress: receivedProgress,
+            workOrder: workOrder,
+            submittedBy: submittedBy,
+            approvedBy: approvedBy,
+            createdAt: createdAt,
           ),
           SizedBox(height: sectionSpacing),
           Wrap(
@@ -1028,7 +1079,6 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
   }
 }
 
-typedef _SummaryField = SummaryField;
 typedef _SummaryChip = SummaryChip;
 
 double? _toDouble(dynamic value) {

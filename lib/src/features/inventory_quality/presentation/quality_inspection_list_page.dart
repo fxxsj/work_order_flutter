@@ -1121,30 +1121,20 @@ class _QualityInspectionListViewState
       expandedChild: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SummaryFieldWrap(
-            isMobile: isMobile,
-            children: [
-              _SummaryField(label: '质检单号', value: number),
-              _SummaryField(label: '客户', value: customer),
-              _SummaryField(label: '施工单号', value: workOrder),
-              _SummaryField(label: '产品', value: product),
-              _SummaryField(label: '检验员', value: inspector),
-              _SummaryField(label: '检验日期', value: inspectionDate),
-              _SummaryField(label: '结果', value: result),
-              _SummaryField(label: '不良率', value: defectiveRate),
-              _SummaryField(
-                  label: '数量', value: _qualityQuantitySummary(inspection)),
-              _SummaryField(label: '附件', value: attachmentStatus),
-              _SummaryField(label: '下一步', value: followUp),
-              if (_hasRecordedExceptionAction(inspection))
-                _SummaryField(
-                  label: '处理结论',
-                  value: _displayText(_qualityDispositionLabel(inspection)),
-                ),
-              if (needsFollowUp)
-                _SummaryField(
-                    label: '异常跟进', value: _qualityNextStep(inspection)),
-            ],
+          _buildMobileFields(
+            context,
+            inspection: inspection,
+            number: number,
+            customer: customer,
+            workOrder: workOrder,
+            product: product,
+            inspector: inspector,
+            inspectionDate: inspectionDate,
+            result: result,
+            defectiveRate: defectiveRate,
+            attachmentStatus: attachmentStatus,
+            followUp: followUp,
+            needsFollowUp: needsFollowUp,
           ),
           SizedBox(height: sectionSpacing),
           Wrap(
@@ -1312,9 +1302,93 @@ class _QualityInspectionListViewState
       ToastUtil.showError('打开检验附件失败: $err');
     }
   }
+
+  Widget _mobileRow(
+    BuildContext context,
+    TextStyle? labelStyle,
+    String label,
+    String value, {
+    bool last = false,
+  }) {
+    final theme = Theme.of(context);
+    final spacing = LayoutTokens.sectionSpacing(context) * 0.6;
+    return Padding(
+      padding: EdgeInsets.only(bottom: last ? 0 : spacing),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 72,
+            child: Text(label, style: labelStyle),
+          ),
+          Expanded(
+            child: Text(
+              value.isEmpty ? _emptyCellText : value,
+              style: theme.textTheme.bodyMedium,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileFields(
+    BuildContext context, {
+    required QualityInspection inspection,
+    required String number,
+    required String customer,
+    required String workOrder,
+    required String product,
+    required String inspector,
+    required String inspectionDate,
+    required String result,
+    required String defectiveRate,
+    required String attachmentStatus,
+    required String followUp,
+    required bool needsFollowUp,
+  }) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>();
+    final labelStyle = theme.textTheme.bodySmall?.copyWith(
+      color: colors?.subtleText ?? theme.hintColor,
+    );
+    final rows = <Widget>[
+      _mobileRow(context, labelStyle, '质检单号', number),
+      _mobileRow(context, labelStyle, '客户', customer),
+      _mobileRow(context, labelStyle, '施工单号', workOrder),
+      _mobileRow(context, labelStyle, '产品', product),
+      _mobileRow(context, labelStyle, '检验员', inspector),
+      _mobileRow(context, labelStyle, '检验日期', inspectionDate),
+      _mobileRow(context, labelStyle, '结果', result),
+      _mobileRow(context, labelStyle, '不良率', defectiveRate),
+      _mobileRow(
+          context, labelStyle, '数量', _qualityQuantitySummary(inspection)),
+      _mobileRow(context, labelStyle, '附件', attachmentStatus),
+      _mobileRow(context, labelStyle, '下一步', followUp),
+    ];
+    if (_hasRecordedExceptionAction(inspection)) {
+      rows.add(_mobileRow(
+        context,
+        labelStyle,
+        '处理结论',
+        _displayText(_qualityDispositionLabel(inspection)),
+      ));
+    }
+    if (needsFollowUp) {
+      rows.add(_mobileRow(
+        context,
+        labelStyle,
+        '异常跟进',
+        _qualityNextStep(inspection),
+      ));
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: rows,
+    );
+  }
 }
 
-typedef _SummaryField = SummaryField;
 typedef _SummaryChip = SummaryChip;
 
 Widget _buildDetailSummaryItem(

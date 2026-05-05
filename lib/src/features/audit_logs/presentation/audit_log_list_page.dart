@@ -360,19 +360,16 @@ class _AuditLogListViewState extends State<_AuditLogListView> {
           ],
         );
       },
-      expandedChild: SummaryFieldWrap(
-        isMobile: isMobile,
-        desktopWidth: 240,
-        children: [
-          _SummaryField(label: '日志ID', value: log.id.toString()),
-          _SummaryField(label: '操作类型', value: actionType),
-          _SummaryField(label: '用户', value: username),
-          _SummaryField(label: '对象类型', value: contentType),
-          _SummaryField(label: '对象', value: _displayText(log.objectRepr)),
-          _SummaryField(label: '变更字段', value: changedFields),
-          _SummaryField(label: 'IP', value: ipAddress),
-          _SummaryField(label: '时间', value: createdAt),
-        ],
+      expandedChild: _buildMobileFields(
+        context,
+        logId: log.id.toString(),
+        actionType: actionType,
+        username: username,
+        contentType: contentType,
+        objectRepr: _displayText(log.objectRepr),
+        changedFields: changedFields,
+        ipAddress: ipAddress,
+        createdAt: createdAt,
       ),
     );
   }
@@ -387,7 +384,62 @@ class _AuditLogListViewState extends State<_AuditLogListView> {
     final minute = local.minute.toString().padLeft(2, '0');
     return '$year-$month-$day $hour:$minute';
   }
+
+  static Widget _buildMobileFields(
+    BuildContext context, {
+    required String logId,
+    required String actionType,
+    required String username,
+    required String contentType,
+    required String objectRepr,
+    required String changedFields,
+    required String ipAddress,
+    required String createdAt,
+  }) {
+    final theme = Theme.of(context);
+    final labelStyle = theme.textTheme.bodySmall?.copyWith(
+      color: theme.extension<AppColors>()?.subtleText ?? theme.hintColor,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _mobileRow(context, labelStyle, '日志ID', logId),
+        _mobileRow(context, labelStyle, '操作类型', actionType),
+        _mobileRow(context, labelStyle, '用户', username),
+        _mobileRow(context, labelStyle, '对象类型', contentType),
+        _mobileRow(context, labelStyle, '对象', objectRepr),
+        _mobileRow(context, labelStyle, '变更字段', changedFields),
+        _mobileRow(context, labelStyle, 'IP', ipAddress),
+        _mobileRow(context, labelStyle, '时间', createdAt, last: true),
+      ],
+    );
+  }
+
+  static Widget _mobileRow(
+    BuildContext context,
+    TextStyle? labelStyle,
+    String label,
+    String value, {
+    bool last = false,
+  }) {
+    final theme = Theme.of(context);
+    final spacing = LayoutTokens.sectionSpacing(context) * 0.6;
+    return Padding(
+      padding: EdgeInsets.only(bottom: last ? 0 : spacing),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(width: 72, child: Text(label, style: labelStyle)),
+          Expanded(
+            child: Text(
+              value.isEmpty ? _emptyCellText : value,
+              style: theme.textTheme.bodyMedium,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-typedef _SummaryField = SummaryField;
 typedef _SummaryChip = SummaryChip;

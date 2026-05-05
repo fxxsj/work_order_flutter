@@ -1274,26 +1274,20 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       expandedChild: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SummaryFieldWrap(
-            isMobile: isMobile,
-            children: [
-              _SummaryField(label: '发货单号', value: number),
-              _SummaryField(label: '客户', value: customer),
-              _SummaryField(label: '客户订单', value: salesOrder),
-              _SummaryField(label: '发货日期', value: deliveryDate),
-              _SummaryField(label: '状态', value: status),
-              _SummaryField(label: '明细数', value: itemsCount),
-              _SummaryField(label: '发货数量', value: totalQuantity),
-              _SummaryField(label: '物流公司', value: logistics),
-              _SummaryField(label: '运单号', value: trackingNumber),
-              _SummaryField(label: '开票跟进', value: invoiceFollowUp),
-              _SummaryField(label: '下一步', value: followUp),
-              if (_hasResolvedRejectedException(order))
-                _SummaryField(
-                  label: '拒收处理',
-                  value: _displayText(order.exceptionResolutionDisplay),
-                ),
-            ],
+          _buildMobileFields(
+            context,
+            order: order,
+            number: number,
+            customer: customer,
+            salesOrder: salesOrder,
+            deliveryDate: deliveryDate,
+            status: status,
+            itemsCount: itemsCount,
+            totalQuantity: totalQuantity,
+            logistics: logistics,
+            trackingNumber: trackingNumber,
+            invoiceFollowUp: invoiceFollowUp,
+            followUp: followUp,
           ),
           SizedBox(height: sectionSpacing),
           Wrap(
@@ -1407,7 +1401,88 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
         (order.exceptionResolution ?? '').trim().isNotEmpty ||
         (order.exceptionResolutionNotes ?? '').trim().isNotEmpty;
   }
+
+  Widget _buildMobileFields(
+    BuildContext context, {
+    required DeliveryOrder order,
+    required String number,
+    required String customer,
+    required String salesOrder,
+    required String deliveryDate,
+    required String status,
+    required String itemsCount,
+    required String totalQuantity,
+    required String logistics,
+    required String trackingNumber,
+    required String invoiceFollowUp,
+    required String followUp,
+  }) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>();
+    final labelStyle = theme.textTheme.bodySmall?.copyWith(
+      color: colors?.subtleText ?? theme.hintColor,
+    );
+    final fields = <(String, String)>[
+      ('发货单号', number),
+      ('客户', customer),
+      ('客户订单', salesOrder),
+      ('发货日期', deliveryDate),
+      ('状态', status),
+      ('明细数', itemsCount),
+      ('发货数量', totalQuantity),
+      ('物流公司', logistics),
+      ('运单号', trackingNumber),
+      ('开票跟进', invoiceFollowUp),
+      ('下一步', followUp),
+    ];
+    if (_hasResolvedRejectedException(order)) {
+      fields.add((
+        '拒收处理',
+        _displayText(order.exceptionResolutionDisplay),
+      ));
+    }
+    return Column(
+      children: [
+        for (int i = 0; i < fields.length; i++)
+          _mobileRow(
+            context,
+            labelStyle,
+            fields[i].$1,
+            fields[i].$2,
+            last: i == fields.length - 1,
+          ),
+      ],
+    );
+  }
+
+  Widget _mobileRow(
+    BuildContext context,
+    TextStyle? labelStyle,
+    String label,
+    String value, {
+    bool last = false,
+  }) {
+    final theme = Theme.of(context);
+    final spacing = LayoutTokens.sectionSpacing(context) * 0.6;
+    return Padding(
+      padding: EdgeInsets.only(bottom: last ? 0 : spacing),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 72,
+            child: Text(label, style: labelStyle),
+          ),
+          Expanded(
+            child: Text(
+              value.isEmpty ? _emptyCellText : value,
+              style: theme.textTheme.bodyMedium,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-typedef _SummaryField = SummaryField;
 typedef _SummaryChip = SummaryChip;

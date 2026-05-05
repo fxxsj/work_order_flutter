@@ -1102,24 +1102,75 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
       expandedChild: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SummaryFieldWrap(
+          _buildMobileFields(
+            context,
             isMobile: isMobile,
-            children: [
-              _SummaryField(label: '发票号', value: number),
-              _SummaryField(label: '客户', value: customer),
-              _SummaryField(label: '来源', value: source),
-              _SummaryField(label: '发票类型', value: invoiceType),
-              _SummaryField(label: '金额', value: amount),
-              _SummaryField(label: '状态', value: status),
-              _SummaryField(label: '下一步', value: followUp),
-              _SummaryField(label: '开票日期', value: issueDate),
-              _SummaryField(label: '附件', value: attachmentStatus),
-            ],
+            number: number,
+            customer: customer,
+            source: source,
+            invoiceType: invoiceType,
+            amount: amount,
+            status: status,
+            followUp: followUp,
+            issueDate: issueDate,
+            attachmentStatus: attachmentStatus,
           ),
           if (actions.isNotEmpty) ...[
             SizedBox(height: sectionSpacing),
             RowActionGroup(actions: actions, primaryCount: 2),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileFields(
+    BuildContext context, {
+    required bool isMobile,
+    required String number,
+    required String customer,
+    required String source,
+    required String invoiceType,
+    required String amount,
+    required String status,
+    required String followUp,
+    required String issueDate,
+    required String attachmentStatus,
+  }) {
+    final theme = Theme.of(context);
+    final labelStyle = theme.textTheme.bodySmall?.copyWith(
+      color: theme.hintColor,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _mobileRow(context, labelStyle, '发票号', number),
+        _mobileRow(context, labelStyle, '客户', customer),
+        _mobileRow(context, labelStyle, '来源', source),
+        _mobileRow(context, labelStyle, '发票类型', invoiceType),
+        _mobileRow(context, labelStyle, '金额', amount),
+        _mobileRow(context, labelStyle, '状态', status),
+        _mobileRow(context, labelStyle, '下一步', followUp),
+        _mobileRow(context, labelStyle, '开票日期', issueDate),
+        _mobileRow(context, labelStyle, '附件', attachmentStatus, last: true),
+      ],
+    );
+  }
+
+  Widget _mobileRow(BuildContext context, TextStyle? labelStyle, String label,
+      String value,
+      {bool last = false}) {
+    final theme = Theme.of(context);
+    final spacing = LayoutTokens.sectionSpacing(context) * 0.6;
+    return Padding(
+      padding: EdgeInsets.only(bottom: last ? 0 : spacing),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(width: 72, child: Text(label, style: labelStyle)),
+          Expanded(
+              child: Text(value.isEmpty ? _emptyCellText : value,
+                  style: theme.textTheme.bodyMedium)),
         ],
       ),
     );
@@ -1250,5 +1301,4 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
   }
 }
 
-typedef _SummaryField = SummaryField;
 typedef _SummaryChip = SummaryChip;
