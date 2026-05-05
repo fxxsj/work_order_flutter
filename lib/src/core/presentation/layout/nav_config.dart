@@ -13,6 +13,7 @@ class NavItem {
   final List<String> requiredPermissions;
   final List<String> requiredGroups;
   final bool superuserOnly;
+  final bool staffOnly;
 
   const NavItem({
     required this.id,
@@ -27,6 +28,7 @@ class NavItem {
     this.requiredPermissions = const [],
     this.requiredGroups = const [],
     this.superuserOnly = false,
+    this.staffOnly = false,
   });
 
   NavItem copyWith({
@@ -42,6 +44,7 @@ class NavItem {
     List<String>? requiredPermissions,
     List<String>? requiredGroups,
     bool? superuserOnly,
+    bool? staffOnly,
   }) {
     return NavItem(
       id: id ?? this.id,
@@ -56,6 +59,7 @@ class NavItem {
       requiredPermissions: requiredPermissions ?? this.requiredPermissions,
       requiredGroups: requiredGroups ?? this.requiredGroups,
       superuserOnly: superuserOnly ?? this.superuserOnly,
+      staffOnly: staffOnly ?? this.staffOnly,
     );
   }
 }
@@ -65,12 +69,14 @@ class _NavAccessContext {
     required this.permissions,
     required this.groups,
     required this.isSuperuser,
+    required this.isStaff,
     required this.unrestricted,
   });
 
   final Set<String> permissions;
   final Set<String> groups;
   final bool isSuperuser;
+  final bool isStaff;
   final bool unrestricted;
 
   factory _NavAccessContext.fromUser(Map<String, dynamic>? user) {
@@ -79,6 +85,7 @@ class _NavAccessContext {
         permissions: {},
         groups: {},
         isSuperuser: false,
+        isStaff: false,
         unrestricted: true,
       );
     }
@@ -96,20 +103,23 @@ class _NavAccessContext {
     }
 
     final isSuperuser = user['is_superuser'] == true;
+    final isStaff = user['is_staff'] == true;
     final unrestricted = permissions.isEmpty && groups.isEmpty && !isSuperuser;
 
     return _NavAccessContext(
       permissions: permissions,
       groups: groups,
       isSuperuser: isSuperuser,
+      isStaff: isStaff,
       unrestricted: unrestricted,
     );
   }
 
   bool canAccess(NavItem item) {
-    if (unrestricted) return true;
     if (isSuperuser || permissions.contains('*')) return true;
     if (item.superuserOnly) return false;
+    if (item.staffOnly && !isStaff) return false;
+    if (unrestricted) return true;
     if (item.requiredGroups.isNotEmpty &&
         !item.requiredGroups.any(groups.contains)) {
       return false;
@@ -520,21 +530,21 @@ const List<NavItem> navItems = [
         label: '系统通知',
         icon: Icons.campaign_outlined,
         path: '/system-notifications',
-        superuserOnly: true,
+        staffOnly: true,
       ),
       NavItem(
         id: 'user_notification_settings',
         label: '通知设置',
         icon: Icons.tune_outlined,
         path: '/notification-settings',
-        superuserOnly: true,
+        staffOnly: true,
       ),
       NavItem(
         id: 'notification_templates',
         label: '通知模板',
         icon: Icons.view_list_outlined,
         path: '/notification-templates',
-        superuserOnly: true,
+        staffOnly: true,
       ),
       NavItem(
         id: 'audit_logs',

@@ -4,6 +4,7 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
+import 'package:work_order_app/src/core/utils/toast_util.dart';
 
 class NotificationTemplatePage extends StatefulWidget {
   const NotificationTemplatePage({super.key});
@@ -16,8 +17,17 @@ class NotificationTemplatePage extends StatefulWidget {
 class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
   ApiClient? _apiClient;
   bool _loading = false;
+  bool _saving = false;
+  bool _previewing = false;
   String? _error;
   final List<_TemplateItem> _templates = [];
+  _TemplateItem? _selectedTemplate;
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _messageController = TextEditingController();
+  final TextEditingController _variablesController = TextEditingController();
+  final TextEditingController _previewController = TextEditingController();
+  bool _isActive = true;
+  String? _previewResult;
 
   @override
   void didChangeDependencies() {
@@ -26,6 +36,15 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
     if (_templates.isEmpty && !_loading) {
       _loadTemplates();
     }
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _messageController.dispose();
+    _variablesController.dispose();
+    _previewController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadTemplates() async {
@@ -48,6 +67,7 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
               title: item['title']?.toString() ?? '-',
               message: item['message']?.toString() ?? '-',
               variables: _parseVariables(item['variables']),
+              isActive: item['is_active'] != false,
             ));
           }
         });
@@ -56,12 +76,125 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
         _templates
           ..clear()
           ..addAll(templates);
+        if (_templates.isNotEmpty) {
+          final currentKey = _selectedTemplate?.key;
+          _TemplateItem? matched;
+          if (currentKey != null) {
+            for (final item in _templates) {
+              if (item.key == currentKey) {
+                matched = item;
+                break;
+              }
+            }
+          }
+          _selectTemplate(matched ?? _templates.first);
+        }
       });
     } catch (err) {
       setState(() => _error = err.toString());
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  void _selectTemplate(_TemplateItem item) {
+    setState(() {
+      _selectedTemplate = item;
+      _titleController.text = item.title;
+      _messageController.text = item.message;
+      _variablesController.text = item.variables.join(', ');
+      _previewController.text = _buildDefaultPreviewJson(item.variables);
+      _isActive = item.isActive;
+      _previewResult = null;
+    });
+  }
+
+  String _buildDefaultPreviewJson(List<String> variables) {
+    final pairs = variables
+        .map((item) => '"$item": "$item-demo"')
+        .join(', ');
+    return '{${pairs.isEmpty ? '' : pairs}}';
+  }
+
+  Future<void> _saveTemplate() async {
+    final selected = _selectedTemplate;
+    if (selected == null) {
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      final variables = _variablesController.text
+          .split(',')
+          .map((item) => item.trim())
+          .where((item) => item.isNotEmpty)
+          .toList();
+      await _apiClient!.post(
+        '/notification-templates/update_template/',
+        data: {
+          'template_name': selected.key,
+          'title': _titleController.text.trim(),
+          'message': _messageController.text.trim(),
+          'variables': variables,
+          'is_active': _isActive,
+        },
+      );
+      await _loadTemplates();
+      ToastUtil.showSuccess('模板已保存');
+    } catch (err) {
+      ToastUtil.showError('保存失败: $err');
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _previewTemplate() async {
+    final selected = _selectedTemplate;
+    if (selected == null) {
+      return;
+    }
+    setState(() => _previewing = true);
+    try {
+      final variables = _parsePreviewVariables(_previewController.text.trim());
+      final response = await _apiClient!.post(
+        '/notification-templates/preview_template/',
+        data: {
+          'template_name': selected.key,
+          'variables': variables,
+        },
+      );
+      final data = response.data;
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _previewResult =
+            '标题：${data['title'] ?? '-'}\n\n内容：${data['message'] ?? '-'}';
+      });
+    } catch (err) {
+      ToastUtil.showError('预览失败: $err');
+    } finally {
+      if (mounted) setState(() => _previewing = false);
+    }
+  }
+
+  Map<String, dynamic> _parsePreviewVariables(String raw) {
+    final result = <String, dynamic>{};
+    final trimmed = raw.replaceAll('{', '').replaceAll('}', '').trim();
+    if (trimmed.isEmpty) {
+      return result;
+    }
+    for (final entry in trimmed.split(',')) {
+      final parts = entry.split(':');
+      if (parts.length < 2) {
+        continue;
+      }
+      final key = parts.first.replaceAll('"', '').trim();
+      final value = parts.sublist(1).join(':').replaceAll('"', '').trim();
+      if (key.isNotEmpty) {
+        result[key] = value;
+      }
+    }
+    return result;
   }
 
   List<String> _parseVariables(dynamic value) {
@@ -110,25 +243,122 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
               child: const Text('暂无模板数据'),
             )
           else
-            AppDataTable(
-              columns: const [
-                DataColumn(label: Text('模板键')),
-                DataColumn(label: Text('标题')),
-                DataColumn(label: Text('内容')),
-                DataColumn(label: Text('变量')),
-              ],
-              rows: _templates
-                  .map(
-                    (item) => DataRow(
-                      cells: [
-                        DataCell(Text(item.key)),
-                        DataCell(Text(item.title)),
-                        DataCell(Text(item.message)),
-                        DataCell(Text(item.variables.join(', '))),
+            Column(
+              children: [
+                AppDataTable(
+                  columns: const [
+                    DataColumn(label: Text('模板键')),
+                    DataColumn(label: Text('标题')),
+                    DataColumn(label: Text('内容')),
+                    DataColumn(label: Text('变量')),
+                    DataColumn(label: Text('状态')),
+                  ],
+                  rows: _templates
+                      .map(
+                        (item) => DataRow(
+                          selected: _selectedTemplate?.key == item.key,
+                          onSelectChanged: (_) => _selectTemplate(item),
+                          cells: [
+                            DataCell(Text(item.key)),
+                            DataCell(Text(item.title)),
+                            DataCell(Text(item.message)),
+                            DataCell(Text(item.variables.join(', '))),
+                            DataCell(Text(item.isActive ? '启用' : '停用')),
+                          ],
+                        ),
+                      )
+                      .toList(),
+                ),
+                SizedBox(height: spacing),
+                if (_selectedTemplate != null)
+                  AppCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '编辑模板: ${_selectedTemplate!.key}',
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
+                        const SizedBox(height: LayoutTokens.gapSm),
+                        TextField(
+                          controller: _titleController,
+                          decoration: const InputDecoration(labelText: '标题模板'),
+                        ),
+                        const SizedBox(height: LayoutTokens.gapSm),
+                        TextField(
+                          controller: _messageController,
+                          maxLines: 4,
+                          decoration: const InputDecoration(labelText: '内容模板'),
+                        ),
+                        const SizedBox(height: LayoutTokens.gapSm),
+                        TextField(
+                          controller: _variablesController,
+                          decoration: const InputDecoration(
+                            labelText: '变量列表',
+                            hintText: 'task_name, workorder_number',
+                          ),
+                        ),
+                        const SizedBox(height: LayoutTokens.gapSm),
+                        SwitchListTile(
+                          value: _isActive,
+                          onChanged: (value) => setState(() => _isActive = value),
+                          title: const Text('启用模板'),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        const SizedBox(height: LayoutTokens.gapSm),
+                        TextField(
+                          controller: _previewController,
+                          maxLines: 3,
+                          decoration: const InputDecoration(
+                            labelText: '预览变量',
+                            hintText: '{"task_name":"打样","assigned_by":"主管"}',
+                          ),
+                        ),
+                        const SizedBox(height: LayoutTokens.gapSm),
+                        Wrap(
+                          spacing: LayoutTokens.gapSm,
+                          runSpacing: LayoutTokens.gapSm,
+                          children: [
+                            FilledButton.icon(
+                              onPressed: _saving ? null : _saveTemplate,
+                              icon: _saving
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : const Icon(Icons.save_outlined, size: 18),
+                              label: Text(_saving ? '保存中' : '保存'),
+                            ),
+                            OutlinedButton.icon(
+                              onPressed: _previewing ? null : _previewTemplate,
+                              icon: _previewing
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : const Icon(Icons.visibility_outlined, size: 18),
+                              label: Text(_previewing ? '预览中' : '预览'),
+                            ),
+                          ],
+                        ),
+                        if (_previewResult != null) ...[
+                          const SizedBox(height: LayoutTokens.gapSm),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(LayoutTokens.gapSm),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(_previewResult!),
+                          ),
+                        ],
                       ],
                     ),
-                  )
-                  .toList(),
+                  ),
+              ],
             ),
         ],
       ),
@@ -142,10 +372,12 @@ class _TemplateItem {
     required this.title,
     required this.message,
     required this.variables,
+    required this.isActive,
   });
 
   final String key;
   final String title;
   final String message;
   final List<String> variables;
+  final bool isActive;
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -101,6 +102,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
   bool _loadingOptions = false;
   bool _loadingDetail = false;
   bool _submitting = false;
+  SalesOrderDetail? _detail;
 
   @override
   void initState() {
@@ -171,6 +173,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
   }
 
   void _applyDetail(SalesOrderDetail detail) {
+    _detail = detail;
     _customerId = detail.customerId;
     _status = detail.status ?? _status;
     _paymentStatus = detail.paymentStatus ?? _paymentStatus;
@@ -329,6 +332,11 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
     return '$year-$month-$day';
   }
 
+  String _formatAmount(double? value) {
+    if (value == null) return '0.00';
+    return value.toStringAsFixed(2);
+  }
+
   Future<void> _pickDate({required bool isOrderDate}) async {
     final initial = isOrderDate
         ? (_orderDate ?? DateTime.now())
@@ -434,7 +442,66 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
     return DetailSectionCard(title: title, child: child);
   }
 
-  Widget _buildBasicSection(double fieldWidth) {
+  double get _orderTaxRateValue =>
+      double.tryParse(_taxRateController.text.trim()) ?? 0;
+
+  double _lineSubtotal(_ItemDraft draft) {
+    final base = draft.quantityValue * draft.unitPriceValue;
+    final discounted = base - draft.discountAmountValue;
+    return discounted < 0 ? 0 : discounted;
+  }
+
+  double _lineTaxAmount(_ItemDraft draft) {
+    return _lineSubtotal(draft) * (draft.taxRateValue / 100);
+  }
+
+  double get _itemsSubtotalValue {
+    return _itemDrafts
+        .where((draft) => draft.productId != null)
+        .fold(0, (sum, draft) => sum + _lineSubtotal(draft));
+  }
+
+  double get _itemsTaxAmountValue {
+    return _itemDrafts
+        .where((draft) => draft.productId != null)
+        .fold(0, (sum, draft) => sum + _lineTaxAmount(draft));
+  }
+
+  double get _itemsTotalValue => _itemsSubtotalValue + _itemsTaxAmountValue;
+
+  int get _itemsCountValue =>
+      _itemDrafts.where((draft) => draft.productId != null).length;
+
+  int get _totalQuantityValue => _itemDrafts
+      .where((draft) => draft.productId != null)
+      .fold(0, (sum, draft) => sum + draft.quantityValue);
+
+  double get _discountAmountValue =>
+      double.tryParse(_discountAmountController.text.trim()) ?? 0;
+
+  double get _depositAmountValue =>
+      double.tryParse(_depositAmountController.text.trim()) ?? 0;
+
+  double get _paidAmountValue =>
+      double.tryParse(_paidAmountController.text.trim()) ?? 0;
+
+  double get _orderLevelTaxAmount {
+    final taxable = _itemsSubtotalValue - _discountAmountValue;
+    return taxable <= 0 ? 0 : taxable * (_orderTaxRateValue / 100);
+  }
+
+  double get _grandTotalValue {
+    final base = _itemsSubtotalValue - _discountAmountValue;
+    final taxed = base <= 0 ? 0.0 : base + _orderLevelTaxAmount;
+    return taxed;
+  }
+
+  double get _unpaidAmountValue {
+    final value = _grandTotalValue - _depositAmountValue - _paidAmountValue;
+    return value < 0 ? 0 : value;
+  }
+
+  Widget _buildContextSection(double fieldWidth) {
     final customerOptions = _customers
         .map(
           (item) => DropdownOption<int>(
@@ -455,50 +522,25 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
     );
 
     return _buildSection(
-      '基本信息',
+      '客户信息',
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          UnifiedDropdown<int>(
-            value: _customerId,
-            decoration: const InputDecoration(labelText: '客户'),
-            options: customerOptions,
-            selectHintText: _customers.isEmpty ? '新增客户' : '请选择',
-            minOptionsForSearch: 1,
-            onChanged: _handleCustomerChanged,
-            validator: (value) => value == null ? '请选择客户' : null,
-          ),
-          if (_customers.isEmpty) ...[
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: _handleCreateCustomer,
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('新增客户'),
-              ),
-            ),
-          ],
-          const SizedBox(height: 12),
           Wrap(
             spacing: 16,
             runSpacing: 12,
             children: [
               SizedBox(
                 width: fieldWidth,
-                child: CrudFormField.text(
-                  label: '状态',
-                  initialValue: _statusLabel(_status),
-                  enabled: false,
-                ).build(context),
-              ),
-              SizedBox(
-                width: fieldWidth,
-                child: CrudFormField.text(
-                  label: '付款状态',
-                  initialValue: _paymentStatusLabel(_paymentStatus),
-                  enabled: false,
-                ).build(context),
+                child: UnifiedDropdown<int>(
+                  value: _customerId,
+                  decoration: const InputDecoration(labelText: '客户'),
+                  options: customerOptions,
+                  selectHintText: _customers.isEmpty ? '新增客户' : '请选择',
+                  minOptionsForSearch: 1,
+                  onChanged: _handleCustomerChanged,
+                  validator: (value) => value == null ? '请选择客户' : null,
+                ),
               ),
               SizedBox(
                 width: fieldWidth,
@@ -520,6 +562,13 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                       (value == null || value.isEmpty) ? '请选择交货日期' : null,
                 ).build(context),
               ),
+              SizedBox(
+                width: fieldWidth,
+                child: CrudFormField.text(
+                  label: '合同号',
+                  controller: _contractNumberController,
+                ).build(context),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -530,70 +579,144 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               SizedBox(
                 width: fieldWidth,
                 child: CrudFormField.text(
-                  label: '合同号',
-                  controller: _contractNumberController,
+                  label: '订单号',
+                  initialValue: widget.mode == SalesOrderFormMode.edit &&
+                          (_detail?.orderNumber.trim().isNotEmpty ?? false)
+                      ? _detail!.orderNumber
+                      : '保存后生成',
+                  enabled: false,
                 ).build(context),
               ),
               SizedBox(
                 width: fieldWidth,
-                child: CrudFormField.number(
-                  label: '税率 (%)',
-                  controller: _taxRateController,
-                  decimal: true,
+                child: CrudFormField.text(
+                  label: '状态',
+                  initialValue: _statusLabel(_status),
+                  enabled: false,
                 ).build(context),
               ),
               SizedBox(
                 width: fieldWidth,
-                child: CrudFormField.number(
-                  label: '折扣金额',
-                  controller: _discountAmountController,
-                  decimal: true,
-                ).build(context),
-              ),
-              SizedBox(
-                width: fieldWidth,
-                child: CrudFormField.number(
-                  label: '定金',
-                  controller: _depositAmountController,
-                  decimal: true,
-                ).build(context),
-              ),
-              SizedBox(
-                width: fieldWidth,
-                child: CrudFormField.number(
-                  label: '已付金额',
-                  controller: _paidAmountController,
-                  decimal: true,
+                child: CrudFormField.text(
+                  label: '付款状态',
+                  initialValue: _paymentStatusLabel(_paymentStatus),
+                  enabled: false,
                 ).build(context),
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 16,
+            runSpacing: 12,
+            children: [
+              SizedBox(
+                width: fieldWidth,
+                child: CrudFormField.text(
+                  label: '联系人',
+                  controller: _contactPersonController,
+                ).build(context),
+              ),
+              SizedBox(
+                width: fieldWidth,
+                child: CrudFormField.text(
+                  label: '联系电话',
+                  controller: _contactPhoneController,
+                ).build(context),
+              ),
+              SizedBox(
+                width: fieldWidth,
+                child: CrudFormField.text(
+                  label: '送货地址',
+                  controller: _shippingAddressController,
+                ).build(context),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          CrudFormField.textarea(
+            label: '备注',
+            controller: _notesController,
+            maxLines: 3,
+          ).build(context),
+          if (_customers.isEmpty) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: _handleCreateCustomer,
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('新增客户'),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildItemsSection() {
+  Widget _buildItemsSection(bool isDesktop) {
     return _buildSection(
       '订单明细',
       Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              PageActionButton.outlined(
+                onPressed: () => setState(
+                  () => _itemDrafts
+                      .add(_ItemDraft(initialTaxRate: _orderTaxRateValue)),
+                ),
+                icon: const Icon(Icons.add, size: 16),
+                label: '新增明细',
+              ),
+              _InlineBadge(label: '明细行数', value: _itemsCountValue.toString()),
+              _InlineBadge(label: '总数量', value: _totalQuantityValue.toString()),
+              _InlineBadge(
+                label: '明细小计',
+                value: _formatAmount(_itemsSubtotalValue),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
           for (int index = 0; index < _itemDrafts.length; index++)
             _ItemRow(
+              key: ValueKey(
+                  'sales-order-item-$index-${_itemDrafts[index].productId ?? 0}'),
               draft: _itemDrafts[index],
               products: _products,
+              isDesktop: isDesktop,
               onCreateProduct: _handleCreateProduct,
+              onChanged: () => setState(() {}),
               onRemove: _itemDrafts.length > 1
-                  ? () => setState(() => _itemDrafts.removeAt(index))
+                  ? () => setState(() {
+                        final draft = _itemDrafts.removeAt(index);
+                        draft.dispose();
+                      })
                   : null,
             ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: PageActionButton.outlined(
-              onPressed: () => setState(() => _itemDrafts.add(_ItemDraft())),
-              icon: const Icon(Icons.add, size: 16),
-              label: '新增明细',
-            ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              _ReadOnlyMetric(
+                label: '明细小计',
+                value: _formatAmount(_itemsSubtotalValue),
+              ),
+              _ReadOnlyMetric(
+                label: '行税额合计',
+                value: _formatAmount(_itemsTaxAmountValue),
+              ),
+              _ReadOnlyMetric(
+                label: '明细合计',
+                value: _formatAmount(_itemsTotalValue),
+              ),
+            ],
           ),
         ],
       ),
@@ -634,31 +757,131 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
     }
   }
 
-  Widget _buildContactSection() {
+  Widget _buildSettlementSection(double fieldWidth) {
     return _buildSection(
-      '联系与备注',
+      '金额与结算',
       Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CrudFormField.text(
-            label: '联系人',
-            controller: _contactPersonController,
-          ).build(context),
+          Wrap(
+            spacing: 16,
+            runSpacing: 12,
+            children: [
+              SizedBox(
+                width: fieldWidth,
+                child: CrudFormField.number(
+                  label: '整单税率 (%)',
+                  controller: _taxRateController,
+                  decimal: true,
+                  onChanged: (_) => setState(() {}),
+                ).build(context),
+              ),
+              SizedBox(
+                width: fieldWidth,
+                child: CrudFormField.number(
+                  label: '整单折扣金额',
+                  controller: _discountAmountController,
+                  decimal: true,
+                  onChanged: (_) => setState(() {}),
+                ).build(context),
+              ),
+              SizedBox(
+                width: fieldWidth,
+                child: CrudFormField.number(
+                  label: '定金',
+                  controller: _depositAmountController,
+                  decimal: true,
+                  onChanged: (_) => setState(() {}),
+                ).build(context),
+              ),
+              SizedBox(
+                width: fieldWidth,
+                child: CrudFormField.number(
+                  label: '已付金额',
+                  controller: _paidAmountController,
+                  decimal: true,
+                  onChanged: (_) => setState(() {}),
+                ).build(context),
+              ),
+            ],
+          ),
           const SizedBox(height: 12),
-          CrudFormField.text(
-            label: '联系电话',
-            controller: _contactPhoneController,
-          ).build(context),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              _ReadOnlyMetric(
+                  label: '小计', value: _formatAmount(_itemsSubtotalValue)),
+              _ReadOnlyMetric(
+                label: '整单税额',
+                value: _formatAmount(_orderLevelTaxAmount),
+              ),
+              _ReadOnlyMetric(
+                  label: '总金额', value: _formatAmount(_grandTotalValue)),
+              _ReadOnlyMetric(
+                  label: '未付金额', value: _formatAmount(_unpaidAmountValue)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTraceabilitySection() {
+    final detail = _detail;
+    if (detail == null) return const SizedBox.shrink();
+    return _buildSection(
+      '订单跟进',
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              _ReadOnlyMetric(
+                label: '实际交货日期',
+                value: _formatDate(detail.actualDeliveryDate).isEmpty
+                    ? '-'
+                    : _formatDate(detail.actualDeliveryDate),
+              ),
+              _ReadOnlyMetric(
+                label: '收款次数',
+                value: (detail.paymentCount ?? 0).toString(),
+              ),
+              _ReadOnlyMetric(
+                label: '待收计划数',
+                value: (detail.pendingPaymentPlanCount ?? 0).toString(),
+              ),
+              _ReadOnlyMetric(
+                label: '待收计划金额',
+                value: _formatAmount(detail.pendingPaymentPlanAmount),
+              ),
+            ],
+          ),
           const SizedBox(height: 12),
-          CrudFormField.text(
-            label: '送货地址',
-            controller: _shippingAddressController,
-          ).build(context),
-          const SizedBox(height: 12),
-          CrudFormField.textarea(
-            label: '备注',
-            controller: _notesController,
-            maxLines: 3,
-          ).build(context),
+          _TraceabilityGroup(
+            label: '关联施工单',
+            numbers: detail.workOrderSummaries.isNotEmpty
+                ? detail.workOrderSummaries.map((item) => item.number).toList()
+                : detail.workOrderNumbers,
+          ),
+          const SizedBox(height: 8),
+          _TraceabilityGroup(
+            label: '关联发货单',
+            numbers: detail.deliveryOrderSummaries.isNotEmpty
+                ? detail.deliveryOrderSummaries
+                    .map((item) => item.number)
+                    .toList()
+                : detail.deliveryOrderNumbers,
+          ),
+          const SizedBox(height: 8),
+          _TraceabilityGroup(
+            label: '关联发票',
+            numbers: detail.invoiceSummaries.isNotEmpty
+                ? detail.invoiceSummaries.map((item) => item.number).toList()
+                : detail.invoiceNumbers,
+          ),
         ],
       ),
     );
@@ -705,23 +928,14 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               key: _formKey,
               child: ListView(
                 children: [
-                  if (isDesktop)
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(child: _buildBasicSection(fieldWidth)),
-                        const SizedBox(width: _sectionSpacing),
-                        Expanded(child: _buildContactSection()),
-                      ],
-                    )
-                  else ...[
-                    _buildBasicSection(fieldWidth),
+                  _buildContextSection(fieldWidth),
+                  const SizedBox(height: _sectionSpacing),
+                  _buildItemsSection(isDesktop),
+                  const SizedBox(height: _sectionSpacing),
+                  _buildSettlementSection(fieldWidth),
+                  if (widget.mode == SalesOrderFormMode.edit) ...[
                     const SizedBox(height: _sectionSpacing),
-                  ],
-                  _buildItemsSection(),
-                  if (!isDesktop) ...[
-                    const SizedBox(height: _sectionSpacing),
-                    _buildContactSection(),
+                    _buildTraceabilitySection(),
                   ],
                 ],
               ),
@@ -731,11 +945,12 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
 }
 
 class _ItemDraft {
-  _ItemDraft()
+  _ItemDraft({double initialTaxRate = 0})
       : quantityController = TextEditingController(text: '1'),
         unitController = TextEditingController(text: '件'),
         unitPriceController = TextEditingController(text: '0'),
-        taxRateController = TextEditingController(text: '0'),
+        taxRateController =
+            TextEditingController(text: initialTaxRate.toStringAsFixed(2)),
         discountAmountController = TextEditingController(text: '0'),
         notesController = TextEditingController();
 
@@ -783,15 +998,20 @@ class _ItemDraft {
 
 class _ItemRow extends StatefulWidget {
   const _ItemRow({
+    super.key,
     required this.draft,
     required this.products,
     required this.onCreateProduct,
+    required this.onChanged,
+    required this.isDesktop,
     this.onRemove,
   });
 
   final _ItemDraft draft;
   final List<ProductOption> products;
   final Future<ProductOption?> Function() onCreateProduct;
+  final VoidCallback onChanged;
+  final bool isDesktop;
   final VoidCallback? onRemove;
 
   @override
@@ -811,15 +1031,16 @@ class _ItemRowState extends State<_ItemRow> {
   }
 
   void _applyProductDefaults(ProductOption product) {
-    widget.draft.unitController.text = (product.unit?.trim().isNotEmpty ?? false)
-        ? product.unit!.trim()
-        : '件';
+    widget.draft.unitController.text =
+        (product.unit?.trim().isNotEmpty ?? false) ? product.unit!.trim() : '件';
     widget.draft.unitPriceController.text =
         (product.unitPrice ?? 0).toStringAsFixed(2);
+    widget.onChanged();
   }
 
   void _handleProductChanged(int? value) {
     setState(() => widget.draft.productId = value);
+    widget.onChanged();
     if (value == null) {
       return;
     }
@@ -845,6 +1066,12 @@ class _ItemRowState extends State<_ItemRow> {
   @override
   Widget build(BuildContext context) {
     final selectedProduct = _selectedProduct;
+    final lineSubtotal =
+        widget.draft.quantityValue * widget.draft.unitPriceValue;
+    final lineDiscounted = lineSubtotal - widget.draft.discountAmountValue;
+    final safeSubtotal = lineDiscounted < 0 ? 0 : lineDiscounted;
+    final lineTax = safeSubtotal * (widget.draft.taxRateValue / 100);
+    final lineTotal = safeSubtotal + lineTax;
     final productOptions = widget.products
         .map(
           (item) => DropdownOption<int>(
@@ -864,90 +1091,239 @@ class _ItemRowState extends State<_ItemRow> {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Wrap(
-        spacing: 12,
-        runSpacing: 12,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          SizedBox(
-            width: 220,
-            child: UnifiedDropdown<int>(
-              value: widget.draft.productId,
-              decoration: const InputDecoration(labelText: '产品'),
-              options: productOptions,
-              selectHintText: widget.products.isEmpty ? '新增产品' : '请选择',
-              minOptionsForSearch: 1,
-              onChanged: _handleProductChanged,
-              validator: (value) => value == null ? '请选择产品' : null,
+      child: DetailSurfaceCard(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                SizedBox(
+                  width: widget.isDesktop ? 260 : double.infinity,
+                  child: UnifiedDropdown<int>(
+                    value: widget.draft.productId,
+                    decoration: const InputDecoration(labelText: '产品'),
+                    options: productOptions,
+                    selectHintText: widget.products.isEmpty ? '新增产品' : '请选择',
+                    minOptionsForSearch: 1,
+                    onChanged: _handleProductChanged,
+                    validator: (value) => value == null ? '请选择产品' : null,
+                  ),
+                ),
+                SizedBox(
+                  width: 220,
+                  child: CrudFormField.text(
+                    label: '规格',
+                    initialValue: selectedProduct?.specification ?? '',
+                    enabled: false,
+                  ).build(context),
+                ),
+                SizedBox(
+                  width: 110,
+                  child: CrudFormField.text(
+                    label: '单位',
+                    controller: widget.draft.unitController,
+                    onChanged: (_) => widget.onChanged(),
+                  ).build(context),
+                ),
+                SizedBox(
+                  width: 120,
+                  child: CrudFormField.number(
+                    label: '单价',
+                    controller: widget.draft.unitPriceController,
+                    decimal: true,
+                    onChanged: (_) => widget.onChanged(),
+                  ).build(context),
+                ),
+                SizedBox(
+                  width: 110,
+                  child: CrudFormField.number(
+                    label: '数量',
+                    controller: widget.draft.quantityController,
+                    onChanged: (_) => widget.onChanged(),
+                  ).build(context),
+                ),
+                SizedBox(
+                  width: 120,
+                  child: CrudFormField.number(
+                    label: '行税率',
+                    controller: widget.draft.taxRateController,
+                    decimal: true,
+                    onChanged: (_) => widget.onChanged(),
+                  ).build(context),
+                ),
+                SizedBox(
+                  width: 120,
+                  child: CrudFormField.number(
+                    label: '行折扣',
+                    controller: widget.draft.discountAmountController,
+                    decimal: true,
+                    onChanged: (_) => widget.onChanged(),
+                  ).build(context),
+                ),
+                SizedBox(
+                  width: widget.isDesktop ? 220 : double.infinity,
+                  child: CrudFormField.text(
+                    label: '备注',
+                    controller: widget.draft.notesController,
+                    onChanged: (_) => widget.onChanged(),
+                  ).build(context),
+                ),
+                if (widget.onRemove != null)
+                  IconButton(
+                    onPressed: widget.onRemove,
+                    icon: const Icon(Icons.remove_circle_outline),
+                    tooltip: '移除',
+                  ),
+              ],
             ),
-          ),
-          if (widget.products.isEmpty)
-            TextButton.icon(
-              onPressed: _handleCreateProduct,
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('新增产品'),
+            if (widget.products.isEmpty) ...[
+              const SizedBox(height: 8),
+              TextButton.icon(
+                onPressed: _handleCreateProduct,
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('新增产品'),
+              ),
+            ],
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                _ReadOnlyMetric(
+                  label: '行小计',
+                  value: lineSubtotal.toStringAsFixed(2),
+                ),
+                _ReadOnlyMetric(
+                  label: '折后金额',
+                  value: safeSubtotal.toStringAsFixed(2),
+                ),
+                _ReadOnlyMetric(
+                  label: '税额',
+                  value: lineTax.toStringAsFixed(2),
+                ),
+                _ReadOnlyMetric(
+                  label: '行合计',
+                  value: lineTotal.toStringAsFixed(2),
+                ),
+              ],
             ),
-          SizedBox(
-            width: 220,
-            child: CrudFormField.text(
-              label: '规格',
-              initialValue: selectedProduct?.specification ?? '',
-              enabled: false,
-            ).build(context),
-          ),
-          SizedBox(
-            width: 120,
-            child: CrudFormField.number(
-              label: '数量',
-              controller: widget.draft.quantityController,
-            ).build(context),
-          ),
-          SizedBox(
-            width: 120,
-            child: CrudFormField.text(
-              label: '单位',
-              controller: widget.draft.unitController,
-            ).build(context),
-          ),
-          SizedBox(
-            width: 140,
-            child: CrudFormField.number(
-              label: '单价',
-              controller: widget.draft.unitPriceController,
-              decimal: true,
-            ).build(context),
-          ),
-          SizedBox(
-            width: 140,
-            child: CrudFormField.number(
-              label: '税率',
-              controller: widget.draft.taxRateController,
-              decimal: true,
-            ).build(context),
-          ),
-          SizedBox(
-            width: 140,
-            child: CrudFormField.number(
-              label: '折扣',
-              controller: widget.draft.discountAmountController,
-              decimal: true,
-            ).build(context),
-          ),
-          SizedBox(
-            width: 220,
-            child: CrudFormField.text(
-              label: '备注',
-              controller: widget.draft.notesController,
-            ).build(context),
-          ),
-          if (widget.onRemove != null)
-            IconButton(
-              onPressed: widget.onRemove,
-              icon: const Icon(Icons.remove_circle_outline),
-              tooltip: '移除',
-            ),
-        ],
+          ],
+        ),
       ),
+    );
+  }
+}
+
+class _ReadOnlyMetric extends StatelessWidget {
+  const _ReadOnlyMetric({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 140),
+      child: DetailSurfaceCard(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: theme.textTheme.labelSmall,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InlineBadge extends StatelessWidget {
+  const _InlineBadge({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color:
+            theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+      ),
+      child: Text(
+        '$label：$value',
+        style: theme.textTheme.bodySmall?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+class _TraceabilityGroup extends StatelessWidget {
+  const _TraceabilityGroup({
+    required this.label,
+    required this.numbers,
+  });
+
+  final String label;
+  final List<String> numbers;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: theme.textTheme.labelMedium),
+        const SizedBox(height: 6),
+        if (numbers.isEmpty)
+          Text('-', style: theme.textTheme.bodyMedium)
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: numbers
+                .map(
+                  (number) => Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.5),
+                      borderRadius:
+                          BorderRadius.circular(LayoutTokens.radiusPill),
+                    ),
+                    child: Text(number, style: theme.textTheme.bodySmall),
+                  ),
+                )
+                .toList(),
+          ),
+      ],
     );
   }
 }
