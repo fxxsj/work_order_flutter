@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/checkbox_group_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/color_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/date_field.dart';
@@ -7,6 +6,9 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/date_range_f
 import 'package:work_order_app/src/core/presentation/layout/widgets/file_upload_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/radio_group_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/tags_field.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/text_input_field.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/textarea_field.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/toggle_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 
 // Re-export commonly used types so existing imports don't break
@@ -658,36 +660,14 @@ class CrudFormField {
         );
 
       case CrudFieldType.toggle:
-        return InputDecorator(
+        return ToggleField(
           key: fieldKey,
-          decoration: InputDecoration(
-            labelText: label,
-            helperText: helperText,
-            filled: true,
-            fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-              borderSide: BorderSide(
-                color: ColorTokens.border,
-                width: 1,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-              borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.primary,
-                width: 2,
-              ),
-            ),
-          ),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Switch(
-              value: value as bool? ?? false,
-              onChanged:
-                  enabled ? (nextValue) => onChanged?.call(nextValue) : null,
-            ),
-          ),
+          label: label,
+          value: value as bool? ?? false,
+          onChanged: onChanged as ValueChanged<bool>?,
+          validator: validator as String? Function(bool?)?,
+          enabled: enabled,
+          helperText: helperText,
         );
 
       case CrudFieldType.fileUpload:
@@ -808,111 +788,99 @@ class CrudFormField {
         );
 
       case CrudFieldType.textarea:
-        return TextFormField(
+        return TextareaField(
           key: fieldKey,
+          label: label,
           controller: controller,
-          initialValue: controller == null ? initialValue : null,
+          initialValue: initialValue,
           validator: validator as String? Function(String?)?,
           enabled: enabled,
-          minLines: minLines,
+          hintText: hintText,
+          helperText: helperText,
+          prefixIcon: prefixIcon,
+          suffixIcon: suffixIcon,
           maxLines: maxLines,
+          isDense: isDense,
           onChanged: onChanged as ValueChanged<String>?,
-          decoration: InputDecoration(
-            labelText: label,
-            hintText: hintText,
-            helperText: helperText,
-            prefixIcon: prefixIcon,
-            suffixIcon: suffixIcon,
-            isDense: isDense,
-            filled: true,
-            fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-              borderSide: BorderSide(
-                color: ColorTokens.border,
-                width: 1,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-              borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.primary,
-                width: 2,
-              ),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-              borderSide: BorderSide(
-                color: ColorTokens.danger,
-                width: 1,
-              ),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-              borderSide: BorderSide(
-                color: ColorTokens.danger,
-                width: 2,
-              ),
-            ),
-          ),
         );
 
       case CrudFieldType.text:
-      case CrudFieldType.number:
-      case CrudFieldType.email:
-      case CrudFieldType.phone:
-        return TextFormField(
+        return TextInputField(
           key: fieldKey,
+          label: label,
+          type: TextInputFieldType.text,
           controller: controller,
-          initialValue: controller == null ? initialValue : null,
+          initialValue: initialValue,
           validator: validator as String? Function(String?)?,
           enabled: enabled,
-          keyboardType: keyboardType,
           obscureText: obscureText,
           textInputAction: textInputAction,
           onChanged: onChanged as ValueChanged<String>?,
           onFieldSubmitted: onFieldSubmitted,
           readOnly: readOnly,
           onTap: onTap,
-          maxLines: maxLines,
-          decoration: InputDecoration(
-            labelText: label,
-            hintText: hintText,
-            helperText: helperText,
-            prefixIcon: prefixIcon,
-            suffixIcon: suffixIcon,
-            isDense: isDense,
-            filled: true,
-            fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-              borderSide: BorderSide(
-                color: ColorTokens.border,
-                width: 1,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-              borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.primary,
-                width: 2,
-              ),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-              borderSide: BorderSide(
-                color: ColorTokens.danger,
-                width: 1,
-              ),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-              borderSide: BorderSide(
-                color: ColorTokens.danger,
-                width: 2,
-              ),
-            ),
-          ),
+          hintText: hintText,
+          helperText: helperText,
+          prefixIcon: prefixIcon,
+          suffixIcon: suffixIcon,
+          isDense: isDense,
+        );
+
+      case CrudFieldType.number:
+        return TextInputField(
+          key: fieldKey,
+          label: label,
+          type: TextInputFieldType.number,
+          controller: controller,
+          initialValue: initialValue,
+          validator: validator as String? Function(String?)?,
+          enabled: enabled,
+          textInputAction: textInputAction,
+          onChanged: onChanged as ValueChanged<String>?,
+          onFieldSubmitted: onFieldSubmitted,
+          hintText: hintText,
+          helperText: helperText,
+          prefixIcon: prefixIcon,
+          suffixIcon: suffixIcon,
+          isDense: isDense,
+        );
+
+      case CrudFieldType.email:
+        return TextInputField(
+          key: fieldKey,
+          label: label,
+          type: TextInputFieldType.email,
+          controller: controller,
+          initialValue: initialValue,
+          validator: validator as String? Function(String?)?,
+          enabled: enabled,
+          textInputAction: textInputAction,
+          onChanged: onChanged as ValueChanged<String>?,
+          onFieldSubmitted: onFieldSubmitted,
+          hintText: hintText,
+          helperText: helperText,
+          prefixIcon: prefixIcon,
+          suffixIcon: suffixIcon,
+          isDense: isDense,
+        );
+
+      case CrudFieldType.phone:
+        return TextInputField(
+          key: fieldKey,
+          label: label,
+          type: TextInputFieldType.phone,
+          controller: controller,
+          initialValue: initialValue,
+          validator: validator as String? Function(String?)?,
+          enabled: enabled,
+          textInputAction: textInputAction,
+          onChanged: onChanged as ValueChanged<String>?,
+          onFieldSubmitted: onFieldSubmitted,
+          hintText: hintText,
+          helperText: helperText,
+          prefixIcon: prefixIcon,
+          suffixIcon: suffixIcon,
+          isDense: isDense,
         );
 
       case CrudFieldType.custom:
