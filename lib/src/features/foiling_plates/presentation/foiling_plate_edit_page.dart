@@ -466,8 +466,8 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
                 label: _typeLabel,
                 value: _foilingType,
                 options: const [
-                  CrudFieldOption(value: 'gold', label: '烫金'),
-                  CrudFieldOption(value: 'silver', label: '烫银'),
+                  AppDropdownOption(value: 'gold', label: '烫金'),
+                  AppDropdownOption(value: 'silver', label: '烫银'),
                 ],
                 onChanged: (value) {
                   if (value == null) return;

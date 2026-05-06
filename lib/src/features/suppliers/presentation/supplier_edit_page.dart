@@ -189,8 +189,8 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
                 label: _statusLabel,
                 value: _status,
                 options: const [
-                  CrudFieldOption(value: _statusActive, label: '启用'),
-                  CrudFieldOption(value: _statusInactive, label: '停用'),
+                  AppDropdownOption(value: _statusActive, label: '启用'),
+                  AppDropdownOption(value: _statusInactive, label: '停用'),
                 ],
                 onChanged: (value) {
                   if (value == null) return;

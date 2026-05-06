@@ -166,11 +166,11 @@ Future<PaymentCreateResult?> showPaymentCreateDialog(
                         label: '收款方式',
                         value: paymentMethod,
                         options: const [
-                          CrudFieldOption<dynamic>(value: 'cash', label: '现金'),
-                          CrudFieldOption<dynamic>(
+                          AppDropdownOption<dynamic>(value: 'cash', label: '现金'),
+                          AppDropdownOption<dynamic>(
                               value: 'transfer', label: '转账'),
-                          CrudFieldOption<dynamic>(value: 'check', label: '支票'),
-                          CrudFieldOption<dynamic>(
+                          AppDropdownOption<dynamic>(value: 'check', label: '支票'),
+                          AppDropdownOption<dynamic>(
                             value: 'acceptance',
                             label: '承兑汇票',
                           ),

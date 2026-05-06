@@ -95,11 +95,11 @@ Future<StatementCreateResult?> showStatementCreateDialog(
                         label: '对账单类型',
                         value: statementType,
                         options: const [
-                          CrudFieldOption<dynamic>(
+                          AppDropdownOption<dynamic>(
                             value: 'customer',
                             label: '客户对账单',
                           ),
-                          CrudFieldOption<dynamic>(
+                          AppDropdownOption<dynamic>(
                             value: 'supplier',
                             label: '供应商对账单',
                           ),
@@ -365,11 +365,11 @@ Future<StatementGenerateResult?> showStatementGenerateDialog(
                   label: '对账单类型',
                   value: statementType,
                   options: const [
-                    CrudFieldOption<dynamic>(
+                    AppDropdownOption<dynamic>(
                       value: 'customer',
                       label: '客户对账单',
                     ),
-                    CrudFieldOption<dynamic>(
+                    AppDropdownOption<dynamic>(
                       value: 'supplier',
                       label: '供应商对账单',
                     ),

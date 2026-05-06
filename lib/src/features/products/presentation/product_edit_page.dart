@@ -561,7 +561,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
             value: _productType,
             options: _productTypeLabels.entries
                 .map(
-                  (entry) => CrudFieldOption(
+                  (entry) => AppDropdownOption(
                     value: entry.key,
                     label: entry.value,
                   ),
@@ -578,7 +578,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
             value: _productGroupId,
             options: _productGroups
                 .map(
-                  (group) => CrudFieldOption(
+                  (group) => AppDropdownOption(
                     value: group.id,
                     label: '${group.code} ${group.name}',
                   ),
@@ -715,7 +715,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
                   label: _defaultProcessTitle,
                   options: _processes
                       .map(
-                        (process) => CrudFieldOption<dynamic>(
+                        (process) => AppDropdownOption<dynamic>(
                           value: process.id,
                           label: process.isActive
                               ? process.name

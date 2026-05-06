@@ -542,7 +542,7 @@ class _DieEditPageState extends State<DieEditPage> {
                 enabled: !isConfirmed,
                 options: _dieTypeLabels.entries
                     .map(
-                      (entry) => CrudFieldOption(
+                      (entry) => AppDropdownOption(
                         value: entry.key,
                         label: entry.value,
                       ),

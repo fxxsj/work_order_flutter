@@ -1,8 +1,19 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/utils/file_upload_picker.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
+
+/// 文件选择结果，持有文件名和 MultipartFile，供 FormField 使用。
+class CrudPickedFile {
+  const CrudPickedFile({
+    required this.filename,
+    required this.file,
+  });
+
+  final String filename;
+  final MultipartFile file;
+}
 
 class FileUploadField extends FormField<CrudPickedFile?> {
   FileUploadField({

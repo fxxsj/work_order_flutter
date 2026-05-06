@@ -175,9 +175,9 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
                 value: _parentId,
                 enabled: !disableParent,
                 options: [
-                  const CrudFieldOption<dynamic>(value: null, label: '不设置'),
+                  const AppDropdownOption<dynamic>(value: null, label: '不设置'),
                   ...availableParents.map(
-                    (department) => CrudFieldOption<dynamic>(
+                    (department) => AppDropdownOption<dynamic>(
                       value: department.id,
                       label: department.name,
                     ),
@@ -199,7 +199,7 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
                 label: _processLabel,
                 options: viewModel.processOptions
                     .map(
-                      (process) => CrudFieldOption<dynamic>(
+                      (process) => AppDropdownOption<dynamic>(
                         value: process.id,
                         label: process.isActive
                             ? process.name

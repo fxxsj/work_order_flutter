@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/file_upload_field.dart';
 
 /// Shows a standardized file upload dialog backed by [CrudFormField.fileUpload].
 Future<CrudPickedFile?> showFileUploadDialog(

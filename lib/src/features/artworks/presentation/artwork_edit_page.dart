@@ -609,7 +609,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                 label: _dieLabel,
                 options: _dieOptions
                     .map(
-                      (die) => CrudFieldOption<dynamic>(
+                      (die) => AppDropdownOption<dynamic>(
                         value: die.id,
                         label: _optionLabel(die.name, die.code),
                       ),
@@ -629,7 +629,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                 label: _foilingLabel,
                 options: _foilingOptions
                     .map(
-                      (plate) => CrudFieldOption<dynamic>(
+                      (plate) => AppDropdownOption<dynamic>(
                         value: plate.id,
                         label: _optionLabel(plate.name, plate.code),
                       ),
@@ -649,7 +649,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                 label: _embossingLabel,
                 options: _embossingOptions
                     .map(
-                      (plate) => CrudFieldOption<dynamic>(
+                      (plate) => AppDropdownOption<dynamic>(
                         value: plate.id,
                         label: _optionLabel(plate.name, plate.code),
                       ),

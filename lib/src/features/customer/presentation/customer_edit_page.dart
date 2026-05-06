@@ -316,12 +316,12 @@ class _CustomerFormBody extends StatelessWidget {
               label: _CustomerEditLabels.salesperson,
               value: selectedSalespersonId,
               options: [
-                const CrudFieldOption<dynamic>(
+                const AppDropdownOption<dynamic>(
                   value: null,
                   label: _CustomerEditLabels.none,
                 ),
                 ...viewModel.salespersons.map(
-                  (item) => CrudFieldOption<dynamic>(
+                  (item) => AppDropdownOption<dynamic>(
                     value: item.id,
                     label: item.name,
                   ),

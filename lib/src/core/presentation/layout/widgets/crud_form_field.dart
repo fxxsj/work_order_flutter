@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/checkbox_group_field.dart';
@@ -28,8 +27,8 @@ enum CrudFieldType {
   custom,
 }
 
-class CrudFieldOption<T> {
-  const CrudFieldOption({
+class AppDropdownOption<T> {
+  const AppDropdownOption({
     required this.value,
     required this.label,
     this.enabled = true,
@@ -38,16 +37,6 @@ class CrudFieldOption<T> {
   final T value;
   final String label;
   final bool enabled;
-}
-
-class CrudPickedFile {
-  const CrudPickedFile({
-    required this.filename,
-    required this.file,
-  });
-
-  final String filename;
-  final MultipartFile file;
 }
 
 /// Reusable field factory used by [CrudEditPage] sections.
@@ -243,7 +232,7 @@ class CrudFormField {
   CrudFormField.dropdown({
     required String label,
     Key? fieldKey,
-    required List<CrudFieldOption<dynamic>> options,
+    required List<AppDropdownOption<dynamic>> options,
     dynamic value,
     ValueChanged<dynamic>? onChanged,
     String? Function(dynamic)? validator,
@@ -423,7 +412,7 @@ class CrudFormField {
   CrudFormField.multiSelect({
     required String label,
     Key? fieldKey,
-    required List<CrudFieldOption<dynamic>> options,
+    required List<AppDropdownOption<dynamic>> options,
     required Set<dynamic> values,
     ValueChanged<Set<dynamic>>? onChanged,
     String? Function(Set<dynamic>?)? validator,
@@ -489,7 +478,7 @@ class CrudFormField {
   CrudFormField.checkboxGroup({
     required String label,
     Key? fieldKey,
-    required List<CrudFieldOption<dynamic>> options,
+    required List<AppDropdownOption<dynamic>> options,
     required Set<dynamic> values,
     ValueChanged<Set<dynamic>>? onChanged,
     String? Function(Set<dynamic>?)? validator,
@@ -518,7 +507,7 @@ class CrudFormField {
   CrudFormField.radioGroup({
     required String label,
     Key? fieldKey,
-    required List<CrudFieldOption<dynamic>> options,
+    required List<AppDropdownOption<dynamic>> options,
     dynamic value,
     ValueChanged<dynamic>? onChanged,
     String? Function(dynamic)? validator,
@@ -586,7 +575,7 @@ class CrudFormField {
   final TextEditingController? startController;
   final TextEditingController? endController;
   final String? Function(dynamic)? validator;
-  final List<CrudFieldOption<dynamic>> options;
+  final List<AppDropdownOption<dynamic>> options;
   final dynamic value;
   final ValueChanged<dynamic>? onChanged;
   final bool enabled;
