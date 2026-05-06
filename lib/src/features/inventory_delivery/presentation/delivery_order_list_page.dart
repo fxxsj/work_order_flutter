@@ -7,7 +7,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/action_decision_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/action_dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/file_upload_dialog.dart';
@@ -373,7 +373,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     );
   }
 
-  Future<void> _openFormDialog(
+  Future<void> _openAppFormDialog(
     DeliveryOrderViewModel viewModel, {
     DeliveryOrder? order,
     int? prefillSalesOrderId,
@@ -536,7 +536,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       }
     }
 
-    await showDeliveryOrderFormDialog(
+    await showDeliveryOrderAppFormDialog(
       context,
       isEdit: isEdit,
       title: isEdit ? _editTitle : _createTitle,
@@ -730,7 +730,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     _pendingPrefill = false;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _openFormDialog(viewModel, prefillSalesOrderId: salesOrderId);
+      _openAppFormDialog(viewModel, prefillSalesOrderId: salesOrderId);
     });
   }
 
@@ -900,7 +900,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
                   if (canEdit)
                     RowAction(
                       label: '编辑',
-                      onPressed: () => _openFormDialog(viewModel, order: order),
+                      onPressed: () => _openAppFormDialog(viewModel, order: order),
                     ),
                   if (canShip)
                     RowAction(
@@ -1020,7 +1020,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
             PageActionButton.filled(
               onPressed: _salesOrdersLoading || _salesOrders.isEmpty
                   ? null
-                  : () => _openFormDialog(viewModel),
+                  : () => _openAppFormDialog(viewModel),
               icon: const Icon(Icons.add, size: 16),
               label: '新建发货单',
             ),
@@ -1317,7 +1317,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
               ),
               if (canEdit)
                 OutlinedButton.icon(
-                  onPressed: () => _openFormDialog(viewModel, order: order),
+                  onPressed: () => _openAppFormDialog(viewModel, order: order),
                   icon: const Icon(Icons.edit_outlined, size: 16),
                   label: const Text('编辑'),
                 ),

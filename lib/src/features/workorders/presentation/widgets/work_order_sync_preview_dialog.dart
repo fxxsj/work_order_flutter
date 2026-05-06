@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
 
 class WorkOrderSyncPreviewResult {
@@ -81,7 +81,7 @@ Future<void> showWorkOrderSyncPreviewDialog(
             }
           }
 
-          return BaseDialog(
+          return AppDialog(
             title: '任务同步预览',
             maxWidth: LayoutTokens.dialogWidthMd,
             content: SizedBox(

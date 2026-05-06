@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 
 class ColorField extends FormField<Color?> {
   ColorField({
@@ -101,7 +101,7 @@ class _ColorFieldBody extends StatelessWidget {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) {
-        return BaseDialog(
+        return AppDialog(
           title: _field._label,
           maxWidth: LayoutTokens.dialogWidthSm,
           scrollable: false,

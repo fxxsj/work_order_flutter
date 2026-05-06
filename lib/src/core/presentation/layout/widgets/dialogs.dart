@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 
 /// Shared dialog shell for consistent width, scrolling and action layout.
-class BaseDialog extends StatelessWidget {
-  const BaseDialog({
+class AppDialog extends StatelessWidget {
+  const AppDialog({
     super.key,
     required this.title,
     required this.content,
@@ -34,8 +34,8 @@ class BaseDialog extends StatelessWidget {
 }
 
 /// Dialog wrapper that embeds a [Form] and standardized submit/cancel actions.
-class FormDialog extends StatelessWidget {
-  const FormDialog({
+class AppFormDialog extends StatelessWidget {
+  const AppFormDialog({
     super.key,
     required this.title,
     required this.formKey,
@@ -60,7 +60,7 @@ class FormDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BaseDialog(
+    return AppDialog(
       title: title,
       maxWidth: maxWidth,
       content: Form(

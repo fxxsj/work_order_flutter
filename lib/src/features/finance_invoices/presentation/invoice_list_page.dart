@@ -7,7 +7,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/action_decision_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/action_dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_loading_indicator.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';

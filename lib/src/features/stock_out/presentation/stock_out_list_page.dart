@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/models/generic_record.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/generic_resource_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
@@ -265,7 +265,7 @@ class StockOutListEntry extends StatelessWidget {
       text: record?.getString('notes') ?? '',
     );
 
-    await showInventoryDocumentFormDialog(
+    await showInventoryDocumentAppFormDialog(
       context,
       title: isEdit ? '编辑出库单' : '新建出库单',
       dateLabel: '出库日期',
@@ -339,7 +339,7 @@ class StockOutListEntry extends StatelessWidget {
     final supportService = StockOutSupportService(context.read<ApiClient>());
     await showDialog<void>(
       context: context,
-      builder: (dialogContext) => BaseDialog(
+      builder: (dialogContext) => AppDialog(
         title: '发货单详情',
         maxWidth: 520,
         actions: [

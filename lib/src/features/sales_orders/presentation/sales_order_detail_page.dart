@@ -4,12 +4,12 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/approval_rejection_notice_card.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/risk_action_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/action_dialogs.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/audit_log_navigation.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -144,7 +144,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     final formKey = GlobalKey<FormState>();
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => FormDialog(
+      builder: (dialogContext) => AppFormDialog(
         title: '审核通过',
         formKey: formKey,
         submitText: '通过',
@@ -173,7 +173,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     final formKey = GlobalKey<FormState>();
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => FormDialog(
+      builder: (dialogContext) => AppFormDialog(
         title: '退回客户订单',
         formKey: formKey,
         submitText: '确认退回',
@@ -250,7 +250,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     final formKey = GlobalKey<FormState>();
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => FormDialog(
+      builder: (dialogContext) => AppFormDialog(
         title: '取消订单',
         formKey: formKey,
         submitText: '确认取消',

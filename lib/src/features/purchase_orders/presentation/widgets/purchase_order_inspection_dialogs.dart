@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_loading_indicator.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
@@ -170,7 +170,7 @@ Future<void> showPurchaseInspectionDialog(
                                           if (canInspect)
                                             OutlinedButton(
                                               onPressed: () async {
-                                                await showPurchaseInspectionFormDialog(
+                                                await showPurchaseInspectionAppFormDialog(
                                                   context,
                                                   record: record,
                                                   confirmInspection:
@@ -190,7 +190,7 @@ Future<void> showPurchaseInspectionDialog(
                                                     await showDialog<bool>(
                                                   context: context,
                                                   builder: (confirmContext) =>
-                                                      BaseDialog(
+                                                      AppDialog(
                                                     title: '确认入库',
                                                     maxWidth: LayoutTokens
                                                         .dialogWidthXs,
@@ -299,7 +299,7 @@ class _InspectionSummaryItem extends StatelessWidget {
   }
 }
 
-Future<void> showPurchaseInspectionFormDialog(
+Future<void> showPurchaseInspectionAppFormDialog(
   BuildContext context, {
   required Map<String, dynamic> record,
   required Future<void> Function(int recordId, Map<String, dynamic> payload)
@@ -346,7 +346,7 @@ Future<void> showPurchaseInspectionFormDialog(
     builder: (dialogContext) {
       return StatefulBuilder(
         builder: (context, setState) {
-          return FormDialog(
+          return AppFormDialog(
             title: '填写质检结果',
             formKey: formKey,
             submitText: '确认',

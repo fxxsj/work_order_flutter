@@ -6,11 +6,11 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/action_decision_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/action_dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/approval_rejection_notice_card.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/file_upload_dialog.dart';
@@ -471,7 +471,7 @@ class _QualityInspectionListViewState
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setState) {
-            return FormDialog(
+            return AppFormDialog(
               title: _completeTitle,
               formKey: formKey,
               submitting: submitting,

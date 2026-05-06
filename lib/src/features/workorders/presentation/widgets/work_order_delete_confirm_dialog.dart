@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/risk_action_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/action_dialogs.dart';
 
 Future<bool> showWorkOrderDeleteConfirmDialog(
   BuildContext context, {

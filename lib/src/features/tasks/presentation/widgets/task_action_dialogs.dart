@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
@@ -80,7 +80,7 @@ class _TaskQuantityDialogState extends State<_TaskQuantityDialog> {
     final completed = task.quantityCompleted ?? 0;
     final remaining = (total - completed).clamp(0, double.infinity).toInt();
 
-    return FormDialog(
+    return AppFormDialog(
       title: '更新进度',
       formKey: _formKey,
       submitText: '确认更新',
@@ -165,7 +165,7 @@ class _TaskCompleteDialogState extends State<_TaskCompleteDialog> {
   @override
   Widget build(BuildContext context) {
     final task = widget.task;
-    return FormDialog(
+    return AppFormDialog(
       title: '完成任务',
       formKey: _formKey,
       submitText: '确认完成',
@@ -257,7 +257,7 @@ class _TaskAssignDialogState extends State<_TaskAssignDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return FormDialog(
+    return AppFormDialog(
       title: '分派操作员',
       formKey: _formKey,
       submitText: '确认分派',

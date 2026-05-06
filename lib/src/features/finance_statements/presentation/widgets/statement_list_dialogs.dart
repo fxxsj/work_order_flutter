@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/action_decision_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/action_dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
@@ -352,7 +352,7 @@ Future<StatementGenerateResult?> showStatementGenerateDialog(
             Navigator.of(dialogContext).pop();
           }
 
-          return FormDialog(
+          return AppFormDialog(
             title: '生成对账数据',
             formKey: formKey,
             onSubmit: submit,
@@ -551,7 +551,7 @@ Future<void> showStatementGeneratePreviewDialog(
   final closing = data['closing_balance'] ?? '-';
   return showDialog<void>(
     context: context,
-    builder: (context) => BaseDialog(
+    builder: (context) => AppDialog(
       title: '对账数据预览',
       scrollable: false,
       actions: [

@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_drawer_edit_panel.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
@@ -235,7 +235,7 @@ class _DieEditPageState extends State<DieEditPage> {
     if (value == 'dedicated' && _productItems.length > 1) {
       final keepFirst = await showDialog<bool>(
         context: context,
-        builder: (context) => BaseDialog(
+        builder: (context) => AppDialog(
           title: '提示',
           maxWidth: LayoutTokens.dialogWidthSm,
           scrollable: false,

@@ -13,7 +13,7 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -529,7 +529,7 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
 
     await showDialog<void>(
       context: context,
-      builder: (context) => BaseDialog(
+      builder: (context) => AppDialog(
         title: title,
         maxWidth: 520,
         content: Column(

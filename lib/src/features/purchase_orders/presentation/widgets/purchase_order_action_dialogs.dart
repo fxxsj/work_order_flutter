@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 
 Future<String?> showPurchaseReasonDialog(
@@ -14,7 +14,7 @@ Future<String?> showPurchaseReasonDialog(
   final controller = TextEditingController();
   final result = await showDialog<String>(
     context: context,
-    builder: (dialogContext) => FormDialog(
+    builder: (dialogContext) => AppFormDialog(
       title: title,
       formKey: formKey,
       submitText: confirmText,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 
 Future<void> showDeliveryShipDialog(
@@ -41,7 +41,7 @@ Future<void> showDeliveryShipDialog(
     builder: (dialogContext) {
       return StatefulBuilder(
         builder: (context, setState) {
-          return FormDialog(
+          return AppFormDialog(
             title: title,
             formKey: formKey,
             submitText: submitText,
@@ -102,7 +102,7 @@ Future<void> showDeliveryReceiveDialog(
     builder: (dialogContext) {
       return StatefulBuilder(
         builder: (context, setState) {
-          return FormDialog(
+          return AppFormDialog(
             title: title,
             formKey: formKey,
             submitText: submitText,
@@ -153,7 +153,7 @@ Future<void> showDeliveryRejectDialog(
     builder: (dialogContext) {
       return StatefulBuilder(
         builder: (context, setState) {
-          return FormDialog(
+          return AppFormDialog(
             title: title,
             formKey: formKey,
             submitText: '确认拒收并回退库存',

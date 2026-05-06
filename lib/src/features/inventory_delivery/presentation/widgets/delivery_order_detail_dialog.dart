@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/approval_rejection_notice_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/attachment_open_button.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/utils/file_link_util.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_detail.dart';
 
@@ -15,7 +15,7 @@ Future<void> showDeliveryOrderDetailDialog(
 }) {
   return showDialog<void>(
     context: context,
-    builder: (dialogContext) => BaseDialog(
+    builder: (dialogContext) => AppDialog(
       title: title,
       maxWidth: LayoutTokens.dialogWidthLg,
       content: SizedBox(

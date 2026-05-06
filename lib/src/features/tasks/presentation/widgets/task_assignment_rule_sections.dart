@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
@@ -65,7 +65,7 @@ Future<bool> showTaskAssignmentRuleDeleteDialog(
 }) async {
   final confirmed = await showDialog<bool>(
     context: context,
-    builder: (context) => BaseDialog(
+    builder: (context) => AppDialog(
       title: '确认删除',
       maxWidth: LayoutTokens.dialogWidthSm,
       scrollable: false,
@@ -129,7 +129,7 @@ class _TaskAssignmentRuleDialogState extends State<TaskAssignmentRuleDialog> {
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.rule != null;
-    return FormDialog(
+    return AppFormDialog(
       title: isEdit ? '编辑分派规则' : '新建分派规则',
       formKey: _formKey,
       submitText: '保存',

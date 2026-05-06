@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 
@@ -24,7 +24,7 @@ Future<void> showProductStockListDialog(
 }) {
   return showDialog<void>(
     context: context,
-    builder: (dialogContext) => BaseDialog(
+    builder: (dialogContext) => AppDialog(
       title: title,
       maxWidth: LayoutTokens.dialogWidthLg,
       scrollable: false,
@@ -46,7 +46,7 @@ Future<void> showProductStockDetailDialog(
 }) {
   return showDialog<void>(
     context: context,
-    builder: (dialogContext) => BaseDialog(
+    builder: (dialogContext) => AppDialog(
       title: title,
       maxWidth: LayoutTokens.dialogWidthLg,
       content: SizedBox(
@@ -94,7 +94,7 @@ Future<ProductStockAdjustResult?> showProductStockAdjustDialog(
               Navigator.of(dialogContext).pop();
             }
 
-            return FormDialog(
+            return AppFormDialog(
               title: title,
               formKey: formKey,
               submitText: submitText,

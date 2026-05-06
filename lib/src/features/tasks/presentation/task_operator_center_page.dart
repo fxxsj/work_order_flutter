@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
@@ -637,7 +637,7 @@ class _TaskUpdateDialogState extends State<_TaskUpdateDialog> {
     final completed = task.quantityCompleted ?? 0;
     final progress = total > 0 ? (completed / total * 100).round() : 0;
 
-    return FormDialog(
+    return AppFormDialog(
       title: _completeMode ? '完成任务' : '更新进度',
       formKey: _formKey,
       submitText: _completeMode ? '确认完成' : '确认更新',

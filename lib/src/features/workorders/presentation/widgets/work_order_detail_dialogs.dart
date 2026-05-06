@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/action_decision_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/action_dialogs.dart';
 
 export 'work_order_delete_confirm_dialog.dart';
 

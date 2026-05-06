@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
@@ -455,7 +455,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     return showDialog<bool>(
       context: context,
       builder: (dialogContext) {
-        return BaseDialog(
+        return AppDialog(
           title: '工序已更新',
           maxWidth: 420,
           scrollable: false,

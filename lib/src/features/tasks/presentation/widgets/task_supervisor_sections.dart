@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/features/tasks/data/task_supervisor_support_service.dart';
@@ -581,7 +581,7 @@ class _TaskSupervisorAssignDialogState
 
   @override
   Widget build(BuildContext context) {
-    return FormDialog(
+    return AppFormDialog(
       title: '分派任务',
       formKey: _formKey,
       submitText: '确认分派',

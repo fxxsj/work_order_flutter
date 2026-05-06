@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 
@@ -46,7 +46,7 @@ Future<SalesOrderPaymentUpdateResult?> showSalesOrderPaymentDialog(
     SalesOrderPaymentUpdateResult? result;
     await showDialog<void>(
       context: context,
-      builder: (dialogContext) => FormDialog(
+      builder: (dialogContext) => AppFormDialog(
         title: '更新付款信息',
         formKey: formKey,
         submitText: '更新',
@@ -92,7 +92,7 @@ Future<SalesOrderCompleteResult?> showSalesOrderCompleteDialog(
     SalesOrderCompleteResult? result;
     await showDialog<void>(
       context: context,
-      builder: (dialogContext) => FormDialog(
+      builder: (dialogContext) => AppFormDialog(
         title: '完成订单',
         formKey: formKey,
         submitText: '完成',
@@ -149,7 +149,7 @@ Future<SalesOrderBatchCreateWorkOrderResult?>
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => FormDialog(
+        builder: (context, setState) => AppFormDialog(
           title: '批量生成施工单',
           formKey: formKey,
           submitText: '开始生成',
