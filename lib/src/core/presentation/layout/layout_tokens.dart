@@ -34,13 +34,13 @@ class LayoutTokens {
   static const double statItemWidth = 180;
   static const double minContentRailWidth = 320;
 
-  /// 统一圆角规范: 8/12/16/20
-  static const double radiusXs = 8;
-  static const double radiusSm = 12;
-  static const double radiusMd = 16;
-  static const double radiusLg = 20;
-  static const double radiusXl = 24;
-  static const double radiusPill = 999;
+  /// 统一圆角规范: 6/8/12/14 - shadcn 风格更柔和
+  static const double radiusXs = 6;
+  static const double radiusSm = 8;
+  static const double radiusMd = 12;
+  static const double radiusLg = 14;
+  static const double radiusXl = 16;
+  static const double radiusPill = 9999;
   static const double navItemHeight = 40;
 
   static const double gapXs = 4;
@@ -50,8 +50,8 @@ class LayoutTokens {
   static const double gapMd = 12;
   static const double gapLg = 16;
   static const double gapXl = 24;
-  static const double cardPaddingSm = 10;
-  static const double progressStrokeWidth = 2.5;
+  static const double cardPaddingSm = 12;
+  static const double progressStrokeWidth = 2;
 
   /// 统一图标大小规范
   static const double iconXs = 14;

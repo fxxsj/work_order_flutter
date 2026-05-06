@@ -6,6 +6,7 @@ import 'opacity_tokens.dart';
 /// 阴影令牌系统
 ///
 /// 统一所有阴影效果，确保视觉一致性
+/// 参考 shadcn/ui 阴影风格：更柔和、更微妙
 class ShadowTokens {
   const ShadowTokens._();
 
@@ -14,90 +15,103 @@ class ShadowTokens {
   /// 无阴影
   static const List<BoxShadow> none = [];
 
-  /// 极小阴影（1px，微妙）
+  /// 极小阴影（悬浮元素边缘）
   static const List<BoxShadow> xs = [
     BoxShadow(
-      color: Color(0x0000000D),
+      color: Color(0x0A000000),
       offset: Offset(0, 1),
       blurRadius: 2,
       spreadRadius: 0,
     ),
   ];
 
-  /// 小阴影（2px，按钮、卡片悬浮）
+  /// 小阴影（按钮、卡片悬浮）
+  /// shadcn 风格：更轻、更弥散
   static const List<BoxShadow> sm = [
     BoxShadow(
-      color: Color(0x00000014),
+      color: Color(0x0A000000),
       offset: Offset(0, 1),
       blurRadius: 3,
       spreadRadius: 0,
     ),
     BoxShadow(
-      color: Color(0x0000000F),
+      color: Color(0x08000000),
       offset: Offset(0, 1),
       blurRadius: 2,
       spreadRadius: 0,
     ),
   ];
 
-  /// 中等阴影（4px，卡片、对话框）
+  /// 中等阴影（卡片、对话框）
   static const List<BoxShadow> md = [
     BoxShadow(
-      color: Color(0x0000001A),
-      offset: Offset(0, 4),
-      blurRadius: 6,
-      spreadRadius: -1,
-    ),
-    BoxShadow(
-      color: Color(0x0000000F),
+      color: Color(0x10000000),
       offset: Offset(0, 2),
-      blurRadius: 4,
-      spreadRadius: -1,
-    ),
-  ];
-
-  /// 大阴影（8px，下拉菜单、弹窗）
-  static const List<BoxShadow> lg = [
-    BoxShadow(
-      color: Color(0x0000001F),
-      offset: Offset(0, 8),
-      blurRadius: 10,
+      blurRadius: 8,
       spreadRadius: 0,
     ),
     BoxShadow(
-      color: Color(0x00000014),
-      offset: Offset(0, 3),
-      blurRadius: 6,
-      spreadRadius: -2,
+      color: Color(0x08000000),
+      offset: Offset(0, 1),
+      blurRadius: 3,
+      spreadRadius: 0,
     ),
   ];
 
-  /// 超大阴影（16px，模态对话框）
+  /// 大阴影（弹出菜单、悬浮面板）
+  static const List<BoxShadow> lg = [
+    BoxShadow(
+      color: Color(0x14000000),
+      offset: Offset(0, 4),
+      blurRadius: 12,
+      spreadRadius: 0,
+    ),
+    BoxShadow(
+      color: Color(0x0A000000),
+      offset: Offset(0, 2),
+      blurRadius: 6,
+      spreadRadius: 0,
+    ),
+  ];
+
+  /// 超大阴影（模态对话框）
   static const List<BoxShadow> xl = [
     BoxShadow(
-      color: Color(0x00000029),
-      offset: Offset(0, 16),
+      color: Color(0x1E000000),
+      offset: Offset(0, 8),
       blurRadius: 24,
       spreadRadius: 0,
     ),
+    BoxShadow(
+      color: Color(0x0A000000),
+      offset: Offset(0, 4),
+      blurRadius: 12,
+      spreadRadius: 0,
+    ),
   ];
 
-  /// 极大阴影（24px，页面级覆盖层）
+  /// 极大阴影（页面级覆盖层）
   static const List<BoxShadow> xxl = [
     BoxShadow(
-      color: Color(0x00000033),
-      offset: Offset(0, 24),
-      blurRadius: 38,
+      color: Color(0x28000000),
+      offset: Offset(0, 16),
+      blurRadius: 40,
+      spreadRadius: 0,
+    ),
+    BoxShadow(
+      color: Color(0x14000000),
+      offset: Offset(0, 8),
+      blurRadius: 24,
       spreadRadius: 0,
     ),
   ];
 
   // ==================== 内阴影 ====================
 
-  /// 近似内阴影，Flutter 原生 BoxShadow 不支持 inset。
+  /// 近似内阴影
   static const List<BoxShadow> inner = [
     BoxShadow(
-      color: Color(0x0000000D),
+      color: Color(0x0A000000),
       offset: Offset(0, 2),
       blurRadius: 4,
       spreadRadius: -1,
@@ -173,10 +187,10 @@ class ShadowTokens {
   /// 聚焦阴影
   static const List<BoxShadow> focus = [
     BoxShadow(
-      color: Color(0x14000000),
+      color: Color(0x1A000000),
       offset: Offset(0, 0),
       blurRadius: 4,
-      spreadRadius: 1,
+      spreadRadius: 2,
     ),
   ];
 

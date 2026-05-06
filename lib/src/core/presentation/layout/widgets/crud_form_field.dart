@@ -829,6 +829,41 @@ class CrudFormField {
             prefixIcon: prefixIcon,
             suffixIcon: suffixIcon,
             isDense: isDense,
+            filled: true,
+            fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+              borderSide: BorderSide(
+                color: Theme.of(context).extension<AppColors>()?.borderColor ??
+                    ColorTokens.border,
+                width: 1,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+                width: 2,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+              borderSide: BorderSide(
+                color:
+                    Theme.of(context).extension<AppSemanticColors>()?.danger ??
+                        ColorTokens.danger,
+                width: 1,
+              ),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+              borderSide: BorderSide(
+                color:
+                    Theme.of(context).extension<AppSemanticColors>()?.danger ??
+                        ColorTokens.danger,
+                width: 2,
+              ),
+            ),
           ),
         );
       case CrudFieldType.custom:

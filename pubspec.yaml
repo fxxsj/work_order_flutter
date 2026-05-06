@@ -41,3 +41,6 @@ flutter:
     - family: AGENCYR
       fonts:
         - asset: assets/fonts/AGENCYR.TTF
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto-Black.ttf

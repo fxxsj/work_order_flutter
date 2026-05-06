@@ -30,11 +30,11 @@ class TextTokens {
   static const double fontSizeBodyMedium = 14;
   static const double fontSizeBodySmall = 13;
 
-  // ==================== 行高 ====================
+  // ==================== 行高 - 更宽松，阅读更舒适 ====================
 
-  static const double lineHeightTight = 1.15;
-  static const double lineHeightSnug = 1.25;
-  static const double lineHeightNormal = 1.5;
+  static const double lineHeightTight = 1.25;
+  static const double lineHeightSnug = 1.375;
+  static const double lineHeightNormal = 1.625;
   static const double lineHeightRelaxed = 1.75;
 
   // ==================== 字重 ====================
@@ -149,7 +149,7 @@ class TextTokens {
       Theme.of(context).textTheme.bodySmall!.copyWith(
             fontSize: fontSizeBodySmall,
             fontWeight: regular,
-            height: lineHeightNormal,
+            height: lineHeightRelaxed,
             letterSpacing: letterSpacingNormal,
           );
 

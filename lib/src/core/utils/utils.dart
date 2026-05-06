@@ -95,6 +95,7 @@ class Utils {
           );
     final baseTextTheme = ThemeData(brightness: resolvedBrightness).textTheme;
     const headingFont = 'AGENCYR';
+    const bodyFont = 'Roboto';
 
     final textTheme = baseTextTheme.copyWith(
       displaySmall: baseTextTheme.displaySmall?.copyWith(
@@ -122,38 +123,46 @@ class Utils {
         fontSize: TextTokens.fontSizeTitleMedium,
         fontWeight: FontWeight.w600,
         height: 1.3,
+        fontFamily: bodyFont,
       ),
       titleSmall: baseTextTheme.titleSmall?.copyWith(
         fontSize: TextTokens.fontSizeTitleSmall,
         fontWeight: FontWeight.w600,
         height: 1.3,
+        fontFamily: bodyFont,
       ),
       bodyLarge: baseTextTheme.bodyLarge?.copyWith(
         fontSize: TextTokens.fontSizeBodyLarge,
         height: 1.5,
+        fontFamily: bodyFont,
       ),
       bodyMedium: baseTextTheme.bodyMedium?.copyWith(
         fontSize: TextTokens.fontSizeBodyMedium,
         height: 1.5,
+        fontFamily: bodyFont,
       ),
       bodySmall: baseTextTheme.bodySmall?.copyWith(
         fontSize: TextTokens.fontSizeBodySmall,
         height: 1.45,
+        fontFamily: bodyFont,
       ),
       labelLarge: baseTextTheme.labelLarge?.copyWith(
         fontSize: TextTokens.fontSizeLabelLarge,
         fontWeight: FontWeight.w500,
         height: 1.3,
+        fontFamily: bodyFont,
       ),
       labelMedium: baseTextTheme.labelMedium?.copyWith(
         fontSize: TextTokens.fontSizeLabelMedium,
         fontWeight: FontWeight.w500,
         height: 1.3,
+        fontFamily: bodyFont,
       ),
       labelSmall: baseTextTheme.labelSmall?.copyWith(
         fontSize: TextTokens.fontSizeLabelSmall,
         fontWeight: FontWeight.w500,
         height: 1.3,
+        fontFamily: bodyFont,
       ),
     );
     final base = ThemeData(
