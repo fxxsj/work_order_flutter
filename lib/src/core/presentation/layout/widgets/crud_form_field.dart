@@ -1,9 +1,12 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/base_dialog.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/checkbox_group_field.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/color_field.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/date_range_field.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/file_upload_field.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/radio_group_field.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/tags_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 import 'package:work_order_app/src/core/utils/file_upload_picker.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -662,8 +665,8 @@ class CrudFormField {
           cancelText: cancelText ?? '取消',
         );
       case CrudFieldType.dateRange:
-        return _CrudDateRangeFormField(
-          fieldKey: fieldKey,
+        return DateRangeField(
+          key: fieldKey,
           label: label,
           startController: startController!,
           endController: endController!,
@@ -694,8 +697,8 @@ class CrudFormField {
           ),
         );
       case CrudFieldType.fileUpload:
-        return _CrudFileUploadFormField(
-          fieldKey: fieldKey,
+        return FileUploadField(
+          key: fieldKey,
           label: label,
           value: value as CrudPickedFile?,
           onChanged: enabled ? onChanged : null,
@@ -732,8 +735,8 @@ class CrudFormField {
           selectHintText: hintText ?? '请选择',
         );
       case CrudFieldType.tags:
-        return _CrudTagsFormField(
-          fieldKey: fieldKey,
+        return TagsField(
+          key: fieldKey,
           label: label,
           values: (value as List<String>? ?? const <String>[]),
           onChanged: enabled ? onChanged : null,
@@ -744,12 +747,17 @@ class CrudFormField {
           emptyText: emptyText ?? '暂无标签',
         );
       case CrudFieldType.checkboxGroup:
-        return _CrudCheckboxGroupFormField(
-          fieldKey: fieldKey,
+        return CheckboxGroupField<dynamic>(
+          key: fieldKey,
           label: label,
-          options: options,
-          selectedValues:
-              (value as Set<dynamic>? ?? <dynamic>{}).cast<dynamic>(),
+          options: options
+              .map((opt) => CheckboxGroupFieldOption<dynamic>(
+                    value: opt.value,
+                    label: opt.label,
+                    enabled: opt.enabled,
+                  ))
+              .toList(),
+          values: (value as Set<dynamic>? ?? <dynamic>{}).cast<dynamic>(),
           onChanged: enabled ? onChanged : null,
           validator: validator as String? Function(Set<dynamic>?)?,
           enabled: enabled,
@@ -758,10 +766,16 @@ class CrudFormField {
           emptyText: emptyText ?? '暂无可选项',
         );
       case CrudFieldType.radioGroup:
-        return _CrudRadioGroupFormField(
-          fieldKey: fieldKey,
+        return RadioGroupField<dynamic>(
+          key: fieldKey,
           label: label,
-          options: options,
+          options: options
+              .map((opt) => RadioGroupFieldOption<dynamic>(
+                    value: opt.value,
+                    label: opt.label,
+                    enabled: opt.enabled,
+                  ))
+              .toList(),
           value: value,
           onChanged: enabled ? onChanged : null,
           validator: validator,
@@ -770,8 +784,8 @@ class CrudFormField {
           helperText: helperText,
         );
       case CrudFieldType.color:
-        return _CrudColorFormField(
-          fieldKey: fieldKey,
+        return ColorField(
+          key: fieldKey,
           label: label,
           value: value as Color?,
           onChanged: enabled ? onChanged : null,
@@ -801,6 +815,36 @@ class CrudFormField {
             prefixIcon: prefixIcon,
             suffixIcon: suffixIcon,
             isDense: isDense,
+            filled: true,
+            fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+              borderSide: BorderSide(
+                color: ColorTokens.border,
+                width: 1,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+                width: 2,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+              borderSide: BorderSide(
+                color: ColorTokens.danger,
+                width: 1,
+              ),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+              borderSide: BorderSide(
+                color: ColorTokens.danger,
+                width: 2,
+              ),
+            ),
           ),
         );
       case CrudFieldType.text:
@@ -834,8 +878,7 @@ class CrudFormField {
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
               borderSide: BorderSide(
-                color: Theme.of(context).extension<AppColors>()?.borderColor ??
-                    ColorTokens.border,
+                color: ColorTokens.border,
                 width: 1,
               ),
             ),
@@ -849,18 +892,14 @@ class CrudFormField {
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
               borderSide: BorderSide(
-                color:
-                    Theme.of(context).extension<AppSemanticColors>()?.danger ??
-                        ColorTokens.danger,
+                color: ColorTokens.danger,
                 width: 1,
               ),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
               borderSide: BorderSide(
-                color:
-                    Theme.of(context).extension<AppSemanticColors>()?.danger ??
-                        ColorTokens.danger,
+                color: ColorTokens.danger,
                 width: 2,
               ),
             ),
@@ -872,996 +911,4 @@ class CrudFormField {
   }
 }
 
-class _CrudDateRangeFormField extends FormField<DateTimeRange?> {
-  _CrudDateRangeFormField({
-    Key? fieldKey,
-    required this.label,
-    required this.startController,
-    required this.endController,
-    required this.enabled,
-    required this.hintText,
-    required this.helperText,
-    required this.clearText,
-    required this.confirmText,
-    required this.cancelText,
-    this.firstDate,
-    this.lastDate,
-    String? Function(DateTimeRange?)? validator,
-  }) : super(
-          key: fieldKey,
-          initialValue: _dateRangeFromControllers(
-            startController,
-            endController,
-          ),
-          validator: validator,
-          builder: (state) => _CrudDateRangeFieldBody(
-            state: state,
-            label: label,
-            startController: startController,
-            endController: endController,
-            enabled: enabled,
-            hintText: hintText,
-            helperText: helperText,
-            clearText: clearText,
-            confirmText: confirmText,
-            cancelText: cancelText,
-            firstDate: firstDate,
-            lastDate: lastDate,
-          ),
-        );
 
-  final String label;
-  final TextEditingController startController;
-  final TextEditingController endController;
-  final bool enabled;
-  final String? hintText;
-  final String? helperText;
-  final String clearText;
-  final String confirmText;
-  final String cancelText;
-  final DateTime? firstDate;
-  final DateTime? lastDate;
-
-  @override
-  FormFieldState<DateTimeRange?> createState() =>
-      _CrudDateRangeFormFieldState();
-}
-
-class _CrudDateRangeFormFieldState extends FormFieldState<DateTimeRange?> {
-  @override
-  _CrudDateRangeFormField get widget => super.widget as _CrudDateRangeFormField;
-
-  @override
-  void didUpdateWidget(covariant _CrudDateRangeFormField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    final nextValue = _dateRangeFromControllers(
-      widget.startController,
-      widget.endController,
-    );
-    final current = value;
-    final changed =
-        current?.start != nextValue?.start || current?.end != nextValue?.end;
-    if (changed) {
-      setValue(nextValue);
-    }
-  }
-}
-
-class _CrudDateRangeFieldBody extends StatelessWidget {
-  const _CrudDateRangeFieldBody({
-    required this.state,
-    required this.label,
-    required this.startController,
-    required this.endController,
-    required this.enabled,
-    required this.hintText,
-    required this.helperText,
-    required this.clearText,
-    required this.confirmText,
-    required this.cancelText,
-    required this.firstDate,
-    required this.lastDate,
-  });
-
-  final FormFieldState<DateTimeRange?> state;
-  final String label;
-  final TextEditingController startController;
-  final TextEditingController endController;
-  final bool enabled;
-  final String? hintText;
-  final String? helperText;
-  final String clearText;
-  final String confirmText;
-  final String cancelText;
-  final DateTime? firstDate;
-  final DateTime? lastDate;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final currentValue = state.value;
-    final hasValue = currentValue != null;
-    final text = hasValue
-        ? '${_formatDateYmd(currentValue.start)} ~ ${_formatDateYmd(currentValue.end)}'
-        : (hintText ?? '请选择日期范围');
-
-    return InkWell(
-      onTap: enabled ? () => _pickDateRange(context, currentValue) : null,
-      borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          helperText: helperText,
-          errorText: state.errorText,
-          suffixIcon: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (hasValue && enabled)
-                IconButton(
-                  tooltip: clearText,
-                  onPressed: () {
-                    startController.clear();
-                    endController.clear();
-                    state.didChange(null);
-                  },
-                  icon: const Icon(Icons.clear, size: 18),
-                ),
-              const Icon(Icons.date_range_outlined),
-              SizedBox(width: LayoutTokens.gapMd),
-            ],
-          ),
-        ).applyDefaults(theme.inputDecorationTheme).copyWith(enabled: enabled),
-        child: Text(
-          text,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: hasValue ? null : theme.hintColor,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _pickDateRange(
-    BuildContext context,
-    DateTimeRange? currentValue,
-  ) async {
-    final now = DateTime.now();
-    final resolvedFirstDate = firstDate ?? DateTime(now.year - 5);
-    final resolvedLastDate = lastDate ?? DateTime(now.year + 5, 12, 31);
-    final picked = await showDateRangePicker(
-      context: context,
-      firstDate: resolvedFirstDate,
-      lastDate: resolvedLastDate,
-      initialDateRange: currentValue,
-      helpText: label,
-      confirmText: confirmText,
-      cancelText: cancelText,
-    );
-    if (picked == null) {
-      return;
-    }
-    startController.text = _formatDateYmd(picked.start);
-    endController.text = _formatDateYmd(picked.end);
-    state.didChange(
-      DateTimeRange(
-        start:
-            DateTime(picked.start.year, picked.start.month, picked.start.day),
-        end: DateTime(picked.end.year, picked.end.month, picked.end.day),
-      ),
-    );
-  }
-}
-
-DateTimeRange? _dateRangeFromControllers(
-  TextEditingController startController,
-  TextEditingController endController,
-) {
-  final start = DateTime.tryParse(startController.text.trim());
-  final end = DateTime.tryParse(endController.text.trim());
-  if (start == null || end == null) {
-    return null;
-  }
-  return DateTimeRange(
-    start: DateTime(start.year, start.month, start.day),
-    end: DateTime(end.year, end.month, end.day),
-  );
-}
-
-String _formatDateYmd(DateTime date) {
-  final year = date.year.toString().padLeft(4, '0');
-  final month = date.month.toString().padLeft(2, '0');
-  final day = date.day.toString().padLeft(2, '0');
-  return '$year-$month-$day';
-}
-
-class _CrudFileUploadFormField extends FormField<CrudPickedFile?> {
-  _CrudFileUploadFormField({
-    Key? fieldKey,
-    required this.label,
-    required this.value,
-    required this.onChanged,
-    required this.enabled,
-    required this.hintText,
-    required this.helperText,
-    required this.allowedExtensions,
-    required this.fallbackFilename,
-    String? Function(CrudPickedFile?)? validator,
-  }) : super(
-          key: fieldKey,
-          initialValue: value,
-          validator: validator,
-          builder: (state) => _CrudFileUploadFieldBody(
-            state: state,
-            label: label,
-            value: value,
-            onChanged: onChanged,
-            enabled: enabled,
-            hintText: hintText,
-            helperText: helperText,
-            allowedExtensions: allowedExtensions,
-            fallbackFilename: fallbackFilename,
-          ),
-        );
-
-  final String label;
-  final CrudPickedFile? value;
-  final ValueChanged<dynamic>? onChanged;
-  final bool enabled;
-  final String? hintText;
-  final String? helperText;
-  final List<String> allowedExtensions;
-  final String fallbackFilename;
-
-  @override
-  FormFieldState<CrudPickedFile?> createState() =>
-      _CrudFileUploadFormFieldState();
-}
-
-class _CrudFileUploadFormFieldState extends FormFieldState<CrudPickedFile?> {
-  @override
-  _CrudFileUploadFormField get widget =>
-      super.widget as _CrudFileUploadFormField;
-
-  @override
-  void didUpdateWidget(covariant _CrudFileUploadFormField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.value?.filename != value?.filename) {
-      setValue(widget.value);
-    }
-  }
-}
-
-class _CrudFileUploadFieldBody extends StatelessWidget {
-  const _CrudFileUploadFieldBody({
-    required this.state,
-    required this.label,
-    required this.value,
-    required this.onChanged,
-    required this.enabled,
-    required this.hintText,
-    required this.helperText,
-    required this.allowedExtensions,
-    required this.fallbackFilename,
-  });
-
-  final FormFieldState<CrudPickedFile?> state;
-  final String label;
-  final CrudPickedFile? value;
-  final ValueChanged<dynamic>? onChanged;
-  final bool enabled;
-  final String? hintText;
-  final String? helperText;
-  final List<String> allowedExtensions;
-  final String fallbackFilename;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final currentValue = state.value;
-    final hasValue = currentValue != null;
-    final supportedTypes = allowedExtensions.join(', ').toUpperCase();
-
-    return InputDecorator(
-      decoration: InputDecoration(
-        labelText: label,
-        helperText: helperText ??
-            (supportedTypes.isEmpty ? null : '支持格式: $supportedTypes'),
-        errorText: state.errorText,
-      ).applyDefaults(theme.inputDecorationTheme).copyWith(enabled: enabled),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            hasValue ? currentValue.filename : (hintText ?? '请选择文件'),
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: hasValue ? null : theme.hintColor,
-            ),
-          ),
-          SizedBox(height: LayoutTokens.gapMd),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              OutlinedButton.icon(
-                onPressed: enabled ? () => _pickFile(context) : null,
-                icon: const Icon(Icons.attach_file_outlined),
-                label: Text(hasValue ? '重新选择' : '选择文件'),
-              ),
-              if (hasValue)
-                TextButton.icon(
-                  onPressed: enabled ? _clearFile : null,
-                  icon: const Icon(Icons.clear),
-                  label: const Text('清空'),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _pickFile(BuildContext context) async {
-    try {
-      final multipartFile = await pickMultipartFile(
-        allowedExtensions: allowedExtensions,
-        fallbackFilename: fallbackFilename,
-      );
-      if (multipartFile == null) {
-        return;
-      }
-      final picked = CrudPickedFile(
-        filename: multipartFile.filename ?? fallbackFilename,
-        file: multipartFile,
-      );
-      state.didChange(picked);
-      onChanged?.call(picked);
-    } on FileUploadPickException catch (err) {
-      ToastUtil.showError(err.message);
-    } catch (_) {
-      ToastUtil.showError('读取文件失败');
-    }
-  }
-
-  void _clearFile() {
-    state.didChange(null);
-    onChanged?.call(null);
-  }
-}
-
-class _CrudTagsFormField extends FormField<List<String>> {
-  _CrudTagsFormField({
-    Key? fieldKey,
-    required this.label,
-    required this.values,
-    required this.onChanged,
-    required this.enabled,
-    required this.hintText,
-    required this.helperText,
-    required this.emptyText,
-    String? Function(List<String>?)? validator,
-  }) : super(
-          key: fieldKey,
-          initialValue: List<String>.from(values),
-          validator: validator,
-          builder: (state) => _CrudTagsFieldBody(
-            state: state,
-            label: label,
-            values: values,
-            onChanged: onChanged,
-            enabled: enabled,
-            hintText: hintText,
-            helperText: helperText,
-            emptyText: emptyText,
-          ),
-        );
-
-  final String label;
-  final List<String> values;
-  final ValueChanged<dynamic>? onChanged;
-  final bool enabled;
-  final String? hintText;
-  final String? helperText;
-  final String emptyText;
-
-  @override
-  FormFieldState<List<String>> createState() => _CrudTagsFormFieldState();
-}
-
-class _CrudTagsFormFieldState extends FormFieldState<List<String>> {
-  @override
-  _CrudTagsFormField get widget => super.widget as _CrudTagsFormField;
-
-  @override
-  void didUpdateWidget(covariant _CrudTagsFormField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!listEquals(widget.values, value ?? const <String>[])) {
-      setValue(List<String>.from(widget.values));
-    }
-  }
-}
-
-class _CrudTagsFieldBody extends StatefulWidget {
-  const _CrudTagsFieldBody({
-    required this.state,
-    required this.label,
-    required this.values,
-    required this.onChanged,
-    required this.enabled,
-    required this.hintText,
-    required this.helperText,
-    required this.emptyText,
-  });
-
-  final FormFieldState<List<String>> state;
-  final String label;
-  final List<String> values;
-  final ValueChanged<dynamic>? onChanged;
-  final bool enabled;
-  final String? hintText;
-  final String? helperText;
-  final String emptyText;
-
-  @override
-  State<_CrudTagsFieldBody> createState() => _CrudTagsFieldBodyState();
-}
-
-class _CrudTagsFieldBodyState extends State<_CrudTagsFieldBody> {
-  static final RegExp _separatorPattern = RegExp(r'[、,，\n]+');
-
-  late final TextEditingController _inputController;
-
-  @override
-  void initState() {
-    super.initState();
-    _inputController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _inputController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final tags = widget.state.value ?? widget.values;
-
-    return InputDecorator(
-      decoration: InputDecoration(
-        labelText: widget.label,
-        helperText: widget.helperText,
-        errorText: widget.state.errorText,
-      ).applyDefaults(theme.inputDecorationTheme).copyWith(
-            enabled: widget.enabled,
-          ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (tags.isNotEmpty)
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: tags
-                  .map(
-                    (tag) => InputChip(
-                      label: Text(tag),
-                      onDeleted: widget.enabled ? () => _removeTag(tag) : null,
-                    ),
-                  )
-                  .toList(),
-            )
-          else
-            Text(
-              widget.emptyText,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.hintColor,
-              ),
-            ),
-          SizedBox(height: LayoutTokens.gapMd),
-          if (widget.enabled)
-            TextField(
-              controller: _inputController,
-              decoration: InputDecoration(
-                hintText: widget.hintText ?? '输入后按回车、逗号或换行添加',
-                suffixIcon: IconButton(
-                  onPressed: _commitInput,
-                  icon: const Icon(Icons.add),
-                  tooltip: '添加',
-                ),
-              ),
-              onChanged: _handleInputChanged,
-              onSubmitted: (_) => _commitInput(),
-            )
-          else if (tags.isEmpty && widget.hintText != null)
-            Text(
-              widget.hintText!,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.hintColor,
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  void _handleInputChanged(String raw) {
-    if (!raw.contains(_separatorPattern)) {
-      return;
-    }
-    final segments = raw.split(_separatorPattern);
-    final endsWithSeparator = RegExp(r'[、,，\n]\s*$').hasMatch(raw);
-    final pending = endsWithSeparator || segments.isEmpty
-        ? ''
-        : segments.removeLast().trim();
-    _addTags(
-      segments.map((item) => item.trim()).where((item) => item.isNotEmpty),
-    );
-    _inputController.value = TextEditingValue(
-      text: pending,
-      selection: TextSelection.collapsed(offset: pending.length),
-    );
-  }
-
-  void _commitInput() {
-    final current = _inputController.text.trim();
-    if (current.isEmpty) {
-      return;
-    }
-    _addTags(
-      current
-          .split(_separatorPattern)
-          .map((item) => item.trim())
-          .where((item) => item.isNotEmpty),
-    );
-    _inputController.clear();
-  }
-
-  void _addTags(Iterable<String> nextTags) {
-    final current = List<String>.from(widget.state.value ?? widget.values);
-    var changed = false;
-    for (final tag in nextTags) {
-      if (current.contains(tag)) {
-        continue;
-      }
-      current.add(tag);
-      changed = true;
-    }
-    if (!changed) {
-      return;
-    }
-    widget.state.didChange(current);
-    widget.onChanged?.call(current);
-  }
-
-  void _removeTag(String tag) {
-    final current = List<String>.from(widget.state.value ?? widget.values)
-      ..remove(tag);
-    widget.state.didChange(current);
-    widget.onChanged?.call(current);
-  }
-}
-
-class _CrudCheckboxGroupFormField extends FormField<Set<dynamic>> {
-  _CrudCheckboxGroupFormField({
-    Key? fieldKey,
-    required this.label,
-    required this.options,
-    required this.selectedValues,
-    required this.onChanged,
-    required this.enabled,
-    required this.hintText,
-    required this.helperText,
-    required this.emptyText,
-    String? Function(Set<dynamic>?)? validator,
-  }) : super(
-          key: fieldKey,
-          initialValue: Set<dynamic>.from(selectedValues),
-          validator: validator,
-          builder: (state) => _CrudCheckboxGroupFieldBody(
-            state: state,
-            label: label,
-            options: options,
-            selectedValues: selectedValues,
-            onChanged: onChanged,
-            enabled: enabled,
-            hintText: hintText,
-            helperText: helperText,
-            emptyText: emptyText,
-          ),
-        );
-
-  final String label;
-  final List<CrudFieldOption<dynamic>> options;
-  final Set<dynamic> selectedValues;
-  final ValueChanged<dynamic>? onChanged;
-  final bool enabled;
-  final String? hintText;
-  final String? helperText;
-  final String emptyText;
-
-  @override
-  FormFieldState<Set<dynamic>> createState() =>
-      _CrudCheckboxGroupFormFieldState();
-}
-
-class _CrudCheckboxGroupFormFieldState extends FormFieldState<Set<dynamic>> {
-  @override
-  _CrudCheckboxGroupFormField get widget =>
-      super.widget as _CrudCheckboxGroupFormField;
-
-  @override
-  void didUpdateWidget(covariant _CrudCheckboxGroupFormField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!setEquals(widget.selectedValues, value ?? <dynamic>{})) {
-      setValue(Set<dynamic>.from(widget.selectedValues));
-    }
-  }
-}
-
-class _CrudCheckboxGroupFieldBody extends StatelessWidget {
-  const _CrudCheckboxGroupFieldBody({
-    required this.state,
-    required this.label,
-    required this.options,
-    required this.selectedValues,
-    required this.onChanged,
-    required this.enabled,
-    required this.hintText,
-    required this.helperText,
-    required this.emptyText,
-  });
-
-  final FormFieldState<Set<dynamic>> state;
-  final String label;
-  final List<CrudFieldOption<dynamic>> options;
-  final Set<dynamic> selectedValues;
-  final ValueChanged<dynamic>? onChanged;
-  final bool enabled;
-  final String? hintText;
-  final String? helperText;
-  final String emptyText;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final currentValues = state.value ?? Set<dynamic>.from(selectedValues);
-
-    return InputDecorator(
-      decoration: InputDecoration(
-        labelText: label,
-        helperText: helperText ?? hintText,
-        errorText: state.errorText,
-      ).applyDefaults(theme.inputDecorationTheme).copyWith(enabled: enabled),
-      child: options.isEmpty
-          ? Text(
-              emptyText,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.hintColor,
-              ),
-            )
-          : Column(
-              mainAxisSize: MainAxisSize.min,
-              children: options
-                  .map(
-                    (option) => CheckboxListTile(
-                      value: currentValues.contains(option.value),
-                      contentPadding: EdgeInsets.zero,
-                      visualDensity: VisualDensity.compact,
-                      controlAffinity: ListTileControlAffinity.leading,
-                      title: Text(option.label),
-                      onChanged: enabled && option.enabled
-                          ? (checked) {
-                              final nextValues = Set<dynamic>.from(
-                                currentValues,
-                              );
-                              if (checked == true) {
-                                nextValues.add(option.value);
-                              } else {
-                                nextValues.remove(option.value);
-                              }
-                              state.didChange(nextValues);
-                              onChanged?.call(nextValues);
-                            }
-                          : null,
-                    ),
-                  )
-                  .toList(),
-            ),
-    );
-  }
-}
-
-class _CrudRadioGroupFormField extends FormField<dynamic> {
-  _CrudRadioGroupFormField({
-    Key? fieldKey,
-    required this.label,
-    required this.options,
-    required this.value,
-    required this.onChanged,
-    required this.enabled,
-    required this.hintText,
-    required this.helperText,
-    String? Function(dynamic)? validator,
-  }) : super(
-          key: fieldKey,
-          initialValue: value,
-          validator: validator,
-          builder: (state) => _CrudRadioGroupFieldBody(
-            state: state,
-            label: label,
-            options: options,
-            value: value,
-            onChanged: onChanged,
-            enabled: enabled,
-            hintText: hintText,
-            helperText: helperText,
-          ),
-        );
-
-  final String label;
-  final List<CrudFieldOption<dynamic>> options;
-  final dynamic value;
-  final ValueChanged<dynamic>? onChanged;
-  final bool enabled;
-  final String? hintText;
-  final String? helperText;
-
-  @override
-  FormFieldState<dynamic> createState() => _CrudRadioGroupFormFieldState();
-}
-
-class _CrudRadioGroupFormFieldState extends FormFieldState<dynamic> {
-  @override
-  _CrudRadioGroupFormField get widget =>
-      super.widget as _CrudRadioGroupFormField;
-
-  @override
-  void didUpdateWidget(covariant _CrudRadioGroupFormField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.value != value) {
-      setValue(widget.value);
-    }
-  }
-}
-
-class _CrudRadioGroupFieldBody extends StatelessWidget {
-  const _CrudRadioGroupFieldBody({
-    required this.state,
-    required this.label,
-    required this.options,
-    required this.value,
-    required this.onChanged,
-    required this.enabled,
-    required this.hintText,
-    required this.helperText,
-  });
-
-  final FormFieldState<dynamic> state;
-  final String label;
-  final List<CrudFieldOption<dynamic>> options;
-  final dynamic value;
-  final ValueChanged<dynamic>? onChanged;
-  final bool enabled;
-  final String? hintText;
-  final String? helperText;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final currentValue = state.value;
-
-    return InputDecorator(
-      decoration: InputDecoration(
-        labelText: label,
-        helperText: helperText ?? hintText,
-        errorText: state.errorText,
-      ).applyDefaults(theme.inputDecorationTheme).copyWith(enabled: enabled),
-      child: RadioGroup<dynamic>(
-        groupValue: currentValue,
-        onChanged: (nextValue) {
-          if (!enabled) {
-            return;
-          }
-          state.didChange(nextValue);
-          onChanged?.call(nextValue);
-        },
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: options
-              .map(
-                (option) => RadioListTile<dynamic>(
-                  value: option.value,
-                  contentPadding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                  enabled: enabled && option.enabled,
-                  title: Text(option.label),
-                ),
-              )
-              .toList(),
-        ),
-      ),
-    );
-  }
-}
-
-class _CrudColorFormField extends FormField<Color?> {
-  _CrudColorFormField({
-    Key? fieldKey,
-    required this.label,
-    required this.value,
-    required this.onChanged,
-    required this.enabled,
-    required this.hintText,
-    required this.helperText,
-    required this.palette,
-    required this.clearText,
-    required this.confirmText,
-    required this.cancelText,
-    String? Function(Color?)? validator,
-  }) : super(
-          key: fieldKey,
-          initialValue: value,
-          validator: validator,
-          builder: (state) => _CrudColorFieldBody(
-            state: state,
-            label: label,
-            value: value,
-            onChanged: onChanged,
-            enabled: enabled,
-            hintText: hintText,
-            helperText: helperText,
-            palette: palette,
-            clearText: clearText,
-            confirmText: confirmText,
-            cancelText: cancelText,
-          ),
-        );
-
-  final String label;
-  final Color? value;
-  final ValueChanged<dynamic>? onChanged;
-  final bool enabled;
-  final String? hintText;
-  final String? helperText;
-  final List<Color>? palette;
-  final String clearText;
-  final String confirmText;
-  final String cancelText;
-
-  @override
-  FormFieldState<Color?> createState() => _CrudColorFormFieldState();
-}
-
-class _CrudColorFormFieldState extends FormFieldState<Color?> {
-  @override
-  _CrudColorFormField get widget => super.widget as _CrudColorFormField;
-
-  @override
-  void didUpdateWidget(covariant _CrudColorFormField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.value != value) {
-      setValue(widget.value);
-    }
-  }
-}
-
-class _CrudColorFieldBody extends StatelessWidget {
-  const _CrudColorFieldBody({
-    required this.state,
-    required this.label,
-    required this.value,
-    required this.onChanged,
-    required this.enabled,
-    required this.hintText,
-    required this.helperText,
-    required this.palette,
-    required this.clearText,
-    required this.confirmText,
-    required this.cancelText,
-  });
-
-  final FormFieldState<Color?> state;
-  final String label;
-  final Color? value;
-  final ValueChanged<dynamic>? onChanged;
-  final bool enabled;
-  final String? hintText;
-  final String? helperText;
-  final List<Color>? palette;
-  final String clearText;
-  final String confirmText;
-  final String cancelText;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final currentValue = state.value ?? value;
-
-    return InkWell(
-      onTap: enabled ? () => _openPicker(context, currentValue) : null,
-      borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: hintText,
-          helperText: helperText,
-          errorText: state.errorText,
-          suffixIcon: const Icon(Icons.color_lens_outlined),
-        ).applyDefaults(theme.inputDecorationTheme).copyWith(enabled: enabled),
-        child: Row(
-          children: [
-            Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                color: currentValue ?? Colors.transparent,
-                borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
-                border: Border.all(color: theme.dividerColor),
-              ),
-            ),
-            SizedBox(width: LayoutTokens.gapMd),
-            Expanded(
-              child: Text(
-                currentValue == null
-                    ? (hintText ?? '请选择颜色')
-                    : '#${currentValue.toARGB32().toRadixString(16).substring(2).toUpperCase()}',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: currentValue == null ? theme.hintColor : null,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _openPicker(BuildContext context, Color? currentValue) async {
-    var temp = currentValue ?? Colors.blue;
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return BaseDialog(
-          title: label,
-          maxWidth: LayoutTokens.dialogWidthSm,
-          scrollable: false,
-          content: SizedBox(
-            width: 320,
-            child: BlockPicker(
-              pickerColor: temp,
-              availableColors: palette ?? _defaultColorPalette,
-              onColorChanged: (color) {
-                temp = color;
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(cancelText),
-            ),
-            TextButton(
-              onPressed: () {
-                state.didChange(null);
-                onChanged?.call(null);
-                Navigator.of(dialogContext).pop();
-              },
-              child: Text(clearText),
-            ),
-            FilledButton(
-              onPressed: () {
-                state.didChange(temp);
-                onChanged?.call(temp);
-                Navigator.of(dialogContext).pop();
-              },
-              child: Text(confirmText),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-const List<Color> _defaultColorPalette = ColorTokens.tagColors;
