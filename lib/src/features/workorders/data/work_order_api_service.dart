@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:work_order_app/src/core/common/api_exception.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_detail_dto.dart';
@@ -8,6 +9,8 @@ class WorkOrderApiService {
   WorkOrderApiService(this._client);
 
   final ApiClient _client;
+
+  ApiClient get client => _client;
 
   Future<WorkOrderPageDto> fetchWorkOrders({
     int page = 1,
@@ -74,7 +77,7 @@ class WorkOrderApiService {
       return WorkOrderPageDto(
           items: list, total: list.length, page: 1, pageSize: list.length);
     }
-    return const WorkOrderPageDto(items: [], total: 0, page: 1, pageSize: 20);
+    throw _unexpectedPayload('施工单列表', payload);
   }
 
   Future<Map<String, dynamic>> fetchSummary({
@@ -82,34 +85,24 @@ class WorkOrderApiService {
   }) async {
     final response =
         await _client.get('/workorders/summary/', queryParameters: params);
-    return _mapFromResponse(response.data);
+    return _requireMap('施工单汇总', response.data);
   }
 
   Future<WorkOrderDetailDto> fetchWorkOrder(int id) async {
     final response = await _client.get('/workorders/$id/');
-    final payload = response.data;
-    final map = payload is Map
-        ? Map<String, dynamic>.from(payload)
-        : <String, dynamic>{};
-    return WorkOrderDetailDto.fromJson(map);
+    return _detailFromResponse(response.data, label: '施工单详情');
   }
 
   Future<WorkOrderDetailDto> createWorkOrder(
       Map<String, dynamic> payload) async {
     final response = await _client.post('/workorders/', data: payload);
-    final body = response.data;
-    final map =
-        body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
-    return WorkOrderDetailDto.fromJson(map);
+    return _detailFromResponse(response.data, label: '创建施工单');
   }
 
   Future<WorkOrderDetailDto> updateWorkOrder(
       int id, Map<String, dynamic> payload) async {
     final response = await _client.put('/workorders/$id/', data: payload);
-    final body = response.data;
-    final map =
-        body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
-    return WorkOrderDetailDto.fromJson(map);
+    return _detailFromResponse(response.data, label: '更新施工单');
   }
 
   Future<WorkOrderDetailDto> uploadDesignFile(
@@ -118,10 +111,7 @@ class WorkOrderApiService {
       '/workorders/$id/',
       data: FormData.fromMap({'design_file': designFile}),
     );
-    final body = response.data;
-    final map =
-        body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
-    return WorkOrderDetailDto.fromJson(map);
+    return _detailFromResponse(response.data, label: '上传设计文件');
   }
 
   Future<void> deleteWorkOrder(int id) async {
@@ -131,10 +121,7 @@ class WorkOrderApiService {
   Future<WorkOrderDetailDto> updateStatus(int id, String status) async {
     final response = await _client
         .post('/workorders/$id/update_status/', data: {'status': status});
-    final body = response.data;
-    final map =
-        body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
-    return WorkOrderDetailDto.fromJson(map);
+    return _detailFromResponse(response.data, label: '更新施工单状态');
   }
 
   Future<WorkOrderDetailDto> approve({
@@ -152,28 +139,19 @@ class WorkOrderApiService {
     }
     final response =
         await _client.post('/workorders/$id/approve/', data: payload);
-    final body = response.data;
-    final map =
-        body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
-    return WorkOrderDetailDto.fromJson(map);
+    return _detailFromResponse(response.data, label: '审核施工单');
   }
 
   Future<WorkOrderDetailDto> resubmitForApproval(int id) async {
     final response =
         await _client.post('/workorders/$id/resubmit_for_approval/');
-    final body = response.data;
-    final map =
-        body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
-    return WorkOrderDetailDto.fromJson(map);
+    return _detailFromResponse(response.data, label: '重新提交施工单审核');
   }
 
   Future<WorkOrderDetailDto> requestReapproval(int id, String reason) async {
     final response = await _client
         .post('/workorders/$id/request_reapproval/', data: {'reason': reason});
-    final body = response.data;
-    final map =
-        body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
-    return WorkOrderDetailDto.fromJson(map);
+    return _detailFromResponse(response.data, label: '请求施工单重新审核');
   }
 
   Future<Map<String, dynamic>> fetchApprovalStatus(int id) async {
@@ -181,7 +159,7 @@ class WorkOrderApiService {
       '/multi-level-approval/get_approval_status/',
       queryParameters: {'order_id': id},
     );
-    return _mapFromResponse(response.data);
+    return _requireMap('施工单审批状态', response.data);
   }
 
   Future<Map<String, dynamic>> submitMultiApproval(int id) async {
@@ -189,12 +167,12 @@ class WorkOrderApiService {
       '/multi-level-approval/submit_for_approval/',
       data: {'order_id': id},
     );
-    return _mapFromResponse(response.data);
+    return _requireMap('提交多级审批', response.data);
   }
 
   Future<Map<String, dynamic>> startApprovalStep(int stepId) async {
     final response = await _client.post('/approval-steps/$stepId/start_step/');
-    return _mapFromResponse(response.data);
+    return _requireMap('开始审批步骤', response.data);
   }
 
   Future<Map<String, dynamic>> completeApprovalStep(
@@ -209,7 +187,7 @@ class WorkOrderApiService {
         if (comments != null) 'comments': comments,
       },
     );
-    return _mapFromResponse(response.data);
+    return _requireMap('完成审批步骤', response.data);
   }
 
   Future<Map<String, dynamic>> escalateApprovalStep(
@@ -224,7 +202,7 @@ class WorkOrderApiService {
         if (toStepId != null) 'to_step_id': toStepId,
       },
     );
-    return _mapFromResponse(response.data);
+    return _requireMap('上报审批步骤', response.data);
   }
 
   Future<Map<String, dynamic>> markUrgent(int id,
@@ -236,28 +214,28 @@ class WorkOrderApiService {
         'reason': reason,
       },
     );
-    return _mapFromResponse(response.data);
+    return _requireMap('标记紧急施工单', response.data);
   }
 
   Future<WorkOrderDetailDto> addProcess(
       int id, Map<String, dynamic> payload) async {
     final response =
         await _client.post('/workorders/$id/add_process/', data: payload);
-    return _detailFromResponse(response.data);
+    return _detailFromResponse(response.data, label: '添加施工单工序');
   }
 
   Future<WorkOrderDetailDto> addMaterial(
       int id, Map<String, dynamic> payload) async {
     final response =
         await _client.post('/workorders/$id/add_material/', data: payload);
-    return _detailFromResponse(response.data);
+    return _detailFromResponse(response.data, label: '添加施工单物料');
   }
 
   Future<Map<String, dynamic>> getStatistics(
       {Map<String, dynamic>? params}) async {
     final response =
         await _client.get('/workorders/statistics/', queryParameters: params);
-    return _mapFromResponse(response.data);
+    return _requireMap('施工单统计', response.data);
   }
 
   Future<Response<dynamic>> export({Map<String, dynamic>? params}) {
@@ -277,7 +255,7 @@ class WorkOrderApiService {
     }
     final response = await _client.get('/workorders/$id/check_sync_needed/',
         queryParameters: params);
-    return _mapFromResponse(response.data);
+    return _requireMap('检查任务同步', response.data);
   }
 
   Future<Map<String, dynamic>> syncTasksPreview(int id,
@@ -288,7 +266,7 @@ class WorkOrderApiService {
     };
     final response = await _client.post('/workorders/$id/sync_tasks_preview/',
         data: payload);
-    return _mapFromResponse(response.data);
+    return _requireMap('任务同步预览', response.data);
   }
 
   Future<Map<String, dynamic>> syncTasksExecute(int id,
@@ -300,19 +278,30 @@ class WorkOrderApiService {
     };
     final response = await _client.post('/workorders/$id/sync_tasks_execute/',
         data: payload);
-    return _mapFromResponse(response.data);
+    return _requireMap('执行任务同步', response.data);
   }
 
-  WorkOrderDetailDto _detailFromResponse(dynamic data) {
-    final map =
-        data is Map ? Map<String, dynamic>.from(data) : <String, dynamic>{};
-    return WorkOrderDetailDto.fromJson(map);
+  WorkOrderDetailDto _detailFromResponse(
+    dynamic data, {
+    required String label,
+  }) {
+    return WorkOrderDetailDto.fromJson(_requireMap(label, data));
   }
 
-  Map<String, dynamic> _mapFromResponse(dynamic data) {
+  Map<String, dynamic> _requireMap(String label, dynamic data) {
     if (data is Map<String, dynamic>) {
       return Map<String, dynamic>.from(data);
     }
-    return {};
+    if (data is Map) {
+      return Map<String, dynamic>.from(data);
+    }
+    throw _unexpectedPayload(label, data);
+  }
+
+  ApiException _unexpectedPayload(String label, dynamic data) {
+    return ApiException(
+      message: '$label 响应格式异常',
+      data: data,
+    );
   }
 }

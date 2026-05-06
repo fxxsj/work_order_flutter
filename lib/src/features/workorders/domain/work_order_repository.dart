@@ -36,9 +36,13 @@ abstract class WorkOrderRepository {
     String? rejectionReason,
   });
 
+  Future<WorkOrderDetailDto> submitApproval(int id, {String? comment});
+
   Future<WorkOrderDetailDto> resubmitForApproval(int id);
 
   Future<WorkOrderDetailDto> requestReapproval(int id, String reason);
+
+  Future<Map<String, dynamic>> checkCompletion(int id);
 
   Future<Map<String, dynamic>> fetchApprovalStatus(int id);
 

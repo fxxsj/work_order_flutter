@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:work_order_app/src/core/common/api_exception.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/tasks/data/task_dto.dart';
@@ -101,7 +102,7 @@ class TaskApiService {
       return TaskPageDto(
           items: list, total: list.length, page: 1, pageSize: list.length);
     }
-    return const TaskPageDto(items: [], total: 0, page: 1, pageSize: 20);
+    throw _unexpectedPayload('任务列表', payload);
   }
 
   Future<Map<String, dynamic>> fetchSummary({
@@ -134,28 +135,28 @@ class TaskApiService {
     }
     final response =
         await _client.get('/workorder-tasks/summary/', queryParameters: params);
-    return _mapFromResponse(response.data);
+    return _requireMap('任务汇总', response.data);
   }
 
   Future<Map<String, dynamic>> complete(
       int id, Map<String, dynamic> payload) async {
     final response =
         await _client.post('/workorder-tasks/$id/complete/', data: payload);
-    return _mapFromResponse(response.data);
+    return _requireMap('完成任务', response.data);
   }
 
   Future<Map<String, dynamic>> updateQuantity(
       int id, Map<String, dynamic> payload) async {
     final response = await _client.post('/workorder-tasks/$id/update_quantity/',
         data: payload);
-    return _mapFromResponse(response.data);
+    return _requireMap('更新任务进度', response.data);
   }
 
   Future<Map<String, dynamic>> assign(
       int id, Map<String, dynamic> payload) async {
     final response =
         await _client.post('/workorder-tasks/$id/assign/', data: payload);
-    return _mapFromResponse(response.data);
+    return _requireMap('分派任务', response.data);
   }
 
   Future<Map<String, dynamic>> assignToOperator(int id,
@@ -167,7 +168,7 @@ class TaskApiService {
         'notes': notes ?? '',
       },
     );
-    return _mapFromResponse(response.data);
+    return _requireMap('指派任务操作员', response.data);
   }
 
   Future<List<Map<String, dynamic>>> fetchDepartmentOperators(
@@ -176,7 +177,7 @@ class TaskApiService {
       '/workorder-tasks/department-operators/',
       queryParameters: {'department_id': departmentId},
     );
-    return _listFromResponse(response.data);
+    return _requireList('部门操作员列表', response.data);
   }
 
   Future<Map<String, dynamic>> claimTask(int id, {String? notes}) async {
@@ -184,49 +185,49 @@ class TaskApiService {
       '/workorder-tasks/$id/claim/',
       data: {'notes': notes ?? ''},
     );
-    return _mapFromResponse(response.data);
+    return _requireMap('认领任务', response.data);
   }
 
   Future<Map<String, dynamic>> fetchClaimableTasks(
       {Map<String, dynamic>? params}) async {
     final response = await _client.get('/workorder-tasks/claimable/',
         queryParameters: params);
-    return _mapFromResponse(response.data);
+    return _requireMap('可认领任务', response.data);
   }
 
   Future<Map<String, dynamic>> fetchOperatorCenterData(
       {Map<String, dynamic>? params}) async {
     final response = await _client.get('/workorder-tasks/operator_center/',
         queryParameters: params);
-    return _mapFromResponse(response.data);
+    return _requireMap('操作员工作台', response.data);
   }
 
   Future<Map<String, dynamic>> splitTask(
       int id, Map<String, dynamic> payload) async {
     final response =
         await _client.post('/workorder-tasks/$id/split/', data: payload);
-    return _mapFromResponse(response.data);
+    return _requireMap('拆分任务', response.data);
   }
 
   Future<Map<String, dynamic>> fetchCollaborationStats(
       {Map<String, dynamic>? params}) async {
     final response = await _client.get('/workorder-tasks/collaboration_stats/',
         queryParameters: params);
-    return _mapFromResponse(response.data);
+    return _requireMap('任务协作统计', response.data);
   }
 
   Future<Map<String, dynamic>> fetchDepartmentWorkload(
       {Map<String, dynamic>? params}) async {
     final response = await _client.get('/workorder-tasks/department_workload/',
         queryParameters: params);
-    return _mapFromResponse(response.data);
+    return _requireMap('部门任务负载', response.data);
   }
 
   Future<Map<String, dynamic>> fetchAssignmentHistory(
       {Map<String, dynamic>? params}) async {
     final response = await _client.get('/workorder-tasks/assignment_history/',
         queryParameters: params);
-    return _mapFromResponse(response.data);
+    return _requireMap('任务分派历史', response.data);
   }
 
   Future<Response<dynamic>> export({Map<String, dynamic>? params}) {
@@ -283,7 +284,7 @@ class TaskApiService {
         'updates': updates,
       },
     );
-    return _mapFromResponse(response.data);
+    return _requireMap('批量更新草稿任务', response.data);
   }
 
   Future<Map<String, dynamic>> bulkDelete(List<int> taskIds) async {
@@ -315,17 +316,20 @@ class TaskApiService {
   Future<Map<String, dynamic>> batchAssign(Map<String, dynamic> payload) async {
     final response =
         await _client.post('/workorder-tasks/batch_assign/', data: payload);
-    return _mapFromResponse(response.data);
+    return _requireMap('批量分派任务', response.data);
   }
 
-  Map<String, dynamic> _mapFromResponse(dynamic data) {
+  Map<String, dynamic> _requireMap(String label, dynamic data) {
     if (data is Map<String, dynamic>) {
       return Map<String, dynamic>.from(data);
     }
-    return {};
+    if (data is Map) {
+      return Map<String, dynamic>.from(data);
+    }
+    throw _unexpectedPayload(label, data);
   }
 
-  List<Map<String, dynamic>> _listFromResponse(dynamic data) {
+  List<Map<String, dynamic>> _requireList(String label, dynamic data) {
     if (data is List) {
       return data
           .whereType<Map>()
@@ -339,6 +343,13 @@ class TaskApiService {
           .map((item) => Map<String, dynamic>.from(item))
           .toList();
     }
-    return [];
+    throw _unexpectedPayload(label, data);
+  }
+
+  ApiException _unexpectedPayload(String label, dynamic data) {
+    return ApiException(
+      message: '$label 响应格式异常',
+      data: data,
+    );
   }
 }

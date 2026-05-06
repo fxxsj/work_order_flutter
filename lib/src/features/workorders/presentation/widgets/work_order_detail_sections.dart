@@ -25,13 +25,8 @@ class WorkOrderDetailOverviewSection extends StatelessWidget {
     required this.statusSelection,
     required this.actionLoading,
     required this.onUploadDesignFile,
-    required this.hasMultiApproval,
     required this.onStatusChanged,
     required this.onUpdateStatus,
-    required this.onApprove,
-    required this.onReject,
-    required this.onResubmit,
-    required this.onRequestReapproval,
     required this.buildSection,
     required this.emptyText,
   });
@@ -41,13 +36,8 @@ class WorkOrderDetailOverviewSection extends StatelessWidget {
   final String? statusSelection;
   final bool actionLoading;
   final VoidCallback? onUploadDesignFile;
-  final bool hasMultiApproval;
   final ValueChanged<String?>? onStatusChanged;
   final VoidCallback? onUpdateStatus;
-  final VoidCallback? onApprove;
-  final VoidCallback? onReject;
-  final VoidCallback? onResubmit;
-  final VoidCallback? onRequestReapproval;
   final Widget Function(String title, Widget child) buildSection;
   final String emptyText;
 
@@ -66,17 +56,11 @@ class WorkOrderDetailOverviewSection extends StatelessWidget {
     final actions = buildSection(
       '流程操作',
       WorkOrderActionPanel(
-        detail: detail,
         statusOptions: statusOptions,
         statusSelection: statusSelection,
         actionLoading: actionLoading,
-        hasMultiApproval: hasMultiApproval,
         onStatusChanged: onStatusChanged,
         onUpdateStatus: onUpdateStatus,
-        onApprove: onApprove,
-        onReject: onReject,
-        onResubmit: onResubmit,
-        onRequestReapproval: onRequestReapproval,
       ),
     );
 
@@ -108,102 +92,25 @@ class WorkOrderDetailOverviewSection extends StatelessWidget {
 class WorkOrderActionPanel extends StatelessWidget {
   const WorkOrderActionPanel({
     super.key,
-    required this.detail,
     required this.statusOptions,
     required this.statusSelection,
     required this.actionLoading,
-    required this.hasMultiApproval,
     required this.onStatusChanged,
     required this.onUpdateStatus,
-    required this.onApprove,
-    required this.onReject,
-    required this.onResubmit,
-    required this.onRequestReapproval,
   });
 
-  final WorkOrderDetail detail;
   final List<DropdownOption<String>> statusOptions;
   final String? statusSelection;
   final bool actionLoading;
-  final bool hasMultiApproval;
   final ValueChanged<String?>? onStatusChanged;
   final VoidCallback? onUpdateStatus;
-  final VoidCallback? onApprove;
-  final VoidCallback? onReject;
-  final VoidCallback? onResubmit;
-  final VoidCallback? onRequestReapproval;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>();
     final spacing = LayoutTokens.gapSm;
-    final dividerColor = colors?.borderColor.withValues(alpha: 0.6);
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final useColumnButtons = constraints.maxWidth < 320;
-        final approvalActions = <Widget>[];
-
-        if (!hasMultiApproval &&
-            detail.approvalStatus == 'pending' &&
-            onApprove != null &&
-            onReject != null) {
-          if (useColumnButtons) {
-            approvalActions.addAll([
-              FilledButton(
-                onPressed: actionLoading ? null : onApprove,
-                child: const Text('审核通过'),
-              ),
-              SizedBox(height: spacing),
-              OutlinedButton(
-                onPressed: actionLoading ? null : onReject,
-                child: const Text('审核拒绝'),
-              ),
-            ]);
-          } else {
-            approvalActions.add(
-              Row(
-                children: [
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: actionLoading ? null : onApprove,
-                      child: const Text('审核通过'),
-                    ),
-                  ),
-                  SizedBox(width: spacing),
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: actionLoading ? null : onReject,
-                      child: const Text('审核拒绝'),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-        }
-        if (!hasMultiApproval &&
-            detail.approvalStatus == 'rejected' &&
-            onResubmit != null) {
-          approvalActions.add(
-            FilledButton(
-              onPressed: actionLoading ? null : onResubmit,
-              child: const Text('重新提交审核'),
-            ),
-          );
-        }
-        if (!hasMultiApproval &&
-            detail.approvalStatus == 'approved' &&
-            onRequestReapproval != null) {
-          approvalActions.add(
-            OutlinedButton(
-              onPressed: actionLoading ? null : onRequestReapproval,
-              child: const Text('请求重新审核'),
-            ),
-          );
-        }
-
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -222,18 +129,6 @@ class WorkOrderActionPanel extends StatelessWidget {
                   : onUpdateStatus,
               child: const Text('更新状态'),
             ),
-            if (approvalActions.isNotEmpty) ...[
-              SizedBox(height: LayoutTokens.gapMd),
-              Divider(height: LayoutTokens.gapMd, color: dividerColor),
-              Text(
-                '审批操作',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: colors?.sidebarText,
-                ),
-              ),
-              SizedBox(height: spacing),
-              ...approvalActions,
-            ],
           ],
         );
       },
@@ -241,10 +136,11 @@ class WorkOrderActionPanel extends StatelessWidget {
   }
 }
 
-class WorkOrderMultiApprovalSection extends StatelessWidget {
-  const WorkOrderMultiApprovalSection({
+class WorkOrderApprovalSection extends StatelessWidget {
+  const WorkOrderApprovalSection({
     super.key,
     required this.detail,
+    required this.hasMultiApproval,
     required this.approvalLoading,
     required this.approvalActionLoading,
     required this.approvalErrorMessage,
@@ -254,6 +150,10 @@ class WorkOrderMultiApprovalSection extends StatelessWidget {
     required this.formatDateTime,
     required this.onRetry,
     required this.onSubmitApproval,
+    required this.onApprove,
+    required this.onReject,
+    required this.onResubmit,
+    required this.onRequestReapproval,
     required this.onMarkUrgent,
     required this.onStartStep,
     required this.onApproveStep,
@@ -263,6 +163,7 @@ class WorkOrderMultiApprovalSection extends StatelessWidget {
   });
 
   final WorkOrderDetail detail;
+  final bool hasMultiApproval;
   final bool approvalLoading;
   final bool approvalActionLoading;
   final String? approvalErrorMessage;
@@ -272,6 +173,10 @@ class WorkOrderMultiApprovalSection extends StatelessWidget {
   final String Function(dynamic value) formatDateTime;
   final VoidCallback onRetry;
   final VoidCallback onSubmitApproval;
+  final VoidCallback? onApprove;
+  final VoidCallback? onReject;
+  final VoidCallback? onResubmit;
+  final VoidCallback? onRequestReapproval;
   final VoidCallback onMarkUrgent;
   final ValueChanged<int> onStartStep;
   final ValueChanged<int> onApproveStep;
@@ -302,6 +207,18 @@ class WorkOrderMultiApprovalSection extends StatelessWidget {
             child: const Text('重试'),
           ),
         ],
+      );
+    }
+
+    if (!hasMultiApproval) {
+      return _SingleApprovalContent(
+        detail: detail,
+        actionLoading: approvalActionLoading,
+        onApprove: onApprove,
+        onReject: onReject,
+        onResubmit: onResubmit,
+        onRequestReapproval: onRequestReapproval,
+        emptyText: emptyText,
       );
     }
 
@@ -516,6 +433,126 @@ class WorkOrderMultiApprovalSection extends StatelessWidget {
         .whereType<Map>()
         .map((item) => Map<String, dynamic>.from(item))
         .toList();
+  }
+}
+
+class _SingleApprovalContent extends StatelessWidget {
+  const _SingleApprovalContent({
+    required this.detail,
+    required this.actionLoading,
+    required this.onApprove,
+    required this.onReject,
+    required this.onResubmit,
+    required this.onRequestReapproval,
+    required this.emptyText,
+  });
+
+  final WorkOrderDetail detail;
+  final bool actionLoading;
+  final VoidCallback? onApprove;
+  final VoidCallback? onReject;
+  final VoidCallback? onResubmit;
+  final VoidCallback? onRequestReapproval;
+  final String emptyText;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final statusText =
+        detail.approvalStatusDisplay ?? detail.approvalStatus ?? emptyText;
+    final comment = (detail.approvalComment ?? '').trim();
+    final status = detail.approvalStatus ?? '';
+    final spacing = LayoutTokens.gapSm;
+    final useColumnButtons = BreakpointsUtil.isMobile(context);
+
+    final actions = <Widget>[];
+    if (status == 'pending' && onApprove != null && onReject != null) {
+      if (useColumnButtons) {
+        actions.addAll([
+          FilledButton(
+            onPressed: actionLoading ? null : onApprove,
+            child: const Text('审核通过'),
+          ),
+          SizedBox(height: spacing),
+          OutlinedButton(
+            onPressed: actionLoading ? null : onReject,
+            child: const Text('审核拒绝'),
+          ),
+        ]);
+      } else {
+        actions.add(
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton(
+                  onPressed: actionLoading ? null : onApprove,
+                  child: const Text('审核通过'),
+                ),
+              ),
+              SizedBox(width: spacing),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: actionLoading ? null : onReject,
+                  child: const Text('审核拒绝'),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+    if (status == 'rejected' && onResubmit != null) {
+      actions.add(
+        FilledButton.icon(
+          onPressed: actionLoading ? null : onResubmit,
+          icon: const Icon(Icons.send_outlined, size: 18),
+          label: const Text('重新提交审核'),
+        ),
+      );
+    }
+    if (status == 'approved' && onRequestReapproval != null) {
+      actions.add(
+        OutlinedButton.icon(
+          onPressed: actionLoading ? null : onRequestReapproval,
+          icon: const Icon(Icons.restart_alt, size: 18),
+          label: const Text('请求重新审核'),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: LayoutTokens.gapLg,
+          runSpacing: LayoutTokens.gapSm,
+          children: [
+            _InfoRow(label: '审批状态', value: statusText),
+            _InfoRow(
+              label: '审核人',
+              value: detail.approvedByName?.trim().isNotEmpty == true
+                  ? detail.approvedByName!
+                  : emptyText,
+            ),
+          ],
+        ),
+        if (comment.isNotEmpty) ...[
+          SizedBox(height: LayoutTokens.gapMd),
+          Text(
+            comment,
+            style: theme.textTheme.bodyMedium,
+          ),
+        ],
+        if (actions.isNotEmpty) ...[
+          SizedBox(height: LayoutTokens.gapMd),
+          Wrap(
+            spacing: LayoutTokens.gapSm,
+            runSpacing: LayoutTokens.gapSm,
+            children: actions,
+          ),
+        ],
+      ],
+    );
   }
 }
 

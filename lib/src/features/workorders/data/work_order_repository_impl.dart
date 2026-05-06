@@ -2,12 +2,17 @@ import 'package:dio/dio.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_detail_dto.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
+import 'package:work_order_app/src/features/workorders/data/work_order_flow_api_service.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
 
 class WorkOrderRepositoryImpl implements WorkOrderRepository {
-  WorkOrderRepositoryImpl(this._apiService);
+  WorkOrderRepositoryImpl(
+    this._apiService, {
+    WorkOrderFlowApiService? flowApiService,
+  }) : _flowApiService = flowApiService ?? WorkOrderFlowApiService(_apiService.client);
 
   final WorkOrderApiService _apiService;
+  final WorkOrderFlowApiService _flowApiService;
 
   @override
   Future<WorkOrderPageDto> getWorkOrders({
@@ -75,12 +80,24 @@ class WorkOrderRepositoryImpl implements WorkOrderRepository {
     String? approvalComment,
     String? rejectionReason,
   }) {
-    return _apiService.approve(
-      id: id,
-      approvalStatus: approvalStatus,
-      approvalComment: approvalComment,
-      rejectionReason: rejectionReason,
+    if (approvalStatus == 'approved') {
+      return _flowApiService.approve(
+        id,
+        comment: approvalComment,
+      );
+    }
+    final reason = rejectionReason?.trim().isNotEmpty == true
+        ? rejectionReason!.trim()
+        : (approvalComment?.trim() ?? '');
+    return _flowApiService.reject(
+      id,
+      reason: reason,
     );
+  }
+
+  @override
+  Future<WorkOrderDetailDto> submitApproval(int id, {String? comment}) {
+    return _flowApiService.submitApproval(id, comment: comment);
   }
 
   @override
@@ -90,7 +107,12 @@ class WorkOrderRepositoryImpl implements WorkOrderRepository {
 
   @override
   Future<WorkOrderDetailDto> requestReapproval(int id, String reason) {
-    return _apiService.requestReapproval(id, reason);
+    return _flowApiService.requestReapproval(id, reason);
+  }
+
+  @override
+  Future<Map<String, dynamic>> checkCompletion(int id) {
+    return _flowApiService.checkCompletion(id);
   }
 
   @override

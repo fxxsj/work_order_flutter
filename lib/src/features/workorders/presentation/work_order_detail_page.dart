@@ -15,6 +15,10 @@ import 'package:work_order_app/src/core/utils/audit_log_navigation.dart';
 import 'package:work_order_app/src/core/utils/store_util.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
+import 'package:work_order_app/src/features/tasks/data/task_list_support_service.dart';
+import 'package:work_order_app/src/features/tasks/domain/task.dart';
+import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
+import 'package:work_order_app/src/features/tasks/presentation/widgets/task_action_dialogs.dart';
 import 'package:work_order_app/src/features/workorders/application/work_order_view_model.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_repository_impl.dart';
@@ -73,16 +77,15 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   String? _errorMessage;
   bool _initialized = false;
   bool _actionLoading = false;
-  bool _approvalLoading = false;
-  bool _approvalActionLoading = false;
-  String? _approvalErrorMessage;
-  Map<String, dynamic>? _approvalStatus;
+  _ApprovalUiState _approvalState = const _ApprovalUiState();
+  TaskListSupportService? _taskSupportService;
 
   String? _statusSelection;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _taskSupportService ??= TaskListSupportService(context.read<ApiClient>());
     if (_initialized) return;
     _initialized = true;
     _loadDetail();
@@ -113,22 +116,29 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
 
   Future<void> _loadApprovalStatus() async {
     setState(() {
-      _approvalLoading = true;
-      _approvalErrorMessage = null;
+      _approvalState = _approvalState.copyWith(
+        loading: true,
+        errorMessage: null,
+      );
     });
     try {
       final viewModel = context.read<WorkOrderViewModel>();
       final payload = await viewModel.fetchApprovalStatus(widget.workOrderId);
       if (!mounted) return;
       setState(() {
-        _approvalStatus = payload;
+        _approvalState = _approvalState.copyWith(
+          loading: false,
+          payload: payload,
+        );
       });
     } catch (err) {
       if (!mounted) return;
-      setState(() => _approvalErrorMessage =
-          err.toString().replaceFirst('Exception: ', ''));
-    } finally {
-      if (mounted) setState(() => _approvalLoading = false);
+      setState(() {
+        _approvalState = _approvalState.copyWith(
+          loading: false,
+          errorMessage: err.toString().replaceFirst('Exception: ', ''),
+        );
+      });
     }
   }
 
@@ -338,7 +348,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   }
 
   bool get _hasMultiApproval {
-    final total = _approvalStatus?['total_steps'];
+    final total = _approvalState.payload?['total_steps'];
     final value = total is int ? total : int.tryParse(total?.toString() ?? '');
     return value != null && value > 0;
   }
@@ -380,7 +390,9 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   }
 
   Future<void> _submitMultiApproval() async {
-    setState(() => _approvalActionLoading = true);
+    setState(() {
+      _approvalState = _approvalState.copyWith(actionLoading: true);
+    });
     try {
       final viewModel = context.read<WorkOrderViewModel>();
       await viewModel.submitMultiApproval(widget.workOrderId);
@@ -390,12 +402,18 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     } catch (err) {
       ToastUtil.showError('提交失败: $err');
     } finally {
-      if (mounted) setState(() => _approvalActionLoading = false);
+      if (mounted) {
+        setState(() {
+          _approvalState = _approvalState.copyWith(actionLoading: false);
+        });
+      }
     }
   }
 
   Future<void> _startApprovalStep(int stepId) async {
-    setState(() => _approvalActionLoading = true);
+    setState(() {
+      _approvalState = _approvalState.copyWith(actionLoading: true);
+    });
     try {
       final viewModel = context.read<WorkOrderViewModel>();
       await viewModel.startApprovalStep(stepId);
@@ -405,7 +423,11 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     } catch (err) {
       ToastUtil.showError('开始失败: $err');
     } finally {
-      if (mounted) setState(() => _approvalActionLoading = false);
+      if (mounted) {
+        setState(() {
+          _approvalState = _approvalState.copyWith(actionLoading: false);
+        });
+      }
     }
   }
 
@@ -414,7 +436,9 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     required String decision,
     String? comments,
   }) async {
-    setState(() => _approvalActionLoading = true);
+    setState(() {
+      _approvalState = _approvalState.copyWith(actionLoading: true);
+    });
     try {
       final viewModel = context.read<WorkOrderViewModel>();
       await viewModel.completeApprovalStep(
@@ -428,7 +452,11 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     } catch (err) {
       ToastUtil.showError('完成失败: $err');
     } finally {
-      if (mounted) setState(() => _approvalActionLoading = false);
+      if (mounted) {
+        setState(() {
+          _approvalState = _approvalState.copyWith(actionLoading: false);
+        });
+      }
     }
   }
 
@@ -437,7 +465,9 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     required String reason,
     int? toStepId,
   }) async {
-    setState(() => _approvalActionLoading = true);
+    setState(() {
+      _approvalState = _approvalState.copyWith(actionLoading: true);
+    });
     try {
       final viewModel = context.read<WorkOrderViewModel>();
       await viewModel.escalateApprovalStep(
@@ -451,7 +481,11 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     } catch (err) {
       ToastUtil.showError('上报失败: $err');
     } finally {
-      if (mounted) setState(() => _approvalActionLoading = false);
+      if (mounted) {
+        setState(() {
+          _approvalState = _approvalState.copyWith(actionLoading: false);
+        });
+      }
     }
   }
 
@@ -466,7 +500,9 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
       ToastUtil.showError('请输入紧急原因');
       return;
     }
-    setState(() => _approvalActionLoading = true);
+    setState(() {
+      _approvalState = _approvalState.copyWith(actionLoading: true);
+    });
     try {
       final viewModel = context.read<WorkOrderViewModel>();
       await viewModel.markUrgent(widget.workOrderId, reason: reason);
@@ -476,7 +512,11 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     } catch (err) {
       ToastUtil.showError('标记失败: $err');
     } finally {
-      if (mounted) setState(() => _approvalActionLoading = false);
+      if (mounted) {
+        setState(() {
+          _approvalState = _approvalState.copyWith(actionLoading: false);
+        });
+      }
     }
   }
 
@@ -507,6 +547,61 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
       stepId,
       reason: result.reason,
       toStepId: result.targetStepId,
+    );
+  }
+
+  bool _canManageTask(Task task) {
+    final status = task.status ?? '';
+    return status != 'draft' && status != 'completed' && status != 'cancelled';
+  }
+
+  Future<void> _handleAssignTask(Task task) async {
+    final departmentId = task.assignedDepartmentId;
+    final departmentName = task.assignedDepartmentName?.trim() ?? '';
+    if (departmentId == null || departmentName.isEmpty) {
+      ToastUtil.showError('当前任务缺少可分配部门');
+      return;
+    }
+    await showTaskAssignDialog(
+      context,
+      task: task,
+      departments: [
+        TaskDepartmentOption(id: departmentId, name: departmentName),
+      ],
+      loadOperators: (value) => _taskSupportService!.loadOperators(value),
+      onSubmit: (operatorId, notes) async {
+        await _taskSupportService!.assignTask(
+          task.id,
+          operatorId: operatorId,
+          notes: notes,
+        );
+        ToastUtil.showSuccess('任务已分派');
+        await _loadDetail();
+      },
+    );
+  }
+
+  Future<void> _handleUpdateTask(Task task) async {
+    await showTaskQuantityDialog(
+      context,
+      task: task,
+      onSubmit: (payload) async {
+        await _taskSupportService!.updateQuantity(task.id, payload);
+        ToastUtil.showSuccess('已更新任务进度');
+        await _loadDetail();
+      },
+    );
+  }
+
+  Future<void> _handleCompleteTask(Task task) async {
+    await showTaskCompleteDialog(
+      context,
+      task: task,
+      onSubmit: (payload) async {
+        await _taskSupportService!.completeTask(task.id, payload);
+        ToastUtil.showSuccess('任务已完成');
+        await _loadDetail();
+      },
     );
   }
 
@@ -708,23 +803,12 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                           onUploadDesignFile: canChangeWorkOrder
                               ? _handleUploadDesignFile
                               : null,
-                          hasMultiApproval: _hasMultiApproval,
                           onStatusChanged: canChangeWorkOrder
                               ? (value) =>
                                   setState(() => _statusSelection = value)
                               : null,
                           onUpdateStatus:
                               canChangeWorkOrder ? _handleUpdateStatus : null,
-                          onApprove: canChangeWorkOrder
-                              ? () => _showApproveDialog(approved: true)
-                              : null,
-                          onReject: canChangeWorkOrder
-                              ? () => _showApproveDialog(approved: false)
-                              : null,
-                          onResubmit:
-                              canChangeWorkOrder ? _handleResubmit : null,
-                          onRequestReapproval:
-                              canChangeWorkOrder ? _showReapprovalDialog : null,
                           buildSection: _buildSection,
                           emptyText: _emptyText,
                         ),
@@ -813,19 +897,32 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                         ),
                         SizedBox(height: sectionSpacing),
                         _buildSection(
-                          '多级审批',
-                          WorkOrderMultiApprovalSection(
+                          '审批流程',
+                          WorkOrderApprovalSection(
                             detail: detail,
-                            approvalLoading: _approvalLoading,
-                            approvalActionLoading: _approvalActionLoading,
-                            approvalErrorMessage: _approvalErrorMessage,
-                            approvalStatus: _approvalStatus,
+                            hasMultiApproval: _hasMultiApproval,
+                            approvalLoading: _approvalState.loading,
+                            approvalActionLoading:
+                                _approvalState.actionLoading,
+                            approvalErrorMessage:
+                                _approvalState.errorMessage,
+                            approvalStatus: _approvalState.payload,
                             currentUserName:
                                 StoreUtil.getCurrentUserInfo().userName,
                             formatPercentage: _formatPercentage,
                             formatDateTime: _formatDateTime,
                             onRetry: _loadApprovalStatus,
                             onSubmitApproval: _submitMultiApproval,
+                            onApprove: canChangeWorkOrder
+                                ? () => _showApproveDialog(approved: true)
+                                : null,
+                            onReject: canChangeWorkOrder
+                                ? () => _showApproveDialog(approved: false)
+                                : null,
+                            onResubmit:
+                                canChangeWorkOrder ? _handleResubmit : null,
+                            onRequestReapproval:
+                                canChangeWorkOrder ? _showReapprovalDialog : null,
                             onMarkUrgent: _markUrgent,
                             onStartStep: _startApprovalStep,
                             onApproveStep: (stepId) => _showCompleteStepDialog(
@@ -861,6 +958,10 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                           child: WorkOrderProcessesSection(
                             items: detail.processes,
                             emptyText: _emptyText,
+                            onAssignTask: _handleAssignTask,
+                            onUpdateTask: _handleUpdateTask,
+                            onCompleteTask: _handleCompleteTask,
+                            canManageTask: _canManageTask,
                           ),
                         ),
                         SizedBox(height: sectionSpacing),
@@ -891,6 +992,34 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                         ),
                       ],
                     ),
+    );
+  }
+}
+
+class _ApprovalUiState {
+  const _ApprovalUiState({
+    this.loading = false,
+    this.actionLoading = false,
+    this.errorMessage,
+    this.payload,
+  });
+
+  final bool loading;
+  final bool actionLoading;
+  final String? errorMessage;
+  final Map<String, dynamic>? payload;
+
+  _ApprovalUiState copyWith({
+    bool? loading,
+    bool? actionLoading,
+    String? errorMessage,
+    Map<String, dynamic>? payload,
+  }) {
+    return _ApprovalUiState(
+      loading: loading ?? this.loading,
+      actionLoading: actionLoading ?? this.actionLoading,
+      errorMessage: errorMessage,
+      payload: payload ?? this.payload,
     );
   }
 }

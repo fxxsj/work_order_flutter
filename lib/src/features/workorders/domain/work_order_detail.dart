@@ -1,5 +1,6 @@
 import 'package:work_order_app/src/core/models/traceability_summary_item.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
+import 'package:work_order_app/src/features/tasks/domain/task.dart';
 
 class WorkOrderDetail {
   const WorkOrderDetail({
@@ -387,6 +388,7 @@ class WorkOrderProcessItem {
     this.plannedEndTime,
     this.actualStartTime,
     this.actualEndTime,
+    this.tasks = const [],
   });
 
   final int id;
@@ -404,6 +406,7 @@ class WorkOrderProcessItem {
   final DateTime? plannedEndTime;
   final DateTime? actualStartTime;
   final DateTime? actualEndTime;
+  final List<Task> tasks;
 
   factory WorkOrderProcessItem.fromJson(Map<String, dynamic> json) {
     final tasks = json['tasks'];
@@ -424,6 +427,12 @@ class WorkOrderProcessItem {
       plannedEndTime: toDateTime(json['planned_end_time']),
       actualStartTime: toDateTime(json['actual_start_time']),
       actualEndTime: toDateTime(json['actual_end_time']),
+      tasks: tasks is List
+          ? tasks
+              .whereType<Map>()
+              .map((item) => Task.fromJson(Map<String, dynamic>.from(item)))
+              .toList()
+          : const [],
     );
   }
 }

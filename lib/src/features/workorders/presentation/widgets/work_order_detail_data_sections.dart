@@ -5,6 +5,8 @@ import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/traceability_summary_section.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/features/tasks/domain/task.dart';
+import 'package:work_order_app/src/features/tasks/presentation/task_ui_helper.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
 
 class WorkOrderDetailInfoItem {
@@ -58,10 +60,18 @@ class WorkOrderProcessesSection extends StatelessWidget {
     super.key,
     required this.items,
     required this.emptyText,
+    required this.onAssignTask,
+    required this.onUpdateTask,
+    required this.onCompleteTask,
+    required this.canManageTask,
   });
 
   final List<WorkOrderProcessItem> items;
   final String emptyText;
+  final Future<void> Function(Task task) onAssignTask;
+  final Future<void> Function(Task task) onUpdateTask;
+  final Future<void> Function(Task task) onCompleteTask;
+  final bool Function(Task task) canManageTask;
 
   @override
   Widget build(BuildContext context) {
@@ -91,6 +101,16 @@ class WorkOrderProcessesSection extends StatelessWidget {
                       : (item.canStart! ? '可开始' : '不可开始'),
                 ),
               ],
+              footer: item.tasks.isEmpty
+                  ? null
+                  : _ProcessTaskList(
+                      tasks: item.tasks,
+                      emptyText: emptyText,
+                      onAssignTask: onAssignTask,
+                      onUpdateTask: onUpdateTask,
+                      onCompleteTask: onCompleteTask,
+                      canManageTask: canManageTask,
+                    ),
             ),
           ),
       ],
@@ -576,11 +596,13 @@ class _DetailListCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.fields,
+    this.footer,
   });
 
   final String title;
   final String subtitle;
   final List<_DetailField> fields;
+  final Widget? footer;
 
   @override
   Widget build(BuildContext context) {
@@ -629,6 +651,151 @@ class _DetailListCard extends StatelessWidget {
                   ),
                 )
                 .toList(),
+          ),
+          if (footer != null) ...[
+            const SizedBox(height: LayoutTokens.gapMd),
+            footer!,
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ProcessTaskList extends StatelessWidget {
+  const _ProcessTaskList({
+    required this.tasks,
+    required this.emptyText,
+    required this.onAssignTask,
+    required this.onUpdateTask,
+    required this.onCompleteTask,
+    required this.canManageTask,
+  });
+
+  final List<Task> tasks;
+  final String emptyText;
+  final Future<void> Function(Task task) onAssignTask;
+  final Future<void> Function(Task task) onUpdateTask;
+  final Future<void> Function(Task task) onCompleteTask;
+  final bool Function(Task task) canManageTask;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '任务操作',
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: LayoutTokens.gapSm),
+        for (var index = 0; index < tasks.length; index++) ...[
+          _ProcessTaskCard(
+            task: tasks[index],
+            emptyText: emptyText,
+            onAssignTask: onAssignTask,
+            onUpdateTask: onUpdateTask,
+            onCompleteTask: onCompleteTask,
+            canManageTask: canManageTask,
+          ),
+          if (index < tasks.length - 1)
+            const SizedBox(height: LayoutTokens.gapSm),
+        ],
+      ],
+    );
+  }
+}
+
+class _ProcessTaskCard extends StatelessWidget {
+  const _ProcessTaskCard({
+    required this.task,
+    required this.emptyText,
+    required this.onAssignTask,
+    required this.onUpdateTask,
+    required this.onCompleteTask,
+    required this.canManageTask,
+  });
+
+  final Task task;
+  final String emptyText;
+  final Future<void> Function(Task task) onAssignTask;
+  final Future<void> Function(Task task) onUpdateTask;
+  final Future<void> Function(Task task) onCompleteTask;
+  final bool Function(Task task) canManageTask;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>()!;
+    final taskStatus = task.status ?? '';
+    final canManage = canManageTask(task);
+    final canAssign = canManage && task.assignedDepartmentId != null;
+    final canUpdate = canManage;
+    final canComplete = canManage && taskStatus != 'pending';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(LayoutTokens.cardPaddingSm),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+        border: Border.all(color: colors.borderColor.withValues(alpha: 0.7)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            TaskUiHelper.title(task),
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: LayoutTokens.gapXs),
+          Text(
+            '状态：${task.statusDisplay ?? task.status ?? emptyText}',
+            style: theme.textTheme.bodySmall,
+          ),
+          const SizedBox(height: LayoutTokens.gapXs),
+          Text(
+            '操作员：${task.assignedOperatorName ?? emptyText}',
+            style: theme.textTheme.bodySmall,
+          ),
+          const SizedBox(height: LayoutTokens.gapXs),
+          Text(
+            '进度：${TaskUiHelper.quantitySummary(task)}',
+            style: theme.textTheme.bodySmall,
+          ),
+          const SizedBox(height: LayoutTokens.gapXs),
+          Text(
+            '跟进：${TaskUiHelper.followUpText(task)}',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colors.subtleText,
+            ),
+          ),
+          const SizedBox(height: LayoutTokens.gapSm),
+          Wrap(
+            spacing: LayoutTokens.gapSm,
+            runSpacing: LayoutTokens.gapSm,
+            children: [
+              OutlinedButton.icon(
+                onPressed: canAssign ? () => onAssignTask(task) : null,
+                icon: const Icon(Icons.person_add_alt_1, size: 16),
+                label: const Text('分配'),
+              ),
+              OutlinedButton.icon(
+                onPressed: canUpdate ? () => onUpdateTask(task) : null,
+                icon: const Icon(Icons.tune, size: 16),
+                label: const Text('更新数量'),
+              ),
+              FilledButton.icon(
+                onPressed: canComplete ? () => onCompleteTask(task) : null,
+                icon: const Icon(Icons.task_alt, size: 16),
+                label: const Text('完成'),
+              ),
+            ],
           ),
         ],
       ),

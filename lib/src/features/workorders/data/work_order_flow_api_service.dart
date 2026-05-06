@@ -1,4 +1,5 @@
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/features/workorders/data/work_order_detail_dto.dart';
 
 class WorkOrderFlowApiService {
   WorkOrderFlowApiService(this._client);
@@ -15,10 +16,65 @@ class WorkOrderFlowApiService {
     return _mapFromResponse(response.data);
   }
 
+  Future<WorkOrderDetailDto> submitApproval(
+    int id, {
+    String? comment,
+  }) async {
+    final response = await _client.post(
+      '/workorders-flow/$id/submit_approval/',
+      data: {
+        if (comment != null && comment.trim().isNotEmpty) 'comment': comment.trim(),
+      },
+    );
+    return _detailFromResponse(response.data);
+  }
+
+  Future<WorkOrderDetailDto> approve(
+    int id, {
+    String? comment,
+  }) async {
+    final response = await _client.post(
+      '/workorders-flow/$id/approve/',
+      data: {
+        if (comment != null && comment.trim().isNotEmpty) 'comment': comment.trim(),
+      },
+    );
+    return _detailFromResponse(response.data);
+  }
+
+  Future<WorkOrderDetailDto> reject(
+    int id, {
+    required String reason,
+  }) async {
+    final response = await _client.post(
+      '/workorders-flow/$id/reject/',
+      data: {'reason': reason.trim()},
+    );
+    return _detailFromResponse(response.data);
+  }
+
+  Future<WorkOrderDetailDto> requestReapproval(int id, String reason) async {
+    final response = await _client.post(
+      '/workorders-flow/$id/request_reapproval/',
+      data: {'reason': reason},
+    );
+    return _detailFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> checkCompletion(int id) async {
+    final response = await _client.post('/workorders-flow/$id/check_completion/');
+    return _mapFromResponse(response.data);
+  }
+
   Map<String, dynamic> _mapFromResponse(dynamic data) {
     if (data is Map<String, dynamic>) {
       return Map<String, dynamic>.from(data);
     }
-    return {};
+    throw StateError('Unexpected work order flow response: ${data.runtimeType}');
+  }
+
+  WorkOrderDetailDto _detailFromResponse(dynamic data) {
+    final map = _mapFromResponse(data);
+    return WorkOrderDetailDto.fromJson(map);
   }
 }

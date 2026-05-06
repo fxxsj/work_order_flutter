@@ -33,6 +33,18 @@ class SalesOrderCreateWorkOrderResult {
   final List<SalesOrderWorkOrderSelection> selectedItems;
 }
 
+class SalesOrderBatchCreateWorkOrderResult {
+  const SalesOrderBatchCreateWorkOrderResult({
+    required this.priority,
+    required this.deliveryDateText,
+    required this.notes,
+  });
+
+  final String priority;
+  final String deliveryDateText;
+  final String notes;
+}
+
 class SalesOrderWorkOrderSelection {
   const SalesOrderWorkOrderSelection({
     required this.salesOrderItemId,
@@ -197,6 +209,76 @@ Future<bool> showSalesOrderNavigateToWorkOrderDialog(
     ),
   );
   return confirmed == true;
+}
+
+Future<SalesOrderBatchCreateWorkOrderResult?>
+    showSalesOrderBatchCreateWorkOrdersDialog(
+  BuildContext context, {
+  required int selectedCount,
+}) async {
+  final formKey = GlobalKey<FormState>();
+  final deliveryController = TextEditingController();
+  final notesController = TextEditingController();
+  String priority = 'normal';
+
+  try {
+    SalesOrderBatchCreateWorkOrderResult? result;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) => FormDialog(
+          title: '批量生成施工单',
+          formKey: formKey,
+          submitText: '开始生成',
+          maxWidth: LayoutTokens.dialogWidthSm,
+          onSubmit: () async {
+            result = SalesOrderBatchCreateWorkOrderResult(
+              priority: priority,
+              deliveryDateText: deliveryController.text.trim(),
+              notes: notesController.text.trim(),
+            );
+            Navigator.of(dialogContext).pop();
+          },
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('将为已选择的 $selectedCount 张客户订单批量生成施工单。'),
+              SizedBox(height: LayoutTokens.gapMd),
+              CrudFormField.text(
+                label: '统一交货日期（YYYY-MM-DD，可选）',
+                controller: deliveryController,
+              ).build(dialogContext),
+              SizedBox(height: LayoutTokens.gapMd),
+              UnifiedDropdown<String>(
+                decoration: const InputDecoration(labelText: '统一优先级'),
+                value: priority,
+                options: const [
+                  DropdownOption(value: 'low', label: '低'),
+                  DropdownOption(value: 'normal', label: '普通'),
+                  DropdownOption(value: 'high', label: '高'),
+                  DropdownOption(value: 'urgent', label: '紧急'),
+                ],
+                onChanged: (value) =>
+                    setState(() => priority = value ?? 'normal'),
+              ),
+              SizedBox(height: LayoutTokens.gapMd),
+              CrudFormField.textarea(
+                label: '备注（可选）',
+                controller: notesController,
+                maxLines: 4,
+                hintText: '补充本次批量排产的统一说明',
+              ).build(dialogContext),
+            ],
+          ),
+        ),
+      ),
+    );
+    return result;
+  } finally {
+    deliveryController.dispose();
+    notesController.dispose();
+  }
 }
 
 class _SalesOrderWorkOrderItemDraft {

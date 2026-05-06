@@ -96,6 +96,8 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
   Timer? _searchDebounce;
   SalesOrderActionService? _actionService;
   String? _routeSignature;
+  bool _selectionMode = false;
+  final Set<int> _selectedOrderIds = <int>{};
 
   @override
   void didChangeDependencies() {
@@ -127,6 +129,110 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  bool _isSelectableForWorkOrder(SalesOrder order) {
+    final status = order.status ?? '';
+    return status == 'approved' || status == 'in_production';
+  }
+
+  void _setSelectionMode(bool enabled) {
+    setState(() {
+      _selectionMode = enabled;
+      if (!enabled) {
+        _selectedOrderIds.clear();
+      }
+    });
+  }
+
+  void _toggleOrderSelection(SalesOrder order, bool selected) {
+    if (!_isSelectableForWorkOrder(order)) return;
+    setState(() {
+      if (selected) {
+        _selectedOrderIds.add(order.id);
+      } else {
+        _selectedOrderIds.remove(order.id);
+      }
+    });
+  }
+
+  void _toggleSelectAllCurrentPage(List<SalesOrder> orders, bool selected) {
+    final eligibleIds = orders
+        .where(_isSelectableForWorkOrder)
+        .map((order) => order.id)
+        .toList(growable: false);
+    setState(() {
+      if (selected) {
+        _selectedOrderIds.addAll(eligibleIds);
+      } else {
+        _selectedOrderIds.removeAll(eligibleIds);
+      }
+    });
+  }
+
+  Future<void> _createBatchWorkOrders(
+    SalesOrderViewModel viewModel,
+    List<SalesOrder> orders,
+  ) async {
+    final selectedOrders = orders
+        .where((order) => _selectedOrderIds.contains(order.id))
+        .where(_isSelectableForWorkOrder)
+        .toList(growable: false);
+    if (selectedOrders.isEmpty) {
+      ToastUtil.showError('请先选择要生成施工单的客户订单');
+      return;
+    }
+
+    final result = await showSalesOrderBatchCreateWorkOrdersDialog(
+      context,
+      selectedCount: selectedOrders.length,
+    );
+    if (result == null) return;
+
+    final payload = <String, dynamic>{
+      'sales_order_ids':
+          selectedOrders.map((order) => order.id).toList(growable: false),
+      'priority': result.priority,
+      'notes': result.notes,
+    };
+    if (result.deliveryDateText.isNotEmpty) {
+      payload['delivery_date'] = result.deliveryDateText;
+    }
+
+    try {
+      final response = await viewModel.createWorkOrdersFromSalesOrders(payload);
+      final created = response['created'] is List
+          ? (response['created'] as List)
+              .whereType<Map>()
+              .map((item) => Map<String, dynamic>.from(item))
+              .toList(growable: false)
+          : const <Map<String, dynamic>>[];
+      final failed = response['failed'] is List
+          ? (response['failed'] as List)
+              .whereType<Map>()
+              .map((item) => Map<String, dynamic>.from(item))
+              .toList(growable: false)
+          : const <Map<String, dynamic>>[];
+      if (created.isNotEmpty) {
+        ToastUtil.showSuccess(
+          failed.isEmpty
+              ? '已生成 ${created.length} 张施工单'
+              : '已生成 ${created.length} 张施工单，${failed.length} 张失败',
+        );
+      } else {
+        ToastUtil.showError('批量生成失败');
+      }
+      await viewModel.loadSalesOrders(resetPage: false);
+      if (!mounted) return;
+      setState(() {
+        _selectedOrderIds.clear();
+        if (created.isNotEmpty) {
+          _selectionMode = false;
+        }
+      });
+    } catch (err) {
+      ToastUtil.showError('批量生成失败: $err');
+    }
   }
 
   void _scheduleSearch(SalesOrderViewModel viewModel,
@@ -429,6 +535,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
       return _buildDesktopTable(
         context,
         orders,
+        selectionMode: _selectionMode,
         canChangeSalesOrder: canChangeSalesOrder,
         canCreateWorkOrder: canCreateWorkOrder,
         canCreateDeliveryOrder: canCreateDeliveryOrder,
@@ -443,6 +550,11 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         return _SalesOrderSummaryCard(
           order: order,
           isMobile: isMobile,
+          selectionMode: _selectionMode,
+          selected: _selectedOrderIds.contains(order.id),
+          selectable: _isSelectableForWorkOrder(order),
+          onSelectedChanged: (value) =>
+              _toggleOrderSelection(order, value ?? false),
           actions: _buildActionsForOrder(
             context,
             order,
@@ -458,6 +570,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
   Widget _buildDesktopTable(
     BuildContext context,
     List<SalesOrder> orders, {
+    required bool selectionMode,
     required bool canChangeSalesOrder,
     required bool canCreateWorkOrder,
     required bool canCreateDeliveryOrder,
@@ -465,8 +578,34 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final textStyle = theme.textTheme.bodySmall;
+    final selectableOrders =
+        orders.where(_isSelectableForWorkOrder).toList(growable: false);
+    final selectedOnPage = _selectedOrderIds.intersection(
+      selectableOrders.map((item) => item.id).toSet(),
+    );
+    final allSelected = selectableOrders.isNotEmpty &&
+        selectableOrders.every((order) => _selectedOrderIds.contains(order.id));
+    final bool? headerSelectionValue = selectableOrders.isEmpty
+        ? false
+        : allSelected
+            ? true
+            : selectedOnPage.isNotEmpty
+                ? null
+                : false;
+
     return AppDataTable(
-      columns: const [
+      columns: [
+        if (selectionMode)
+          DataColumn(
+            label: Checkbox(
+              value: headerSelectionValue,
+              tristate: true,
+              onChanged: selectableOrders.isEmpty
+                  ? null
+                  : (value) =>
+                      _toggleSelectAllCurrentPage(orders, value ?? false),
+            ),
+          ),
         DataColumn(label: Text('订单号')),
         DataColumn(label: Text('客户')),
         DataColumn(label: Text('状态')),
@@ -481,7 +620,18 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
       rows: orders
           .map(
             (order) => DataRow(
+              selected: selectionMode && _selectedOrderIds.contains(order.id),
               cells: [
+                if (selectionMode)
+                  DataCell(
+                    Checkbox(
+                      value: _selectedOrderIds.contains(order.id),
+                      onChanged: _isSelectableForWorkOrder(order)
+                          ? (value) =>
+                              _toggleOrderSelection(order, value ?? false)
+                          : null,
+                    ),
+                  ),
                 DataCell(
                   InkWell(
                     onTap: () => context.go('/sales-orders/${order.id}'),
@@ -715,6 +865,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
   ) {
     final permissions = PermissionUtil.snapshot(context);
     final canCreateSalesOrder = permissions.has('workorder.add_salesorder');
+    final canCreateWorkOrder = permissions.has('workorder.add_workorder');
     return PageHeaderBar(
       breadcrumb: null,
       useSurface: false,
@@ -776,6 +927,40 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
               icon: const Icon(Icons.refresh, size: 16),
               label: _refreshButtonText,
             ),
+            if (canCreateWorkOrder && !_selectionMode)
+              PageActionButton.outlined(
+                onPressed: () => _setSelectionMode(true),
+                icon: const Icon(Icons.checklist_rtl_outlined, size: 16),
+                label: '批量选单',
+              ),
+            if (canCreateWorkOrder && _selectionMode)
+              PageActionButton.outlined(
+                onPressed: () => _toggleSelectAllCurrentPage(
+                  viewModel.salesOrders,
+                  !_allSelectableOrdersSelected(viewModel.salesOrders),
+                ),
+                icon: const Icon(Icons.select_all_outlined, size: 16),
+                label: _allSelectableOrdersSelected(viewModel.salesOrders)
+                    ? '取消全选'
+                    : '全选本页',
+              ),
+            if (canCreateWorkOrder && _selectionMode)
+              PageActionButton.filled(
+                onPressed: _selectedOrderIds.isEmpty
+                    ? null
+                    : () => _createBatchWorkOrders(
+                          viewModel,
+                          viewModel.salesOrders,
+                        ),
+                icon: const Icon(Icons.assignment_add, size: 16),
+                label: '批量生成(${_selectedOrderIds.length})',
+              ),
+            if (canCreateWorkOrder && _selectionMode)
+              PageActionButton.outlined(
+                onPressed: () => _setSelectionMode(false),
+                icon: const Icon(Icons.close, size: 16),
+                label: '退出多选',
+              ),
             if (canCreateSalesOrder)
               PageActionButton.filled(
                 onPressed: () => context.go('/sales-orders/create'),
@@ -818,6 +1003,15 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     return viewModel.statusFilter.isNotEmpty;
   }
 
+  bool _allSelectableOrdersSelected(List<SalesOrder> orders) {
+    final selectableOrders =
+        orders.where(_isSelectableForWorkOrder).toList(growable: false);
+    if (selectableOrders.isEmpty) {
+      return false;
+    }
+    return selectableOrders.every((order) => _selectedOrderIds.contains(order.id));
+  }
+
   void _openQuickFilter({required String status}) {
     context.go(
       Uri(
@@ -832,6 +1026,10 @@ class _SalesOrderSummaryCard extends StatelessWidget {
   const _SalesOrderSummaryCard({
     required this.order,
     required this.isMobile,
+    required this.selectionMode,
+    required this.selected,
+    required this.selectable,
+    required this.onSelectedChanged,
     required this.actions,
   });
 
@@ -839,6 +1037,10 @@ class _SalesOrderSummaryCard extends StatelessWidget {
 
   final SalesOrder order;
   final bool isMobile;
+  final bool selectionMode;
+  final bool selected;
+  final bool selectable;
+  final ValueChanged<bool?>? onSelectedChanged;
   final List<RowAction> actions;
 
   @override
@@ -864,6 +1066,15 @@ class _SalesOrderSummaryCard extends StatelessWidget {
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (selectionMode) ...[
+              Padding(
+                padding: const EdgeInsets.only(right: LayoutTokens.gapMd),
+                child: Checkbox(
+                  value: selected,
+                  onChanged: selectable ? onSelectedChanged : null,
+                ),
+              ),
+            ],
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,4 +1,5 @@
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/common/api_exception.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_detail_dto.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_dto.dart';
@@ -55,7 +56,7 @@ class SalesOrderApiService {
       return SalesOrderPageDto(
           items: list, total: list.length, page: 1, pageSize: list.length);
     }
-    return const SalesOrderPageDto(items: [], total: 0, page: 1, pageSize: 20);
+    throw _unexpectedPayload('客户订单列表', payload);
   }
 
   Future<Map<String, dynamic>> fetchSummary({
@@ -63,65 +64,48 @@ class SalesOrderApiService {
   }) async {
     final response =
         await _client.get('/sales-orders/summary/', queryParameters: params);
-    final payload = response.data;
-    if (payload is Map<String, dynamic>) {
-      return Map<String, dynamic>.from(payload);
-    }
-    if (payload is Map) {
-      return Map<String, dynamic>.from(payload);
-    }
-    return const {};
+    return _requireMap('客户订单汇总', response.data);
   }
 
   Future<SalesOrderDetailDto> fetchSalesOrder(int id) async {
     final response = await _client.get('/sales-orders/$id/');
-    final payload = response.data;
-    final map = payload is Map
-        ? Map<String, dynamic>.from(payload)
-        : <String, dynamic>{};
-    return SalesOrderDetailDto.fromJson(map);
+    return _detailFromResponse(response.data, label: '客户订单详情');
   }
 
   Future<SalesOrderDetailDto> createSalesOrder(
       Map<String, dynamic> payload) async {
     final response = await _client.post('/sales-orders/', data: payload);
-    final body = response.data;
-    final map =
-        body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
-    return SalesOrderDetailDto.fromJson(map);
+    return _detailFromResponse(response.data, label: '创建客户订单');
   }
 
   Future<SalesOrderDetailDto> updateSalesOrder(
       int id, Map<String, dynamic> payload) async {
     final response = await _client.put('/sales-orders/$id/', data: payload);
-    final body = response.data;
-    final map =
-        body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
-    return SalesOrderDetailDto.fromJson(map);
+    return _detailFromResponse(response.data, label: '更新客户订单');
   }
 
   Future<SalesOrderDetailDto> submit(int id) async {
     final response = await _client.post('/sales-orders/$id/submit/');
-    return _detailFromResponse(response.data);
+    return _detailFromResponse(response.data, label: '提交客户订单');
   }
 
   Future<SalesOrderDetailDto> approve(
       int id, Map<String, dynamic> payload) async {
     final response =
         await _client.post('/sales-orders/$id/approve/', data: payload);
-    return _detailFromResponse(response.data);
+    return _detailFromResponse(response.data, label: '审核客户订单');
   }
 
   Future<SalesOrderDetailDto> reject(
       int id, Map<String, dynamic> payload) async {
     final response =
         await _client.post('/sales-orders/$id/reject/', data: payload);
-    return _detailFromResponse(response.data);
+    return _detailFromResponse(response.data, label: '拒绝客户订单');
   }
 
   Future<SalesOrderDetailDto> startProduction(int id) async {
     final response = await _client.post('/sales-orders/$id/start_production/');
-    return _detailFromResponse(response.data);
+    return _detailFromResponse(response.data, label: '开始生产');
   }
 
   Future<SalesOrderDetailDto> complete(
@@ -130,30 +114,48 @@ class SalesOrderApiService {
   ]) async {
     final response =
         await _client.post('/sales-orders/$id/complete/', data: payload);
-    return _detailFromResponse(response.data);
+    return _detailFromResponse(response.data, label: '完成客户订单');
   }
 
   Future<SalesOrderDetailDto> cancel(
       int id, Map<String, dynamic> payload) async {
     final response =
         await _client.post('/sales-orders/$id/cancel/', data: payload);
-    return _detailFromResponse(response.data);
+    return _detailFromResponse(response.data, label: '取消客户订单');
   }
 
   Future<SalesOrderDetailDto> updatePayment(
       int id, Map<String, dynamic> payload) async {
     final response =
         await _client.post('/sales-orders/$id/update_payment/', data: payload);
-    return _detailFromResponse(response.data);
+    return _detailFromResponse(response.data, label: '更新付款信息');
   }
 
   Future<void> deleteSalesOrder(int id) async {
     await _client.delete('/sales-orders/$id/');
   }
 
-  SalesOrderDetailDto _detailFromResponse(dynamic data) {
-    final map =
-        data is Map ? Map<String, dynamic>.from(data) : <String, dynamic>{};
-    return SalesOrderDetailDto.fromJson(map);
+  SalesOrderDetailDto _detailFromResponse(
+    dynamic data, {
+    required String label,
+  }) {
+    return SalesOrderDetailDto.fromJson(_requireMap(label, data));
+  }
+
+  Map<String, dynamic> _requireMap(String label, dynamic data) {
+    if (data is Map<String, dynamic>) {
+      return Map<String, dynamic>.from(data);
+    }
+    if (data is Map) {
+      return Map<String, dynamic>.from(data);
+    }
+    throw _unexpectedPayload(label, data);
+  }
+
+  ApiException _unexpectedPayload(String label, dynamic data) {
+    return ApiException(
+      message: '$label 响应格式异常',
+      data: data,
+    );
   }
 }

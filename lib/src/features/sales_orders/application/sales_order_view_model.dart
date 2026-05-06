@@ -88,6 +88,12 @@ class SalesOrderViewModel extends PaginatedViewModel<SalesOrder> {
     return _repository.createWorkOrderFromSalesOrder(payload);
   }
 
+  Future<Map<String, dynamic>> createWorkOrdersFromSalesOrders(
+    Map<String, dynamic> payload,
+  ) {
+    return _repository.createWorkOrdersFromSalesOrders(payload);
+  }
+
   @override
   Future<PageData<SalesOrder>> fetchPage({
     required int page,
