@@ -4,7 +4,10 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/controllers/app_badge_controller.dart';
 import 'package:work_order_app/src/features/notification/application/notification_view_model.dart';
-import 'package:work_order_app/src/features/notification/domain/notification_model.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_bar_chip.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/avatar_menu.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/notification_list_item.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/notification_time_utils.dart';
 
 class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   const AppHeader({
@@ -127,7 +130,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 );
               }
-              return _AppBarChip(
+              return AppBarChip(
                 label: '今日待办 ${badgeCtrl.todoCount}',
                 color: primary,
               );
@@ -208,7 +211,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
             right: LayoutTokens.gapMd,
             left: LayoutTokens.gapXs,
           ),
-          child: _AvatarMenu(
+          child: AvatarMenu(
             primary: primary,
             onProfileTap: onProfileTap,
             onLogoutTap: onLogoutTap,
@@ -301,13 +304,13 @@ List<PopupMenuEntry<String>> _buildNotificationMenuItems(
       PopupMenuItem<String>(
         value: item.id,
         padding: EdgeInsets.zero,
-        child: _NotificationListItem(
+        child: NotificationListItem(
           item: item,
           accent: accent,
           subtleText: subtleText,
           primary: primary,
           showDivider: showDivider,
-          timeLabel: _formatRelativeTime(item.createdAt),
+          timeLabel: formatRelativeTime(item.createdAt),
           onMarkRead: () {
             controller.markRead(item.id);
             Navigator.pop(context);
@@ -348,204 +351,4 @@ List<PopupMenuEntry<String>> _buildNotificationMenuItems(
     ),
   );
   return items;
-}
-
-class _NotificationListItem extends StatelessWidget {
-  const _NotificationListItem({
-    required this.item,
-    required this.accent,
-    required this.subtleText,
-    required this.primary,
-    required this.showDivider,
-    required this.timeLabel,
-    required this.onMarkRead,
-  });
-
-  final NotificationModel item;
-  final Color accent;
-  final Color subtleText;
-  final Color primary;
-  final bool showDivider;
-  final String timeLabel;
-  final VoidCallback onMarkRead;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final semantic = theme.extension<AppSemanticColors>();
-    final levelColor = _levelColorFor(item.level, primary, semantic);
-    final titleStyle = theme.textTheme.bodySmall?.copyWith(
-      color: accent,
-      fontWeight: item.isRead ? FontWeight.w500 : FontWeight.w700,
-    );
-    final timeStyle = theme.textTheme.labelSmall?.copyWith(color: subtleText);
-    final contentStyle = theme.textTheme.bodySmall?.copyWith(
-      color: subtleText,
-      height: 1.4,
-    );
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.fromLTRB(
-        LayoutTokens.gapMd,
-        LayoutTokens.gapSm,
-        LayoutTokens.gapMd,
-        LayoutTokens.gapSm,
-      ),
-      decoration: BoxDecoration(
-        color:
-            item.isRead ? Colors.transparent : primary.withValues(alpha: 0.14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: levelColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              SizedBox(width: LayoutTokens.gapSm),
-              Expanded(
-                child: Text(
-                  item.title,
-                  style: titleStyle,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              SizedBox(width: LayoutTokens.gapSm),
-              Text(
-                timeLabel,
-                style: timeStyle,
-              ),
-              SizedBox(width: LayoutTokens.gapSm),
-              IconButton(
-                tooltip: '标为已读',
-                icon: const Icon(Icons.done_all, size: 16),
-                color: item.isRead ? subtleText : primary,
-                onPressed: onMarkRead,
-              ),
-            ],
-          ),
-          SizedBox(height: LayoutTokens.gapSm),
-          Text(
-            item.content,
-            style: contentStyle,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          if (showDivider)
-            Padding(
-              padding: EdgeInsets.only(top: LayoutTokens.gapSm),
-              child:
-                  Divider(height: 1, color: subtleText.withValues(alpha: 0.2)),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AppBarChip extends StatelessWidget {
-  const _AppBarChip({required this.label, required this.color});
-
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-      margin: const EdgeInsets.only(left: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
-        border: Border.all(color: color.withValues(alpha: 0.14)),
-      ),
-      child: Text(
-        label,
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-}
-
-class _AvatarMenu extends StatelessWidget {
-  const _AvatarMenu({
-    required this.primary,
-    required this.onProfileTap,
-    required this.onLogoutTap,
-  });
-
-  final Color primary;
-  final VoidCallback onProfileTap;
-  final VoidCallback onLogoutTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return PopupMenuButton<String>(
-      tooltip: '账户',
-      offset: const Offset(0, 48),
-      shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusMd)),
-      onSelected: (value) {
-        if (value == 'profile') {
-          onProfileTap();
-        } else if (value == 'logout') {
-          onLogoutTap();
-        }
-      },
-      itemBuilder: (context) => const [
-        PopupMenuItem(value: 'profile', child: Text('个人信息')),
-        PopupMenuItem(value: 'logout', child: Text('退出登录')),
-      ],
-      child: CircleAvatar(
-        radius: 15,
-        backgroundColor: primary.withValues(alpha: 0.12),
-        child: Icon(Icons.person, size: 17, color: primary),
-      ),
-    );
-  }
-}
-
-String _formatRelativeTime(DateTime createdAt) {
-  final diff = DateTime.now().difference(createdAt);
-  if (diff.inMinutes < 1) {
-    return '刚刚';
-  }
-  if (diff.inMinutes < 60) {
-    return '${diff.inMinutes}分钟前';
-  }
-  if (diff.inHours < 24) {
-    return '${diff.inHours}小时前';
-  }
-  if (diff.inDays < 7) {
-    return '${diff.inDays}天前';
-  }
-  final hour = createdAt.hour.toString().padLeft(2, '0');
-  final minute = createdAt.minute.toString().padLeft(2, '0');
-  return '${createdAt.month}月${createdAt.day}日 $hour:$minute';
-}
-
-Color _levelColorFor(
-  NotificationLevel level,
-  Color primary,
-  AppSemanticColors? semantic,
-) {
-  switch (level) {
-    case NotificationLevel.warning:
-      return semantic?.warning ?? ColorTokens.warning;
-    case NotificationLevel.urgent:
-      return semantic?.danger ?? ColorTokens.danger;
-    case NotificationLevel.info:
-      return primary;
-  }
 }

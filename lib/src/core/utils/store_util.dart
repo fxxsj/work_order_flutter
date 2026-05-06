@@ -60,6 +60,7 @@ class StoreUtil {
     if (access != null && access.toString().isNotEmpty) {
       return access.toString();
     }
+    // ignore: deprecated_member_use_from_same_package — backward compat for tokens written by older app versions
     final legacy = read(Constant.KEY_TOKEN);
     if (legacy != null && legacy.toString().isNotEmpty) {
       return legacy.toString();
@@ -99,7 +100,8 @@ class StoreUtil {
 
   static Future<void> writeTokens({required String access, String? refresh}) async {
     await write(Constant.KEY_ACCESS_TOKEN, access);
-    await write(Constant.KEY_TOKEN, access); // legacy compatibility
+    // ignore: deprecated_member_use_from_same_package — write both keys for backward compat
+    await write(Constant.KEY_TOKEN, access);
     if (refresh != null) {
       await write(Constant.KEY_REFRESH_TOKEN, refresh);
     }
@@ -108,6 +110,7 @@ class StoreUtil {
   static Future<void> clearTokens() async {
     await remove(Constant.KEY_ACCESS_TOKEN);
     await remove(Constant.KEY_REFRESH_TOKEN);
+    // ignore: deprecated_member_use_from_same_package — clear legacy key too for clean state
     await remove(Constant.KEY_TOKEN);
   }
 

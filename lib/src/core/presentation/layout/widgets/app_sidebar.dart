@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/drawer_tile.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/rail_badge.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/sidebar_brand.dart';
 
 class AppSidebarDrawer extends StatelessWidget {
   const AppSidebarDrawer({
@@ -40,13 +43,13 @@ class AppSidebarDrawer extends StatelessWidget {
     for (final item in navItems) {
       if (item.children.isEmpty) {
         tiles.add(
-          _buildDrawerTile(
-            item,
+          DrawerTile(
+            item: item,
+            badgeText: badgeTextForItem(item),
+            isSelected: currentId == item.id,
             primary: primary,
             sidebarText: sidebarText,
-            isSelected: currentId == item.id,
             onTap: () => onSelectId(item.id),
-            badgeTextForItem: badgeTextForItem,
           ),
         );
       } else {
@@ -71,13 +74,13 @@ class AppSidebarDrawer extends StatelessWidget {
               ),
               children: [
                 for (final child in item.children)
-                  _buildDrawerTile(
-                    child,
+                  DrawerTile(
+                    item: child,
+                    badgeText: badgeTextForItem(child),
+                    isSelected: currentId == child.id,
                     primary: primary,
                     sidebarText: sidebarText,
-                    isSelected: currentId == child.id,
                     onTap: () => onSelectId(child.id),
-                    badgeTextForItem: badgeTextForItem,
                     dense: true,
                   ),
               ],
@@ -95,7 +98,7 @@ class AppSidebarDrawer extends StatelessWidget {
           color: primary,
           padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapLg),
           alignment: Alignment.centerLeft,
-          child: _SidebarBrand(
+          child: SidebarBrand(
             compact: false,
             title: appTitle,
             primary: primary,
@@ -157,7 +160,7 @@ class AppSidebarRail extends StatelessWidget {
           color: primary,
           padding: EdgeInsets.symmetric(horizontal: LayoutTokens.cardPaddingSm),
           alignment: Alignment.centerLeft,
-          child: _SidebarBrand(
+          child: SidebarBrand(
             compact: !railExtended,
             title: appTitle,
             primary: primary,
@@ -285,7 +288,7 @@ class AppSidebarRail extends StatelessWidget {
                 size: 18,
               ),
             if (railExtended && !isParent)
-              _RailBadge(
+              RailBadge(
                 badgeText: badgeTextForItem(item),
                 primary: primary,
               ),
@@ -298,213 +301,6 @@ class AppSidebarRail extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.only(bottom: LayoutTokens.gapXs),
       child: content,
-    );
-  }
-}
-
-Widget _buildDrawerTile(
-  NavItem item, {
-  required Color primary,
-  required Color sidebarText,
-  required bool isSelected,
-  required VoidCallback onTap,
-  required String? Function(NavItem) badgeTextForItem,
-  bool dense = false,
-}) {
-  return _DrawerTile(
-    item: item,
-    badgeText: badgeTextForItem(item),
-    isSelected: isSelected,
-    primary: primary,
-    sidebarText: sidebarText,
-    onTap: onTap,
-    dense: dense,
-  );
-}
-
-class _DrawerTile extends StatelessWidget {
-  const _DrawerTile({
-    required this.item,
-    required this.badgeText,
-    required this.isSelected,
-    required this.primary,
-    required this.sidebarText,
-    required this.onTap,
-    this.dense = false,
-  });
-
-  final NavItem item;
-  final String? badgeText;
-  final bool isSelected;
-  final Color primary;
-  final Color sidebarText;
-  final VoidCallback onTap;
-  final bool dense;
-
-  @override
-  Widget build(BuildContext context) {
-    final background =
-        isSelected ? primary.withValues(alpha: 0.08) : Colors.transparent;
-    final theme = Theme.of(context);
-    final labelStyle = theme.textTheme.bodySmall?.copyWith(
-      color: isSelected ? primary : sidebarText,
-      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-    );
-    final badgeStyle = theme.textTheme.labelSmall?.copyWith(
-      color: primary,
-      fontWeight: FontWeight.w600,
-    );
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: dense ? 18 : LayoutTokens.gapMd,
-        vertical: dense ? 1 : 3,
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: LayoutTokens.gapMd,
-            vertical: dense ? 7 : 9,
-          ),
-          decoration: BoxDecoration(
-            color: background,
-            borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-            border: Border.all(
-              color: isSelected
-                  ? primary.withValues(alpha: 0.12)
-                  : Colors.transparent,
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(item.icon,
-                  color: isSelected ? primary : sidebarText, size: 18),
-              SizedBox(width: LayoutTokens.cardPaddingSm),
-              Expanded(
-                child: Text(
-                  item.label,
-                  style: labelStyle,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (badgeText != null)
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: LayoutTokens.gapSm,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: primary.withValues(alpha: 0.1),
-                    borderRadius:
-                        BorderRadius.circular(LayoutTokens.radiusPill),
-                  ),
-                  child: Text(
-                    badgeText!,
-                    style: badgeStyle,
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RailBadge extends StatelessWidget {
-  const _RailBadge({
-    required this.badgeText,
-    required this.primary,
-  });
-
-  final String? badgeText;
-  final Color primary;
-
-  @override
-  Widget build(BuildContext context) {
-    if (badgeText == null) {
-      return const SizedBox.shrink();
-    }
-    final theme = Theme.of(context);
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: LayoutTokens.gapSm,
-        vertical: 3,
-      ),
-      decoration: BoxDecoration(
-        color: primary.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
-      ),
-      child: Text(
-        badgeText!,
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: primary,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-}
-
-class _SidebarBrand extends StatelessWidget {
-  const _SidebarBrand({
-    required this.compact,
-    required this.title,
-    required this.primary,
-    required this.sidebarText,
-  });
-
-  final bool compact;
-  final String title;
-  final Color primary;
-  final Color sidebarText;
-
-  @override
-  Widget build(BuildContext context) {
-    if (compact) {
-      return Container(
-        height: LayoutTokens.navItemHeight,
-        decoration: BoxDecoration(
-          color:
-              Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.18),
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-        ),
-        child: Icon(Icons.grid_view_rounded,
-            color: Theme.of(context).colorScheme.onPrimary, size: 18),
-      );
-    }
-
-    final onPrimary = Theme.of(context).colorScheme.onPrimary;
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: LayoutTokens.gapXs,
-        vertical: LayoutTokens.gapXxxs,
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: onPrimary.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-            ),
-            child: Icon(Icons.grid_view_rounded, color: onPrimary, size: 18),
-          ),
-          SizedBox(width: LayoutTokens.cardPaddingSm),
-          Expanded(
-            child: Text(
-              title,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: onPrimary,
-                    fontWeight: FontWeight.w700,
-                  ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
