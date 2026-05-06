@@ -64,28 +64,30 @@ class _RadioGroupFieldBody<T> extends StatelessWidget {
         labelText: widget._label,
         helperText: widget._helperText ?? widget._hintText,
         errorText: state.errorText,
-      ).applyDefaults(theme.inputDecorationTheme).copyWith(enabled: widget._enabled),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: options.map((option) {
-          return RadioListTile<T>(
-            value: option.value,
-            groupValue: currentValue,
-            contentPadding: EdgeInsets.zero,
-            visualDensity: VisualDensity.compact,
-            controlAffinity: ListTileControlAffinity.leading,
-            title: Text(option.label),
-            enabled: widget._enabled && option.enabled,
-            onChanged: widget._enabled
-                ? (nextValue) {
-                    if (nextValue != null) {
-                      state.didChange(nextValue);
-                      widget._onChanged?.call(nextValue);
-                    }
-                  }
-                : null,
-          );
-        }).toList(),
+      )
+          .applyDefaults(theme.inputDecorationTheme)
+          .copyWith(enabled: widget._enabled),
+      child: RadioGroup<T>(
+        groupValue: currentValue,
+        onChanged: (nextValue) {
+          if (nextValue != null && widget._enabled) {
+            state.didChange(nextValue);
+            widget._onChanged?.call(nextValue);
+          }
+        },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: options.map((option) {
+            return RadioListTile<T>(
+              value: option.value,
+              contentPadding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              controlAffinity: ListTileControlAffinity.leading,
+              title: Text(option.label),
+              enabled: widget._enabled && option.enabled,
+            );
+          }).toList(),
+        ),
       ),
     );
   }
