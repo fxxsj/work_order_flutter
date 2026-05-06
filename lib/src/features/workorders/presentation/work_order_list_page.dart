@@ -594,40 +594,40 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     final permissions = PermissionUtil.snapshot(context);
     final canCreateWorkOrder = permissions.has('workorder.add_workorder');
     final statusItems = const [
-      DropdownOption(value: 'pending', label: '待开始'),
-      DropdownOption(value: 'in_progress', label: '进行中'),
-      DropdownOption(value: 'paused', label: '已暂停'),
-      DropdownOption(value: 'completed', label: '已完成'),
-      DropdownOption(value: 'cancelled', label: '已取消'),
+      AppDropdownOption(value: 'pending', label: '待开始'),
+      AppDropdownOption(value: 'in_progress', label: '进行中'),
+      AppDropdownOption(value: 'paused', label: '已暂停'),
+      AppDropdownOption(value: 'completed', label: '已完成'),
+      AppDropdownOption(value: 'cancelled', label: '已取消'),
     ];
     final priorityItems = const [
-      DropdownOption(value: 'low', label: '低'),
-      DropdownOption(value: 'normal', label: '普通'),
-      DropdownOption(value: 'high', label: '高'),
-      DropdownOption(value: 'urgent', label: '紧急'),
+      AppDropdownOption(value: 'low', label: '低'),
+      AppDropdownOption(value: 'normal', label: '普通'),
+      AppDropdownOption(value: 'high', label: '高'),
+      AppDropdownOption(value: 'urgent', label: '紧急'),
     ];
     final approvalItems = const [
-      DropdownOption(value: 'pending', label: '待审核'),
-      DropdownOption(value: 'approved', label: '已通过'),
-      DropdownOption(value: 'rejected', label: '已拒绝'),
+      AppDropdownOption(value: 'pending', label: '待审核'),
+      AppDropdownOption(value: 'approved', label: '已通过'),
+      AppDropdownOption(value: 'rejected', label: '已拒绝'),
     ];
     final customerItems = [
-      const DropdownOption<int?>(value: null, label: '全部客户'),
+      const AppDropdownOption<int?>(value: null, label: '全部客户'),
       ..._customers.map(
-        (item) => DropdownOption<int?>(value: item.id, label: item.name),
+        (item) => AppDropdownOption<int?>(value: item.id, label: item.name),
       ),
     ];
     final productItems = [
-      const DropdownOption<int?>(value: null, label: '全部产品'),
+      const AppDropdownOption<int?>(value: null, label: '全部产品'),
       ..._products.map(
         (item) =>
-            DropdownOption<int?>(value: item.id, label: item.displayLabel),
+            AppDropdownOption<int?>(value: item.id, label: item.displayLabel),
       ),
     ];
     final processItems = [
-      const DropdownOption<int?>(value: null, label: '全部工序'),
+      const AppDropdownOption<int?>(value: null, label: '全部工序'),
       ..._processes.map(
-        (item) => DropdownOption<int?>(value: item.id, label: item.name),
+        (item) => AppDropdownOption<int?>(value: item.id, label: item.name),
       ),
     ];
 
@@ -746,12 +746,12 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
   Widget _buildFilterPanel(
     BuildContext context,
     WorkOrderViewModel viewModel, {
-    required List<DropdownOption<String>> statusItems,
-    required List<DropdownOption<String>> priorityItems,
-    required List<DropdownOption<String>> approvalItems,
-    required List<DropdownOption<int?>> customerItems,
-    required List<DropdownOption<int?>> productItems,
-    required List<DropdownOption<int?>> processItems,
+    required List<AppDropdownOption<String>> statusItems,
+    required List<AppDropdownOption<String>> priorityItems,
+    required List<AppDropdownOption<String>> approvalItems,
+    required List<AppDropdownOption<int?>> customerItems,
+    required List<AppDropdownOption<int?>> productItems,
+    required List<AppDropdownOption<int?>> processItems,
     required double bottomSpacing,
   }) {
     return FilterPanelBody(
@@ -760,7 +760,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
       onReset: () => _resetFilters(viewModel),
       fields: [
         if (_loadingOptions) const LinearProgressIndicator(minHeight: 2),
-        UnifiedDropdown<String>(
+        AppSelect<String>(
           value: _statusFilter,
           decoration: const InputDecoration(labelText: '状态'),
           options: statusItems,
@@ -769,7 +769,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
             _applyFilters(viewModel);
           },
         ),
-        UnifiedDropdown<String>(
+        AppSelect<String>(
           value: _priorityFilter,
           decoration: const InputDecoration(labelText: '优先级'),
           options: priorityItems,
@@ -778,7 +778,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
             _applyFilters(viewModel);
           },
         ),
-        UnifiedDropdown<String>(
+        AppSelect<String>(
           value: _approvalStatusFilter,
           decoration: const InputDecoration(labelText: '审核状态'),
           options: approvalItems,
@@ -787,7 +787,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
             _applyFilters(viewModel);
           },
         ),
-        UnifiedDropdown<int?>(
+        AppSelect<int?>(
           value: _customerFilterId,
           decoration: const InputDecoration(labelText: '客户'),
           options: customerItems,
@@ -796,7 +796,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
             _applyFilters(viewModel);
           },
         ),
-        UnifiedDropdown<int?>(
+        AppSelect<int?>(
           value: _productFilterId,
           decoration: const InputDecoration(labelText: '产品'),
           options: productItems,
@@ -805,7 +805,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
             _applyFilters(viewModel);
           },
         ),
-        UnifiedDropdown<int?>(
+        AppSelect<int?>(
           value: _processFilterId,
           decoration: const InputDecoration(labelText: '工序'),
           options: processItems,

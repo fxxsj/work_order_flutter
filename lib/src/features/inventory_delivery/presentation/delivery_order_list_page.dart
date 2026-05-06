@@ -1055,28 +1055,28 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       resetLabel: _resetButtonText,
       onReset: () => _resetFilters(viewModel),
       fields: [
-        UnifiedDropdown<String>(
+        AppSelect<String>(
           key: ValueKey<String>(statusValue),
           value: statusValue.isEmpty ? null : statusValue,
           decoration: const InputDecoration(labelText: _statusFilterLabel),
           options: const [
-            DropdownOption<String>(value: '', label: '全部状态'),
-            DropdownOption<String>(value: 'pending', label: '待发货'),
-            DropdownOption<String>(value: 'shipped', label: '已发货'),
-            DropdownOption<String>(value: 'in_transit', label: '运输中'),
-            DropdownOption<String>(value: 'received', label: '已签收'),
-            DropdownOption<String>(value: 'rejected', label: '拒收'),
+            AppDropdownOption<String>(value: '', label: '全部状态'),
+            AppDropdownOption<String>(value: 'pending', label: '待发货'),
+            AppDropdownOption<String>(value: 'shipped', label: '已发货'),
+            AppDropdownOption<String>(value: 'in_transit', label: '运输中'),
+            AppDropdownOption<String>(value: 'received', label: '已签收'),
+            AppDropdownOption<String>(value: 'rejected', label: '拒收'),
           ],
           onChanged: (value) => viewModel.setStatusFilter(value ?? ''),
         ),
-        UnifiedDropdown<int>(
+        AppSelect<int>(
           key: ValueKey<int>(customerValue),
           value: customerValue == 0 ? null : customerValue,
           decoration: const InputDecoration(labelText: _customerFilterLabel),
           options: [
-            const DropdownOption<int>(value: 0, label: '全部客户'),
+            const AppDropdownOption<int>(value: 0, label: '全部客户'),
             ..._customers.map(
-              (customer) => DropdownOption<int>(
+              (customer) => AppDropdownOption<int>(
                 value: customer.id,
                 label: customer.name,
               ),

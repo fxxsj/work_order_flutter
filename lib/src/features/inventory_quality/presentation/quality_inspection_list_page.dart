@@ -483,14 +483,14 @@ class _QualityInspectionListViewState
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  UnifiedDropdown<String>(
+                  AppSelect<String>(
                     key: ValueKey<String>(result),
                     value: result,
                     decoration: const InputDecoration(labelText: '检验结果'),
                     options: const [
-                      DropdownOption(value: 'passed', label: '合格'),
-                      DropdownOption(value: 'failed', label: '不合格'),
-                      DropdownOption(value: 'conditional', label: '条件接收'),
+                      AppDropdownOption(value: 'passed', label: '合格'),
+                      AppDropdownOption(value: 'failed', label: '不合格'),
+                      AppDropdownOption(value: 'conditional', label: '条件接收'),
                     ],
                     onChanged: submitting
                         ? null
@@ -908,29 +908,29 @@ class _QualityInspectionListViewState
       resetLabel: _resetButtonText,
       onReset: () => _resetFilters(viewModel),
       fields: [
-        UnifiedDropdown<String>(
+        AppSelect<String>(
           key: ValueKey<String>(typeValue),
           value: typeValue.isEmpty ? null : typeValue,
           decoration: const InputDecoration(labelText: _typeFilterLabel),
           options: const [
-            DropdownOption<String>(value: '', label: '全部类型'),
-            DropdownOption<String>(value: 'incoming', label: '来料检验'),
-            DropdownOption<String>(value: 'process', label: '过程检验'),
-            DropdownOption<String>(value: 'final', label: '成品检验'),
-            DropdownOption<String>(value: 'customer', label: '客诉检验'),
+            AppDropdownOption<String>(value: '', label: '全部类型'),
+            AppDropdownOption<String>(value: 'incoming', label: '来料检验'),
+            AppDropdownOption<String>(value: 'process', label: '过程检验'),
+            AppDropdownOption<String>(value: 'final', label: '成品检验'),
+            AppDropdownOption<String>(value: 'customer', label: '客诉检验'),
           ],
           onChanged: (value) => viewModel.setTypeFilter(value ?? ''),
         ),
-        UnifiedDropdown<String>(
+        AppSelect<String>(
           key: ValueKey<String>(resultValue),
           value: resultValue.isEmpty ? null : resultValue,
           decoration: const InputDecoration(labelText: _resultFilterLabel),
           options: const [
-            DropdownOption<String>(value: '', label: '全部结果'),
-            DropdownOption<String>(value: 'pending', label: '待检验'),
-            DropdownOption<String>(value: 'passed', label: '合格'),
-            DropdownOption<String>(value: 'failed', label: '不合格'),
-            DropdownOption<String>(value: 'conditional', label: '条件接收'),
+            AppDropdownOption<String>(value: '', label: '全部结果'),
+            AppDropdownOption<String>(value: 'pending', label: '待检验'),
+            AppDropdownOption<String>(value: 'passed', label: '合格'),
+            AppDropdownOption<String>(value: 'failed', label: '不合格'),
+            AppDropdownOption<String>(value: 'conditional', label: '条件接收'),
           ],
           onChanged: (value) => viewModel.setResultFilter(value ?? ''),
         ),

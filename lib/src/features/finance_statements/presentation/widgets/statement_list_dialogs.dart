@@ -130,14 +130,14 @@ Future<StatementCreateResult?> showStatementCreateDialog(
 
                             final customerOptions = availableCustomers
                                 .map(
-                                  (customer) => DropdownOption<int?>(
+                                  (customer) => AppDropdownOption<int?>(
                                     value: customer.id,
                                     label: customer.name,
                                   ),
                                 )
                                 .toList()
                               ..add(
-                                DropdownOption<int?>(
+                                AppDropdownOption<int?>(
                                   value: -1,
                                   label: '新增客户',
                                   icon: Icons.add,
@@ -148,7 +148,7 @@ Future<StatementCreateResult?> showStatementCreateDialog(
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                UnifiedDropdown<int?>(
+                                AppSelect<int?>(
                                   key: ValueKey<String>(
                                     'statement_create_customer_${selectedCustomerId ?? 'none'}',
                                   ),
@@ -203,14 +203,14 @@ Future<StatementCreateResult?> showStatementCreateDialog(
 
                             final supplierOptions = availableSuppliers
                                 .map(
-                                  (supplier) => DropdownOption<int?>(
+                                  (supplier) => AppDropdownOption<int?>(
                                     value: supplier.id,
                                     label: supplier.name,
                                   ),
                                 )
                                 .toList()
                               ..add(
-                                DropdownOption<int?>(
+                                AppDropdownOption<int?>(
                                   value: -1,
                                   label: '新增供应商',
                                   icon: Icons.add,
@@ -221,7 +221,7 @@ Future<StatementCreateResult?> showStatementCreateDialog(
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                UnifiedDropdown<int?>(
+                                AppSelect<int?>(
                                   key: ValueKey<String>(
                                     'statement_create_supplier_${selectedSupplierId ?? 'none'}',
                                   ),
@@ -398,14 +398,14 @@ Future<StatementGenerateResult?> showStatementGenerateDialog(
 
                       final customerOptions = availableCustomers
                           .map(
-                            (customer) => DropdownOption<int?>(
+                            (customer) => AppDropdownOption<int?>(
                               value: customer.id,
                               label: customer.name,
                             ),
                           )
                           .toList()
                         ..add(
-                          DropdownOption<int?>(
+                          AppDropdownOption<int?>(
                             value: -1,
                             label: '新增客户',
                             icon: Icons.add,
@@ -416,7 +416,7 @@ Future<StatementGenerateResult?> showStatementGenerateDialog(
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          UnifiedDropdown<int?>(
+                          AppSelect<int?>(
                             key: ValueKey<String>(
                               'statement_generate_customer_${selectedCustomerId ?? 'none'}',
                             ),
@@ -468,14 +468,14 @@ Future<StatementGenerateResult?> showStatementGenerateDialog(
 
                       final supplierOptions = availableSuppliers
                           .map(
-                            (supplier) => DropdownOption<int?>(
+                            (supplier) => AppDropdownOption<int?>(
                               value: supplier.id,
                               label: supplier.name,
                             ),
                           )
                           .toList()
                         ..add(
-                          DropdownOption<int?>(
+                          AppDropdownOption<int?>(
                             value: -1,
                             label: '新增供应商',
                             icon: Icons.add,
@@ -486,7 +486,7 @@ Future<StatementGenerateResult?> showStatementGenerateDialog(
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          UnifiedDropdown<int?>(
+                          AppSelect<int?>(
                             key: ValueKey<String>(
                               'statement_generate_supplier_${selectedSupplierId ?? 'none'}',
                             ),

@@ -308,22 +308,22 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      UnifiedDropdown<String>(
+                      AppSelect<String>(
                         value: invoiceType,
                         decoration: const InputDecoration(
                           labelText: '发票类型',
                           border: OutlineInputBorder(),
                         ),
                         options: const [
-                          DropdownOption(
+                          AppDropdownOption(
                             value: 'vat_special',
                             label: '增值税专用发票',
                           ),
-                          DropdownOption(
+                          AppDropdownOption(
                             value: 'vat_normal',
                             label: '增值税普通发票',
                           ),
-                          DropdownOption(
+                          AppDropdownOption(
                             value: 'electronic',
                             label: '电子发票',
                           ),
@@ -335,19 +335,19 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                                 ),
                       ),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      UnifiedDropdown<int?>(
+                      AppSelect<int?>(
                         value: selectedCustomerId,
                         decoration: const InputDecoration(
                           labelText: '客户',
                           border: OutlineInputBorder(),
                         ),
                         options: [
-                          const DropdownOption<int?>(
+                          const AppDropdownOption<int?>(
                             value: null,
                             label: '请选择客户',
                           ),
                           ..._customers.map(
-                            (customer) => DropdownOption<int?>(
+                            (customer) => AppDropdownOption<int?>(
                               value: customer.id,
                               label: customer.name,
                             ),
@@ -360,19 +360,19 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                         validator: (value) => value == null ? '请选择客户' : null,
                       ),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      UnifiedDropdown<int?>(
+                      AppSelect<int?>(
                         value: selectedSalesOrderId,
                         decoration: const InputDecoration(
                           labelText: '关联客户订单（可选）',
                           border: OutlineInputBorder(),
                         ),
                         options: [
-                          const DropdownOption<int?>(
+                          const AppDropdownOption<int?>(
                             value: null,
                             label: '不关联客户订单',
                           ),
                           ..._salesOrders.map(
-                            (order) => DropdownOption<int?>(
+                            (order) => AppDropdownOption<int?>(
                               value: order.id,
                               label: order.orderNumber,
                             ),
@@ -384,19 +384,19 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                                 setState(() => selectedSalesOrderId = value),
                       ),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      UnifiedDropdown<int?>(
+                      AppSelect<int?>(
                         value: selectedWorkOrderId,
                         decoration: const InputDecoration(
                           labelText: '关联施工单（可选）',
                           border: OutlineInputBorder(),
                         ),
                         options: [
-                          const DropdownOption<int?>(
+                          const AppDropdownOption<int?>(
                             value: null,
                             label: '不关联施工单',
                           ),
                           ..._workOrders.map(
-                            (order) => DropdownOption<int?>(
+                            (order) => AppDropdownOption<int?>(
                               value: order.id,
                               label: order.orderNumber,
                             ),

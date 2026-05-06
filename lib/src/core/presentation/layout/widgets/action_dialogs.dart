@@ -268,12 +268,12 @@ Future<ActionDecisionResult<T>?> showActionDecisionDialog<T>(
                   const SizedBox(height: 12),
                 ],
                 if (showSelection) ...[
-                  UnifiedDropdown<T>(
+                  AppSelect<T>(
                     key: ValueKey<T?>(selection),
                     value: selection,
                     options: options
                         .map(
-                          (option) => DropdownOption<T>(
+                          (option) => AppDropdownOption<T>(
                             value: option.value,
                             label: option.label,
                           ),

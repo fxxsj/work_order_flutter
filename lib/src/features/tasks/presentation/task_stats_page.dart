@@ -153,12 +153,12 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
 
   Widget _buildFilters(bool isMobile) {
     final departmentItems = [
-      const DropdownOption<int?>(
+      const AppDropdownOption<int?>(
         value: null,
         label: '全部部门',
       ),
       ..._departments.map(
-        (dept) => DropdownOption<int?>(
+        (dept) => AppDropdownOption<int?>(
           value: dept.id,
           label: dept.name,
         ),
@@ -257,7 +257,7 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
 
   Widget _buildFilterPanel(
     BuildContext context, {
-    required List<DropdownOption<int?>> departmentItems,
+    required List<AppDropdownOption<int?>> departmentItems,
   }) {
     final spacing = LayoutTokens.formSectionSpacing(context);
     return ListView(
@@ -277,7 +277,7 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
           },
         ),
         SizedBox(height: spacing),
-        UnifiedDropdown<int?>(
+        AppSelect<int?>(
           key: ValueKey<int?>(_departmentId),
           value: _departmentId,
           decoration: const InputDecoration(labelText: '部门'),

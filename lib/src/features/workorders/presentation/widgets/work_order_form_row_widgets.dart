@@ -39,12 +39,12 @@ class WorkOrderMultiSelectField extends StatelessWidget {
       );
     }
 
-    return UnifiedDropdown<dynamic>(
+    return AppSelect<dynamic>(
       value: Set<dynamic>.from(selected),
       isMultiSelect: true,
       options: items
           .map(
-            (item) => DropdownOption<dynamic>(
+            (item) => AppDropdownOption<dynamic>(
               value: item.id,
               label: item.label,
             ),
@@ -54,7 +54,7 @@ class WorkOrderMultiSelectField extends StatelessWidget {
         hintText: placeholder,
       ),
       selectHintText: placeholder,
-      searchConfig: const DropdownSearchConfig(
+      searchConfig: const AppAppDropdownSearchConfig(
         enabled: true,
         hintText: '搜索',
         highlightMatches: true,
@@ -134,7 +134,7 @@ class _WorkOrderProductRowState extends State<WorkOrderProductRow> {
 
     final productOptions = widget.products
         .map(
-          (item) => DropdownOption<int>(
+          (item) => AppDropdownOption<int>(
             value: item.id,
             label: item.displayLabel,
           ),
@@ -142,7 +142,7 @@ class _WorkOrderProductRowState extends State<WorkOrderProductRow> {
         .toList();
     if (!_isSalesOrderSource && widget.onCreateProduct != null) {
       productOptions.add(
-        DropdownOption<int>(
+        AppDropdownOption<int>(
           value: -1,
           label: '新增产品',
           icon: Icons.add,
@@ -161,7 +161,7 @@ class _WorkOrderProductRowState extends State<WorkOrderProductRow> {
         final specWidth = useFullWidth ? maxWidth : 200.0;
         final sourceOrderOptions = widget.salesOrders
             .map(
-              (item) => DropdownOption<int>(
+              (item) => AppDropdownOption<int>(
                 value: item.id,
                 label: item.orderNumber,
                 secondaryLabel: item.customerName,
@@ -170,7 +170,7 @@ class _WorkOrderProductRowState extends State<WorkOrderProductRow> {
             .toList();
         final salesOrderItemOptions = _salesOrderItems
             .map(
-              (item) => DropdownOption<int>(
+              (item) => AppDropdownOption<int>(
                 value: item.salesOrderItemId ?? item.productId,
                 label: item.productCode?.isNotEmpty == true
                     ? '${item.productName ?? ''} (${item.productCode})'
@@ -191,7 +191,7 @@ class _WorkOrderProductRowState extends State<WorkOrderProductRow> {
               children: [
                 SizedBox(
                   width: mediumWidth,
-                  child: UnifiedDropdown<String>(
+                  child: AppSelect<String>(
                     value: widget.draft.sourceType,
                     decoration: const InputDecoration(labelText: '产品来源'),
                     options: workOrderProductSourceOptions,
@@ -213,7 +213,7 @@ class _WorkOrderProductRowState extends State<WorkOrderProductRow> {
                 if (_isSalesOrderSource)
                   SizedBox(
                     width: wideWidth,
-                    child: UnifiedDropdown<int>(
+                    child: AppSelect<int>(
                       value: widget.draft.sourceSalesOrderId,
                       decoration: const InputDecoration(labelText: '来源客户订单'),
                       options: sourceOrderOptions,
@@ -233,7 +233,7 @@ class _WorkOrderProductRowState extends State<WorkOrderProductRow> {
                   ),
                 SizedBox(
                   width: wideWidth,
-                  child: UnifiedDropdown<int>(
+                  child: AppSelect<int>(
                     value: _isSalesOrderSource
                         ? widget.draft.salesOrderItemId
                         : widget.draft.productId,
@@ -365,7 +365,7 @@ class _WorkOrderMaterialRowState extends State<WorkOrderMaterialRow> {
   Widget build(BuildContext context) {
     final materialOptions = widget.materials
         .map(
-          (item) => DropdownOption<int>(
+          (item) => AppDropdownOption<int>(
             value: item.id,
             label: '${item.name} (${item.code})',
           ),
@@ -373,7 +373,7 @@ class _WorkOrderMaterialRowState extends State<WorkOrderMaterialRow> {
         .toList();
     if (widget.onCreateMaterial != null) {
       materialOptions.add(
-        DropdownOption<int>(
+        AppDropdownOption<int>(
           value: -1,
           label: '新增物料',
           icon: Icons.add,
@@ -400,7 +400,7 @@ class _WorkOrderMaterialRowState extends State<WorkOrderMaterialRow> {
               children: [
                 SizedBox(
                   width: productWidth,
-                  child: UnifiedDropdown<int>(
+                  child: AppSelect<int>(
                     value: widget.draft.materialId,
                     decoration: const InputDecoration(labelText: '物料'),
                     options: materialOptions,

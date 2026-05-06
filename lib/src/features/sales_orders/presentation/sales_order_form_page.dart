@@ -524,14 +524,14 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
   Widget _buildContextSection(double fieldWidth) {
     final customerOptions = _customers
         .map(
-          (item) => DropdownOption<int>(
+          (item) => AppDropdownOption<int>(
             value: item.id,
             label: item.name,
           ),
         )
         .toList();
     customerOptions.add(
-      DropdownOption<int>(
+      AppDropdownOption<int>(
         value: -1,
         label: '新增客户',
         icon: Icons.add,
@@ -552,7 +552,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
             children: [
               SizedBox(
                 width: fieldWidth,
-                child: UnifiedDropdown<int>(
+                child: AppSelect<int>(
                   value: _customerId,
                   decoration: const InputDecoration(labelText: '客户'),
                   options: customerOptions,
@@ -1123,14 +1123,14 @@ class _ItemRowState extends State<_ItemRow> {
     final lineTotal = safeSubtotal + lineTax;
     final productOptions = widget.products
         .map(
-          (item) => DropdownOption<int>(
+          (item) => AppDropdownOption<int>(
             value: item.id,
             label: item.displayLabel,
           ),
         )
         .toList();
     productOptions.add(
-      DropdownOption<int>(
+      AppDropdownOption<int>(
         value: -1,
         label: '新增产品',
         icon: Icons.add,
@@ -1156,7 +1156,7 @@ class _ItemRowState extends State<_ItemRow> {
                   ),
                 if (widget.isDesktop)
                   Expanded(
-                    child: UnifiedDropdown<int>(
+                    child: AppSelect<int>(
                       value: widget.draft.productId,
                       decoration: const InputDecoration(labelText: '产品'),
                       options: productOptions,
@@ -1238,7 +1238,7 @@ class _ItemRowState extends State<_ItemRow> {
             if (!widget.isDesktop)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
-                child: UnifiedDropdown<int>(
+                child: AppSelect<int>(
                   value: widget.draft.productId,
                   decoration: const InputDecoration(labelText: '产品'),
                   options: productOptions,

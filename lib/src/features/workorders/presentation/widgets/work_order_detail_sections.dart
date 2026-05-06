@@ -32,7 +32,7 @@ class WorkOrderDetailOverviewSection extends StatelessWidget {
   });
 
   final WorkOrderDetail detail;
-  final List<DropdownOption<String>> statusOptions;
+  final List<AppDropdownOption<String>> statusOptions;
   final String? statusSelection;
   final bool actionLoading;
   final VoidCallback? onUploadDesignFile;
@@ -99,7 +99,7 @@ class WorkOrderActionPanel extends StatelessWidget {
     required this.onUpdateStatus,
   });
 
-  final List<DropdownOption<String>> statusOptions;
+  final List<AppDropdownOption<String>> statusOptions;
   final String? statusSelection;
   final bool actionLoading;
   final ValueChanged<String?>? onStatusChanged;
@@ -114,7 +114,7 @@ class WorkOrderActionPanel extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            UnifiedDropdown<String>(
+            AppSelect<String>(
               value: statusSelection,
               decoration: const InputDecoration(labelText: '状态'),
               options: statusOptions,

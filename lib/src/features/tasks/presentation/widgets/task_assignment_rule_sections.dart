@@ -138,13 +138,13 @@ class _TaskAssignmentRuleDialogState extends State<TaskAssignmentRuleDialog> {
       onSubmit: _submit,
       content: Column(
         children: [
-          UnifiedDropdown<int>(
+          AppSelect<int>(
             key: ValueKey<int>(_processId),
             value: _processId,
             decoration: const InputDecoration(labelText: '工序'),
             options: widget.processes
                 .map(
-                  (p) => DropdownOption(
+                  (p) => AppDropdownOption(
                     value: p.id,
                     label: '${p.code} ${p.name}',
                   ),
@@ -155,13 +155,13 @@ class _TaskAssignmentRuleDialogState extends State<TaskAssignmentRuleDialog> {
                 : (value) => setState(() => _processId = value ?? _processId),
           ),
           SizedBox(height: LayoutTokens.gapMd),
-          UnifiedDropdown<int>(
+          AppSelect<int>(
             key: ValueKey<int>(_departmentId),
             value: _departmentId,
             decoration: const InputDecoration(labelText: '分派部门'),
             options: widget.departments
                 .map(
-                  (d) => DropdownOption(value: d.id, label: d.name),
+                  (d) => AppDropdownOption(value: d.id, label: d.name),
                 )
                 .toList(),
             onChanged: isEdit
@@ -183,15 +183,15 @@ class _TaskAssignmentRuleDialogState extends State<TaskAssignmentRuleDialog> {
             onChanged: (value) => _priority = int.tryParse(value) ?? _priority,
           ).build(context),
           SizedBox(height: LayoutTokens.gapMd),
-          UnifiedDropdown<String>(
+          AppSelect<String>(
             key: ValueKey<String>(_strategy),
             value: _strategy,
             decoration: const InputDecoration(labelText: '操作员选择策略'),
             options: const [
-              DropdownOption(value: 'least_tasks', label: '任务最少'),
-              DropdownOption(value: 'random', label: '随机选择'),
-              DropdownOption(value: 'round_robin', label: '轮询分配'),
-              DropdownOption(value: 'first_available', label: '第一个可用'),
+              AppDropdownOption(value: 'least_tasks', label: '任务最少'),
+              AppDropdownOption(value: 'random', label: '随机选择'),
+              AppDropdownOption(value: 'round_robin', label: '轮询分配'),
+              AppDropdownOption(value: 'first_available', label: '第一个可用'),
             ],
             onChanged: (value) =>
                 setState(() => _strategy = value ?? _strategy),

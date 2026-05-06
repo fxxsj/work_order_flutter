@@ -147,7 +147,7 @@ class _TaskSupervisorDashboardViewState
   Widget _buildActions(bool isMobile) {
     final deptItems = _departments
         .map((dept) =>
-            DropdownOption<int?>(value: dept.id, label: dept.name))
+            AppDropdownOption<int?>(value: dept.id, label: dept.name))
         .toList();
 
     return LayoutBuilder(
@@ -267,13 +267,13 @@ class _TaskSupervisorDashboardViewState
 
   Widget _buildFilterPanel(
     BuildContext context, {
-    required List<DropdownOption<int?>> deptItems,
+    required List<AppDropdownOption<int?>> deptItems,
   }) {
     final spacing = LayoutTokens.formSectionSpacing(context);
     return ListView(
       padding: LayoutTokens.pagePadding(context),
       children: [
-        UnifiedDropdown<int?>(
+        AppSelect<int?>(
           key: ValueKey<int?>(_departmentId),
           value: _departmentId,
           decoration: const InputDecoration(labelText: '部门'),

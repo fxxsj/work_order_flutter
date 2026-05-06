@@ -19,11 +19,11 @@ import 'package:work_order_app/src/features/workorders/domain/work_order_sales_o
 import 'package:work_order_app/src/features/workorders/presentation/work_order_form_page.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_form_row_widgets.dart';
 
-const workOrderProductSourceOptions = <DropdownOption<String>>[
-  DropdownOption(value: 'sales_order', label: '客户订单'),
-  DropdownOption(value: 'stock', label: '库存生产'),
-  DropdownOption(value: 'reprint', label: '补印'),
-  DropdownOption(value: 'sample', label: '打样'),
+const workOrderProductSourceOptions = <AppDropdownOption<String>>[
+  AppDropdownOption(value: 'sales_order', label: '客户订单'),
+  AppDropdownOption(value: 'stock', label: '库存生产'),
+  AppDropdownOption(value: 'reprint', label: '补印'),
+  AppDropdownOption(value: 'sample', label: '打样'),
 ];
 
 class WorkOrderFormSectionCard extends StatelessWidget {
@@ -196,14 +196,14 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: fieldWidth,
-                    child: UnifiedDropdown<String>(
+                    child: AppSelect<String>(
                       value: status,
                       options: const [
-                        DropdownOption(value: 'pending', label: '待开始'),
-                        DropdownOption(value: 'in_progress', label: '进行中'),
-                        DropdownOption(value: 'paused', label: '已暂停'),
-                        DropdownOption(value: 'completed', label: '已完成'),
-                        DropdownOption(value: 'cancelled', label: '已取消'),
+                        AppDropdownOption(value: 'pending', label: '待开始'),
+                        AppDropdownOption(value: 'in_progress', label: '进行中'),
+                        AppDropdownOption(value: 'paused', label: '已暂停'),
+                        AppDropdownOption(value: 'completed', label: '已完成'),
+                        AppDropdownOption(value: 'cancelled', label: '已取消'),
                       ],
                       decoration: const InputDecoration(labelText: '状态'),
                       onChanged: (value) => onStatusChanged(value),
@@ -211,13 +211,13 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
                   ),
                   SizedBox(
                     width: fieldWidth,
-                    child: UnifiedDropdown<String>(
+                    child: AppSelect<String>(
                       value: priority,
                       options: const [
-                        DropdownOption(value: 'low', label: '低'),
-                        DropdownOption(value: 'normal', label: '普通'),
-                        DropdownOption(value: 'high', label: '高'),
-                        DropdownOption(value: 'urgent', label: '紧急'),
+                        AppDropdownOption(value: 'low', label: '低'),
+                        AppDropdownOption(value: 'normal', label: '普通'),
+                        AppDropdownOption(value: 'high', label: '高'),
+                        AppDropdownOption(value: 'urgent', label: '紧急'),
                       ],
                       decoration: const InputDecoration(labelText: '优先级'),
                       onChanged: (value) => onPriorityChanged(value),
@@ -321,7 +321,7 @@ class WorkOrderCustomerSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final options = customers
         .map(
-          (item) => DropdownOption<int>(
+          (item) => AppDropdownOption<int>(
             value: item.id,
             label: item.name,
           ),
@@ -329,7 +329,7 @@ class WorkOrderCustomerSection extends StatelessWidget {
         .toList();
     if (onCreateCustomer != null) {
       options.add(
-        DropdownOption<int>(
+        AppDropdownOption<int>(
           value: -1,
           label: '新增客户',
           icon: Icons.add,
@@ -343,7 +343,7 @@ class WorkOrderCustomerSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          UnifiedDropdown<int>(
+          AppSelect<int>(
             value: customerId,
             options: options,
             decoration: const InputDecoration(labelText: '客户'),
@@ -381,13 +381,13 @@ class WorkOrderSalesOrderSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final options = <DropdownOption<int>>[
-      const DropdownOption<int>(
+    final options = <AppDropdownOption<int>>[
+      const AppDropdownOption<int>(
         value: -1,
         label: '不关联客户订单',
       ),
       ...salesOrders.map(
-        (item) => DropdownOption<int>(
+        (item) => AppDropdownOption<int>(
           value: item.id,
           label: item.orderNumber,
           secondaryLabel: [
@@ -403,7 +403,7 @@ class WorkOrderSalesOrderSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          UnifiedDropdown<int>(
+          AppSelect<int>(
             value: salesOrderId,
             options: options,
             decoration: const InputDecoration(
@@ -590,15 +590,15 @@ class WorkOrderResourcesSection extends StatelessWidget {
           final leftColumn = Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              UnifiedDropdown<String>(
+              AppSelect<String>(
                 value: printingType,
                 options: const [
-                  DropdownOption(value: 'none', label: '不需要印刷'),
-                  DropdownOption(value: 'front', label: '正面印刷'),
-                  DropdownOption(value: 'back', label: '背面印刷'),
-                  DropdownOption(value: 'self_reverse', label: '自反印刷'),
-                  DropdownOption(value: 'reverse_gripper', label: '反咬口印刷'),
-                  DropdownOption(value: 'register', label: '套版印刷'),
+                  AppDropdownOption(value: 'none', label: '不需要印刷'),
+                  AppDropdownOption(value: 'front', label: '正面印刷'),
+                  AppDropdownOption(value: 'back', label: '背面印刷'),
+                  AppDropdownOption(value: 'self_reverse', label: '自反印刷'),
+                  AppDropdownOption(value: 'reverse_gripper', label: '反咬口印刷'),
+                  AppDropdownOption(value: 'register', label: '套版印刷'),
                 ],
                 decoration: const InputDecoration(labelText: '印刷形式'),
                 onChanged: (value) => onPrintingTypeChanged(value),

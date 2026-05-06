@@ -173,14 +173,14 @@ Future<SalesOrderBatchCreateWorkOrderResult?>
                 controller: deliveryController,
               ).build(dialogContext),
               SizedBox(height: LayoutTokens.gapMd),
-              UnifiedDropdown<String>(
+              AppSelect<String>(
                 decoration: const InputDecoration(labelText: '统一优先级'),
                 value: priority,
                 options: const [
-                  DropdownOption(value: 'low', label: '低'),
-                  DropdownOption(value: 'normal', label: '普通'),
-                  DropdownOption(value: 'high', label: '高'),
-                  DropdownOption(value: 'urgent', label: '紧急'),
+                  AppDropdownOption(value: 'low', label: '低'),
+                  AppDropdownOption(value: 'normal', label: '普通'),
+                  AppDropdownOption(value: 'high', label: '高'),
+                  AppDropdownOption(value: 'urgent', label: '紧急'),
                 ],
                 onChanged: (value) =>
                     setState(() => priority = value ?? 'normal'),

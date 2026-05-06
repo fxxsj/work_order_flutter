@@ -757,7 +757,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
               viewModel.statusFilter.isEmpty ? '' : viewModel.statusFilter;
           final statusField = SizedBox(
             width: isMobile ? constraints.maxWidth : 150,
-            child: UnifiedDropdown<String>(
+            child: AppSelect<String>(
               key: ValueKey<String>(statusValue),
               value: statusValue,
               decoration: const InputDecoration(
@@ -766,13 +766,13 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
                 border: OutlineInputBorder(),
               ),
               options: const [
-                DropdownOption(value: '', label: '全部状态'),
-                DropdownOption(value: 'draft', label: '草稿'),
-                DropdownOption(value: 'submitted', label: '已提交'),
-                DropdownOption(value: 'approved', label: '已批准'),
-                DropdownOption(value: 'ordered', label: '已下单'),
-                DropdownOption(value: 'received', label: '已收货'),
-                DropdownOption(value: 'cancelled', label: '已取消'),
+                AppDropdownOption(value: '', label: '全部状态'),
+                AppDropdownOption(value: 'draft', label: '草稿'),
+                AppDropdownOption(value: 'submitted', label: '已提交'),
+                AppDropdownOption(value: 'approved', label: '已批准'),
+                AppDropdownOption(value: 'ordered', label: '已下单'),
+                AppDropdownOption(value: 'received', label: '已收货'),
+                AppDropdownOption(value: 'cancelled', label: '已取消'),
               ],
               onChanged: (value) => viewModel.setStatusFilter(value ?? ''),
             ),
@@ -781,7 +781,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
           final supplierValue = viewModel.supplierId;
           final supplierField = SizedBox(
             width: isMobile ? constraints.maxWidth : 180,
-            child: UnifiedDropdown<int>(
+            child: AppSelect<int>(
               key: ValueKey<int>(supplierValue),
               value: supplierValue,
               decoration: const InputDecoration(
@@ -790,9 +790,9 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
                 border: OutlineInputBorder(),
               ),
               options: [
-                const DropdownOption<int>(value: 0, label: '全部供应商'),
+                const AppDropdownOption<int>(value: 0, label: '全部供应商'),
                 ..._suppliers.map(
-                  (supplier) => DropdownOption<int>(
+                  (supplier) => AppDropdownOption<int>(
                     value: supplier.id,
                     label: supplier.name,
                   ),

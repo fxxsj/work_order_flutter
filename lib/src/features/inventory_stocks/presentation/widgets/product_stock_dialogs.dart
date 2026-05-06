@@ -105,14 +105,14 @@ Future<ProductStockAdjustResult?> showProductStockAdjustDialog(
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  UnifiedDropdown<String>(
+                  AppSelect<String>(
                     decoration: const InputDecoration(labelText: '调整方式'),
                     value: adjustType,
                     enabled: !submitting,
                     options: const [
-                      DropdownOption(value: 'add', label: '增加库存'),
-                      DropdownOption(value: 'subtract', label: '减少库存'),
-                      DropdownOption(value: 'set', label: '设定库存'),
+                      AppDropdownOption(value: 'add', label: '增加库存'),
+                      AppDropdownOption(value: 'subtract', label: '减少库存'),
+                      AppDropdownOption(value: 'set', label: '设定库存'),
                     ],
                     onChanged: submitting
                         ? null

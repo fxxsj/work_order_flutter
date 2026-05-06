@@ -4,8 +4,8 @@ import 'package:work_order_app/src/core/constants/breakpoints.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 
 /// 下拉选项配置
-class DropdownOption<T> {
-  const DropdownOption({
+class AppDropdownOption<T> {
+  const AppDropdownOption({
     required this.value,
     required this.label,
     this.enabled = true,
@@ -25,8 +25,8 @@ class DropdownOption<T> {
 }
 
 /// 搜索配置
-class DropdownSearchConfig {
-  const DropdownSearchConfig({
+class AppDropdownSearchConfig {
+  const AppDropdownSearchConfig({
     this.enabled = true,
     this.hintText,
     this.matcher,
@@ -35,7 +35,7 @@ class DropdownSearchConfig {
 
   final bool enabled;
   final String? hintText;
-  final bool Function(String query, DropdownOption<dynamic> option)? matcher;
+  final bool Function(String query, AppDropdownOption<dynamic> option)? matcher;
   final bool highlightMatches;
 }
 
@@ -43,8 +43,8 @@ class DropdownSearchConfig {
 ///
 /// 单选模式对齐 Flutter 官方 `DropdownMenu`。
 /// 多选模式使用确认式弹层，避免把多选伪装成普通 dropdown。
-class UnifiedDropdown<T> extends FormField<T?> {
-  UnifiedDropdown({
+class AppSelect<T> extends FormField<T?> {
+  AppSelect({
     super.key,
     required this.options,
     this.onChanged,
@@ -54,7 +54,7 @@ class UnifiedDropdown<T> extends FormField<T?> {
     T? value,
     FormFieldValidator<T?>? validator,
     AutovalidateMode? autovalidateMode,
-    this.searchConfig = const DropdownSearchConfig(),
+    this.searchConfig = const AppDropdownSearchConfig(),
     this.emptyText = '暂无可选项',
     this.noResultsText = '无匹配结果',
     this.selectHintText = '请选择',
@@ -108,7 +108,7 @@ class UnifiedDropdown<T> extends FormField<T?> {
   final InputDecoration decoration;
   final bool enabled;
   final bool isMultiSelect;
-  final DropdownSearchConfig searchConfig;
+  final AppDropdownSearchConfig searchConfig;
   final String emptyText;
   final String noResultsText;
   final String selectHintText;
@@ -139,7 +139,7 @@ class _SingleSelectDropdownField<T> extends StatefulWidget {
   final ValueChanged<T?>? onChanged;
   final InputDecoration decoration;
   final bool enabled;
-  final DropdownSearchConfig searchConfig;
+  final AppDropdownSearchConfig searchConfig;
   final String emptyText;
   final String selectHintText;
   final int minOptionsForSearch;
@@ -163,10 +163,10 @@ class _SingleSelectDropdownFieldState<T>
     }
   }
 
-  List<DropdownOption<dynamic>> get _effectiveOptions {
+  List<AppDropdownOption<dynamic>> get _effectiveOptions {
     return widget.options
-        .whereType<DropdownOption<dynamic>>()
-        .cast<DropdownOption<dynamic>>()
+        .whereType<AppDropdownOption<dynamic>>()
+        .cast<AppDropdownOption<dynamic>>()
         .toList();
   }
 
@@ -309,7 +309,7 @@ class _MultiSelectDropdownField<T> extends StatefulWidget {
   final ValueChanged<T?>? onChanged;
   final InputDecoration decoration;
   final bool enabled;
-  final DropdownSearchConfig searchConfig;
+  final AppDropdownSearchConfig searchConfig;
   final String emptyText;
   final String noResultsText;
   final String selectHintText;
@@ -347,10 +347,10 @@ class _MultiSelectDropdownFieldState<T>
     super.dispose();
   }
 
-  List<DropdownOption<dynamic>> get _effectiveOptions {
+  List<AppDropdownOption<dynamic>> get _effectiveOptions {
     return widget.options
-        .whereType<DropdownOption<dynamic>>()
-        .cast<DropdownOption<dynamic>>()
+        .whereType<AppDropdownOption<dynamic>>()
+        .cast<AppDropdownOption<dynamic>>()
         .toList();
   }
 
@@ -509,9 +509,9 @@ class _MultiSelectPicker extends StatefulWidget {
   });
 
   final String? title;
-  final List<DropdownOption<dynamic>> options;
+  final List<AppDropdownOption<dynamic>> options;
   final Set<dynamic> initialSelection;
-  final DropdownSearchConfig searchConfig;
+  final AppDropdownSearchConfig searchConfig;
   final String emptyText;
   final String noResultsText;
   final String selectAllText;
@@ -534,7 +534,7 @@ class _MultiSelectPickerState extends State<_MultiSelectPicker> {
         widget.options.length >= widget.minOptionsForSearch;
   }
 
-  List<DropdownOption<dynamic>> get _filteredOptions {
+  List<AppDropdownOption<dynamic>> get _filteredOptions {
     return _filterOptions(
       widget.options,
       _query,
@@ -726,7 +726,7 @@ class _MultiSelectPickerState extends State<_MultiSelectPicker> {
     );
   }
 
-  Widget _buildOptionLabel(ThemeData theme, DropdownOption<dynamic> option) {
+  Widget _buildOptionLabel(ThemeData theme, AppDropdownOption<dynamic> option) {
     final label = _buildHighlightedText(
       text: option.label,
       query: _query,
@@ -772,7 +772,7 @@ class _DropdownMenuEntryValue<T> {
   });
 
   final int index;
-  final DropdownOption<T> option;
+  final AppDropdownOption<T> option;
 
   @override
   bool operator ==(Object other) {
@@ -789,7 +789,7 @@ class _DropdownMenuEntryValue<T> {
 List<DropdownMenuEntry<_DropdownMenuEntryValue<dynamic>>> _filterMenuEntries(
   List<DropdownMenuEntry<_DropdownMenuEntryValue<dynamic>>> entries,
   String query,
-  DropdownSearchConfig searchConfig,
+  AppDropdownSearchConfig searchConfig,
 ) {
   if (query.trim().isEmpty) {
     return entries;
@@ -801,10 +801,10 @@ List<DropdownMenuEntry<_DropdownMenuEntryValue<dynamic>>> _filterMenuEntries(
   }).toList();
 }
 
-List<DropdownOption<dynamic>> _filterOptions(
-  List<DropdownOption<dynamic>> options,
+List<AppDropdownOption<dynamic>> _filterOptions(
+  List<AppDropdownOption<dynamic>> options,
   String query,
-  DropdownSearchConfig searchConfig,
+  AppDropdownSearchConfig searchConfig,
 ) {
   if (query.trim().isEmpty) {
     return options;
@@ -817,8 +817,8 @@ List<DropdownOption<dynamic>> _filterOptions(
 
 bool _matchesQuery(
   String query,
-  DropdownOption<dynamic> option,
-  DropdownSearchConfig searchConfig,
+  AppDropdownOption<dynamic> option,
+  AppDropdownSearchConfig searchConfig,
 ) {
   final trimmedQuery = query.trim();
   if (trimmedQuery.isEmpty) {

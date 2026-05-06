@@ -717,11 +717,11 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     final canViewAudit = AuditLogNavigation.canView(context);
 
     final statusOptions = const [
-      DropdownOption(value: 'pending', label: '待开始'),
-      DropdownOption(value: 'in_progress', label: '进行中'),
-      DropdownOption(value: 'paused', label: '已暂停'),
-      DropdownOption(value: 'completed', label: '已完成'),
-      DropdownOption(value: 'cancelled', label: '已取消'),
+      AppDropdownOption(value: 'pending', label: '待开始'),
+      AppDropdownOption(value: 'in_progress', label: '进行中'),
+      AppDropdownOption(value: 'paused', label: '已暂停'),
+      AppDropdownOption(value: 'completed', label: '已完成'),
+      AppDropdownOption(value: 'cancelled', label: '已取消'),
     ];
 
     return ListPageScaffold(

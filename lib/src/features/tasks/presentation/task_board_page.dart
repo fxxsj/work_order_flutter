@@ -243,22 +243,22 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
     bool isMobile,
   ) {
     final departmentItems = [
-      const DropdownOption<int?>(
+      const AppDropdownOption<int?>(
         value: null,
         label: '全部部门',
       ),
       ..._departments.map(
-        (item) => DropdownOption<int?>(
+        (item) => AppDropdownOption<int?>(
           value: item.id,
           label: item.name,
         ),
       ),
     ];
     final statusItems = const [
-      DropdownOption<String?>(value: null, label: '全部状态'),
-      DropdownOption(value: 'pending', label: '待开始'),
-      DropdownOption(value: 'in_progress', label: '进行中'),
-      DropdownOption(value: 'completed', label: '已完成'),
+      AppDropdownOption<String?>(value: null, label: '全部状态'),
+      AppDropdownOption(value: 'pending', label: '待开始'),
+      AppDropdownOption(value: 'in_progress', label: '进行中'),
+      AppDropdownOption(value: 'completed', label: '已完成'),
     ];
 
     return PageHeaderBar(
@@ -416,15 +416,15 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
   Widget _buildFilterPanel(
     BuildContext context,
     TaskViewModel viewModel, {
-    required List<DropdownOption<int?>> departmentItems,
-    required List<DropdownOption<String?>> statusItems,
+    required List<AppDropdownOption<int?>> departmentItems,
+    required List<AppDropdownOption<String?>> statusItems,
   }) {
     final spacing = LayoutTokens.formSectionSpacing(context);
     return ListView(
       padding: LayoutTokens.pagePadding(context),
       children: [
         if (_loadingDepartments) const LinearProgressIndicator(minHeight: 2),
-        UnifiedDropdown<int?>(
+        AppSelect<int?>(
           key: ValueKey<int?>(_departmentFilterId),
           value: _departmentFilterId,
           decoration: const InputDecoration(labelText: '部门'),
@@ -435,7 +435,7 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
           },
         ),
         SizedBox(height: spacing),
-        UnifiedDropdown<String?>(
+        AppSelect<String?>(
           key: ValueKey<String?>(_statusFilter),
           value: _statusFilter,
           decoration: const InputDecoration(labelText: '状态'),

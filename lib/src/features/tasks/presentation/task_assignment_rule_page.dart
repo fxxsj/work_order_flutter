@@ -237,27 +237,27 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
     bool isMobile,
   ) {
     final processItems = [
-      const DropdownOption<int?>(value: null, label: '全部工序'),
+      const AppDropdownOption<int?>(value: null, label: '全部工序'),
       ..._processes.map(
-        (process) => DropdownOption<int?>(
+        (process) => AppDropdownOption<int?>(
           value: process.id,
           label: '${process.code} ${process.name}',
         ),
       ),
     ];
     final departmentItems = [
-      const DropdownOption<int?>(value: null, label: '全部部门'),
+      const AppDropdownOption<int?>(value: null, label: '全部部门'),
       ..._departments.map(
-        (dept) => DropdownOption<int?>(
+        (dept) => AppDropdownOption<int?>(
           value: dept.id,
           label: dept.name,
         ),
       ),
     ];
     final activeItems = const [
-      DropdownOption<bool?>(value: null, label: '全部状态'),
-      DropdownOption<bool?>(value: true, label: '仅启用'),
-      DropdownOption<bool?>(value: false, label: '仅禁用'),
+      AppDropdownOption<bool?>(value: null, label: '全部状态'),
+      AppDropdownOption<bool?>(value: true, label: '仅启用'),
+      AppDropdownOption<bool?>(value: false, label: '仅禁用'),
     ];
 
     return LayoutBuilder(
@@ -379,15 +379,15 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
   Widget _buildFilterPanel(
     BuildContext context,
     TaskAssignmentRuleViewModel viewModel, {
-    required List<DropdownOption<int?>> processItems,
-    required List<DropdownOption<int?>> departmentItems,
-    required List<DropdownOption<bool?>> activeItems,
+    required List<AppDropdownOption<int?>> processItems,
+    required List<AppDropdownOption<int?>> departmentItems,
+    required List<AppDropdownOption<bool?>> activeItems,
   }) {
     final spacing = LayoutTokens.formSectionSpacing(context);
     return ListView(
       padding: LayoutTokens.pagePadding(context),
       children: [
-        UnifiedDropdown<int?>(
+        AppSelect<int?>(
           key: ValueKey<int?>(viewModel.processId),
           value: viewModel.processId,
           decoration: const InputDecoration(labelText: '工序'),
@@ -398,7 +398,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
           },
         ),
         SizedBox(height: spacing),
-        UnifiedDropdown<int?>(
+        AppSelect<int?>(
           key: ValueKey<int?>(viewModel.departmentId),
           value: viewModel.departmentId,
           decoration: const InputDecoration(labelText: '部门'),
@@ -409,7 +409,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
           },
         ),
         SizedBox(height: spacing),
-        UnifiedDropdown<bool?>(
+        AppSelect<bool?>(
           key: ValueKey<bool?>(viewModel.isActive),
           value: viewModel.isActive,
           decoration: const InputDecoration(labelText: '状态'),

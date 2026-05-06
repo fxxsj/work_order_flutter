@@ -631,13 +631,13 @@ class CrudFormField {
     switch (type) {
       case CrudFieldType.dropdown:
         final dropdownOptions = options
-            .map((opt) => DropdownOption<dynamic>(
+            .map((opt) => AppDropdownOption<dynamic>(
                   value: opt.value,
                   label: opt.label,
                   enabled: opt.enabled,
                 ))
             .toList();
-        return UnifiedDropdown<dynamic>(
+        return AppSelect<dynamic>(
           key: fieldKey,
           options: dropdownOptions,
           value: value,
@@ -652,11 +652,11 @@ class CrudFormField {
           isMultiSelect: isMultiSelect,
           minOptionsForSearch: minOptionsForSearch,
           searchConfig: searchHintText != null
-              ? DropdownSearchConfig(
+              ? AppDropdownSearchConfig(
                   hintText: searchHintText,
                   enabled: true,
                 )
-              : const DropdownSearchConfig(),
+              : const AppDropdownSearchConfig(),
           emptyText: emptyText ?? '暂无可选项',
           noResultsText: noResultsText ?? '无匹配结果',
           selectHintText: selectHintText,
@@ -711,13 +711,13 @@ class CrudFormField {
         );
       case CrudFieldType.multiSelect:
         final multiOptions = options
-            .map((opt) => DropdownOption<dynamic>(
+            .map((opt) => AppDropdownOption<dynamic>(
                   value: opt.value,
                   label: opt.label,
                   enabled: opt.enabled,
                 ))
             .toList();
-        return UnifiedDropdown<dynamic>(
+        return AppSelect<dynamic>(
           key: fieldKey,
           options: multiOptions,
           value: (value is Set<dynamic> ? value : null) ?? const {},

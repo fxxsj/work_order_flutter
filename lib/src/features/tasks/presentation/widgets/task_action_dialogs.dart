@@ -270,12 +270,12 @@ class _TaskAssignDialogState extends State<_TaskAssignDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            UnifiedDropdown<int?>(
+            AppSelect<int?>(
               value: _departmentId,
               decoration: const InputDecoration(labelText: '部门'),
               options: [
                 for (final dept in widget.departments)
-                  DropdownOption<int?>(value: dept.id, label: dept.name),
+                  AppDropdownOption<int?>(value: dept.id, label: dept.name),
               ],
               onChanged: (value) {
                 setState(() {
@@ -294,12 +294,12 @@ class _TaskAssignDialogState extends State<_TaskAssignDialog> {
               const LinearProgressIndicator(minHeight: 2),
               SizedBox(height: LayoutTokens.gapMd),
             ],
-            UnifiedDropdown<int?>(
+            AppSelect<int?>(
               value: _operatorId,
               decoration: const InputDecoration(labelText: '操作员'),
               options: _operators
                   .map(
-                    (op) => DropdownOption<int?>(value: op.id, label: op.name),
+                    (op) => AppDropdownOption<int?>(value: op.id, label: op.name),
                   )
                   .toList(),
               onChanged: (value) => setState(() => _operatorId = value),

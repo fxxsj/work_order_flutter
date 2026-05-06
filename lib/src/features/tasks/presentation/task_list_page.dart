@@ -416,33 +416,33 @@ class _TaskListViewState extends State<_TaskListView> {
     bool isMobile,
   ) {
     final statusItems = const [
-      DropdownOption(value: 'draft', label: '草稿'),
-      DropdownOption(value: 'pending', label: '待开始'),
-      DropdownOption(value: 'in_progress', label: '进行中'),
-      DropdownOption(value: 'completed', label: '已完成'),
-      DropdownOption(value: 'cancelled', label: '已取消'),
+      AppDropdownOption(value: 'draft', label: '草稿'),
+      AppDropdownOption(value: 'pending', label: '待开始'),
+      AppDropdownOption(value: 'in_progress', label: '进行中'),
+      AppDropdownOption(value: 'completed', label: '已完成'),
+      AppDropdownOption(value: 'cancelled', label: '已取消'),
     ];
     final priorityItems = const [
-      DropdownOption(value: 'low', label: '低'),
-      DropdownOption(value: 'normal', label: '普通'),
-      DropdownOption(value: 'high', label: '高'),
-      DropdownOption(value: 'urgent', label: '紧急'),
+      AppDropdownOption(value: 'low', label: '低'),
+      AppDropdownOption(value: 'normal', label: '普通'),
+      AppDropdownOption(value: 'high', label: '高'),
+      AppDropdownOption(value: 'urgent', label: '紧急'),
     ];
     final departmentItems = [
-      const DropdownOption<int?>(
+      const AppDropdownOption<int?>(
           value: null, label: '全部部门'),
       ..._departments.map(
-        (item) => DropdownOption<int?>(
+        (item) => AppDropdownOption<int?>(
           value: item.id,
           label: item.name,
         ),
       ),
     ];
     final processItems = [
-      const DropdownOption<int?>(
+      const AppDropdownOption<int?>(
           value: null, label: '全部工序'),
       ..._processes.map(
-        (item) => DropdownOption<int?>(
+        (item) => AppDropdownOption<int?>(
           value: item.id,
           label: item.name,
         ),
@@ -554,10 +554,10 @@ class _TaskListViewState extends State<_TaskListView> {
   Widget _buildFilterPanel(
     BuildContext context,
     TaskViewModel viewModel, {
-    required List<DropdownOption<String>> statusItems,
-    required List<DropdownOption<String>> priorityItems,
-    required List<DropdownOption<int?>> departmentItems,
-    required List<DropdownOption<int?>> processItems,
+    required List<AppDropdownOption<String>> statusItems,
+    required List<AppDropdownOption<String>> priorityItems,
+    required List<AppDropdownOption<int?>> departmentItems,
+    required List<AppDropdownOption<int?>> processItems,
   }) {
     return FilterPanelBody(
       bottomSpacing: LayoutTokens.formSectionSpacing(context),
@@ -565,7 +565,7 @@ class _TaskListViewState extends State<_TaskListView> {
       onReset: () => _resetFilters(viewModel),
       fields: [
         if (_loadingOptions) const LinearProgressIndicator(minHeight: 2),
-        UnifiedDropdown<String>(
+        AppSelect<String>(
           value: _statusFilter,
           decoration: const InputDecoration(labelText: '状态'),
           options: statusItems,
@@ -574,7 +574,7 @@ class _TaskListViewState extends State<_TaskListView> {
             _applyFilters(viewModel);
           },
         ),
-        UnifiedDropdown<String>(
+        AppSelect<String>(
           value: _priorityFilter,
           decoration: const InputDecoration(labelText: '优先级'),
           options: priorityItems,
@@ -583,7 +583,7 @@ class _TaskListViewState extends State<_TaskListView> {
             _applyFilters(viewModel);
           },
         ),
-        UnifiedDropdown<int?>(
+        AppSelect<int?>(
           value: _departmentFilterId,
           decoration: const InputDecoration(labelText: '部门'),
           options: departmentItems,
@@ -592,7 +592,7 @@ class _TaskListViewState extends State<_TaskListView> {
             _applyFilters(viewModel);
           },
         ),
-        UnifiedDropdown<int?>(
+        AppSelect<int?>(
           value: _processFilterId,
           decoration: const InputDecoration(labelText: '工序'),
           options: processItems,

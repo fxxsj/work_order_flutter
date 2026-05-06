@@ -272,7 +272,7 @@ class StockOutListEntry extends StatelessWidget {
       dateController: dateController,
       notesController: notesController,
       fieldsBuilder: (context, setState, submitting) => [
-        UnifiedDropdown<String>(
+        AppSelect<String>(
           value: outTypeController.text,
           decoration: const InputDecoration(
             labelText: '出库类型',
@@ -280,7 +280,7 @@ class StockOutListEntry extends StatelessWidget {
           ),
           options: _outTypeOptions
               .map(
-                (option) => DropdownOption(
+                (option) => AppDropdownOption(
                   value: option.value,
                   label: option.label,
                 ),

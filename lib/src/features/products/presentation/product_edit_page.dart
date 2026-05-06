@@ -822,14 +822,14 @@ class _MaterialCardState extends State<_MaterialCard> {
     final draft = widget.draft;
     final materialOptions = widget.materials
         .map(
-          (material) => DropdownOption<int>(
+          (material) => AppDropdownOption<int>(
             value: material.id,
             label: '${material.code} ${material.name}',
           ),
         )
         .toList();
     materialOptions.add(
-      DropdownOption<int>(
+      AppDropdownOption<int>(
         value: -1,
         label: '新增物料',
         icon: Icons.add,
@@ -848,7 +848,7 @@ class _MaterialCardState extends State<_MaterialCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: UnifiedDropdown<int>(
+                  child: AppSelect<int>(
                     value: draft.materialId,
                     decoration: const InputDecoration(labelText: '物料'),
                     options: materialOptions,

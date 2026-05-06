@@ -88,14 +88,14 @@ Future<void> showPurchaseOrderFormDialog(
 
                         final supplierOptions = suppliers
                             .map(
-                              (supplier) => DropdownOption<int>(
+                              (supplier) => AppDropdownOption<int>(
                                 value: supplier.id,
                                 label: supplier.name,
                               ),
                             )
                             .toList()
                           ..add(
-                            DropdownOption<int>(
+                            AppDropdownOption<int>(
                               value: -1,
                               label: '新增供应商',
                               icon: Icons.add,
@@ -106,7 +106,7 @@ Future<void> showPurchaseOrderFormDialog(
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            UnifiedDropdown<int>(
+                            AppSelect<int>(
                               key: ValueKey<String>(
                                 'purchase_supplier_${selectedSupplierId ?? 'none'}',
                               ),
@@ -142,7 +142,7 @@ Future<void> showPurchaseOrderFormDialog(
                       },
                     ),
                     const SizedBox(height: LayoutTokens.gapMd),
-                    UnifiedDropdown<int>(
+                    AppSelect<int>(
                       key: ValueKey<String>(
                         'purchase_workorder_${selectedWorkOrderId ?? 'none'}',
                       ),
@@ -152,9 +152,9 @@ Future<void> showPurchaseOrderFormDialog(
                         border: OutlineInputBorder(),
                       ),
                       options: [
-                        const DropdownOption<int>(value: 0, label: '不关联'),
+                        const AppDropdownOption<int>(value: 0, label: '不关联'),
                         ...workOrderOptions.map(
-                          (order) => DropdownOption<int>(
+                          (order) => AppDropdownOption<int>(
                             value: order.id,
                             label: order.orderNumber,
                           ),
@@ -359,7 +359,7 @@ class PurchaseItemRow extends StatelessWidget {
 
     final materialOptions = materials
         .map(
-          (material) => DropdownOption<int>(
+          (material) => AppDropdownOption<int>(
             value: material.id,
             label:
                 '${material.code.isEmpty ? '-' : material.code} ${material.name}',
@@ -367,7 +367,7 @@ class PurchaseItemRow extends StatelessWidget {
         )
         .toList()
       ..add(
-        DropdownOption<int>(
+        AppDropdownOption<int>(
           value: -1,
           label: '新增物料',
           icon: Icons.add,
@@ -387,7 +387,7 @@ class PurchaseItemRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: UnifiedDropdown<int>(
+                  child: AppSelect<int>(
                     key: ValueKey<int?>(item.materialId),
                     value: item.materialId == 0 ? null : item.materialId,
                     decoration: const InputDecoration(

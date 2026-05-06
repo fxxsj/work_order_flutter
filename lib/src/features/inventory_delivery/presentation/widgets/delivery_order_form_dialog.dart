@@ -138,7 +138,7 @@ Future<void> showDeliveryOrderFormDialog(
                 _DeliveryFormSection(
                   title: '关联单据',
                   subtitle: '先选择客户订单，系统会回填收货信息并带出待发货明细。',
-                  child: UnifiedDropdown<int>(
+                  child: AppSelect<int>(
                     key: ValueKey<int?>(selectedSalesOrderId),
                     value: selectedSalesOrderId,
                     decoration: const InputDecoration(
@@ -147,7 +147,7 @@ Future<void> showDeliveryOrderFormDialog(
                     ),
                     options: salesOrders
                         .map(
-                          (order) => DropdownOption<int>(
+                          (order) => AppDropdownOption<int>(
                             value: order.id,
                             label: order.orderNumber,
                           ),
@@ -404,7 +404,7 @@ class DeliveryItemRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: UnifiedDropdown<int>(
+                  child: AppSelect<int>(
                     key: ValueKey<int?>(item.productId),
                     value: item.productId == 0 ? null : item.productId,
                     decoration: const InputDecoration(
@@ -414,7 +414,7 @@ class DeliveryItemRow extends StatelessWidget {
                     ),
                     options: products
                         .map(
-                          (product) => DropdownOption<int>(
+                          (product) => AppDropdownOption<int>(
                             value: product.id,
                             label: product.displayLabel,
                           ),

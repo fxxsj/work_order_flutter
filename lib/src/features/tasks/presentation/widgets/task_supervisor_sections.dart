@@ -591,13 +591,13 @@ class _TaskSupervisorAssignDialogState
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          UnifiedDropdown<int>(
+          AppSelect<int>(
             key: ValueKey<int>(_operatorId),
             value: _operatorId,
             decoration: const InputDecoration(labelText: '操作员'),
             options: widget.operators
                 .map(
-                  (op) => DropdownOption(value: op.id, label: op.name),
+                  (op) => AppDropdownOption(value: op.id, label: op.name),
                 )
                 .toList(),
             onChanged: (value) =>

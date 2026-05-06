@@ -82,19 +82,19 @@ Future<PaymentCreateResult?> showPaymentCreateDialog(
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      UnifiedDropdown<int?>(
+                      AppSelect<int?>(
                         value: selectedCustomerId,
                         decoration: const InputDecoration(
                           labelText: '客户',
                           border: OutlineInputBorder(),
                         ),
                         options: [
-                          const DropdownOption<int?>(
+                          const AppDropdownOption<int?>(
                             value: null,
                             label: '请选择客户',
                           ),
                           ...customers.map(
-                            (customer) => DropdownOption<int?>(
+                            (customer) => AppDropdownOption<int?>(
                               value: customer.id,
                               label: customer.name,
                             ),
@@ -105,19 +105,19 @@ Future<PaymentCreateResult?> showPaymentCreateDialog(
                         validator: (value) => value == null ? '请选择客户' : null,
                       ),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      UnifiedDropdown<int?>(
+                      AppSelect<int?>(
                         value: selectedSalesOrderId,
                         decoration: const InputDecoration(
                           labelText: '关联客户订单（可选）',
                           border: OutlineInputBorder(),
                         ),
                         options: [
-                          const DropdownOption<int?>(
+                          const AppDropdownOption<int?>(
                             value: null,
                             label: '不关联客户订单',
                           ),
                           ...salesOrders.map(
-                            (order) => DropdownOption<int?>(
+                            (order) => AppDropdownOption<int?>(
                               value: order.id,
                               label: order.orderNumber,
                             ),
@@ -127,19 +127,19 @@ Future<PaymentCreateResult?> showPaymentCreateDialog(
                             setState(() => selectedSalesOrderId = value),
                       ),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      UnifiedDropdown<int?>(
+                      AppSelect<int?>(
                         value: selectedInvoiceId,
                         decoration: const InputDecoration(
                           labelText: '关联发票（可选）',
                           border: OutlineInputBorder(),
                         ),
                         options: [
-                          const DropdownOption<int?>(
+                          const AppDropdownOption<int?>(
                             value: null,
                             label: '不关联发票',
                           ),
                           ...invoices.map(
-                            (invoice) => DropdownOption<int?>(
+                            (invoice) => AppDropdownOption<int?>(
                               value: invoice.id,
                               label:
                                   invoice.invoiceNumber ?? '发票 #${invoice.id}',

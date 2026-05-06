@@ -270,14 +270,14 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
               final item = _productItems[index];
               final productOptions = _productOptions
                   .map(
-                    (product) => DropdownOption<int>(
+                    (product) => AppDropdownOption<int>(
                       value: product.id,
                       label: product.displayLabel,
                     ),
                   )
                   .toList()
                 ..add(
-                  DropdownOption<int>(
+                  AppDropdownOption<int>(
                     value: -1,
                     label: '新增产品',
                     icon: Icons.add,
@@ -294,7 +294,7 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
                   children: [
                     Expanded(
                       flex: 3,
-                      child: UnifiedDropdown<int>(
+                      child: AppSelect<int>(
                         value: item.productId,
                         decoration:
                             const InputDecoration(labelText: _productLabel),

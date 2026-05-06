@@ -52,12 +52,12 @@ void main() {
         home: Scaffold(
           body: Padding(
             padding: const EdgeInsets.all(16),
-            child: UnifiedDropdown<int?>(
+            child: AppSelect<int?>(
               value: null,
               decoration: const InputDecoration(labelText: '客户'),
               options: const [
-                DropdownOption<int?>(value: null, label: '全部客户'),
-                DropdownOption<int?>(value: 1, label: '客户 A'),
+                AppDropdownOption<int?>(value: null, label: '全部客户'),
+                AppDropdownOption<int?>(value: 1, label: '客户 A'),
               ],
               onChanged: (_) {},
             ),
@@ -81,13 +81,13 @@ void main() {
         home: Scaffold(
           body: Padding(
             padding: const EdgeInsets.all(16),
-            child: UnifiedDropdown<dynamic>(
+            child: AppSelect<dynamic>(
               value: const <dynamic>{'A'},
               isMultiSelect: true,
               decoration: const InputDecoration(labelText: '标签'),
               options: const [
-                DropdownOption<String>(value: 'A', label: '标签 A'),
-                DropdownOption<String>(value: 'B', label: '标签 B'),
+                AppDropdownOption<String>(value: 'A', label: '标签 A'),
+                AppDropdownOption<String>(value: 'B', label: '标签 B'),
               ],
               onChanged: (value) => committedValue = value as Set<dynamic>?,
             ),
@@ -199,12 +199,12 @@ class _UnifiedDropdownHarnessState extends State<_UnifiedDropdownHarness> {
       children: [
         Padding(
           padding: const EdgeInsets.all(16),
-          child: UnifiedDropdown<String>(
+          child: AppSelect<String>(
             value: _value,
             decoration: const InputDecoration(labelText: '状态'),
             options: const [
-              DropdownOption(value: 'pending', label: '待处理'),
-              DropdownOption(value: 'done', label: '已完成'),
+              AppDropdownOption(value: 'pending', label: '待处理'),
+              AppDropdownOption(value: 'done', label: '已完成'),
             ],
             onChanged: (_) {},
           ),

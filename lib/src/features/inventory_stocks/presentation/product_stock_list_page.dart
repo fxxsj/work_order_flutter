@@ -562,16 +562,16 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
       resetLabel: _resetButtonText,
       onReset: () => _resetFilters(context, viewModel),
       fields: [
-        UnifiedDropdown<String>(
+        AppSelect<String>(
           key: ValueKey<String>(statusValue),
           value: statusValue,
           decoration: const InputDecoration(labelText: _statusFilterLabel),
           options: const [
-            DropdownOption(value: '', label: '全部状态'),
-            DropdownOption(value: 'in_stock', label: '在库'),
-            DropdownOption(value: 'reserved', label: '已预留'),
-            DropdownOption(value: 'quality_check', label: '质检中'),
-            DropdownOption(value: 'defective', label: '次品'),
+            AppDropdownOption(value: '', label: '全部状态'),
+            AppDropdownOption(value: 'in_stock', label: '在库'),
+            AppDropdownOption(value: 'reserved', label: '已预留'),
+            AppDropdownOption(value: 'quality_check', label: '质检中'),
+            AppDropdownOption(value: 'defective', label: '次品'),
           ],
           onChanged: (value) => viewModel.setStatusFilter(value ?? ''),
         ),

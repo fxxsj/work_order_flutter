@@ -214,18 +214,18 @@ class _TaskAssignmentHistoryViewState
 
   Widget _buildFilters(bool isMobile) {
     final deptItems = [
-      const DropdownOption<int?>(value: null, label: '全部部门'),
+      const AppDropdownOption<int?>(value: null, label: '全部部门'),
       ..._departments.map(
         (dept) =>
-            DropdownOption<int?>(value: dept.id, label: dept.name),
+            AppDropdownOption<int?>(value: dept.id, label: dept.name),
       ),
     ];
     final userItems = [
-      const DropdownOption<int?>(value: null, label: '全部操作员'),
+      const AppDropdownOption<int?>(value: null, label: '全部操作员'),
       ..._users.map((user) {
         final id = _toInt(user['id']);
         final name = user['username']?.toString() ?? '用户 $id';
-        return DropdownOption<int?>(value: id, label: name);
+        return AppDropdownOption<int?>(value: id, label: name);
       }),
     ];
 
@@ -323,8 +323,8 @@ class _TaskAssignmentHistoryViewState
 
   Widget _buildFilterPanel(
     BuildContext context, {
-    required List<DropdownOption<int?>> deptItems,
-    required List<DropdownOption<int?>> userItems,
+    required List<AppDropdownOption<int?>> deptItems,
+    required List<AppDropdownOption<int?>> userItems,
   }) {
     final spacing = LayoutTokens.formSectionSpacing(context);
     return ListView(
@@ -344,7 +344,7 @@ class _TaskAssignmentHistoryViewState
           },
         ),
         SizedBox(height: spacing),
-        UnifiedDropdown<int?>(
+        AppSelect<int?>(
           key: ValueKey<int?>(_departmentId),
           value: _departmentId,
           decoration: const InputDecoration(labelText: '部门'),
@@ -355,7 +355,7 @@ class _TaskAssignmentHistoryViewState
           },
         ),
         SizedBox(height: spacing),
-        UnifiedDropdown<int?>(
+        AppSelect<int?>(
           key: ValueKey<int?>(_operatorId),
           value: _operatorId,
           decoration: const InputDecoration(labelText: '操作员'),
