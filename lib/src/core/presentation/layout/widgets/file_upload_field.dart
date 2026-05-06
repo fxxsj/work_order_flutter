@@ -28,7 +28,6 @@ class FileUploadField extends FormField<CrudPickedFile?> {
     required List<String> allowedExtensions,
     String fallbackFilename = 'upload.bin',
   })  : _label = label,
-        _value = value,
         _onChanged = onChanged,
         _enabled = enabled,
         _hintText = hintText,
@@ -42,7 +41,6 @@ class FileUploadField extends FormField<CrudPickedFile?> {
         );
 
   final String _label;
-  final CrudPickedFile? _value;
   final ValueChanged<CrudPickedFile?>? _onChanged;
   final bool _enabled;
   final String? _hintText;
@@ -61,7 +59,7 @@ class _FileUploadFieldBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currentValue = state.value ?? _field._value;
+    final currentValue = state.value;
     final hasValue = currentValue != null;
     final supportedTypes = _field._allowedExtensions.join(', ').toUpperCase();
 
