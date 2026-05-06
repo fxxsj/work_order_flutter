@@ -5,6 +5,7 @@ import 'package:work_order_app/src/core/models/generic_record.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/generic_resource_list_page.dart';
+import 'package:work_order_app/src/features/inventory_shared/presentation/widgets/inventory_document_form_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
@@ -264,7 +265,7 @@ class StockOutListEntry extends StatelessWidget {
       text: record?.getString('notes') ?? '',
     );
 
-    await showInventoryDocumentAppFormDialog(
+    await showInventoryDocumentFormDialog(
       context,
       title: isEdit ? '编辑出库单' : '新建出库单',
       dateLabel: '出库日期',

@@ -536,7 +536,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       }
     }
 
-    await showDeliveryOrderAppFormDialog(
+    await showDeliveryOrderFormDialog(
       context,
       isEdit: isEdit,
       title: isEdit ? _editTitle : _createTitle,

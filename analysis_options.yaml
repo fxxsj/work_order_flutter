@@ -27,3 +27,13 @@ linter:
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options
+
+analyzer:
+  exclude:
+    # Dead code stubs — not wired into the app
+    - lib/src/features/customers/**
+    - lib/src/features/auth/bindings/**
+    - lib/src/features/layout/bindings/**
+    - lib/src/features/notification/bindings/**
+    - lib/src/features/theme/bindings/**
+    - test/features/customers/**

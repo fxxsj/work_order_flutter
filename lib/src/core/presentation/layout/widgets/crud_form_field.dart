@@ -9,6 +9,12 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/radio_group_
 import 'package:work_order_app/src/core/presentation/layout/widgets/tags_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
 
+// Re-export commonly used types so existing imports don't break
+export 'package:work_order_app/src/core/presentation/layout/widgets/file_upload_field.dart'
+    show CrudPickedFile;
+export 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart'
+    show AppDropdownOption;
+
 enum CrudFieldType {
   text,
   number,

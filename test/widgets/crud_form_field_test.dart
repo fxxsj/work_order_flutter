@@ -50,8 +50,8 @@ void main() {
       CrudFormField.checkboxGroup(
         label: 'CMYK',
         options: const [
-          CrudFieldOption<dynamic>(value: 'C', label: 'C'),
-          CrudFieldOption<dynamic>(value: 'M', label: 'M'),
+          AppDropdownOption<dynamic>(value: 'C', label: 'C'),
+          AppDropdownOption<dynamic>(value: 'M', label: 'M'),
         ],
         values: changedValues,
         onChanged: (values) => changedValues = values.cast<String>(),
@@ -73,8 +73,8 @@ void main() {
         label: '收款方式',
         value: changedValue,
         options: const [
-          CrudFieldOption<dynamic>(value: 'cash', label: '现金'),
-          CrudFieldOption<dynamic>(value: 'transfer', label: '转账'),
+          AppDropdownOption<dynamic>(value: 'cash', label: '现金'),
+          AppDropdownOption<dynamic>(value: 'transfer', label: '转账'),
         ],
         onChanged: (value) => changedValue = value,
       ),

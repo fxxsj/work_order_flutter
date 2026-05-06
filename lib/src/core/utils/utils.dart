@@ -42,7 +42,7 @@ class Utils {
             success: ColorTokens.success,
             warning: ColorTokens.warning,
             danger: ColorTokens.danger,
-            info: ColorTokens.infoLight,
+            info: ColorTokens.info,
             surfaceAlt: ColorTokens.surfaceAltDark,
             shadowStrong: ColorTokens.shadowDark,
             successBg: ColorTokens.successBg,
@@ -87,7 +87,7 @@ class Utils {
           )
         : AppColors(
             background: mix(ColorTokens.backgroundBaseLight, seedSoft2, 0.12),
-            surface: mix(ColorTokens.textLight, seedSoft, 0.04),
+            surface: mix(ColorTokens.surfaceLight, seedSoft, 0.04),
             sidebar: mix(ColorTokens.sidebarBaseLight, seedSoft, 0.08),
             subtleText: ColorTokens.textSecondary,
             sidebarText: ColorTokens.sidebarTextLight,
@@ -300,7 +300,7 @@ class Utils {
         backgroundColor: resolvedBrightness == Brightness.dark
             ? ColorTokens.surfaceDark
             : ColorTokens.sidebarBaseDark,
-        contentTextStyle: TextStyle(color: ColorTokens.textLight),
+        contentTextStyle: TextStyle(color: ColorTokens.textOnDark),
       ),
       extensions: [semantic, appColors],
     );
