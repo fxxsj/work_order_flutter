@@ -82,6 +82,8 @@ class WorkOrderListTile extends StatelessWidget {
                 spacing: LayoutTokens.gapSm,
                 runSpacing: LayoutTokens.gapSm,
                 children: [
+                  if (workOrder.salesOrderNumber?.isNotEmpty == true)
+                    MetaChip(label: '订单号', value: workOrder.salesOrderNumber!),
                   if (workOrder.customerName?.isNotEmpty == true)
                     MetaChip(label: '客户', value: workOrder.customerName!),
                   if (workOrder.productName?.isNotEmpty == true)

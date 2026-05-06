@@ -22,6 +22,8 @@ class WorkOrder {
     this.progressPercentage,
     this.draftTaskCount,
     this.totalTaskCount,
+    this.salesOrderId,
+    this.salesOrderNumber,
   });
 
   final int id;
@@ -44,6 +46,8 @@ class WorkOrder {
   final int? progressPercentage;
   final int? draftTaskCount;
   final int? totalTaskCount;
+  final int? salesOrderId;
+  final String? salesOrderNumber;
 
   factory WorkOrder.fromJson(Map<String, dynamic> json) {
     return WorkOrder(
@@ -67,6 +71,8 @@ class WorkOrder {
       progressPercentage: toInt(json['progress_percentage']),
       draftTaskCount: toInt(json['draft_task_count']),
       totalTaskCount: toInt(json['total_task_count']),
+      salesOrderId: toInt(json['sales_order_id']),
+      salesOrderNumber: toStringOrNull(json['sales_order_number']),
     );
   }
 
