@@ -15,8 +15,16 @@ import 'package:work_order_app/src/features/materials/domain/material.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
+import 'package:work_order_app/src/features/workorders/domain/work_order_sales_order_candidate.dart';
 import 'package:work_order_app/src/features/workorders/presentation/work_order_form_page.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_form_row_widgets.dart';
+
+const workOrderProductSourceOptions = <DropdownOption<String>>[
+  DropdownOption(value: 'sales_order', label: '客户订单'),
+  DropdownOption(value: 'stock', label: '库存生产'),
+  DropdownOption(value: 'reprint', label: '补印'),
+  DropdownOption(value: 'sample', label: '打样'),
+];
 
 class WorkOrderFormSectionCard extends StatelessWidget {
   const WorkOrderFormSectionCard({
@@ -71,6 +79,9 @@ class WorkOrderProductDraft {
 
   WorkOrderProductDraft.fromDetail(WorkOrderProductItem item)
       : productId = item.productId,
+        sourceType = item.sourceType ?? 'stock',
+        sourceSalesOrderId = item.sourceSalesOrderId,
+        salesOrderItemId = item.salesOrderItemId,
         quantityController =
             TextEditingController(text: item.quantity?.toString() ?? '1'),
         unitController = TextEditingController(text: item.unit ?? '件'),
@@ -79,6 +90,9 @@ class WorkOrderProductDraft {
             TextEditingController(text: item.sortOrder?.toString() ?? '0');
 
   int? productId;
+  String sourceType = 'stock';
+  int? sourceSalesOrderId;
+  int? salesOrderItemId;
   final TextEditingController quantityController;
   final TextEditingController unitController;
   final TextEditingController specController;
@@ -293,12 +307,14 @@ class WorkOrderCustomerSection extends StatelessWidget {
     required this.customerId,
     required this.customers,
     required this.onCustomerChanged,
+    this.requiredSelection = true,
     this.onCreateCustomer,
   });
 
   final int? customerId;
   final List<Customer> customers;
   final ValueChanged<int?> onCustomerChanged;
+  final bool requiredSelection;
   final VoidCallback? onCreateCustomer;
 
   @override
@@ -334,7 +350,8 @@ class WorkOrderCustomerSection extends StatelessWidget {
             selectHintText: customers.isEmpty ? '新增客户' : '请选择',
             minOptionsForSearch: 1,
             onChanged: (value) => onCustomerChanged(value),
-            validator: (value) => value == null ? '请选择客户' : null,
+            validator: (value) =>
+                requiredSelection && value == null ? '请选择客户' : null,
           ),
           if (customers.isEmpty && onCreateCustomer != null) ...[
             const SizedBox(height: LayoutTokens.gapSm),
@@ -350,11 +367,66 @@ class WorkOrderCustomerSection extends StatelessWidget {
   }
 }
 
+class WorkOrderSalesOrderSection extends StatelessWidget {
+  const WorkOrderSalesOrderSection({
+    super.key,
+    required this.salesOrderId,
+    required this.salesOrders,
+    required this.onSalesOrderChanged,
+  });
+
+  final int? salesOrderId;
+  final List<WorkOrderSalesOrderCandidate> salesOrders;
+  final ValueChanged<int?> onSalesOrderChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final options = <DropdownOption<int>>[
+      const DropdownOption<int>(
+        value: -1,
+        label: '不关联客户订单',
+      ),
+      ...salesOrders.map(
+        (item) => DropdownOption<int>(
+          value: item.id,
+          label: item.orderNumber,
+          secondaryLabel: [
+            if (item.customerName?.isNotEmpty == true) item.customerName!,
+            if (item.statusDisplay?.isNotEmpty == true) item.statusDisplay!,
+          ].join(' · '),
+        ),
+      ),
+    ];
+
+    return WorkOrderFormSectionCard(
+      title: '来源客户订单',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          UnifiedDropdown<int>(
+            value: salesOrderId,
+            options: options,
+            decoration: const InputDecoration(
+              labelText: '客户订单',
+              helperText: '仅显示仍有未开施工单产品的客户订单，选择后会同步限制可选产品',
+            ),
+            selectHintText: salesOrders.isEmpty ? '暂无可关联客户订单' : '请选择',
+            minOptionsForSearch: 1,
+            onChanged: onSalesOrderChanged,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class WorkOrderProductListSection extends StatelessWidget {
   const WorkOrderProductListSection({
     super.key,
     required this.drafts,
     required this.products,
+    required this.salesOrders,
+    required this.defaultSalesOrderId,
     required this.onAdd,
     required this.onRemove,
     this.onProductSelectionChanged,
@@ -363,6 +435,8 @@ class WorkOrderProductListSection extends StatelessWidget {
 
   final List<WorkOrderProductDraft> drafts;
   final List<ProductOption> products;
+  final List<WorkOrderSalesOrderCandidate> salesOrders;
+  final int? defaultSalesOrderId;
   final VoidCallback onAdd;
   final ValueChanged<int> onRemove;
   final VoidCallback? onProductSelectionChanged;
@@ -378,6 +452,8 @@ class WorkOrderProductListSection extends StatelessWidget {
             WorkOrderProductRow(
               draft: drafts[index],
               products: products,
+              salesOrders: salesOrders,
+              defaultSalesOrderId: defaultSalesOrderId,
               onRemove: drafts.length > 1 ? () => onRemove(index) : null,
               onProductChanged: onProductSelectionChanged,
               onCreateProduct: onCreateProduct,
@@ -661,6 +737,8 @@ class WorkOrderFormContent extends StatelessWidget {
   const WorkOrderFormContent({
     super.key,
     required this.mode,
+    required this.salesOrderId,
+    required this.salesOrders,
     required this.customerId,
     required this.customers,
     required this.status,
@@ -688,6 +766,7 @@ class WorkOrderFormContent extends StatelessWidget {
     required this.foilingPlateIds,
     required this.embossingPlates,
     required this.embossingPlateIds,
+    required this.onSalesOrderChanged,
     required this.onCustomerChanged,
     this.onCreateCustomer,
     required this.onStatusChanged,
@@ -710,6 +789,8 @@ class WorkOrderFormContent extends StatelessWidget {
   });
 
   final WorkOrderFormMode mode;
+  final int? salesOrderId;
+  final List<WorkOrderSalesOrderCandidate> salesOrders;
   final int? customerId;
   final List<Customer> customers;
   final String status;
@@ -737,6 +818,7 @@ class WorkOrderFormContent extends StatelessWidget {
   final Set<int> foilingPlateIds;
   final List<EmbossingPlate> embossingPlates;
   final Set<int> embossingPlateIds;
+  final ValueChanged<int?> onSalesOrderChanged;
   final ValueChanged<int?> onCustomerChanged;
   final VoidCallback? onCreateCustomer;
   final ValueChanged<String?> onStatusChanged;
@@ -761,9 +843,16 @@ class WorkOrderFormContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView(
       children: [
+        WorkOrderSalesOrderSection(
+          salesOrderId: salesOrderId,
+          salesOrders: salesOrders,
+          onSalesOrderChanged: onSalesOrderChanged,
+        ),
+        SizedBox(height: sectionSpacing),
         WorkOrderCustomerSection(
           customerId: customerId,
           customers: customers,
+          requiredSelection: salesOrderId == null,
           onCustomerChanged: onCustomerChanged,
           onCreateCustomer: onCreateCustomer,
         ),
@@ -788,6 +877,8 @@ class WorkOrderFormContent extends StatelessWidget {
         WorkOrderProductListSection(
           drafts: productDrafts,
           products: products,
+          salesOrders: salesOrders,
+          defaultSalesOrderId: salesOrderId,
           onAdd: onAddProduct,
           onRemove: onRemoveProduct,
           onProductSelectionChanged: onProductSelectionChanged,

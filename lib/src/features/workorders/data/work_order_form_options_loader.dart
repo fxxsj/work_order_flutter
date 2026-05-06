@@ -15,9 +15,12 @@ import 'package:work_order_app/src/features/processes/data/process_api_service.d
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/products/data/product_api_service.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
+import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
+import 'package:work_order_app/src/features/workorders/domain/work_order_sales_order_candidate.dart';
 
 class WorkOrderFormOptionsData {
   const WorkOrderFormOptionsData({
+    required this.salesOrders,
     required this.customers,
     required this.products,
     required this.fullProducts,
@@ -29,6 +32,7 @@ class WorkOrderFormOptionsData {
     required this.embossingPlates,
   });
 
+  final List<WorkOrderSalesOrderCandidate> salesOrders;
   final List<Customer> customers;
   final List<ProductOption> products;
   final List<Product> fullProducts;
@@ -41,12 +45,14 @@ class WorkOrderFormOptionsData {
 }
 
 class WorkOrderFormOptionsLoader {
-  WorkOrderFormOptionsLoader(this._client);
+  WorkOrderFormOptionsLoader(this._client, {this.excludeWorkOrderId});
 
   final ApiClient _client;
+  final int? excludeWorkOrderId;
 
   Future<WorkOrderFormOptionsData> load() async {
     final customerApi = CustomerApiService(_client);
+    final workOrderApi = WorkOrderApiService(_client);
     final productApi = ProductApiService(_client);
     final materialApi = MaterialApiService(_client);
     final processApi = ProcessApiService(_client);
@@ -55,11 +61,13 @@ class WorkOrderFormOptionsLoader {
     final foilingApi = FoilingPlateApiService(_client);
     final embossingApi = EmbossingPlateApiService(_client);
 
+    final salesOrderFuture = workOrderApi.fetchSalesOrderCandidates(
+      excludeWorkOrderId: excludeWorkOrderId,
+    );
     final customerFuture = customerApi.fetchCustomers(page: 1, pageSize: 200);
     final productFuture =
         productApi.fetchProducts(pageSize: 200, isActive: true);
-    final productPageFuture =
-        productApi.fetchProductPage(pageSize: 200);
+    final productPageFuture = productApi.fetchProductPage(pageSize: 200);
     final materialFuture = materialApi.fetchMaterials(page: 1, pageSize: 200);
     final processFuture = processApi.fetchProcesses(page: 1, pageSize: 200);
     final artworkFuture = artworkApi.fetchArtworks(page: 1, pageSize: 200);
@@ -68,6 +76,7 @@ class WorkOrderFormOptionsLoader {
     final embossingFuture =
         embossingApi.fetchEmbossingPlates(page: 1, pageSize: 200);
 
+    final salesOrderPage = await salesOrderFuture;
     final customerPage = await customerFuture;
     final productOptions = await productFuture;
     final productPage = await productPageFuture;
@@ -79,6 +88,7 @@ class WorkOrderFormOptionsLoader {
     final embossingPage = await embossingFuture;
 
     return WorkOrderFormOptionsData(
+      salesOrders: salesOrderPage,
       customers: customerPage.items.map((item) => item.toEntity()).toList(),
       products: productOptions,
       fullProducts: productPage.items.map((dto) => dto.toEntity()).toList(),

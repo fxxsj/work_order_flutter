@@ -4,6 +4,7 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_detail_dto.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
+import 'package:work_order_app/src/features/workorders/domain/work_order_sales_order_candidate.dart';
 
 class WorkOrderApiService {
   WorkOrderApiService(this._client);
@@ -86,6 +87,31 @@ class WorkOrderApiService {
     final response =
         await _client.get('/workorders/summary/', queryParameters: params);
     return _requireMap('施工单汇总', response.data);
+  }
+
+  Future<List<WorkOrderSalesOrderCandidate>> fetchSalesOrderCandidates({
+    int? excludeWorkOrderId,
+  }) async {
+    final params = <String, dynamic>{};
+    if (excludeWorkOrderId != null && excludeWorkOrderId > 0) {
+      params['exclude_work_order_id'] = excludeWorkOrderId;
+    }
+    final response = await _client.get(
+      '/workorders/sales_order_candidates/',
+      queryParameters: params.isEmpty ? null : params,
+    );
+    final payload = response.data;
+    if (payload is! List) {
+      throw _unexpectedPayload('施工单来源客户订单候选列表', payload);
+    }
+    return payload
+        .whereType<Map>()
+        .map(
+          (item) => WorkOrderSalesOrderCandidate.fromJson(
+            Map<String, dynamic>.from(item),
+          ),
+        )
+        .toList(growable: false);
   }
 
   Future<WorkOrderDetailDto> fetchWorkOrder(int id) async {

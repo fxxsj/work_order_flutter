@@ -3,6 +3,7 @@ import 'package:work_order_app/src/features/workorders/presentation/widgets/work
 class WorkOrderFormSubmissionInput {
   const WorkOrderFormSubmissionInput({
     required this.customerId,
+    required this.salesOrderId,
     required this.status,
     required this.priority,
     required this.orderDate,
@@ -24,6 +25,7 @@ class WorkOrderFormSubmissionInput {
   });
 
   final int? customerId;
+  final int? salesOrderId;
   final String status;
   final String priority;
   final DateTime? orderDate;
@@ -46,14 +48,22 @@ class WorkOrderFormSubmissionInput {
 
 class WorkOrderFormSubmission {
   static String? validate(WorkOrderFormSubmissionInput input) {
-    if (input.customerId == null) {
-      return '请选择客户';
+    if (input.customerId == null && input.salesOrderId == null) {
+      return '请选择客户或客户订单';
     }
     if (input.deliveryDate == null) {
       return '请选择交货日期';
     }
     if (input.productDrafts.every((draft) => draft.productId == null)) {
       return '请至少填写一个产品';
+    }
+    for (final draft in input.productDrafts) {
+      if (draft.productId == null) {
+        continue;
+      }
+      if (draft.sourceType == 'sales_order' && draft.salesOrderItemId == null) {
+        return '客户订单来源的产品必须选择来源订单产品';
+      }
     }
     return null;
   }
@@ -67,6 +77,8 @@ class WorkOrderFormSubmission {
             'quantity': draft.quantityValue,
             'unit': draft.unitValue,
             'specification': draft.specificationValue,
+            'source_type': draft.sourceType,
+            'sales_order_item': draft.salesOrderItemId,
             'sort_order': draft.sortOrderValue,
           },
         )
@@ -100,6 +112,7 @@ class WorkOrderFormSubmission {
 
     return {
       'customer': input.customerId,
+      'sales_order': input.salesOrderId,
       'status': input.status,
       'priority': input.priority,
       'order_date': orderDate.isEmpty ? null : orderDate,

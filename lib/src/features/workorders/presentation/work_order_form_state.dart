@@ -29,6 +29,7 @@ class WorkOrderFormDraftState {
   DateTime? actualDeliveryDate;
 
   int? customerId;
+  int? salesOrderId;
   String status = 'pending';
   String priority = 'normal';
   String printingType = 'none';
@@ -57,6 +58,7 @@ class WorkOrderFormDraftState {
 
   void applyDetail(WorkOrderDetail detail) {
     customerId = detail.customerId;
+    salesOrderId = detail.salesOrderId;
     status = detail.status ?? status;
     priority = detail.priority ?? priority;
     setOrderDate(detail.orderDate);
@@ -136,6 +138,7 @@ class WorkOrderFormDraftState {
   WorkOrderFormSubmissionInput submissionInput() {
     return WorkOrderFormSubmissionInput(
       customerId: customerId,
+      salesOrderId: salesOrderId,
       status: status,
       priority: priority,
       orderDate: orderDate,
@@ -199,10 +202,8 @@ class WorkOrderFormDraftState {
     }
 
     // 6. Auto-add products from artworks
-    final existingProductIds = productDrafts
-        .map((d) => d.productId)
-        .whereType<int>()
-        .toSet();
+    final existingProductIds =
+        productDrafts.map((d) => d.productId).whereType<int>().toSet();
     for (final artwork in selectedArtworks) {
       for (final ap in artwork.products) {
         if (!existingProductIds.contains(ap.productId)) {
@@ -222,10 +223,8 @@ class WorkOrderFormDraftState {
   }
 
   void _autoFillProcessesAndMaterials(List<Product> fullProducts) {
-    final selectedProductIds = productDrafts
-        .map((d) => d.productId)
-        .whereType<int>()
-        .toSet();
+    final selectedProductIds =
+        productDrafts.map((d) => d.productId).whereType<int>().toSet();
 
     final productMap = <int, Product>{};
     for (final p in fullProducts) {
@@ -241,10 +240,8 @@ class WorkOrderFormDraftState {
     }
 
     // Merge material drafts
-    final existingMaterialIds = materialDrafts
-        .map((d) => d.materialId)
-        .whereType<int>()
-        .toSet();
+    final existingMaterialIds =
+        materialDrafts.map((d) => d.materialId).whereType<int>().toSet();
     for (final pid in selectedProductIds) {
       final product = productMap[pid];
       if (product != null) {

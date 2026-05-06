@@ -7,6 +7,7 @@ class WorkOrderDetail {
     required this.id,
     required this.orderNumber,
     this.customerId,
+    this.salesOrderId,
     this.designFileUrl,
     this.customerName,
     this.salespersonName,
@@ -69,6 +70,7 @@ class WorkOrderDetail {
   final int id;
   final String orderNumber;
   final int? customerId;
+  final int? salesOrderId;
   final String? designFileUrl;
   final String? customerName;
   final String? salespersonName;
@@ -132,6 +134,7 @@ class WorkOrderDetail {
       id: toInt(json['id']) ?? 0,
       orderNumber: json['order_number']?.toString() ?? '',
       customerId: toInt(json['customer']),
+      salesOrderId: toInt(json['sales_order']),
       designFileUrl: toStringOrNull(json['design_file']),
       customerName: toStringOrNull(json['customer_name']),
       salespersonName: toStringOrNull(json['salesperson_name']),
@@ -292,6 +295,11 @@ class WorkOrderProductItem {
   const WorkOrderProductItem({
     required this.id,
     this.productId,
+    this.sourceType,
+    this.sourceTypeDisplay,
+    this.salesOrderItemId,
+    this.sourceSalesOrderId,
+    this.sourceSalesOrderNumber,
     this.productName,
     this.productCode,
     this.quantity,
@@ -303,6 +311,11 @@ class WorkOrderProductItem {
 
   final int id;
   final int? productId;
+  final String? sourceType;
+  final String? sourceTypeDisplay;
+  final int? salesOrderItemId;
+  final int? sourceSalesOrderId;
+  final String? sourceSalesOrderNumber;
   final String? productName;
   final String? productCode;
   final double? quantity;
@@ -315,6 +328,11 @@ class WorkOrderProductItem {
     return WorkOrderProductItem(
       id: toInt(json['id']) ?? 0,
       productId: toInt(json['product']),
+      sourceType: toStringOrNull(json['source_type']),
+      sourceTypeDisplay: toStringOrNull(json['source_type_display']),
+      salesOrderItemId: toInt(json['sales_order_item']),
+      sourceSalesOrderId: toInt(json['source_sales_order_id']),
+      sourceSalesOrderNumber: toStringOrNull(json['source_sales_order_number']),
       productName: toStringOrNull(json['product_name']),
       productCode: toStringOrNull(json['product_code']),
       quantity: WorkOrderDetail._toDouble(json['quantity']),

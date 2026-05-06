@@ -30,6 +30,7 @@ import 'package:work_order_app/src/features/workorders/data/work_order_form_subm
 import 'package:work_order_app/src/features/workorders/data/work_order_repository_impl.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
+import 'package:work_order_app/src/features/workorders/domain/work_order_sales_order_candidate.dart';
 import 'package:work_order_app/src/features/workorders/presentation/work_order_form_state.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_form_sections.dart';
 
@@ -72,6 +73,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
   static const double _spacing = 12;
 
   List<Customer> _customers = [];
+  List<WorkOrderSalesOrderCandidate> _salesOrders = [];
   List<ProductOption> _products = [];
   List<Product> _fullProducts = [];
   List<MaterialItem> _materials = [];
@@ -103,10 +105,13 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
   Future<void> _loadOptions() async {
     setState(() => _loadingOptions = true);
     try {
-      final options =
-          await WorkOrderFormOptionsLoader(context.read<ApiClient>()).load();
+      final options = await WorkOrderFormOptionsLoader(
+        context.read<ApiClient>(),
+        excludeWorkOrderId: widget.workOrderId,
+      ).load();
 
       setState(() {
+        _salesOrders = options.salesOrders;
         _customers = options.customers;
         _products = options.products;
         _fullProducts = options.fullProducts;
@@ -262,6 +267,78 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     });
   }
 
+  Future<void> _handleSalesOrderChanged(int? value) async {
+    final previousSalesOrderId = _draft.salesOrderId;
+    final salesOrderId = value != null && value > 0 ? value : null;
+    final selected = salesOrderId == null
+        ? null
+        : _salesOrders.cast<WorkOrderSalesOrderCandidate?>().firstWhere(
+              (item) => item?.id == salesOrderId,
+              orElse: () => null,
+            );
+
+    setState(() {
+      _draft.salesOrderId = salesOrderId;
+      if (selected?.customerId != null) {
+        _draft.customerId = selected!.customerId;
+      }
+      if (selected?.orderDate != null) {
+        _draft.setOrderDate(selected!.orderDate);
+      }
+      if (selected?.deliveryDate != null) {
+        _draft.setDeliveryDate(selected!.deliveryDate);
+      }
+      for (final draft in _draft.productDrafts) {
+        if (draft.sourceType != 'sales_order') {
+          continue;
+        }
+        final followsHeaderOrder = draft.sourceSalesOrderId == null ||
+            draft.sourceSalesOrderId == previousSalesOrderId;
+        if (followsHeaderOrder) {
+          draft.sourceSalesOrderId = salesOrderId;
+          draft.salesOrderItemId = null;
+          if (salesOrderId != null) {
+            draft.productId = null;
+          }
+        }
+      }
+    });
+  }
+
+  void _handleCustomerChanged(int? value) {
+    setState(() {
+      _draft.customerId = value;
+      final selectedSalesOrder = _selectedSalesOrder;
+      if (_draft.salesOrderId != null &&
+          selectedSalesOrder?.customerId != value) {
+        _draft.salesOrderId = null;
+      }
+    });
+  }
+
+  WorkOrderSalesOrderCandidate? get _selectedSalesOrder {
+    final salesOrderId = _draft.salesOrderId;
+    if (salesOrderId == null) {
+      return null;
+    }
+    return _salesOrders.cast<WorkOrderSalesOrderCandidate?>().firstWhere(
+          (item) => item?.id == salesOrderId,
+          orElse: () => null,
+        );
+  }
+
+  void _handleAddProduct() {
+    setState(() {
+      _draft.addProductDraft();
+      final lastDraft =
+          _draft.productDrafts.isNotEmpty ? _draft.productDrafts.last : null;
+      if (lastDraft != null && _draft.salesOrderId != null) {
+        lastDraft.sourceType = 'sales_order';
+        lastDraft.sourceSalesOrderId = _draft.salesOrderId;
+      }
+    });
+  }
+
   Future<void> _handleSubmit() async {
     final requiredPermission = widget.mode == WorkOrderFormMode.create
         ? 'workorder.add_workorder'
@@ -382,6 +459,8 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
               key: _formKey,
               child: WorkOrderFormContent(
                 mode: widget.mode,
+                salesOrderId: _draft.salesOrderId,
+                salesOrders: _salesOrders,
                 customerId: _draft.customerId,
                 customers: _customers,
                 status: _draft.status,
@@ -412,8 +491,8 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                 foilingPlateIds: _draft.foilingPlateIds,
                 embossingPlates: _embossingPlates,
                 embossingPlateIds: _draft.embossingPlateIds,
-                onCustomerChanged: (value) =>
-                    setState(() => _draft.customerId = value),
+                onSalesOrderChanged: _handleSalesOrderChanged,
+                onCustomerChanged: _handleCustomerChanged,
                 onCreateCustomer: _handleCreateCustomer,
                 onStatusChanged: (value) =>
                     setState(() => _draft.status = value ?? 'pending'),
@@ -422,7 +501,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                 onPickOrderDate: () => _pickDate(isOrderDate: true),
                 onPickDeliveryDate: () => _pickDate(isOrderDate: false),
                 onPickActualDeliveryDate: _pickActualDeliveryDate,
-                onAddProduct: () => setState(_draft.addProductDraft),
+                onAddProduct: _handleAddProduct,
                 onRemoveProduct: (index) =>
                     setState(() => _draft.removeProductDraftAt(index)),
                 onProcessSelectionChanged: () => setState(() {}),
