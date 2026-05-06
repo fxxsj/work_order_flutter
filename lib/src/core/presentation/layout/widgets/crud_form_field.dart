@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/checkbox_group_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/color_field.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/date_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/date_range_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/file_upload_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/radio_group_field.dart';
@@ -25,18 +26,6 @@ enum CrudFieldType {
   radioGroup,
   color,
   custom,
-}
-
-class AppDropdownOption<T> {
-  const AppDropdownOption({
-    required this.value,
-    required this.label,
-    this.enabled = true,
-  });
-
-  final T value;
-  final String label;
-  final bool enabled;
 }
 
 /// Reusable field factory used by [CrudEditPage] sections.
@@ -79,7 +68,6 @@ class CrudFormField {
     this.firstDate,
     this.lastDate,
     this.builder,
-    // 新增 UnifiedDropdown 配置参数
     this.minOptionsForSearch = 7,
     this.isMultiSelect = false,
     this.selectHintText = '请选择',
@@ -239,7 +227,6 @@ class CrudFormField {
     bool enabled = true,
     String? hintText,
     String? helperText,
-    // 新增：UnifiedDropdown 配置参数
     bool isMultiSelect = false,
     int minOptionsForSearch = 7,
     String? searchHintText,
@@ -605,7 +592,6 @@ class CrudFormField {
   final DateTime? firstDate;
   final DateTime? lastDate;
   final Widget Function(BuildContext context)? builder;
-  // 新增 UnifiedDropdown 配置字段
   final int minOptionsForSearch;
   final bool isMultiSelect;
   final String selectHintText;
@@ -628,11 +614,7 @@ class CrudFormField {
           key: fieldKey,
           options: dropdownOptions,
           value: value,
-          decoration: InputDecoration(
-            labelText: label,
-            hintText: hintText,
-            helperText: helperText,
-          ),
+          decoration: const InputDecoration(),
           onChanged: enabled ? onChanged : null,
           validator: validator,
           enabled: enabled,
@@ -651,6 +633,7 @@ class CrudFormField {
           confirmText: confirmText ?? '确定',
           cancelText: cancelText ?? '取消',
         );
+
       case CrudFieldType.dateRange:
         return DateRangeField(
           key: fieldKey,
@@ -667,12 +650,29 @@ class CrudFormField {
           lastDate: lastDate,
           validator: validator as String? Function(DateTimeRange?)?,
         );
+
       case CrudFieldType.toggle:
         return InputDecorator(
           key: fieldKey,
           decoration: InputDecoration(
             labelText: label,
             helperText: helperText,
+            filled: true,
+            fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+              borderSide: BorderSide(
+                color: ColorTokens.border,
+                width: 1,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+                width: 2,
+              ),
+            ),
           ),
           child: Align(
             alignment: Alignment.centerLeft,
@@ -683,6 +683,7 @@ class CrudFormField {
             ),
           ),
         );
+
       case CrudFieldType.fileUpload:
         return FileUploadField(
           key: fieldKey,
@@ -696,6 +697,7 @@ class CrudFormField {
           allowedExtensions: allowedExtensions ?? const [],
           fallbackFilename: fallbackFilename ?? 'upload.bin',
         );
+
       case CrudFieldType.multiSelect:
         final multiOptions = options
             .map((opt) => AppDropdownOption<dynamic>(
@@ -708,11 +710,7 @@ class CrudFormField {
           key: fieldKey,
           options: multiOptions,
           value: (value is Set<dynamic> ? value : null) ?? const {},
-          decoration: InputDecoration(
-            labelText: label,
-            hintText: hintText,
-            helperText: helperText,
-          ),
+          decoration: const InputDecoration(),
           onChanged: enabled ? onChanged : null,
           validator: validator,
           enabled: enabled,
@@ -721,6 +719,7 @@ class CrudFormField {
           noResultsText: noResultsText ?? '无匹配项',
           selectHintText: hintText ?? '请选择',
         );
+
       case CrudFieldType.tags:
         return TagsField(
           key: fieldKey,
@@ -733,6 +732,7 @@ class CrudFormField {
           helperText: helperText,
           emptyText: emptyText ?? '暂无标签',
         );
+
       case CrudFieldType.checkboxGroup:
         return CheckboxGroupField<dynamic>(
           key: fieldKey,
@@ -752,6 +752,7 @@ class CrudFormField {
           helperText: helperText,
           emptyText: emptyText ?? '暂无可选项',
         );
+
       case CrudFieldType.radioGroup:
         return RadioGroupField<dynamic>(
           key: fieldKey,
@@ -770,6 +771,7 @@ class CrudFormField {
           hintText: hintText,
           helperText: helperText,
         );
+
       case CrudFieldType.color:
         return ColorField(
           key: fieldKey,
@@ -785,6 +787,20 @@ class CrudFormField {
           confirmText: confirmText ?? '确定',
           cancelText: cancelText ?? '取消',
         );
+
+      case CrudFieldType.date:
+        return DateField(
+          key: fieldKey,
+          label: label,
+          controller: controller!,
+          validator: validator as String? Function(String?)?,
+          enabled: enabled,
+          hintText: hintText,
+          helperText: helperText,
+          readOnly: readOnly,
+          onTap: onTap,
+        );
+
       case CrudFieldType.textarea:
         return TextFormField(
           key: fieldKey,
@@ -834,11 +850,11 @@ class CrudFormField {
             ),
           ),
         );
+
       case CrudFieldType.text:
       case CrudFieldType.number:
       case CrudFieldType.email:
       case CrudFieldType.phone:
-      case CrudFieldType.date:
         return TextFormField(
           key: fieldKey,
           controller: controller,
@@ -892,10 +908,9 @@ class CrudFormField {
             ),
           ),
         );
+
       case CrudFieldType.custom:
         return const SizedBox.shrink();
     }
   }
 }
-
-

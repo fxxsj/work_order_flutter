@@ -54,7 +54,7 @@ class WorkOrderMultiSelectField extends StatelessWidget {
         hintText: placeholder,
       ),
       selectHintText: placeholder,
-      searchConfig: const AppAppDropdownSearchConfig(
+      searchConfig: const AppDropdownSearchConfig(
         enabled: true,
         hintText: '搜索',
         highlightMatches: true,
