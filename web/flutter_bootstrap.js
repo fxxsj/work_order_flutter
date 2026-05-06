@@ -16,14 +16,10 @@ const shouldForceCpuOnly =
 const rendererParam = searchParams.get('renderer');
 const loaderConfig = {};
 
-// Avoid a Flutter Web CanvasKit hot-restart context-lost bug on local debug
-// hosts by defaulting to the more stable skwasm renderer there.
-// Keep renderer override available through ?renderer=canvaskit/skwasm, and
-// leave production builds on Flutter's default renderer.
+// Keep renderer override available through ?renderer=canvaskit/skwasm, but
+// otherwise let Flutter pick a compatible build for the current environment.
 if (rendererParam) {
   loaderConfig.renderer = rendererParam;
-} else if (isLocalDebugHost) {
-  loaderConfig.renderer = 'skwasm';
 }
 
 if (shouldForceCpuOnly && loaderConfig.renderer === 'canvaskit') {
