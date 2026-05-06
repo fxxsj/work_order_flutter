@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 
 class CheckboxGroupFieldOption<T> {
   const CheckboxGroupFieldOption({

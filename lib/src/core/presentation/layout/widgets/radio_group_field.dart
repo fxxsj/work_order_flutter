@@ -24,7 +24,6 @@ class RadioGroupField<T> extends FormField<T> {
     String? hintText,
     String? helperText,
   })  : _label = label,
-        _options = options,
         _onChanged = onChanged,
         _enabled = enabled,
         _hintText = hintText,
@@ -39,7 +38,6 @@ class RadioGroupField<T> extends FormField<T> {
         );
 
   final String _label;
-  final List<RadioGroupFieldOption<T>> _options;
   final ValueChanged<T>? _onChanged;
   final bool _enabled;
   final String? _hintText;
