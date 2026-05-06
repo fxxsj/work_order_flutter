@@ -1,4 +1,3 @@
-import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_api_service.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_detail_dto.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_dto.dart';
@@ -86,20 +85,6 @@ class SalesOrderRepositoryImpl implements SalesOrderRepository {
   Future<SalesOrderDetailDto> updatePayment(
       int id, Map<String, dynamic> payload) {
     return _apiService.updatePayment(id, payload);
-  }
-
-  @override
-  Future<int?> createWorkOrderFromSalesOrder(
-      Map<String, dynamic> payload) async {
-    final service = _workOrderFlowApiService;
-    if (service == null) {
-      throw StateError('WorkOrderFlowApiService is not configured.');
-    }
-    final result = await service.createFromSalesOrder(payload);
-    final data = result['data'] is Map<String, dynamic>
-        ? Map<String, dynamic>.from(result['data'])
-        : result;
-    return toInt(data['id']);
   }
 
   @override

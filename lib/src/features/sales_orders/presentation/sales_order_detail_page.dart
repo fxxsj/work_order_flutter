@@ -321,56 +321,8 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     );
   }
 
-  Future<void> _showCreateWorkOrderDialog() async {
-    final detail = _detail;
-    if (detail == null) return;
-    final result = await showSalesOrderCreateWorkOrderDialog(
-      context,
-      initialDeliveryDate: _formatDate(_detail?.deliveryDate),
-      orderItems: detail.items,
-    );
-    if (result == null) return;
-
-    final payload = <String, dynamic>{
-      'sales_order_id': widget.orderId,
-      'priority': result.priority,
-      'notes': result.notes,
-      'selected_items': result.selectedItems
-          .map(
-            (item) => {
-              'sales_order_item_id': item.salesOrderItemId,
-              'production_quantity': item.productionQuantity,
-            },
-          )
-          .toList(growable: false),
-    };
-    final deliveryDate = result.deliveryDateText.trim();
-    if (deliveryDate.isNotEmpty) {
-      payload['delivery_date'] = deliveryDate;
-    }
-
-    if (_actionLoading) return;
-    setState(() => _actionLoading = true);
-    try {
-      final viewModel = context.read<SalesOrderViewModel>();
-      final workOrderId =
-          await viewModel.createWorkOrderFromSalesOrder(payload);
-      if (!mounted) return;
-      ToastUtil.showSuccess('施工单已生成');
-      await _loadDetail();
-      if (workOrderId != null && mounted) {
-        final goToDetail = await showSalesOrderNavigateToWorkOrderDialog(
-          context,
-        );
-        if (goToDetail == true && mounted) {
-          context.go('/workorders/$workOrderId');
-        }
-      }
-    } catch (err) {
-      ToastUtil.showError('生成失败: $err');
-    } finally {
-      if (mounted) setState(() => _actionLoading = false);
-    }
+  void _goToCreateWorkOrder() {
+    context.go('/workorders/create?sales_order_id=${widget.orderId}');
   }
 
   String _formatDate(DateTime? value) {
@@ -456,7 +408,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
         SalesOrderActionItem(
           label: '生成施工单',
           icon: Icons.assignment_outlined,
-          onTap: _showCreateWorkOrderDialog,
+          onTap: _goToCreateWorkOrder,
         ),
     ];
     return actions;

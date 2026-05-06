@@ -37,10 +37,16 @@ import 'package:work_order_app/src/features/workorders/presentation/widgets/work
 enum WorkOrderFormMode { create, edit }
 
 class WorkOrderFormEntry extends StatelessWidget {
-  const WorkOrderFormEntry({super.key, required this.mode, this.workOrderId});
+  const WorkOrderFormEntry({
+    super.key,
+    required this.mode,
+    this.workOrderId,
+    this.initialSalesOrderId,
+  });
 
   final WorkOrderFormMode mode;
   final int? workOrderId;
+  final int? initialSalesOrderId;
 
   @override
   Widget build(BuildContext context) {
@@ -52,16 +58,26 @@ class WorkOrderFormEntry extends StatelessWidget {
           WorkOrderRepositoryImpl(context.read<WorkOrderApiService>()),
       createViewModel: (context) =>
           WorkOrderViewModel(context.read<WorkOrderRepository>()),
-      child: WorkOrderFormPage(mode: mode, workOrderId: workOrderId),
+      child: WorkOrderFormPage(
+        mode: mode,
+        workOrderId: workOrderId,
+        initialSalesOrderId: initialSalesOrderId,
+      ),
     );
   }
 }
 
 class WorkOrderFormPage extends StatefulWidget {
-  const WorkOrderFormPage({super.key, required this.mode, this.workOrderId});
+  const WorkOrderFormPage({
+    super.key,
+    required this.mode,
+    this.workOrderId,
+    this.initialSalesOrderId,
+  });
 
   final WorkOrderFormMode mode;
   final int? workOrderId;
+  final int? initialSalesOrderId;
 
   @override
   State<WorkOrderFormPage> createState() => _WorkOrderFormPageState();
@@ -71,6 +87,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
   final _formKey = GlobalKey<FormState>();
   final _draft = WorkOrderFormDraftState();
   static const double _spacing = 12;
+  bool _routePrefillApplied = false;
 
   List<Customer> _customers = [];
   List<WorkOrderSalesOrderCandidate> _salesOrders = [];
@@ -93,6 +110,21 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     _loadOptions();
     if (widget.mode == WorkOrderFormMode.edit && widget.workOrderId != null) {
       _loadDetail(widget.workOrderId!);
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _applyRoutePrefillIfNeeded();
+  }
+
+  @override
+  void didUpdateWidget(covariant WorkOrderFormPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialSalesOrderId != widget.initialSalesOrderId) {
+      _routePrefillApplied = false;
+      _applyRoutePrefillIfNeeded();
     }
   }
 
@@ -122,11 +154,38 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
         _foilingPlates = options.foilingPlates;
         _embossingPlates = options.embossingPlates;
       });
+      _applyRoutePrefillIfNeeded();
     } catch (err) {
       ToastUtil.showError('加载基础数据失败: $err');
     } finally {
       if (mounted) setState(() => _loadingOptions = false);
     }
+  }
+
+  void _applyRoutePrefillIfNeeded() {
+    if (_routePrefillApplied ||
+        widget.mode != WorkOrderFormMode.create ||
+        _salesOrders.isEmpty) {
+      return;
+    }
+    final salesOrderId = widget.initialSalesOrderId;
+    if (salesOrderId == null || salesOrderId <= 0) {
+      _routePrefillApplied = true;
+      return;
+    }
+    final exists = _salesOrders.any((item) => item.id == salesOrderId);
+    _routePrefillApplied = true;
+    if (!exists) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ToastUtil.showError('该客户订单已无可生成施工单的产品，请检查是否已全部开单。');
+      });
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _handleSalesOrderChanged(salesOrderId);
+    });
   }
 
   Future<void> _loadDetail(int id) async {

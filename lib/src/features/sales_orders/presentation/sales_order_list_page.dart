@@ -421,54 +421,8 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     }
   }
 
-  Future<void> _createWorkOrder(
-    SalesOrderViewModel viewModel,
-    SalesOrder order,
-  ) async {
-    try {
-      final detail = await viewModel.fetchDetail(order.id);
-      if (!mounted) return;
-      final result = await showSalesOrderCreateWorkOrderDialog(
-        context,
-        initialDeliveryDate:
-            order.deliveryDate == null ? '' : _formatDate(order.deliveryDate),
-        orderItems: detail.items,
-      );
-      if (result == null) return;
-
-      final payload = <String, dynamic>{
-        'sales_order_id': order.id,
-        'priority': result.priority,
-        'notes': result.notes,
-        'selected_items': result.selectedItems
-            .map(
-              (item) => {
-                'sales_order_item_id': item.salesOrderItemId,
-                'production_quantity': item.productionQuantity,
-              },
-            )
-            .toList(growable: false),
-      };
-      final deliveryDate = result.deliveryDateText;
-      if (deliveryDate.isNotEmpty) {
-        payload['delivery_date'] = deliveryDate;
-      }
-
-      final workOrderId =
-          await viewModel.createWorkOrderFromSalesOrder(payload);
-      ToastUtil.showSuccess('施工单已生成');
-      await viewModel.loadSalesOrders(resetPage: false);
-      if (workOrderId != null && mounted) {
-        final goToDetail = await showSalesOrderNavigateToWorkOrderDialog(
-          context,
-        );
-        if (goToDetail && mounted) {
-          context.go('/workorders/$workOrderId');
-        }
-      }
-    } catch (err) {
-      ToastUtil.showError('生成失败: $err');
-    }
+  void _createWorkOrder(SalesOrder order) {
+    context.go('/workorders/create?sales_order_id=${order.id}');
   }
 
   @override
@@ -771,7 +725,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
       actions.add(RowAction(
         label: '生成施工单',
         icon: Icons.assignment_outlined,
-        onPressed: () => _createWorkOrder(viewModel, order),
+        onPressed: () => _createWorkOrder(order),
       ));
     }
 

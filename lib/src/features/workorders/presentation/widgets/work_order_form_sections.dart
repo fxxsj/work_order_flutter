@@ -605,6 +605,23 @@ class WorkOrderResourcesSection extends StatelessWidget {
               ),
               if (showPrintingDetails) ...[
                 SizedBox(height: LayoutTokens.gapMd),
+                const WorkOrderFormSubsectionTitle(title: '图稿'),
+                SizedBox(height: LayoutTokens.gapSm),
+                WorkOrderMultiSelectField(
+                  items: artworks
+                      .map(
+                        (item) => WorkOrderOptionItem(
+                          item.id,
+                          item.fullCode.isNotEmpty ? item.fullCode : item.name,
+                        ),
+                      )
+                      .toList(),
+                  selected: artworkIds,
+                  emptyText: '暂无图稿数据',
+                  placeholder: '请选择（可多选）',
+                  onChanged: onSelectionChanged,
+                ),
+                SizedBox(height: LayoutTokens.gapMd),
                 const WorkOrderFormSubsectionTitle(title: 'CMYK 颜色'),
                 SizedBox(height: LayoutTokens.gapSm),
                 Wrap(
@@ -631,25 +648,6 @@ class WorkOrderResourcesSection extends StatelessWidget {
           final rightColumn = Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (showPrintingDetails) ...[
-                const WorkOrderFormSubsectionTitle(title: '图稿'),
-                SizedBox(height: LayoutTokens.gapSm),
-                WorkOrderMultiSelectField(
-                  items: artworks
-                      .map(
-                        (item) => WorkOrderOptionItem(
-                          item.id,
-                          item.fullCode.isNotEmpty ? item.fullCode : item.name,
-                        ),
-                      )
-                      .toList(),
-                  selected: artworkIds,
-                  emptyText: '暂无图稿数据',
-                  placeholder: '请选择（可多选）',
-                  onChanged: onSelectionChanged,
-                ),
-                SizedBox(height: LayoutTokens.gapMd),
-              ],
               const WorkOrderFormSubsectionTitle(title: '刀模'),
               SizedBox(height: LayoutTokens.gapSm),
               WorkOrderMultiSelectField(

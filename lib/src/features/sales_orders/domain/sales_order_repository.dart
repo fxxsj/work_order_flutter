@@ -34,8 +34,6 @@ abstract class SalesOrderRepository {
   Future<SalesOrderDetailDto> updatePayment(
       int id, Map<String, dynamic> payload);
 
-  Future<int?> createWorkOrderFromSalesOrder(Map<String, dynamic> payload);
-
   Future<Map<String, dynamic>> createWorkOrdersFromSalesOrders(
     Map<String, dynamic> payload,
   );
