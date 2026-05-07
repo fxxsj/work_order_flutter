@@ -5,6 +5,7 @@ import 'package:work_order_app/src/core/models/generic_record.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/generic_resource_list_page.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/features/inventory_shared/presentation/widgets/inventory_document_form_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
@@ -449,7 +450,7 @@ class _DetailRow extends StatelessWidget {
               style: theme.textTheme.bodySmall,
             ),
           ),
-          const SizedBox(width: 8),
+                      SpacingTokens.hSm,
           Expanded(
             child: Text(value, style: theme.textTheme.bodyMedium),
           ),

@@ -539,7 +539,7 @@ class _ImageViewerDialogState extends State<_ImageViewerDialog> {
                         '${_currentIndex + 1} / ${widget.images.length}',
                         style: const TextStyle(color: Colors.white70),
                       ),
-                      const SizedBox(width: 16),
+                        SpacingTokens.hLg,
                     ],
                   ),
                 ),
