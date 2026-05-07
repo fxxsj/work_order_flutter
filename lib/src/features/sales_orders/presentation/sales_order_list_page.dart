@@ -213,26 +213,182 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
               .map((item) => Map<String, dynamic>.from(item))
               .toList(growable: false)
           : const <Map<String, dynamic>>[];
-      if (created.isNotEmpty) {
-        ToastUtil.showSuccess(
-          failed.isEmpty
-              ? '已生成 ${created.length} 张施工单'
-              : '已生成 ${created.length} 张施工单，${failed.length} 张失败',
+
+      // 部分成功时显示详情对话框
+      if (created.isNotEmpty && failed.isNotEmpty) {
+        await _showBatchCreateResultDialog(
+          context: context,
+          created: created,
+          failed: failed,
+          orders: orders,
+          viewModel: viewModel,
         );
-      } else {
-        ToastUtil.showError('批量生成失败');
-      }
-      await viewModel.loadSalesOrders(resetPage: false);
-      if (!mounted) return;
-      setState(() {
-        _selectedOrderIds.clear();
-        if (created.isNotEmpty) {
+      } else if (created.isNotEmpty) {
+        // 全部成功
+        ToastUtil.showSuccess('已生成 ${created.length} 张施工单');
+        await viewModel.loadSalesOrders(resetPage: false);
+        if (!mounted) return;
+        setState(() {
+          _selectedOrderIds.clear();
           _selectionMode = false;
-        }
-      });
+        });
+      } else {
+        // 全部失败
+        final errorMsg = failed.isNotEmpty && failed.first['error'] != null
+            ? failed.first['error'].toString()
+            : '批量生成失败';
+        ToastUtil.showError(errorMsg);
+        await viewModel.loadSalesOrders(resetPage: false);
+      }
     } catch (err) {
       ToastUtil.showError('批量生成失败: $err');
     }
+  }
+
+  Future<void> _showBatchCreateResultDialog({
+    required BuildContext context,
+    required List<Map<String, dynamic>> created,
+    required List<Map<String, dynamic>> failed,
+    required List<SalesOrder> orders,
+    required SalesOrderViewModel viewModel,
+  }) async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('批量创建结果'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 成功部分
+                if (created.isNotEmpty) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      '成功创建 ${created.length} 张施工单：',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ),
+                  Flexible(
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: created.length,
+                      itemBuilder: (context, index) {
+                        final item = created[index];
+                        final order = orders.firstWhere(
+                          (o) => o.id == item['sales_order_id'],
+                          orElse: () => SalesOrder(
+                            id: item['sales_order_id'] as int,
+                            orderNumber: '未知',
+                          ),
+                        );
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.check_circle,
+                                  color: Colors.green, size: 16),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '${order.orderNumber} → ${item['order_number'] ?? 'N/A'}',
+                                  style: Theme.of(dialogContext).textTheme.bodySmall,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const Divider(height: 24),
+                ],
+                // 失败部分
+                if (failed.isNotEmpty) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      '失败 ${failed.length} 项：',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ),
+                  Flexible(
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: failed.length,
+                      itemBuilder: (context, index) {
+                        final item = failed[index];
+                        final order = orders.firstWhere(
+                          (o) => o.id == item['sales_order_id'],
+                          orElse: () => SalesOrder(
+                            id: item['sales_order_id'] as int,
+                            orderNumber: '未知',
+                          ),
+                        );
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(Icons.error_outline,
+                                  color: Colors.red, size: 16),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      order.orderNumber,
+                                      style: Theme.of(dialogContext)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(fontWeight: FontWeight.w600),
+                                    ),
+                                    Text(
+                                      item['error']?.toString() ?? '未知错误',
+                                      style: Theme.of(dialogContext)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(color: Colors.grey),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('关闭'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                viewModel.loadSalesOrders(resetPage: false);
+                if (!mounted) return;
+                setState(() {
+                  _selectedOrderIds.clear();
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _scheduleSearch(SalesOrderViewModel viewModel,
