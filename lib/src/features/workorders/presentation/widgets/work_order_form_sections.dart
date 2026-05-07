@@ -142,10 +142,92 @@ class WorkOrderMaterialDraft {
   }
 }
 
+class _SalesOrderDropdown extends StatelessWidget {
+  const _SalesOrderDropdown({
+    required this.salesOrderId,
+    required this.salesOrders,
+    required this.onChanged,
+  });
+
+  final int? salesOrderId;
+  final List<WorkOrderSalesOrderCandidate> salesOrders;
+  final ValueChanged<int?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final options = salesOrders
+        .map((item) => AppDropdownOption<int>(
+              value: item.id,
+              label: item.orderNumber,
+              secondaryLabel: [
+                if (item.customerName?.isNotEmpty == true) item.customerName!,
+                if (item.statusDisplay?.isNotEmpty == true) item.statusDisplay!,
+              ].join(' · '),
+            ))
+        .toList();
+
+    return AppSelect<int>(
+      value: salesOrderId,
+      options: options,
+      decoration: const InputDecoration(labelText: '客户订单'),
+      selectHintText: salesOrders.isEmpty ? '无可用订单' : '请选择客户订单',
+      minOptionsForSearch: 1,
+      onChanged: onChanged,
+    );
+  }
+}
+
+class _CustomerDropdown extends StatelessWidget {
+  const _CustomerDropdown({
+    required this.customerId,
+    required this.customers,
+    required this.onChanged,
+    this.onCreateCustomer,
+  });
+
+  final int? customerId;
+  final List<Customer> customers;
+  final ValueChanged<int?> onChanged;
+  final VoidCallback? onCreateCustomer;
+
+  @override
+  Widget build(BuildContext context) {
+    final options = customers
+        .map((item) => AppDropdownOption<int>(
+              value: item.id,
+              label: item.name,
+            ))
+        .toList();
+    if (onCreateCustomer != null) {
+      options.add(
+        AppDropdownOption<int>(
+          value: -1,
+          label: '新增客户',
+          icon: Icons.add,
+          onSelected: onCreateCustomer,
+        ),
+      );
+    }
+
+    return AppSelect<int>(
+      value: customerId,
+      options: options,
+      decoration: const InputDecoration(labelText: '客户'),
+      selectHintText: customers.isEmpty ? '新增客户' : '请选择客户',
+      minOptionsForSearch: 1,
+      onChanged: onChanged,
+    );
+  }
+}
+
 class WorkOrderBasicInfoSection extends StatelessWidget {
   const WorkOrderBasicInfoSection({
     super.key,
     required this.mode,
+    required this.salesOrderId,
+    required this.salesOrders,
+    required this.customerId,
+    required this.customers,
     required this.status,
     required this.priority,
     required this.orderDateController,
@@ -154,6 +236,9 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
     required this.defectiveQuantityController,
     required this.actualDeliveryDateController,
     required this.notesController,
+    required this.onSalesOrderChanged,
+    required this.onCustomerChanged,
+    this.onCreateCustomer,
     required this.onStatusChanged,
     required this.onPriorityChanged,
     required this.onPickOrderDate,
@@ -162,6 +247,10 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
   });
 
   final WorkOrderFormMode mode;
+  final int? salesOrderId;
+  final List<WorkOrderSalesOrderCandidate> salesOrders;
+  final int? customerId;
+  final List<Customer> customers;
   final String status;
   final String priority;
   final TextEditingController orderDateController;
@@ -170,6 +259,9 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
   final TextEditingController defectiveQuantityController;
   final TextEditingController actualDeliveryDateController;
   final TextEditingController notesController;
+  final ValueChanged<int?> onSalesOrderChanged;
+  final ValueChanged<int?> onCustomerChanged;
+  final VoidCallback? onCreateCustomer;
   final ValueChanged<String?> onStatusChanged;
   final ValueChanged<String?> onPriorityChanged;
   final VoidCallback onPickOrderDate;
@@ -194,6 +286,23 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
                 spacing: fieldSpacing,
                 runSpacing: LayoutTokens.gapMd,
                 children: [
+                  SizedBox(
+                    width: fieldWidth,
+                    child: _SalesOrderDropdown(
+                      salesOrderId: salesOrderId,
+                      salesOrders: salesOrders,
+                      onChanged: onSalesOrderChanged,
+                    ),
+                  ),
+                  SizedBox(
+                    width: fieldWidth,
+                    child: _CustomerDropdown(
+                      customerId: customerId,
+                      customers: customers,
+                      onChanged: onCustomerChanged,
+                      onCreateCustomer: onCreateCustomer,
+                    ),
+                  ),
                   SizedBox(
                     width: fieldWidth,
                     child: AppSelect<String>(
@@ -841,22 +950,12 @@ class WorkOrderFormContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView(
       children: [
-        WorkOrderSalesOrderSection(
-          salesOrderId: salesOrderId,
-          salesOrders: salesOrders,
-          onSalesOrderChanged: onSalesOrderChanged,
-        ),
-        SizedBox(height: sectionSpacing),
-        WorkOrderCustomerSection(
-          customerId: customerId,
-          customers: customers,
-          requiredSelection: salesOrderId == null,
-          onCustomerChanged: onCustomerChanged,
-          onCreateCustomer: onCreateCustomer,
-        ),
-        SizedBox(height: sectionSpacing),
         WorkOrderBasicInfoSection(
           mode: mode,
+          salesOrderId: salesOrderId,
+          salesOrders: salesOrders,
+          customerId: customerId,
+          customers: customers,
           status: status,
           priority: priority,
           orderDateController: orderDateController,
@@ -865,6 +964,9 @@ class WorkOrderFormContent extends StatelessWidget {
           defectiveQuantityController: defectiveQuantityController,
           actualDeliveryDateController: actualDeliveryDateController,
           notesController: notesController,
+          onSalesOrderChanged: onSalesOrderChanged,
+          onCustomerChanged: onCustomerChanged,
+          onCreateCustomer: onCreateCustomer,
           onStatusChanged: onStatusChanged,
           onPriorityChanged: onPriorityChanged,
           onPickOrderDate: onPickOrderDate,
