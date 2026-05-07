@@ -80,7 +80,9 @@ class PageHeaderBar extends StatelessWidget {
         border: showDivider
             ? Border(
                 bottom: BorderSide(
-                    color: theme.dividerColor.withValues(alpha: 0.6)),
+                  color: theme.dividerColor
+                      .withValues(alpha: OpacityTokens.intense),
+                ),
               )
             : null,
       ),
@@ -436,7 +438,7 @@ class WorkbenchStatChip extends StatelessWidget {
         vertical: isXs ? LayoutTokens.gapSm : LayoutTokens.cardPaddingSm,
       ),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLowest.withValues(alpha: 0.92),
+        color: theme.colorScheme.surfaceContainerLowest.withValues(alpha: OpacityTokens.surfaceOverlay),
         borderRadius: BorderRadius.circular(
             isXs ? LayoutTokens.radiusMd : LayoutTokens.radiusLg),
         border: Border.all(color: colors.borderColor),

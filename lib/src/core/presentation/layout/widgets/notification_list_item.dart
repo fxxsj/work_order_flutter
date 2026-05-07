@@ -47,8 +47,9 @@ class NotificationListItem extends StatelessWidget {
         LayoutTokens.gapSm,
       ),
       decoration: BoxDecoration(
-        color:
-            item.isRead ? Colors.transparent : primary.withValues(alpha: 0.14),
+        color: item.isRead
+            ? Colors.transparent
+            : primary.withValues(alpha: OpacityTokens.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,8 +97,10 @@ class NotificationListItem extends StatelessWidget {
           if (showDivider)
             Padding(
               padding: EdgeInsets.only(top: LayoutTokens.gapSm),
-              child:
-                  Divider(height: 1, color: subtleText.withValues(alpha: 0.2)),
+              child: Divider(
+                height: 1,
+                color: subtleText.withValues(alpha: OpacityTokens.distinct),
+              ),
             ),
         ],
       ),

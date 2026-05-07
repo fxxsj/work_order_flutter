@@ -141,7 +141,7 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
             title: _basicSectionTitle,
             column: 0,
             fields: [
-              CrudFormField.text(
+              CrudFieldConfig.text(
                 label: _codeLabel,
                 controller: _codeController,
                 enabled: widget.supplier == null,
@@ -154,7 +154,7 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
                   ),
                 ]),
               ),
-              CrudFormField.text(
+              CrudFieldConfig.text(
                 label: _nameLabel,
                 controller: _nameController,
                 validator: FormValidators.required(_nameRequiredText),
@@ -165,16 +165,16 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
             title: _contactSectionTitle,
             column: isMobile ? 0 : 1,
             fields: [
-              CrudFormField.text(
+              CrudFieldConfig.text(
                 label: _contactLabel,
                 controller: _contactController,
               ),
-              CrudFormField.phone(
+              CrudFieldConfig.phone(
                 label: _phoneLabel,
                 controller: _phoneController,
                 validator: FormValidators.phone(_phoneInvalidText),
               ),
-              CrudFormField.email(
+              CrudFieldConfig.email(
                 label: _emailLabel,
                 controller: _emailController,
                 validator: FormValidators.email(_emailInvalidText),
@@ -185,7 +185,7 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
             title: _extraSectionTitle,
             column: isMobile ? 0 : 1,
             fields: [
-              CrudFormField.dropdown(
+              CrudFieldConfig.dropdown(
                 label: _statusLabel,
                 value: _status,
                 options: const [
@@ -197,11 +197,11 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
                   setState(() => _status = value as String);
                 },
               ),
-              CrudFormField.textarea(
+              CrudFieldConfig.textarea(
                 label: _addressLabel,
                 controller: _addressController,
               ),
-              CrudFormField.textarea(
+              CrudFieldConfig.textarea(
                 label: _notesLabel,
                 controller: _notesController,
               ),

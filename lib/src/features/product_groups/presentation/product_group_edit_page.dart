@@ -112,7 +112,7 @@ class _ProductGroupEditPageState extends State<ProductGroupEditPage> {
             title: _basicSectionTitle,
             column: 0,
             fields: [
-              CrudFormField.text(
+              CrudFieldConfig.text(
                 label: _codeLabel,
                 controller: _codeController,
                 validator: (value) {
@@ -127,7 +127,7 @@ class _ProductGroupEditPageState extends State<ProductGroupEditPage> {
                   return null;
                 },
               ),
-              CrudFormField.text(
+              CrudFieldConfig.text(
                 label: _nameLabel,
                 controller: _nameController,
                 validator: (value) {
@@ -142,12 +142,12 @@ class _ProductGroupEditPageState extends State<ProductGroupEditPage> {
             title: _extraSectionTitle,
             column: isMobile ? 0 : 1,
             fields: [
-              CrudFormField.textarea(
+              CrudFieldConfig.textarea(
                 label: _descLabel,
                 controller: _descController,
                 maxLines: 3,
               ),
-              CrudFormField.toggle(
+              CrudFieldConfig.toggle(
                 label: _statusLabel,
                 value: _isActive,
                 onChanged: (value) => setState(() => _isActive = value),

@@ -420,7 +420,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      CrudFormField.number(
+                      CrudFieldConfig.number(
                         label: '金额（不含税）',
                         controller: amountController,
                         decimal: true,
@@ -430,18 +430,18 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                                 : null,
                       ).build(context),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      CrudFormField.number(
+                      CrudFieldConfig.number(
                         label: '税率(%)',
                         controller: taxRateController,
                         decimal: true,
                       ).build(context),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      CrudFormField.text(
+                      CrudFieldConfig.text(
                         label: '开票日期（YYYY-MM-DD，可选）',
                         controller: issueDateController,
                       ).build(context),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      CrudFormField.textarea(
+                      CrudFieldConfig.textarea(
                         label: '备注（可选）',
                         controller: notesController,
                         maxLines: 3,

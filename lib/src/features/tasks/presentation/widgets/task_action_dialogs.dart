@@ -94,7 +94,7 @@ class _TaskQuantityDialogState extends State<_TaskQuantityDialog> {
           SizedBox(height: LayoutTokens.gapSm),
           Text('已完成 $completed / $total · 剩余 $remaining'),
           SizedBox(height: LayoutTokens.gapMd),
-          CrudFormField.number(
+          CrudFieldConfig.number(
             label: '本次完成数量',
             initialValue: _quantityIncrement.toString(),
             validator: (value) {
@@ -109,7 +109,7 @@ class _TaskQuantityDialogState extends State<_TaskQuantityDialog> {
             },
           ).build(context),
           SizedBox(height: LayoutTokens.gapMd),
-          CrudFormField.number(
+          CrudFieldConfig.number(
             label: '不良品数量',
             initialValue: _quantityDefective.toString(),
             onChanged: (value) {
@@ -117,7 +117,7 @@ class _TaskQuantityDialogState extends State<_TaskQuantityDialog> {
             },
           ).build(context),
           SizedBox(height: LayoutTokens.gapMd),
-          CrudFormField.text(
+          CrudFieldConfig.text(
             label: '备注（可选）',
             onChanged: (value) => _notes = value,
           ).build(context),
@@ -177,7 +177,7 @@ class _TaskCompleteDialogState extends State<_TaskCompleteDialog> {
         children: [
           Text(task.workContent ?? '任务 #${task.id}'),
           SizedBox(height: LayoutTokens.gapMd),
-          CrudFormField.number(
+          CrudFieldConfig.number(
             label: '不良品数量',
             initialValue: _quantityDefective.toString(),
             onChanged: (value) {
@@ -185,12 +185,12 @@ class _TaskCompleteDialogState extends State<_TaskCompleteDialog> {
             },
           ).build(context),
           SizedBox(height: LayoutTokens.gapMd),
-          CrudFormField.text(
+          CrudFieldConfig.text(
             label: '完成理由（可选）',
             onChanged: (value) => _completionReason = value,
           ).build(context),
           SizedBox(height: LayoutTokens.gapMd),
-          CrudFormField.text(
+          CrudFieldConfig.text(
             label: '备注（可选）',
             onChanged: (value) => _notes = value,
           ).build(context),
@@ -306,7 +306,7 @@ class _TaskAssignDialogState extends State<_TaskAssignDialog> {
               validator: (value) => value == null ? '请选择操作员' : null,
             ),
             SizedBox(height: LayoutTokens.gapMd),
-            CrudFormField.text(
+            CrudFieldConfig.text(
               label: '备注（可选）',
               onChanged: (value) => _notes = value,
             ).build(context),

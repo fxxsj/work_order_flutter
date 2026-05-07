@@ -42,11 +42,11 @@ class ContentContainer extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors?.surface ?? theme.colorScheme.surface,
         borderRadius: canvasRadius,
-        border: Border.all(color: borderColor.withValues(alpha: 0.7)),
+        border: Border.all(color: borderColor.withValues(alpha: OpacityTokens.intense)),
         boxShadow: [
           if (semantic != null)
             BoxShadow(
-              color: semantic.shadowStrong.withValues(alpha: isTablet ? 0.06 : 0.08),
+              color: semantic.shadowStrong.withValues(alpha: isTablet ? OpacityTokens.weak : OpacityTokens.subtle),
               blurRadius: 18,
               offset: const Offset(0, 8),
             ),

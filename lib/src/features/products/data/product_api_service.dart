@@ -1,4 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:work_order_app/src/core/common/api_exception.dart';
+import 'package:work_order_app/src/core/data/page_data.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/products/data/product_dto.dart';
@@ -21,46 +23,13 @@ class ProductApiService {
     }
     final response = await _client.get('/products/', queryParameters: params);
     final payload = response.data;
-    final items = <ProductOption>[];
     if (payload is Map<String, dynamic>) {
-      final results = payload['results'];
-      if (results is List) {
-        for (final item in results) {
-          if (item is Map) {
-            final map = Map<String, dynamic>.from(item);
-            items.add(
-              ProductOption(
-                id: toInt(map['id']) ?? 0,
-                name: map['name']?.toString() ?? '',
-                code: map['code']?.toString() ?? '',
-                specification: toStringOrNull(map['specification']),
-                unit: toStringOrNull(map['unit']),
-                unitPrice: _toDouble(map['unit_price']),
-              ),
-            );
-          }
-        }
-      }
-      return items.where((item) => item.id > 0).toList();
+      return _parseProductOptions(payload['results']);
     }
     if (payload is List) {
-      for (final item in payload) {
-        if (item is Map) {
-          final map = Map<String, dynamic>.from(item);
-          items.add(
-            ProductOption(
-              id: toInt(map['id']) ?? 0,
-              name: map['name']?.toString() ?? '',
-              code: map['code']?.toString() ?? '',
-              specification: toStringOrNull(map['specification']),
-              unit: toStringOrNull(map['unit']),
-              unitPrice: _toDouble(map['unit_price']),
-            ),
-          );
-        }
-      }
+      return _parseProductOptions(payload);
     }
-    return items.where((item) => item.id > 0).toList();
+    throw _unexpectedPayload('产品选项列表', payload);
   }
 
   static double? _toDouble(dynamic value) {
@@ -86,45 +55,45 @@ class ProductApiService {
     final response = await _client.get('/products/', queryParameters: params);
     final payload = response.data;
     if (payload is Map<String, dynamic>) {
-      final results = payload['results'];
-      final list = results is List
-          ? results
-              .whereType<Map>()
-              .map((item) => ProductDto.fromJson(Map<String, dynamic>.from(item)))
-              .toList()
-          : <ProductDto>[];
-      final total = toInt(payload['count']) ?? list.length;
-      return ProductPageDto(items: list, total: total, page: page, pageSize: pageSize);
+      final pageData = PageData.fromPayload(
+        payload: payload,
+        page: page,
+        pageSize: pageSize,
+        results: _parseProductDtoList(payload['results']),
+      );
+      return ProductPageDto(
+        items: pageData.items,
+        total: pageData.total,
+        page: pageData.page,
+        pageSize: pageData.pageSize,
+      );
     }
     if (payload is List) {
-      final list = payload
-          .whereType<Map>()
-          .map((item) => ProductDto.fromJson(Map<String, dynamic>.from(item)))
-          .toList();
-      return ProductPageDto(items: list, total: list.length, page: 1, pageSize: list.length);
+      final list = _parseProductDtoList(payload);
+      return ProductPageDto(
+        items: list,
+        total: list.length,
+        page: 1,
+        pageSize: list.length,
+      );
     }
-    return const ProductPageDto(items: [], total: 0, page: 1, pageSize: 20);
+    throw _unexpectedPayload('产品分页列表', payload);
   }
 
   Future<ProductDto> createProduct(ProductDto dto) async {
     final response = await _client.post('/products/', data: dto.toPayload());
-    final payload = response.data;
-    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
-    return ProductDto.fromJson(map);
+    return ProductDto.fromJson(_requireMap('创建产品', response.data));
   }
 
   Future<ProductDto> fetchProduct(int id) async {
     final response = await _client.get('/products/$id/');
-    final payload = response.data;
-    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
-    return ProductDto.fromJson(map);
+    return ProductDto.fromJson(_requireMap('产品详情', response.data));
   }
 
   Future<ProductDto> updateProduct(ProductDto dto) async {
-    final response = await _client.put('/products/${dto.id}/', data: dto.toPayload());
-    final payload = response.data;
-    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
-    return ProductDto.fromJson(map);
+    final response =
+        await _client.put('/products/${dto.id}/', data: dto.toPayload());
+    return ProductDto.fromJson(_requireMap('更新产品', response.data));
   }
 
   Future<void> deleteProduct(int id) async {
@@ -140,19 +109,18 @@ class ProductApiService {
     final formData = FormData.fromMap({
       'image': imageFile,
       'sort_order': sortOrder,
-      if (description != null && description.isNotEmpty) 'description': description,
+      if (description != null && description.isNotEmpty)
+        'description': description,
     });
     final response = await _client.requestRaw(
       '/products/$productId/upload_image/',
       method: 'post',
       data: formData,
     );
-    final body = response.data;
-    final map = body is Map
-        ? (body['data'] is Map
-            ? Map<String, dynamic>.from(body['data'])
-            : Map<String, dynamic>.from(body))
-        : <String, dynamic>{};
+    final body = _requireMap('上传产品图片', response.data);
+    final map = body['data'] is Map
+        ? Map<String, dynamic>.from(body['data'] as Map)
+        : body;
     return ProductImage(
       id: toInt(map['id']) ?? 0,
       imageUrl: map['image']?.toString() ?? '',
@@ -164,5 +132,53 @@ class ProductApiService {
 
   Future<void> deleteImage(int productId, int imageId) async {
     await _client.delete('/products/$productId/images/$imageId/');
+  }
+
+  List<ProductOption> _parseProductOptions(dynamic payload) {
+    if (payload is! List) {
+      return const <ProductOption>[];
+    }
+    final items = <ProductOption>[];
+    for (final item in payload.whereType<Map>()) {
+      final map = Map<String, dynamic>.from(item);
+      items.add(
+        ProductOption(
+          id: toInt(map['id']) ?? 0,
+          name: map['name']?.toString() ?? '',
+          code: map['code']?.toString() ?? '',
+          specification: toStringOrNull(map['specification']),
+          unit: toStringOrNull(map['unit']),
+          unitPrice: _toDouble(map['unit_price']),
+        ),
+      );
+    }
+    return items.where((item) => item.id > 0).toList();
+  }
+
+  List<ProductDto> _parseProductDtoList(dynamic payload) {
+    if (payload is! List) {
+      return const <ProductDto>[];
+    }
+    return payload
+        .whereType<Map>()
+        .map((item) => ProductDto.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
+  }
+
+  Map<String, dynamic> _requireMap(String label, dynamic data) {
+    if (data is Map<String, dynamic>) {
+      return Map<String, dynamic>.from(data);
+    }
+    if (data is Map) {
+      return Map<String, dynamic>.from(data);
+    }
+    throw _unexpectedPayload(label, data);
+  }
+
+  ApiException _unexpectedPayload(String label, dynamic data) {
+    return ApiException(
+      message: '$label 响应格式异常',
+      data: data,
+    );
   }
 }

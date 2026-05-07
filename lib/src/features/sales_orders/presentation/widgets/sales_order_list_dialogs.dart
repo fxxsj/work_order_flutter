@@ -61,13 +61,13 @@ Future<SalesOrderPaymentUpdateResult?> showSalesOrderPaymentDialog(
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CrudFormField.number(
+            CrudFieldConfig.number(
               label: '已付金额',
               controller: amountController,
               decimal: true,
             ).build(dialogContext),
             SizedBox(height: LayoutTokens.gapMd),
-            CrudFormField.text(
+            CrudFieldConfig.text(
               label: '付款日期（YYYY-MM-DD）',
               controller: dateController,
             ).build(dialogContext),
@@ -113,7 +113,7 @@ Future<SalesOrderCompleteResult?> showSalesOrderCompleteDialog(
             ),
             if (requireReason) ...[
               SizedBox(height: LayoutTokens.gapMd),
-              CrudFormField.textarea(
+              CrudFieldConfig.textarea(
                 label: '人工完结原因',
                 controller: reasonController,
                 maxLines: 3,
@@ -168,7 +168,7 @@ Future<SalesOrderBatchCreateWorkOrderResult?>
             children: [
               Text('将为已选择的 $selectedCount 张客户订单批量生成施工单。'),
               SizedBox(height: LayoutTokens.gapMd),
-              CrudFormField.text(
+              CrudFieldConfig.text(
                 label: '统一交货日期（YYYY-MM-DD，可选）',
                 controller: deliveryController,
               ).build(dialogContext),
@@ -186,7 +186,7 @@ Future<SalesOrderBatchCreateWorkOrderResult?>
                     setState(() => priority = value ?? 'normal'),
               ),
               SizedBox(height: LayoutTokens.gapMd),
-              CrudFormField.textarea(
+              CrudFieldConfig.textarea(
                 label: '备注（可选）',
                 controller: notesController,
                 maxLines: 4,

@@ -174,10 +174,10 @@ class EmptyStateCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final semantic = theme.extension<AppSemanticColors>();
-    final background =
-        (semantic?.info ?? theme.colorScheme.primary).withValues(alpha: 0.05);
-    final border =
-        (semantic?.info ?? theme.colorScheme.primary).withValues(alpha: 0.15);
+    final background = (semantic?.info ?? theme.colorScheme.primary)
+        .withValues(alpha: OpacityTokens.faint);
+    final border = (semantic?.info ?? theme.colorScheme.primary)
+        .withValues(alpha: OpacityTokens.medium);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -253,8 +253,8 @@ class ErrorStateCard extends StatelessWidget {
     final theme = Theme.of(context);
     final semantic = theme.extension<AppSemanticColors>();
     final danger = semantic?.danger ?? theme.colorScheme.error;
-    final background = danger.withValues(alpha: 0.06);
-    final border = danger.withValues(alpha: 0.2);
+    final background = danger.withValues(alpha: OpacityTokens.weak);
+    final border = danger.withValues(alpha: OpacityTokens.distinct);
 
     return SizedBox(
       width: double.infinity,

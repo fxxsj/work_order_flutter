@@ -604,7 +604,7 @@ class _TaskSupervisorAssignDialogState
                 setState(() => _operatorId = value ?? _operatorId),
           ),
           SizedBox(height: LayoutTokens.gapMd),
-          CrudFormField.text(
+          CrudFieldConfig.text(
             label: '备注（可选）',
             onChanged: (value) => _notes = value,
           ).build(context),

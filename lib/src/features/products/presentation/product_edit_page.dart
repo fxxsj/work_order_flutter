@@ -437,7 +437,8 @@ class _ProductEditPageState extends State<ProductEditPage> {
     }
   }
 
-  Future<void> _removeImage(ProductViewModel viewModel, ProductImage image) async {
+  Future<void> _removeImage(
+      ProductViewModel viewModel, ProductImage image) async {
     final product = _product;
     if (product == null) return;
     try {
@@ -527,7 +528,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        CrudFormField.text(
+        CrudFieldConfig.text(
           label: _codeLabel,
           controller: _codeController,
           enabled: widget.product == null,
@@ -546,7 +547,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
         const SizedBox(height: LayoutTokens.gapMd),
         _buildFieldPair(
           context,
-          first: CrudFormField.text(
+          first: CrudFieldConfig.text(
             label: _nameLabel,
             controller: _nameController,
             validator: (value) {
@@ -555,7 +556,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
               return null;
             },
           ).build(context),
-          second: CrudFormField.dropdown(
+          second: CrudFieldConfig.dropdown(
             fieldKey: ValueKey(_productType),
             label: _productTypeLabel,
             value: _productType,
@@ -572,7 +573,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
         ),
         if (_productType != 'single') ...[
           const SizedBox(height: LayoutTokens.gapMd),
-          CrudFormField.dropdown(
+          CrudFieldConfig.dropdown(
             fieldKey: ValueKey('${_productType}_${_productGroupId ?? ''}'),
             label: _productGroupLabel,
             value: _productGroupId,
@@ -584,14 +585,14 @@ class _ProductEditPageState extends State<ProductEditPage> {
                   ),
                 )
                 .toList(),
-            onChanged: (value) => setState(() => _productGroupId = value as int?),
-            validator: (value) => _productType != 'single' && value == null
-                ? '请选择产品组'
-                : null,
+            onChanged: (value) =>
+                setState(() => _productGroupId = value as int?),
+            validator: (value) =>
+                _productType != 'single' && value == null ? '请选择产品组' : null,
           ).build(context),
         ],
         const SizedBox(height: LayoutTokens.gapMd),
-        CrudFormField.text(
+        CrudFieldConfig.text(
           label: _specLabel,
           controller: _specController,
         ).build(context),
@@ -605,11 +606,11 @@ class _ProductEditPageState extends State<ProductEditPage> {
       children: [
         _buildFieldPair(
           context,
-          first: CrudFormField.text(
+          first: CrudFieldConfig.text(
             label: _unitLabel,
             controller: _unitController,
           ).build(context),
-          second: CrudFormField.number(
+          second: CrudFieldConfig.number(
             label: _unitPriceLabel,
             controller: _unitPriceController,
             decimal: true,
@@ -618,25 +619,25 @@ class _ProductEditPageState extends State<ProductEditPage> {
         const SizedBox(height: LayoutTokens.gapMd),
         _buildFieldPair(
           context,
-          first: CrudFormField.number(
+          first: CrudFieldConfig.number(
             label: _stockLabel,
             controller: _stockController,
             decimal: true,
           ).build(context),
-          second: CrudFormField.number(
+          second: CrudFieldConfig.number(
             label: _minStockLabel,
             controller: _minStockController,
             decimal: true,
           ).build(context),
         ),
         const SizedBox(height: LayoutTokens.gapMd),
-        CrudFormField.textarea(
+        CrudFieldConfig.textarea(
           label: _descriptionLabel,
           controller: _descriptionController,
           maxLines: 3,
         ).build(context),
         const SizedBox(height: LayoutTokens.gapMd),
-        CrudFormField.toggle(
+        CrudFieldConfig.toggle(
           label: _statusLabel,
           value: _isActive,
           onChanged: (value) => setState(() => _isActive = value),
@@ -657,7 +658,8 @@ class _ProductEditPageState extends State<ProductEditPage> {
       imageUrlBuilder: (image) => image.imageUrl,
       descriptionBuilder: (image) => image.description,
       onUpload: () => _pickAndUploadImage(context.read<ProductViewModel>()),
-      onDelete: (image) => _removeImage(context.read<ProductViewModel>(), image),
+      onDelete: (image) =>
+          _removeImage(context.read<ProductViewModel>(), image),
     );
   }
 
@@ -677,7 +679,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
               CrudFormSection(
                 title: '',
                 fields: [
-                  CrudFormField.custom(
+                  CrudFieldConfig.custom(
                     builder: _buildLoadingState,
                   ),
                 ],
@@ -690,28 +692,28 @@ class _ProductEditPageState extends State<ProductEditPage> {
               title: _basicSectionTitle,
               column: 0,
               fields: [
-                CrudFormField.custom(builder: _buildBasicSection),
+                CrudFieldConfig.custom(builder: _buildBasicSection),
               ],
             ),
             CrudFormSection(
               title: _extraSectionTitle,
               column: isMobile ? 0 : 1,
               fields: [
-                CrudFormField.custom(builder: _buildExtraSection),
+                CrudFieldConfig.custom(builder: _buildExtraSection),
               ],
             ),
             CrudFormSection(
               title: '图片管理',
               column: isMobile ? 0 : 1,
               fields: [
-                CrudFormField.custom(builder: _buildImageSection),
+                CrudFieldConfig.custom(builder: _buildImageSection),
               ],
             ),
             CrudFormSection(
               title: _configSectionTitle,
               column: 0,
               fields: [
-                CrudFormField.multiSelect(
+                CrudFieldConfig.multiSelect(
                   label: _defaultProcessTitle,
                   options: _processes
                       .map(
@@ -734,7 +736,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
                     });
                   },
                 ),
-                CrudFormField.custom(
+                CrudFieldConfig.custom(
                   builder: _buildMaterialSection,
                 ),
               ],
@@ -880,14 +882,14 @@ class _MaterialCardState extends State<_MaterialCard> {
             Row(
               children: [
                 Expanded(
-                  child: CrudFormField.text(
+                  child: CrudFieldConfig.text(
                     label: '尺寸',
                     controller: draft.materialSizeController,
                   ).build(context),
                 ),
                 SizedBox(width: LayoutTokens.gapMd),
                 Expanded(
-                  child: CrudFormField.text(
+                  child: CrudFieldConfig.text(
                     label: '用量',
                     controller: draft.materialUsageController,
                   ).build(context),
@@ -902,7 +904,7 @@ class _MaterialCardState extends State<_MaterialCard> {
               onChanged: (value) => setState(() => draft.needCutting = value),
             ),
             SizedBox(height: sectionSpacing),
-            CrudFormField.textarea(
+            CrudFieldConfig.textarea(
               label: '备注',
               controller: draft.notesController,
               maxLines: 2,

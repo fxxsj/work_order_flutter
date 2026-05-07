@@ -30,7 +30,7 @@ class RiskActionHintPanel extends StatelessWidget {
     final tone = destructive
         ? (semantic?.danger ?? scheme.error)
         : (semantic?.info ?? scheme.primary);
-    final bg = tone.withValues(alpha: 0.08);
+    final bg = tone.withValues(alpha: OpacityTokens.subtle);
 
     return Container(
       width: double.infinity,
@@ -38,7 +38,7 @@ class RiskActionHintPanel extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
-        border: Border.all(color: tone.withValues(alpha: 0.18)),
+        border: Border.all(color: tone.withValues(alpha: OpacityTokens.medium)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -290,7 +290,7 @@ Future<ActionDecisionResult<T>?> showActionDecisionDialog<T>(
                   if (showNotes) const SizedBox(height: 12),
                 ],
                 if (showNotes)
-                  CrudFormField.textarea(
+                  CrudFieldConfig.textarea(
                     label: notesLabel,
                     controller: notesController,
                     enabled: !submitting,
@@ -299,7 +299,7 @@ Future<ActionDecisionResult<T>?> showActionDecisionDialog<T>(
                   ).build(dialogContext),
                 if (showExtraNotes) ...[
                   if (showNotes) const SizedBox(height: 12),
-                  CrudFormField.textarea(
+                  CrudFieldConfig.textarea(
                     label: extraNotesLabel,
                     controller: extraNotesController,
                     enabled: !submitting,

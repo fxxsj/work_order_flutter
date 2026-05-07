@@ -183,7 +183,7 @@ Future<bool?> showPurchaseReceiveDialog(
                               setState(() => receivedDate.value = picked),
                         ),
                         const SizedBox(height: LayoutTokens.gapMd),
-                        CrudFormField.text(
+                        CrudFieldConfig.text(
                           label: '送货单号',
                           controller: deliveryNoteController,
                         ).build(context),
@@ -200,7 +200,7 @@ Future<bool?> showPurchaseReceiveDialog(
                             ),
                             const SizedBox(width: LayoutTokens.gapMd),
                             Expanded(
-                              child: CrudFormField.text(
+                              child: CrudFieldConfig.text(
                                 label: '送货单号',
                                 controller: deliveryNoteController,
                               ).build(context),
@@ -369,7 +369,7 @@ class _ReceiveItemRow extends StatelessWidget {
             if (isCompact)
               Column(
                 children: [
-                  CrudFormField.number(
+                  CrudFieldConfig.number(
                     label: '本次收货',
                     controller: item.receiveController,
                     enabled: !isDisabled,
@@ -391,7 +391,7 @@ class _ReceiveItemRow extends StatelessWidget {
                     },
                   ).build(context),
                   const SizedBox(height: LayoutTokens.gapSm),
-                  CrudFormField.text(
+                  CrudFieldConfig.text(
                     label: '备注',
                     controller: item.notesController,
                     enabled: !isDisabled,
@@ -404,7 +404,7 @@ class _ReceiveItemRow extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: 120,
-                    child: CrudFormField.number(
+                    child: CrudFieldConfig.number(
                       label: '本次收货',
                       controller: item.receiveController,
                       enabled: !isDisabled,
@@ -428,7 +428,7 @@ class _ReceiveItemRow extends StatelessWidget {
                   ),
                   const SizedBox(width: LayoutTokens.gapMd),
                   Expanded(
-                    child: CrudFormField.text(
+                    child: CrudFieldConfig.text(
                       label: '备注',
                       controller: item.notesController,
                       enabled: !isDisabled,

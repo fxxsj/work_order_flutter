@@ -48,7 +48,8 @@ class _ExpandableSummaryCardState extends State<ExpandableSummaryCard>
     final colors = theme.extension<AppColors>();
     final resolvedRadius = widget.radius ?? LayoutTokens.radiusLg;
     final resolvedBorderColor = widget.borderColor ??
-        (colors?.borderColor ?? theme.dividerColor.withValues(alpha: 0.6));
+        (colors?.borderColor ??
+            theme.dividerColor.withValues(alpha: OpacityTokens.intense));
     final resolvedBackground = widget.backgroundColor ??
         (colors?.surface ?? theme.colorScheme.surface);
     final resolvedHeaderPadding =

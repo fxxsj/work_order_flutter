@@ -14,6 +14,7 @@ class OpacityTokens {
   static const double mild = 0.12;
   static const double medium = 0.16;
   static const double distinct = 0.24;
+  static const double distinctStrong = 0.4;
   static const double strong = 0.45;
   static const double heavy = 0.55;
   static const double intense = 0.7;
@@ -21,9 +22,13 @@ class OpacityTokens {
 
   /// 常用组合
   static const double border = medium;
+  static const double borderMedium = 0.5;
+  static const double borderStrong = 0.75;
   static const double divider = medium;
   static const double iconSubtle = strong;
   static const double textSecondary = intense;
+  static const double textMuted = 0.78;
+  static const double textProminent = 0.9;
   static const double disabled = 0.38;
   static const double hover = weak;
   static const double focus = subtle;
@@ -31,6 +36,7 @@ class OpacityTokens {
   static const double dragged = weak;
   static const double scrim = 0.32;
   static const double splash = 0.12;
+  static const double surfaceOverlay = 0.92;
 
   /// 获取带透明度的颜色
   static Color withOpacity(Color color, double opacity) {

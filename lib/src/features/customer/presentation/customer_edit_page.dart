@@ -304,7 +304,7 @@ class _CustomerFormBody extends StatelessWidget {
         title: _CustomerEditLabels.basicSection,
         child: _CustomerFieldList(
           children: [
-            CrudFormField.text(
+            CrudFieldConfig.text(
               label: _CustomerEditLabels.name,
               controller: nameController,
               validator: FormValidators.compose<String>([
@@ -312,7 +312,7 @@ class _CustomerFormBody extends StatelessWidget {
                 FormValidators.minLength(2, _CustomerEditLabels.nameLength),
               ]),
             ).build(context),
-            CrudFormField.dropdown(
+            CrudFieldConfig.dropdown(
               label: _CustomerEditLabels.salesperson,
               value: selectedSalespersonId,
               options: [
@@ -339,11 +339,11 @@ class _CustomerFormBody extends StatelessWidget {
         title: _CustomerEditLabels.contactSection,
         child: _CustomerFieldList(
           children: [
-            CrudFormField.text(
+            CrudFieldConfig.text(
               label: _CustomerEditLabels.contact,
               controller: contactController,
             ).build(context),
-            CrudFormField.phone(
+            CrudFieldConfig.phone(
               label: _CustomerEditLabels.phone,
               controller: phoneController,
               validator: FormValidators.pattern(
@@ -351,7 +351,7 @@ class _CustomerFormBody extends StatelessWidget {
                 _CustomerEditLabels.phoneInvalid,
               ),
             ).build(context),
-            CrudFormField.email(
+            CrudFieldConfig.email(
               label: _CustomerEditLabels.email,
               controller: emailController,
               validator: FormValidators.email(_CustomerEditLabels.emailInvalid),
@@ -364,13 +364,13 @@ class _CustomerFormBody extends StatelessWidget {
         title: _CustomerEditLabels.extraSection,
         child: _CustomerFieldList(
           children: [
-            CrudFormField.textarea(
+            CrudFieldConfig.textarea(
               label: _CustomerEditLabels.address,
               controller: addressController,
               minLines: 2,
               maxLines: 2,
             ).build(context),
-            CrudFormField.textarea(
+            CrudFieldConfig.textarea(
               label: _CustomerEditLabels.notes,
               controller: notesController,
               maxLines: 3,

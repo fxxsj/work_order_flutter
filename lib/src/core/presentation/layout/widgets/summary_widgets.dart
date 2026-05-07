@@ -73,7 +73,7 @@ class SummaryChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withValues(alpha: 0.05),
+        color: theme.colorScheme.primary.withValues(alpha: OpacityTokens.faint),
         borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
         border: Border.all(color: colors?.borderColor ?? theme.dividerColor),
       ),

@@ -47,7 +47,7 @@ class CrudEditConfig<T, VM extends ChangeNotifier> {
   final bool Function(BuildContext context, VM viewModel, T? item)? canSave;
 }
 
-/// Generic edit page that renders [CrudFormField] sections and save actions.
+/// Generic edit page that renders [CrudFieldConfig] sections and save actions.
 class CrudEditPage<T, VM extends ChangeNotifier> extends StatefulWidget {
   const CrudEditPage({
     super.key,

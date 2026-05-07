@@ -26,7 +26,8 @@ class DetailSurfaceCard extends StatelessWidget {
     final resolvedBackground =
         backgroundColor ?? (colors?.surface ?? theme.colorScheme.surface);
     final resolvedBorderColor = borderColor ??
-        (colors?.borderColor ?? theme.dividerColor.withValues(alpha: 0.6));
+        (colors?.borderColor ??
+            theme.dividerColor.withValues(alpha: OpacityTokens.intense));
     final content = padding == null
         ? child
         : Padding(

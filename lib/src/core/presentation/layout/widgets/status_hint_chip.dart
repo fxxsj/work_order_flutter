@@ -53,10 +53,10 @@ class StatusHintChip extends StatelessWidget {
       height: 36,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: baseColor.withValues(alpha: selected ? 0.16 : 0.08),
+        color: baseColor.withValues(alpha: selected ? OpacityTokens.medium : OpacityTokens.subtle),
         borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
         border: Border.all(
-            color: baseColor.withValues(alpha: selected ? 0.45 : 0.28)),
+            color: baseColor.withValues(alpha: selected ? OpacityTokens.strong : OpacityTokens.borderMedium)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

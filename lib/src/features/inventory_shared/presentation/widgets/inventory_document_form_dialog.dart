@@ -56,7 +56,7 @@ Future<void> showInventoryDocumentFormDialog(
             children: [
               ..._withSpacing(fields),
               if (fields.isNotEmpty) const SizedBox(height: LayoutTokens.gapMd),
-              CrudFormField.text(
+              CrudFieldConfig.text(
                 label: dateLabel,
                 controller: dateController,
                 enabled: !submitting,
@@ -75,7 +75,7 @@ Future<void> showInventoryDocumentFormDialog(
                 },
               ).build(context),
               const SizedBox(height: LayoutTokens.gapMd),
-              CrudFormField.textarea(
+              CrudFieldConfig.textarea(
                 label: '备注',
                 controller: notesController,
                 enabled: !submitting,

@@ -225,7 +225,7 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
                   ),
                   SizedBox(
                     width: fieldWidth,
-                    child: CrudFormField.text(
+                    child: CrudFieldConfig.text(
                       label: '下单日期',
                       controller: orderDateController,
                       readOnly: true,
@@ -234,7 +234,7 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
                   ),
                   SizedBox(
                     width: fieldWidth,
-                    child: CrudFormField.text(
+                    child: CrudFieldConfig.text(
                       label: '交货日期',
                       controller: deliveryDateController,
                       readOnly: true,
@@ -245,7 +245,7 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
                   ),
                   SizedBox(
                     width: fieldWidth,
-                    child: CrudFormField.number(
+                    child: CrudFieldConfig.number(
                       label: '生产数量',
                       controller: productionQuantityController,
                       validator: (value) {
@@ -261,7 +261,7 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
                   ),
                   SizedBox(
                     width: fieldWidth,
-                    child: CrudFormField.number(
+                    child: CrudFieldConfig.number(
                       label: '预损数量',
                       controller: defectiveQuantityController,
                       validator: (value) {
@@ -278,7 +278,7 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
                   if (mode == WorkOrderFormMode.edit)
                     SizedBox(
                       width: fieldWidth,
-                      child: CrudFormField.text(
+                      child: CrudFieldConfig.text(
                         label: '实际交货日期',
                         controller: actualDeliveryDateController,
                         readOnly: true,
@@ -290,7 +290,7 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
             },
           ),
           SizedBox(height: LayoutTokens.gapMd),
-          CrudFormField.textarea(
+          CrudFieldConfig.textarea(
             label: '备注',
             controller: notesController,
             maxLines: 3,
@@ -637,7 +637,7 @@ class WorkOrderResourcesSection extends StatelessWidget {
                       .toList(),
                 ),
                 SizedBox(height: LayoutTokens.gapMd),
-                CrudFormField.text(
+                CrudFieldConfig.text(
                   label: '其他颜色（逗号分隔）',
                   controller: printingOtherColorsController,
                 ).build(context),

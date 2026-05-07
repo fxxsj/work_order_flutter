@@ -122,7 +122,7 @@ Future<ProductStockAdjustResult?> showProductStockAdjustDialog(
                           },
                   ),
                   SizedBox(height: LayoutTokens.gapMd),
-                  CrudFormField.number(
+                  CrudFieldConfig.number(
                     label: '调整数量',
                     controller: quantityController,
                     decimal: true,
@@ -140,7 +140,7 @@ Future<ProductStockAdjustResult?> showProductStockAdjustDialog(
                     },
                   ).build(context),
                   SizedBox(height: LayoutTokens.gapMd),
-                  CrudFormField.textarea(
+                  CrudFieldConfig.textarea(
                     label: '调整原因',
                     controller: reasonController,
                     maxLines: 3,

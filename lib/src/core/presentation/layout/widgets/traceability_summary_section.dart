@@ -143,11 +143,11 @@ class _TraceabilitySummaryTile extends StatelessWidget {
           width: width,
           padding: LayoutTokens.cardPadding(context),
           decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withValues(alpha: 0.03),
+            color: theme.colorScheme.primary.withValues(alpha: OpacityTokens.faint),
             borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
             border: Border.all(
               color: (colors?.borderColor ?? theme.dividerColor)
-                  .withValues(alpha: 0.9),
+                  .withValues(alpha: OpacityTokens.textProminent),
             ),
           ),
           child: Column(
@@ -219,7 +219,7 @@ class _SummaryMetaPill extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color:
-            theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.52),
+            theme.colorScheme.surfaceContainerHighest.withValues(alpha: OpacityTokens.borderMedium),
         borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
       ),
       child: RichText(

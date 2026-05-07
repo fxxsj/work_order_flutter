@@ -360,7 +360,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
   }
 
   Widget _buildVersionField(BuildContext context) {
-    return CrudFormField.text(
+    return CrudFieldConfig.text(
       label: _versionLabel,
       initialValue: _artwork?.version?.toString() ?? '1',
       enabled: false,
@@ -433,7 +433,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                       ),
                     SizedBox(width: LayoutTokens.gapMd),
                     Expanded(
-                      child: CrudFormField.number(
+                      child: CrudFieldConfig.number(
                         label: _quantityLabel,
                         controller: item.quantityController,
                       ).build(context),
@@ -513,17 +513,17 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
             title: _basicSectionTitle,
             column: 0,
             fields: [
-              CrudFormField.text(
+              CrudFieldConfig.text(
                 label: _baseCodeLabel,
                 controller: _baseCodeController,
                 hintText: '留空则系统自动生成',
                 enabled: currentArtwork == null,
               ),
               if (currentArtwork != null)
-                CrudFormField.custom(
+                CrudFieldConfig.custom(
                   builder: _buildVersionField,
                 ),
-              CrudFormField.text(
+              CrudFieldConfig.text(
                 label: _nameLabel,
                 controller: _nameController,
                 validator: (value) {
@@ -534,7 +534,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                   return null;
                 },
               ),
-              CrudFormField.custom(
+              CrudFieldConfig.custom(
                 builder: (context) {
                   return InputDecorator(
                     decoration: InputDecoration(
@@ -568,7 +568,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                   );
                 },
               ),
-              CrudFormField.tags(
+              CrudFieldConfig.tags(
                 label: _otherColorsLabel,
                 values: _otherColors,
                 hintText: '输入后按回车、逗号或换行添加颜色',
@@ -581,7 +581,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                 },
               ),
               if (!isMobile)
-                CrudFormField.text(
+                CrudFieldConfig.text(
                   label: _impositionLabel,
                   controller: _impositionController,
                 ),
@@ -591,7 +591,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
             title: '图稿图片',
             column: 0,
             fields: [
-              CrudFormField.custom(
+              CrudFieldConfig.custom(
                 builder: _buildImageSection,
               ),
             ],
@@ -601,11 +601,11 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
             column: isMobile ? 0 : 1,
             fields: [
               if (isMobile)
-                CrudFormField.text(
+                CrudFieldConfig.text(
                   label: _impositionLabel,
                   controller: _impositionController,
                 ),
-              CrudFormField.multiSelect(
+              CrudFieldConfig.multiSelect(
                 label: _dieLabel,
                 options: _dieOptions
                     .map(
@@ -625,7 +625,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                   });
                 },
               ),
-              CrudFormField.multiSelect(
+              CrudFieldConfig.multiSelect(
                 label: _foilingLabel,
                 options: _foilingOptions
                     .map(
@@ -645,7 +645,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                   });
                 },
               ),
-              CrudFormField.multiSelect(
+              CrudFieldConfig.multiSelect(
                 label: _embossingLabel,
                 options: _embossingOptions
                     .map(
@@ -666,13 +666,13 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                 },
               ),
               if (_loadingPicklists)
-                CrudFormField.custom(
+                CrudFieldConfig.custom(
                   builder: (_) => const LinearProgressIndicator(minHeight: 2),
                 ),
-              CrudFormField.custom(
+              CrudFieldConfig.custom(
                 builder: _buildProductSection,
               ),
-              CrudFormField.textarea(
+              CrudFieldConfig.textarea(
                 label: _notesLabel,
                 controller: _notesController,
                 maxLines: 3,

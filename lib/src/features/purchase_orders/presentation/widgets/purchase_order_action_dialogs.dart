@@ -22,7 +22,7 @@ Future<String?> showPurchaseReasonDialog(
       maxWidth: LayoutTokens.dialogWidthSm,
       onSubmit: () async =>
           Navigator.of(dialogContext).pop(controller.text.trim()),
-      content: CrudFormField.textarea(
+      content: CrudFieldConfig.textarea(
         label: fieldLabel,
         controller: controller,
         maxLines: 3,

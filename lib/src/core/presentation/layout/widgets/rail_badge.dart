@@ -24,7 +24,7 @@ class RailBadge extends StatelessWidget {
         vertical: 3,
       ),
       decoration: BoxDecoration(
-        color: primary.withValues(alpha: 0.12),
+        color: primary.withValues(alpha: OpacityTokens.mild),
         borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
       ),
       child: Text(

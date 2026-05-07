@@ -65,7 +65,7 @@ class _LoginState extends State<Login> {
         key: formKey,
         child: Column(
           children: [
-            CrudFormField.text(
+            CrudFieldConfig.text(
               label: '账号',
               controller: userNameController,
               textInputAction: TextInputAction.next,
@@ -75,7 +75,7 @@ class _LoginState extends State<Login> {
               validator: FormValidators.required('请输入账号'),
             ).build(context),
             SizedBox(height: LayoutTokens.gapLg),
-            CrudFormField.text(
+            CrudFieldConfig.text(
               label: '密码',
               controller: passwordController,
               obscureText: _obscurePassword,

@@ -126,7 +126,7 @@ class _ProcessEditPageState extends State<ProcessEditPage> {
             title: _basicSectionTitle,
             column: 0,
             fields: [
-              CrudFormField.text(
+              CrudFieldConfig.text(
                 label: _codeLabel,
                 controller: _codeController,
                 enabled: widget.process == null,
@@ -136,7 +136,7 @@ class _ProcessEditPageState extends State<ProcessEditPage> {
                   return null;
                 },
               ),
-              CrudFormField.text(
+              CrudFieldConfig.text(
                 label: _nameLabel,
                 controller: _nameController,
                 validator: (value) {
@@ -145,7 +145,7 @@ class _ProcessEditPageState extends State<ProcessEditPage> {
                   return null;
                 },
               ),
-              CrudFormField.textarea(
+              CrudFieldConfig.textarea(
                 label: _descLabel,
                 controller: _descController,
                 minLines: 3,
@@ -157,16 +157,16 @@ class _ProcessEditPageState extends State<ProcessEditPage> {
             title: _extraSectionTitle,
             column: isMobile ? 0 : 1,
             fields: [
-              CrudFormField.number(
+              CrudFieldConfig.number(
                 label: _durationLabel,
                 controller: _durationController,
                 decimal: true,
               ),
-              CrudFormField.number(
+              CrudFieldConfig.number(
                 label: _sortLabel,
                 controller: _sortController,
               ),
-              CrudFormField.toggle(
+              CrudFieldConfig.toggle(
                 label: _statusLabel,
                 value: _isActive,
                 onChanged: (value) => setState(() => _isActive = value),

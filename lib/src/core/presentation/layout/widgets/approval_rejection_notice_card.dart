@@ -38,8 +38,8 @@ class ApprovalRejectionNoticeCard extends StatelessWidget {
 
     return DetailSurfaceCard(
       padding: LayoutTokens.cardPadding(context),
-      backgroundColor: warning.withValues(alpha: 0.08),
-      borderColor: warning.withValues(alpha: 0.35),
+      backgroundColor: warning.withValues(alpha: OpacityTokens.subtle),
+      borderColor: warning.withValues(alpha: OpacityTokens.strong),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

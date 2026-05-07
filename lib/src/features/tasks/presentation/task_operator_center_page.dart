@@ -671,7 +671,7 @@ class _TaskUpdateDialogState extends State<_TaskUpdateDialog> {
           ),
           SizedBox(height: LayoutTokens.gapMd),
           if (!_completeMode) ...[
-            CrudFormField.number(
+            CrudFieldConfig.number(
               label: '本次完成数量',
               initialValue: _quantityIncrement.toString(),
               validator: (value) {
@@ -687,7 +687,7 @@ class _TaskUpdateDialogState extends State<_TaskUpdateDialog> {
             ).build(context),
             SizedBox(height: LayoutTokens.gapMd),
           ],
-          CrudFormField.number(
+          CrudFieldConfig.number(
             label: '不良品数量',
             initialValue: _quantityDefective.toString(),
             onChanged: (value) {
@@ -696,13 +696,13 @@ class _TaskUpdateDialogState extends State<_TaskUpdateDialog> {
           ).build(context),
           if (_completeMode) ...[
             SizedBox(height: LayoutTokens.gapMd),
-            CrudFormField.text(
+            CrudFieldConfig.text(
               label: '完成理由（可选）',
               onChanged: (value) => _completionReason = value,
             ).build(context),
           ],
           SizedBox(height: LayoutTokens.gapMd),
-          CrudFormField.text(
+          CrudFieldConfig.text(
             label: '备注（可选）',
             onChanged: (value) => _notes = value,
           ).build(context),

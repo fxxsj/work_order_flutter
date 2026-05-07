@@ -144,7 +144,7 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
             title: _basicSectionTitle,
             column: 0,
             fields: [
-              CrudFormField.text(
+              CrudFieldConfig.text(
                 label: _codeLabel,
                 controller: _codeController,
                 enabled: widget.department == null,
@@ -159,7 +159,7 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
                   return null;
                 },
               ),
-              CrudFormField.text(
+              CrudFieldConfig.text(
                 label: _nameLabel,
                 controller: _nameController,
                 validator: (value) {
@@ -170,7 +170,7 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
                   return null;
                 },
               ),
-              CrudFormField.dropdown(
+              CrudFieldConfig.dropdown(
                 label: _parentLabel,
                 value: _parentId,
                 enabled: !disableParent,
@@ -191,11 +191,11 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
             title: _extraSectionTitle,
             column: isMobile ? 0 : 1,
             fields: [
-              CrudFormField.number(
+              CrudFieldConfig.number(
                 label: _sortLabel,
                 controller: _sortController,
               ),
-              CrudFormField.multiSelect(
+              CrudFieldConfig.multiSelect(
                 label: _processLabel,
                 options: viewModel.processOptions
                     .map(
@@ -218,7 +218,7 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
                   });
                 },
               ),
-              CrudFormField.toggle(
+              CrudFieldConfig.toggle(
                 label: _statusLabel,
                 value: _isActive,
                 onChanged: (value) => setState(() => _isActive = value),

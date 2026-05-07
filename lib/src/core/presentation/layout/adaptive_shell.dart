@@ -76,7 +76,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     final background = colors.background;
     final primary = theme.primaryColor;
     final headerForeground = theme.colorScheme.onPrimary;
-    final headerMuted = headerForeground.withValues(alpha: 0.78);
+    final headerMuted = headerForeground.withValues(alpha: OpacityTokens.textMuted);
     final sidebar = colors.sidebar;
     final sidebarText = colors.sidebarText;
     final sidebarItems = sidebarNavItems(currentUser: currentUser);
@@ -152,7 +152,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
                 color: sidebar,
                 border: Border(
                   right: BorderSide(
-                    color: borderColor.withValues(alpha: 0.72),
+                    color: borderColor.withValues(alpha: OpacityTokens.borderStrong),
                   ),
                 ),
               ),

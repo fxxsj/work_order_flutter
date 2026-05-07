@@ -91,7 +91,7 @@ Future<StatementCreateResult?> showStatementCreateDialog(
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      CrudFormField.radioGroup(
+                      CrudFieldConfig.radioGroup(
                         label: '对账单类型',
                         value: statementType,
                         options: const [
@@ -255,7 +255,7 @@ Future<StatementCreateResult?> showStatementCreateDialog(
                           },
                         ),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      CrudFormField.text(
+                      CrudFieldConfig.text(
                         label: '对账周期（YYYY-MM）',
                         controller: periodController,
                         validator: (value) =>
@@ -264,7 +264,7 @@ Future<StatementCreateResult?> showStatementCreateDialog(
                                 : null,
                       ).build(context),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      CrudFormField.dateRange(
+                      CrudFieldConfig.dateRange(
                         label: '对账日期范围',
                         startController: startDateController,
                         endController: endDateController,
@@ -286,13 +286,13 @@ Future<StatementCreateResult?> showStatementCreateDialog(
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      CrudFormField.number(
+                      CrudFieldConfig.number(
                         label: '期初余额',
                         controller: openingBalanceController,
                         decimal: true,
                       ).build(context),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      CrudFormField.textarea(
+                      CrudFieldConfig.textarea(
                         label: '备注（可选）',
                         controller: notesController,
                         maxLines: 3,
@@ -361,7 +361,7 @@ Future<StatementGenerateResult?> showStatementGenerateDialog(
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CrudFormField.radioGroup(
+                CrudFieldConfig.radioGroup(
                   label: '对账单类型',
                   value: statementType,
                   options: const [
@@ -519,7 +519,7 @@ Future<StatementGenerateResult?> showStatementGenerateDialog(
                     },
                   ),
                 SizedBox(height: LayoutTokens.gapMd),
-                CrudFormField.text(
+                CrudFieldConfig.text(
                   label: '对账周期（YYYY-MM）',
                   controller: periodController,
                   validator: (value) => (value == null || value.trim().isEmpty)

@@ -3,8 +3,8 @@ import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 
 enum TextInputFieldType { text, number, email, phone }
 
-/// Unified text input field for [CrudFormField.text], [CrudFormField.number],
-/// [CrudFormField.email], and [CrudFormField.phone].
+/// Unified text input field for [CrudFieldConfig.text], [CrudFieldConfig.number],
+/// [CrudFieldConfig.email], and [CrudFieldConfig.phone].
 class TextInputField extends StatelessWidget {
   const TextInputField({
     super.key,

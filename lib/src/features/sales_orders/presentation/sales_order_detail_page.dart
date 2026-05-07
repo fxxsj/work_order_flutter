@@ -150,7 +150,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
         submitText: '通过',
         maxWidth: 420,
         onSubmit: () async => Navigator.of(dialogContext).pop(true),
-        content: CrudFormField.textarea(
+        content: CrudFieldConfig.textarea(
           label: '审核意见（可选）',
           controller: _approvalCommentController,
           maxLines: 3,
@@ -192,7 +192,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
               destructive: true,
             ),
             const SizedBox(height: 12),
-            CrudFormField.textarea(
+            CrudFieldConfig.textarea(
               label: '退回原因',
               controller: _rejectionReasonController,
               hintText: '请明确写清需要补充或修改的内容',
@@ -201,7 +201,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
                   (value?.trim().isEmpty ?? true) ? '请填写拒绝原因' : null,
             ).build(dialogContext),
             const SizedBox(height: 12),
-            CrudFormField.textarea(
+            CrudFieldConfig.textarea(
               label: '补充说明（可选）',
               controller: _approvalCommentController,
               hintText: '例如：客户信息不完整，需补充联系人和交期',
@@ -269,7 +269,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
               destructive: true,
             ),
             const SizedBox(height: 12),
-            CrudFormField.textarea(
+            CrudFieldConfig.textarea(
               label: '取消原因（可选）',
               controller: _cancelReasonController,
               maxLines: 3,

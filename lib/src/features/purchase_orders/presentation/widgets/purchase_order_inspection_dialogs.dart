@@ -360,7 +360,7 @@ Future<void> showPurchaseInspectionAppFormDialog(
                   label: '收货数量',
                   value: received.toStringAsFixed(2),
                 ),
-                CrudFormField.number(
+                CrudFieldConfig.number(
                   label: '合格数量',
                   controller: qualifiedController,
                   decimal: true,
@@ -371,7 +371,7 @@ Future<void> showPurchaseInspectionAppFormDialog(
                   },
                 ).build(dialogContext),
                 SizedBox(height: LayoutTokens.gapMd),
-                CrudFormField.number(
+                CrudFieldConfig.number(
                   label: '不合格数量',
                   controller: unqualifiedController,
                   decimal: true,
@@ -382,7 +382,7 @@ Future<void> showPurchaseInspectionAppFormDialog(
                   },
                 ).build(dialogContext),
                 SizedBox(height: LayoutTokens.gapMd),
-                CrudFormField.textarea(
+                CrudFieldConfig.textarea(
                   label: '不合格原因',
                   controller: reasonController,
                   maxLines: 3,

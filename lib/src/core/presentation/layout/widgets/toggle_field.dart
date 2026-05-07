@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 
-/// Toggle/switch field for [CrudFormField.toggle].
+/// Toggle/switch field for [CrudFieldConfig.toggle].
 class ToggleField extends FormField<bool> {
   ToggleField({
     super.key,

@@ -500,7 +500,7 @@ class _QualityInspectionListViewState
                           },
                   ),
                   const SizedBox(height: 12),
-                  CrudFormField.number(
+                  CrudFieldConfig.number(
                     label: '合格数量',
                     controller: passedController,
                     validator: (value) {
@@ -513,7 +513,7 @@ class _QualityInspectionListViewState
                     },
                   ).build(context),
                   const SizedBox(height: 12),
-                  CrudFormField.number(
+                  CrudFieldConfig.number(
                     label: '不合格数量',
                     controller: failedController,
                     validator: (value) {

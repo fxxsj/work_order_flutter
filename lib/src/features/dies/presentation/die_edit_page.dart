@@ -393,7 +393,7 @@ class _DieEditPageState extends State<DieEditPage> {
                       ),
                     SizedBox(width: LayoutTokens.gapMd),
                     Expanded(
-                      child: CrudFormField.number(
+                      child: CrudFieldConfig.number(
                         label: _quantityLabel,
                         controller: item.quantityController,
                       ).build(context),
@@ -518,13 +518,13 @@ class _DieEditPageState extends State<DieEditPage> {
             title: _basicSectionTitle,
             column: 0,
             fields: [
-              CrudFormField.text(
+              CrudFieldConfig.text(
                 label: _codeLabel,
                 controller: _codeController,
                 enabled: !isConfirmed,
                 hintText: '留空则系统自动生成',
               ),
-              CrudFormField.text(
+              CrudFieldConfig.text(
                 label: _nameLabel,
                 controller: _nameController,
                 enabled: !isConfirmed,
@@ -536,7 +536,7 @@ class _DieEditPageState extends State<DieEditPage> {
                   return null;
                 },
               ),
-              CrudFormField.dropdown(
+              CrudFieldConfig.dropdown(
                 label: _typeLabel,
                 value: _dieType,
                 enabled: !isConfirmed,
@@ -552,7 +552,7 @@ class _DieEditPageState extends State<DieEditPage> {
                     ? null
                     : (value) => _handleDieTypeChange(value as String?),
               ),
-              CrudFormField.text(
+              CrudFieldConfig.text(
                 label: _sizeLabel,
                 controller: _sizeController,
                 enabled: !isConfirmed,
@@ -563,17 +563,17 @@ class _DieEditPageState extends State<DieEditPage> {
             title: _extraSectionTitle,
             column: isMobile ? 0 : 1,
             fields: [
-              CrudFormField.text(
+              CrudFieldConfig.text(
                 label: _materialLabel,
                 controller: _materialController,
                 enabled: !isConfirmed,
               ),
-              CrudFormField.text(
+              CrudFieldConfig.text(
                 label: _thicknessLabel,
                 controller: _thicknessController,
                 enabled: !isConfirmed,
               ),
-              CrudFormField.textarea(
+              CrudFieldConfig.textarea(
                 label: _notesLabel,
                 controller: _notesController,
                 maxLines: 3,
@@ -584,7 +584,7 @@ class _DieEditPageState extends State<DieEditPage> {
             title: _productSectionTitle,
             column: 0,
             fields: [
-              CrudFormField.custom(
+              CrudFieldConfig.custom(
                 builder: _buildProductSection,
               ),
             ],
@@ -593,7 +593,7 @@ class _DieEditPageState extends State<DieEditPage> {
             title: _imageSectionTitle,
             column: 0,
             fields: [
-              CrudFormField.custom(
+              CrudFieldConfig.custom(
                 builder: _buildImageSection,
               ),
             ],

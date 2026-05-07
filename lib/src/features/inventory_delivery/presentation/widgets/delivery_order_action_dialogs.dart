@@ -51,12 +51,12 @@ Future<void> showDeliveryShipDialog(
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CrudFormField.text(
+                CrudFieldConfig.text(
                   label: '物流公司',
                   controller: logisticsController,
                 ).build(dialogContext),
                 SizedBox(height: LayoutTokens.gapMd),
-                CrudFormField.text(
+                CrudFieldConfig.text(
                   label: '运单号',
                   controller: trackingController,
                 ).build(dialogContext),
@@ -109,7 +109,7 @@ Future<void> showDeliveryReceiveDialog(
             submitting: submitting,
             maxWidth: LayoutTokens.dialogWidthSm,
             onSubmit: () => submit(setState),
-            content: CrudFormField.textarea(
+            content: CrudFieldConfig.textarea(
               label: '签收备注',
               controller: notesController,
               maxLines: 3,
@@ -168,7 +168,7 @@ Future<void> showDeliveryRejectDialog(
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 SizedBox(height: LayoutTokens.gapMd),
-                CrudFormField.textarea(
+                CrudFieldConfig.textarea(
                   label: '拒收原因',
                   controller: reasonController,
                   maxLines: 3,

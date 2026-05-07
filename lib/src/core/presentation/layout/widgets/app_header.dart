@@ -76,7 +76,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
       elevation: 0,
       scrolledUnderElevation: 0,
       shape: Border(
-        bottom: BorderSide(color: borderColor.withValues(alpha: 0.75)),
+        bottom: BorderSide(color: borderColor.withValues(alpha: OpacityTokens.borderStrong)),
       ),
       toolbarHeight: height,
       iconTheme: IconThemeData(color: subtleText),

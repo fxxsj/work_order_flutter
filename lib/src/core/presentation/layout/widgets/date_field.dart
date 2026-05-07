@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 
-/// Date field for [CrudFormField.date].
+/// Date field for [CrudFieldConfig.date].
 class DateField extends FormField<String> {
   DateField({
     super.key,

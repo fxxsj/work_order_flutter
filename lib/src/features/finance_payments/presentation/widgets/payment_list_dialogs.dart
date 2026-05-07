@@ -162,7 +162,7 @@ Future<PaymentCreateResult?> showPaymentCreateDialog(
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      CrudFormField.radioGroup(
+                      CrudFieldConfig.radioGroup(
                         label: '收款方式',
                         value: paymentMethod,
                         options: const [
@@ -179,7 +179,7 @@ Future<PaymentCreateResult?> showPaymentCreateDialog(
                             setState(() => paymentMethod = value as String),
                       ).build(context),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      CrudFormField.number(
+                      CrudFieldConfig.number(
                         label: '收款金额',
                         controller: amountController,
                         decimal: true,
@@ -189,22 +189,22 @@ Future<PaymentCreateResult?> showPaymentCreateDialog(
                                 : null,
                       ).build(context),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      CrudFormField.text(
+                      CrudFieldConfig.text(
                         label: '收款日期（YYYY-MM-DD）',
                         controller: paymentDateController,
                       ).build(context),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      CrudFormField.text(
+                      CrudFieldConfig.text(
                         label: '收款账户（可选）',
                         controller: bankController,
                       ).build(context),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      CrudFormField.text(
+                      CrudFieldConfig.text(
                         label: '交易流水号（可选）',
                         controller: transactionController,
                       ).build(context),
                       const SizedBox(height: LayoutTokens.gapMd),
-                      CrudFormField.textarea(
+                      CrudFieldConfig.textarea(
                         label: '备注（可选）',
                         controller: notesController,
                         maxLines: 3,

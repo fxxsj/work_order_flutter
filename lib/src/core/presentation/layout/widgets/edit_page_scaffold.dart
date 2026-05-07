@@ -73,7 +73,7 @@ class EditPageFooterBar extends StatelessWidget {
         border: Border(
           top: BorderSide(
             color:
-                (colors?.borderColor ?? theme.dividerColor).withValues(alpha: 0.6),
+                (colors?.borderColor ?? theme.dividerColor).withValues(alpha: OpacityTokens.heavy),
           ),
         ),
       ),

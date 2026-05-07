@@ -235,13 +235,13 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CrudFormField.text(
+          CrudFieldConfig.text(
             label: '用户名',
             initialValue: _username(),
             enabled: false,
           ).build(context),
           SizedBox(height: LayoutTokens.gapMd),
-          CrudFormField.email(
+          CrudFieldConfig.email(
             label: '邮箱',
             controller: _emailController,
             validator: (value) {
@@ -254,10 +254,10 @@ class _ProfilePageState extends State<ProfilePage> {
             },
           ).build(context),
           SizedBox(height: LayoutTokens.gapMd),
-          CrudFormField.text(label: '姓', controller: _lastNameController)
+          CrudFieldConfig.text(label: '姓', controller: _lastNameController)
               .build(context),
           SizedBox(height: LayoutTokens.gapMd),
-          CrudFormField.text(label: '名', controller: _firstNameController)
+          CrudFieldConfig.text(label: '名', controller: _firstNameController)
               .build(context),
           SizedBox(height: LayoutTokens.gapMd),
           Wrap(
@@ -300,7 +300,7 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CrudFormField.text(
+          CrudFieldConfig.text(
             label: '旧密码',
             controller: _oldPasswordController,
             obscureText: true,
@@ -308,7 +308,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 value == null || value.isEmpty ? '请输入旧密码' : null,
           ).build(context),
           SizedBox(height: LayoutTokens.gapMd),
-          CrudFormField.text(
+          CrudFieldConfig.text(
             label: '新密码',
             controller: _newPasswordController,
             obscureText: true,
@@ -319,7 +319,7 @@ class _ProfilePageState extends State<ProfilePage> {
             },
           ).build(context),
           SizedBox(height: LayoutTokens.gapMd),
-          CrudFormField.text(
+          CrudFieldConfig.text(
             label: '确认密码',
             controller: _confirmPasswordController,
             obscureText: true,

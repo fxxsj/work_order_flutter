@@ -22,8 +22,10 @@ class SidebarBrand extends StatelessWidget {
       return Container(
         height: LayoutTokens.navItemHeight,
         decoration: BoxDecoration(
-          color:
-              Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.18),
+          color: Theme.of(context)
+              .colorScheme
+              .onPrimary
+              .withValues(alpha: OpacityTokens.medium),
           borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
         ),
         child: Icon(Icons.grid_view_rounded,
@@ -43,7 +45,7 @@ class SidebarBrand extends StatelessWidget {
             width: 34,
             height: 34,
             decoration: BoxDecoration(
-              color: onPrimary.withValues(alpha: 0.18),
+              color: onPrimary.withValues(alpha: OpacityTokens.medium),
               borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
             ),
             child: Icon(Icons.grid_view_rounded, color: onPrimary, size: 18),

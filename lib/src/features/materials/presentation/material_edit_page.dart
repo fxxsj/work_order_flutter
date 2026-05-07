@@ -136,7 +136,7 @@ class _MaterialEditPageState extends State<MaterialEditPage> {
             title: _basicSectionTitle,
             column: 0,
             fields: [
-              CrudFormField.text(
+              CrudFieldConfig.text(
                 label: _codeLabel,
                 controller: _codeController,
                 validator: (value) {
@@ -150,7 +150,7 @@ class _MaterialEditPageState extends State<MaterialEditPage> {
                   return null;
                 },
               ),
-              CrudFormField.text(
+              CrudFieldConfig.text(
                 label: _nameLabel,
                 controller: _nameController,
                 validator: (value) {
@@ -159,7 +159,7 @@ class _MaterialEditPageState extends State<MaterialEditPage> {
                   return null;
                 },
               ),
-              CrudFormField.text(
+              CrudFieldConfig.text(
                 label: _unitLabel,
                 controller: _unitController,
                 validator: (value) {
@@ -174,17 +174,17 @@ class _MaterialEditPageState extends State<MaterialEditPage> {
             title: _extraSectionTitle,
             column: isMobile ? 0 : 1,
             fields: [
-              CrudFormField.number(
+              CrudFieldConfig.number(
                 label: _unitPriceLabel,
                 controller: _unitPriceController,
                 decimal: true,
               ),
-              CrudFormField.number(
+              CrudFieldConfig.number(
                 label: _stockLabel,
                 controller: _stockController,
                 decimal: true,
               ),
-              CrudFormField.number(
+              CrudFieldConfig.number(
                 label: _minStockLabel,
                 controller: _minStockController,
                 decimal: true,

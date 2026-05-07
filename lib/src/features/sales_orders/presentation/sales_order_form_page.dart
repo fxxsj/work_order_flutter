@@ -83,8 +83,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
       TextEditingController(text: '0');
   final TextEditingController _paidAmountController =
       TextEditingController(text: '0');
-  final TextEditingController _paymentDateController =
-      TextEditingController();
+  final TextEditingController _paymentDateController = TextEditingController();
 
   DateTime? _orderDate;
   DateTime? _deliveryDate;
@@ -564,7 +563,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               ),
               SizedBox(
                 width: fieldWidth,
-                child: CrudFormField.text(
+                child: CrudFieldConfig.text(
                   label: '下单日期',
                   controller: _orderDateController,
                   readOnly: true,
@@ -573,7 +572,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               ),
               SizedBox(
                 width: fieldWidth,
-                child: CrudFormField.text(
+                child: CrudFieldConfig.text(
                   label: '交货日期',
                   controller: _deliveryDateController,
                   readOnly: true,
@@ -584,7 +583,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               ),
               SizedBox(
                 width: fieldWidth,
-                child: CrudFormField.text(
+                child: CrudFieldConfig.text(
                   label: '合同号',
                   controller: _contractNumberController,
                 ).build(context),
@@ -599,17 +598,18 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               children: [
                 SizedBox(
                   width: fieldWidth,
-                  child: CrudFormField.text(
+                  child: CrudFieldConfig.text(
                     label: '订单号',
-                    initialValue: _detail?.orderNumber.trim().isNotEmpty ?? false
-                        ? _detail!.orderNumber
-                        : '保存后生成',
+                    initialValue:
+                        _detail?.orderNumber.trim().isNotEmpty ?? false
+                            ? _detail!.orderNumber
+                            : '保存后生成',
                     enabled: false,
                   ).build(context),
                 ),
                 SizedBox(
                   width: fieldWidth,
-                  child: CrudFormField.text(
+                  child: CrudFieldConfig.text(
                     label: '状态',
                     initialValue: _statusLabel(_status),
                     enabled: false,
@@ -617,7 +617,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                 ),
                 SizedBox(
                   width: fieldWidth,
-                  child: CrudFormField.text(
+                  child: CrudFieldConfig.text(
                     label: '付款状态',
                     initialValue: _paymentStatusLabel(_paymentStatus),
                     enabled: false,
@@ -632,7 +632,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
             children: [
               SizedBox(
                 width: fieldWidth,
-                child: CrudFormField.text(
+                child: CrudFieldConfig.text(
                   label: '联系人',
                   hintText: widget.mode == SalesOrderFormMode.create
                       ? '（自动从客户档案带出）'
@@ -643,7 +643,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               ),
               SizedBox(
                 width: fieldWidth,
-                child: CrudFormField.text(
+                child: CrudFieldConfig.text(
                   label: '联系电话',
                   hintText: widget.mode == SalesOrderFormMode.create
                       ? '（自动从客户档案带出）'
@@ -654,7 +654,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               ),
               SizedBox(
                 width: fieldWidth,
-                child: CrudFormField.text(
+                child: CrudFieldConfig.text(
                   label: '送货地址',
                   hintText: widget.mode == SalesOrderFormMode.create
                       ? '（自动从客户档案带出）'
@@ -666,7 +666,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
             ],
           ),
           const SizedBox(height: 12),
-          CrudFormField.textarea(
+          CrudFieldConfig.textarea(
             label: '备注',
             controller: _notesController,
             maxLines: 3,
@@ -790,7 +790,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
             children: [
               SizedBox(
                 width: fieldWidth,
-                child: CrudFormField.number(
+                child: CrudFieldConfig.number(
                   label: '整单税率 (%)',
                   controller: _taxRateController,
                   decimal: true,
@@ -799,7 +799,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               ),
               SizedBox(
                 width: fieldWidth,
-                child: CrudFormField.number(
+                child: CrudFieldConfig.number(
                   label: '整单折扣金额',
                   controller: _discountAmountController,
                   decimal: true,
@@ -808,7 +808,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               ),
               SizedBox(
                 width: fieldWidth,
-                child: CrudFormField.text(
+                child: CrudFieldConfig.text(
                   label: '小计',
                   initialValue: _formatAmount(_itemsSubtotalValue),
                   enabled: false,
@@ -817,7 +817,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               ),
               SizedBox(
                 width: fieldWidth,
-                child: CrudFormField.text(
+                child: CrudFieldConfig.text(
                   label: '整单税额',
                   initialValue: _formatAmount(_orderLevelTaxAmount),
                   enabled: false,
@@ -826,7 +826,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               ),
               SizedBox(
                 width: fieldWidth,
-                child: CrudFormField.text(
+                child: CrudFieldConfig.text(
                   label: '总金额',
                   initialValue: _formatAmount(_grandTotalValue),
                   enabled: false,
@@ -835,7 +835,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               ),
               SizedBox(
                 width: fieldWidth,
-                child: CrudFormField.text(
+                child: CrudFieldConfig.text(
                   label: '未付金额',
                   initialValue: _formatAmount(_unpaidAmountValue),
                   enabled: false,
@@ -844,7 +844,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               ),
               SizedBox(
                 width: fieldWidth,
-                child: CrudFormField.number(
+                child: CrudFieldConfig.number(
                   label: '定金',
                   controller: _depositAmountController,
                   decimal: true,
@@ -853,7 +853,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               ),
               SizedBox(
                 width: fieldWidth,
-                child: CrudFormField.number(
+                child: CrudFieldConfig.number(
                   label: '已付金额',
                   controller: _paidAmountController,
                   decimal: true,
@@ -862,11 +862,12 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               ),
               SizedBox(
                 width: fieldWidth,
-                child: CrudFormField.text(
+                child: CrudFieldConfig.text(
                   label: '付款日期',
                   controller: _paymentDateController,
                   readOnly: true,
-                  onTap: () => _pickDate(isOrderDate: false, isPaymentDate: true),
+                  onTap: () =>
+                      _pickDate(isOrderDate: false, isPaymentDate: true),
                 ).build(context),
               ),
             ],
@@ -1160,9 +1161,7 @@ class _ItemRowState extends State<_ItemRow> {
                       value: widget.draft.productId,
                       decoration: const InputDecoration(labelText: '产品'),
                       options: productOptions,
-                      selectHintText: widget.products.isEmpty
-                          ? '新增产品'
-                          : '请选择',
+                      selectHintText: widget.products.isEmpty ? '新增产品' : '请选择',
                       minOptionsForSearch: 1,
                       onChanged: _handleProductChanged,
                       validator: (value) => value == null ? '请选择产品' : null,
@@ -1171,7 +1170,7 @@ class _ItemRowState extends State<_ItemRow> {
                 if (widget.isDesktop) const SizedBox(width: 12),
                 SizedBox(
                   width: 220,
-                  child: CrudFormField.text(
+                  child: CrudFieldConfig.text(
                     label: '规格',
                     initialValue: selectedProduct?.specification ?? '',
                     enabled: false,
@@ -1180,7 +1179,7 @@ class _ItemRowState extends State<_ItemRow> {
                 const SizedBox(width: 12),
                 SizedBox(
                   width: 100,
-                  child: CrudFormField.text(
+                  child: CrudFieldConfig.text(
                     label: '单位',
                     controller: widget.draft.unitController,
                     onChanged: (_) => widget.onChanged(),
@@ -1189,7 +1188,7 @@ class _ItemRowState extends State<_ItemRow> {
                 const SizedBox(width: 12),
                 SizedBox(
                   width: 120,
-                  child: CrudFormField.number(
+                  child: CrudFieldConfig.number(
                     label: '单价',
                     controller: widget.draft.unitPriceController,
                     decimal: true,
@@ -1199,7 +1198,7 @@ class _ItemRowState extends State<_ItemRow> {
                 const SizedBox(width: 12),
                 SizedBox(
                   width: 100,
-                  child: CrudFormField.number(
+                  child: CrudFieldConfig.number(
                     label: '数量',
                     controller: widget.draft.quantityController,
                     onChanged: (_) => widget.onChanged(),
@@ -1208,7 +1207,7 @@ class _ItemRowState extends State<_ItemRow> {
                 const SizedBox(width: 12),
                 SizedBox(
                   width: 100,
-                  child: CrudFormField.number(
+                  child: CrudFieldConfig.number(
                     label: '税率',
                     controller: widget.draft.taxRateController,
                     decimal: true,
@@ -1218,7 +1217,7 @@ class _ItemRowState extends State<_ItemRow> {
                 const SizedBox(width: 12),
                 SizedBox(
                   width: 100,
-                  child: CrudFormField.number(
+                  child: CrudFieldConfig.number(
                     label: '折扣',
                     controller: widget.draft.discountAmountController,
                     decimal: true,
@@ -1242,9 +1241,7 @@ class _ItemRowState extends State<_ItemRow> {
                   value: widget.draft.productId,
                   decoration: const InputDecoration(labelText: '产品'),
                   options: productOptions,
-                  selectHintText: widget.products.isEmpty
-                      ? '新增产品'
-                      : '请选择',
+                  selectHintText: widget.products.isEmpty ? '新增产品' : '请选择',
                   minOptionsForSearch: 1,
                   onChanged: _handleProductChanged,
                   validator: (value) => value == null ? '请选择产品' : null,
@@ -1256,7 +1253,7 @@ class _ItemRowState extends State<_ItemRow> {
               children: [
                 SizedBox(
                   width: 120,
-                  child: CrudFormField.text(
+                  child: CrudFieldConfig.text(
                     label: '折后金额',
                     initialValue: safeSubtotal.toStringAsFixed(2),
                     enabled: false,
@@ -1266,7 +1263,7 @@ class _ItemRowState extends State<_ItemRow> {
                 const SizedBox(width: 12),
                 SizedBox(
                   width: 120,
-                  child: CrudFormField.text(
+                  child: CrudFieldConfig.text(
                     label: '税额',
                     initialValue: lineTax.toStringAsFixed(2),
                     enabled: false,
@@ -1276,7 +1273,7 @@ class _ItemRowState extends State<_ItemRow> {
                 const SizedBox(width: 12),
                 SizedBox(
                   width: 120,
-                  child: CrudFormField.text(
+                  child: CrudFieldConfig.text(
                     label: '合计',
                     initialValue: lineTotal.toStringAsFixed(2),
                     enabled: false,
@@ -1285,7 +1282,7 @@ class _ItemRowState extends State<_ItemRow> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: CrudFormField.text(
+                  child: CrudFieldConfig.text(
                     label: '备注',
                     controller: widget.draft.notesController,
                     onChanged: (_) => widget.onChanged(),
@@ -1352,8 +1349,8 @@ class _InlineBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color:
-            theme.colorScheme.surfaceContainerHighest.withValues(alpha: OpacityTokens.heavy),
+        color: theme.colorScheme.surfaceContainerHighest
+            .withValues(alpha: OpacityTokens.heavy),
         borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
       ),
       child: Text(

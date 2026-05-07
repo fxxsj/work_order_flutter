@@ -316,10 +316,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.4),
+              color: theme.colorScheme.primaryContainer.withValues(alpha: OpacityTokens.distinctStrong),
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
-                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                color: theme.colorScheme.outlineVariant.withValues(alpha: OpacityTokens.borderMedium),
               ),
             ),
             child: Text(
@@ -413,7 +413,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     child: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.5),
+                        color: Colors.black.withValues(alpha: OpacityTokens.borderMedium),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: const Icon(
@@ -562,7 +562,7 @@ class _ImageViewerDialogState extends State<_ImageViewerDialog> {
                         icon: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.5),
+                            color: Colors.black.withValues(alpha: OpacityTokens.borderMedium),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -591,7 +591,7 @@ class _ImageViewerDialogState extends State<_ImageViewerDialog> {
                         icon: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.5),
+                            color: Colors.black.withValues(alpha: OpacityTokens.borderMedium),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(

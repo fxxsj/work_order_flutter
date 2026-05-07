@@ -163,7 +163,7 @@ Future<void> showPurchaseOrderFormDialog(
                       onChanged: submitting ? null : onWorkOrderChanged,
                     ),
                     const SizedBox(height: LayoutTokens.gapMd),
-                    CrudFormField.textarea(
+                    CrudFieldConfig.textarea(
                       label: '备注',
                       controller: notesController,
                       maxLines: 3,
@@ -547,7 +547,7 @@ class _PurchaseDenseField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CrudFormField.text(
+    return CrudFieldConfig.text(
       label: label,
       controller: controller,
       enabled: enabled,

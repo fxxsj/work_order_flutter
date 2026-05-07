@@ -51,7 +51,7 @@ class _RegisterState extends State {
         key: formKey,
         child: Column(
           children: [
-            CrudFormField.text(
+            CrudFieldConfig.text(
               label: '账号',
               controller: userNameController,
               textInputAction: TextInputAction.next,
@@ -60,7 +60,7 @@ class _RegisterState extends State {
               validator: FormValidators.required('请输入账号'),
             ).build(context),
             SizedBox(height: LayoutTokens.gapLg),
-            CrudFormField.text(
+            CrudFieldConfig.text(
               label: '密码',
               controller: passwordController,
               obscureText: _obscurePassword,
@@ -82,7 +82,7 @@ class _RegisterState extends State {
               validator: FormValidators.required('请输入密码'),
             ).build(context),
             SizedBox(height: LayoutTokens.gapLg),
-            CrudFormField.text(
+            CrudFieldConfig.text(
               label: '确认密码',
               controller: confirmController,
               obscureText: _obscureConfirm,

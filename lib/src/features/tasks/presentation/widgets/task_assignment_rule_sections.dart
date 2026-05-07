@@ -170,7 +170,7 @@ class _TaskAssignmentRuleDialogState extends State<TaskAssignmentRuleDialog> {
                     setState(() => _departmentId = value ?? _departmentId),
           ),
           SizedBox(height: LayoutTokens.gapMd),
-          CrudFormField.number(
+          CrudFieldConfig.number(
             label: '优先级 (0-100)',
             initialValue: _priority.toString(),
             validator: (value) {
@@ -203,7 +203,7 @@ class _TaskAssignmentRuleDialogState extends State<TaskAssignmentRuleDialog> {
             title: const Text('启用规则'),
             contentPadding: EdgeInsets.zero,
           ),
-          CrudFormField.text(
+          CrudFieldConfig.text(
             label: '备注（可选）',
             initialValue: _notes,
             onChanged: (value) => _notes = value,

@@ -1,5 +1,6 @@
+import 'package:work_order_app/src/core/common/api_exception.dart';
+import 'package:work_order_app/src/core/data/page_data.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
-import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/departments/data/department_dto.dart';
 
 class DepartmentApiService {
@@ -21,27 +22,33 @@ class DepartmentApiService {
       params['search'] = trimmed;
     }
 
-    final response = await _client.get('/departments/', queryParameters: params);
+    final response =
+        await _client.get('/departments/', queryParameters: params);
     final payload = response.data;
     if (payload is Map<String, dynamic>) {
-      final results = payload['results'];
-      final list = results is List
-          ? results
-              .whereType<Map>()
-              .map((item) => DepartmentDto.fromJson(Map<String, dynamic>.from(item)))
-              .toList()
-          : <DepartmentDto>[];
-      final total = toInt(payload['count']) ?? list.length;
-      return DepartmentPageDto(items: list, total: total, page: page, pageSize: pageSize);
+      final pageData = PageData.fromPayload(
+        payload: payload,
+        page: page,
+        pageSize: pageSize,
+        results: _parseDepartmentList(payload['results']),
+      );
+      return DepartmentPageDto(
+        items: pageData.items,
+        total: pageData.total,
+        page: pageData.page,
+        pageSize: pageData.pageSize,
+      );
     }
     if (payload is List) {
-      final list = payload
-          .whereType<Map>()
-          .map((item) => DepartmentDto.fromJson(Map<String, dynamic>.from(item)))
-          .toList();
-      return DepartmentPageDto(items: list, total: list.length, page: 1, pageSize: list.length);
+      final list = _parseDepartmentList(payload);
+      return DepartmentPageDto(
+        items: list,
+        total: list.length,
+        page: 1,
+        pageSize: list.length,
+      );
     }
-    return const DepartmentPageDto(items: [], total: 0, page: 1, pageSize: 20);
+    throw _unexpectedPayload('部门分页列表', payload);
   }
 
   Future<List<DepartmentDto>> fetchDepartmentTree() async {
@@ -54,22 +61,20 @@ class DepartmentApiService {
     if (isActive != null) {
       params['is_active'] = isActive.toString();
     }
-    final response = await _client.get('/departments/all/', queryParameters: params.isEmpty ? null : params);
+    final response = await _client.get('/departments/all/',
+        queryParameters: params.isEmpty ? null : params);
     return _listFromResponse(response.data);
   }
 
   Future<DepartmentDto> createDepartment(DepartmentDto dto) async {
     final response = await _client.post('/departments/', data: dto.toPayload());
-    final payload = response.data;
-    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
-    return DepartmentDto.fromJson(map);
+    return DepartmentDto.fromJson(_requireMap('创建部门', response.data));
   }
 
   Future<DepartmentDto> updateDepartment(DepartmentDto dto) async {
-    final response = await _client.put('/departments/${dto.id}/', data: dto.toPayload());
-    final payload = response.data;
-    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
-    return DepartmentDto.fromJson(map);
+    final response =
+        await _client.put('/departments/${dto.id}/', data: dto.toPayload());
+    return DepartmentDto.fromJson(_requireMap('更新部门', response.data));
   }
 
   Future<void> deleteDepartment(int id) async {
@@ -87,14 +92,16 @@ class DepartmentApiService {
       if (results is List) {
         return results
             .whereType<Map>()
-            .map((item) => ProcessOptionDto.fromJson(Map<String, dynamic>.from(item)))
+            .map((item) =>
+                ProcessOptionDto.fromJson(Map<String, dynamic>.from(item)))
             .toList();
       }
     }
     if (payload is List) {
       return payload
           .whereType<Map>()
-          .map((item) => ProcessOptionDto.fromJson(Map<String, dynamic>.from(item)))
+          .map((item) =>
+              ProcessOptionDto.fromJson(Map<String, dynamic>.from(item)))
           .toList();
     }
     return [];
@@ -102,20 +109,38 @@ class DepartmentApiService {
 
   List<DepartmentDto> _listFromResponse(dynamic payload) {
     if (payload is List) {
-      return payload
-          .whereType<Map>()
-          .map((item) => DepartmentDto.fromJson(Map<String, dynamic>.from(item)))
-          .toList();
+      return _parseDepartmentList(payload);
     }
     if (payload is Map<String, dynamic>) {
-      final results = payload['results'];
-      if (results is List) {
-        return results
-            .whereType<Map>()
-            .map((item) => DepartmentDto.fromJson(Map<String, dynamic>.from(item)))
-            .toList();
-      }
+      return _parseDepartmentList(payload['results']);
     }
-    return [];
+    return const <DepartmentDto>[];
+  }
+
+  List<DepartmentDto> _parseDepartmentList(dynamic payload) {
+    if (payload is! List) {
+      return const <DepartmentDto>[];
+    }
+    return payload
+        .whereType<Map>()
+        .map((item) => DepartmentDto.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
+  }
+
+  Map<String, dynamic> _requireMap(String label, dynamic data) {
+    if (data is Map<String, dynamic>) {
+      return Map<String, dynamic>.from(data);
+    }
+    if (data is Map) {
+      return Map<String, dynamic>.from(data);
+    }
+    throw _unexpectedPayload(label, data);
+  }
+
+  ApiException _unexpectedPayload(String label, dynamic data) {
+    return ApiException(
+      message: '$label 响应格式异常',
+      data: data,
+    );
   }
 }

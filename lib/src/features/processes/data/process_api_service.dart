@@ -1,5 +1,6 @@
+import 'package:work_order_app/src/core/common/api_exception.dart';
+import 'package:work_order_app/src/core/data/page_data.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
-import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/processes/data/process_dto.dart';
 
 class ProcessApiService {
@@ -28,41 +29,70 @@ class ProcessApiService {
     final response = await _client.get('/processes/', queryParameters: params);
     final payload = response.data;
     if (payload is Map<String, dynamic>) {
-      final results = payload['results'];
-      final list = results is List
-          ? results
-              .whereType<Map>()
-              .map((item) => ProcessDto.fromJson(Map<String, dynamic>.from(item)))
-              .toList()
-          : <ProcessDto>[];
-      final total = toInt(payload['count']) ?? list.length;
-      return ProcessPageDto(items: list, total: total, page: page, pageSize: pageSize);
+      final pageData = PageData.fromPayload(
+        payload: payload,
+        page: page,
+        pageSize: pageSize,
+        results: _parseProcessList(payload['results']),
+      );
+      return ProcessPageDto(
+        items: pageData.items,
+        total: pageData.total,
+        page: pageData.page,
+        pageSize: pageData.pageSize,
+      );
     }
     if (payload is List) {
-      final list = payload
-          .whereType<Map>()
-          .map((item) => ProcessDto.fromJson(Map<String, dynamic>.from(item)))
-          .toList();
-      return ProcessPageDto(items: list, total: list.length, page: 1, pageSize: list.length);
+      final list = _parseProcessList(payload);
+      return ProcessPageDto(
+        items: list,
+        total: list.length,
+        page: 1,
+        pageSize: list.length,
+      );
     }
-    return const ProcessPageDto(items: [], total: 0, page: 1, pageSize: 20);
+    throw _unexpectedPayload('工序分页列表', payload);
   }
 
   Future<ProcessDto> createProcess(ProcessDto dto) async {
     final response = await _client.post('/processes/', data: dto.toPayload());
-    final payload = response.data;
-    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
-    return ProcessDto.fromJson(map);
+    return ProcessDto.fromJson(_requireMap('创建工序', response.data));
   }
 
   Future<ProcessDto> updateProcess(ProcessDto dto) async {
-    final response = await _client.put('/processes/${dto.id}/', data: dto.toPayload());
-    final payload = response.data;
-    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
-    return ProcessDto.fromJson(map);
+    final response =
+        await _client.put('/processes/${dto.id}/', data: dto.toPayload());
+    return ProcessDto.fromJson(_requireMap('更新工序', response.data));
   }
 
   Future<void> deleteProcess(int id) async {
     await _client.delete('/processes/$id/');
+  }
+
+  List<ProcessDto> _parseProcessList(dynamic payload) {
+    if (payload is! List) {
+      return const <ProcessDto>[];
+    }
+    return payload
+        .whereType<Map>()
+        .map((item) => ProcessDto.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
+  }
+
+  Map<String, dynamic> _requireMap(String label, dynamic data) {
+    if (data is Map<String, dynamic>) {
+      return Map<String, dynamic>.from(data);
+    }
+    if (data is Map) {
+      return Map<String, dynamic>.from(data);
+    }
+    throw _unexpectedPayload(label, data);
+  }
+
+  ApiException _unexpectedPayload(String label, dynamic data) {
+    return ApiException(
+      message: '$label 响应格式异常',
+      data: data,
+    );
   }
 }

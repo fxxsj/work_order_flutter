@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 
-/// Textarea field for [CrudFormField.textarea].
+/// Textarea field for [CrudFieldConfig.textarea].
 class TextareaField extends StatelessWidget {
   const TextareaField({
     super.key,

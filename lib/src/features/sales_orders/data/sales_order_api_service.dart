@@ -1,6 +1,6 @@
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/common/api_exception.dart';
-import 'package:work_order_app/src/core/utils/parse_utils.dart';
+import 'package:work_order_app/src/core/data/page_data.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_detail_dto.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_dto.dart';
 
@@ -35,26 +35,27 @@ class SalesOrderApiService {
         await _client.get('/sales-orders/', queryParameters: params);
     final payload = response.data;
     if (payload is Map<String, dynamic>) {
-      final results = payload['results'];
-      final list = results is List
-          ? results
-              .whereType<Map>()
-              .map((item) =>
-                  SalesOrderDto.fromJson(Map<String, dynamic>.from(item)))
-              .toList()
-          : <SalesOrderDto>[];
-      final total = toInt(payload['count']) ?? list.length;
+      final pageData = PageData.fromPayload(
+        payload: payload,
+        page: page,
+        pageSize: pageSize,
+        results: _parseSalesOrderList(payload['results']),
+      );
       return SalesOrderPageDto(
-          items: list, total: total, page: page, pageSize: pageSize);
+        items: pageData.items,
+        total: pageData.total,
+        page: pageData.page,
+        pageSize: pageData.pageSize,
+      );
     }
     if (payload is List) {
-      final list = payload
-          .whereType<Map>()
-          .map(
-              (item) => SalesOrderDto.fromJson(Map<String, dynamic>.from(item)))
-          .toList();
+      final list = _parseSalesOrderList(payload);
       return SalesOrderPageDto(
-          items: list, total: list.length, page: 1, pageSize: list.length);
+        items: list,
+        total: list.length,
+        page: 1,
+        pageSize: list.length,
+      );
     }
     throw _unexpectedPayload('客户订单列表', payload);
   }
@@ -157,5 +158,15 @@ class SalesOrderApiService {
       message: '$label 响应格式异常',
       data: data,
     );
+  }
+
+  List<SalesOrderDto> _parseSalesOrderList(dynamic payload) {
+    if (payload is! List) {
+      return const <SalesOrderDto>[];
+    }
+    return payload
+        .whereType<Map>()
+        .map((item) => SalesOrderDto.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
   }
 }

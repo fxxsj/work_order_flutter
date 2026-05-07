@@ -293,28 +293,28 @@ class _WorkOrderProductRowState extends State<WorkOrderProductRow> {
                   ),
                 SizedBox(
                   width: smallWidth,
-                  child: CrudFormField.number(
+                  child: CrudFieldConfig.number(
                     label: '数量',
                     controller: widget.draft.quantityController,
                   ).build(context),
                 ),
                 SizedBox(
                   width: smallWidth,
-                  child: CrudFormField.text(
+                  child: CrudFieldConfig.text(
                     label: '单位',
                     controller: widget.draft.unitController,
                   ).build(context),
                 ),
                 SizedBox(
                   width: specWidth,
-                  child: CrudFormField.text(
+                  child: CrudFieldConfig.text(
                     label: '规格',
                     controller: widget.draft.specController,
                   ).build(context),
                 ),
                 SizedBox(
                   width: smallWidth,
-                  child: CrudFormField.number(
+                  child: CrudFieldConfig.number(
                     label: '排序',
                     controller: widget.draft.sortOrderController,
                   ).build(context),
@@ -418,14 +418,14 @@ class _WorkOrderMaterialRowState extends State<WorkOrderMaterialRow> {
                   ),
                 SizedBox(
                   width: mediumWidth,
-                  child: CrudFormField.text(
+                  child: CrudFieldConfig.text(
                     label: '规格',
                     controller: widget.draft.sizeController,
                   ).build(context),
                 ),
                 SizedBox(
                   width: mediumWidth,
-                  child: CrudFormField.text(
+                  child: CrudFieldConfig.text(
                     label: '用量',
                     controller: widget.draft.usageController,
                   ).build(context),
@@ -444,7 +444,7 @@ class _WorkOrderMaterialRowState extends State<WorkOrderMaterialRow> {
                 ),
                 SizedBox(
                   width: notesWidth,
-                  child: CrudFormField.text(
+                  child: CrudFieldConfig.text(
                     label: '备注',
                     controller: widget.draft.notesController,
                   ).build(context),

@@ -77,18 +77,18 @@ Future<void> showDeliveryOrderFormDialog(
           if (isCompact) {
             return Column(
               children: [
-                CrudFormField.number(
+                CrudFieldConfig.number(
                   label: '运费',
                   controller: freightController,
                   decimal: true,
                 ).build(context),
                 const SizedBox(height: LayoutTokens.gapMd),
-                CrudFormField.number(
+                CrudFieldConfig.number(
                   label: '包裹数',
                   controller: packageCountController,
                 ).build(context),
                 const SizedBox(height: LayoutTokens.gapMd),
-                CrudFormField.number(
+                CrudFieldConfig.number(
                   label: '总重量(kg)',
                   controller: packageWeightController,
                   decimal: true,
@@ -100,7 +100,7 @@ Future<void> showDeliveryOrderFormDialog(
           return Row(
             children: [
               Expanded(
-                child: CrudFormField.number(
+                child: CrudFieldConfig.number(
                   label: '运费',
                   controller: freightController,
                   decimal: true,
@@ -108,14 +108,14 @@ Future<void> showDeliveryOrderFormDialog(
               ),
               const SizedBox(width: LayoutTokens.gapMd),
               Expanded(
-                child: CrudFormField.number(
+                child: CrudFieldConfig.number(
                   label: '包裹数',
                   controller: packageCountController,
                 ).build(context),
               ),
               const SizedBox(width: LayoutTokens.gapMd),
               Expanded(
-                child: CrudFormField.number(
+                child: CrudFieldConfig.number(
                   label: '总重量(kg)',
                   controller: packageWeightController,
                   decimal: true,
@@ -173,21 +173,21 @@ Future<void> showDeliveryOrderFormDialog(
                 title: '收货信息',
                 child: Column(
                   children: [
-                    CrudFormField.text(
+                    CrudFieldConfig.text(
                       label: '收货人',
                       controller: receiverNameController,
                       validator: (value) =>
                           (value?.trim().isEmpty ?? true) ? '请输入收货人' : null,
                     ).build(context),
                     const SizedBox(height: LayoutTokens.gapMd),
-                    CrudFormField.text(
+                    CrudFieldConfig.text(
                       label: '联系电话',
                       controller: receiverPhoneController,
                       validator: (value) =>
                           (value?.trim().isEmpty ?? true) ? '请输入联系电话' : null,
                     ).build(context),
                     const SizedBox(height: LayoutTokens.gapMd),
-                    CrudFormField.text(
+                    CrudFieldConfig.text(
                       label: '送货地址',
                       controller: addressController,
                       validator: (value) =>
@@ -207,19 +207,19 @@ Future<void> showDeliveryOrderFormDialog(
                 title: '物流与备注',
                 child: Column(
                   children: [
-                    CrudFormField.text(
+                    CrudFieldConfig.text(
                       label: '物流公司',
                       controller: logisticsController,
                     ).build(context),
                     const SizedBox(height: LayoutTokens.gapMd),
-                    CrudFormField.text(
+                    CrudFieldConfig.text(
                       label: '物流单号',
                       controller: trackingController,
                     ).build(context),
                     const SizedBox(height: LayoutTokens.gapMd),
                     buildMetricsFields(),
                     const SizedBox(height: LayoutTokens.gapMd),
-                    CrudFormField.textarea(
+                    CrudFieldConfig.textarea(
                       label: '备注',
                       controller: notesController,
                       maxLines: 3,
@@ -578,7 +578,7 @@ class _DeliveryDenseField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CrudFormField.text(
+    return CrudFieldConfig.text(
       label: label,
       controller: controller,
       enabled: enabled,

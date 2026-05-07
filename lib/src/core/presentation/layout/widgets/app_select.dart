@@ -880,7 +880,7 @@ Widget _buildHighlightedText({
         style: TextStyle(
           color: theme.colorScheme.primary,
           fontWeight: FontWeight.w700,
-          backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.12),
+          backgroundColor: theme.colorScheme.primary.withValues(alpha: OpacityTokens.mild),
         ),
       ),
     );

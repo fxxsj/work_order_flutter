@@ -25,8 +25,9 @@ class DrawerTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final background =
-        isSelected ? primary.withValues(alpha: 0.08) : Colors.transparent;
+    final background = isSelected
+        ? primary.withValues(alpha: OpacityTokens.subtle)
+        : Colors.transparent;
     final theme = Theme.of(context);
     final labelStyle = theme.textTheme.bodySmall?.copyWith(
       color: isSelected ? primary : sidebarText,
@@ -54,7 +55,7 @@ class DrawerTile extends StatelessWidget {
             borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
             border: Border.all(
               color: isSelected
-                  ? primary.withValues(alpha: 0.12)
+                  ? primary.withValues(alpha: OpacityTokens.mild)
                   : Colors.transparent,
             ),
           ),
@@ -77,7 +78,7 @@ class DrawerTile extends StatelessWidget {
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: primary.withValues(alpha: 0.1),
+                    color: primary.withValues(alpha: OpacityTokens.splash),
                     borderRadius:
                         BorderRadius.circular(LayoutTokens.radiusPill),
                   ),
