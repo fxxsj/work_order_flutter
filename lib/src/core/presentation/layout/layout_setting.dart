@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/controllers/theme_controller.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:work_order_app/src/core/presentation/layout/opacity_tokens.dart';
 
 class LayoutSetting extends StatelessWidget {
   LayoutSetting({Key? key}) : super(key: key);
@@ -148,7 +149,7 @@ class LayoutSetting extends StatelessWidget {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: color.withValues(alpha: 0.5),
+                                  color: color.withValues(alpha: OpacityTokens.heavy),
                                   offset: const Offset(0, 2),
                                   blurRadius: compact ? 3 : 4,
                                 ),

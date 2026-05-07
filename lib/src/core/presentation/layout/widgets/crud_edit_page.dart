@@ -20,7 +20,7 @@ class CrudFormSection {
   });
 
   final String title;
-  final List<CrudFormField> fields;
+  final List<CrudFieldConfig> fields;
   final int column;
   final bool visible;
 }

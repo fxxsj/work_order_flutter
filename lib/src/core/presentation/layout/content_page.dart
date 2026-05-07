@@ -730,7 +730,7 @@ class _ChartCard extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: surface,
-        border: Border.all(color: borderColor.withValues(alpha: 0.6)),
+        border: Border.all(color: borderColor.withValues(alpha: OpacityTokens.heavy)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -895,7 +895,7 @@ class _ChartBarRow extends StatelessWidget {
         Container(
           height: LayoutTokens.gapSm,
           decoration: BoxDecoration(
-            color: borderColor.withValues(alpha: 0.2),
+            color: borderColor.withValues(alpha: OpacityTokens.medium),
             borderRadius: BorderRadius.circular(LayoutTokens.radiusXs),
           ),
           child: FractionallySizedBox(
@@ -903,7 +903,7 @@ class _ChartBarRow extends StatelessWidget {
             widthFactor: percent,
             child: Container(
               decoration: BoxDecoration(
-                color: primary.withValues(alpha: 0.6),
+                color: primary.withValues(alpha: OpacityTokens.heavy),
                 borderRadius: BorderRadius.circular(LayoutTokens.radiusXs),
               ),
             ),
@@ -989,7 +989,7 @@ class _StatCard extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: surface,
-        border: Border.all(color: borderColor.withValues(alpha: 0.6)),
+        border: Border.all(color: borderColor.withValues(alpha: OpacityTokens.heavy)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1068,7 +1068,7 @@ class _DashboardHero extends StatelessWidget {
               _TinyBadge(
                 label: subtitle,
                 color: accent,
-                background: primary.withValues(alpha: 0.08),
+                background: primary.withValues(alpha: OpacityTokens.subtle),
               ),
             ],
           );
@@ -1094,7 +1094,7 @@ class _DashboardHero extends StatelessWidget {
                   width: 40,
                   height: LayoutTokens.navItemHeight,
                   decoration: BoxDecoration(
-                    color: primary.withValues(alpha: 0.08),
+                    color: primary.withValues(alpha: OpacityTokens.subtle),
                     borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
                   ),
                   child: Icon(
@@ -1118,7 +1118,7 @@ class _DashboardHero extends StatelessWidget {
                 width: 40,
                 height: LayoutTokens.navItemHeight,
                 decoration: BoxDecoration(
-                  color: primary.withValues(alpha: 0.08),
+                  color: primary.withValues(alpha: OpacityTokens.subtle),
                   borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
                 ),
                 child: Icon(
@@ -1443,7 +1443,7 @@ class _QuickEntryCard extends StatelessWidget {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: primary.withValues(alpha: 0.08),
+                color: primary.withValues(alpha: OpacityTokens.subtle),
                 borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
               ),
               child: Icon(item.icon, color: primary, size: LayoutTokens.iconMd),
@@ -1596,7 +1596,7 @@ class _RoutePill extends StatelessWidget {
           vertical: LayoutTokens.gapSm,
         ),
         decoration: BoxDecoration(
-          color: primary.withValues(alpha: 0.06),
+          color: primary.withValues(alpha: OpacityTokens.weak),
           borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
         ),
         child: Text(

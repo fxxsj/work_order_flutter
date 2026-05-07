@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/constants/breakpoints.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/opacity_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/features/materials/domain/material.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_sales_order_candidate.dart';
@@ -474,7 +475,7 @@ class _WorkOrderFormRowCard extends StatelessWidget {
     final colors = theme.extension<AppColors>()!;
     return AppCard(
       padding: LayoutTokens.cardPadding(context),
-      background: theme.colorScheme.primary.withValues(alpha: 0.03),
+      background: theme.colorScheme.primary.withValues(alpha: OpacityTokens.faint),
       borderColor: colors.borderColor,
       radius: LayoutTokens.radiusLg,
       child: child,

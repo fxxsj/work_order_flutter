@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/controllers/theme_controller.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/opacity_tokens.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class Utils {
@@ -172,7 +173,7 @@ class Utils {
       textTheme: textTheme,
       primaryColor: scheme.primary,
       scaffoldBackgroundColor: appColors.background,
-      shadowColor: semantic.shadowStrong.withValues(alpha: 0.12),
+      shadowColor: semantic.shadowStrong.withValues(alpha: OpacityTokens.mild),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: appColors.surface,
@@ -181,13 +182,13 @@ class Utils {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
           borderSide: BorderSide(
-            color: appColors.borderColor.withValues(alpha: 0.7),
+            color: appColors.borderColor.withValues(alpha: OpacityTokens.intense),
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
           borderSide: BorderSide(
-            color: appColors.borderColor.withValues(alpha: 0.7),
+            color: appColors.borderColor.withValues(alpha: OpacityTokens.intense),
           ),
         ),
         focusedBorder: OutlineInputBorder(
@@ -197,7 +198,7 @@ class Utils {
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
           borderSide: BorderSide(
-            color: semantic.danger.withValues(alpha: 0.8),
+            color: semantic.danger.withValues(alpha: OpacityTokens.intense),
             width: 1.4,
           ),
         ),
@@ -243,18 +244,18 @@ class Utils {
       ),
       iconTheme: IconThemeData(color: scheme.primary),
       dividerTheme: DividerThemeData(
-        color: appColors.borderColor.withValues(alpha: 0.7),
+        color: appColors.borderColor.withValues(alpha: OpacityTokens.intense),
         thickness: 0.8,
       ),
       cardTheme: CardThemeData(
         color: appColors.surface,
         elevation: 0,
-        shadowColor: semantic.shadowStrong.withValues(alpha: 0.08),
+        shadowColor: semantic.shadowStrong.withValues(alpha: OpacityTokens.subtle),
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
           side:
-              BorderSide(color: appColors.borderColor.withValues(alpha: 0.45)),
+              BorderSide(color: appColors.borderColor.withValues(alpha: OpacityTokens.strong)),
         ),
       ),
       scrollbarTheme: ScrollbarThemeData(

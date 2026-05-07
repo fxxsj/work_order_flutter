@@ -19,9 +19,9 @@ class AppBarChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       margin: const EdgeInsets.only(left: 2),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
+        color: color.withValues(alpha: OpacityTokens.subtle),
         borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
-        border: Border.all(color: color.withValues(alpha: 0.14)),
+        border: Border.all(color: color.withValues(alpha: OpacityTokens.mild)),
       ),
       child: Text(
         label,

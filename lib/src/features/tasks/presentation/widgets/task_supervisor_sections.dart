@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/opacity_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/features/tasks/data/task_supervisor_support_service.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_list_tile.dart';
@@ -84,7 +85,7 @@ class TaskSupervisorPriorityChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Chip(
       label: Text('$label $value'),
-      backgroundColor: color.withValues(alpha: 0.12),
+      backgroundColor: color.withValues(alpha: OpacityTokens.mild),
       labelStyle: TextStyle(color: color),
     );
   }
@@ -135,9 +136,9 @@ class TaskSupervisorFocusCard extends StatelessWidget {
       constraints: const BoxConstraints(minWidth: 220, maxWidth: 320),
       padding: LayoutTokens.cardPadding(context),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
+        color: color.withValues(alpha: OpacityTokens.subtle),
         borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
-        border: Border.all(color: color.withValues(alpha: 0.28)),
+        border: Border.all(color: color.withValues(alpha: OpacityTokens.medium)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,7 +149,7 @@ class TaskSupervisorFocusCard extends StatelessWidget {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.14),
+                  color: color.withValues(alpha: OpacityTokens.mild),
                   borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
                 ),
                 child: Icon(icon, size: 18, color: color),
@@ -227,7 +228,7 @@ class TaskSupervisorOperatorCard extends StatelessWidget {
               CircleAvatar(
                 radius: 18,
                 backgroundColor:
-                    theme.colorScheme.primary.withValues(alpha: 0.15),
+                    theme.colorScheme.primary.withValues(alpha: OpacityTokens.mild),
                 child: Icon(Icons.person, color: theme.colorScheme.primary),
               ),
               SizedBox(width: LayoutTokens.gapMd),
@@ -375,7 +376,7 @@ class TaskSupervisorDraggableTaskCard extends StatelessWidget {
           if (isBusy)
             Positioned.fill(
               child: Container(
-                color: colors.surface.withValues(alpha: 0.7),
+                color: colors.surface.withValues(alpha: OpacityTokens.intense),
                 child: const Center(
                   child: SizedBox(
                     width: 18,

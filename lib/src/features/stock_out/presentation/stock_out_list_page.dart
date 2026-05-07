@@ -8,7 +8,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/generic_reso
 import 'package:work_order_app/src/features/inventory_shared/presentation/widgets/inventory_document_form_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';

@@ -3,7 +3,7 @@ import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/finance_invoices/domain/invoice.dart';

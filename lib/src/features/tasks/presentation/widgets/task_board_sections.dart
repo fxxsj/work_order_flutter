@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/opacity_tokens.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_list_tile.dart';
 
@@ -269,7 +270,7 @@ class TaskTimelineList extends StatelessWidget {
                   LayoutTokens.gapSm,
                 ),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.05),
+                  color: theme.colorScheme.primary.withValues(alpha: OpacityTokens.faint),
                   border: Border(bottom: BorderSide(color: colors.borderColor)),
                 ),
                 child: Row(
@@ -290,13 +291,13 @@ class TaskTimelineList extends StatelessWidget {
                           vertical: LayoutTokens.gapXs,
                         ),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.error.withValues(alpha: 0.1),
+                          color: theme.colorScheme.error.withValues(alpha: OpacityTokens.weak),
                           borderRadius: BorderRadius.circular(
                             LayoutTokens.radiusPill,
                           ),
                           border: Border.all(
                             color:
-                                theme.colorScheme.error.withValues(alpha: 0.4),
+                                theme.colorScheme.error.withValues(alpha: OpacityTokens.strong),
                           ),
                         ),
                         child: Text(
@@ -452,14 +453,14 @@ class _DraggableTaskCard extends StatelessWidget {
         if (isDragging)
           Positioned.fill(
             child: Container(
-              color: colors.surface.withValues(alpha: 0.6),
+              color: colors.surface.withValues(alpha: OpacityTokens.heavy),
               child: const Center(child: Icon(Icons.open_with, size: 18)),
             ),
           ),
         if (isBusy)
           Positioned.fill(
             child: Container(
-              color: colors.surface.withValues(alpha: 0.7),
+              color: colors.surface.withValues(alpha: OpacityTokens.intense),
               child: const Center(
                 child: SizedBox(
                   width: 18,

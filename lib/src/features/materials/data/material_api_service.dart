@@ -1,5 +1,5 @@
+import 'package:work_order_app/src/core/data/page_data.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
-import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/materials/data/material_dto.dart';
 
 class MaterialApiService {
@@ -7,7 +7,7 @@ class MaterialApiService {
 
   final ApiClient _client;
 
-  Future<MaterialPageDto> fetchMaterials({
+  Future<PageData<MaterialDto>> fetchMaterials({
     int page = 1,
     int pageSize = 20,
     String? search,
@@ -31,17 +31,31 @@ class MaterialApiService {
               .map((item) => MaterialDto.fromJson(Map<String, dynamic>.from(item)))
               .toList()
           : <MaterialDto>[];
-      final total = toInt(payload['count']) ?? list.length;
-      return MaterialPageDto(items: list, total: total, page: page, pageSize: pageSize);
+      return PageData.fromPayload(
+        payload: payload,
+        page: page,
+        pageSize: pageSize,
+        results: list,
+      );
     }
     if (payload is List) {
       final list = payload
           .whereType<Map>()
           .map((item) => MaterialDto.fromJson(Map<String, dynamic>.from(item)))
           .toList();
-      return MaterialPageDto(items: list, total: list.length, page: 1, pageSize: list.length);
+      return PageData(
+        items: list,
+        total: list.length,
+        page: 1,
+        pageSize: list.length,
+      );
     }
-    return const MaterialPageDto(items: [], total: 0, page: 1, pageSize: 20);
+    return PageData(
+      items: const [],
+      total: 0,
+      page: page,
+      pageSize: pageSize,
+    );
   }
 
   Future<MaterialDto> createMaterial(MaterialDto dto) async {

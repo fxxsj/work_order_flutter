@@ -34,7 +34,7 @@ class AvatarMenu extends StatelessWidget {
       ],
       child: CircleAvatar(
         radius: 15,
-        backgroundColor: primary.withValues(alpha: 0.12),
+        backgroundColor: primary.withValues(alpha: OpacityTokens.mild),
         child: Icon(Icons.person, size: 17, color: primary),
       ),
     );

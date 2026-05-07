@@ -4,7 +4,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dar
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/features/materials/data/material_dto.dart';
 import 'package:work_order_app/src/features/suppliers/data/supplier_dto.dart';

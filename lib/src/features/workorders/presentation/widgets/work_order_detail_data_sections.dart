@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/models/traceability_summary_item.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/opacity_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/traceability_summary_section.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
@@ -339,7 +340,7 @@ class WorkOrderProcessGanttSection extends StatelessWidget {
       case 'pending':
         return semantic?.info ?? theme.colorScheme.secondary;
       default:
-        return theme.colorScheme.primary.withValues(alpha: 0.7);
+        return theme.colorScheme.primary.withValues(alpha: OpacityTokens.intense);
     }
   }
 }
@@ -542,7 +543,7 @@ class WorkOrderApprovalLogsSection extends StatelessWidget {
             color: theme.colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
             border:
-                Border.all(color: theme.dividerColor.withValues(alpha: 0.4)),
+                Border.all(color: theme.dividerColor.withValues(alpha: OpacityTokens.strong)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -617,7 +618,7 @@ class _DetailListCard extends StatelessWidget {
       width: double.infinity,
       padding: basePadding,
       decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withValues(alpha: 0.03),
+        color: theme.colorScheme.primary.withValues(alpha: OpacityTokens.faint),
         borderRadius: BorderRadius.circular(radius),
         border: Border.all(color: colors.borderColor),
       ),
@@ -742,7 +743,7 @@ class _ProcessTaskCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
-        border: Border.all(color: colors.borderColor.withValues(alpha: 0.7)),
+        border: Border.all(color: colors.borderColor.withValues(alpha: OpacityTokens.intense)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

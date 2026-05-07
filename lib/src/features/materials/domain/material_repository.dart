@@ -1,7 +1,8 @@
+import 'package:work_order_app/src/core/data/page_data.dart';
 import 'package:work_order_app/src/features/materials/data/material_dto.dart';
 
 abstract class MaterialRepository {
-  Future<MaterialPageDto> getMaterials({
+  Future<PageData<MaterialDto>> getMaterials({
     int page = 1,
     int pageSize = 20,
     String? search,

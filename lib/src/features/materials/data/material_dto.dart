@@ -65,16 +65,3 @@ extension MaterialMapper on MaterialItem {
   }
 }
 
-class MaterialPageDto {
-  const MaterialPageDto({
-    required this.items,
-    required this.total,
-    required this.page,
-    required this.pageSize,
-  });
-
-  final List<MaterialDto> items;
-  final int total;
-  final int page;
-  final int pageSize;
-}

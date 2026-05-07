@@ -3,12 +3,13 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/opacity_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -1353,7 +1354,7 @@ class _InlineBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color:
-            theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
+            theme.colorScheme.surfaceContainerHighest.withValues(alpha: OpacityTokens.heavy),
         borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
       ),
       child: Text(
@@ -1396,7 +1397,7 @@ class _TraceabilityGroup extends StatelessWidget {
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.surfaceContainerHighest
-                          .withValues(alpha: 0.5),
+                          .withValues(alpha: OpacityTokens.heavy),
                       borderRadius:
                           BorderRadius.circular(LayoutTokens.radiusPill),
                     ),

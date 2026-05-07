@@ -241,7 +241,7 @@ class AppSidebarRail extends StatelessWidget {
   }) {
     final theme = Theme.of(context);
     final background =
-        isSelected ? primary.withValues(alpha: 0.08) : Colors.transparent;
+        isSelected ? primary.withValues(alpha: OpacityTokens.subtle) : Colors.transparent;
     final iconColor = isSelected ? primary : sidebarText;
     final textColor = isSelected ? primary : sidebarText;
     final labelStyle = theme.textTheme.bodySmall?.copyWith(
@@ -262,7 +262,7 @@ class AppSidebarRail extends StatelessWidget {
           borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
           border: Border.all(
             color: isSelected
-                ? primary.withValues(alpha: 0.12)
+                ? primary.withValues(alpha: OpacityTokens.mild)
                 : Colors.transparent,
           ),
         ),
@@ -284,7 +284,7 @@ class AppSidebarRail extends StatelessWidget {
             if (railExtended && isParent)
               Icon(
                 isExpanded ? Icons.expand_less : Icons.expand_more,
-                color: textColor.withValues(alpha: 0.8),
+                color: textColor.withValues(alpha: OpacityTokens.intense),
                 size: 18,
               ),
             if (railExtended && !isParent)

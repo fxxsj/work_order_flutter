@@ -24,7 +24,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/attachment_open_button.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/file_link_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';

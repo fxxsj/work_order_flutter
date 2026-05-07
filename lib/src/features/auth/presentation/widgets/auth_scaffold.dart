@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/opacity_tokens.dart';
 
 class AuthScaffold extends StatelessWidget {
   const AuthScaffold({
@@ -32,10 +33,10 @@ class AuthScaffold extends StatelessWidget {
             end: Alignment.bottomRight,
             colors: [
               Color.alphaBlend(
-                  scheme.primary.withValues(alpha: 0.12), colors.background),
+                  scheme.primary.withValues(alpha: OpacityTokens.mild), colors.background),
               colors.background,
               Color.alphaBlend(
-                  semantic.warning.withValues(alpha: 0.08), colors.background),
+                  semantic.warning.withValues(alpha: OpacityTokens.weak), colors.background),
             ],
           ),
         ),
@@ -46,7 +47,7 @@ class AuthScaffold extends StatelessWidget {
               left: -80,
               child: _GlowOrb(
                 size: 280,
-                color: semantic.warning.withValues(alpha: 0.32),
+                color: semantic.warning.withValues(alpha: OpacityTokens.scrim),
               ),
             ),
             Positioned(
@@ -54,7 +55,7 @@ class AuthScaffold extends StatelessWidget {
               right: -56,
               child: _GlowOrb(
                 size: 220,
-                color: scheme.primary.withValues(alpha: 0.24),
+                color: scheme.primary.withValues(alpha: OpacityTokens.distinct),
               ),
             ),
             Positioned(
@@ -62,7 +63,7 @@ class AuthScaffold extends StatelessWidget {
               right: 32,
               child: _GlowOrb(
                 size: 260,
-                color: semantic.info.withValues(alpha: 0.16),
+                color: semantic.info.withValues(alpha: OpacityTokens.medium),
               ),
             ),
             SafeArea(
@@ -83,19 +84,19 @@ class AuthScaffold extends StatelessWidget {
                           return DecoratedBox(
                             decoration: BoxDecoration(
                               color: Color.alphaBlend(
-                                colors.surface.withValues(alpha: 0.92),
+                                colors.surface.withValues(alpha: OpacityTokens.intense),
                                 colors.background,
                               ),
                               borderRadius:
                                   BorderRadius.circular(compact ? 28 : 36),
                               border: Border.all(
                                 color:
-                                    colors.borderColor.withValues(alpha: 0.75),
+                                    colors.borderColor.withValues(alpha: OpacityTokens.intense),
                               ),
                               boxShadow: [
                                 BoxShadow(
                                   color: semantic.shadowStrong
-                                      .withValues(alpha: 0.12),
+                                      .withValues(alpha: OpacityTokens.mild),
                                   blurRadius: 48,
                                   offset: const Offset(0, 22),
                                 ),
@@ -184,9 +185,9 @@ class _HeroPanel extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             Color.alphaBlend(
-                scheme.primary.withValues(alpha: 0.25), colors.sidebar),
+                scheme.primary.withValues(alpha: OpacityTokens.distinct), colors.sidebar),
             Color.alphaBlend(
-              scheme.secondary.withValues(alpha: 0.16),
+              scheme.secondary.withValues(alpha: OpacityTokens.medium),
               colors.surface,
             ),
           ],
@@ -224,7 +225,7 @@ class _HeroPanel extends StatelessWidget {
             width: 36,
             height: 3,
             decoration: BoxDecoration(
-              color: semantic.success.withValues(alpha: 0.5),
+              color: semantic.success.withValues(alpha: OpacityTokens.heavy),
               borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
             ),
           ),
@@ -296,7 +297,7 @@ class _GlowOrb extends StatelessWidget {
           gradient: RadialGradient(
             colors: [
               color,
-              color.withValues(alpha: 0.0),
+              color.withValues(alpha: OpacityTokens.invisible),
             ],
           ),
         ),

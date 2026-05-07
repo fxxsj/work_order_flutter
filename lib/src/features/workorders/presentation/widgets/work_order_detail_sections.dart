@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/constants/breakpoints.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/opacity_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/attachment_open_button.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/unified_dropdown.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/file_link_util.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
@@ -577,7 +578,7 @@ class _SummaryContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
-    final dividerColor = colors?.borderColor.withValues(alpha: 0.6);
+    final dividerColor = colors?.borderColor.withValues(alpha: OpacityTokens.heavy);
     final showPrinting = detail.printingType != null &&
         detail.printingType != 'none';
 
@@ -853,7 +854,7 @@ class _DescriptionCell extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
-    final dividerColor = colors?.borderColor.withValues(alpha: 0.4);
+    final dividerColor = colors?.borderColor.withValues(alpha: OpacityTokens.strong);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -878,7 +879,7 @@ class _DescriptionCell extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: progressValue! / 100,
                 backgroundColor:
-                    colors?.borderColor.withValues(alpha: 0.3),
+                    colors?.borderColor.withValues(alpha: OpacityTokens.medium),
                 valueColor: AlwaysStoppedAnimation<Color>(
                   progressValue! >= 100
                       ? Colors.green
@@ -922,9 +923,9 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
+        color: color.withValues(alpha: OpacityTokens.mild),
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
+        border: Border.all(color: color.withValues(alpha: OpacityTokens.strong)),
       ),
       child: Text(
         text,
