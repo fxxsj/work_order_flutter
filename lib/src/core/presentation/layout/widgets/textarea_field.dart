@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 
 /// Textarea field for [CrudFieldConfig.textarea].
-class TextareaField extends StatelessWidget {
+class TextareaField extends StatefulWidget {
   const TextareaField({
     super.key,
-    required this.label,
     this.controller,
     this.initialValue,
     this.validator,
@@ -18,6 +17,7 @@ class TextareaField extends StatelessWidget {
     this.maxLines = 3,
     this.isDense = false,
     this.onChanged,
+    required this.label,
   });
 
   final String label;
@@ -35,22 +35,61 @@ class TextareaField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
 
   @override
+  State<TextareaField> createState() => _TextareaFieldState();
+}
+
+class _TextareaFieldState extends State<TextareaField> {
+  late TextEditingController _controller;
+  bool _ownsController = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.controller != null) {
+      _controller = widget.controller!;
+    } else {
+      _controller = TextEditingController(text: widget.initialValue);
+      _ownsController = true;
+    }
+  }
+
+  @override
+  void didUpdateWidget(TextareaField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.controller != oldWidget.controller) {
+      if (_ownsController && widget.controller == null) {
+        // 已经拥有 controller 且外部传入变为 null，不需要切换
+      } else if (widget.controller != null && widget.controller != _controller) {
+        _controller = widget.controller!;
+        _ownsController = false;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_ownsController) {
+      _controller.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return TextFormField(
-      controller: controller,
-      initialValue: controller == null ? initialValue : null,
-      validator: validator,
-      enabled: enabled,
-      minLines: minLines,
-      maxLines: maxLines,
-      onChanged: onChanged,
+      controller: _controller,
+      validator: widget.validator,
+      enabled: widget.enabled,
+      minLines: widget.minLines,
+      maxLines: widget.maxLines,
+      onChanged: widget.onChanged,
       decoration: InputDecoration(
-        labelText: label,
-        hintText: hintText,
-        helperText: helperText,
-        prefixIcon: prefixIcon,
-        suffixIcon: suffixIcon,
-        isDense: isDense,
+        labelText: widget.label,
+        hintText: widget.hintText,
+        helperText: widget.helperText,
+        prefixIcon: widget.prefixIcon,
+        suffixIcon: widget.suffixIcon,
+        isDense: widget.isDense,
         filled: true,
         fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
         enabledBorder: OutlineInputBorder(

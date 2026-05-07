@@ -5,7 +5,7 @@ enum TextInputFieldType { text, number, email, phone }
 
 /// Unified text input field for [CrudFieldConfig.text], [CrudFieldConfig.number],
 /// [CrudFieldConfig.email], and [CrudFieldConfig.phone].
-class TextInputField extends StatelessWidget {
+class TextInputField extends StatefulWidget {
   const TextInputField({
     super.key,
     required this.label,
@@ -45,8 +45,16 @@ class TextInputField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onFieldSubmitted;
 
+  @override
+  State<TextInputField> createState() => _TextInputFieldState();
+}
+
+class _TextInputFieldState extends State<TextInputField> {
+  late TextEditingController _controller;
+  bool _ownsController = false;
+
   TextInputType get _keyboardType {
-    switch (type) {
+    switch (widget.type) {
       case TextInputFieldType.number:
         return TextInputType.number;
       case TextInputFieldType.email:
@@ -59,26 +67,55 @@ class TextInputField extends StatelessWidget {
   }
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.controller != null) {
+      _controller = widget.controller!;
+    } else {
+      _controller = TextEditingController(text: widget.initialValue);
+      _ownsController = true;
+    }
+  }
+
+  @override
+  void didUpdateWidget(TextInputField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.controller != oldWidget.controller) {
+      if (widget.controller != null && widget.controller != _controller) {
+        _controller = widget.controller!;
+        _ownsController = false;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_ownsController) {
+      _controller.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return TextFormField(
-      controller: controller,
-      initialValue: controller == null ? initialValue : null,
-      validator: validator,
-      enabled: enabled,
+      controller: _controller,
+      validator: widget.validator,
+      enabled: widget.enabled,
       keyboardType: _keyboardType,
-      obscureText: obscureText,
-      textInputAction: textInputAction,
-      onChanged: onChanged,
-      onFieldSubmitted: onFieldSubmitted,
-      readOnly: readOnly,
-      onTap: onTap,
+      obscureText: widget.obscureText,
+      textInputAction: widget.textInputAction,
+      onChanged: widget.onChanged,
+      onFieldSubmitted: widget.onFieldSubmitted,
+      readOnly: widget.readOnly,
+      onTap: widget.onTap,
       decoration: InputDecoration(
-        labelText: label,
-        hintText: hintText,
-        helperText: helperText,
-        prefixIcon: prefixIcon,
-        suffixIcon: suffixIcon,
-        isDense: isDense,
+        labelText: widget.label,
+        hintText: widget.hintText,
+        helperText: widget.helperText,
+        prefixIcon: widget.prefixIcon,
+        suffixIcon: widget.suffixIcon,
+        isDense: widget.isDense,
         filled: true,
         fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
         enabledBorder: OutlineInputBorder(
