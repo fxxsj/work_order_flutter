@@ -10,7 +10,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # 默认值
-PLATFORM=""
+PLATFORM="android"
 PROFILE="dev"
 API_URL="http://127.0.0.1:8000/api/v1/"
 
@@ -19,11 +19,12 @@ show_help() {
     echo "用法: ./start.sh [平台] [环境]"
     echo ""
     echo "平台选项:"
-    echo "  chrome   - Chrome Web (默认)"
-    echo "  linux   - Linux 桌面"
+    echo "  android - Android (默认)"
+    echo "  chrome  - Chrome Web"
+    echo "  linux  - Linux 桌面"
     echo "  windows - Windows 桌面"
-    echo "  macos   - macOS 桌面"
-    echo "  web     - Web (生产构建)"
+    echo "  macos  - macOS 桌面"
+    echo "  web    - Web (生产构建)"
     echo ""
     echo "环境选项:"
     echo "  dev  - 开发环境 (默认)"
@@ -32,6 +33,7 @@ show_help() {
     echo ""
     echo "示例:"
     echo "  ./start.sh              # 交互式选择"
+    echo "  ./start.sh android dev  # Android 开发模式"
     echo "  ./start.sh chrome dev   # Chrome 开发模式"
     echo "  ./start.sh linux prod  # Linux 生产环境"
     echo ""
@@ -85,21 +87,23 @@ set_api_url() {
 select_platform() {
     echo ""
     echo "请选择运行平台:"
-    echo "  1) Chrome Web"
-    echo "  2) Linux 桌面"
-    echo "  3) Windows 桌面"
-    echo "  4) macOS 桌面"
-    echo "  5) Web (生产构建)"
+    echo "  1) Android (默认)"
+    echo "  2) Chrome Web"
+    echo "  3) Linux 桌面"
+    echo "  4) Windows 桌面"
+    echo "  5) macOS 桌面"
+    echo "  6) Web (生产构建)"
     echo ""
-    read -p "请输入选择 [1-5]: " choice
+    read -p "请输入选择 [1-6]: " choice
 
     case $choice in
-        1) PLATFORM="chrome" ;;
-        2) PLATFORM="linux" ;;
-        3) PLATFORM="windows" ;;
-        4) PLATFORM="macos" ;;
-        5) PLATFORM="web" ;;
-        *) echo -e "${RED}无效选择，默认使用 Chrome Web${NC}"; PLATFORM="chrome" ;;
+        1) PLATFORM="android" ;;
+        2) PLATFORM="chrome" ;;
+        3) PLATFORM="linux" ;;
+        4) PLATFORM="windows" ;;
+        5) PLATFORM="macos" ;;
+        6) PLATFORM="web" ;;
+        *) echo -e "${YELLOW}无效选择，默认使用 Android${NC}"; PLATFORM="android" ;;
     esac
 }
 
@@ -136,6 +140,11 @@ launch_flutter() {
     echo ""
 
     case $PLATFORM in
+        android)
+            flutter run -d android \
+                --dart-define=APP_PROFILE=$PROFILE \
+                --dart-define=APP_API_BASE_URL=$API_URL
+            ;;
         chrome)
             flutter run -d chrome \
                 --dart-define=APP_PROFILE=$PROFILE \
@@ -181,6 +190,7 @@ main() {
                 show_help
                 exit 0
                 ;;
+            android) PLATFORM="android" ;;
             chrome) PLATFORM="chrome" ;;
             linux) PLATFORM="linux" ;;
             windows) PLATFORM="windows" ;;
