@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../presentation/layout/opacity_tokens.dart';
+
 @immutable
 class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
   const AppSemanticColors({
@@ -73,10 +75,10 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
   }
 
   /// 获取语义色对应的浅色背景
-  Color getSuccessBg() => successBg ?? success.withValues(alpha: 0.1);
-  Color getWarningBg() => warningBg ?? warning.withValues(alpha: 0.1);
-  Color getDangerBg() => dangerBg ?? danger.withValues(alpha: 0.1);
-  Color getInfoBg() => infoBg ?? info.withValues(alpha: 0.1);
+  Color getSuccessBg() => successBg ?? success.withValues(alpha: OpacityTokens.subtle);
+  Color getWarningBg() => warningBg ?? warning.withValues(alpha: OpacityTokens.subtle);
+  Color getDangerBg() => dangerBg ?? danger.withValues(alpha: OpacityTokens.subtle);
+  Color getInfoBg() => infoBg ?? info.withValues(alpha: OpacityTokens.subtle);
 }
 
 @immutable
