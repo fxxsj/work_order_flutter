@@ -1,161 +1,161 @@
-# 新西彩订单管理
+# 新西彩订单管理 - Flutter 前端
 
-新西彩订单管理系统（Work Order ERP）前端项目，基于 Flutter 构建，服务于印刷生产订单的全流程协同。
+> Flutter 3.x + Riverpod + GoRouter 跨平台应用
 
-## 特性
+## 技术栈
 
-- 自适应布局（桌面 / 平板 / 移动端）
-- Material 3 视觉与主题色切换
-- Dio 网络层 + GetX 状态管理
-- 支持接入 Django 后端 JWT/Token
+- Flutter 3.41.2
+- Riverpod (状态管理)
+- GoRouter (路由)
+- Dio (HTTP 客户端)
 
-## 运行环境
+## 快速启动
 
-- Flutter >= 3.0
-- Dart >= 3.0
-
-## 运行
+### 1. 安装依赖
 
 ```bash
 flutter pub get
-flutter run -d linux
 ```
 
-如需运行到 Android 或 Web，请先确保对应平台已启用：
+### 2. 配置后端地址
 
+默认连接 `http://127.0.0.1:8000/api/v1/`
+
+修改方式（选一种）：
+
+**方式 A：命令行参数（推荐）**
 ```bash
-flutter config --enable-android
-flutter config --enable-web
+flutter run --dart-define=APP_API_BASE_URL=http://127.0.0.1:8000/api/v1/
 ```
 
-## 配置
-
-默认配置会从 `config/application.yaml` 读取当前环境，再加载对应的
-`config/application-<profile>.yaml`。当前仓库内置：
-
-- `application-dev.yaml`
-- `application-test.yaml`
-- `application-prod.yaml`
-
-推荐优先使用 `dart-define` 覆盖，而不是上线前手工改文件。
-
-接口地址配置示例：
-
+**方式 B：修改配置文件**
 ```yaml
+# config/application-dev.yaml
 app:
   api:
     baseUrl: http://127.0.0.1:8000/api/v1/
 ```
 
-开发/测试/生产环境可分别覆盖：
-
-```yaml
-app:
-  api:
-    baseUrl: https://api.example.com/api/v1/
-```
-
-推荐构建方式：
+### 3. 启动开发服务器
 
 ```bash
-flutter run \
-  --dart-define=APP_PROFILE=dev \
-  --dart-define=APP_API_BASE_URL=http://127.0.0.1:8000/api/v1/
+# Chrome Web
+flutter run -d chrome
 
-flutter build windows \
-  --dart-define=APP_PROFILE=prod \
-  --dart-define=APP_API_BASE_URL=https://api.your-domain.com/api/v1/
+# Linux 桌面
+flutter run -d linux
+
+# Windows 桌面
+flutter run -d windows
+
+# macOS 桌面
+flutter run -d macos
 ```
 
-生产环境下，如果接口地址仍然是 `127.0.0.1` / `localhost` / `0.0.0.0`，
-应用启动时会直接报错，避免把开发地址误带上线。
+### 一键启动（需先配置）
+
+```bash
+# 交互式选择平台
+./start.sh
+
+# 或指定平台和环境
+./start.sh chrome dev
+./start.sh linux prod
+```
+
+## 环境说明
+
+| 环境 | Profile | 用途 |
+|------|---------|------|
+| dev | `application-dev.yaml` | 本地开发 |
+| test | `application-test.yaml` | 测试环境 |
+| prod | `application-prod.yaml` | 生产环境 |
 
 ## 全平台构建
 
-项目提供统一构建入口：
+### 使用构建工具
 
 ```bash
-dart run tool/build.dart <platform> [options]
-```
-
-支持平台：
-
-- `web`
-- `android`
-- `windows`
-- `macos`
-- `linux`
-
-示例：
-
-```bash
+# Web
 dart run tool/build.dart web --profile prod --api-base-url https://api.example.com/api/v1/
-dart run tool/build.dart android --profile prod --arch arm64 --api-base-url https://api.example.com/api/v1/
-dart run tool/build.dart windows --profile prod --arch amd64 --api-base-url https://api.example.com/api/v1/
-dart run tool/build.dart macos --profile prod --arch arm64 --api-base-url https://api.example.com/api/v1/
-dart run tool/build.dart linux --profile prod --arch amd64 --api-base-url https://api.example.com/api/v1/
+
+# Android
+dart run tool/build.dart android --profile prod --arch arm64 --api-base-url https://api.example.com/
+
+# Windows
+dart run tool/build.dart windows --profile prod --api-base-url https://api.example.com/
+
+# Linux
+dart run tool/build.dart linux --profile prod --api-base-url https://api.example.com/
+
+# macOS
+dart run tool/build.dart macos --profile prod --api-base-url https://api.example.com/
 ```
 
-构建完成后，产物会整理到：
+### 构建产物位置
 
-```text
-dist/<platform>/<profile>/<arch?>/
+- 开发构建: `dist/<platform>/<profile>/`
+- 发布包: `release/<platform>/<profile>/`
+
+## 目录结构
+
+```
+flutter/
+├── lib/src/
+│   ├── core/              # 核心层
+│   │   ├── network/       # Dio HTTP 客户端
+│   │   ├── models/        # 数据模型
+│   │   ├── common/        # 工具类
+│   │   └── presentation/  # 设计系统 (Tokens)
+│   ├── features/          # 业务模块 (Feature-first)
+│   │   └── */presentation/  # UI 页面
+│   └── app/              # 应用入口
+├── config/               # 环境配置文件
+│   ├── application.yaml
+│   ├── application-dev.yaml
+│   ├── application-test.yaml
+│   └── application-prod.yaml
+├── tool/                 # 构建工具
+│   ├── build.dart        # 统一构建入口
+│   └── package_release.dart  # 发布打包
+└── start.sh             # 一键启动脚本
 ```
 
-发布归档会输出到：
-
-```text
-release/<platform>/<profile>/<arch?>/
-```
-
-说明：
-
-- Android 这版会根据 `--arch` 映射到对应 ABI 并输出 APK
-- Windows / macOS / Linux 当前按宿主机构建，`--arch` 主要用于发布目录标识
-- 桌面端发布归档会在宿主工具可用时继续产出平台发行包
-
-统一归档入口：
+## 启用平台支持
 
 ```bash
-dart run tool/package_release.dart web --profile prod
-dart run tool/package_release.dart android --profile prod --arch arm64
-dart run tool/package_release.dart windows --profile prod
-dart run tool/package_release.dart macos --profile prod
-dart run tool/package_release.dart linux --profile prod --arch amd64
+# Android
+flutter config --enable-android
+
+# Web
+flutter config --enable-web
+
+# Linux
+flutter config --enable-linux
+
+# Windows (仅 Windows)
+flutter config --enable-windows
+
+# macOS (仅 macOS)
+flutter config --enable-macos
 ```
 
-GitHub Actions 已补齐五个平台 workflow：
+## 常见问题
 
-- `.github/workflows/flutter-web-release.yml`
-- `.github/workflows/flutter-android-release.yml`
-- `.github/workflows/flutter-windows-release.yml`
-- `.github/workflows/flutter-macos-release.yml`
-- `.github/workflows/flutter-linux-release.yml`
+**Q: 接口连接失败？**
+A: 确保后端已启动且 `APP_API_BASE_URL` 配置正确。
 
-使用前请在仓库变量中配置：
+**Q: 热重载不生效？**
+A: 尝试 `flutter clean` 后重新 `flutter pub get`。
 
-- `FLUTTER_APP_API_BASE_URL`
-- `FLUTTER_APP_DISPLAY_NAME`（可选）
+**Q: 生产构建后接口报错？**
+A: 检查 `APP_API_BASE_URL` 是否为生产环境地址。
 
-发布凭据与账号配置说明见：
+## GitHub Actions
 
-- [docs/release_secrets_guide.md](./docs/release_secrets_guide.md)
+- `ci.yml` - 分析、测试、Web 构建
+- `release.yml` - 多平台发布 (Web/Linux/Windows)
 
-如果要继续向 FlClash 的发布形态靠拢，下一步需要补的就是平台专用发行器：
-
-- Windows：当前已接入 Inno Setup，可生成 `zip + installer.exe`，支持 PFX 证书签名
-- macOS：当前已接入 `zip + dmg`，支持 codesign + notarization
-- Linux：当前已接入 `tar.gz + deb + rpm + AppImage`
-
-当前发布形态：
-
-- `web`: zip
-- `android`: apk
-- `windows`: zip + 安装包 exe（CI 已安装 Inno Setup）
-- `macos`: zip + dmg
-- `linux`: tar.gz + deb + rpm + AppImage
-
-## 说明
-
-- 登录页与注册页为简化版 UI，可按业务需求继续定制
-- 若需接入更多模块，请在 `pages/layout/adaptive_shell.dart` 中扩展导航与页面
+触发 release：
+- 手动: `workflow_dispatch`
+- 自动: push tag `flutter-v*`
