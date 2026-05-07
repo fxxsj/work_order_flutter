@@ -191,7 +191,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
               auditHint: '退回原因会直接进入审批和审计记录。',
               destructive: true,
             ),
-            const SizedBox(height: 12),
+            SpacingTokens.vMd,
             CrudFieldConfig.textarea(
               label: '退回原因',
               controller: _rejectionReasonController,
@@ -200,7 +200,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
               validator: (value) =>
                   (value?.trim().isEmpty ?? true) ? '请填写拒绝原因' : null,
             ).build(dialogContext),
-            const SizedBox(height: 12),
+            SpacingTokens.vMd,
             CrudFieldConfig.textarea(
               label: '补充说明（可选）',
               controller: _approvalCommentController,
@@ -268,7 +268,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
               auditHint: '订单取消原因会影响后续争议处理和经营复盘。',
               destructive: true,
             ),
-            const SizedBox(height: 12),
+            SpacingTokens.vMd,
             CrudFieldConfig.textarea(
               label: '取消原因（可选）',
               controller: _cancelReasonController,
@@ -479,7 +479,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(_errorMessage!),
-                        const SizedBox(height: 12),
+                        SpacingTokens.vMd,
                         FilledButton(
                           onPressed: _loadDetail,
                           child: const Text('重试'),

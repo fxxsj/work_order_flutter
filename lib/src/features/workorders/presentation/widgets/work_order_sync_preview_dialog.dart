@@ -237,7 +237,7 @@ class _InfoRow extends StatelessWidget {
           label,
           style: theme.textTheme.bodySmall?.copyWith(color: colors?.subtleText),
         ),
-        const SizedBox(height: 4),
+        SpacingTokens.vXs,
         Text(
           value,
           style: theme.textTheme.bodyMedium?.copyWith(

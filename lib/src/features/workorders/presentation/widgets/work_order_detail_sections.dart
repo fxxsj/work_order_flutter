@@ -871,10 +871,10 @@ class _DescriptionCell extends StatelessWidget {
               color: colors?.subtleText,
             ),
           ),
-          const SizedBox(height: 4),
+          SpacingTokens.vXs,
           if (isProgress && progressValue != null)
             ClipRRect(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: RadiusTokens.bXs,
               child: LinearProgressIndicator(
                 value: progressValue! / 100,
                 backgroundColor:
@@ -923,7 +923,7 @@ class _StatusBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: OpacityTokens.mild),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: RadiusTokens.bXs,
         border: Border.all(color: color.withValues(alpha: OpacityTokens.strong)),
       ),
       child: Text(
@@ -1002,7 +1002,7 @@ class _InfoRow extends StatelessWidget {
           label,
           style: theme.textTheme.bodySmall?.copyWith(color: colors?.subtleText),
         ),
-        const SizedBox(height: 4),
+        SpacingTokens.vXs,
         Text(
           value,
           style: theme.textTheme.bodyMedium?.copyWith(

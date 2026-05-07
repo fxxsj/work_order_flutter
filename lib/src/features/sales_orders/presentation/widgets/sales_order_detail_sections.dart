@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/models/traceability_summary_item.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/traceability_summary_section.dart';
@@ -266,7 +267,7 @@ class SalesOrderFinanceSummarySection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SalesOrderInfoGrid(items: items),
-          const SizedBox(height: 16),
+          SpacingTokens.vLg,
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -341,7 +342,7 @@ class SalesOrderInfoRow extends StatelessWidget {
           label,
           style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
         ),
-        const SizedBox(height: 4),
+        SpacingTokens.vXs,
         Text(value, style: theme.textTheme.bodyMedium),
       ],
     );

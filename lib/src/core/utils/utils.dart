@@ -179,30 +179,30 @@ class Utils {
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+          borderRadius: RadiusTokens.bMd,
           borderSide: BorderSide(
             color: appColors.borderColor.withValues(alpha: OpacityTokens.intense),
           ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+          borderRadius: RadiusTokens.bMd,
           borderSide: BorderSide(
             color: appColors.borderColor.withValues(alpha: OpacityTokens.intense),
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+          borderRadius: RadiusTokens.bMd,
           borderSide: BorderSide(color: scheme.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+          borderRadius: RadiusTokens.bMd,
           borderSide: BorderSide(
             color: semantic.danger.withValues(alpha: OpacityTokens.intense),
             width: 1.4,
           ),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+          borderRadius: RadiusTokens.bMd,
           borderSide: BorderSide(
             color: semantic.danger,
             width: 2,
@@ -252,14 +252,14 @@ class Utils {
         shadowColor: semantic.shadowStrong.withValues(alpha: OpacityTokens.subtle),
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
+          borderRadius: RadiusTokens.bLg,
           side:
               BorderSide(color: appColors.borderColor.withValues(alpha: OpacityTokens.strong)),
         ),
       ),
       scrollbarTheme: ScrollbarThemeData(
         thumbColor: WidgetStateProperty.all(scheme.primary.withAlpha(153)),
-        radius: const Radius.circular(LayoutTokens.radiusXs),
+        radius: const Radius.circular(RadiusTokens.xs),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: scheme.primary,

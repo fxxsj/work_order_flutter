@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+
+// 本文件 const 初始化需要直接 import
+import 'spacing_tokens.dart';
+import 'radius_tokens.dart';
 
 /// 设计令牌统一导出
 export 'opacity_tokens.dart' show OpacityTokens, OpacityExtension;
@@ -8,9 +11,17 @@ export 'text_tokens.dart' show TextTokens, TextStyleExtension, TextBuilder;
 export 'animation_tokens.dart'
     show AnimationTokens, AnimationBuilderExtension, PresetAnimations;
 export 'color_tokens.dart' show ColorTokens, ColorExtension;
+export 'spacing_tokens.dart' show SpacingTokens;
+export 'radius_tokens.dart' show RadiusTokens;
 
+/// 布局尺寸令牌（对话框宽度、侧边栏、导航等结构尺寸）
+///
+/// 间距相关请使用 [SpacingTokens]，圆角相关请使用 [RadiusTokens]。
+/// 旧的 gap* / radius* 成员保留为 const 兼容别名，新代码请直接用对应 Token 类。
 class LayoutTokens {
   const LayoutTokens._();
+
+  // ── 结构尺寸 ────────────────────────────────────────────
 
   static const double maxContentWidth = 1440;
   static const double maxContentWidthWide = 1680;
@@ -33,25 +44,9 @@ class LayoutTokens {
   static const double infoItemWidth = 132;
   static const double statItemWidth = 180;
   static const double minContentRailWidth = 320;
-
-  /// 统一圆角规范: 6/8/12/14 - shadcn 风格更柔和
-  static const double radiusXs = 6;
-  static const double radiusSm = 8;
-  static const double radiusMd = 12;
-  static const double radiusLg = 14;
-  static const double radiusXl = 16;
-  static const double radiusPill = 9999;
   static const double navItemHeight = 40;
-
-  static const double gapXs = 4;
-  static const double gapXxxs = 2;
-  static const double gapXxs = 6;
-  static const double gapSm = 8;
-  static const double gapMd = 12;
-  static const double gapLg = 16;
-  static const double gapXl = 24;
-  static const double cardPaddingSm = 12;
   static const double progressStrokeWidth = 2;
+  static const double cardPaddingSm = 12;
 
   /// 统一图标大小规范
   static const double iconXs = 14;
@@ -62,82 +57,48 @@ class LayoutTokens {
   static const double iconXxl = 32;
   static const double iconXxxl = 36;
 
-  static EdgeInsets pagePadding(BuildContext context) {
-    final isXs = BreakpointsUtil.isXs(context);
-    final isSm = BreakpointsUtil.isSm(context);
-    final isMd = BreakpointsUtil.isMd(context);
-    final isXl = BreakpointsUtil.isXl(context);
-    if (isXs) {
-      return const EdgeInsets.fromLTRB(12, 12, 12, 16);
-    }
-    if (isSm) {
-      return const EdgeInsets.fromLTRB(16, 14, 16, 18);
-    }
-    if (isMd) {
-      return const EdgeInsets.fromLTRB(20, 18, 20, 22);
-    }
-    if (isXl) {
-      return const EdgeInsets.fromLTRB(24, 20, 24, 24);
-    }
-    return const EdgeInsets.fromLTRB(28, 22, 28, 28);
-  }
+  // ── 兼容别名（spacing，const 保证不影响现有代码） ───────
 
-  static EdgeInsets pageHeaderPadding(BuildContext context) {
-    final isXs = BreakpointsUtil.isXs(context);
-    final isSm = BreakpointsUtil.isSm(context);
-    final isMd = BreakpointsUtil.isMd(context);
-    final isXl = BreakpointsUtil.isXl(context);
-    if (isXs) {
-      return const EdgeInsets.fromLTRB(12, 12, 12, 8);
-    }
-    if (isSm) {
-      return const EdgeInsets.fromLTRB(14, 14, 14, 10);
-    }
-    if (isMd) {
-      return const EdgeInsets.fromLTRB(18, 16, 18, 12);
-    }
-    if (isXl) {
-      return const EdgeInsets.fromLTRB(20, 18, 20, 12);
-    }
-    return const EdgeInsets.fromLTRB(22, 20, 22, 14);
-  }
+  static const double gapXxxs = SpacingTokens.xxxs;
+  static const double gapXxs = SpacingTokens.xxs;
+  static const double gapXs = SpacingTokens.xs;
+  static const double gapSm = SpacingTokens.sm;
+  static const double gapMd = SpacingTokens.md;
+  static const double gapLg = SpacingTokens.lg;
+  static const double gapXl = SpacingTokens.xl;
 
-  static EdgeInsets cardPadding(BuildContext context) {
-    final isXs = BreakpointsUtil.isXs(context);
-    final isSm = BreakpointsUtil.isSm(context);
-    if (isXs) {
-      return const EdgeInsets.all(12);
-    }
-    if (isSm) {
-      return const EdgeInsets.all(14);
-    }
-    return const EdgeInsets.all(16);
-  }
+  // ── 兼容别名（radius，const 保证不影响现有代码） ────────
 
-  static double sectionSpacing(BuildContext context) {
-    if (BreakpointsUtil.isXs(context)) return 14;
-    if (BreakpointsUtil.isSm(context)) return 16;
-    if (BreakpointsUtil.isMd(context)) return 18;
-    return 20;
-  }
+  static const double radiusXs = RadiusTokens.xs;
+  static const double radiusSm = RadiusTokens.sm;
+  static const double radiusMd = RadiusTokens.md;
+  static const double radiusLg = RadiusTokens.lg;
+  static const double radiusXl = RadiusTokens.xl;
+  static const double radiusPill = RadiusTokens.pill;
 
-  static double formSectionSpacing(BuildContext context) {
-    final isXs = BreakpointsUtil.isXs(context);
-    final isSm = BreakpointsUtil.isSm(context);
-    if (isXs) return 14;
-    if (isSm) return 16;
-    return 18;
-  }
+  // ── 兼容方法（响应式，委托到 SpacingTokens） ────────────
 
-  static double formColumnSpacing(BuildContext context) {
-    return BreakpointsUtil.isXs(context) ? 14 : 28;
-  }
+  static EdgeInsets pagePadding(BuildContext context) =>
+      SpacingTokens.pagePadding(context);
 
-  static double formActionSpacing(BuildContext context) {
-    return BreakpointsUtil.isXs(context) ? 14 : 20;
-  }
+  static EdgeInsets pageHeaderPadding(BuildContext context) =>
+      SpacingTokens.pageHeaderPadding(context);
 
-  static double formPageSpacing(BuildContext context) {
-    return BreakpointsUtil.isXs(context) ? 8 : 10;
-  }
+  static EdgeInsets cardPadding(BuildContext context) =>
+      SpacingTokens.cardPadding(context);
+
+  static double sectionSpacing(BuildContext context) =>
+      SpacingTokens.sectionSpacing(context);
+
+  static double formSectionSpacing(BuildContext context) =>
+      SpacingTokens.formSectionSpacing(context);
+
+  static double formColumnSpacing(BuildContext context) =>
+      SpacingTokens.formColumnSpacing(context);
+
+  static double formActionSpacing(BuildContext context) =>
+      SpacingTokens.formActionSpacing(context);
+
+  static double formPageSpacing(BuildContext context) =>
+      SpacingTokens.formPageSpacing(context);
 }

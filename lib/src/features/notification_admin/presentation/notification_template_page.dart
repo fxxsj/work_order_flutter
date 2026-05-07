@@ -389,7 +389,7 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
                             padding: const EdgeInsets.all(LayoutTokens.gapSm),
                             decoration: BoxDecoration(
                               color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: RadiusTokens.bMd,
                             ),
                             child: Text(_previewResult!),
                           ),

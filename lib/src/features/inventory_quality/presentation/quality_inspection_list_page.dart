@@ -499,7 +499,7 @@ class _QualityInspectionListViewState
                             setState(() => result = value);
                           },
                   ),
-                  const SizedBox(height: 12),
+                  SpacingTokens.vMd,
                   CrudFieldConfig.number(
                     label: '合格数量',
                     controller: passedController,
@@ -512,7 +512,7 @@ class _QualityInspectionListViewState
                       return null;
                     },
                   ).build(context),
-                  const SizedBox(height: 12),
+                  SpacingTokens.vMd,
                   CrudFieldConfig.number(
                     label: '不合格数量',
                     controller: failedController,

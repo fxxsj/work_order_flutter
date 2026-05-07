@@ -166,7 +166,7 @@ class WorkOrderProcessGanttSection extends StatelessWidget {
                 color: colors?.subtleText ?? theme.hintColor,
               ),
             ),
-            const SizedBox(height: 12),
+            SpacingTokens.vMd,
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: ConstrainedBox(
@@ -551,7 +551,7 @@ class WorkOrderApprovalLogsSection extends StatelessWidget {
                 log.approvalStatusDisplay ?? log.approvalStatus ?? emptyText,
                 style: theme.textTheme.titleSmall,
               ),
-              const SizedBox(height: 6),
+              SpacingTokens.vXxs,
               Text('审核人: ${log.approvedByName ?? emptyText}'),
               Text('时间: ${formatDate(log.approvedAt)}'),
               if (log.approvalComment != null &&
@@ -631,7 +631,7 @@ class _DetailListCard extends StatelessWidget {
               color: colors.sidebarText,
             ),
           ),
-          const SizedBox(height: 4),
+          SpacingTokens.vXs,
           Text(
             subtitle,
             style:

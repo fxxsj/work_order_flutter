@@ -811,7 +811,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
       height: 360,
       child: ListView.separated(
         itemCount: items.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 8),
+        separatorBuilder: (_, __) => SpacingTokens.vSm,
         itemBuilder: (context, index) {
           final stock = items[index];
           final qty = _formatAmount(stock.quantity);
@@ -844,12 +844,12 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w600,
                           )),
-                  const SizedBox(height: 4),
+                  SpacingTokens.vXs,
                   Text(subtitle,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Theme.of(context).hintColor,
                           )),
-                  const SizedBox(height: 8),
+                  SpacingTokens.vSm,
                   Wrap(
                     spacing: 12,
                     runSpacing: 6,

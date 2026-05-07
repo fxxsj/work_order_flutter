@@ -590,7 +590,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SpacingTokens.vMd,
           if (widget.mode == SalesOrderFormMode.edit)
             Wrap(
               spacing: 16,
@@ -625,7 +625,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                 ),
               ],
             ),
-          const SizedBox(height: 12),
+          SpacingTokens.vMd,
           Wrap(
             spacing: 16,
             runSpacing: 12,
@@ -665,14 +665,14 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SpacingTokens.vMd,
           CrudFieldConfig.textarea(
             label: '备注',
             controller: _notesController,
             maxLines: 3,
           ).build(context),
           if (_customers.isEmpty) ...[
-            const SizedBox(height: 8),
+            SpacingTokens.vSm,
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
@@ -722,7 +722,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SpacingTokens.vMd,
           for (int index = 0; index < _itemDrafts.length; index++)
             _ItemRow(
               key: ValueKey(
@@ -909,14 +909,14 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SpacingTokens.vMd,
           _TraceabilityGroup(
             label: '关联施工单',
             numbers: detail.workOrderSummaries.isNotEmpty
                 ? detail.workOrderSummaries.map((item) => item.number).toList()
                 : detail.workOrderNumbers,
           ),
-          const SizedBox(height: 8),
+          SpacingTokens.vSm,
           _TraceabilityGroup(
             label: '关联发货单',
             numbers: detail.deliveryOrderSummaries.isNotEmpty
@@ -925,7 +925,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                     .toList()
                 : detail.deliveryOrderNumbers,
           ),
-          const SizedBox(height: 8),
+          SpacingTokens.vSm,
           _TraceabilityGroup(
             label: '关联发票',
             numbers: detail.invoiceSummaries.isNotEmpty
@@ -1248,7 +1248,7 @@ class _ItemRowState extends State<_ItemRow> {
                 ),
               ),
             // 第二行：折后金额/税额/合计/备注撑满整行
-            const SizedBox(height: 12),
+            SpacingTokens.vMd,
             Row(
               children: [
                 SizedBox(
@@ -1320,7 +1320,7 @@ class _ReadOnlyMetric extends StatelessWidget {
               label,
               style: theme.textTheme.labelSmall,
             ),
-            const SizedBox(height: 4),
+            SpacingTokens.vXs,
             Text(
               value,
               style: theme.textTheme.titleSmall?.copyWith(
@@ -1379,7 +1379,7 @@ class _TraceabilityGroup extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: theme.textTheme.labelMedium),
-        const SizedBox(height: 6),
+        SpacingTokens.vXxs,
         if (numbers.isEmpty)
           Text('-', style: theme.textTheme.bodyMedium)
         else

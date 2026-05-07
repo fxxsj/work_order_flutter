@@ -779,7 +779,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(_errorMessage!),
-                          const SizedBox(height: 12),
+                          SpacingTokens.vMd,
                           FilledButton(
                             onPressed: _loadDetail,
                             child: const Text('重试'),

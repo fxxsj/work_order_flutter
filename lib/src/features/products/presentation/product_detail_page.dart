@@ -317,7 +317,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: theme.colorScheme.primaryContainer.withValues(alpha: OpacityTokens.distinctStrong),
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: RadiusTokens.bXs,
               border: Border.all(
                 color: theme.colorScheme.outlineVariant.withValues(alpha: OpacityTokens.borderMedium),
               ),
@@ -392,7 +392,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           GestureDetector(
             onTap: () => _showImageViewer(context, images, images.indexOf(image)),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: RadiusTokens.bSm,
               child: Stack(
                 children: [
                   Image.network(
@@ -414,7 +414,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: OpacityTokens.borderMedium),
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: RadiusTokens.bXs,
                       ),
                       child: const Icon(
                         Icons.zoom_in,
