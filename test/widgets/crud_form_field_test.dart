@@ -6,7 +6,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_fi
 void main() {
   Future<void> pumpField(
     WidgetTester tester,
-    CrudFormField field,
+    CrudFieldConfig field,
   ) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -27,7 +27,7 @@ void main() {
 
     await pumpField(
       tester,
-      CrudFormField.tags(
+      CrudFieldConfig.tags(
         label: '其他颜色',
         values: changedValues,
         onChanged: (values) => changedValues = values,
@@ -47,7 +47,7 @@ void main() {
 
     await pumpField(
       tester,
-      CrudFormField.checkboxGroup(
+      CrudFieldConfig.checkboxGroup(
         label: 'CMYK',
         options: const [
           AppDropdownOption<dynamic>(value: 'C', label: 'C'),
@@ -69,7 +69,7 @@ void main() {
 
     await pumpField(
       tester,
-      CrudFormField.radioGroup(
+      CrudFieldConfig.radioGroup(
         label: '收款方式',
         value: changedValue,
         options: const [
@@ -94,7 +94,7 @@ void main() {
 
     await pumpField(
       tester,
-      CrudFormField.fileUpload(
+      CrudFieldConfig.fileUpload(
         label: '附件',
         value: changedValue,
         allowedExtensions: const ['pdf'],
