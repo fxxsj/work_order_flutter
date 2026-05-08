@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
@@ -28,7 +27,6 @@ import 'package:work_order_app/src/features/workorders/data/work_order_api_servi
 import 'package:work_order_app/src/features/workorders/data/work_order_form_options_loader.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_form_submission.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_repository_impl.dart';
-import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_sales_order_candidate.dart';
 import 'package:work_order_app/src/features/workorders/presentation/work_order_form_state.dart';
@@ -422,57 +420,18 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     final payload = WorkOrderFormSubmission.buildPayload(submissionInput);
     try {
       final viewModel = context.read<WorkOrderViewModel>();
-      WorkOrderDetail? updatedDetail;
       if (widget.mode == WorkOrderFormMode.create) {
-        updatedDetail = await viewModel.createWorkOrder(payload);
+        await viewModel.createWorkOrder(payload);
       } else if (widget.workOrderId != null) {
-        updatedDetail =
-            await viewModel.updateWorkOrder(widget.workOrderId!, payload);
+        await viewModel.updateWorkOrder(widget.workOrderId!, payload);
       }
       if (!mounted) return;
-      if (widget.mode == WorkOrderFormMode.edit &&
-          updatedDetail != null &&
-          _draft.hasProcessChanges()) {
-        final canSync = updatedDetail.approvalStatus != 'approved';
-        if (canSync) {
-          final goPreview = await _showSyncPrompt(updatedDetail.id);
-          if (!mounted) return;
-          if (goPreview == true) {
-            context.go('/workorders/${updatedDetail.id}');
-            return;
-          }
-        }
-      }
       Navigator.of(context).pop(true);
     } catch (err) {
       ToastUtil.showError('保存失败: $err');
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
-  }
-
-  Future<bool?> _showSyncPrompt(int workOrderId) {
-    return showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return AppDialog(
-          title: '工序已更新',
-          maxWidth: 420,
-          scrollable: false,
-          content: const Text('检测到工序选择已变更，是否前往任务同步预览？'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('稍后处理'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('去预览'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override

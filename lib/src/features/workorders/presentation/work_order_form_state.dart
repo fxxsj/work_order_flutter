@@ -38,7 +38,6 @@ class WorkOrderFormDraftState {
   final List<WorkOrderProductDraft> productDrafts = [];
   final List<WorkOrderMaterialDraft> materialDrafts = [];
   final Set<int> processIds = {};
-  final Set<int> initialProcessIds = {};
   final Set<int> artworkIds = {};
   final Set<int> dieIds = {};
   final Set<int> foilingPlateIds = {};
@@ -85,9 +84,6 @@ class WorkOrderFormDraftState {
     processIds
       ..clear()
       ..addAll(detail.processes.map((item) => item.processId).whereType<int>());
-    initialProcessIds
-      ..clear()
-      ..addAll(processIds);
     artworkIds
       ..clear()
       ..addAll(detail.artworkIds);
@@ -259,18 +255,6 @@ class WorkOrderFormDraftState {
         }
       }
     }
-  }
-
-  bool hasProcessChanges() {
-    if (initialProcessIds.length != processIds.length) {
-      return true;
-    }
-    for (final id in processIds) {
-      if (!initialProcessIds.contains(id)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   static String formatDate(DateTime? value) {

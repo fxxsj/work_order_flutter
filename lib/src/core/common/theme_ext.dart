@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../presentation/layout/opacity_tokens.dart';
+import '../../core/presentation/layout/opacity_tokens.dart';
 
 @immutable
 class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
