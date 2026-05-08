@@ -81,17 +81,42 @@ class _TextInputFieldState extends State<TextInputField> {
   void didUpdateWidget(TextInputField oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.controller != oldWidget.controller) {
-      if (widget.controller != null && widget.controller != _controller) {
-        _controller = widget.controller!;
-        _ownsController = false;
-      }
+      _handleControllerChange();
+    }
+  }
+
+  void _handleControllerChange() {
+    TextEditingController? oldOwned;
+    if (_ownsController) {
+      oldOwned = _controller;
+    }
+    _ownsController = widget.controller == null;
+    if (_ownsController) {
+      _controller = TextEditingController(text: widget.initialValue);
+    } else {
+      _controller = widget.controller!;
+    }
+    // Defer disposal to avoid TextFormField.State listener removal conflicts
+    if (oldOwned != null) {
+      final toDispose = oldOwned;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        try {
+          toDispose.dispose();
+        } catch (_) {
+          // Already disposed
+        }
+      });
     }
   }
 
   @override
   void dispose() {
     if (_ownsController) {
-      _controller.dispose();
+      try {
+        _controller.dispose();
+      } catch (_) {
+        // Already disposed
+      }
     }
     super.dispose();
   }

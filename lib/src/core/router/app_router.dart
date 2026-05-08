@@ -53,6 +53,7 @@ GoRouter createAppRouter(AuthController authController) {
         branches: [
           for (final item in _leafItems)
             StatefulShellBranch(
+              navigatorKey: _branchNavigatorKeys[item.id],
               routes: _buildBranchRoutes(item),
             ),
         ],
@@ -64,6 +65,9 @@ GoRouter createAppRouter(AuthController authController) {
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final List<NavItem> _leafItems = allLeafNavItemsByBranch();
+final Map<String, GlobalKey<NavigatorState>> _branchNavigatorKeys = {
+  for (final item in _leafItems) item.id: GlobalKey<NavigatorState>(),
+};
 
 const Set<String> _resourceEditRouteIds = {
   'customers',

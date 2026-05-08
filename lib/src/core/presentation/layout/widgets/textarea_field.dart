@@ -45,31 +45,50 @@ class _TextareaFieldState extends State<TextareaField> {
   @override
   void initState() {
     super.initState();
-    if (widget.controller != null) {
-      _controller = widget.controller!;
-    } else {
-      _controller = TextEditingController(text: widget.initialValue);
-      _ownsController = true;
-    }
+    _controller = widget.controller ?? TextEditingController(text: widget.initialValue);
+    _ownsController = widget.controller == null;
   }
 
   @override
   void didUpdateWidget(TextareaField oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.controller != oldWidget.controller) {
-      if (_ownsController && widget.controller == null) {
-        // 已经拥有 controller 且外部传入变为 null，不需要切换
-      } else if (widget.controller != null && widget.controller != _controller) {
-        _controller = widget.controller!;
-        _ownsController = false;
-      }
+      _handleControllerChange(oldWidget.controller);
+    }
+  }
+
+  void _handleControllerChange(TextEditingController? oldController) {
+    TextEditingController? oldOwned;
+    if (_ownsController) {
+      oldOwned = _controller;
+    }
+    _ownsController = widget.controller == null;
+    if (_ownsController) {
+      _controller = TextEditingController(text: widget.initialValue);
+    } else {
+      _controller = widget.controller!;
+    }
+    // Defer disposal to avoid TextFormField.State listener removal conflicts
+    if (oldOwned != null) {
+      final toDispose = oldOwned;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        try {
+          toDispose.dispose();
+        } catch (_) {
+          // Already disposed
+        }
+      });
     }
   }
 
   @override
   void dispose() {
     if (_ownsController) {
-      _controller.dispose();
+      try {
+        _controller.dispose();
+      } catch (_) {
+        // Already disposed
+      }
     }
     super.dispose();
   }

@@ -118,6 +118,7 @@ Future<bool> showRiskActionConfirmDialog(
 }) async {
   final confirmed = await showDialog<bool>(
     context: context,
+    useRootNavigator: false,
     builder: (context) {
       final screenWidth = MediaQuery.sizeOf(context).width;
       final dialogWidth = (screenWidth < 600)
@@ -221,6 +222,7 @@ Future<ActionDecisionResult<T>?> showActionDecisionDialog<T>(
 
   final result = await showDialog<ActionDecisionResult<T>>(
     context: context,
+    useRootNavigator: false,
     builder: (dialogContext) {
       return StatefulBuilder(
         builder: (context, setState) {
@@ -296,7 +298,7 @@ Future<ActionDecisionResult<T>?> showActionDecisionDialog<T>(
                     enabled: !submitting,
                     maxLines: notesMaxLines,
                     hintText: notesHint,
-                  ).build(dialogContext),
+                  ).build(context),
                 if (showExtraNotes) ...[
                   if (showNotes) const SizedBox(height: 12),
                   CrudFieldConfig.textarea(
@@ -305,7 +307,7 @@ Future<ActionDecisionResult<T>?> showActionDecisionDialog<T>(
                     enabled: !submitting,
                     maxLines: extraNotesMaxLines,
                     hintText: extraNotesHint,
-                  ).build(dialogContext),
+                  ).build(context),
                 ],
               ],
             ),
@@ -346,7 +348,7 @@ Future<ActionDecisionResult<T>?> showActionDecisionDialog<T>(
     },
   );
 
-  notesController.dispose();
-  extraNotesController.dispose();
+  // Controllers are local variables and will be garbage collected when
+  // the dialog route is removed. No manual disposal needed.
   return result;
 }
