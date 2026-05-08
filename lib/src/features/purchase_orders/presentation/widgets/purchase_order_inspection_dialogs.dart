@@ -369,7 +369,7 @@ Future<void> showPurchaseInspectionAppFormDialog(
                     if (parsed == null || parsed < 0) return '请输入有效数量';
                     return null;
                   },
-                ).build(dialogContext),
+                ).build(context),
                 SizedBox(height: LayoutTokens.gapMd),
                 CrudFieldConfig.number(
                   label: '不合格数量',
@@ -380,7 +380,7 @@ Future<void> showPurchaseInspectionAppFormDialog(
                     if (parsed == null || parsed < 0) return '请输入有效数量';
                     return null;
                   },
-                ).build(dialogContext),
+                ).build(context),
                 SizedBox(height: LayoutTokens.gapMd),
                 CrudFieldConfig.textarea(
                   label: '不合格原因',
@@ -396,7 +396,7 @@ Future<void> showPurchaseInspectionAppFormDialog(
                     }
                     return null;
                   },
-                ).build(dialogContext),
+                ).build(context),
               ],
             ),
           );

@@ -54,12 +54,12 @@ Future<void> showDeliveryShipDialog(
                 CrudFieldConfig.text(
                   label: '物流公司',
                   controller: logisticsController,
-                ).build(dialogContext),
+                ).build(context),
                 SizedBox(height: LayoutTokens.gapMd),
                 CrudFieldConfig.text(
                   label: '运单号',
                   controller: trackingController,
-                ).build(dialogContext),
+                ).build(context),
               ],
             ),
           );
@@ -113,7 +113,7 @@ Future<void> showDeliveryReceiveDialog(
               label: '签收备注',
               controller: notesController,
               maxLines: 3,
-            ).build(dialogContext),
+            ).build(context),
           );
         },
       );
@@ -179,7 +179,7 @@ Future<void> showDeliveryRejectDialog(
                     }
                     return null;
                   },
-                ).build(dialogContext),
+                ).build(context),
               ],
             ),
           );

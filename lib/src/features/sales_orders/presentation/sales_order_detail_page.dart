@@ -154,7 +154,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
           label: '审核意见（可选）',
           controller: _approvalCommentController,
           maxLines: 3,
-        ).build(dialogContext),
+        ).build(context),
       ),
     );
     if (confirmed != true) return;
@@ -199,14 +199,14 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
               maxLines: 3,
               validator: (value) =>
                   (value?.trim().isEmpty ?? true) ? '请填写拒绝原因' : null,
-            ).build(dialogContext),
+            ).build(context),
             SpacingTokens.vMd,
             CrudFieldConfig.textarea(
               label: '补充说明（可选）',
               controller: _approvalCommentController,
               hintText: '例如：客户信息不完整，需补充联系人和交期',
               maxLines: 3,
-            ).build(dialogContext),
+            ).build(context),
           ],
         ),
       ),
@@ -273,7 +273,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
               label: '取消原因（可选）',
               controller: _cancelReasonController,
               maxLines: 3,
-            ).build(dialogContext),
+            ).build(context),
           ],
         ),
       ),

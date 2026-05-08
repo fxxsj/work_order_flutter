@@ -65,12 +65,12 @@ Future<SalesOrderPaymentUpdateResult?> showSalesOrderPaymentDialog(
               label: '已付金额',
               controller: amountController,
               decimal: true,
-            ).build(dialogContext),
+            ).build(context),
             SizedBox(height: LayoutTokens.gapMd),
             CrudFieldConfig.text(
               label: '付款日期（YYYY-MM-DD）',
               controller: dateController,
-            ).build(dialogContext),
+            ).build(context),
           ],
         ),
       ),
@@ -122,7 +122,7 @@ Future<SalesOrderCompleteResult?> showSalesOrderCompleteDialog(
                   if (!requireReason) return null;
                   return (value?.trim().isEmpty ?? true) ? '请填写人工完结原因' : null;
                 },
-              ).build(dialogContext),
+              ).build(context),
             ],
           ],
         ),
@@ -171,7 +171,7 @@ Future<SalesOrderBatchCreateWorkOrderResult?>
               CrudFieldConfig.text(
                 label: '统一交货日期（YYYY-MM-DD，可选）',
                 controller: deliveryController,
-              ).build(dialogContext),
+              ).build(context),
               SizedBox(height: LayoutTokens.gapMd),
               AppSelect<String>(
                 decoration: const InputDecoration(labelText: '统一优先级'),
@@ -191,7 +191,7 @@ Future<SalesOrderBatchCreateWorkOrderResult?>
                 controller: notesController,
                 maxLines: 4,
                 hintText: '补充本次批量排产的统一说明',
-              ).build(dialogContext),
+              ).build(context),
             ],
           ),
         ),
