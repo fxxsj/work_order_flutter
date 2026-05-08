@@ -563,7 +563,15 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                 onAddProduct: _handleAddProduct,
                 onRemoveProduct: (index) =>
                     setState(() => _draft.removeProductDraftAt(index)),
-                onProcessSelectionChanged: () => setState(() {}),
+                onProcessSelectionChanged: (processId) {
+                  setState(() {
+                    if (_draft.processIds.contains(processId)) {
+                      _draft.processIds.remove(processId);
+                    } else {
+                      _draft.processIds.add(processId);
+                    }
+                  });
+                },
                 onAddMaterial: () => setState(_draft.addMaterialDraft),
                 onRemoveMaterial: (index) =>
                     setState(() => _draft.removeMaterialDraftAt(index)),

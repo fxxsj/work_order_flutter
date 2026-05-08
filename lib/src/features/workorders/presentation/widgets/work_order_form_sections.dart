@@ -629,25 +629,29 @@ class WorkOrderProcessConfigSection extends StatelessWidget {
     super.key,
     required this.processes,
     required this.processIds,
-    required this.onSelectionChanged,
+    required this.onToggleProcess,
   });
 
   final List<Process> processes;
   final Set<int> processIds;
-  final VoidCallback onSelectionChanged;
+  final ValueChanged<int> onToggleProcess;
 
   @override
   Widget build(BuildContext context) {
     return WorkOrderFormSectionCard(
       title: '工序配置',
-      child: WorkOrderMultiSelectField(
-        items: processes
-            .map((item) => WorkOrderOptionItem(item.id, item.name))
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: processes
+            .map(
+              (process) => FilterChip(
+                label: Text(process.name),
+                selected: processIds.contains(process.id),
+                onSelected: (_) => onToggleProcess(process.id),
+              ),
+            )
             .toList(),
-        selected: processIds,
-        emptyText: '暂无工序数据',
-        placeholder: '请选择（可多选）',
-        onChanged: onSelectionChanged,
       ),
     );
   }
@@ -935,7 +939,7 @@ class WorkOrderFormContent extends StatelessWidget {
   final VoidCallback onPickActualDeliveryDate;
   final VoidCallback onAddProduct;
   final ValueChanged<int> onRemoveProduct;
-  final VoidCallback onProcessSelectionChanged;
+  final ValueChanged<int> onProcessSelectionChanged;
   final VoidCallback onAddMaterial;
   final ValueChanged<int> onRemoveMaterial;
   final ValueChanged<String?> onPrintingTypeChanged;
@@ -988,7 +992,7 @@ class WorkOrderFormContent extends StatelessWidget {
         WorkOrderProcessConfigSection(
           processes: processes,
           processIds: processIds,
-          onSelectionChanged: onProcessSelectionChanged,
+          onToggleProcess: onProcessSelectionChanged,
         ),
         SizedBox(height: sectionSpacing),
         WorkOrderMaterialListSection(
