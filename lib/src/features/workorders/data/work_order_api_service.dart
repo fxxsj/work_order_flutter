@@ -150,30 +150,6 @@ class WorkOrderApiService {
     return _detailFromResponse(response.data, label: '更新施工单状态');
   }
 
-  Future<WorkOrderDetailDto> approve({
-    required int id,
-    required String approvalStatus,
-    String? approvalComment,
-    String? rejectionReason,
-  }) async {
-    final payload = <String, dynamic>{
-      'approval_status': approvalStatus,
-      'approval_comment': approvalComment ?? '',
-    };
-    if (rejectionReason != null && rejectionReason.trim().isNotEmpty) {
-      payload['rejection_reason'] = rejectionReason.trim();
-    }
-    final response =
-        await _client.post('/workorders/$id/approve/', data: payload);
-    return _detailFromResponse(response.data, label: '审核施工单');
-  }
-
-  Future<WorkOrderDetailDto> resubmitForApproval(int id) async {
-    final response =
-        await _client.post('/workorders/$id/resubmit_for_approval/');
-    return _detailFromResponse(response.data, label: '重新提交施工单审核');
-  }
-
   Future<Map<String, dynamic>> markUrgent(int id,
       {required String reason}) async {
     final response = await _client.post(

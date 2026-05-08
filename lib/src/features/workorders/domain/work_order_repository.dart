@@ -29,14 +29,11 @@ abstract class WorkOrderRepository {
 
   Future<WorkOrderDetailDto> updateStatus(int id, String status);
 
-  Future<WorkOrderDetailDto> approve({
-    required int id,
-    required String approvalStatus,
-    String? approvalComment,
-    String? rejectionReason,
-  });
-
   Future<WorkOrderDetailDto> submitApproval(int id, {String? comment});
+
+  Future<WorkOrderDetailDto> approveWorkOrder(int id, {String? comment});
+
+  Future<WorkOrderDetailDto> rejectWorkOrder(int id, {required String reason});
 
   Future<WorkOrderDetailDto> resubmitForApproval(int id);
 

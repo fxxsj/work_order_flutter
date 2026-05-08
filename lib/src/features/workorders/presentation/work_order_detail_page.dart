@@ -203,12 +203,15 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     setState(() => _actionLoading = true);
     try {
       final viewModel = context.read<WorkOrderViewModel>();
-      final detail = await viewModel.approve(
-        id: widget.workOrderId,
-        approvalStatus: approved ? 'approved' : 'rejected',
-        approvalComment: comment,
-        rejectionReason: rejectionReason,
-      );
+      final detail = approved
+          ? await viewModel.approveWorkOrder(
+              widget.workOrderId,
+              comment: comment,
+            )
+          : await viewModel.rejectWorkOrder(
+              widget.workOrderId,
+              reason: rejectionReason ?? comment,
+            );
       if (!mounted) return;
       setState(() {
         _detail = detail;
@@ -731,13 +734,15 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                         SizedBox(height: sectionSpacing),
                         DetailSectionCard(
                           title: '工序进度',
-                          trailing: OutlinedButton.icon(
-                            onPressed: detail.processes.isEmpty
-                                ? null
-                                : () => _showSyncPreviewDialog(detail),
-                            icon: const Icon(Icons.sync_alt, size: 16),
-                            label: const Text('任务同步预览'),
-                          ),
+                          trailing: PermissionUtil.isSuperuser(context)
+                              ? OutlinedButton.icon(
+                                  onPressed: detail.processes.isEmpty
+                                      ? null
+                                      : () => _showSyncPreviewDialog(detail),
+                                  icon: const Icon(Icons.sync_alt, size: 16),
+                                  label: const Text('任务同步预览'),
+                                )
+                              : null,
                           child: WorkOrderProcessesSection(
                             items: detail.processes,
                             emptyText: _emptyText,

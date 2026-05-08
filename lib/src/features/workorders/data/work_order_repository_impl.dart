@@ -75,30 +75,18 @@ class WorkOrderRepositoryImpl implements WorkOrderRepository {
   }
 
   @override
-  Future<WorkOrderDetailDto> approve({
-    required int id,
-    required String approvalStatus,
-    String? approvalComment,
-    String? rejectionReason,
-  }) {
-    if (approvalStatus == 'approved') {
-      return _flowApiService.approve(
-        id,
-        comment: approvalComment,
-      );
-    }
-    final reason = rejectionReason?.trim().isNotEmpty == true
-        ? rejectionReason!.trim()
-        : (approvalComment?.trim() ?? '');
-    return _flowApiService.reject(
-      id,
-      reason: reason,
-    );
+  Future<WorkOrderDetailDto> submitApproval(int id, {String? comment}) {
+    return _flowApiService.submitApproval(id, comment: comment);
   }
 
   @override
-  Future<WorkOrderDetailDto> submitApproval(int id, {String? comment}) {
-    return _flowApiService.submitApproval(id, comment: comment);
+  Future<WorkOrderDetailDto> approveWorkOrder(int id, {String? comment}) {
+    return _flowApiService.approve(id, comment: comment);
+  }
+
+  @override
+  Future<WorkOrderDetailDto> rejectWorkOrder(int id, {required String reason}) {
+    return _flowApiService.reject(id, reason: reason);
   }
 
   @override
