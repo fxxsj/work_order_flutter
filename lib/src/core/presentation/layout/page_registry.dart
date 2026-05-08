@@ -37,10 +37,6 @@ import 'package:work_order_app/src/features/finance_costs/presentation/cost_cent
 import 'package:work_order_app/src/features/finance_costs/presentation/cost_item_list_page.dart';
 import 'package:work_order_app/src/features/finance_payments/presentation/payment_plan_list_page.dart';
 import 'package:work_order_app/src/features/processes/presentation/process_log_list_page.dart';
-import 'package:work_order_app/src/features/approvals/presentation/approval_center_page.dart';
-import 'package:work_order_app/src/features/approvals/presentation/approval_workflow_list_page.dart';
-import 'package:work_order_app/src/features/approvals/presentation/urgent_order_page.dart';
-import 'package:work_order_app/src/features/approvals/presentation/approval_report_page.dart';
 import 'package:work_order_app/src/features/notification_admin/presentation/system_notification_page.dart';
 import 'package:work_order_app/src/features/notification_admin/presentation/user_notification_settings_page.dart';
 import 'package:work_order_app/src/features/notification_admin/presentation/notification_template_page.dart';
@@ -119,14 +115,6 @@ Widget? buildFullPage(String id) {
       return const PaymentPlanListEntry();
     case 'process_logs':
       return const ProcessLogListEntry();
-    case 'approval_center':
-      return const ApprovalCenterPage();
-    case 'approval_workflows':
-      return const ApprovalWorkflowListEntry();
-    case 'urgent_orders':
-      return const UrgentOrderPage();
-    case 'approval_reports':
-      return const ApprovalReportPage();
     case 'system_notifications':
       return const SystemNotificationPage();
     case 'user_notification_settings':

@@ -174,69 +174,11 @@ class WorkOrderApiService {
     return _detailFromResponse(response.data, label: '重新提交施工单审核');
   }
 
-  Future<WorkOrderDetailDto> requestReapproval(int id, String reason) async {
-    final response = await _client
-        .post('/workorders/$id/request_reapproval/', data: {'reason': reason});
-    return _detailFromResponse(response.data, label: '请求施工单重新审核');
-  }
-
-  Future<Map<String, dynamic>> fetchApprovalStatus(int id) async {
-    final response = await _client.get(
-      '/multi-level-approval/get_approval_status/',
-      queryParameters: {'order_id': id},
-    );
-    return _requireMap('施工单审批状态', response.data);
-  }
-
-  Future<Map<String, dynamic>> submitMultiApproval(int id) async {
-    final response = await _client.post(
-      '/multi-level-approval/submit_for_approval/',
-      data: {'order_id': id},
-    );
-    return _requireMap('提交多级审批', response.data);
-  }
-
-  Future<Map<String, dynamic>> startApprovalStep(int stepId) async {
-    final response = await _client.post('/approval-steps/$stepId/start_step/');
-    return _requireMap('开始审批步骤', response.data);
-  }
-
-  Future<Map<String, dynamic>> completeApprovalStep(
-    int stepId, {
-    required String decision,
-    String? comments,
-  }) async {
-    final response = await _client.post(
-      '/approval-steps/$stepId/complete_step/',
-      data: {
-        'decision': decision,
-        if (comments != null) 'comments': comments,
-      },
-    );
-    return _requireMap('完成审批步骤', response.data);
-  }
-
-  Future<Map<String, dynamic>> escalateApprovalStep(
-    int stepId, {
-    required String reason,
-    int? toStepId,
-  }) async {
-    final response = await _client.post(
-      '/approval-steps/$stepId/escalate_step/',
-      data: {
-        'escalation_reason': reason,
-        if (toStepId != null) 'to_step_id': toStepId,
-      },
-    );
-    return _requireMap('上报审批步骤', response.data);
-  }
-
   Future<Map<String, dynamic>> markUrgent(int id,
       {required String reason}) async {
     final response = await _client.post(
-      '/urgent-orders/mark_urgent/',
+      '/workorders-flow/$id/mark_urgent/',
       data: {
-        'order_id': id,
         'reason': reason,
       },
     );

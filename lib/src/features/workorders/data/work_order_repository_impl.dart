@@ -107,54 +107,8 @@ class WorkOrderRepositoryImpl implements WorkOrderRepository {
   }
 
   @override
-  Future<WorkOrderDetailDto> requestReapproval(int id, String reason) {
-    return _flowApiService.requestReapproval(id, reason);
-  }
-
-  @override
   Future<Map<String, dynamic>> checkCompletion(int id) {
     return _flowApiService.checkCompletion(id);
-  }
-
-  @override
-  Future<Map<String, dynamic>> fetchApprovalStatus(int id) {
-    return _apiService.fetchApprovalStatus(id);
-  }
-
-  @override
-  Future<Map<String, dynamic>> submitMultiApproval(int id) {
-    return _apiService.submitMultiApproval(id);
-  }
-
-  @override
-  Future<Map<String, dynamic>> startApprovalStep(int stepId) {
-    return _apiService.startApprovalStep(stepId);
-  }
-
-  @override
-  Future<Map<String, dynamic>> completeApprovalStep(
-    int stepId, {
-    required String decision,
-    String? comments,
-  }) {
-    return _apiService.completeApprovalStep(
-      stepId,
-      decision: decision,
-      comments: comments,
-    );
-  }
-
-  @override
-  Future<Map<String, dynamic>> escalateApprovalStep(
-    int stepId, {
-    required String reason,
-    int? toStepId,
-  }) {
-    return _apiService.escalateApprovalStep(
-      stepId,
-      reason: reason,
-      toStepId: toStepId,
-    );
   }
 
   @override

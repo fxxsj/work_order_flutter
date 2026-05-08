@@ -137,10 +137,6 @@ class _NavAccessContext {
 const List<String> branchOrder = [
   'dashboard',
   'workorders',
-  'approval_center',
-  'approval_workflows',
-  'urgent_orders',
-  'approval_reports',
   'tasks_list',
   'tasks_operator',
   'tasks_supervisor',
@@ -195,38 +191,6 @@ const List<NavItem> navItems = [
     icon: Icons.description_outlined,
     path: '/workorders',
     requiredPermissions: ['workorder.view_workorder'],
-  ),
-  NavItem(
-    id: 'approvals',
-    label: '审批管理',
-    icon: Icons.fact_check_outlined,
-    children: [
-      NavItem(
-        id: 'approval_center',
-        label: '审批中心',
-        icon: Icons.task_alt_outlined,
-        path: '/approvals/center',
-        requiredPermissions: ['workorder.view_workorder'],
-      ),
-      NavItem(
-        id: 'approval_workflows',
-        label: '审批工作流',
-        icon: Icons.route_outlined,
-        path: '/approvals/workflows',
-      ),
-      NavItem(
-        id: 'urgent_orders',
-        label: '紧急订单',
-        icon: Icons.priority_high_outlined,
-        path: '/approvals/urgent-orders',
-      ),
-      NavItem(
-        id: 'approval_reports',
-        label: '审批报表',
-        icon: Icons.bar_chart_outlined,
-        path: '/approvals/reports',
-      ),
-    ],
   ),
   NavItem(
     id: 'tasks',

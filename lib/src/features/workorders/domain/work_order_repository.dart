@@ -40,27 +40,7 @@ abstract class WorkOrderRepository {
 
   Future<WorkOrderDetailDto> resubmitForApproval(int id);
 
-  Future<WorkOrderDetailDto> requestReapproval(int id, String reason);
-
   Future<Map<String, dynamic>> checkCompletion(int id);
-
-  Future<Map<String, dynamic>> fetchApprovalStatus(int id);
-
-  Future<Map<String, dynamic>> submitMultiApproval(int id);
-
-  Future<Map<String, dynamic>> startApprovalStep(int stepId);
-
-  Future<Map<String, dynamic>> completeApprovalStep(
-    int stepId, {
-    required String decision,
-    String? comments,
-  });
-
-  Future<Map<String, dynamic>> escalateApprovalStep(
-    int stepId, {
-    required String reason,
-    int? toStepId,
-  });
 
   Future<Map<String, dynamic>> markUrgent(int id, {required String reason});
 

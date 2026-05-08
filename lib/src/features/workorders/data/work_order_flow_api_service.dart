@@ -6,13 +6,17 @@ class WorkOrderFlowApiService {
 
   final ApiClient _client;
 
-  Future<Map<String, dynamic>> createFromSalesOrder(Map<String, dynamic> payload) async {
-    final response = await _client.post('/workorders-flow/create_from_sales_order/', data: payload);
+  Future<Map<String, dynamic>> createFromSalesOrder(
+      Map<String, dynamic> payload) async {
+    final response = await _client
+        .post('/workorders-flow/create_from_sales_order/', data: payload);
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> createFromSalesOrders(Map<String, dynamic> payload) async {
-    final response = await _client.post('/workorders-flow/create_from_sales_orders/', data: payload);
+  Future<Map<String, dynamic>> createFromSalesOrders(
+      Map<String, dynamic> payload) async {
+    final response = await _client
+        .post('/workorders-flow/create_from_sales_orders/', data: payload);
     return _mapFromResponse(response.data);
   }
 
@@ -23,7 +27,8 @@ class WorkOrderFlowApiService {
     final response = await _client.post(
       '/workorders-flow/$id/submit_approval/',
       data: {
-        if (comment != null && comment.trim().isNotEmpty) 'comment': comment.trim(),
+        if (comment != null && comment.trim().isNotEmpty)
+          'comment': comment.trim(),
       },
     );
     return _detailFromResponse(response.data);
@@ -36,7 +41,8 @@ class WorkOrderFlowApiService {
     final response = await _client.post(
       '/workorders-flow/$id/approve/',
       data: {
-        if (comment != null && comment.trim().isNotEmpty) 'comment': comment.trim(),
+        if (comment != null && comment.trim().isNotEmpty)
+          'comment': comment.trim(),
       },
     );
     return _detailFromResponse(response.data);
@@ -53,16 +59,9 @@ class WorkOrderFlowApiService {
     return _detailFromResponse(response.data);
   }
 
-  Future<WorkOrderDetailDto> requestReapproval(int id, String reason) async {
-    final response = await _client.post(
-      '/workorders-flow/$id/request_reapproval/',
-      data: {'reason': reason},
-    );
-    return _detailFromResponse(response.data);
-  }
-
   Future<Map<String, dynamic>> checkCompletion(int id) async {
-    final response = await _client.post('/workorders-flow/$id/check_completion/');
+    final response =
+        await _client.post('/workorders-flow/$id/check_completion/');
     return _mapFromResponse(response.data);
   }
 
@@ -70,7 +69,8 @@ class WorkOrderFlowApiService {
     if (data is Map<String, dynamic>) {
       return Map<String, dynamic>.from(data);
     }
-    throw StateError('Unexpected work order flow response: ${data.runtimeType}');
+    throw StateError(
+        'Unexpected work order flow response: ${data.runtimeType}');
   }
 
   WorkOrderDetailDto _detailFromResponse(dynamic data) {

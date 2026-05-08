@@ -8,12 +8,14 @@ class WorkOrderFlowRepositoryImpl implements WorkOrderFlowRepository {
   final WorkOrderFlowApiService _apiService;
 
   @override
-  Future<Map<String, dynamic>> createFromSalesOrder(Map<String, dynamic> payload) {
+  Future<Map<String, dynamic>> createFromSalesOrder(
+      Map<String, dynamic> payload) {
     return _apiService.createFromSalesOrder(payload);
   }
 
   @override
-  Future<Map<String, dynamic>> createFromSalesOrders(Map<String, dynamic> payload) {
+  Future<Map<String, dynamic>> createFromSalesOrders(
+      Map<String, dynamic> payload) {
     return _apiService.createFromSalesOrders(payload);
   }
 
@@ -30,11 +32,6 @@ class WorkOrderFlowRepositoryImpl implements WorkOrderFlowRepository {
   @override
   Future<WorkOrderDetailDto> reject(int id, {required String reason}) {
     return _apiService.reject(id, reason: reason);
-  }
-
-  @override
-  Future<WorkOrderDetailDto> requestReapproval(int id, String reason) {
-    return _apiService.requestReapproval(id, reason);
   }
 
   @override

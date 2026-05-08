@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/constants/breakpoints.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/attachment_open_button.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
 import 'package:work_order_app/src/core/utils/file_link_util.dart';
@@ -140,300 +138,36 @@ class WorkOrderApprovalSection extends StatelessWidget {
   const WorkOrderApprovalSection({
     super.key,
     required this.detail,
-    required this.hasMultiApproval,
-    required this.approvalLoading,
-    required this.approvalActionLoading,
-    required this.approvalErrorMessage,
-    required this.approvalStatus,
-    required this.currentUserName,
-    required this.formatPercentage,
-    required this.formatDateTime,
-    required this.onRetry,
+    required this.actionLoading,
     required this.onSubmitApproval,
     required this.onApprove,
     required this.onReject,
     required this.onResubmit,
-    required this.onRequestReapproval,
     required this.onMarkUrgent,
-    required this.onStartStep,
-    required this.onApproveStep,
-    required this.onRejectStep,
-    required this.onEscalateStep,
     required this.emptyText,
   });
 
   final WorkOrderDetail detail;
-  final bool hasMultiApproval;
-  final bool approvalLoading;
-  final bool approvalActionLoading;
-  final String? approvalErrorMessage;
-  final Map<String, dynamic>? approvalStatus;
-  final String? currentUserName;
-  final String Function(dynamic value) formatPercentage;
-  final String Function(dynamic value) formatDateTime;
-  final VoidCallback onRetry;
+  final bool actionLoading;
   final VoidCallback onSubmitApproval;
   final VoidCallback? onApprove;
   final VoidCallback? onReject;
   final VoidCallback? onResubmit;
-  final VoidCallback? onRequestReapproval;
   final VoidCallback onMarkUrgent;
-  final ValueChanged<int> onStartStep;
-  final ValueChanged<int> onApproveStep;
-  final ValueChanged<int> onRejectStep;
-  final ValueChanged<int> onEscalateStep;
   final String emptyText;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.extension<AppColors>();
-    final isMobile = BreakpointsUtil.isMobile(context);
-    final currentStep = _currentApprovalStep;
-    final steps = _allApprovalSteps;
-
-    if (approvalLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (approvalErrorMessage != null) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(approvalErrorMessage!, style: theme.textTheme.bodyMedium),
-          SizedBox(height: LayoutTokens.gapMd),
-          FilledButton(
-            onPressed: onRetry,
-            child: const Text('重试'),
-          ),
-        ],
-      );
-    }
-
-    if (!hasMultiApproval) {
-      return _SingleApprovalContent(
-        detail: detail,
-        actionLoading: approvalActionLoading,
-        onApprove: onApprove,
-        onReject: onReject,
-        onSubmitApproval: onSubmitApproval,
-        onResubmit: onResubmit,
-        onRequestReapproval: onRequestReapproval,
-        emptyText: emptyText,
-      );
-    }
-
-    if (approvalStatus == null || steps.isEmpty) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('尚未启动多级审批', style: theme.textTheme.bodyMedium),
-          SizedBox(height: LayoutTokens.gapMd),
-          Wrap(
-            spacing: LayoutTokens.gapSm,
-            runSpacing: LayoutTokens.gapSm,
-            children: [
-              FilledButton.icon(
-                onPressed: approvalActionLoading ? null : onSubmitApproval,
-                icon: const Icon(Icons.fact_check_outlined, size: 18),
-                label: Text(approvalActionLoading ? '提交中' : '提交审批'),
-              ),
-              if (detail.priority != 'urgent')
-                OutlinedButton.icon(
-                  onPressed: approvalActionLoading ? null : onMarkUrgent,
-                  icon: const Icon(Icons.priority_high, size: 18),
-                  label: const Text('标记紧急'),
-                ),
-            ],
-          ),
-        ],
-      );
-    }
-
-    final totalSteps = approvalStatus?['total_steps']?.toString() ?? emptyText;
-    final completedSteps =
-        approvalStatus?['completed_steps']?.toString() ?? emptyText;
-    final progressText =
-        formatPercentage(approvalStatus?['progress_percentage']);
-    final approvalStatusText = approvalStatus?['approval_status']?.toString() ??
-        detail.approvalStatusDisplay ??
-        emptyText;
-
-    final assignedTo = currentStep == null
-        ? emptyText
-        : currentStep['assigned_to_name']?.toString() ?? emptyText;
-    final stepStatus = currentStep == null
-        ? emptyText
-        : currentStep['status']?.toString() ?? emptyText;
-    final stepName = currentStep == null
-        ? emptyText
-        : currentStep['step_name']?.toString() ?? emptyText;
-    final stepRawId = currentStep == null ? null : currentStep['id'];
-    final stepId = stepRawId is int
-        ? stepRawId
-        : int.tryParse(stepRawId?.toString() ?? '');
-
-    final canAct = currentUserName == null ||
-        currentUserName!.isEmpty ||
-        currentUserName == assignedTo;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Wrap(
-          spacing: LayoutTokens.gapLg,
-          runSpacing: LayoutTokens.gapSm,
-          children: [
-            _InfoRow(label: '审批状态', value: approvalStatusText),
-            _InfoRow(
-              label: '进度',
-              value: '$completedSteps / $totalSteps ($progressText)',
-            ),
-            _InfoRow(label: '当前步骤', value: stepName),
-            _InfoRow(label: '负责人', value: assignedTo),
-          ],
-        ),
-        SizedBox(height: LayoutTokens.gapMd),
-        Wrap(
-          spacing: LayoutTokens.gapSm,
-          runSpacing: LayoutTokens.gapSm,
-          children: [
-            if (stepId != null && stepStatus == 'pending')
-              FilledButton.icon(
-                onPressed: approvalActionLoading || !canAct
-                    ? null
-                    : () => onStartStep(stepId),
-                icon: const Icon(Icons.play_arrow, size: 18),
-                label: const Text('开始审核'),
-              ),
-            if (stepId != null &&
-                (stepStatus == 'pending' || stepStatus == 'in_progress')) ...[
-              FilledButton.icon(
-                onPressed: approvalActionLoading || !canAct
-                    ? null
-                    : () => onApproveStep(stepId),
-                icon: const Icon(Icons.check_circle_outline, size: 18),
-                label: const Text('通过'),
-              ),
-              OutlinedButton.icon(
-                onPressed: approvalActionLoading || !canAct
-                    ? null
-                    : () => onRejectStep(stepId),
-                icon: const Icon(Icons.cancel_outlined, size: 18),
-                label: const Text('拒绝'),
-              ),
-              OutlinedButton.icon(
-                onPressed: approvalActionLoading || !canAct
-                    ? null
-                    : () => onEscalateStep(stepId),
-                icon: const Icon(Icons.trending_up, size: 18),
-                label: const Text('上报'),
-              ),
-            ],
-            FilledButton.icon(
-              onPressed: approvalActionLoading ? null : onSubmitApproval,
-              icon: const Icon(Icons.fact_check_outlined, size: 18),
-              label: Text(approvalActionLoading ? '提交中' : '重新提交'),
-            ),
-            if (detail.priority != 'urgent')
-              OutlinedButton.icon(
-                onPressed: approvalActionLoading ? null : onMarkUrgent,
-                icon: const Icon(Icons.priority_high, size: 18),
-                label: const Text('标记紧急'),
-              ),
-          ],
-        ),
-        SizedBox(height: LayoutTokens.gapLg),
-        Text(
-          '审批步骤',
-          style: theme.textTheme.titleSmall?.copyWith(
-            color: colors?.sidebarText,
-          ),
-        ),
-        SizedBox(height: LayoutTokens.gapSm),
-        if (!isMobile)
-          AppDataTable(
-            columns: const [
-              DataColumn(label: Text('序号')),
-              DataColumn(label: Text('步骤')),
-              DataColumn(label: Text('状态')),
-              DataColumn(label: Text('负责人')),
-              DataColumn(label: Text('决定')),
-              DataColumn(label: Text('开始时间')),
-              DataColumn(label: Text('完成时间')),
-            ],
-            rows: steps
-                .map(
-                  (step) => DataRow(
-                    cells: [
-                      DataCell(
-                          Text(step['step_order']?.toString() ?? emptyText)),
-                      DataCell(
-                          Text(step['step_name']?.toString() ?? emptyText)),
-                      DataCell(Text(step['status']?.toString() ?? emptyText)),
-                      DataCell(Text(
-                          step['assigned_to_name']?.toString() ?? emptyText)),
-                      DataCell(Text(step['decision']?.toString() ?? emptyText)),
-                      DataCell(Text(formatDateTime(step['started_at']))),
-                      DataCell(Text(formatDateTime(step['completed_at']))),
-                    ],
-                  ),
-                )
-                .toList(),
-          )
-        else
-          Column(
-            children: steps
-                .map(
-                  (step) => Padding(
-                    padding: EdgeInsets.only(bottom: LayoutTokens.gapMd),
-                    child: DetailSectionCard(
-                      title: step['step_name']?.toString() ?? emptyText,
-                      child: Wrap(
-                        spacing: LayoutTokens.gapLg,
-                        runSpacing: LayoutTokens.gapSm,
-                        children: [
-                          _InfoRow(
-                              label: '状态',
-                              value: step['status']?.toString() ?? emptyText),
-                          _InfoRow(
-                              label: '负责人',
-                              value: step['assigned_to_name']?.toString() ??
-                                  emptyText),
-                          _InfoRow(
-                              label: '决定',
-                              value: step['decision']?.toString() ?? emptyText),
-                          _InfoRow(
-                              label: '开始时间',
-                              value: formatDateTime(step['started_at'])),
-                          _InfoRow(
-                              label: '完成时间',
-                              value: formatDateTime(step['completed_at'])),
-                        ],
-                      ),
-                    ),
-                  ),
-                )
-                .toList(),
-          ),
-      ],
+    return _SingleApprovalContent(
+      detail: detail,
+      actionLoading: actionLoading,
+      onApprove: onApprove,
+      onReject: onReject,
+      onSubmitApproval: onSubmitApproval,
+      onResubmit: onResubmit,
+      onMarkUrgent: onMarkUrgent,
+      emptyText: emptyText,
     );
-  }
-
-  Map<String, dynamic>? get _currentApprovalStep {
-    final data = approvalStatus?['current_step'];
-    if (data is Map<String, dynamic>) return data;
-    if (data is Map) return Map<String, dynamic>.from(data);
-    return null;
-  }
-
-  List<Map<String, dynamic>> get _allApprovalSteps {
-    final data = approvalStatus?['all_steps'];
-    if (data is! List) return const [];
-    return data
-        .whereType<Map>()
-        .map((item) => Map<String, dynamic>.from(item))
-        .toList();
   }
 }
 
@@ -445,7 +179,7 @@ class _SingleApprovalContent extends StatelessWidget {
     required this.onReject,
     required this.onSubmitApproval,
     required this.onResubmit,
-    required this.onRequestReapproval,
+    required this.onMarkUrgent,
     required this.emptyText,
   });
 
@@ -455,7 +189,7 @@ class _SingleApprovalContent extends StatelessWidget {
   final VoidCallback? onReject;
   final VoidCallback onSubmitApproval;
   final VoidCallback? onResubmit;
-  final VoidCallback? onRequestReapproval;
+  final VoidCallback onMarkUrgent;
   final String emptyText;
 
   @override
@@ -524,12 +258,12 @@ class _SingleApprovalContent extends StatelessWidget {
         ),
       );
     }
-    if (status == 'approved' && onRequestReapproval != null) {
+    if (detail.priority != 'urgent') {
       actions.add(
         OutlinedButton.icon(
-          onPressed: actionLoading ? null : onRequestReapproval,
-          icon: const Icon(Icons.restart_alt, size: 18),
-          label: const Text('请求重新审核'),
+          onPressed: actionLoading ? null : onMarkUrgent,
+          icon: const Icon(Icons.priority_high, size: 18),
+          label: const Text('标记紧急'),
         ),
       );
     }
