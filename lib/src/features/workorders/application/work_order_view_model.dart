@@ -75,12 +75,14 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
 
   Future<WorkOrderDetail> createWorkOrder(Map<String, dynamic> payload) async {
     final detail = await _repository.createWorkOrder(payload);
+    await loadWorkOrders(resetPage: true);
     return detail.toEntity();
   }
 
   Future<WorkOrderDetail> updateWorkOrder(
       int id, Map<String, dynamic> payload) async {
     final detail = await _repository.updateWorkOrder(id, payload);
+    await loadWorkOrders();
     return detail.toEntity();
   }
 
@@ -92,6 +94,7 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
 
   Future<void> deleteWorkOrder(int id) async {
     await _repository.deleteWorkOrder(id);
+    await loadWorkOrders();
   }
 
   Future<WorkOrderDetail> updateStatus(int id, String status) async {
