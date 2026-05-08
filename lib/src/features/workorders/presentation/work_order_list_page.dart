@@ -116,8 +116,9 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     }
     final uri = GoRouterState.of(context).uri;
     final routeSearch = uri.queryParameters['search']?.trim() ?? '';
-    final routeApprovalStatus =
-        uri.queryParameters['approval_status']?.trim() ?? '';
+    final routeApprovalStatus = _normalizeApprovalStatus(
+      uri.queryParameters['approval_status']?.trim() ?? '',
+    );
     final signature = '$routeSearch|$routeApprovalStatus';
     final hadRouteState = _routeSignature != null;
     if (_routeSignature == signature) return;
@@ -607,7 +608,8 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
       AppDropdownOption(value: 'urgent', label: '紧急'),
     ];
     final approvalItems = const [
-      AppDropdownOption(value: 'pending', label: '待审核'),
+      AppDropdownOption(value: 'draft', label: '草稿'),
+      AppDropdownOption(value: 'submitted', label: '待审核'),
       AppDropdownOption(value: 'approved', label: '已通过'),
       AppDropdownOption(value: 'rejected', label: '已拒绝'),
     ];
@@ -660,9 +662,10 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
           final pendingApprovalCount = _summaryCount(
             viewModel,
             'pending_approval_count',
-            fallback: viewModel.workOrders
-                .where((item) => (item.approvalStatus ?? '') == 'pending')
-                .length,
+            fallback: viewModel.workOrders.where((item) {
+              final status = item.approvalStatus ?? '';
+              return status == 'submitted' || status == 'pending';
+            }).length,
           );
           final rejectedCount = _summaryCount(
             viewModel,
@@ -690,8 +693,8 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
                 label: '待审核施工单',
                 count: pendingApprovalCount,
                 icon: Icons.rule_folder_outlined,
-                selected: viewModel.approvalStatusFilter == 'pending',
-                onTap: () => _openQuickFilter('pending'),
+                selected: viewModel.approvalStatusFilter == 'submitted',
+                onTap: () => _openQuickFilter('submitted'),
                 variant: StatusChipVariant.info,
               ),
             if (rejectedCount > 0)
@@ -858,9 +861,15 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     context.go(
       Uri(
         path: '/workorders',
-        queryParameters: {'approval_status': approvalStatus},
+        queryParameters: {
+          'approval_status': _normalizeApprovalStatus(approvalStatus),
+        },
       ).toString(),
     );
+  }
+
+  String _normalizeApprovalStatus(String value) {
+    return value == 'pending' ? 'submitted' : value;
   }
 
   Future<void> _confirmDelete(
@@ -918,7 +927,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     final total = workOrder.totalTaskCount ?? 0;
     final draft = workOrder.draftTaskCount ?? 0;
 
-    if (approvalStatus == 'pending') {
+    if (approvalStatus == 'submitted' || approvalStatus == 'pending') {
       return '待审批后下发任务';
     }
     if (approvalStatus == 'rejected') {

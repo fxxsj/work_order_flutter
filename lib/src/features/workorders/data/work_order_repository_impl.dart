@@ -9,7 +9,8 @@ class WorkOrderRepositoryImpl implements WorkOrderRepository {
   WorkOrderRepositoryImpl(
     this._apiService, {
     WorkOrderFlowApiService? flowApiService,
-  }) : _flowApiService = flowApiService ?? WorkOrderFlowApiService(_apiService.client);
+  }) : _flowApiService =
+            flowApiService ?? WorkOrderFlowApiService(_apiService.client);
 
   final WorkOrderApiService _apiService;
   final WorkOrderFlowApiService _flowApiService;
@@ -102,7 +103,7 @@ class WorkOrderRepositoryImpl implements WorkOrderRepository {
 
   @override
   Future<WorkOrderDetailDto> resubmitForApproval(int id) {
-    return _apiService.resubmitForApproval(id);
+    return _flowApiService.submitApproval(id);
   }
 
   @override

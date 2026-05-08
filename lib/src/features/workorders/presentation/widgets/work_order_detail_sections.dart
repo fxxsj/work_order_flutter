@@ -216,6 +216,7 @@ class WorkOrderApprovalSection extends StatelessWidget {
         actionLoading: approvalActionLoading,
         onApprove: onApprove,
         onReject: onReject,
+        onSubmitApproval: onSubmitApproval,
         onResubmit: onResubmit,
         onRequestReapproval: onRequestReapproval,
         emptyText: emptyText,
@@ -442,6 +443,7 @@ class _SingleApprovalContent extends StatelessWidget {
     required this.actionLoading,
     required this.onApprove,
     required this.onReject,
+    required this.onSubmitApproval,
     required this.onResubmit,
     required this.onRequestReapproval,
     required this.emptyText,
@@ -451,6 +453,7 @@ class _SingleApprovalContent extends StatelessWidget {
   final bool actionLoading;
   final VoidCallback? onApprove;
   final VoidCallback? onReject;
+  final VoidCallback onSubmitApproval;
   final VoidCallback? onResubmit;
   final VoidCallback? onRequestReapproval;
   final String emptyText;
@@ -466,7 +469,18 @@ class _SingleApprovalContent extends StatelessWidget {
     final useColumnButtons = BreakpointsUtil.isMobile(context);
 
     final actions = <Widget>[];
-    if (status == 'pending' && onApprove != null && onReject != null) {
+    if (status == 'draft') {
+      actions.add(
+        FilledButton.icon(
+          onPressed: actionLoading ? null : onSubmitApproval,
+          icon: const Icon(Icons.fact_check_outlined, size: 18),
+          label: Text(actionLoading ? '提交中' : '提交审核'),
+        ),
+      );
+    }
+    if ((status == 'submitted' || status == 'pending') &&
+        onApprove != null &&
+        onReject != null) {
       if (useColumnButtons) {
         actions.addAll([
           FilledButton(
@@ -577,9 +591,10 @@ class _SummaryContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
-    final dividerColor = colors?.borderColor.withValues(alpha: OpacityTokens.heavy);
-    final showPrinting = detail.printingType != null &&
-        detail.printingType != 'none';
+    final dividerColor =
+        colors?.borderColor.withValues(alpha: OpacityTokens.heavy);
+    final showPrinting =
+        detail.printingType != null && detail.printingType != 'none';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -600,9 +615,7 @@ class _SummaryContent extends StatelessWidget {
           ),
           _DescItem(
             '审核状态',
-            detail.approvalStatusDisplay ??
-                detail.approvalStatus ??
-                emptyText,
+            detail.approvalStatusDisplay ?? detail.approvalStatus ?? emptyText,
             isStatus: true,
             statusType: 'approval',
             statusValue: detail.approvalStatus,
@@ -737,8 +750,7 @@ class _SummaryContent extends StatelessWidget {
     );
   }
 
-  Widget _buildDescriptionGrid(
-      BuildContext context, List<_DescItem> items) {
+  Widget _buildDescriptionGrid(BuildContext context, List<_DescItem> items) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxWidth = constraints.maxWidth;
@@ -853,7 +865,8 @@ class _DescriptionCell extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
-    final dividerColor = colors?.borderColor.withValues(alpha: OpacityTokens.strong);
+    final dividerColor =
+        colors?.borderColor.withValues(alpha: OpacityTokens.strong);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -924,7 +937,8 @@ class _StatusBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: OpacityTokens.mild),
         borderRadius: RadiusTokens.bXs,
-        border: Border.all(color: color.withValues(alpha: OpacityTokens.strong)),
+        border:
+            Border.all(color: color.withValues(alpha: OpacityTokens.strong)),
       ),
       child: Text(
         text,
@@ -955,6 +969,9 @@ class _StatusBadge extends StatelessWidget {
         }
       case 'approval':
         switch (statusValue) {
+          case 'draft':
+            return Colors.grey;
+          case 'submitted':
           case 'pending':
             return Colors.orange;
           case 'approved':
