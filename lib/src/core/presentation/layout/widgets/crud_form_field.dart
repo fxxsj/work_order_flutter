@@ -485,28 +485,3 @@ sealed class CrudFieldConfig {
         builder: builder,
       );
 }
-
-// ============================================================================
-// Legacy API - Backward Compatibility
-// ============================================================================
-
-/// Legacy type enum for backward compatibility
-@Deprecated('Use CrudFieldConfig subclasses instead')
-enum CrudFieldType {
-  text,
-  number,
-  email,
-  phone,
-  dropdown,
-  date,
-  dateRange,
-  textarea,
-  toggle,
-  fileUpload,
-  multiSelect,
-  tags,
-  checkboxGroup,
-  radioGroup,
-  color,
-  custom,
-}

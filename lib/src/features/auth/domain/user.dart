@@ -1,56 +1,54 @@
 class User {
-
   String? userName;
-  String? password;
   String? face;
 
-//<editor-fold desc="Data Methods">
+  // Password is transient - used only during auth flow, never persisted
+  String? password;
 
   User({
     this.userName,
-    this.password,
     this.face,
+    this.password,
   });
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) || (other is User && runtimeType == other.runtimeType && userName == other.userName && password == other.password && face == other.face);
+      identical(this, other) ||
+      (other is User &&
+          runtimeType == other.runtimeType &&
+          userName == other.userName &&
+          face == other.face);
 
   @override
-  int get hashCode => userName.hashCode ^ password.hashCode ^ face.hashCode;
+  int get hashCode => userName.hashCode ^ face.hashCode;
 
   @override
   String toString() {
-    return 'User{' + ' userName: $userName,' + ' password: $password,' + ' face: $face,' + '}';
+    return 'User{' + ' userName: $userName,' + ' face: $face,' + '}';
   }
 
   User copyWith({
     String? userName,
-    String? password,
     String? face,
   }) {
     return User(
       userName: userName ?? this.userName,
-      password: password ?? this.password,
       face: face ?? this.face,
     );
   }
 
+  // Password intentionally excluded from serialization - never persist
   Map<String, dynamic> toMap() {
     return {
-      'userName': this.userName,
-      'password': this.password,
-      'face': this.face,
+      'userName': userName,
+      'face': face,
     };
   }
 
   factory User.fromMap(Map<String, dynamic> map) {
     return User(
-      userName: map['userName'] as String,
-      password: map['password'] as String,
-      face: map['face'] as String,
+      userName: map['userName'] as String?,
+      face: map['face'] as String?,
     );
   }
-
-//</editor-fold>
 }
