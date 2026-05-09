@@ -11,6 +11,7 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
     required this.info,
     required this.surfaceAlt,
     required this.shadowStrong,
+    required this.unreadBackground,
     this.successBg,
     this.warningBg,
     this.dangerBg,
@@ -23,6 +24,7 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
   final Color info;
   final Color surfaceAlt;
   final Color shadowStrong;
+  final Color unreadBackground;
   final Color? successBg;
   final Color? warningBg;
   final Color? dangerBg;
@@ -36,6 +38,7 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
     Color? info,
     Color? surfaceAlt,
     Color? shadowStrong,
+    Color? unreadBackground,
     Color? successBg,
     Color? warningBg,
     Color? dangerBg,
@@ -48,6 +51,7 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
       info: info ?? this.info,
       surfaceAlt: surfaceAlt ?? this.surfaceAlt,
       shadowStrong: shadowStrong ?? this.shadowStrong,
+      unreadBackground: unreadBackground ?? this.unreadBackground,
       successBg: successBg ?? this.successBg,
       warningBg: warningBg ?? this.warningBg,
       dangerBg: dangerBg ?? this.dangerBg,
@@ -67,6 +71,7 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
       info: Color.lerp(info, other.info, t) ?? info,
       surfaceAlt: Color.lerp(surfaceAlt, other.surfaceAlt, t) ?? surfaceAlt,
       shadowStrong: Color.lerp(shadowStrong, other.shadowStrong, t) ?? shadowStrong,
+      unreadBackground: Color.lerp(unreadBackground, other.unreadBackground, t) ?? unreadBackground,
       successBg: Color.lerp(successBg, other.successBg, t) ?? successBg,
       warningBg: Color.lerp(warningBg, other.warningBg, t) ?? warningBg,
       dangerBg: Color.lerp(dangerBg, other.dangerBg, t) ?? dangerBg,

@@ -13,7 +13,7 @@ class NotificationListItem extends StatelessWidget {
     required this.primary,
     required this.showDivider,
     required this.timeLabel,
-    required this.onMarkRead,
+    required this.onAction,
   });
 
   final NotificationModel item;
@@ -22,88 +22,93 @@ class NotificationListItem extends StatelessWidget {
   final Color primary;
   final bool showDivider;
   final String timeLabel;
-  final VoidCallback onMarkRead;
+  final VoidCallback onAction;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final semantic = theme.extension<AppSemanticColors>();
     final levelColor = _levelColorFor(item.level, primary, semantic);
-    final titleStyle = theme.textTheme.bodySmall?.copyWith(
+    final actionIcon = item.isRead ? Icons.delete_outline : Icons.done_all;
+    final actionTooltip = item.isRead ? '删除通知' : '标为已读';
+    final actionColor = item.isRead ? subtleText : primary;
+
+    // Main content style is more prominent
+    final contentStyle = theme.textTheme.bodyMedium?.copyWith(
       color: accent,
       fontWeight: item.isRead ? FontWeight.w500 : FontWeight.w700,
     );
+    // Time style is more subtle
     final timeStyle = theme.textTheme.labelSmall?.copyWith(color: subtleText);
-    final contentStyle = theme.textTheme.bodySmall?.copyWith(
-      color: subtleText,
-      height: 1.4,
-    );
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.fromLTRB(
-        LayoutTokens.gapMd,
-        LayoutTokens.gapSm,
-        LayoutTokens.gapMd,
-        LayoutTokens.gapSm,
-      ),
-      decoration: BoxDecoration(
-        color: item.isRead
-            ? Colors.transparent
-            : primary.withValues(alpha: OpacityTokens.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(
+            horizontal: LayoutTokens.gapMd,
+            vertical: LayoutTokens.gapSm,
+          ),
+          decoration: BoxDecoration(
+            color:
+                item.isRead ? Colors.transparent : semantic?.unreadBackground,
+          ),
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
+              SizedBox(
                 width: 8,
                 height: 8,
-                decoration: BoxDecoration(
-                  color: levelColor,
-                  shape: BoxShape.circle,
-                ),
+                child: item.isRead
+                    ? null
+                    : DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: levelColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
               ),
-              SizedBox(width: LayoutTokens.gapSm),
+              SizedBox(width: LayoutTokens.gapMd),
+
+              // Content and Time
               Expanded(
-                child: Text(
-                  item.title,
-                  style: titleStyle,
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      item.content,
+                      style: contentStyle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: LayoutTokens.gapXs),
+                    Text(
+                      timeLabel,
+                      style: timeStyle,
+                    ),
+                  ],
                 ),
               ),
               SizedBox(width: LayoutTokens.gapSm),
-              Text(
-                timeLabel,
-                style: timeStyle,
-              ),
-              SizedBox(width: LayoutTokens.gapSm),
+
+              // Mark as read button
               IconButton(
-                tooltip: '标为已读',
-                icon: const Icon(Icons.done_all, size: 16),
-                color: item.isRead ? subtleText : primary,
-                onPressed: onMarkRead,
+                tooltip: actionTooltip,
+                icon: Icon(actionIcon, size: 16),
+                color: actionColor,
+                onPressed: onAction,
               ),
             ],
           ),
-          SizedBox(height: LayoutTokens.gapSm),
-          Text(
-            item.content,
-            style: contentStyle,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+        ),
+        if (showDivider)
+          Divider(
+            height: 1,
+            color: subtleText.withValues(alpha: OpacityTokens.distinct),
           ),
-          if (showDivider)
-            Padding(
-              padding: EdgeInsets.only(top: LayoutTokens.gapSm),
-              child: Divider(
-                height: 1,
-                color: subtleText.withValues(alpha: OpacityTokens.distinct),
-              ),
-            ),
-        ],
-      ),
+      ],
     );
   }
 }

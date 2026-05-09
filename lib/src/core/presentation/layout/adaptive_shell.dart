@@ -14,6 +14,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/app_sidebar.
 import 'package:work_order_app/src/core/presentation/layout/widgets/content_container.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/storage/app_storage.dart';
+import 'package:work_order_app/src/features/notification/domain/notification_model.dart';
 
 class AdaptiveShell extends StatefulWidget {
   const AdaptiveShell({super.key, required this.navigationShell});
@@ -70,7 +71,8 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     final background = colors.background;
     final primary = theme.primaryColor;
     final headerForeground = theme.colorScheme.onPrimary;
-    final headerMuted = headerForeground.withValues(alpha: OpacityTokens.textMuted);
+    final headerMuted =
+        headerForeground.withValues(alpha: OpacityTokens.textMuted);
     final sidebar = colors.sidebar;
     final sidebarText = colors.sidebarText;
     final sidebarItems = sidebarNavItems(currentUser: currentUser);
@@ -101,6 +103,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
       onMenuTap: () => scaffoldKey.currentState?.openDrawer(),
       onSettingTap: () => scaffoldKey.currentState?.openEndDrawer(),
       onNotificationViewAll: () => _handleSelectId('notifications'),
+      onNotificationOpen: _handleOpenNotification,
       onProfileTap: () => _handleSelectId('profile'),
       onLogoutTap: _handleLogout,
       primary: headerForeground,
@@ -146,7 +149,8 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
                 color: sidebar,
                 border: Border(
                   right: BorderSide(
-                    color: borderColor.withValues(alpha: OpacityTokens.borderStrong),
+                    color: borderColor.withValues(
+                        alpha: OpacityTokens.borderStrong),
                   ),
                 ),
               ),
@@ -206,6 +210,18 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     if (isMobile) {
       scaffoldKey.currentState?.closeDrawer();
     }
+  }
+
+  void _handleOpenNotification(NotificationModel notification) {
+    if (notification.workOrderId != null) {
+      context.go('/workorders/${notification.workOrderId}');
+      return;
+    }
+    if (notification.taskId != null) {
+      context.go('/tasks');
+      return;
+    }
+    _handleSelectId('notifications');
   }
 
   Future<void> _handleLogout() async {

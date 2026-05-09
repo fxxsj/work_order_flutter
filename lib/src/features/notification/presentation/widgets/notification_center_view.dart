@@ -161,8 +161,11 @@ class _NotificationToolbar extends StatelessWidget {
         ),
         TextButton.icon(
           onPressed: onMarkAllRead,
-          icon: const Icon(Icons.done_all, size: 18),
-          label: const Text('全部已读'),
+          style: TextButton.styleFrom(
+            foregroundColor: primary,
+          ),
+          icon: Icon(Icons.done_all, size: 18, color: primary),
+          label: Text('全部已读', style: TextStyle(color: primary)),
         ),
         OutlinedButton.icon(
           onPressed: onRefresh,

@@ -185,7 +185,8 @@ class NotificationViewModel extends ChangeNotifier {
     _safeNotify();
     _page = 1;
     try {
-      final page = await _api.fetchNotifications(page: _page, pageSize: _pageSize);
+      final page =
+          await _api.fetchNotifications(page: _page, pageSize: _pageSize);
       _notifications = page.items.toList();
       _totalCount = page.totalCount ?? page.items.length;
       _hasMore = page.hasMore;
@@ -210,7 +211,8 @@ class NotificationViewModel extends ChangeNotifier {
     _safeNotify();
     try {
       final nextPage = _page + 1;
-      final page = await _api.fetchNotifications(page: nextPage, pageSize: _pageSize);
+      final page =
+          await _api.fetchNotifications(page: nextPage, pageSize: _pageSize);
       _notifications = [..._notifications, ...page.items];
       _page = nextPage;
       _hasMore = page.hasMore;
@@ -242,6 +244,20 @@ class NotificationViewModel extends ChangeNotifier {
     }
     _updateLists(updated);
     _unreadCount = _unreadCount > 0 ? _unreadCount - 1 : 0;
+    _safeNotify();
+  }
+
+  Future<void> deleteNotification(String id) async {
+    await _api.deleteNotification(id);
+    final removedWasUnread =
+        _recentList.any((item) => item.id == id && !item.isRead) ||
+            _notifications.any((item) => item.id == id && !item.isRead);
+    _recentList = _recentList.where((item) => item.id != id).toList();
+    _notifications = _notifications.where((item) => item.id != id).toList();
+    _totalCount = _totalCount > 0 ? _totalCount - 1 : 0;
+    if (removedWasUnread) {
+      _unreadCount = _unreadCount > 0 ? _unreadCount - 1 : 0;
+    }
     _safeNotify();
   }
 
@@ -281,7 +297,8 @@ class NotificationViewModel extends ChangeNotifier {
     if (recentIndex != -1) {
       _recentList = List.from(_recentList)..[recentIndex] = updated;
     }
-    final listIndex = _notifications.indexWhere((item) => item.id == updated.id);
+    final listIndex =
+        _notifications.indexWhere((item) => item.id == updated.id);
     if (listIndex != -1) {
       _notifications = List.from(_notifications)..[listIndex] = updated;
     }

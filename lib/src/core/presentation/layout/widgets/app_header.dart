@@ -4,10 +4,16 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/controllers/app_badge_controller.dart';
 import 'package:work_order_app/src/features/notification/application/notification_view_model.dart';
+import 'package:work_order_app/src/features/notification/domain/notification_model.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_bar_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/avatar_menu.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/notification_list_item.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/notification_time_utils.dart';
+
+const String _notificationMarkAllReadAction = '__notification_mark_all_read__';
+const String _notificationMarkReadPrefix = 'notification_mark_read:';
+const String _notificationDeletePrefix = 'notification_delete:';
+const String _notificationOpenPrefix = 'notification_open:';
 
 class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   const AppHeader({
@@ -21,6 +27,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
     required this.onMenuTap,
     required this.onSettingTap,
     required this.onNotificationViewAll,
+    required this.onNotificationOpen,
     required this.onProfileTap,
     required this.onLogoutTap,
     required this.primary,
@@ -42,6 +49,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback onMenuTap;
   final VoidCallback onSettingTap;
   final VoidCallback onNotificationViewAll;
+  final ValueChanged<NotificationModel> onNotificationOpen;
   final VoidCallback onProfileTap;
   final VoidCallback onLogoutTap;
   final Color primary;
@@ -76,7 +84,8 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
       elevation: 0,
       scrolledUnderElevation: 0,
       shape: Border(
-        bottom: BorderSide(color: borderColor.withValues(alpha: OpacityTokens.borderStrong)),
+        bottom: BorderSide(
+            color: borderColor.withValues(alpha: OpacityTokens.borderStrong)),
       ),
       toolbarHeight: height,
       iconTheme: IconThemeData(color: subtleText),
@@ -142,21 +151,66 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
           builder: (context, notifyCtrl, _) {
             final unread = notifyCtrl.unreadCount;
             final label = unread > 99 ? '99+' : '$unread';
+            final colors = theme.extension<AppColors>();
+            final notificationSurface =
+                colors?.surface ?? theme.colorScheme.surface;
+            final notificationText = theme.brightness == Brightness.dark
+                ? ColorTokens.textOnDark
+                : ColorTokens.textDark;
+            final notificationSubtle =
+                colors?.subtleText ?? theme.colorScheme.onSurfaceVariant;
+            final notificationPrimary = theme.colorScheme.primary;
             return PopupMenuButton<String>(
               tooltip: '通知',
               offset: const Offset(0, 46),
               constraints: const BoxConstraints(minWidth: 280, maxWidth: 320),
+              color: notificationSurface,
+              surfaceTintColor: Colors.transparent,
+              shadowColor:
+                  semantic?.shadowStrong.withValues(alpha: OpacityTokens.mild),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(LayoutTokens.radiusMd)),
               onSelected: (value) {
-                notifyCtrl.markRead(value);
+                if (value == _notificationMarkAllReadAction) {
+                  notifyCtrl.markAllRead();
+                  return;
+                }
+                if (value.startsWith(_notificationDeletePrefix)) {
+                  notifyCtrl.deleteNotification(
+                    value.substring(_notificationDeletePrefix.length),
+                  );
+                  return;
+                }
+                if (value.startsWith(_notificationMarkReadPrefix)) {
+                  notifyCtrl.markRead(
+                    value.substring(_notificationMarkReadPrefix.length),
+                  );
+                  return;
+                }
+                if (value.startsWith(_notificationOpenPrefix)) {
+                  final id = value.substring(_notificationOpenPrefix.length);
+                  NotificationModel? item;
+                  for (final notification in notifyCtrl.recentList) {
+                    if (notification.id == id) {
+                      item = notification;
+                      break;
+                    }
+                  }
+                  if (item == null) {
+                    return;
+                  }
+                  if (!item.isRead) {
+                    notifyCtrl.markRead(item.id);
+                  }
+                  onNotificationOpen(item);
+                }
               },
               itemBuilder: (context) => _buildNotificationMenuItems(
                 context,
                 notifyCtrl,
-                accent,
-                subtleText,
-                primary,
+                notificationText,
+                notificationSubtle,
+                notificationPrimary,
                 onNotificationViewAll,
               ),
               child: Padding(
@@ -235,12 +289,16 @@ List<PopupMenuEntry<String>> _buildNotificationMenuItems(
     color: accent,
     fontWeight: FontWeight.w600,
   );
-  final actionStyle = theme.textTheme.labelSmall ?? theme.textTheme.bodySmall;
+  final actionStyle =
+      (theme.textTheme.labelSmall ?? theme.textTheme.bodySmall)?.copyWith(
+    color: primary,
+    fontWeight: FontWeight.w600,
+  );
   final emptyStyle = theme.textTheme.bodySmall?.copyWith(color: subtleText);
   final items = <PopupMenuEntry<String>>[];
   items.add(
     PopupMenuItem<String>(
-      enabled: false,
+      value: _notificationMarkAllReadAction,
       padding: EdgeInsets.fromLTRB(
         LayoutTokens.gapMd,
         LayoutTokens.gapSm,
@@ -254,21 +312,28 @@ List<PopupMenuEntry<String>> _buildNotificationMenuItems(
             style: headerStyle,
           ),
           const Spacer(),
-          TextButton(
-            onPressed: () {
-              controller.markAllRead();
-              Navigator.pop(context);
-            },
-            style: TextButton.styleFrom(
-              visualDensity: VisualDensity.compact,
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: primary.withValues(alpha: OpacityTokens.mild),
+              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+              border: Border.all(
+                color: primary.withValues(alpha: OpacityTokens.strong),
+              ),
+            ),
+            child: Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: LayoutTokens.gapSm,
                 vertical: LayoutTokens.gapXs,
               ),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              child: Text(
+                '全部已读',
+                style: actionStyle?.copyWith(
+                  color: primary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
-            child: Text('全部已读', style: actionStyle),
           ),
         ],
       ),
@@ -302,7 +367,7 @@ List<PopupMenuEntry<String>> _buildNotificationMenuItems(
     final showDivider = i != sortedList.length - 1;
     items.add(
       PopupMenuItem<String>(
-        value: item.id,
+        value: '$_notificationOpenPrefix${item.id}',
         padding: EdgeInsets.zero,
         child: NotificationListItem(
           item: item,
@@ -311,8 +376,12 @@ List<PopupMenuEntry<String>> _buildNotificationMenuItems(
           primary: primary,
           showDivider: showDivider,
           timeLabel: formatRelativeTime(item.createdAt),
-          onMarkRead: () {
-            controller.markRead(item.id);
+          onAction: () {
+            if (item.isRead) {
+              controller.deleteNotification(item.id);
+            } else {
+              controller.markRead(item.id);
+            }
             Navigator.pop(context);
           },
         ),
