@@ -8,6 +8,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.d
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/file_upload_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
@@ -59,6 +60,7 @@ class WorkOrderDetailPage extends StatefulWidget {
 
 class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   static const String _emptyText = '-';
+  static const double _spacingSm = LayoutTokens.gapSm;
   static const String _deleteDialogTitle = '确认删除';
   static const List<String> _designFileExtensions = [
     'pdf',
@@ -542,74 +544,80 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
         useSurface: false,
         showDivider: false,
         padding: EdgeInsets.zero,
-        actions: Wrap(
-          spacing: sectionSpacing,
-          runSpacing: 8,
-          children: [
-            PageActionButton.outlined(
-              onPressed: () => context.pop(),
-              icon: const Icon(Icons.arrow_back, size: 16),
-              label: '返回',
-            ),
-            ToggleButtons(
-              isSelected: [
-                _viewMode == WorkOrderDetailViewMode.basic,
-                _viewMode == WorkOrderDetailViewMode.products,
-                _viewMode == WorkOrderDetailViewMode.process,
-                _viewMode == WorkOrderDetailViewMode.approval,
-              ],
-              onPressed: (index) {
-                setState(() {
-                  _viewMode = WorkOrderDetailViewMode.values[index];
-                });
-              },
-              constraints: BoxConstraints(
-                minHeight: _controlHeight,
-                minWidth: isMobile ? 72 : 88,
-              ),
-              children: const [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
-                  child: Text('基本信息'),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
-                  child: Text('产品物料'),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
-                  child: Text('工序进度'),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
-                  child: Text('审批流程'),
-                ),
-              ],
-            ),
-            PageActionButton.filled(
-              onPressed: canChangeWorkOrder
-                  ? () => context.go('/workorders/${widget.workOrderId}/edit')
-                  : null,
-              icon: const Icon(Icons.edit, size: 16),
-              label: '编辑',
-            ),
-            if (canViewAudit &&
-                (detail?.orderNumber.trim().isNotEmpty ?? false))
+        actions: LayoutBuilder(
+          builder: (context, constraints) {
+            final actions = <Widget>[
               PageActionButton.outlined(
-                onPressed: () => AuditLogNavigation.open(
-                  context,
-                  keyword: detail!.orderNumber,
+                onPressed: () => context.pop(),
+                icon: const Icon(Icons.arrow_back, size: 16),
+                label: '返回',
+              ),
+              ToggleButtons(
+                isSelected: [
+                  _viewMode == WorkOrderDetailViewMode.basic,
+                  _viewMode == WorkOrderDetailViewMode.products,
+                  _viewMode == WorkOrderDetailViewMode.process,
+                  _viewMode == WorkOrderDetailViewMode.approval,
+                ],
+                onPressed: (index) {
+                  setState(() {
+                    _viewMode = WorkOrderDetailViewMode.values[index];
+                  });
+                },
+                constraints: BoxConstraints(
+                  minHeight: _controlHeight,
+                  minWidth: isMobile ? 72 : 88,
                 ),
-                icon: const Icon(Icons.history_outlined, size: 16),
-                label: '相关审计',
+                children: const [
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
+                    child: Text('基本信息'),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
+                    child: Text('产品物料'),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
+                    child: Text('工序进度'),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
+                    child: Text('审批流程'),
+                  ),
+                ],
               ),
-            if (canDeleteWorkOrder)
-              PageActionButton.outlined(
-                onPressed: _actionLoading ? null : _confirmDelete,
-                icon: const Icon(Icons.delete_outline, size: 16),
-                square: true,
+              PageActionButton.filled(
+                onPressed: canChangeWorkOrder
+                    ? () => context.go('/workorders/${widget.workOrderId}/edit')
+                    : null,
+                icon: const Icon(Icons.edit, size: 16),
+                label: '编辑',
               ),
-          ],
+              if (canViewAudit &&
+                  (detail?.orderNumber.trim().isNotEmpty ?? false))
+                PageActionButton.outlined(
+                  onPressed: () => AuditLogNavigation.open(
+                    context,
+                    keyword: detail!.orderNumber,
+                  ),
+                  icon: const Icon(Icons.history_outlined, size: 16),
+                  label: '相关审计',
+                ),
+              if (canDeleteWorkOrder)
+                PageActionButton.outlined(
+                  onPressed: _actionLoading ? null : _confirmDelete,
+                  icon: const Icon(Icons.delete_outline, size: 16),
+                  square: true,
+                ),
+            ];
+
+            return ListToolbar(
+              isMobile: isMobile,
+              actions: actions,
+              spacing: _spacingSm,
+            );
+          },
         ),
       ),
       body: _loading
