@@ -23,7 +23,7 @@ class WorkOrderDetailBasicView extends StatelessWidget {
   });
 
   final WorkOrderDetail detail;
-  final List<AppDropdownOption<String?>> statusOptions;
+  final List<AppDropdownOption<String>> statusOptions;
   final String? statusSelection;
   final bool actionLoading;
   final VoidCallback? onUploadDesignFile;

@@ -528,11 +528,11 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     final isMobile = screenWidth < 600;
 
     final statusOptions = const [
-      AppDropdownOption(value: 'pending', label: '待开始'),
-      AppDropdownOption(value: 'in_progress', label: '进行中'),
-      AppDropdownOption(value: 'paused', label: '已暂停'),
-      AppDropdownOption(value: 'completed', label: '已完成'),
-      AppDropdownOption(value: 'cancelled', label: '已取消'),
+      AppDropdownOption<String>(value: 'pending', label: '待开始'),
+      AppDropdownOption<String>(value: 'in_progress', label: '进行中'),
+      AppDropdownOption<String>(value: 'paused', label: '已暂停'),
+      AppDropdownOption<String>(value: 'completed', label: '已完成'),
+      AppDropdownOption<String>(value: 'cancelled', label: '已取消'),
     ];
 
     return ListPageScaffold(
