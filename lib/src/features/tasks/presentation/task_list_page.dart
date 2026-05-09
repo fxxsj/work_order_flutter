@@ -182,7 +182,18 @@ class _TaskListViewState extends State<_TaskListView> {
 
   void _resetFilters(TaskViewModel viewModel) {
     _searchController.clear();
-    context.go('/tasks');
+    setState(() {
+      _statusFilter = null;
+      _priorityFilter = null;
+      _departmentFilterId = null;
+      _processFilterId = null;
+    });
+    viewModel
+      ..setStatusFilter(null)
+      ..setPriorityFilter(null)
+      ..setDepartmentFilterId(null)
+      ..setProcessFilterId(null);
+    viewModel.loadTasks(resetPage: true);
   }
 
   Future<void> _exportTasks(TaskViewModel viewModel) async {
