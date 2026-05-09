@@ -112,13 +112,31 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
       ToastUtil.showSuccess('任务已认领');
       await _loadData();
     } catch (err) {
-      ToastUtil.showError(
-          '认领失败: ${err.toString().replaceFirst('Exception: ', '')}');
+      ToastUtil.showError(_claimErrorMessage(err));
     } finally {
       if (mounted) {
         setState(() => _claimingTaskId = null);
       }
     }
+  }
+
+  String _claimErrorMessage(Object error) {
+    final message = error.toString().replaceFirst('Exception: ', '').trim();
+    if (message.isEmpty) {
+      return '认领失败，请刷新后重试';
+    }
+    if (message.contains('已认领') ||
+        message.toLowerCase().contains('already') ||
+        message.toLowerCase().contains('claimed')) {
+      return '任务已被认领，请刷新列表';
+    }
+    if (message.contains('部门') ||
+        message.toLowerCase().contains('department') ||
+        message.toLowerCase().contains('permission') ||
+        message.contains('权限')) {
+      return '当前账号不属于该任务部门，无法认领';
+    }
+    return '认领失败: $message';
   }
 
   @override
@@ -142,7 +160,7 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
           actions: [
             if (_claimableTasks.isNotEmpty)
               StatusHintChip(
-                label: '待认领',
+                label: '本部门待认领',
                 count: _claimableTasks.length,
                 icon: Icons.assignment_turned_in_outlined,
                 selected: _quickFilter == 'claimable',
@@ -292,14 +310,22 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
   }
 
   Widget _buildClaimableSection(bool isNarrow, List<Task> tasks) {
+    final colors = Theme.of(context).extension<AppColors>();
     return DetailSectionCard(
-      title: '可认领任务',
+      title: '本部门可认领任务',
+      trailing: Text(
+        '仅显示当前账号所属部门',
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: colors?.subtleText ??
+                  Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+      ),
       child: SizedBox(
         height: 420,
         child: _buildTaskList(
           tasks,
           isNarrow: isNarrow,
-          emptyText: '暂无可认领任务',
+          emptyText: '本部门暂无可认领任务',
           trailingBuilder: (task) {
             final claiming = _claimingTaskId == task.id;
             if (claiming) {

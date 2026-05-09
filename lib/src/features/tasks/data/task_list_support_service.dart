@@ -88,10 +88,11 @@ class TaskListSupportService {
     required int operatorId,
     required String notes,
   }) {
-    return TaskApiService(_client).assign(taskId, {
-      'operator_id': operatorId,
-      'notes': notes,
-    });
+    return TaskApiService(_client).assignToOperator(
+      taskId,
+      operatorId: operatorId,
+      notes: notes,
+    );
   }
 
   String _resolveExportFilename(
