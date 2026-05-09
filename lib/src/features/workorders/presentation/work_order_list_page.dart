@@ -911,21 +911,16 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
 
   String _taskSummaryText(WorkOrder workOrder) {
     final total = workOrder.totalTaskCount ?? 0;
-    final draft = workOrder.draftTaskCount ?? 0;
     if (total <= 0) {
       return '未生成';
     }
-    if (draft <= 0) {
-      return '$total 项';
-    }
-    return '$draft/$total 草稿';
+    return '$total 项';
   }
 
   String _followUpText(WorkOrder workOrder) {
     final approvalStatus = workOrder.approvalStatus ?? '';
     final status = workOrder.status ?? '';
     final total = workOrder.totalTaskCount ?? 0;
-    final draft = workOrder.draftTaskCount ?? 0;
 
     if (approvalStatus == 'submitted' || approvalStatus == 'pending') {
       return '待审批后下发任务';
@@ -938,9 +933,6 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     }
     if (total <= 0) {
       return '待生成任务';
-    }
-    if (draft > 0) {
-      return '待分派/开工';
     }
     if (status == 'pending') {
       return '待开始生产';

@@ -90,7 +90,7 @@ Future<void> showWorkOrderSyncPreviewDialog(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '选择要保留的工序，预览同步后将删除被移除工序的草稿任务，并为新增工序生成草稿任务。',
+                    '选择要保留的工序，预览同步后将删除被移除工序的任务，并为新增工序生成任务。',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colors?.subtleText ?? theme.hintColor,
                     ),

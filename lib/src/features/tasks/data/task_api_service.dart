@@ -273,46 +273,6 @@ class TaskApiService {
     );
   }
 
-  Future<Map<String, dynamic>> bulkUpdate({
-    required List<int> taskIds,
-    required Map<String, dynamic> updates,
-  }) async {
-    final response = await _client.patch(
-      '/draft-tasks/bulk_update/',
-      data: {
-        'task_ids': taskIds,
-        'updates': updates,
-      },
-    );
-    return _requireMap('批量更新草稿任务', response.data);
-  }
-
-  Future<Map<String, dynamic>> bulkDelete(List<int> taskIds) async {
-    if (taskIds.isEmpty) {
-      return {
-        'message': '未选择任务',
-        'deleted_count': 0,
-        'failed_count': 0,
-      };
-    }
-    var deleted = 0;
-    final failed = <int>[];
-    for (final id in taskIds) {
-      try {
-        await _client.delete('/draft-tasks/$id/');
-        deleted += 1;
-      } catch (_) {
-        failed.add(id);
-      }
-    }
-    return {
-      'message': '成功删除 $deleted 个草稿任务',
-      'deleted_count': deleted,
-      'failed_count': failed.length,
-      'failed_tasks': failed.map((id) => {'id': id}).toList(),
-    };
-  }
-
   Future<Map<String, dynamic>> batchAssign(Map<String, dynamic> payload) async {
     final response =
         await _client.post('/workorder-tasks/batch_assign/', data: payload);

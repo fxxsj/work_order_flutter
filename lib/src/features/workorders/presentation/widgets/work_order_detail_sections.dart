@@ -389,8 +389,6 @@ class _SummaryContent extends StatelessWidget {
             detail.totalTaskCount?.toString() ?? emptyText,
           ),
           _DescItem(
-            '草稿任务',
-            detail.draftTaskCount?.toString() ?? emptyText,
           ),
           _DescItem(
             '印刷形式',

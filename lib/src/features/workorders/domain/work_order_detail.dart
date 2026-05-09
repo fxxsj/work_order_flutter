@@ -35,7 +35,6 @@ class WorkOrderDetail {
     this.printingOtherColors = const [],
     this.notes,
     this.progressPercentage,
-    this.draftTaskCount,
     this.totalTaskCount,
     this.salesOrderNumbers = const [],
     this.qualityInspectionNumbers = const [],
@@ -98,7 +97,6 @@ class WorkOrderDetail {
   final List<String> printingOtherColors;
   final String? notes;
   final int? progressPercentage;
-  final int? draftTaskCount;
   final int? totalTaskCount;
   final List<String> salesOrderNumbers;
   final List<String> qualityInspectionNumbers;
@@ -162,7 +160,6 @@ class WorkOrderDetail {
       printingOtherColors: _parseStringList(json['printing_other_colors']),
       notes: toStringOrNull(json['notes']),
       progressPercentage: toInt(json['progress_percentage']),
-      draftTaskCount: toInt(json['draft_task_count']),
       totalTaskCount: toInt(json['total_task_count']),
       salesOrderNumbers: _parseStringList(json['sales_order_numbers']),
       qualityInspectionNumbers:
