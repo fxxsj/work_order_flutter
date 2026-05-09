@@ -4,12 +4,12 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/api_exception.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/approval_rejection_notice_card.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/file_upload_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/page_action_button.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/audit_log_navigation.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
@@ -25,7 +25,7 @@ import 'package:work_order_app/src/features/workorders/domain/work_order_detail.
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_data_sections.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_dialogs.dart';
-import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_sections.dart';
+import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_page_views.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_sync_preview_dialog.dart';
 
 class WorkOrderDetailEntry extends StatelessWidget {
@@ -79,6 +79,9 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   TaskListSupportService? _taskSupportService;
 
   String? _statusSelection;
+  WorkOrderDetailViewMode _viewMode = WorkOrderDetailViewMode.basic;
+
+  static const double _controlHeight = 40.0;
 
   @override
   void didChangeDependencies() {
@@ -309,7 +312,8 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     if (direct.isNotEmpty) {
       return direct;
     }
-    for (final log in _detail?.approvalLogs ?? const <WorkOrderApprovalLog>[]) {
+    for (final log in _detail?.approvalLogs ??
+        const <WorkOrderApprovalLog>[]) {
       final reason = log.rejectionReason?.trim() ?? '';
       if (reason.isNotEmpty) {
         return reason;
@@ -323,7 +327,8 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     if (direct.isNotEmpty) {
       return direct;
     }
-    for (final log in _detail?.approvalLogs ?? const <WorkOrderApprovalLog>[]) {
+    for (final log in _detail?.approvalLogs ??
+        const <WorkOrderApprovalLog>[]) {
       final comment = log.approvalComment?.trim() ?? '';
       if (comment.isNotEmpty) {
         return comment;
@@ -357,11 +362,6 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
         setState(() => _actionLoading = false);
       }
     }
-  }
-
-  bool _canManageTask(Task task) {
-    final status = task.status ?? '';
-    return status != 'draft' && status != 'completed' && status != 'cancelled';
   }
 
   Future<void> _handleAssignTask(Task task) async {
@@ -524,6 +524,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     final canChangeWorkOrder = permissions.has('workorder.change_workorder');
     final canDeleteWorkOrder = permissions.has('workorder.delete_workorder');
     final canViewAudit = AuditLogNavigation.canView(context);
+    final isMobile = LayoutTokens.isMobile(context);
 
     final statusOptions = const [
       AppDropdownOption(value: 'pending', label: '待开始'),
@@ -548,6 +549,41 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
               onPressed: () => context.pop(),
               icon: const Icon(Icons.arrow_back, size: 16),
               label: '返回',
+            ),
+            ToggleButtons(
+              isSelected: [
+                _viewMode == WorkOrderDetailViewMode.basic,
+                _viewMode == WorkOrderDetailViewMode.products,
+                _viewMode == WorkOrderDetailViewMode.process,
+                _viewMode == WorkOrderDetailViewMode.approval,
+              ],
+              onPressed: (index) {
+                setState(() {
+                  _viewMode = WorkOrderDetailViewMode.values[index];
+                });
+              },
+              constraints: BoxConstraints(
+                minHeight: _controlHeight,
+                minWidth: isMobile ? 72 : 88,
+              ),
+              children: const [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
+                  child: Text('基本信息'),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
+                  child: Text('产品物料'),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
+                  child: Text('工序进度'),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
+                  child: Text('审批流程'),
+                ),
+              ],
             ),
             PageActionButton.filled(
               onPressed: canChangeWorkOrder
@@ -602,183 +638,45 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                   ? const DetailSurfaceCard(
                       child: Center(child: Text('未找到施工单信息')),
                     )
-                  : ListView(
-                      children: [
-                        WorkOrderDetailOverviewSection(
-                          detail: detail,
-                          statusOptions: statusOptions,
-                          statusSelection: _statusSelection,
-                          actionLoading: _actionLoading,
-                          onUploadDesignFile: canChangeWorkOrder
-                              ? _handleUploadDesignFile
-                              : null,
-                          onStatusChanged: canChangeWorkOrder
-                              ? (value) =>
-                                  setState(() => _statusSelection = value)
-                              : null,
-                          onUpdateStatus:
-                              canChangeWorkOrder ? _handleUpdateStatus : null,
-                          buildSection: _buildSection,
-                          emptyText: _emptyText,
-                        ),
-                        if ((detail.approvalStatus ?? '') == 'rejected' &&
-                            ((_workOrderRejectionReason ?? '').isNotEmpty ||
-                                (_workOrderRejectionComment ?? '')
-                                    .isNotEmpty)) ...[
-                          SizedBox(height: sectionSpacing),
-                          ApprovalRejectionNoticeCard(
-                            reason: _workOrderRejectionReason ?? '请先查看审批说明',
-                            comment: _workOrderRejectionComment,
-                            nextStep: '根据退回原因补充资料或修改内容后，直接点击“重新提交审核”。',
-                            primaryAction: FilledButton.icon(
-                              onPressed: canChangeWorkOrder && !_actionLoading
-                                  ? _handleResubmit
-                                  : null,
-                              icon: const Icon(Icons.send_outlined, size: 18),
-                              label: const Text('重新提交审核'),
-                            ),
-                            secondaryAction: OutlinedButton.icon(
-                              onPressed: canChangeWorkOrder
-                                  ? () => context.go(
-                                      '/workorders/${widget.workOrderId}/edit')
-                                  : null,
-                              icon: const Icon(Icons.edit_outlined, size: 18),
-                              label: const Text('先去修改'),
-                            ),
-                          ),
-                        ],
-                        SizedBox(height: sectionSpacing),
-                        WorkOrderTraceabilitySection(
-                          salesOrderSummaries: detail.salesOrderSummaries,
-                          qualityInspectionSummaries:
-                              detail.qualityInspectionSummaries,
-                          invoiceSummaries: detail.invoiceSummaries,
-                          onOpenSalesOrder: (item) {
-                            final id = item.id;
-                            if (id != null && id > 0) {
-                              context.go('/sales-orders/$id');
-                            }
-                          },
-                          onOpenSalesOrderPage: () =>
-                              context.go('/sales-orders'),
-                          onOpenQualityPage: () =>
-                              context.go('/inventory/quality'),
-                          onOpenInvoicePage: () =>
-                              context.go('/finance/invoices'),
-                          emptyText: _emptyText,
-                        ),
-                        SizedBox(height: sectionSpacing),
-                        WorkOrderFinanceSummarySection(
-                          items: [
-                            WorkOrderDetailInfoItem(
-                              '来源订单金额合计',
-                              _formatAmount(detail.salesOrderTotalAmount),
-                            ),
-                            WorkOrderDetailInfoItem(
-                              '已回款合计',
-                              _formatAmount(detail.salesOrderPaidAmount),
-                            ),
-                            WorkOrderDetailInfoItem(
-                              '未回款合计',
-                              _formatAmount(detail.salesOrderUnpaidAmount),
-                            ),
-                            WorkOrderDetailInfoItem(
-                              '已结清订单',
-                              detail.settledSalesOrderCount?.toString() ??
-                                  _emptyText,
-                            ),
-                            WorkOrderDetailInfoItem(
-                              '未结清订单',
-                              detail.unsettledSalesOrderCount?.toString() ??
-                                  _emptyText,
-                            ),
-                            WorkOrderDetailInfoItem(
-                              '关联发票',
-                              detail.invoiceCount?.toString() ?? _emptyText,
-                            ),
-                          ],
-                          onOpenSalesOrderPage: () =>
-                              context.go('/sales-orders'),
-                          onOpenInvoicePage: () =>
-                              context.go('/finance/invoices'),
-                          onOpenPaymentPage: () =>
-                              context.go('/finance/payments'),
-                        ),
-                        SizedBox(height: sectionSpacing),
-                        _buildSection(
-                          '审批流程',
-                          WorkOrderApprovalSection(
-                            detail: detail,
-                            actionLoading: _actionLoading,
-                            onSubmitApproval: _handleSubmitApproval,
-                            onApprove: canChangeWorkOrder
-                                ? () => _showApproveDialog(approved: true)
-                                : null,
-                            onReject: canChangeWorkOrder
-                                ? () => _showApproveDialog(approved: false)
-                                : null,
-                            onResubmit:
-                                canChangeWorkOrder ? _handleResubmit : null,
-                            onMarkUrgent: _markUrgent,
-                            emptyText: _emptyText,
-                          ),
-                        ),
-                        SizedBox(height: sectionSpacing),
-                        _buildSection(
-                          '产品清单',
-                          WorkOrderProductsSection(
-                            items: detail.products,
-                            emptyText: _emptyText,
-                          ),
-                        ),
-                        SizedBox(height: sectionSpacing),
-                        DetailSectionCard(
-                          title: '工序进度',
-                          trailing: PermissionUtil.isSuperuser(context)
-                              ? OutlinedButton.icon(
-                                  onPressed: detail.processes.isEmpty
-                                      ? null
-                                      : () => _showSyncPreviewDialog(detail),
-                                  icon: const Icon(Icons.sync_alt, size: 16),
-                                  label: const Text('任务同步预览'),
-                                )
-                              : null,
-                          child: WorkOrderProcessesSection(
-                            items: detail.processes,
-                            emptyText: _emptyText,
-                            onAssignTask: _handleAssignTask,
-                            onUpdateTask: _handleUpdateTask,
-                            onCompleteTask: _handleCompleteTask,
-                            canManageTask: _canManageTask,
-                          ),
-                        ),
-                        SizedBox(height: sectionSpacing),
-                        _buildSection(
-                          '工序排程',
-                          WorkOrderProcessGanttSection(
-                            items: detail.processes,
-                            emptyText: _emptyText,
-                            formatDateTime: _formatDateTime,
-                          ),
-                        ),
-                        SizedBox(height: sectionSpacing),
-                        _buildSection(
-                          '物料需求',
-                          WorkOrderMaterialsSection(
-                            items: detail.materials,
-                            emptyText: _emptyText,
-                          ),
-                        ),
-                        SizedBox(height: sectionSpacing),
-                        _buildSection(
-                          '审批记录',
-                          WorkOrderApprovalLogsSection(
-                            logs: detail.approvalLogs,
-                            emptyText: _emptyText,
-                            formatDate: _formatDate,
-                          ),
-                        ),
-                      ],
+                  : WorkOrderDetailPageViews(
+                      viewMode: _viewMode,
+                      detail: detail,
+                      statusOptions: statusOptions,
+                      statusSelection: _statusSelection,
+                      actionLoading: _actionLoading,
+                      onUploadDesignFile: canChangeWorkOrder
+                          ? _handleUploadDesignFile
+                          : null,
+                      onStatusChanged: canChangeWorkOrder
+                          ? (value) =>
+                              setState(() => _statusSelection = value)
+                          : null,
+                      onUpdateStatus:
+                          canChangeWorkOrder ? _handleUpdateStatus : null,
+                      onSubmitApproval: _handleSubmitApproval,
+                      onApprove: canChangeWorkOrder
+                          ? () => _showApproveDialog(approved: true)
+                          : null,
+                      onReject: canChangeWorkOrder
+                          ? () => _showApproveDialog(approved: false)
+                          : null,
+                      onResubmit: canChangeWorkOrder ? _handleResubmit : null,
+                      onMarkUrgent: _markUrgent,
+                      onAssignTask: _handleAssignTask,
+                      onUpdateTask: _handleUpdateTask,
+                      onCompleteTask: _handleCompleteTask,
+                      onSyncPreview: _showSyncPreviewDialog,
+                      emptyText: _emptyText,
+                      formatDate: _formatDate,
+                      formatAmount: _formatAmount,
+                      formatDateTime: _formatDateTime,
+                      rejectionReason: _workOrderRejectionReason,
+                      rejectionComment: _workOrderRejectionComment,
+                      onEditPressed: canChangeWorkOrder
+                          ? () => context.go(
+                              '/workorders/${widget.workOrderId}/edit')
+                          : null,
+                      buildSection: _buildSection,
                     ),
     );
   }
