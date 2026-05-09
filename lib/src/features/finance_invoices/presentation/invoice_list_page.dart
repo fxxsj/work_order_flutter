@@ -25,7 +25,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/audit_log_navigation.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/file_link_util.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -232,7 +232,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
 
     await showAdaptiveFilterDrawer(
       context,
-      isMobile: BreakpointsUtil.isMobile(context),
+      isMobile: ResponsiveLayout.isMobile(context),
       title: '新建发票',
       desktopWidth: LayoutTokens.dialogWidthLg,
       child: StatefulBuilder(
@@ -619,7 +619,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = BreakpointsUtil.isMobile(context);
+    final isMobile = ResponsiveLayout.isMobile(context);
 
     return Consumer<InvoiceViewModel>(
       builder: (context, viewModel, _) {

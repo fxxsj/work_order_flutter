@@ -7,7 +7,7 @@ import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/features/processes/data/process_api_service.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
@@ -74,7 +74,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   @override
   Widget build(BuildContext context) {
     final product = widget.product;
-    final isMobile = BreakpointsUtil.isMobile(context);
+    final isMobile = ResponsiveLayout.isMobile(context);
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
     final columnSpacing = LayoutTokens.formColumnSpacing(context);
     final itemSpacing = LayoutTokens.sectionSpacing(context);

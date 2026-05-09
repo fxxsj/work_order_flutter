@@ -3,7 +3,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_loading_indicator.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 
 class PageHeaderBar extends StatelessWidget {
   const PageHeaderBar({
@@ -44,7 +44,7 @@ class PageHeaderBar extends StatelessWidget {
         ],
         LayoutBuilder(
           builder: (context, constraints) {
-            final isMobile = BreakpointsUtil.isMobile(context);
+            final isMobile = ResponsiveLayout.isMobile(context);
             final actionContent = isMobile
                 ? ConstrainedBox(
                     constraints: BoxConstraints(maxWidth: constraints.maxWidth),
@@ -280,8 +280,8 @@ class WorkbenchHeaderBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
-    final isXs = BreakpointsUtil.isXs(context);
-    final isMobile = BreakpointsUtil.isMobile(context);
+    final isXs = ResponsiveLayout.isXs(context);
+    final isMobile = ResponsiveLayout.isMobile(context);
     final cardPadding = isXs ? 14.0 : 16.0;
     final titleSpacing = isXs ? 10.0 : 14.0;
     final sectionSpacing = isXs ? 12.0 : 14.0;
@@ -430,7 +430,7 @@ class WorkbenchStatChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
-    final isXs = BreakpointsUtil.isXs(context);
+    final isXs = ResponsiveLayout.isXs(context);
 
     return Container(
       padding: EdgeInsets.symmetric(

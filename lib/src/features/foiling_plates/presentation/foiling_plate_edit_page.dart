@@ -10,7 +10,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawe
 import 'package:work_order_app/src/core/presentation/layout/widgets/image_gallery_upload_section.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/file_upload_picker.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -28,7 +28,7 @@ Future<bool> showFoilingPlateEditDrawer(
   var saved = false;
   await showAdaptiveFilterDrawer(
     context,
-    isMobile: BreakpointsUtil.isMobile(context),
+    isMobile: ResponsiveLayout.isMobile(context),
     title: plate == null ? '新建烫金版' : '编辑烫金版',
     desktopWidth: LayoutTokens.pageWidthXwide,
     child: ChangeNotifierProvider<FoilingPlateViewModel>.value(

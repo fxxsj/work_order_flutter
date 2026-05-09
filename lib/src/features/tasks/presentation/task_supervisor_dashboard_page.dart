@@ -12,7 +12,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
 import 'package:work_order_app/src/features/tasks/data/task_supervisor_support_service.dart';
@@ -129,7 +129,7 @@ class _TaskSupervisorDashboardViewState
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = BreakpointsUtil.isMobile(context);
+    final isMobile = ResponsiveLayout.isMobile(context);
 
     return ListPageScaffold(
       spacing: _spacingSm,
@@ -326,7 +326,7 @@ class _TaskSupervisorDashboardViewState
         text: '暂无部门任务',
       );
     }
-    final isMobile = BreakpointsUtil.isMobile(context);
+    final isMobile = ResponsiveLayout.isMobile(context);
     final filteredTasks = _filterTasks(_departmentTasks);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -472,7 +472,7 @@ class _TaskSupervisorDashboardViewState
           DetailSectionCard(
             title: '部门汇总',
             child: SummaryFieldWrap(
-              isMobile: BreakpointsUtil.isMobile(context),
+              isMobile: ResponsiveLayout.isMobile(context),
               children: [
                 SummaryField(
                     label: '总任务', value: '${_toInt(summary['total_tasks'])}'),

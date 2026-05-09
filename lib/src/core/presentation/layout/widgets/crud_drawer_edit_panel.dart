@@ -4,7 +4,7 @@ import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 
 class CrudDrawerEditPanel<T, VM extends ChangeNotifier> extends StatefulWidget {
@@ -55,7 +55,7 @@ class _CrudDrawerEditPanelState<T, VM extends ChangeNotifier>
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = BreakpointsUtil.isMobile(context);
+    final isMobile = ResponsiveLayout.isMobile(context);
 
     return Consumer<VM>(
       builder: (context, viewModel, _) {

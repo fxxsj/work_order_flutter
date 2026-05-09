@@ -12,7 +12,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/tasks/application/task_view_model.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
@@ -161,7 +161,7 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = BreakpointsUtil.isMobile(context);
+    final isMobile = ResponsiveLayout.isMobile(context);
 
     return Consumer<TaskViewModel>(
       builder: (context, viewModel, _) {

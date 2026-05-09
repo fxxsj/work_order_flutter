@@ -13,7 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/features/auth/data/auth_api.dart';
 import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
@@ -172,7 +172,7 @@ class _TaskAssignmentHistoryViewState
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = BreakpointsUtil.isMobile(context);
+    final isMobile = ResponsiveLayout.isMobile(context);
     return ListPageScaffold(
       spacing: _spacingSm,
       header: PageHeaderBar(
@@ -385,7 +385,7 @@ class _TaskAssignmentHistoryViewState
   }
 
   Widget _buildBody(BuildContext context) {
-    final isMobile = BreakpointsUtil.isMobile(context);
+    final isMobile = ResponsiveLayout.isMobile(context);
     if (_loading && _items.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -588,7 +588,7 @@ class _HistoryCard extends StatelessWidget {
           Text(content, style: theme.textTheme.bodyMedium),
           SizedBox(height: LayoutTokens.gapMd),
           SummaryFieldWrap(
-            isMobile: BreakpointsUtil.isMobile(context),
+            isMobile: ResponsiveLayout.isMobile(context),
             children: [
               SummaryField(label: '当前部门', value: department),
               SummaryField(label: '当前操作员', value: assignedOperator),

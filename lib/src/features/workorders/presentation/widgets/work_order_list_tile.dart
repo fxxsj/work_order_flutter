@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/meta_chip.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/extensions/datetime_extensions.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order.dart';
 
@@ -20,7 +20,7 @@ class WorkOrderListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
-    final isXs = BreakpointsUtil.isXs(context);
+    final isXs = ResponsiveLayout.isXs(context);
     final title = workOrder.orderNumber.isEmpty
         ? '施工单 #${workOrder.id}'
         : workOrder.orderNumber;

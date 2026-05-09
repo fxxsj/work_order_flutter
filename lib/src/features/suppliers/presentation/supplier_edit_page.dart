@@ -5,7 +5,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/crud_drawer_
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/validators.dart';
 import 'package:work_order_app/src/features/suppliers/application/supplier_view_model.dart';
 import 'package:work_order_app/src/features/suppliers/domain/supplier.dart';
@@ -18,7 +18,7 @@ Future<bool> showSupplierEditDrawer(
   var saved = false;
   await showAdaptiveFilterDrawer(
     context,
-    isMobile: BreakpointsUtil.isMobile(context),
+    isMobile: ResponsiveLayout.isMobile(context),
     title: supplier == null ? '新建供应商' : '编辑供应商',
     desktopWidth: LayoutTokens.pageWidthXwide,
     child: ChangeNotifierProvider<SupplierViewModel>.value(

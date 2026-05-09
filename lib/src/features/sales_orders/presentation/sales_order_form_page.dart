@@ -9,7 +9,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
@@ -945,8 +945,8 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
           ? 'workorder.add_salesorder'
           : 'workorder.change_salesorder',
     );
-    final isDesktop = BreakpointsUtil.isDesktop(context);
-    final isTablet = BreakpointsUtil.isTablet(context);
+    final isDesktop = ResponsiveLayout.isDesktop(context);
+    final isTablet = ResponsiveLayout.isTablet(context);
     final fieldWidth = isDesktop ? 260.0 : (isTablet ? 220.0 : double.infinity);
     return ListPageScaffold(
       spacing: _spacing,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 
 class ContentContainer extends StatelessWidget {
   const ContentContainer({
@@ -22,13 +22,13 @@ class ContentContainer extends StatelessWidget {
     final semantic = theme.extension<AppSemanticColors>();
     final padding = LayoutTokens.pagePadding(context);
     final innerPadding = LayoutTokens.cardPadding(context);
-    final isMobile = BreakpointsUtil.isMobile(context);
-    final isTablet = BreakpointsUtil.isTablet(context);
+    final isMobile = ResponsiveLayout.isMobile(context);
+    final isTablet = ResponsiveLayout.isTablet(context);
     double resolvedMaxWidth = maxWidth;
     if (maxWidth == LayoutTokens.maxContentWidth) {
-      if (BreakpointsUtil.is2xl(context)) {
+      if (ResponsiveLayout.is2xl(context)) {
         resolvedMaxWidth = LayoutTokens.maxContentWidthWide;
-      } else if (BreakpointsUtil.isDesktop(context)) {
+      } else if (ResponsiveLayout.isDesktop(context)) {
         resolvedMaxWidth = LayoutTokens.maxContentWidth;
       } else {
         resolvedMaxWidth = double.infinity;

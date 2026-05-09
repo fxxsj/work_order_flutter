@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/controllers/theme_controller.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:work_order_app/src/core/presentation/layout/opacity_tokens.dart';
@@ -10,8 +10,8 @@ class LayoutSetting extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isXs = BreakpointsUtil.isXs(context);
-    final isSm = BreakpointsUtil.isSm(context);
+    final isXs = ResponsiveLayout.isXs(context);
+    final isSm = ResponsiveLayout.isSm(context);
     final tilePadding = EdgeInsets.symmetric(
         horizontal: isXs ? 12 : 16, vertical: isXs ? 4 : 6);
     final density =

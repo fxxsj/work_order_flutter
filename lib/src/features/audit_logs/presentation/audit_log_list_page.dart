@@ -14,7 +14,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/features/audit_logs/application/audit_log_view_model.dart';
 import 'package:work_order_app/src/features/audit_logs/data/audit_log_api_service.dart';
 import 'package:work_order_app/src/features/audit_logs/data/audit_log_repository_impl.dart';
@@ -119,7 +119,7 @@ class _AuditLogListViewState extends State<_AuditLogListView> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = BreakpointsUtil.isMobile(context);
+    final isMobile = ResponsiveLayout.isMobile(context);
 
     return Consumer<AuditLogViewModel>(
       builder: (context, viewModel, _) {

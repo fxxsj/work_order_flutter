@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/meta_chip.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/extensions/datetime_extensions.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_ui_helper.dart';
@@ -25,7 +25,7 @@ class TaskListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
-    final isXs = BreakpointsUtil.isXs(context);
+    final isXs = ResponsiveLayout.isXs(context);
     final title = TaskUiHelper.title(task);
     final progressText = TaskUiHelper.quantitySummary(task);
     final deliveryDate = task.deliveryDate;

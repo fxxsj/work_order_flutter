@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 
 /// 间距设计令牌
 ///
@@ -89,10 +89,10 @@ class SpacingTokens {
   // ── 响应式间距方法 ──────────────────────────────────────
 
   static EdgeInsets pagePadding(BuildContext context) {
-    final isXs = BreakpointsUtil.isXs(context);
-    final isSm = BreakpointsUtil.isSm(context);
-    final isMd = BreakpointsUtil.isMd(context);
-    final isXl = BreakpointsUtil.isXl(context);
+    final isXs = ResponsiveLayout.isXs(context);
+    final isSm = ResponsiveLayout.isSm(context);
+    final isMd = ResponsiveLayout.isMd(context);
+    final isXl = ResponsiveLayout.isXl(context);
     if (isXs) return const EdgeInsets.fromLTRB(12, 12, 12, 16);
     if (isSm) return const EdgeInsets.fromLTRB(16, 14, 16, 18);
     if (isMd) return const EdgeInsets.fromLTRB(20, 18, 20, 22);
@@ -101,10 +101,10 @@ class SpacingTokens {
   }
 
   static EdgeInsets pageHeaderPadding(BuildContext context) {
-    final isXs = BreakpointsUtil.isXs(context);
-    final isSm = BreakpointsUtil.isSm(context);
-    final isMd = BreakpointsUtil.isMd(context);
-    final isXl = BreakpointsUtil.isXl(context);
+    final isXs = ResponsiveLayout.isXs(context);
+    final isSm = ResponsiveLayout.isSm(context);
+    final isMd = ResponsiveLayout.isMd(context);
+    final isXl = ResponsiveLayout.isXl(context);
     if (isXs) return const EdgeInsets.fromLTRB(12, 12, 12, 8);
     if (isSm) return const EdgeInsets.fromLTRB(14, 14, 14, 10);
     if (isMd) return const EdgeInsets.fromLTRB(18, 16, 18, 12);
@@ -113,37 +113,37 @@ class SpacingTokens {
   }
 
   static EdgeInsets cardPadding(BuildContext context) {
-    final isXs = BreakpointsUtil.isXs(context);
-    final isSm = BreakpointsUtil.isSm(context);
+    final isXs = ResponsiveLayout.isXs(context);
+    final isSm = ResponsiveLayout.isSm(context);
     if (isXs) return const EdgeInsets.all(12);
     if (isSm) return const EdgeInsets.all(14);
     return const EdgeInsets.all(16);
   }
 
   static double sectionSpacing(BuildContext context) {
-    if (BreakpointsUtil.isXs(context)) return 14;
-    if (BreakpointsUtil.isSm(context)) return 16;
-    if (BreakpointsUtil.isMd(context)) return 18;
+    if (ResponsiveLayout.isXs(context)) return 14;
+    if (ResponsiveLayout.isSm(context)) return 16;
+    if (ResponsiveLayout.isMd(context)) return 18;
     return 20;
   }
 
   static double formSectionSpacing(BuildContext context) {
-    final isXs = BreakpointsUtil.isXs(context);
-    final isSm = BreakpointsUtil.isSm(context);
+    final isXs = ResponsiveLayout.isXs(context);
+    final isSm = ResponsiveLayout.isSm(context);
     if (isXs) return 14;
     if (isSm) return 16;
     return 18;
   }
 
   static double formColumnSpacing(BuildContext context) {
-    return BreakpointsUtil.isXs(context) ? 14 : 28;
+    return ResponsiveLayout.isXs(context) ? 14 : 28;
   }
 
   static double formActionSpacing(BuildContext context) {
-    return BreakpointsUtil.isXs(context) ? 14 : 20;
+    return ResponsiveLayout.isXs(context) ? 14 : 20;
   }
 
   static double formPageSpacing(BuildContext context) {
-    return BreakpointsUtil.isXs(context) ? 8 : 10;
+    return ResponsiveLayout.isXs(context) ? 8 : 10;
   }
 }

@@ -5,7 +5,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_fi
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/tasks/data/task_assignment_rule_dto.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_assignment_rule.dart';
@@ -276,7 +276,7 @@ class TaskAssignmentRuleCard extends StatelessWidget {
           Text(subtitle),
           SizedBox(height: LayoutTokens.gapSm),
           SummaryFieldWrap(
-            isMobile: BreakpointsUtil.isMobile(context),
+            isMobile: ResponsiveLayout.isMobile(context),
             children: [
               SummaryField(label: '优先级', value: rule.priority.toString()),
               SummaryField(

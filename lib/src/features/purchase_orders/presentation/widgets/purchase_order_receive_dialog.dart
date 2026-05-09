@@ -3,7 +3,7 @@ import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/features/purchase_orders/domain/purchase_order_detail.dart';
 
 class PurchaseReceiveSubmission {
@@ -60,7 +60,7 @@ Future<bool?> showPurchaseReceiveDialog(
   try {
     await showAdaptiveFilterDrawer(
       context,
-      isMobile: BreakpointsUtil.isMobile(context),
+      isMobile: ResponsiveLayout.isMobile(context),
       title: title,
       desktopWidth: LayoutTokens.pageWidthXwide,
       child: StatefulBuilder(
@@ -78,7 +78,7 @@ Future<bool?> showPurchaseReceiveDialog(
           final supplier = _displayText(detail.supplierName);
           final status = _displayText(detail.statusDisplay ?? detail.status);
           final isCompact =
-              BreakpointsUtil.isXs(context) || BreakpointsUtil.isSm(context);
+              ResponsiveLayout.isXs(context) || ResponsiveLayout.isSm(context);
 
           Future<void> submit() async {
             if (!(formKey.currentState?.validate() ?? false)) {
@@ -331,7 +331,7 @@ class _ReceiveItemRow extends StatelessWidget {
     final isDisabled = !enabled || item.remainingQuantity <= 0;
     final theme = Theme.of(context);
     final isCompact =
-        BreakpointsUtil.isXs(context) || BreakpointsUtil.isSm(context);
+        ResponsiveLayout.isXs(context) || ResponsiveLayout.isSm(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: LayoutTokens.gapSm),
       child: AppCard(

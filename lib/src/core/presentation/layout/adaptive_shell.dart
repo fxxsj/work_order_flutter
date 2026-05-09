@@ -12,14 +12,8 @@ import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_header.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_sidebar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/content_container.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/storage/app_storage.dart';
-
-enum ScreenSize {
-  mobile,
-  tablet,
-  desktop,
-}
 
 class AdaptiveShell extends StatefulWidget {
   const AdaptiveShell({super.key, required this.navigationShell});
@@ -69,9 +63,9 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     final screenSize = _getScreenSize(size.width);
 
     final isMobile = screenSize == ScreenSize.mobile;
-    final isXs = BreakpointsUtil.isXs(context);
-    final isXl = BreakpointsUtil.isXl(context);
-    final is2xl = BreakpointsUtil.is2xl(context);
+    final isXs = ResponsiveLayout.isXs(context);
+    final isXl = ResponsiveLayout.isXl(context);
+    final is2xl = ResponsiveLayout.is2xl(context);
 
     final background = colors.background;
     final primary = theme.primaryColor;
@@ -234,9 +228,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
   }
 
   ScreenSize _getScreenSize(double width) {
-    if (width < Breakpoints.md) return ScreenSize.mobile;
-    if (width < Breakpoints.lg) return ScreenSize.tablet;
-    return ScreenSize.desktop;
+    return ResponsiveLayout.getScreenSize(width);
   }
 
   String _currentId(BuildContext context) {

@@ -4,7 +4,7 @@ import 'package:work_order_app/src/core/models/traceability_summary_item.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/traceability_summary_section.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_ui_helper.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
@@ -470,7 +470,7 @@ class WorkOrderFinanceSummarySection extends StatelessWidget {
             children: items
                 .map(
                   (item) => SizedBox(
-                    width: BreakpointsUtil.isXs(context)
+                    width: ResponsiveLayout.isXs(context)
                         ? double.infinity
                         : LayoutTokens.statItemWidth,
                     child: _InfoRow(label: item.label, value: item.value),
@@ -608,7 +608,7 @@ class _DetailListCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
-    final isXs = BreakpointsUtil.isXs(context);
+    final isXs = ResponsiveLayout.isXs(context);
     final itemWidth = isXs ? double.infinity : LayoutTokens.infoItemWidth;
     final basePadding = LayoutTokens.cardPadding(context);
     final radius = isXs ? LayoutTokens.radiusMd : LayoutTokens.radiusLg;

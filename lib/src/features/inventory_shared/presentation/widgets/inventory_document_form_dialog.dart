@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 
 typedef InventoryDocumentFieldsBuilder = List<Widget> Function(
   BuildContext context,
@@ -29,7 +29,7 @@ Future<void> showInventoryDocumentFormDialog(
 
   return showAdaptiveFilterDrawer(
     context,
-    isMobile: BreakpointsUtil.isMobile(context),
+    isMobile: ResponsiveLayout.isMobile(context),
     title: title,
     desktopWidth: width,
     child: StatefulBuilder(

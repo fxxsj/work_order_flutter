@@ -5,7 +5,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_fi
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/features/materials/data/material_dto.dart';
 import 'package:work_order_app/src/features/suppliers/data/supplier_dto.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
@@ -38,7 +38,7 @@ Future<void> showPurchaseOrderFormDialog(
 
   return showAdaptiveFilterDrawer(
     context,
-    isMobile: BreakpointsUtil.isMobile(context),
+    isMobile: ResponsiveLayout.isMobile(context),
     title: title,
     desktopWidth: LayoutTokens.pageWidthXwide,
     child: StatefulBuilder(
@@ -375,7 +375,7 @@ class PurchaseItemRow extends StatelessWidget {
         ),
       );
     final isCompact =
-        BreakpointsUtil.isXs(context) || BreakpointsUtil.isSm(context);
+        ResponsiveLayout.isXs(context) || ResponsiveLayout.isSm(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: LayoutTokens.gapSm),
       child: AppCard(

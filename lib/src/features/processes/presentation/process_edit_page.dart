@@ -5,7 +5,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/crud_drawer_
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/features/processes/application/process_view_model.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 
@@ -17,7 +17,7 @@ Future<bool> showProcessEditDrawer(
   var saved = false;
   await showAdaptiveFilterDrawer(
     context,
-    isMobile: BreakpointsUtil.isMobile(context),
+    isMobile: ResponsiveLayout.isMobile(context),
     title: process == null ? '新建工序' : '编辑工序',
     desktopWidth: LayoutTokens.pageWidthXwide,
     child: ChangeNotifierProvider<ProcessViewModel>.value(

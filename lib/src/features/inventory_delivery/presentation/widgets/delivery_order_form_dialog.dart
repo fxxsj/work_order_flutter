@@ -5,7 +5,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_fi
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_dto.dart';
 
@@ -46,13 +46,13 @@ Future<void> showDeliveryOrderFormDialog(
 
   return showAdaptiveFilterDrawer(
     context,
-    isMobile: BreakpointsUtil.isMobile(context),
+    isMobile: ResponsiveLayout.isMobile(context),
     title: title,
     desktopWidth: LayoutTokens.pageWidthXwide,
     child: StatefulBuilder(
       builder: (context, setState) {
         final isCompact =
-            BreakpointsUtil.isXs(context) || BreakpointsUtil.isSm(context);
+            ResponsiveLayout.isXs(context) || ResponsiveLayout.isSm(context);
         String? salesOrderLabel;
         if (selectedSalesOrderId != null) {
           for (final order in salesOrders) {
@@ -392,7 +392,7 @@ class DeliveryItemRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isCompact =
-        BreakpointsUtil.isXs(context) || BreakpointsUtil.isSm(context);
+        ResponsiveLayout.isXs(context) || ResponsiveLayout.isSm(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: LayoutTokens.gapSm),
       child: AppCard(

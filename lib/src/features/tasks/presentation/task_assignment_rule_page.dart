@@ -13,7 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/tasks/application/task_assignment_rule_view_model.dart';
@@ -196,7 +196,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = BreakpointsUtil.isMobile(context);
+    final isMobile = ResponsiveLayout.isMobile(context);
 
     return Consumer<TaskAssignmentRuleViewModel>(
       builder: (context, viewModel, _) {
@@ -586,7 +586,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
                   child: DetailSectionCard(
                     title: process,
                     child: SummaryFieldWrap(
-                      isMobile: BreakpointsUtil.isMobile(context),
+                      isMobile: ResponsiveLayout.isMobile(context),
                       children: [
                         SummaryField(label: '目标部门', value: target),
                         SummaryField(label: '优先级', value: priority),

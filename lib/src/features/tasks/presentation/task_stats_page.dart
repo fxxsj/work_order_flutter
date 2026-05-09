@@ -13,7 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
@@ -136,7 +136,7 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = BreakpointsUtil.isMobile(context);
+    final isMobile = ResponsiveLayout.isMobile(context);
 
     return ListPageScaffold(
       spacing: _spacingSm,
@@ -307,7 +307,7 @@ class _TaskStatsViewState extends State<_TaskStatsView> {
   }
 
   Widget _buildBody(BuildContext context) {
-    final isMobile = BreakpointsUtil.isMobile(context);
+    final isMobile = ResponsiveLayout.isMobile(context);
     if (_loading && _stats.isEmpty) {
       return const AppLoadingIndicator();
     }
@@ -503,7 +503,7 @@ class _StatsCard extends StatelessWidget {
             ),
           SizedBox(height: LayoutTokens.gapMd),
           SummaryFieldWrap(
-            isMobile: BreakpointsUtil.isMobile(context),
+            isMobile: ResponsiveLayout.isMobile(context),
             children: [
               SummaryField(
                   label: '任务总数', value: '${_toInt(item['total_tasks'])}'),

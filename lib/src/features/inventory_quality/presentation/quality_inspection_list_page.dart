@@ -25,7 +25,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widg
 import 'package:work_order_app/src/core/presentation/layout/widgets/attachment_open_button.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/file_link_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/inventory_quality/application/quality_inspection_view_model.dart';
@@ -166,7 +166,7 @@ class _QualityInspectionListViewState
   Future<void> _openDetailDialog(QualityInspection inspection) async {
     await showAdaptiveFilterDrawer(
       context,
-      isMobile: BreakpointsUtil.isMobile(context),
+      isMobile: ResponsiveLayout.isMobile(context),
       title: _detailTitle,
       desktopWidth: LayoutTokens.dialogWidthLg,
       child: Column(
@@ -582,7 +582,7 @@ class _QualityInspectionListViewState
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = BreakpointsUtil.isMobile(context);
+    final isMobile = ResponsiveLayout.isMobile(context);
 
     return Consumer<QualityInspectionViewModel>(
       builder: (context, viewModel, _) {

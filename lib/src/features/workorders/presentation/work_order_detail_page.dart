@@ -24,7 +24,6 @@ import 'package:work_order_app/src/features/workorders/data/work_order_api_servi
 import 'package:work_order_app/src/features/workorders/data/work_order_repository_impl.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
-import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_data_sections.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_dialogs.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_page_views.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_sync_preview_dialog.dart';

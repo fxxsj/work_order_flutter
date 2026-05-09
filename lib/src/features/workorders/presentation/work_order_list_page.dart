@@ -19,7 +19,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_
     show StatusHintChip, StatusChipVariant;
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/file_download.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -248,7 +248,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = BreakpointsUtil.isMobile(context);
+    final isMobile = ResponsiveLayout.isMobile(context);
 
     return Consumer<WorkOrderViewModel>(
       builder: (context, viewModel, _) {

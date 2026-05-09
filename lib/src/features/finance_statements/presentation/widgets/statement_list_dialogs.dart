@@ -6,7 +6,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
-import 'package:work_order_app/src/core/utils/breakpoints_util.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/suppliers/domain/supplier.dart';
 
@@ -48,7 +48,7 @@ Future<StatementCreateResult?> showStatementCreateDialog(
     StatementCreateResult? result;
     await showAdaptiveFilterDrawer(
       context,
-      isMobile: BreakpointsUtil.isMobile(context),
+      isMobile: ResponsiveLayout.isMobile(context),
       title: '新建对账单',
       desktopWidth: LayoutTokens.dialogWidthLg,
       child: StatefulBuilder(
