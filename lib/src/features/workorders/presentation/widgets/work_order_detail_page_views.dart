@@ -43,6 +43,7 @@ class WorkOrderDetailPageViews extends StatelessWidget {
     required this.formatDateTime,
     required this.rejectionReason,
     required this.rejectionComment,
+    required this.onEditPressed,
     required this.buildSection,
   });
 

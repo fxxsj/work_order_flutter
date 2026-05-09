@@ -9,7 +9,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/detail_secti
 import 'package:work_order_app/src/core/presentation/layout/widgets/file_upload_dialog.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/page_action_button.dart';
+
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/audit_log_navigation.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
@@ -524,7 +524,8 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     final canChangeWorkOrder = permissions.has('workorder.change_workorder');
     final canDeleteWorkOrder = permissions.has('workorder.delete_workorder');
     final canViewAudit = AuditLogNavigation.canView(context);
-    final isMobile = LayoutTokens.isMobile(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
     final statusOptions = const [
       AppDropdownOption(value: 'pending', label: '待开始'),
