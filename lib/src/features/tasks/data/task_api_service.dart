@@ -180,6 +180,14 @@ class TaskApiService {
     return _requireList('部门操作员列表', response.data);
   }
 
+  Future<List<Map<String, dynamic>>> fetchProcessDepartments(int processId) async {
+    final response = await _client.get(
+      '/workorder-tasks/process-departments/',
+      queryParameters: {'process_id': processId},
+    );
+    return _requireList('工序负责部门', response.data);
+  }
+
   Future<Map<String, dynamic>> claimTask(int id, {String? notes}) async {
     final response = await _client.post(
       '/workorder-tasks/$id/claim/',

@@ -440,8 +440,7 @@ class _TaskListViewState extends State<_TaskListView> {
       AppDropdownOption(value: 'urgent', label: '紧急'),
     ];
     final departmentItems = [
-      const AppDropdownOption<int?>(
-          value: null, label: '全部部门'),
+      const AppDropdownOption<int?>(value: null, label: '全部部门'),
       ..._departments.map(
         (item) => AppDropdownOption<int?>(
           value: item.id,
@@ -450,8 +449,7 @@ class _TaskListViewState extends State<_TaskListView> {
       ),
     ];
     final processItems = [
-      const AppDropdownOption<int?>(
-          value: null, label: '全部工序'),
+      const AppDropdownOption<int?>(value: null, label: '全部工序'),
       ..._processes.map(
         (item) => AppDropdownOption<int?>(
           value: item.id,
@@ -702,8 +700,8 @@ class _TaskListViewState extends State<_TaskListView> {
     return '$year-$month-$day';
   }
 
-  Widget _mobileRow(BuildContext context, TextStyle? labelStyle, String label,
-      String value,
+  Widget _mobileRow(
+      BuildContext context, TextStyle? labelStyle, String label, String value,
       {bool last = false}) {
     final theme = Theme.of(context);
     final spacing = LayoutTokens.sectionSpacing(context) * 0.6;
@@ -923,10 +921,30 @@ class _TaskListViewState extends State<_TaskListView> {
     TaskViewModel viewModel,
     Task task,
   ) async {
+    final processId = task.processId;
+    if (processId == null) {
+      ToastUtil.showError('当前任务缺少工序信息，无法分派');
+      return;
+    }
+
+    final List<TaskDepartmentOption> processDepartments;
+    try {
+      processDepartments =
+          await _supportService!.loadProcessDepartments(processId);
+    } catch (err) {
+      ToastUtil.showError('加载工序负责部门失败: $err');
+      return;
+    }
+    if (processDepartments.isEmpty) {
+      ToastUtil.showError('当前工序未配置负责部门');
+      return;
+    }
+    if (!mounted) return;
+
     await showTaskAssignDialog(
       context,
       task: task,
-      departments: _departments,
+      departments: processDepartments,
       loadOperators: (departmentId) =>
           _supportService!.loadOperators(departmentId),
       onSubmit: (operatorId, notes) =>

@@ -56,6 +56,12 @@ class Task with _$Task {
     )
     String? processName,
     @JsonKey(
+      name: 'process_id',
+      readValue: _readProcessId,
+      fromJson: _intOrNullFromJson,
+    )
+    int? processId,
+    @JsonKey(
       name: 'priority_display',
       readValue: _readPriorityDisplay,
       fromJson: _stringOrNullFromJson,
@@ -100,6 +106,10 @@ Object? _readCustomerName(Map json, String key) {
 
 Object? _readProcessName(Map json, String key) {
   return json[key] ?? _processInfo(json)?['name'];
+}
+
+Object? _readProcessId(Map json, String key) {
+  return json[key] ?? _processInfo(json)?['id'];
 }
 
 Object? _readPriorityDisplay(Map json, String key) {

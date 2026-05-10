@@ -17,6 +17,7 @@ class TaskBoardSupportService {
           (item) => TaskDepartmentOption(
             id: item.id,
             name: item.name,
+            processIds: item.processIds,
           ),
         )
         .toList();

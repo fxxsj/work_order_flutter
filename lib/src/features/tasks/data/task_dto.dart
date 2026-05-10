@@ -18,6 +18,7 @@ class TaskDto {
     this.workOrderNumber,
     this.customerName,
     this.processName,
+    this.processId,
     this.priorityDisplay,
     this.deliveryDate,
   });
@@ -38,6 +39,7 @@ class TaskDto {
   final String? workOrderNumber;
   final String? customerName;
   final String? processName;
+  final int? processId;
   final String? priorityDisplay;
   final DateTime? deliveryDate;
 
@@ -63,6 +65,7 @@ class TaskDto {
       workOrderNumber: workOrderNumber,
       customerName: customerName,
       processName: processName,
+      processId: processId,
       priorityDisplay: priorityDisplay,
       deliveryDate: deliveryDate,
     );
@@ -88,6 +91,7 @@ extension TaskMapper on Task {
       workOrderNumber: workOrderNumber,
       customerName: customerName,
       processName: processName,
+      processId: processId,
       priorityDisplay: priorityDisplay,
       deliveryDate: deliveryDate,
     );

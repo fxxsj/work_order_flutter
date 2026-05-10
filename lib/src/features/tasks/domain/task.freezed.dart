@@ -65,6 +65,11 @@ mixin _$Task {
       fromJson: _stringOrNullFromJson)
   String? get processName => throw _privateConstructorUsedError;
   @JsonKey(
+      name: 'process_id',
+      readValue: _readProcessId,
+      fromJson: _intOrNullFromJson)
+  int? get processId => throw _privateConstructorUsedError;
+  @JsonKey(
       name: 'priority_display',
       readValue: _readPriorityDisplay,
       fromJson: _stringOrNullFromJson)
@@ -102,8 +107,7 @@ abstract class $TaskCopyWith<$Res> {
       String? taskTypeDisplay,
       @JsonKey(name: 'assigned_department', fromJson: _intOrNullFromJson)
       int? assignedDepartmentId,
-      @JsonKey(
-          name: 'assigned_department_name', fromJson: _stringOrNullFromJson)
+      @JsonKey(name: 'assigned_department_name', fromJson: _stringOrNullFromJson)
       String? assignedDepartmentName,
       @JsonKey(name: 'assigned_operator', fromJson: _intOrNullFromJson)
       int? assignedOperatorId,
@@ -133,6 +137,11 @@ abstract class $TaskCopyWith<$Res> {
           readValue: _readProcessName,
           fromJson: _stringOrNullFromJson)
       String? processName,
+      @JsonKey(
+          name: 'process_id',
+          readValue: _readProcessId,
+          fromJson: _intOrNullFromJson)
+      int? processId,
       @JsonKey(
           name: 'priority_display',
           readValue: _readPriorityDisplay,
@@ -176,6 +185,7 @@ class _$TaskCopyWithImpl<$Res, $Val extends Task>
     Object? workOrderNumber = freezed,
     Object? customerName = freezed,
     Object? processName = freezed,
+    Object? processId = freezed,
     Object? priorityDisplay = freezed,
     Object? deliveryDate = freezed,
   }) {
@@ -244,6 +254,10 @@ class _$TaskCopyWithImpl<$Res, $Val extends Task>
           ? _value.processName
           : processName // ignore: cast_nullable_to_non_nullable
               as String?,
+      processId: freezed == processId
+          ? _value.processId
+          : processId // ignore: cast_nullable_to_non_nullable
+              as int?,
       priorityDisplay: freezed == priorityDisplay
           ? _value.priorityDisplay
           : priorityDisplay // ignore: cast_nullable_to_non_nullable
@@ -276,8 +290,7 @@ abstract class _$$TaskImplCopyWith<$Res> implements $TaskCopyWith<$Res> {
       String? taskTypeDisplay,
       @JsonKey(name: 'assigned_department', fromJson: _intOrNullFromJson)
       int? assignedDepartmentId,
-      @JsonKey(
-          name: 'assigned_department_name', fromJson: _stringOrNullFromJson)
+      @JsonKey(name: 'assigned_department_name', fromJson: _stringOrNullFromJson)
       String? assignedDepartmentName,
       @JsonKey(name: 'assigned_operator', fromJson: _intOrNullFromJson)
       int? assignedOperatorId,
@@ -307,6 +320,11 @@ abstract class _$$TaskImplCopyWith<$Res> implements $TaskCopyWith<$Res> {
           readValue: _readProcessName,
           fromJson: _stringOrNullFromJson)
       String? processName,
+      @JsonKey(
+          name: 'process_id',
+          readValue: _readProcessId,
+          fromJson: _intOrNullFromJson)
+      int? processId,
       @JsonKey(
           name: 'priority_display',
           readValue: _readPriorityDisplay,
@@ -347,6 +365,7 @@ class __$$TaskImplCopyWithImpl<$Res>
     Object? workOrderNumber = freezed,
     Object? customerName = freezed,
     Object? processName = freezed,
+    Object? processId = freezed,
     Object? priorityDisplay = freezed,
     Object? deliveryDate = freezed,
   }) {
@@ -415,6 +434,10 @@ class __$$TaskImplCopyWithImpl<$Res>
           ? _value.processName
           : processName // ignore: cast_nullable_to_non_nullable
               as String?,
+      processId: freezed == processId
+          ? _value.processId
+          : processId // ignore: cast_nullable_to_non_nullable
+              as int?,
       priorityDisplay: freezed == priorityDisplay
           ? _value.priorityDisplay
           : priorityDisplay // ignore: cast_nullable_to_non_nullable
@@ -474,6 +497,11 @@ class _$TaskImpl implements _Task {
           readValue: _readProcessName,
           fromJson: _stringOrNullFromJson)
       this.processName,
+      @JsonKey(
+          name: 'process_id',
+          readValue: _readProcessId,
+          fromJson: _intOrNullFromJson)
+      this.processId,
       @JsonKey(
           name: 'priority_display',
           readValue: _readPriorityDisplay,
@@ -550,6 +578,12 @@ class _$TaskImpl implements _Task {
   final String? processName;
   @override
   @JsonKey(
+      name: 'process_id',
+      readValue: _readProcessId,
+      fromJson: _intOrNullFromJson)
+  final int? processId;
+  @override
+  @JsonKey(
       name: 'priority_display',
       readValue: _readPriorityDisplay,
       fromJson: _stringOrNullFromJson)
@@ -563,7 +597,7 @@ class _$TaskImpl implements _Task {
 
   @override
   String toString() {
-    return 'Task(id: $id, workContent: $workContent, status: $status, statusDisplay: $statusDisplay, taskType: $taskType, taskTypeDisplay: $taskTypeDisplay, assignedDepartmentId: $assignedDepartmentId, assignedDepartmentName: $assignedDepartmentName, assignedOperatorId: $assignedOperatorId, assignedOperatorName: $assignedOperatorName, productionQuantity: $productionQuantity, quantityCompleted: $quantityCompleted, workOrderId: $workOrderId, workOrderNumber: $workOrderNumber, customerName: $customerName, processName: $processName, priorityDisplay: $priorityDisplay, deliveryDate: $deliveryDate)';
+    return 'Task(id: $id, workContent: $workContent, status: $status, statusDisplay: $statusDisplay, taskType: $taskType, taskTypeDisplay: $taskTypeDisplay, assignedDepartmentId: $assignedDepartmentId, assignedDepartmentName: $assignedDepartmentName, assignedOperatorId: $assignedOperatorId, assignedOperatorName: $assignedOperatorName, productionQuantity: $productionQuantity, quantityCompleted: $quantityCompleted, workOrderId: $workOrderId, workOrderNumber: $workOrderNumber, customerName: $customerName, processName: $processName, processId: $processId, priorityDisplay: $priorityDisplay, deliveryDate: $deliveryDate)';
   }
 
   @override
@@ -601,6 +635,8 @@ class _$TaskImpl implements _Task {
                 other.customerName == customerName) &&
             (identical(other.processName, processName) ||
                 other.processName == processName) &&
+            (identical(other.processId, processId) ||
+                other.processId == processId) &&
             (identical(other.priorityDisplay, priorityDisplay) ||
                 other.priorityDisplay == priorityDisplay) &&
             (identical(other.deliveryDate, deliveryDate) ||
@@ -609,26 +645,28 @@ class _$TaskImpl implements _Task {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      id,
-      workContent,
-      status,
-      statusDisplay,
-      taskType,
-      taskTypeDisplay,
-      assignedDepartmentId,
-      assignedDepartmentName,
-      assignedOperatorId,
-      assignedOperatorName,
-      productionQuantity,
-      quantityCompleted,
-      workOrderId,
-      workOrderNumber,
-      customerName,
-      processName,
-      priorityDisplay,
-      deliveryDate);
+  int get hashCode => Object.hashAll([
+        runtimeType,
+        id,
+        workContent,
+        status,
+        statusDisplay,
+        taskType,
+        taskTypeDisplay,
+        assignedDepartmentId,
+        assignedDepartmentName,
+        assignedOperatorId,
+        assignedOperatorName,
+        productionQuantity,
+        quantityCompleted,
+        workOrderId,
+        workOrderNumber,
+        customerName,
+        processName,
+        processId,
+        priorityDisplay,
+        deliveryDate
+      ]);
 
   /// Create a copy of Task
   /// with the given fields replaced by the non-null parameter values.
@@ -691,6 +729,11 @@ abstract class _Task implements Task {
           readValue: _readProcessName,
           fromJson: _stringOrNullFromJson)
       final String? processName,
+      @JsonKey(
+          name: 'process_id',
+          readValue: _readProcessId,
+          fromJson: _intOrNullFromJson)
+      final int? processId,
       @JsonKey(
           name: 'priority_display',
           readValue: _readPriorityDisplay,
@@ -764,6 +807,12 @@ abstract class _Task implements Task {
       readValue: _readProcessName,
       fromJson: _stringOrNullFromJson)
   String? get processName;
+  @override
+  @JsonKey(
+      name: 'process_id',
+      readValue: _readProcessId,
+      fromJson: _intOrNullFromJson)
+  int? get processId;
   @override
   @JsonKey(
       name: 'priority_display',

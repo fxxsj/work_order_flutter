@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
 import 'package:work_order_app/src/features/processes/data/process_api_service.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
@@ -47,6 +48,7 @@ class TaskListSupportService {
             (item) => TaskDepartmentOption(
               id: item.id,
               name: item.name,
+              processIds: item.processIds,
             ),
           )
           .toList(),
@@ -73,6 +75,24 @@ class TaskListSupportService {
 
   Future<List<Map<String, dynamic>>> loadOperators(int departmentId) {
     return TaskApiService(_client).fetchDepartmentOperators(departmentId);
+  }
+
+  Future<List<TaskDepartmentOption>> loadProcessDepartments(
+      int processId) async {
+    final departments =
+        await TaskApiService(_client).fetchProcessDepartments(processId);
+    return departments
+        .map((item) {
+          final processIds =
+              _parseProcessIds(item, fallbackProcessId: processId);
+          return TaskDepartmentOption(
+            id: toInt(item['id']) ?? 0,
+            name: item['name']?.toString() ?? '',
+            processIds: processIds,
+          );
+        })
+        .where((item) => item.id > 0 && item.name.isNotEmpty)
+        .toList();
   }
 
   Future<void> updateQuantity(int taskId, Map<String, dynamic> payload) {
@@ -116,5 +136,21 @@ class TaskListSupportService {
       // ignore header parsing errors
     }
     return '${fallback}_$timestamp.xlsx';
+  }
+
+  List<int> _parseProcessIds(
+    Map<String, dynamic> item, {
+    required int fallbackProcessId,
+  }) {
+    final ids = <int>{};
+    final raw = item['process_ids'] ?? item['processes'];
+    if (raw is List) {
+      for (final value in raw) {
+        final id = value is Map ? toInt(value['id']) : toInt(value);
+        if (id != null && id > 0) ids.add(id);
+      }
+    }
+    ids.add(fallbackProcessId);
+    return ids.toList();
   }
 }

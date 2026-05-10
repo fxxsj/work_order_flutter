@@ -313,8 +313,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     if (direct.isNotEmpty) {
       return direct;
     }
-    for (final log in _detail?.approvalLogs ??
-        const <WorkOrderApprovalLog>[]) {
+    for (final log in _detail?.approvalLogs ?? const <WorkOrderApprovalLog>[]) {
       final reason = log.rejectionReason?.trim() ?? '';
       if (reason.isNotEmpty) {
         return reason;
@@ -328,8 +327,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     if (direct.isNotEmpty) {
       return direct;
     }
-    for (final log in _detail?.approvalLogs ??
-        const <WorkOrderApprovalLog>[]) {
+    for (final log in _detail?.approvalLogs ?? const <WorkOrderApprovalLog>[]) {
       final comment = log.approvalComment?.trim() ?? '';
       if (comment.isNotEmpty) {
         return comment;
@@ -366,18 +364,20 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   }
 
   Future<void> _handleAssignTask(Task task) async {
-    final departmentId = task.assignedDepartmentId;
-    final departmentName = task.assignedDepartmentName?.trim() ?? '';
-    if (departmentId == null || departmentName.isEmpty) {
-      ToastUtil.showError('当前任务缺少可分配部门');
+    final processId = task.processId;
+    if (processId == null) {
+      ToastUtil.showError('当前任务缺少工序信息，无法分派');
       return;
     }
+
+    final departments = await _loadAssignableDepartments(processId);
+    if (departments == null) return;
+    if (!mounted) return;
+
     await showTaskAssignDialog(
       context,
       task: task,
-      departments: [
-        TaskDepartmentOption(id: departmentId, name: departmentName),
-      ],
+      departments: departments,
       loadOperators: (value) => _taskSupportService!.loadOperators(value),
       onSubmit: (operatorId, notes) async {
         await _taskSupportService!.assignTask(
@@ -389,6 +389,23 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
         await _loadDetail();
       },
     );
+  }
+
+  Future<List<TaskDepartmentOption>?> _loadAssignableDepartments(
+    int processId,
+  ) async {
+    try {
+      final departments =
+          await _taskSupportService!.loadProcessDepartments(processId);
+      if (departments.isEmpty) {
+        ToastUtil.showError('当前工序未配置负责部门');
+        return null;
+      }
+      return departments;
+    } catch (err) {
+      ToastUtil.showError('加载工序负责部门失败: $err');
+      return null;
+    }
   }
 
   Future<void> _handleUpdateTask(Task task) async {
@@ -569,19 +586,23 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                 ),
                 children: const [
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
                     child: Text('基本信息'),
                   ),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
                     child: Text('产品物料'),
                   ),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
                     child: Text('工序进度'),
                   ),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
                     child: Text('审批流程'),
                   ),
                 ],
@@ -652,12 +673,10 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                       statusOptions: statusOptions,
                       statusSelection: _statusSelection,
                       actionLoading: _actionLoading,
-                      onUploadDesignFile: canChangeWorkOrder
-                          ? _handleUploadDesignFile
-                          : null,
+                      onUploadDesignFile:
+                          canChangeWorkOrder ? _handleUploadDesignFile : null,
                       onStatusChanged: canChangeWorkOrder
-                          ? (value) =>
-                              setState(() => _statusSelection = value)
+                          ? (value) => setState(() => _statusSelection = value)
                           : null,
                       onUpdateStatus:
                           canChangeWorkOrder ? _handleUpdateStatus : null,
@@ -681,8 +700,8 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                       rejectionReason: _workOrderRejectionReason,
                       rejectionComment: _workOrderRejectionComment,
                       onEditPressed: canChangeWorkOrder
-                          ? () => context.go(
-                              '/workorders/${widget.workOrderId}/edit')
+                          ? () => context
+                              .go('/workorders/${widget.workOrderId}/edit')
                           : null,
                       buildSection: _buildSection,
                     ),

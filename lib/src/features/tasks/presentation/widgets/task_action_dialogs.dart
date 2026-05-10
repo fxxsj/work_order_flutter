@@ -241,12 +241,27 @@ class _TaskAssignDialogState extends State<_TaskAssignDialog> {
   bool _submitting = false;
   String _notes = '';
 
+  /// 过滤出负责该任务工序的部门
+  List<TaskDepartmentOption> get _filteredDepartments {
+    final processId = widget.task.processId;
+    if (processId == null) return widget.departments;
+    return widget.departments
+        .where((dept) => dept.processIds.contains(processId))
+        .toList();
+  }
+
   @override
   void initState() {
     super.initState();
+    final validDepts = _filteredDepartments;
     _departmentId = widget.task.assignedDepartmentId;
-    if (_departmentId == null && widget.departments.isNotEmpty) {
-      _departmentId = widget.departments.first.id;
+    // 如果当前 assigned department 不在过滤后的列表中，选择第一个有效部门
+    if (_departmentId != null &&
+        !validDepts.any((dept) => dept.id == _departmentId)) {
+      _departmentId = validDepts.isNotEmpty ? validDepts.first.id : null;
+    }
+    if (_departmentId == null && validDepts.isNotEmpty) {
+      _departmentId = validDepts.first.id;
     }
     if (_departmentId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -257,6 +272,7 @@ class _TaskAssignDialogState extends State<_TaskAssignDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final processName = widget.task.processName;
     return AppFormDialog(
       title: '分派操作员',
       formKey: _formKey,
@@ -270,11 +286,21 @@ class _TaskAssignDialogState extends State<_TaskAssignDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (processName != null)
+              Padding(
+                padding: EdgeInsets.only(bottom: LayoutTokens.gapSm),
+                child: Text(
+                  '工序：$processName',
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodySmall?.color,
+                  ),
+                ),
+              ),
             AppSelect<int?>(
               value: _departmentId,
               decoration: const InputDecoration(labelText: '部门'),
               options: [
-                for (final dept in widget.departments)
+                for (final dept in _filteredDepartments)
                   AppDropdownOption<int?>(value: dept.id, label: dept.name),
               ],
               onChanged: (value) {

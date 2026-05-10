@@ -426,11 +426,14 @@ class WorkOrderProcessItem {
   factory WorkOrderProcessItem.fromJson(Map<String, dynamic> json) {
     final tasks = json['tasks'];
     final count = tasks is List ? tasks.length : null;
+    final processId = toInt(json['process']);
+    final processName = toStringOrNull(json['process_name']);
+    final processCode = toStringOrNull(json['process_code']);
     return WorkOrderProcessItem(
       id: toInt(json['id']) ?? 0,
-      processId: toInt(json['process']),
-      processName: toStringOrNull(json['process_name']),
-      processCode: toStringOrNull(json['process_code']),
+      processId: processId,
+      processName: processName,
+      processCode: processCode,
       status: toStringOrNull(json['status']),
       statusDisplay: toStringOrNull(json['status_display']),
       operatorName: toStringOrNull(json['operator_name']),
@@ -443,10 +446,13 @@ class WorkOrderProcessItem {
       actualStartTime: toDateTime(json['actual_start_time']),
       actualEndTime: toDateTime(json['actual_end_time']),
       tasks: tasks is List
-          ? tasks
-              .whereType<Map>()
-              .map((item) => Task.fromJson(Map<String, dynamic>.from(item)))
-              .toList()
+          ? tasks.whereType<Map>().map((item) {
+              final taskJson = Map<String, dynamic>.from(item);
+              taskJson.putIfAbsent('process_id', () => processId);
+              taskJson.putIfAbsent('process_name', () => processName);
+              taskJson.putIfAbsent('process_code', () => processCode);
+              return Task.fromJson(taskJson);
+            }).toList()
           : const [],
     );
   }

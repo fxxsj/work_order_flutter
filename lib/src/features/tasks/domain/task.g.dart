@@ -28,6 +28,7 @@ _$TaskImpl _$$TaskImplFromJson(Map<String, dynamic> json) => _$TaskImpl(
           _stringOrNullFromJson(_readCustomerName(json, 'customer_name')),
       processName:
           _stringOrNullFromJson(_readProcessName(json, 'process_name')),
+      processId: _intOrNullFromJson(_readProcessId(json, 'process_id')),
       priorityDisplay:
           _stringOrNullFromJson(_readPriorityDisplay(json, 'priority_display')),
       deliveryDate:
@@ -52,6 +53,7 @@ Map<String, dynamic> _$$TaskImplToJson(_$TaskImpl instance) =>
       'work_order_number': instance.workOrderNumber,
       'customer_name': instance.customerName,
       'process_name': instance.processName,
+      'process_id': instance.processId,
       'priority_display': instance.priorityDisplay,
       'delivery_date': instance.deliveryDate?.toIso8601String(),
     };
