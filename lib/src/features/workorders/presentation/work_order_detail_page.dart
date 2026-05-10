@@ -26,6 +26,7 @@ import 'package:work_order_app/src/features/workorders/domain/work_order_detail.
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_dialogs.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_page_views.dart';
+import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_print_preview_dialog.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_sync_preview_dialog.dart';
 
 class WorkOrderDetailEntry extends StatelessWidget {
@@ -624,6 +625,16 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                   icon: const Icon(Icons.history_outlined, size: 16),
                   label: '相关审计',
                 ),
+              PageActionButton.outlined(
+                onPressed: detail == null
+                    ? null
+                    : () => showWorkOrderPrintPreviewDialog(
+                          context,
+                          detail: detail,
+                        ),
+                icon: const Icon(Icons.print_outlined, size: 16),
+                label: '打印预览',
+              ),
               if (canDeleteWorkOrder)
                 PageActionButton.outlined(
                   onPressed: _actionLoading ? null : _confirmDelete,
