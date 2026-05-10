@@ -44,8 +44,6 @@ class TaskUiHelper {
     final status = task.status ?? '';
     final hasOperator = (task.assignedOperatorName ?? '').trim().isNotEmpty;
     switch (status) {
-      case 'draft':
-        return '待审批后下发';
       case 'pending':
         return hasOperator ? '待开工生产' : '待分派/开工';
       case 'in_progress':

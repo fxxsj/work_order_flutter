@@ -353,9 +353,8 @@ class _TaskListViewState extends State<_TaskListView> {
         (task) {
           final isCompleted = task.status == 'completed';
           final isCancelled = task.status == 'cancelled';
-          final isDraft = task.status == 'draft';
-          final canUpdate = !(isCompleted || isCancelled || isDraft);
-          final canComplete = !(isCompleted || isCancelled || isDraft);
+          final canUpdate = !(isCompleted || isCancelled);
+          final canComplete = !(isCompleted || isCancelled);
           final source = TaskUiHelper.sourceSummary(task);
           final quantity = TaskUiHelper.quantitySummary(task);
           final deliveryDate = _formatDate(task.deliveryDate);
@@ -427,7 +426,6 @@ class _TaskListViewState extends State<_TaskListView> {
     bool isMobile,
   ) {
     final statusItems = const [
-      AppDropdownOption(value: 'draft', label: '草稿'),
       AppDropdownOption(value: 'pending', label: '待开始'),
       AppDropdownOption(value: 'in_progress', label: '进行中'),
       AppDropdownOption(value: 'completed', label: '已完成'),
@@ -777,9 +775,8 @@ class _TaskListViewState extends State<_TaskListView> {
     final deliveryDate = _formatDate(task.deliveryDate);
     final isCompleted = task.status == 'completed';
     final isCancelled = task.status == 'cancelled';
-    final isDraft = task.status == 'draft';
-    final canUpdate = !(isCompleted || isCancelled || isDraft);
-    final canComplete = !(isCompleted || isCancelled || isDraft);
+    final canUpdate = !(isCompleted || isCancelled);
+    final canComplete = !(isCompleted || isCancelled);
 
     return ExpandableSummaryCard(
       headerBuilder: (context, expanded) {

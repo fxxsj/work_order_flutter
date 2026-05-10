@@ -456,10 +456,6 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
                   children: [
                     RowActionGroup(
                       actions: [
-                        RowAction(
-                          label: '查看',
-                          onPressed: () => _openTaskDetail(context, task),
-                        ),
                         if (showUpdateActions)
                           RowAction(
                             label: '更新进度',
@@ -478,6 +474,10 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
                               completeMode: true,
                             ),
                           ),
+                        RowAction(
+                          label: '查看施工单',
+                          onPressed: () => _openTaskDetail(context, task),
+                        ),
                       ],
                     ),
                     if (trailingBuilder != null) trailingBuilder(task),
@@ -572,18 +572,98 @@ class _TaskCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final colors = theme.extension<AppColors>()!;
     final isCompleted = task.status == 'completed';
+    final deadlineRisk = TaskUiHelper.deadlineRiskText(task);
+    final isOverdue = deadlineRisk == '已逾期';
+    final isDueSoon = deadlineRisk != null && !isOverdue;
+
+    // 格式化日期
+    String formatDate(DateTime? date) {
+      if (date == null) return '-';
+      return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    }
+
     return Container(
       padding: LayoutTokens.cardPadding(context),
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
-        border: Border.all(color: colors.borderColor),
+        border: Border.all(
+          color: isOverdue
+              ? colorScheme.error
+              : isDueSoon
+                  ? Colors.orange
+                  : colors.borderColor,
+          width: isOverdue || isDueSoon ? 2 : 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 头部：施工单号 + 客户名
+          if (task.workOrderNumber != null || task.customerName != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: LayoutTokens.gapSm),
+              child: Row(
+                children: [
+                  if (task.workOrderNumber != null) ...[
+                    InkWell(
+                      onTap: onTap,
+                      child: Text(
+                        task.workOrderNumber!,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (task.workOrderNumber != null && task.customerName != null)
+                    const Text(' · '),
+                  if (task.customerName != null)
+                    Text(
+                      task.customerName!,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: colors.subtleText,
+                      ),
+                    ),
+                  const Spacer(),
+                  if (deadlineRisk != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: LayoutTokens.gapSm,
+                        vertical: LayoutTokens.gapXs,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isOverdue
+                            ? colorScheme.error.withValues(alpha: 0.1)
+                            : Colors.orange.withValues(alpha: 0.1),
+                        borderRadius:
+                            BorderRadius.circular(LayoutTokens.radiusSm),
+                      ),
+                      child: Text(
+                        deadlineRisk,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: isOverdue
+                              ? colorScheme.error
+                              : Colors.orange,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    )
+                  else if (task.deliveryDate != null)
+                    Text(
+                      '交付 ${formatDate(task.deliveryDate)}',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: colors.subtleText,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          // 任务内容
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -598,6 +678,7 @@ class _TaskCard extends StatelessWidget {
             ],
           ),
           SizedBox(height: LayoutTokens.gapSm),
+          // 操作按钮
           Wrap(
             spacing: LayoutTokens.gapSm,
             runSpacing: LayoutTokens.gapSm,
@@ -611,6 +692,11 @@ class _TaskCard extends StatelessWidget {
                 onPressed: isCompleted ? null : onComplete,
                 icon: const Icon(Icons.check_circle_outline, size: 16),
                 label: Text(isCompleted ? '已完成' : '完成任务'),
+              ),
+              TextButton.icon(
+                onPressed: onTap,
+                icon: const Icon(Icons.visibility_outlined, size: 16),
+                label: const Text('查看施工单'),
               ),
             ],
           ),
