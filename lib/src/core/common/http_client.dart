@@ -19,6 +19,7 @@ class HttpClient {
   static bool _isRefreshing = false;
   static Completer<bool>? _refreshCompleter;
   static final List<_RetryRequest> _requestQueue = [];
+  static final Set<ErrorInterceptorHandler> _processedHandlers = {};
 
   static Dio get dio => _dio;
   static String? get accessToken => _accessToken;
@@ -35,7 +36,12 @@ class HttpClient {
   }
 
   static Future<void> retryQueuedRequests() async {
+    _processedHandlers.clear();
     for (final retry in _requestQueue) {
+      if (_processedHandlers.contains(retry.handler)) {
+        continue;
+      }
+      _processedHandlers.add(retry.handler);
       try {
         final token = _accessToken;
         retry.requestOptions.headers[HttpHeaders.authorizationHeader] =
@@ -58,7 +64,12 @@ class HttpClient {
 
   /// 拒绝队列中的所有请求
   static Future<void> rejectQueuedRequests(DioException error) async {
+    _processedHandlers.clear();
     for (final retry in _requestQueue) {
+      if (_processedHandlers.contains(retry.handler)) {
+        continue;
+      }
+      _processedHandlers.add(retry.handler);
       retry.handler.next(error);
     }
     _requestQueue.clear();

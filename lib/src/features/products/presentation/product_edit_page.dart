@@ -73,9 +73,6 @@ class _ProductEditPageState extends State<ProductEditPage> {
   static const String _defaultProcessTitle = '默认工序';
   static const String _defaultMaterialTitle = '默认物料';
   static const String _materialEmptyText = '暂无物料配置';
-  static const String _processPlaceholder = '请选择默认工序';
-  static const String _processSearchHint = '搜索工序名称';
-  static const String _emptyMatchText = '没有匹配的工序';
   static const String _addMaterialText = '添加物料';
 
   static const String _submitText = '保存';
@@ -192,8 +189,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
         pageSize: 200,
         isActive: true,
       );
-      final processFuture =
-          _processApi.fetchProcesses(page: 1, pageSize: 200, isActive: true);
+      final processFuture = _processApi.fetchProcesses(page: 1, pageSize: 200);
       final materialFuture =
           _materialApi.fetchMaterials(page: 1, pageSize: 200);
       final groupPage = await productGroupFuture;
@@ -276,6 +272,16 @@ class _ProductEditPageState extends State<ProductEditPage> {
     setState(() {
       final draft = _materialDrafts.removeAt(index);
       draft.dispose();
+    });
+  }
+
+  void _toggleProcess(int processId) {
+    setState(() {
+      if (_processIds.contains(processId)) {
+        _processIds.remove(processId);
+      } else {
+        _processIds.add(processId);
+      }
     });
   }
 
@@ -509,6 +515,48 @@ class _ProductEditPageState extends State<ProductEditPage> {
     );
   }
 
+  Widget _buildProcessSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final sectionSpacing = LayoutTokens.formSectionSpacing(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          _defaultProcessTitle,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
+        SizedBox(height: sectionSpacing),
+        if (_processes.isEmpty)
+          Text(
+            '暂无可选工序',
+            style: theme.textTheme.bodySmall,
+          )
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _processes
+                .map(
+                  (process) => FilterChip(
+                    label: Text(
+                      process.isActive ? process.name : '${process.name}（已停用）',
+                    ),
+                    selected: _processIds.contains(process.id),
+                    onSelected: process.isActive
+                        ? (_) => _toggleProcess(process.id)
+                        : null,
+                  ),
+                )
+                .toList(),
+          ),
+      ],
+    );
+  }
+
   Widget _buildFieldPair(
     BuildContext context, {
     required Widget first,
@@ -713,29 +761,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
               title: _configSectionTitle,
               column: 0,
               fields: [
-                CrudFieldConfig.multiSelect(
-                  label: _defaultProcessTitle,
-                  options: _processes
-                      .map(
-                        (process) => AppDropdownOption<dynamic>(
-                          value: process.id,
-                          label: process.isActive
-                              ? process.name
-                              : '${process.name}（已停用）',
-                          enabled: process.isActive,
-                        ),
-                      )
-                      .toList(),
-                  values: _processIds.toSet(),
-                  hintText: _processPlaceholder,
-                  searchHintText: _processSearchHint,
-                  noResultsText: _emptyMatchText,
-                  onChanged: (values) {
-                    setState(() {
-                      _processIds = values.cast<int>().toList();
-                    });
-                  },
-                ),
+                CrudFieldConfig.custom(builder: _buildProcessSection),
                 CrudFieldConfig.custom(
                   builder: _buildMaterialSection,
                 ),
