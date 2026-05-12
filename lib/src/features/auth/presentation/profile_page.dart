@@ -8,6 +8,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_mode_to
 import 'package:work_order_app/src/features/auth/application/auth_controller.dart';
 import 'package:work_order_app/src/features/auth/application/auth_view_model.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
+import 'package:work_order_app/src/core/utils/role_labels.dart';
 import 'package:provider/provider.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -80,10 +81,10 @@ class _ProfilePageState extends State<ProfilePage> {
         .toString();
   }
 
-  List<String> _groups() {
-    final groups = _currentUser['groups'];
-    if (groups is List) {
-      return groups.map((e) => e.toString()).toList();
+  List<String> _roleCodes() {
+    final roleCodes = _currentUser['role_codes'];
+    if (roleCodes is List) {
+      return roleCodes.map((e) => e.toString()).toList();
     }
     return [];
   }
@@ -260,7 +261,7 @@ class _ProfilePageState extends State<ProfilePage> {
           Wrap(
             spacing: 8,
             children: [
-              ..._groups().map((role) => Chip(label: Text(role))),
+              ..._roleCodes().map((code) => Chip(label: Text(RoleLabels.label(code)))),
               if (_isSuperUser()) const Chip(label: Text('超级管理员')),
             ],
           ),

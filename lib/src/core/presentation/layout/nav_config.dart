@@ -11,7 +11,7 @@ class NavItem {
   final String? badge;
   final bool showInSidebar;
   final List<String> requiredPermissions;
-  final List<String> requiredGroups;
+  final List<String> requiredRoles;
   final bool superuserOnly;
   final bool staffOnly;
 
@@ -26,7 +26,7 @@ class NavItem {
     this.badge,
     this.showInSidebar = true,
     this.requiredPermissions = const [],
-    this.requiredGroups = const [],
+    this.requiredRoles = const [],
     this.superuserOnly = false,
     this.staffOnly = false,
   });
@@ -42,7 +42,7 @@ class NavItem {
     String? badge,
     bool? showInSidebar,
     List<String>? requiredPermissions,
-    List<String>? requiredGroups,
+    List<String>? requiredRoles,
     bool? superuserOnly,
     bool? staffOnly,
   }) {
@@ -57,7 +57,7 @@ class NavItem {
       badge: badge ?? this.badge,
       showInSidebar: showInSidebar ?? this.showInSidebar,
       requiredPermissions: requiredPermissions ?? this.requiredPermissions,
-      requiredGroups: requiredGroups ?? this.requiredGroups,
+      requiredRoles: requiredRoles ?? this.requiredRoles,
       superuserOnly: superuserOnly ?? this.superuserOnly,
       staffOnly: staffOnly ?? this.staffOnly,
     );
@@ -67,14 +67,14 @@ class NavItem {
 class _NavAccessContext {
   const _NavAccessContext({
     required this.permissions,
-    required this.groups,
+    required this.roleCodes,
     required this.isSuperuser,
     required this.isStaff,
     required this.unrestricted,
   });
 
   final Set<String> permissions;
-  final Set<String> groups;
+  final Set<String> roleCodes;
   final bool isSuperuser;
   final bool isStaff;
   final bool unrestricted;
@@ -83,7 +83,7 @@ class _NavAccessContext {
     if (user == null || user.isEmpty) {
       return const _NavAccessContext(
         permissions: {},
-        groups: {},
+        roleCodes: {},
         isSuperuser: false,
         isStaff: false,
         unrestricted: true,
@@ -91,24 +91,24 @@ class _NavAccessContext {
     }
 
     final rawPermissions = user['permissions'];
-    final rawGroups = user['groups'];
+    final rawRoleCodes = user['role_codes'];
     final permissions = <String>{};
-    final groups = <String>{};
+    final roleCodes = <String>{};
 
     if (rawPermissions is List) {
       permissions.addAll(rawPermissions.map((item) => item.toString()));
     }
-    if (rawGroups is List) {
-      groups.addAll(rawGroups.map((item) => item.toString()));
+    if (rawRoleCodes is List) {
+      roleCodes.addAll(rawRoleCodes.map((item) => item.toString()));
     }
 
     final isSuperuser = user['is_superuser'] == true;
     final isStaff = user['is_staff'] == true;
-    final unrestricted = permissions.isEmpty && groups.isEmpty && !isSuperuser;
+    final unrestricted = permissions.isEmpty && roleCodes.isEmpty && !isSuperuser;
 
     return _NavAccessContext(
       permissions: permissions,
-      groups: groups,
+      roleCodes: roleCodes,
       isSuperuser: isSuperuser,
       isStaff: isStaff,
       unrestricted: unrestricted,
@@ -120,8 +120,8 @@ class _NavAccessContext {
     if (item.superuserOnly) return false;
     if (item.staffOnly && !isStaff) return false;
     if (unrestricted) return true;
-    if (item.requiredGroups.isNotEmpty &&
-        !item.requiredGroups.any(groups.contains)) {
+    if (item.requiredRoles.isNotEmpty &&
+        !item.requiredRoles.any(roleCodes.contains)) {
       return false;
     }
     if (item.requiredPermissions.isNotEmpty &&
