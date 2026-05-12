@@ -36,92 +36,54 @@ import 'package:work_order_app/src/features/finance_payments/presentation/paymen
 import 'package:work_order_app/src/features/processes/presentation/process_log_list_page.dart';
 import 'package:work_order_app/src/features/notification_admin/presentation/notification_management_page.dart';
 
-Widget? buildFullPage(String id) {
-  switch (id) {
-    case 'profile':
-      return const ProfilePage();
-    case 'customers':
-      return const CustomerListEntry();
-    case 'workorders':
-      return const WorkOrderListEntry();
-    case 'tasks_list':
-      return const TaskListEntry();
-    case 'tasks_rules':
-      return const TaskAssignmentRuleEntry();
-    case 'tasks_operator':
-      return const TaskOperatorCenterEntry();
-    case 'tasks_supervisor':
-      return const TaskSupervisorDashboardEntry();
-    case 'sales_orders':
-      return const SalesOrderListEntry();
-    case 'audit_logs':
-      return const AuditLogListEntry();
-    case 'products':
-      return const ProductListEntry();
-    case 'materials':
-      return const MaterialListEntry();
-    case 'product_groups':
-      return const ProductGroupListEntry();
-    case 'purchase_orders':
-      return const PurchaseOrderListEntry();
-    case 'stocks':
-      return const ProductStockListEntry();
-    case 'delivery':
-      return const DeliveryOrderListEntry();
-    case 'quality':
-      return const QualityInspectionListEntry();
-    case 'invoices':
-      return const InvoiceListEntry();
-    case 'payments':
-      return const PaymentListEntry();
-    case 'costs':
-      return const ProductionCostListEntry();
-    case 'statements':
-      return const StatementListEntry();
-    case 'suppliers':
-      return const SupplierListEntry();
-    case 'departments':
-      return const DepartmentListEntry();
-    case 'processes':
-      return const ProcessListEntry();
-    case 'artworks':
-      return const ArtworkListEntry();
-    case 'dies':
-      return const DieListEntry();
-    case 'foiling':
-      return const FoilingPlateListEntry();
-    case 'embossing':
-      return const EmbossingPlateListEntry();
-    case 'stock_ins':
-      return const StockInListEntry();
-    case 'stock_outs':
-      return const StockOutListEntry();
-    case 'cost_centers':
-      return const CostCenterListEntry();
-    case 'cost_items':
-      return const CostItemListEntry();
-    case 'payment_plans':
-      return const PaymentPlanListEntry();
-    case 'process_logs':
-      return const ProcessLogListEntry();
-    case 'system_notifications':
-      return const NotificationManagementPage();
-    default:
-      return null;
-  }
-}
+final _pages = <String, Widget Function()> {
+  'profile': () => const ProfilePage(),
+  'customers': () => const CustomerListEntry(),
+  'workorders': () => const WorkOrderListEntry(),
+  'tasks_list': () => const TaskListEntry(),
+  'tasks_rules': () => const TaskAssignmentRuleEntry(),
+  'tasks_operator': () => const TaskOperatorCenterEntry(),
+  'tasks_supervisor': () => const TaskSupervisorDashboardEntry(),
+  'sales_orders': () => const SalesOrderListEntry(),
+  'audit_logs': () => const AuditLogListEntry(),
+  'products': () => const ProductListEntry(),
+  'materials': () => const MaterialListEntry(),
+  'product_groups': () => const ProductGroupListEntry(),
+  'purchase_orders': () => const PurchaseOrderListEntry(),
+  'stocks': () => const ProductStockListEntry(),
+  'delivery': () => const DeliveryOrderListEntry(),
+  'quality': () => const QualityInspectionListEntry(),
+  'invoices': () => const InvoiceListEntry(),
+  'payments': () => const PaymentListEntry(),
+  'costs': () => const ProductionCostListEntry(),
+  'statements': () => const StatementListEntry(),
+  'suppliers': () => const SupplierListEntry(),
+  'departments': () => const DepartmentListEntry(),
+  'processes': () => const ProcessListEntry(),
+  'artworks': () => const ArtworkListEntry(),
+  'dies': () => const DieListEntry(),
+  'foiling': () => const FoilingPlateListEntry(),
+  'embossing': () => const EmbossingPlateListEntry(),
+  'stock_ins': () => const StockInListEntry(),
+  'stock_outs': () => const StockOutListEntry(),
+  'cost_centers': () => const CostCenterListEntry(),
+  'cost_items': () => const CostItemListEntry(),
+  'payment_plans': () => const PaymentPlanListEntry(),
+  'process_logs': () => const ProcessLogListEntry(),
+  'system_notifications': () => const NotificationManagementPage(),
+};
+
+Widget? buildFullPage(String id) => _pages[id]?.call();
 
 ContentBodyBuilder? buildContentBody(String id) {
-  switch (id) {
-    case 'notifications':
-      return (context, style) => NotificationCenterView(
-            primary: style.primary,
-            surface: style.surface,
-            accent: style.accent,
-            subtleText: style.subtleText,
-            borderColor: style.borderColor,
-          );
-    default:
-      return null;
+  if (id == 'notifications') {
+    return (context, style) => NotificationCenterView(
+          primary: style.primary,
+          surface: style.surface,
+          accent: style.accent,
+          subtleText: style.subtleText,
+          borderColor: style.borderColor,
+        );
   }
+  return null;
 }
