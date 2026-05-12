@@ -459,7 +459,12 @@ const List<NavItem> navItems = [
         label: '通知管理',
         icon: Icons.notifications_active_outlined,
         path: '/system-notifications',
-        staffOnly: true,
+        requiredPermissions: [
+          'workorder.view_systemnotificationsettings',
+          'workorder.change_systemnotificationsettings',
+          'workorder.view_notificationtemplate',
+          'workorder.change_notificationtemplate',
+        ],
       ),
       NavItem(
         id: 'audit_logs',
