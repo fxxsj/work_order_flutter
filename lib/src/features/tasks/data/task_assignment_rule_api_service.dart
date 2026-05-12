@@ -37,40 +37,52 @@ class TaskAssignmentRuleApiService {
       params['ordering'] = ordering.trim();
     }
 
-    final response = await _client.get('/task-assignment-rules/', queryParameters: params);
+    final response =
+        await _client.get('/task-assignment-rules/', queryParameters: params);
     final payload = response.data;
     if (payload is Map<String, dynamic>) {
       final results = payload['results'];
       final list = results is List
           ? results
               .whereType<Map>()
-              .map((item) => TaskAssignmentRuleDto.fromJson(Map<String, dynamic>.from(item)))
+              .map((item) => TaskAssignmentRuleDto.fromJson(
+                  Map<String, dynamic>.from(item)))
               .toList()
           : <TaskAssignmentRuleDto>[];
       final total = toInt(payload['count']) ?? list.length;
-      return TaskAssignmentRulePageDto(items: list, total: total, page: page, pageSize: pageSize);
+      return TaskAssignmentRulePageDto(
+          items: list, total: total, page: page, pageSize: pageSize);
     }
     if (payload is List) {
       final list = payload
           .whereType<Map>()
-          .map((item) => TaskAssignmentRuleDto.fromJson(Map<String, dynamic>.from(item)))
+          .map((item) =>
+              TaskAssignmentRuleDto.fromJson(Map<String, dynamic>.from(item)))
           .toList();
-      return TaskAssignmentRulePageDto(items: list, total: list.length, page: 1, pageSize: list.length);
+      return TaskAssignmentRulePageDto(
+          items: list, total: list.length, page: 1, pageSize: list.length);
     }
-    return const TaskAssignmentRulePageDto(items: [], total: 0, page: 1, pageSize: 20);
+    return const TaskAssignmentRulePageDto(
+        items: [], total: 0, page: 1, pageSize: 20);
   }
 
   Future<TaskAssignmentRuleDto> createRule(TaskAssignmentRuleDto dto) async {
-    final response = await _client.post('/task-assignment-rules/', data: dto.toPayload());
+    final response =
+        await _client.post('/task-assignment-rules/', data: dto.toPayload());
     final payload = response.data;
-    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    final map = payload is Map
+        ? Map<String, dynamic>.from(payload)
+        : <String, dynamic>{};
     return TaskAssignmentRuleDto.fromJson(map);
   }
 
-  Future<TaskAssignmentRuleDto> updateRule(int id, Map<String, dynamic> payload) async {
-    final response = await _client.put('/task-assignment-rules/$id/', data: payload);
+  Future<TaskAssignmentRuleDto> updateRule(
+      int id, Map<String, dynamic> payload) async {
+    final response =
+        await _client.patch('/task-assignment-rules/$id/', data: payload);
     final data = response.data;
-    final map = data is Map ? Map<String, dynamic>.from(data) : <String, dynamic>{};
+    final map =
+        data is Map ? Map<String, dynamic>.from(data) : <String, dynamic>{};
     return TaskAssignmentRuleDto.fromJson(map);
   }
 
@@ -79,7 +91,8 @@ class TaskAssignmentRuleApiService {
   }
 
   Future<Map<String, dynamic>> preview({Map<String, dynamic>? params}) async {
-    final response = await _client.get('/task-assignment-rules/preview/', queryParameters: params);
+    final response = await _client.get('/task-assignment-rules/preview/',
+        queryParameters: params);
     return _mapFromResponse(response.data);
   }
 

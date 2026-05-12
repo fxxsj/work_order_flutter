@@ -6,12 +6,12 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_loading_indicator.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -78,6 +78,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
   Timer? _searchDebounce;
   List<Process> _processes = [];
   List<TaskDepartmentOption> _departments = [];
+  String? _lookupError;
   bool _previewLoading = false;
   List<Map<String, dynamic>> _previewData = [];
   bool _globalEnabled = true;
@@ -112,9 +113,13 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
       setState(() {
         _processes = lookup.processes;
         _departments = lookup.departments;
+        _lookupError = null;
       });
-    } catch (_) {
-      // ignore
+    } catch (err) {
+      if (!mounted) return;
+      setState(() {
+        _lookupError = err.toString().replaceFirst('Exception: ', '');
+      });
     }
   }
 
@@ -366,6 +371,16 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
               label: _createButtonText,
             ),
             PageActionButton.outlined(
+              onPressed: _previewLoading ? null : _openPreviewDialog,
+              icon: _previewLoading
+                  ? const AppLoadingIndicator(
+                      centered: false,
+                      size: LayoutTokens.iconXs,
+                    )
+                  : const Icon(Icons.visibility_outlined, size: 16),
+              label: '预览',
+            ),
+            PageActionButton.outlined(
               onPressed: openFilterDrawer,
               icon: const Icon(Icons.filter_alt_outlined, size: 16),
               label: activeCount > 0 ? '筛选 $activeCount' : '筛选',
@@ -454,13 +469,6 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
         onRetry: () => viewModel.loadRules(resetPage: true),
       );
     }
-    if (!viewModel.loading && rules.isEmpty) {
-      return const EmptyStateCard(
-        icon: Icons.rule_outlined,
-        text: _emptyText,
-      );
-    }
-
     final displayedRules = _reorderPreview ?? rules;
     final processIds = displayedRules.map((rule) => rule.processId).toSet();
     final canReorder = processIds.length == 1 && displayedRules.length > 1;
@@ -468,8 +476,6 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
     return ListView(
       children: [
         _buildGlobalToggle(),
-        SizedBox(height: LayoutTokens.gapMd),
-        _buildPreviewSection(),
         SizedBox(height: LayoutTokens.gapMd),
         DetailSectionCard(
           title: '规则列表',
@@ -479,66 +485,63 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
                   style: Theme.of(context).textTheme.bodySmall,
                 )
               : null,
-          child: canReorder
-              ? ReorderableListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  buildDefaultDragHandles: false,
-                  onReorder: (oldIndex, newIndex) => _handleReorder(
-                      viewModel, displayedRules, oldIndex, newIndex),
-                  itemCount: displayedRules.length,
-                  itemBuilder: (context, index) {
-                    final rule = displayedRules[index];
-                    return Padding(
-                      key: ValueKey(rule.id),
-                      padding: EdgeInsets.only(bottom: LayoutTokens.gapMd),
-                      child: TaskAssignmentRuleCard(
-                        rule: rule,
-                        onEdit: _reordering
-                            ? null
-                            : () => _openRuleDialog(context, viewModel, rule),
-                        onDelete: _reordering
-                            ? null
-                            : () => _deleteRule(viewModel, rule),
-                        onToggle: _reordering
-                            ? null
-                            : (value) => _toggleRule(viewModel, rule, value),
-                        dragHandle: ReorderableDragStartListener(
-                          index: index,
-                          child: Icon(
-                            Icons.drag_indicator,
-                            color: Theme.of(context).colorScheme.primary,
+          child: displayedRules.isEmpty
+              ? _buildEmptyRulesContent(context, viewModel)
+              : canReorder
+                  ? ReorderableListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      buildDefaultDragHandles: false,
+                      onReorder: (oldIndex, newIndex) => _handleReorder(
+                          viewModel, displayedRules, oldIndex, newIndex),
+                      itemCount: displayedRules.length,
+                      itemBuilder: (context, index) {
+                        final rule = displayedRules[index];
+                        return Padding(
+                          key: ValueKey(rule.id),
+                          padding: EdgeInsets.only(bottom: LayoutTokens.gapMd),
+                          child: TaskAssignmentRuleCard(
+                            rule: rule,
+                            onEdit: _reordering
+                                ? null
+                                : () =>
+                                    _openRuleDialog(context, viewModel, rule),
+                            onDelete: _reordering
+                                ? null
+                                : () => _deleteRule(viewModel, rule),
+                            onToggle: _reordering
+                                ? null
+                                : (value) =>
+                                    _toggleRule(viewModel, rule, value),
+                            dragHandle: ReorderableDragStartListener(
+                              index: index,
+                              child: Icon(
+                                Icons.drag_indicator,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    )
+                  : Column(
+                      children: [
+                        ...displayedRules.map(
+                          (rule) => Padding(
+                            padding:
+                                EdgeInsets.only(bottom: LayoutTokens.gapMd),
+                            child: TaskAssignmentRuleCard(
+                              rule: rule,
+                              onEdit: () =>
+                                  _openRuleDialog(context, viewModel, rule),
+                              onDelete: () => _deleteRule(viewModel, rule),
+                              onToggle: (value) =>
+                                  _toggleRule(viewModel, rule, value),
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  },
-                )
-              : Column(
-                  children: [
-                    if (!canReorder)
-                      Padding(
-                        padding: EdgeInsets.only(bottom: LayoutTokens.gapMd),
-                        child: Text(
-                          '选择单个工序后可拖拽调整优先级。',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ),
-                    ...displayedRules.map(
-                      (rule) => Padding(
-                        padding: EdgeInsets.only(bottom: LayoutTokens.gapMd),
-                        child: TaskAssignmentRuleCard(
-                          rule: rule,
-                          onEdit: () =>
-                              _openRuleDialog(context, viewModel, rule),
-                          onDelete: () => _deleteRule(viewModel, rule),
-                          onToggle: (value) =>
-                              _toggleRule(viewModel, rule, value),
-                        ),
-                      ),
+                      ],
                     ),
-                  ],
-                ),
         ),
       ],
     );
@@ -547,57 +550,99 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
   Widget _buildGlobalToggle() {
     return DetailSectionCard(
       title: '自动分派',
-      trailing: Switch(
-        value: _globalEnabled,
-        onChanged: _toggleGlobal,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextButton.icon(
+            onPressed: _previewLoading ? null : _openPreviewDialog,
+            icon: const Icon(Icons.visibility_outlined, size: 16),
+            label: const Text('查看预览'),
+          ),
+          Switch(
+            value: _globalEnabled,
+            onChanged: _toggleGlobal,
+          ),
+        ],
       ),
-      child: Text(
-        _globalEnabled ? '已启用自动分派，任务将按规则分派到部门。' : '自动分派已禁用，仅提供预览。',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _globalEnabled ? '任务将按启用的规则自动分派到部门。' : '自动分派已禁用，规则仅用于预览。',
+          ),
+          if (_lookupError != null) ...[
+            SizedBox(height: LayoutTokens.gapSm),
+            Text(
+              '工序或部门加载失败：$_lookupError',
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+            SizedBox(height: LayoutTokens.gapSm),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: _loadLookup,
+                icon: const Icon(Icons.refresh, size: 16),
+                label: const Text('重新加载基础数据'),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
 
-  Widget _buildPreviewSection() {
-    return DetailSectionCard(
-      title: '分派效果预览',
-      trailing: TextButton.icon(
-        onPressed: _previewLoading ? null : _loadPreview,
-        icon: _previewLoading
-            ? const AppLoadingIndicator(
-                centered: false,
-                size: LayoutTokens.iconXs,
-              )
-            : const Icon(Icons.refresh, size: 16),
-        label: const Text('刷新预览'),
-      ),
-      child: _previewData.isEmpty
-          ? const Text('暂无预览数据')
-          : Column(
-              children: _previewData.map((item) {
-                final process = item['process_name']?.toString() ?? '-';
-                final target =
-                    item['target_department_name']?.toString() ?? '-';
-                final priority = item['priority']?.toString() ?? '-';
-                final strategy =
-                    item['operator_selection_strategy']?.toString() ?? '-';
-                final load = item['current_load']?.toString() ?? '0';
-                return Padding(
-                  padding: EdgeInsets.only(bottom: LayoutTokens.gapMd),
-                  child: DetailSectionCard(
-                    title: process,
-                    child: SummaryFieldWrap(
-                      isMobile: ResponsiveLayout.isMobile(context),
-                      children: [
-                        SummaryField(label: '目标部门', value: target),
-                        SummaryField(label: '优先级', value: priority),
-                        SummaryField(label: '当前负载', value: load),
-                        SummaryField(label: '操作员策略', value: strategy),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
+  Widget _buildEmptyRulesContent(
+    BuildContext context,
+    TaskAssignmentRuleViewModel viewModel,
+  ) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.rule_outlined,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
+            SizedBox(width: LayoutTokens.gapSm),
+            Expanded(
+              child: Text(
+                _emptyText,
+                style: theme.textTheme.bodyMedium,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: LayoutTokens.gapMd),
+        PageActionButton.filled(
+          onPressed: () => _openRuleDialog(context, viewModel, null),
+          icon: const Icon(Icons.add),
+          label: _createButtonText,
+        ),
+      ],
+    );
+  }
+
+  Future<void> _openPreviewDialog() async {
+    await _loadPreview();
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AppDialog(
+        title: '分派效果预览',
+        maxWidth: LayoutTokens.dialogWidthMd,
+        content: SizedBox(
+          width: double.maxFinite,
+          child: TaskAssignmentRulePreviewContent(items: _previewData),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('关闭'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -643,29 +688,27 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
       ToastUtil.showError('请先加载工序与部门列表');
       return;
     }
-    await showDialog<void>(
-      context: context,
-      builder: (context) => TaskAssignmentRuleDialog(
-        rule: rule,
-        processes: _processes,
-        departments: _departments,
-        onSubmit: (payload) async {
-          try {
-            if (rule == null) {
-              await viewModel.createRule(payload);
-              ToastUtil.showSuccess('规则已创建');
-            } else {
-              await viewModel.updateRule(rule.id, payload.toPayload());
-              ToastUtil.showSuccess('规则已更新');
-            }
-            _loadPreview();
-          } catch (err) {
-            ToastUtil.showError(
-                '保存失败: ${err.toString().replaceFirst('Exception: ', '')}');
-            rethrow;
+    await showTaskAssignmentRuleEditDrawer(
+      context,
+      rule: rule,
+      processes: _processes,
+      departments: _departments,
+      onSubmit: (payload) async {
+        try {
+          if (rule == null) {
+            await viewModel.createRule(payload);
+            ToastUtil.showSuccess('规则已创建');
+          } else {
+            await viewModel.updateRule(rule.id, payload.toPayload());
+            ToastUtil.showSuccess('规则已更新');
           }
-        },
-      ),
+          _loadPreview();
+        } catch (err) {
+          ToastUtil.showError(
+              '保存失败: ${err.toString().replaceFirst('Exception: ', '')}');
+          rethrow;
+        }
+      },
     );
   }
 

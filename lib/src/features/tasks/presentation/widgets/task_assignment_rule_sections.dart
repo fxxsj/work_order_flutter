@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
@@ -85,33 +87,60 @@ Future<bool> showTaskAssignmentRuleDeleteDialog(
   return confirmed == true;
 }
 
-class TaskAssignmentRuleDialog extends StatefulWidget {
-  const TaskAssignmentRuleDialog({
+Future<bool> showTaskAssignmentRuleEditDrawer(
+  BuildContext context, {
+  required TaskAssignmentRule? rule,
+  required List<Process> processes,
+  required List<TaskDepartmentOption> departments,
+  required Future<void> Function(TaskAssignmentRuleDto payload) onSubmit,
+}) async {
+  var saved = false;
+  await showAdaptiveFilterDrawer(
+    context,
+    isMobile: ResponsiveLayout.isMobile(context),
+    title: rule == null ? '新建分派规则' : '编辑分派规则',
+    desktopWidth: LayoutTokens.dialogWidthMd,
+    child: TaskAssignmentRuleEditPanel(
+      rule: rule,
+      processes: processes,
+      departments: departments,
+      onSubmit: onSubmit,
+      onSaved: () => saved = true,
+    ),
+  );
+  return saved;
+}
+
+class TaskAssignmentRuleEditPanel extends StatefulWidget {
+  const TaskAssignmentRuleEditPanel({
     super.key,
     required this.rule,
     required this.processes,
     required this.departments,
     required this.onSubmit,
+    this.onSaved,
   });
 
   final TaskAssignmentRule? rule;
   final List<Process> processes;
   final List<TaskDepartmentOption> departments;
   final Future<void> Function(TaskAssignmentRuleDto payload) onSubmit;
+  final VoidCallback? onSaved;
 
   @override
-  State<TaskAssignmentRuleDialog> createState() =>
-      _TaskAssignmentRuleDialogState();
+  State<TaskAssignmentRuleEditPanel> createState() =>
+      _TaskAssignmentRuleEditPanelState();
 }
 
-class _TaskAssignmentRuleDialogState extends State<TaskAssignmentRuleDialog> {
+class _TaskAssignmentRuleEditPanelState
+    extends State<TaskAssignmentRuleEditPanel> {
   final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _notesController;
   late int _processId;
   late int _departmentId;
   int _priority = 50;
   bool _isActive = true;
   String _strategy = 'least_tasks';
-  String _notes = '';
   bool _submitting = false;
 
   @override
@@ -123,94 +152,143 @@ class _TaskAssignmentRuleDialogState extends State<TaskAssignmentRuleDialog> {
     _priority = rule?.priority ?? 50;
     _isActive = rule?.isActive ?? true;
     _strategy = rule?.operatorSelectionStrategy ?? 'least_tasks';
-    _notes = rule?.notes ?? '';
+    _notesController = TextEditingController(text: rule?.notes ?? '');
+  }
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.rule != null;
-    return AppFormDialog(
-      title: isEdit ? '编辑分派规则' : '新建分派规则',
+    return AdaptiveFormPanel(
       formKey: _formKey,
       submitText: '保存',
+      cancelText: '取消',
       submitting: _submitting,
-      maxWidth: LayoutTokens.dialogWidthSm,
+      submitEnabled: !_submitting,
       onSubmit: _submit,
-      content: Column(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AppSelect<int>(
-            key: ValueKey<int>(_processId),
-            value: _processId,
-            decoration: const InputDecoration(labelText: '工序'),
-            options: widget.processes
-                .map(
-                  (p) => AppDropdownOption(
-                    value: p.id,
-                    label: '${p.code} ${p.name}',
+          _RuleFormSection(
+            title: '基础信息',
+            child: _RuleFieldList(
+              children: [
+                if (isEdit)
+                  _ReadOnlyRuleField(
+                    label: '工序',
+                    value: _processLabel(_processId),
+                  )
+                else
+                  AppSelect<int>(
+                    key:
+                        ValueKey<String>('assignment-rule-process-$_processId'),
+                    value: _processId,
+                    decoration: const InputDecoration(labelText: '工序'),
+                    options: widget.processes
+                        .map(
+                          (p) => AppDropdownOption(
+                            value: p.id,
+                            label: '${p.code} ${p.name}',
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) =>
+                        setState(() => _processId = value ?? _processId),
                   ),
-                )
-                .toList(),
-            onChanged: isEdit
-                ? null
-                : (value) => setState(() => _processId = value ?? _processId),
+                if (isEdit)
+                  _ReadOnlyRuleField(
+                    label: '分派部门',
+                    value: _departmentLabel(_departmentId),
+                  )
+                else
+                  AppSelect<int>(
+                    key: ValueKey<String>(
+                        'assignment-rule-department-$_departmentId'),
+                    value: _departmentId,
+                    decoration: const InputDecoration(labelText: '分派部门'),
+                    options: widget.departments
+                        .map(
+                          (d) => AppDropdownOption(value: d.id, label: d.name),
+                        )
+                        .toList(),
+                    onChanged: (value) =>
+                        setState(() => _departmentId = value ?? _departmentId),
+                  ),
+                SwitchListTile(
+                  value: _isActive,
+                  onChanged: (value) => setState(() => _isActive = value),
+                  title: const Text('启用规则'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ],
+            ),
           ),
-          SizedBox(height: LayoutTokens.gapMd),
-          AppSelect<int>(
-            key: ValueKey<int>(_departmentId),
-            value: _departmentId,
-            decoration: const InputDecoration(labelText: '分派部门'),
-            options: widget.departments
-                .map(
-                  (d) => AppDropdownOption(value: d.id, label: d.name),
-                )
-                .toList(),
-            onChanged: isEdit
-                ? null
-                : (value) =>
-                    setState(() => _departmentId = value ?? _departmentId),
+          const SizedBox(height: LayoutTokens.gapLg),
+          _RuleFormSection(
+            title: '高级设置',
+            child: _RuleFieldList(
+              children: [
+                CrudFieldConfig.number(
+                  label: '优先级 (0-100)',
+                  initialValue: _priority.toString(),
+                  helperText: '同一工序存在多条规则时，数值越高越先匹配。',
+                  validator: (value) {
+                    final parsed = int.tryParse(value ?? '');
+                    if (parsed == null || parsed < 0 || parsed > 100) {
+                      return '请输入 0-100 的整数';
+                    }
+                    return null;
+                  },
+                  onChanged: (value) =>
+                      _priority = int.tryParse(value) ?? _priority,
+                ).build(context),
+                AppSelect<String>(
+                  key: ValueKey<String>('assignment-rule-strategy-$_strategy'),
+                  value: _strategy,
+                  decoration: const InputDecoration(labelText: '操作员选择策略'),
+                  options: const [
+                    AppDropdownOption(value: 'least_tasks', label: '任务最少'),
+                    AppDropdownOption(value: 'random', label: '随机选择'),
+                    AppDropdownOption(value: 'round_robin', label: '轮询分配'),
+                    AppDropdownOption(value: 'first_available', label: '第一个可用'),
+                  ],
+                  onChanged: (value) =>
+                      setState(() => _strategy = value ?? _strategy),
+                ),
+                CrudFieldConfig.textarea(
+                  label: '备注（可选）',
+                  controller: _notesController,
+                  maxLines: 3,
+                ).build(context),
+              ],
+            ),
           ),
-          SizedBox(height: LayoutTokens.gapMd),
-          CrudFieldConfig.number(
-            label: '优先级 (0-100)',
-            initialValue: _priority.toString(),
-            validator: (value) {
-              final parsed = int.tryParse(value ?? '');
-              if (parsed == null || parsed < 0 || parsed > 100) {
-                return '请输入 0-100 的整数';
-              }
-              return null;
-            },
-            onChanged: (value) => _priority = int.tryParse(value) ?? _priority,
-          ).build(context),
-          SizedBox(height: LayoutTokens.gapMd),
-          AppSelect<String>(
-            key: ValueKey<String>(_strategy),
-            value: _strategy,
-            decoration: const InputDecoration(labelText: '操作员选择策略'),
-            options: const [
-              AppDropdownOption(value: 'least_tasks', label: '任务最少'),
-              AppDropdownOption(value: 'random', label: '随机选择'),
-              AppDropdownOption(value: 'round_robin', label: '轮询分配'),
-              AppDropdownOption(value: 'first_available', label: '第一个可用'),
-            ],
-            onChanged: (value) =>
-                setState(() => _strategy = value ?? _strategy),
-          ),
-          SizedBox(height: LayoutTokens.gapMd),
-          SwitchListTile(
-            value: _isActive,
-            onChanged: (value) => setState(() => _isActive = value),
-            title: const Text('启用规则'),
-            contentPadding: EdgeInsets.zero,
-          ),
-          CrudFieldConfig.text(
-            label: '备注（可选）',
-            initialValue: _notes,
-            onChanged: (value) => _notes = value,
-          ).build(context),
         ],
       ),
     );
+  }
+
+  String _processLabel(int id) {
+    for (final process in widget.processes) {
+      if (process.id == id) {
+        return '${process.code} ${process.name}';
+      }
+    }
+    return widget.rule?.processName ?? '工序 #$id';
+  }
+
+  String _departmentLabel(int id) {
+    for (final department in widget.departments) {
+      if (department.id == id) {
+        return department.name;
+      }
+    }
+    return widget.rule?.departmentName ?? '部门 #$id';
   }
 
   Future<void> _submit() async {
@@ -223,16 +301,85 @@ class _TaskAssignmentRuleDialogState extends State<TaskAssignmentRuleDialog> {
       priority: _priority,
       operatorSelectionStrategy: _strategy,
       isActive: _isActive,
-      notes: _notes,
+      notes: _notesController.text,
     );
     try {
       await widget.onSubmit(payload);
-      if (mounted) Navigator.of(context).pop();
+      if (!mounted) return;
+      widget.onSaved?.call();
+      Navigator.of(context).pop(true);
     } catch (_) {
       // keep dialog open on failure
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
+  }
+}
+
+class _RuleFormSection extends StatelessWidget {
+  const _RuleFormSection({
+    required this.title,
+    required this.child,
+  });
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: LayoutTokens.gapMd),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _RuleFieldList extends StatelessWidget {
+  const _RuleFieldList({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var index = 0; index < children.length; index++) ...[
+          if (index > 0) const SizedBox(height: LayoutTokens.gapMd),
+          children[index],
+        ],
+      ],
+    );
+  }
+}
+
+class _ReadOnlyRuleField extends StatelessWidget {
+  const _ReadOnlyRuleField({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InputDecorator(
+      decoration: InputDecoration(labelText: label)
+          .applyDefaults(theme.inputDecorationTheme)
+          .copyWith(enabled: false),
+      child: Text(
+        value,
+        style: theme.textTheme.bodyMedium,
+      ),
+    );
   }
 }
 
@@ -291,6 +438,60 @@ class TaskAssignmentRuleCard extends StatelessWidget {
               ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class TaskAssignmentRulePreviewContent extends StatelessWidget {
+  const TaskAssignmentRulePreviewContent({
+    super.key,
+    required this.items,
+  });
+
+  final List<Map<String, dynamic>> items;
+
+  @override
+  Widget build(BuildContext context) {
+    if (items.isEmpty) {
+      return const Text('暂无预览数据');
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var index = 0; index < items.length; index++) ...[
+          if (index > 0) const SizedBox(height: LayoutTokens.gapMd),
+          _TaskAssignmentRulePreviewCard(item: items[index]),
+        ],
+      ],
+    );
+  }
+}
+
+class _TaskAssignmentRulePreviewCard extends StatelessWidget {
+  const _TaskAssignmentRulePreviewCard({required this.item});
+
+  final Map<String, dynamic> item;
+
+  @override
+  Widget build(BuildContext context) {
+    final process = item['process_name']?.toString() ?? '-';
+    final target = item['target_department_name']?.toString() ?? '-';
+    final priority = item['priority']?.toString() ?? '-';
+    final strategy = item['operator_selection_strategy']?.toString() ?? '-';
+    final load = item['current_load']?.toString() ?? '0';
+
+    return DetailSectionCard(
+      title: process,
+      child: SummaryFieldWrap(
+        isMobile: ResponsiveLayout.isMobile(context),
+        children: [
+          SummaryField(label: '目标部门', value: target),
+          SummaryField(label: '优先级', value: priority),
+          SummaryField(label: '当前负载', value: load),
+          SummaryField(label: '操作员策略', value: strategy),
         ],
       ),
     );
