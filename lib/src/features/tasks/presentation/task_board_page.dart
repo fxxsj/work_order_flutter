@@ -364,6 +364,11 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
               icon: const Icon(Icons.refresh, size: 16),
               label: _refreshButtonText,
             ),
+            PageActionButton.outlined(
+              onPressed: () => context.go('/tasks/supervisor'),
+              icon: const Icon(Icons.person_add_alt_1_outlined, size: 16),
+              label: '待分派',
+            ),
             PageModeToggle<_TaskBoardViewMode>(
               value: _viewMode,
               minWidth: isMobile ? 72 : 88,

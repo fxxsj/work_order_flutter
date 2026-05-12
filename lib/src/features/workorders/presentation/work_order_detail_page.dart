@@ -437,7 +437,8 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   }
 
   Future<void> _showSyncPreviewDialog(WorkOrderDetail detail) async {
-    final canSync = detail.approvalStatus != 'approved';
+    final isSuperuser = PermissionUtil.isSuperuser(context);
+    final canSync = isSuperuser && detail.approvalStatus != 'approved';
     await showWorkOrderSyncPreviewDialog(
       context,
       canSync: canSync,

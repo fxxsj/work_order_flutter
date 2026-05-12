@@ -138,20 +138,21 @@ class _TaskAssignmentRuleEditPanelState
   late final TextEditingController _notesController;
   late int _processId;
   late int _departmentId;
-  int _priority = 50;
-  bool _isActive = true;
-  String _strategy = 'least_tasks';
+  late int _priority;
+  late bool _isActive;
+  late String _strategy;
   bool _submitting = false;
 
   @override
   void initState() {
     super.initState();
     final rule = widget.rule;
+    final defaults = kTaskAssignmentRuleDefaults;
     _processId = rule?.processId ?? widget.processes.first.id;
-    _departmentId = rule?.departmentId ?? widget.departments.first.id;
-    _priority = rule?.priority ?? 50;
+    _departmentId = rule?. departmentId ?? widget.departments.first.id;
+    _priority = rule?.priority ?? defaults.priority;
     _isActive = rule?.isActive ?? true;
-    _strategy = rule?.operatorSelectionStrategy ?? 'least_tasks';
+    _strategy = rule?.operatorSelectionStrategy ?? defaults.strategy;
     _notesController = TextEditingController(text: rule?.notes ?? '');
   }
 

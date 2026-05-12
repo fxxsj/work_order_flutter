@@ -1,6 +1,12 @@
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_assignment_rule.dart';
 
+/// 分派规则默认常量
+const kTaskAssignmentRuleDefaults = (
+  priority: 50,
+  strategy: 'least_tasks',
+);
+
 class TaskAssignmentRuleDto {
   TaskAssignmentRuleDto({
     required this.id,
@@ -39,7 +45,7 @@ class TaskAssignmentRuleDto {
       id: toInt(json['id']) ?? 0,
       processId: toInt(json['process']) ?? 0,
       departmentId: toInt(json['department']) ?? 0,
-      priority: toInt(json['priority']) ?? 0,
+      priority: toInt(json['priority']) ?? 50,
       operatorSelectionStrategy:
           toStringOrNull(json['operator_selection_strategy']) ?? 'least_tasks',
       isActive: json['is_active'] == true,
@@ -52,6 +58,24 @@ class TaskAssignmentRuleDto {
       notes: toStringOrNull(json['notes']),
       createdAt: toDateTime(json['created_at']),
       updatedAt: toDateTime(json['updated_at']),
+    );
+  }
+
+  /// 创建新规则时的默认值
+  factory TaskAssignmentRuleDto.createDefault({
+    required int processId,
+    required int departmentId,
+    int priority = 50,
+    String operatorSelectionStrategy = 'least_tasks',
+    bool isActive = true,
+  }) {
+    return TaskAssignmentRuleDto(
+      id: 0,
+      processId: processId,
+      departmentId: departmentId,
+      priority: priority,
+      operatorSelectionStrategy: operatorSelectionStrategy,
+      isActive: isActive,
     );
   }
 

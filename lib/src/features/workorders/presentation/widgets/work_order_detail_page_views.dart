@@ -74,6 +74,16 @@ class WorkOrderDetailPageViews extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildStatusGuide(context),
+        Expanded(child: _buildContent()),
+      ],
+    );
+  }
+
+  Widget _buildContent() {
     switch (viewMode) {
       case WorkOrderDetailViewMode.basic:
         return WorkOrderDetailBasicView(
@@ -131,5 +141,66 @@ class WorkOrderDetailPageViews extends StatelessWidget {
           onEditPressed: onEditPressed,
         );
     }
+  }
+
+  Widget _buildStatusGuide(BuildContext context) {
+    final status = detail.approvalStatus ?? '';
+    if (status.isEmpty) return const SizedBox.shrink();
+
+    final (icon, color, message) = switch (status) {
+      'draft' => (
+          Icons.edit_note_outlined,
+          const Color(0xFF3B82F6),
+          '补齐资料后提交审核',
+        ),
+      'pending' || 'submitted' => (
+          Icons.hourglass_empty,
+          const Color(0xFFF59E0B),
+          '等待审核，审核通过后自动生成任务',
+        ),
+      'rejected' => (
+          Icons.cancel_outlined,
+          const Color(0xFFEF4444),
+          rejectionReason?.isNotEmpty == true
+              ? '审核退回: $rejectionReason'
+              : '审核退回，请修改后重新提交',
+        ),
+      'approved' || 'in_progress' => (
+          Icons.check_circle_outline,
+          const Color(0xFF22C55E),
+          '任务已分派至部门，主管可继续分派操作员',
+        ),
+      _ => (null, null, null),
+    };
+
+    if (message == null) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: (color ?? const Color(0xFF3B82F6)).withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: (color ?? const Color(0xFF3B82F6)).withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: color),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                fontSize: 14,
+                color: color?.withValues(alpha: 0.9),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

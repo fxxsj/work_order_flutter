@@ -101,6 +101,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
   bool _loadingOptions = false;
   bool _loadingDetail = false;
   bool _submitting = false;
+  String? _approvalStatus;
 
   @override
   void initState() {
@@ -192,6 +193,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
       final viewModel = context.read<WorkOrderViewModel>();
       final detail = await viewModel.fetchDetail(id);
       _draft.applyDetail(detail);
+      _approvalStatus = detail.approvalStatus;
       if (mounted) {
         setState(() {});
       }
@@ -418,12 +420,32 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
 
     setState(() => _submitting = true);
     final payload = WorkOrderFormSubmission.buildPayload(submissionInput);
+    int? workOrderId;
     try {
       final viewModel = context.read<WorkOrderViewModel>();
       if (widget.mode == WorkOrderFormMode.create) {
-        await viewModel.createWorkOrder(payload);
+        final result = await viewModel.createWorkOrder(payload);
+        workOrderId = result.id;
       } else if (widget.workOrderId != null) {
         await viewModel.updateWorkOrder(widget.workOrderId!, payload);
+        workOrderId = widget.workOrderId;
+      }
+      if (!mounted) return;
+      // 只对草稿/退回状态（新创建或编辑时）引导提交审核
+      final canSubmitApproval = widget.mode == WorkOrderFormMode.create ||
+          _approvalStatus == 'draft' ||
+          _approvalStatus == 'rejected';
+      if (!canSubmitApproval) {
+        ToastUtil.showSuccess('保存成功');
+        if (!mounted) return;
+        Navigator.of(context).pop(true);
+        return;
+      }
+      final shouldSubmit = await _showSubmitApprovalDialog();
+      if (shouldSubmit == true && workOrderId != null) {
+        await viewModel.submitApproval(workOrderId);
+        if (!mounted) return;
+        ToastUtil.showSuccess('已保存并提交审核');
       }
       if (!mounted) return;
       Navigator.of(context).pop(true);
@@ -432,6 +454,26 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
+  }
+
+  Future<bool?> _showSubmitApprovalDialog() async {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('保存成功'),
+        content: const Text('是否立即提交审核？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('稍后处理'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('立即提交'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
