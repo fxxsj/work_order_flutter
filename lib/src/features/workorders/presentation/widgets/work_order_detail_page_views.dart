@@ -157,7 +157,7 @@ class WorkOrderDetailPageViews extends StatelessWidget {
       'submitted' => (
           Icons.hourglass_empty,
           ColorTokens.warning,
-          '等待审核，审核通过后自动生成任务',
+          '等待审核，审核通过后将自动生成部门任务',
         ),
       'rejected' => (
           Icons.cancel_outlined,

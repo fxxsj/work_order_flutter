@@ -524,7 +524,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     SalesOrderViewModel viewModel,
     SalesOrder order,
   ) async {
-    final decision = await showActionDecisionDialog<void>(
+    final result = await showActionDecisionDialog<void>(
       context,
       title: '取消订单',
       summary: '取消客户订单会中断后续施工、发货和财务闭环，相关部门需要同步停单。',
@@ -538,9 +538,9 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
       notesMaxLines: 3,
       submitText: '确认取消',
     );
-    if (decision == null) return;
+    if (result == null) return;
     try {
-      await _actionService!.cancel(order.id, reason: decision.notes);
+      await _actionService!.cancel(order.id, reason: result.notes.trim());
       ToastUtil.showSuccess('已取消');
       await viewModel.loadSalesOrders(resetPage: false);
     } catch (err) {
@@ -554,30 +554,29 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
   ) async {
     final result = await showSalesOrderPaymentDialog(context);
     if (result == null) return;
-    final amountText = result.amountText;
-    final dateText = result.dateText;
+
+    final amountText = result.amountText.trim();
+    final dateText = result.dateText.trim();
     if (amountText.isEmpty && dateText.isEmpty) {
       ToastUtil.showError('请至少填写一项');
       return;
     }
-    final payload = <String, dynamic>{};
-    if (amountText.isNotEmpty) {
-      final amount = double.tryParse(amountText);
-      if (amount == null || amount < 0) {
-        ToastUtil.showError('请输入正确的金额');
-        return;
-      }
-      payload['paid_amount'] = amount;
+    final amount = amountText.isEmpty ? null : double.tryParse(amountText);
+    if (amountText.isNotEmpty && (amount == null || amount < 0)) {
+      ToastUtil.showError('请输入正确的金额');
+      return;
     }
-    if (dateText.isNotEmpty) {
-      payload['payment_date'] = dateText;
-    }
+    final payload = <String, dynamic>{
+      if (amount != null) 'paid_amount': amount,
+      if (dateText.isNotEmpty) 'payment_date': dateText,
+    };
+
     try {
       await _actionService!.updatePayment(order.id, payload);
       ToastUtil.showSuccess('已更新付款信息');
       await viewModel.loadSalesOrders(resetPage: false);
     } catch (err) {
-      ToastUtil.showError('更新失败: $err');
+      ToastUtil.showError('更新付款失败: $err');
     }
   }
 
@@ -861,23 +860,12 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         onPressed: () => _rejectOrder(viewModel, order),
       ));
     }
-    if (canChangeSalesOrder &&
+    if (canCreateWorkOrder &&
         (status == 'approved' || status == 'in_production')) {
       actions.add(RowAction(
-        label: '完成订单',
-        icon: Icons.task_alt_outlined,
-        onPressed: () => _completeOrder(viewModel, order),
-      ));
-    }
-    if (canChangeSalesOrder &&
-        status.isNotEmpty &&
-        status != 'completed' &&
-        status != 'cancelled') {
-      actions.add(RowAction(
-        label: '取消订单',
-        icon: Icons.block_outlined,
-        destructive: true,
-        onPressed: () => _cancelOrder(viewModel, order),
+        label: '生成施工单草稿',
+        icon: Icons.assignment_outlined,
+        onPressed: () => _createWorkOrderDraft(viewModel, order),
       ));
     }
     if (canCreateDeliveryOrder &&
@@ -897,12 +885,23 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         onPressed: () => _updatePayment(viewModel, order),
       ));
     }
-    if (canCreateWorkOrder &&
+    if (canChangeSalesOrder &&
         (status == 'approved' || status == 'in_production')) {
       actions.add(RowAction(
-        label: '生成施工单草稿',
-        icon: Icons.assignment_outlined,
-        onPressed: () => _createWorkOrderDraft(viewModel, order),
+        label: '完成订单',
+        icon: Icons.task_alt_outlined,
+        onPressed: () => _completeOrder(viewModel, order),
+      ));
+    }
+    if (canChangeSalesOrder &&
+        status.isNotEmpty &&
+        status != 'completed' &&
+        status != 'cancelled') {
+      actions.add(RowAction(
+        label: '取消订单',
+        icon: Icons.block_outlined,
+        destructive: true,
+        onPressed: () => _cancelOrder(viewModel, order),
       ));
     }
 
@@ -984,9 +983,11 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
 
   bool _isAllItemsDelivered(List<SalesOrderItem> items) {
     if (items.isEmpty) return false;
-    return items.every(
-      (item) => (item.deliveredQuantity ?? 0) >= (item.quantity ?? 0),
-    );
+    return items.every((item) {
+      final delivered = item.deliveredQuantity ?? 0;
+      final quantity = item.quantity ?? 0;
+      return delivered >= quantity;
+    });
   }
 
   Widget _buildPageHeader(

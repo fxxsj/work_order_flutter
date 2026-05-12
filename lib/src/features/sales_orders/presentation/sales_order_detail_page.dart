@@ -67,7 +67,6 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
       TextEditingController();
   final TextEditingController _rejectionReasonController =
       TextEditingController();
-  final TextEditingController _cancelReasonController = TextEditingController();
 
   @override
   void didChangeDependencies() {
@@ -81,7 +80,6 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
   void dispose() {
     _approvalCommentController.dispose();
     _rejectionReasonController.dispose();
-    _cancelReasonController.dispose();
     super.dispose();
   }
 
@@ -223,6 +221,30 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     );
   }
 
+  Future<void> _createWorkOrderDraft() async {
+    if (_actionLoading) return;
+    setState(() => _actionLoading = true);
+    try {
+      final viewModel = context.read<SalesOrderViewModel>();
+      final result = await viewModel.createWorkOrderFromSalesOrder({
+        'sales_order_id': widget.orderId,
+      });
+      final workOrderId = int.tryParse(result['id']?.toString() ?? '') ??
+          int.tryParse(result['work_order_id']?.toString() ?? '');
+      if (!mounted) return;
+      ToastUtil.showSuccess('已生成施工单草稿');
+      if (workOrderId != null && workOrderId > 0) {
+        context.go('/workorders/$workOrderId/edit');
+      } else {
+        context.go('/workorders');
+      }
+    } catch (err) {
+      ToastUtil.showError('生成施工单草稿失败: $err');
+    } finally {
+      if (mounted) setState(() => _actionLoading = false);
+    }
+  }
+
   Future<void> _showCompleteDialog() async {
     final detail = _detail;
     if (detail == null) return;
@@ -246,44 +268,27 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
   }
 
   Future<void> _showCancelDialog() async {
-    _cancelReasonController.clear();
-    final formKey = GlobalKey<FormState>();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AppFormDialog(
-        title: '取消订单',
-        formKey: formKey,
-        submitText: '确认取消',
-        maxWidth: 520,
-        onSubmit: () async => Navigator.of(dialogContext).pop(true),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const RiskActionHintPanel(
-              summary: '取消客户订单会中断后续施工、发货和财务闭环，相关部门需要同步停单。',
-              impacts: [
-                '如果已排产或已出货，请先确认是否应走变更、退货或异常流程',
-                '建议填写取消原因，便于业务和财务后续对账追踪',
-              ],
-              auditHint: '订单取消原因会影响后续争议处理和经营复盘。',
-              destructive: true,
-            ),
-            SpacingTokens.vMd,
-            CrudFieldConfig.textarea(
-              label: '取消原因（可选）',
-              controller: _cancelReasonController,
-              maxLines: 3,
-            ).build(context),
-          ],
-        ),
-      ),
+    final result = await showActionDecisionDialog<void>(
+      context,
+      title: '取消订单',
+      summary: '取消客户订单会中断后续施工、发货和财务闭环，相关部门需要同步停单。',
+      impacts: const [
+        '如果已排产或已出货，请先确认是否应走变更、退货或异常流程',
+        '建议填写取消原因，便于业务和财务后续对账追踪',
+      ],
+      auditHint: '订单取消原因会影响后续争议处理和经营复盘。',
+      destructive: true,
+      notesLabel: '取消原因（可选）',
+      notesMaxLines: 3,
+      submitText: '确认取消',
     );
-    if (confirmed != true) return;
+    if (result == null) return;
     final viewModel = context.read<SalesOrderViewModel>();
     await _runDetailAction(
-      () => viewModel.cancel(widget.orderId, {
-        'reason': _cancelReasonController.text.trim(),
-      }),
+      () => viewModel.cancel(
+        widget.orderId,
+        {'reason': result.notes.trim()},
+      ),
       successMessage: '已取消',
     );
   }
@@ -319,30 +324,6 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
       () => viewModel.updatePayment(widget.orderId, payload),
       successMessage: '已更新付款信息',
     );
-  }
-
-  Future<void> _createWorkOrderDraft() async {
-    if (_actionLoading) return;
-    setState(() => _actionLoading = true);
-    try {
-      final viewModel = context.read<SalesOrderViewModel>();
-      final result = await viewModel.createWorkOrderFromSalesOrder({
-        'sales_order_id': widget.orderId,
-      });
-      final workOrderId = int.tryParse(result['id']?.toString() ?? '') ??
-          int.tryParse(result['work_order_id']?.toString() ?? '');
-      if (!mounted) return;
-      ToastUtil.showSuccess('已生成施工单草稿');
-      if (workOrderId != null && workOrderId > 0) {
-        context.go('/workorders/$workOrderId/edit');
-      } else {
-        context.go('/workorders');
-      }
-    } catch (err) {
-      ToastUtil.showError('生成施工单草稿失败: $err');
-    } finally {
-      if (mounted) setState(() => _actionLoading = false);
-    }
   }
 
   String _formatDate(DateTime? value) {
@@ -391,22 +372,12 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
           onTap: _showRejectDialog,
         ),
       ],
-      if (canChangeSalesOrder &&
+      if (canCreateWorkOrder &&
           (status == 'approved' || status == 'in_production'))
         SalesOrderActionItem(
-          label: '完成订单',
-          icon: Icons.task_alt_outlined,
-          onTap: _showCompleteDialog,
-        ),
-      if (canChangeSalesOrder &&
-          status.isNotEmpty &&
-          status != 'completed' &&
-          status != 'cancelled')
-        SalesOrderActionItem(
-          label: '取消订单',
-          icon: Icons.block_outlined,
-          onTap: _showCancelDialog,
-          destructive: true,
+          label: '生成施工单草稿',
+          icon: Icons.assignment_outlined,
+          onTap: _createWorkOrderDraft,
         ),
       if (canCreateDeliveryOrder &&
           (status == 'approved' ||
@@ -423,12 +394,22 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
           icon: Icons.payments_outlined,
           onTap: _showUpdatePaymentDialog,
         ),
-      if (canCreateWorkOrder &&
+      if (canChangeSalesOrder &&
           (status == 'approved' || status == 'in_production'))
         SalesOrderActionItem(
-          label: '生成施工单草稿',
-          icon: Icons.assignment_outlined,
-          onTap: _createWorkOrderDraft,
+          label: '完成订单',
+          icon: Icons.task_alt_outlined,
+          onTap: _showCompleteDialog,
+        ),
+      if (canChangeSalesOrder &&
+          status.isNotEmpty &&
+          status != 'completed' &&
+          status != 'cancelled')
+        SalesOrderActionItem(
+          label: '取消订单',
+          icon: Icons.block_outlined,
+          onTap: _showCancelDialog,
+          destructive: true,
         ),
     ];
     return actions;
@@ -674,13 +655,6 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     );
   }
 
-  bool _isAllItemsDelivered(List<SalesOrderItem> items) {
-    if (items.isEmpty) return false;
-    return items.every(
-      (item) => (item.deliveredQuantity ?? 0) >= (item.quantity ?? 0),
-    );
-  }
-
   Widget _buildOverviewSection(SalesOrderDetail detail, String title) {
     return SalesOrderOverviewSection(
       title: title,
@@ -722,6 +696,13 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
               : '${detail.taxRate!.toStringAsFixed(2)}%',
         ),
       ],
+    );
+  }
+
+  bool _isAllItemsDelivered(List<SalesOrderItem> items) {
+    if (items.isEmpty) return false;
+    return items.every(
+      (item) => (item.deliveredQuantity ?? 0) >= (item.quantity ?? 0),
     );
   }
 }
