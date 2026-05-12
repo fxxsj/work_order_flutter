@@ -8,6 +8,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/detail_secti
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/page_mode_toggle.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
@@ -51,7 +52,6 @@ class _TaskSupervisorDashboardView extends StatefulWidget {
 class _TaskSupervisorDashboardViewState
     extends State<_TaskSupervisorDashboardView> {
   static const double _spacingSm = LayoutTokens.gapSm;
-  static const double _controlHeight = PageActionStyle.height;
   static const String _refreshButtonText = '刷新';
   static const String _emptyText = '暂无数据';
   static const String _errorFallbackText = '加载失败';
@@ -146,8 +146,8 @@ class _TaskSupervisorDashboardViewState
 
   Widget _buildActions(bool isMobile) {
     final deptItems = _departments
-        .map((dept) =>
-            AppDropdownOption<int?>(value: dept.id, label: dept.name))
+        .map(
+            (dept) => AppDropdownOption<int?>(value: dept.id, label: dept.name))
         .toList();
 
     return LayoutBuilder(
@@ -224,35 +224,14 @@ class _TaskSupervisorDashboardViewState
               icon: const Icon(Icons.refresh, size: 16),
               label: _refreshButtonText,
             ),
-            ToggleButtons(
-              isSelected: [
-                _viewMode == 'dashboard',
-                _viewMode == 'tasks',
-                _viewMode == 'dragdrop',
+            PageModeToggle<String>(
+              value: _viewMode,
+              options: const [
+                PageModeOption(value: 'dashboard', label: '统计视图'),
+                PageModeOption(value: 'tasks', label: '任务列表'),
+                PageModeOption(value: 'dragdrop', label: '拖拽分派'),
               ],
-              onPressed: (index) {
-                setState(() {
-                  if (index == 0) _viewMode = 'dashboard';
-                  if (index == 1) _viewMode = 'tasks';
-                  if (index == 2) _viewMode = 'dragdrop';
-                });
-              },
-              constraints:
-                  BoxConstraints(minHeight: _controlHeight, minWidth: 88),
-              children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
-                  child: Text('统计视图'),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
-                  child: Text('任务列表'),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
-                  child: Text('拖拽分派'),
-                ),
-              ],
+              onChanged: (value) => setState(() => _viewMode = value),
             ),
             PageActionButton.outlined(
               onPressed: openFilterDrawer,

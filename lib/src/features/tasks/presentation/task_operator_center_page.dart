@@ -12,6 +12,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/page_mode_toggle.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
@@ -62,6 +63,7 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
   List<Task> _claimableTasks = [];
   int? _claimingTaskId;
   String? _quickFilter;
+  String? _myTaskStatusFilter;
 
   @override
   void initState() {
@@ -264,47 +266,48 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
   }
 
   Widget _buildMyTasksSection(bool isNarrow, List<Task> tasks) {
-    final tabs = [
+    final filters = [
       _TaskTab(label: '全部', filter: null),
       _TaskTab(label: '待开始', filter: 'pending'),
       _TaskTab(label: '进行中', filter: 'in_progress'),
       _TaskTab(label: '已完成', filter: 'completed'),
     ];
+    final selectedTab = filters.firstWhere(
+      (tab) => tab.filter == _myTaskStatusFilter,
+      orElse: () => filters.first,
+    );
+    final selectedTasks = selectedTab.filter == null
+        ? tasks
+        : tasks.where((task) => task.status == selectedTab.filter).toList();
 
     return DetailSectionCard(
       title: '我的任务',
-      child: DefaultTabController(
-        length: tabs.length,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TabBar(
-              isScrollable: true,
-              labelPadding:
-                  EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
-              tabs: tabs.map((tab) => Tab(text: tab.label)).toList(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          PageModeToggle<String?>(
+            value: _myTaskStatusFilter,
+            options: const [
+              PageModeOption(value: null, label: '全部'),
+              PageModeOption(value: 'pending', label: '待开始'),
+              PageModeOption(value: 'in_progress', label: '进行中'),
+              PageModeOption(value: 'completed', label: '已完成'),
+            ],
+            onChanged: (value) => setState(() => _myTaskStatusFilter = value),
+          ),
+          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(
+            height: 420,
+            child: _buildTaskList(
+              selectedTasks,
+              isNarrow: isNarrow,
+              emptyText: selectedTab.filter == null
+                  ? '暂无任务'
+                  : '暂无${selectedTab.label}任务',
+              showUpdateActions: true,
             ),
-            SizedBox(height: LayoutTokens.gapMd),
-            SizedBox(
-              height: 420,
-              child: TabBarView(
-                children: tabs.map((tab) {
-                  final list = tab.filter == null
-                      ? tasks
-                      : tasks
-                          .where((task) => task.status == tab.filter)
-                          .toList();
-                  return _buildTaskList(
-                    list,
-                    isNarrow: isNarrow,
-                    emptyText: '暂无${tab.label}任务',
-                    showUpdateActions: true,
-                  );
-                }).toList(),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -646,9 +649,7 @@ class _TaskCard extends StatelessWidget {
                       child: Text(
                         deadlineRisk,
                         style: theme.textTheme.labelSmall?.copyWith(
-                          color: isOverdue
-                              ? colorScheme.error
-                              : Colors.orange,
+                          color: isOverdue ? colorScheme.error : Colors.orange,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -765,21 +766,19 @@ class _TaskUpdateDialogState extends State<_TaskUpdateDialog> {
           SizedBox(height: LayoutTokens.gapSm),
           Text('$completed / $total · $progress%'),
           SizedBox(height: LayoutTokens.gapLg),
-          ToggleButtons(
-            isSelected: [_completeMode == false, _completeMode == true],
-            onPressed: (index) {
-              setState(() => _completeMode = index == 1);
-            },
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
-                child: Text('增量更新'),
+          PageModeToggle<bool>(
+            value: _completeMode,
+            options: const [
+              PageModeOption(
+                value: false,
+                label: '增量更新',
               ),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
-                child: Text('直接完成'),
+              PageModeOption(
+                value: true,
+                label: '直接完成',
               ),
             ],
+            onChanged: (value) => setState(() => _completeMode = value),
           ),
           SizedBox(height: LayoutTokens.gapMd),
           if (!_completeMode) ...[

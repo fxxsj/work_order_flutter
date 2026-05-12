@@ -10,6 +10,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/file_upload_
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/page_mode_toggle.dart';
 
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/audit_log_navigation.dart';
@@ -82,8 +83,6 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
 
   String? _statusSelection;
   WorkOrderDetailViewMode _viewMode = WorkOrderDetailViewMode.basic;
-
-  static const double _controlHeight = 40.0;
 
   @override
   void didChangeDependencies() {
@@ -569,44 +568,28 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                 icon: const Icon(Icons.arrow_back, size: 16),
                 label: '返回',
               ),
-              ToggleButtons(
-                isSelected: [
-                  _viewMode == WorkOrderDetailViewMode.basic,
-                  _viewMode == WorkOrderDetailViewMode.products,
-                  _viewMode == WorkOrderDetailViewMode.process,
-                  _viewMode == WorkOrderDetailViewMode.approval,
-                ],
-                onPressed: (index) {
-                  setState(() {
-                    _viewMode = WorkOrderDetailViewMode.values[index];
-                  });
-                },
-                constraints: BoxConstraints(
-                  minHeight: _controlHeight,
-                  minWidth: isMobile ? 72 : 88,
-                ),
-                children: const [
-                  Padding(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
-                    child: Text('基本信息'),
+              PageModeToggle<WorkOrderDetailViewMode>(
+                value: _viewMode,
+                minWidth: isMobile ? 72 : 88,
+                options: const [
+                  PageModeOption(
+                    value: WorkOrderDetailViewMode.basic,
+                    label: '基本信息',
                   ),
-                  Padding(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
-                    child: Text('产品物料'),
+                  PageModeOption(
+                    value: WorkOrderDetailViewMode.products,
+                    label: '产品物料',
                   ),
-                  Padding(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
-                    child: Text('工序进度'),
+                  PageModeOption(
+                    value: WorkOrderDetailViewMode.process,
+                    label: '工序进度',
                   ),
-                  Padding(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
-                    child: Text('审批流程'),
+                  PageModeOption(
+                    value: WorkOrderDetailViewMode.approval,
+                    label: '审批流程',
                   ),
                 ],
+                onChanged: (value) => setState(() => _viewMode = value),
               ),
               PageActionButton.filled(
                 onPressed: canChangeWorkOrder

@@ -10,6 +10,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/page_mode_toggle.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
@@ -363,37 +364,18 @@ class _TaskBoardViewState extends State<_TaskBoardView> {
               icon: const Icon(Icons.refresh, size: 16),
               label: _refreshButtonText,
             ),
-            ToggleButtons(
-              isSelected: [
-                _viewMode == _TaskBoardViewMode.board,
-                _viewMode == _TaskBoardViewMode.list,
-                _viewMode == _TaskBoardViewMode.timeline,
-              ],
-              onPressed: (index) {
-                setState(() {
-                  if (index == 0) _viewMode = _TaskBoardViewMode.board;
-                  if (index == 1) _viewMode = _TaskBoardViewMode.list;
-                  if (index == 2) _viewMode = _TaskBoardViewMode.timeline;
-                });
-              },
-              constraints: BoxConstraints(
-                minHeight: _controlHeight,
-                minWidth: isMobile ? 72 : 88,
-              ),
-              children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
-                  child: Text('看板'),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
-                  child: Text('列表'),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapMd),
-                  child: Text('时间轴'),
+            PageModeToggle<_TaskBoardViewMode>(
+              value: _viewMode,
+              minWidth: isMobile ? 72 : 88,
+              options: const [
+                PageModeOption(value: _TaskBoardViewMode.board, label: '看板'),
+                PageModeOption(value: _TaskBoardViewMode.list, label: '列表'),
+                PageModeOption(
+                  value: _TaskBoardViewMode.timeline,
+                  label: '时间轴',
                 ),
               ],
+              onChanged: (value) => setState(() => _viewMode = value),
             ),
             PageActionButton.outlined(
               onPressed: openFilterDrawer,

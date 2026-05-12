@@ -1,5 +1,4 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:work_order_app/src/core/common/api_exception.dart';
 import 'package:work_order_app/src/core/constants/constant.dart';
 import 'package:work_order_app/src/core/storage/app_storage.dart';
@@ -15,17 +14,25 @@ class AuthViewModel extends ChangeNotifier {
   final AuthController _authController;
 
   Map<String, dynamic> _currentUser = {};
+  bool _notifyScheduled = false;
+  bool _disposed = false;
 
   Map<String, dynamic> get currentUser => _currentUser;
 
   void _notifySafe() {
-    if (WidgetsBinding.instance.schedulerPhase == SchedulerPhase.persistentCallbacks) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        notifyListeners();
-      });
-    } else {
+    if (_disposed || _notifyScheduled) return;
+    _notifyScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _notifyScheduled = false;
+      if (_disposed) return;
       notifyListeners();
-    }
+    });
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
   }
 
   String? readRememberedUsername() {
@@ -38,17 +45,21 @@ class AuthViewModel extends ChangeNotifier {
     required String password,
     required bool rememberUsername,
   }) async {
-    final responseMap = await _repository.login(username: username, password: password);
+    final responseMap =
+        await _repository.login(username: username, password: password);
 
     String? accessToken;
     String? refreshToken;
-    final directAccess = responseMap['access'] ?? responseMap['access_token'] ?? responseMap['auth_token'];
+    final directAccess = responseMap['access'] ??
+        responseMap['access_token'] ??
+        responseMap['auth_token'];
     if (directAccess != null) {
       accessToken = directAccess.toString();
       refreshToken = responseMap['refresh']?.toString();
     } else if (responseMap['data'] is Map) {
       final inner = Map<String, dynamic>.from(responseMap['data'] as Map);
-      final innerAccess = inner['access'] ?? inner['access_token'] ?? inner['auth_token'];
+      final innerAccess =
+          inner['access'] ?? inner['access_token'] ?? inner['auth_token'];
       if (innerAccess != null) {
         accessToken = innerAccess.toString();
         refreshToken = inner['refresh']?.toString();
@@ -63,7 +74,8 @@ class AuthViewModel extends ChangeNotifier {
     responseMap['access'] = accessToken;
     responseMap['refresh'] = refreshToken;
 
-    await _authController.handleLogin(access: accessToken, refresh: refreshToken);
+    await _authController.handleLogin(
+        access: accessToken, refresh: refreshToken);
     if (rememberUsername) {
       await _storage.write(Constant.KEY_REMEMBER_USERNAME, username);
     }

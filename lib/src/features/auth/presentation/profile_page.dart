@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/animated_button.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/page_mode_toggle.dart';
 import 'package:work_order_app/src/features/auth/application/auth_controller.dart';
 import 'package:work_order_app/src/features/auth/application/auth_view_model.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -37,7 +38,10 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    _loadUser();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _loadUser();
+    });
   }
 
   @override
@@ -54,7 +58,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadUser() async {
     try {
       final user = await context.read<AuthViewModel>().loadCurrentUser();
-      if (user.isNotEmpty) {
+      if (mounted && user.isNotEmpty) {
         _setUser(user);
       }
     } catch (_) {
@@ -200,20 +204,13 @@ class _ProfilePageState extends State<ProfilePage> {
                 style: theme.textTheme.titleLarge
                     ?.copyWith(fontWeight: FontWeight.w700)),
             SizedBox(height: LayoutTokens.gapLg),
-            Wrap(
-              spacing: 8,
-              children: [
-                ChoiceChip(
-                  label: const Text('基本信息'),
-                  selected: _activeTab == 0,
-                  onSelected: (_) => setState(() => _activeTab = 0),
-                ),
-                ChoiceChip(
-                  label: const Text('修改密码'),
-                  selected: _activeTab == 1,
-                  onSelected: (_) => setState(() => _activeTab = 1),
-                ),
+            PageModeToggle<int>(
+              value: _activeTab,
+              options: const [
+                PageModeOption(value: 0, label: '基本信息'),
+                PageModeOption(value: 1, label: '修改密码'),
               ],
+              onChanged: (value) => setState(() => _activeTab = value),
             ),
             SizedBox(height: LayoutTokens.gapLg),
             IndexedStack(
