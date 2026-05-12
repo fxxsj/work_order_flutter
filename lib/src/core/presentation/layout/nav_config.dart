@@ -230,6 +230,7 @@ const List<NavItem> navItems = [
         label: '部门任务看板',
         icon: Icons.view_kanban_outlined,
         path: '/tasks/board',
+        showInSidebar: false,
         requiredPermissions: [
           'workorder.view_workordertask',
           'workorder.view_workorder',
@@ -240,6 +241,7 @@ const List<NavItem> navItems = [
         label: '协作统计',
         icon: Icons.insights_outlined,
         path: '/tasks/stats',
+        showInSidebar: false,
         requiredPermissions: [
           'workorder.view_workordertask',
           'workorder.view_workorder',
@@ -250,6 +252,7 @@ const List<NavItem> navItems = [
         label: '分派历史',
         icon: Icons.history_outlined,
         path: '/tasks/assignment-history',
+        showInSidebar: false,
         requiredPermissions: [
           'workorder.view_workordertask',
           'workorder.view_workorder',
@@ -482,7 +485,7 @@ const List<NavItem> navItems = [
       ),
       NavItem(
         id: 'tasks_rules',
-        label: '分派规则配置',
+        label: '默认分派部门',
         icon: Icons.rule_outlined,
         path: '/tasks/assignment-rules',
         requiredPermissions: ['workorder.view_taskassignmentrule'],

@@ -107,6 +107,25 @@ class SalesOrderRepositoryImpl implements SalesOrderRepository {
   }
 
   @override
+  Future<Map<String, dynamic>> createWorkOrderFromSalesOrder(
+    Map<String, dynamic> payload,
+  ) async {
+    final service = _workOrderFlowApiService;
+    if (service == null) {
+      throw StateError('WorkOrderFlowApiService is not configured.');
+    }
+    final result = await service.createFromSalesOrder(payload);
+    final data = result['data'];
+    if (data is Map<String, dynamic>) {
+      return Map<String, dynamic>.from(data);
+    }
+    if (data is Map) {
+      return Map<String, dynamic>.from(data);
+    }
+    return result;
+  }
+
+  @override
   Future<void> deleteSalesOrder(int id) {
     return _apiService.deleteSalesOrder(id);
   }

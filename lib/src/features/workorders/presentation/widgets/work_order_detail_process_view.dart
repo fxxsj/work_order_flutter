@@ -33,6 +33,9 @@ class WorkOrderDetailProcessView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final canSyncTasks = PermissionUtil.isSuperuser(context) &&
+        detail.approvalStatus != 'approved' &&
+        detail.approvalStatus != 'submitted';
     return SingleChildScrollView(
       padding: EdgeInsets.all(LayoutTokens.sectionSpacing(context)),
       child: Column(
@@ -40,13 +43,13 @@ class WorkOrderDetailProcessView extends StatelessWidget {
         children: [
           DetailSectionCard(
             title: '工序进度',
-            trailing: PermissionUtil.isSuperuser(context)
+            trailing: canSyncTasks
                 ? OutlinedButton.icon(
                     onPressed: detail.processes.isEmpty
                         ? null
                         : () => onSyncPreview(detail),
                     icon: const Icon(Icons.sync_alt, size: 16),
-                    label: const Text('任务同步预览'),
+                    label: const Text('同步工序任务'),
                   )
                 : null,
             child: WorkOrderProcessesSection(

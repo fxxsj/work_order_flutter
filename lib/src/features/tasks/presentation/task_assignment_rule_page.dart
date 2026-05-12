@@ -67,8 +67,8 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
   static const double _controlHeight = PageActionStyle.height;
   static const String _refreshButtonText = '刷新';
   static const String _resetButtonText = '重置筛选';
-  static const String _createButtonText = '新建规则';
-  static const String _emptyText = '暂无分派规则';
+  static const String _createButtonText = '新增默认部门';
+  static const String _emptyText = '暂无默认分派部门';
   static const String _errorFallbackText = '加载失败';
   static const String _retryText = '重新加载';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
@@ -82,8 +82,6 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
   bool _previewLoading = false;
   List<Map<String, dynamic>> _previewData = [];
   bool _globalEnabled = true;
-  List<TaskAssignmentRule>? _reorderPreview;
-  bool _reordering = false;
   TaskAssignmentRuleSupportService? _supportService;
   bool _setupRequested = false;
 
@@ -157,7 +155,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
     try {
       final enabled = await _supportService!.setGlobalState(value);
       setState(() => _globalEnabled = enabled);
-      ToastUtil.showSuccess(_globalEnabled ? '自动分派已启用' : '自动分派已禁用');
+      ToastUtil.showSuccess(_globalEnabled ? '默认分派已启用' : '默认分派已禁用');
       _loadPreview();
     } catch (err) {
       setState(() => _globalEnabled = !value);
@@ -469,79 +467,31 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
         onRetry: () => viewModel.loadRules(resetPage: true),
       );
     }
-    final displayedRules = _reorderPreview ?? rules;
-    final processIds = displayedRules.map((rule) => rule.processId).toSet();
-    final canReorder = processIds.length == 1 && displayedRules.length > 1;
-
     return ListView(
       children: [
         _buildGlobalToggle(),
         SizedBox(height: LayoutTokens.gapMd),
         DetailSectionCard(
-          title: '规则列表',
-          trailing: canReorder
-              ? Text(
-                  '拖拽调整优先级',
-                  style: Theme.of(context).textTheme.bodySmall,
-                )
-              : null,
-          child: displayedRules.isEmpty
+          title: '工序默认部门',
+          child: rules.isEmpty
               ? _buildEmptyRulesContent(context, viewModel)
-              : canReorder
-                  ? ReorderableListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      buildDefaultDragHandles: false,
-                      onReorder: (oldIndex, newIndex) => _handleReorder(
-                          viewModel, displayedRules, oldIndex, newIndex),
-                      itemCount: displayedRules.length,
-                      itemBuilder: (context, index) {
-                        final rule = displayedRules[index];
-                        return Padding(
-                          key: ValueKey(rule.id),
-                          padding: EdgeInsets.only(bottom: LayoutTokens.gapMd),
-                          child: TaskAssignmentRuleCard(
-                            rule: rule,
-                            onEdit: _reordering
-                                ? null
-                                : () =>
-                                    _openRuleDialog(context, viewModel, rule),
-                            onDelete: _reordering
-                                ? null
-                                : () => _deleteRule(viewModel, rule),
-                            onToggle: _reordering
-                                ? null
-                                : (value) =>
-                                    _toggleRule(viewModel, rule, value),
-                            dragHandle: ReorderableDragStartListener(
-                              index: index,
-                              child: Icon(
-                                Icons.drag_indicator,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    )
-                  : Column(
-                      children: [
-                        ...displayedRules.map(
-                          (rule) => Padding(
-                            padding:
-                                EdgeInsets.only(bottom: LayoutTokens.gapMd),
-                            child: TaskAssignmentRuleCard(
-                              rule: rule,
-                              onEdit: () =>
-                                  _openRuleDialog(context, viewModel, rule),
-                              onDelete: () => _deleteRule(viewModel, rule),
-                              onToggle: (value) =>
-                                  _toggleRule(viewModel, rule, value),
-                            ),
-                          ),
+              : Column(
+                  children: [
+                    ...rules.map(
+                      (rule) => Padding(
+                        padding: EdgeInsets.only(bottom: LayoutTokens.gapMd),
+                        child: TaskAssignmentRuleCard(
+                          rule: rule,
+                          onEdit: () =>
+                              _openRuleDialog(context, viewModel, rule),
+                          onDelete: () => _deleteRule(viewModel, rule),
+                          onToggle: (value) =>
+                              _toggleRule(viewModel, rule, value),
                         ),
-                      ],
+                      ),
                     ),
+                  ],
+                ),
         ),
       ],
     );
@@ -549,7 +499,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
 
   Widget _buildGlobalToggle() {
     return DetailSectionCard(
-      title: '自动分派',
+      title: '默认分派部门',
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -568,7 +518,9 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            _globalEnabled ? '任务将按启用的规则自动分派到部门。' : '自动分派已禁用，规则仅用于预览。',
+            _globalEnabled
+                ? '施工单审核通过后，任务会按工序默认分派到部门。'
+                : '默认分派已禁用，任务生成后需由主管手动分派部门。',
           ),
           if (_lookupError != null) ...[
             SizedBox(height: LayoutTokens.gapSm),
@@ -651,12 +603,12 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
     final confirmed = await showTaskAssignmentRuleDeleteDialog(
       context,
       content:
-          '确定要删除 ${rule.processName ?? '工序'} - ${rule.departmentName ?? '部门'} 规则吗？',
+          '确定要删除 ${rule.processName ?? '工序'} - ${rule.departmentName ?? '部门'} 的默认分派吗？',
     );
     if (confirmed != true) return;
     try {
       await viewModel.deleteRule(rule.id);
-      ToastUtil.showSuccess('规则已删除');
+      ToastUtil.showSuccess('默认分派已删除');
       _loadPreview();
     } catch (err) {
       ToastUtil.showError(
@@ -697,10 +649,10 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
         try {
           if (rule == null) {
             await viewModel.createRule(payload);
-            ToastUtil.showSuccess('规则已创建');
+            ToastUtil.showSuccess('默认分派已创建');
           } else {
             await viewModel.updateRule(rule.id, payload.toPayload());
-            ToastUtil.showSuccess('规则已更新');
+            ToastUtil.showSuccess('默认分派已更新');
           }
           _loadPreview();
         } catch (err) {
@@ -710,60 +662,6 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
         }
       },
     );
-  }
-
-  Future<void> _handleReorder(
-    TaskAssignmentRuleViewModel viewModel,
-    List<TaskAssignmentRule> rules,
-    int oldIndex,
-    int newIndex,
-  ) async {
-    if (_reordering) return;
-    final updated = List<TaskAssignmentRule>.from(rules);
-    if (newIndex > oldIndex) newIndex -= 1;
-    final moved = updated.removeAt(oldIndex);
-    updated.insert(newIndex, moved);
-    setState(() {
-      _reorderPreview = updated;
-      _reordering = true;
-    });
-    try {
-      await _persistRuleOrder(viewModel, updated);
-      ToastUtil.showSuccess('优先级已更新');
-      await viewModel.loadRules(resetPage: true);
-      _loadPreview();
-    } catch (err) {
-      ToastUtil.showError(
-          '更新失败: ${err.toString().replaceFirst('Exception: ', '')}');
-      await viewModel.loadRules(resetPage: true);
-    } finally {
-      if (mounted) {
-        setState(() {
-          _reordering = false;
-          _reorderPreview = null;
-        });
-      }
-    }
-  }
-
-  Future<void> _persistRuleOrder(
-    TaskAssignmentRuleViewModel viewModel,
-    List<TaskAssignmentRule> rules,
-  ) async {
-    if (rules.isEmpty) return;
-    const maxPriority = 100;
-    const minPriority = 0;
-    final steps = rules.length > 1
-        ? (maxPriority - minPriority) / (rules.length - 1)
-        : 0.0;
-    for (var i = 0; i < rules.length; i++) {
-      final priority =
-          (maxPriority - (steps * i)).round().clamp(minPriority, maxPriority);
-      final rule = rules[i];
-      if (rule.priority == priority) continue;
-      await viewModel.updateRule(rule.id, {'priority': priority},
-          reload: false);
-    }
   }
 
   String _pageInfoText(TaskAssignmentRuleViewModel viewModel) {

@@ -98,7 +98,7 @@ Future<bool> showTaskAssignmentRuleEditDrawer(
   await showAdaptiveFilterDrawer(
     context,
     isMobile: ResponsiveLayout.isMobile(context),
-    title: rule == null ? '新建分派规则' : '编辑分派规则',
+    title: rule == null ? '新增默认部门' : '编辑默认部门',
     desktopWidth: LayoutTokens.dialogWidthMd,
     child: TaskAssignmentRuleEditPanel(
       rule: rule,
@@ -202,7 +202,7 @@ class _TaskAssignmentRuleEditPanelState
                   ),
                 if (isEdit)
                   _ReadOnlyRuleField(
-                    label: '分派部门',
+                    label: '默认部门',
                     value: _departmentLabel(_departmentId),
                   )
                 else
@@ -210,7 +210,7 @@ class _TaskAssignmentRuleEditPanelState
                     key: ValueKey<String>(
                         'assignment-rule-department-$_departmentId'),
                     value: _departmentId,
-                    decoration: const InputDecoration(labelText: '分派部门'),
+                    decoration: const InputDecoration(labelText: '默认部门'),
                     options: widget.departments
                         .map(
                           (d) => AppDropdownOption(value: d.id, label: d.name),
@@ -222,52 +222,18 @@ class _TaskAssignmentRuleEditPanelState
                 SwitchListTile(
                   value: _isActive,
                   onChanged: (value) => setState(() => _isActive = value),
-                  title: const Text('启用规则'),
+                  title: const Text('启用'),
                   contentPadding: EdgeInsets.zero,
                 ),
               ],
             ),
           ),
           const SizedBox(height: LayoutTokens.gapLg),
-          _RuleFormSection(
-            title: '高级设置',
-            child: _RuleFieldList(
-              children: [
-                CrudFieldConfig.number(
-                  label: '优先级 (0-100)',
-                  initialValue: _priority.toString(),
-                  helperText: '同一工序存在多条规则时，数值越高越先匹配。',
-                  validator: (value) {
-                    final parsed = int.tryParse(value ?? '');
-                    if (parsed == null || parsed < 0 || parsed > 100) {
-                      return '请输入 0-100 的整数';
-                    }
-                    return null;
-                  },
-                  onChanged: (value) =>
-                      _priority = int.tryParse(value) ?? _priority,
-                ).build(context),
-                AppSelect<String>(
-                  key: ValueKey<String>('assignment-rule-strategy-$_strategy'),
-                  value: _strategy,
-                  decoration: const InputDecoration(labelText: '操作员选择策略'),
-                  options: const [
-                    AppDropdownOption(value: 'least_tasks', label: '任务最少'),
-                    AppDropdownOption(value: 'random', label: '随机选择'),
-                    AppDropdownOption(value: 'round_robin', label: '轮询分配'),
-                    AppDropdownOption(value: 'first_available', label: '第一个可用'),
-                  ],
-                  onChanged: (value) =>
-                      setState(() => _strategy = value ?? _strategy),
-                ),
-                CrudFieldConfig.textarea(
-                  label: '备注（可选）',
-                  controller: _notesController,
-                  maxLines: 3,
-                ).build(context),
-              ],
-            ),
-          ),
+          CrudFieldConfig.textarea(
+            label: '备注（可选）',
+            controller: _notesController,
+            maxLines: 3,
+          ).build(context),
         ],
       ),
     );
@@ -425,12 +391,6 @@ class TaskAssignmentRuleCard extends StatelessWidget {
           SummaryFieldWrap(
             isMobile: ResponsiveLayout.isMobile(context),
             children: [
-              SummaryField(label: '优先级', value: rule.priority.toString()),
-              SummaryField(
-                label: '操作员策略',
-                value: rule.operatorSelectionStrategyDisplay ??
-                    rule.operatorSelectionStrategy,
-              ),
               SummaryField(label: '部门编码', value: rule.departmentCode ?? '-'),
               SummaryField(
                 label: '备注',
@@ -479,8 +439,6 @@ class _TaskAssignmentRulePreviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final process = item['process_name']?.toString() ?? '-';
     final target = item['target_department_name']?.toString() ?? '-';
-    final priority = item['priority']?.toString() ?? '-';
-    final strategy = item['operator_selection_strategy']?.toString() ?? '-';
     final load = item['current_load']?.toString() ?? '0';
 
     return DetailSectionCard(
@@ -489,9 +447,7 @@ class _TaskAssignmentRulePreviewCard extends StatelessWidget {
         isMobile: ResponsiveLayout.isMobile(context),
         children: [
           SummaryField(label: '目标部门', value: target),
-          SummaryField(label: '优先级', value: priority),
           SummaryField(label: '当前负载', value: load),
-          SummaryField(label: '操作员策略', value: strategy),
         ],
       ),
     );

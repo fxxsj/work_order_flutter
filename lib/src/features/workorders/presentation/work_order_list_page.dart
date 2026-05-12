@@ -932,7 +932,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
       return '施工单已取消';
     }
     if (total <= 0) {
-      return '待生成任务';
+      return '任务未生成，请检查工序配置';
     }
     if (status == 'pending') {
       return '待开始生产';

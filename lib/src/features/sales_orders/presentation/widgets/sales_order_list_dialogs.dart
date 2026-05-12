@@ -150,7 +150,7 @@ Future<SalesOrderBatchCreateWorkOrderResult?>
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setState) => AppFormDialog(
-          title: '批量生成施工单',
+          title: '批量生成施工单草稿',
           formKey: formKey,
           submitText: '开始生成',
           maxWidth: LayoutTokens.dialogWidthSm,
@@ -166,7 +166,7 @@ Future<SalesOrderBatchCreateWorkOrderResult?>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('将为已选择的 $selectedCount 张客户订单批量生成施工单。'),
+              Text('将为已选择的 $selectedCount 张客户订单批量生成施工单草稿。'),
               SizedBox(height: LayoutTokens.gapMd),
               CrudFieldConfig.text(
                 label: '统一交货日期（YYYY-MM-DD，可选）',

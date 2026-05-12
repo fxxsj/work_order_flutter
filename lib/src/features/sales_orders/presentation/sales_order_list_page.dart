@@ -179,7 +179,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         .where(_isSelectableForWorkOrder)
         .toList(growable: false);
     if (selectedOrders.isEmpty) {
-      ToastUtil.showError('请先选择要生成施工单的客户订单');
+      ToastUtil.showError('请先选择要生成施工单草稿的客户订单');
       return;
     }
 
@@ -194,6 +194,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
           selectedOrders.map((order) => order.id).toList(growable: false),
       'priority': result.priority,
       'notes': result.notes,
+      'allow_partial': true,
     };
     if (result.deliveryDateText.isNotEmpty) {
       payload['delivery_date'] = result.deliveryDateText;
@@ -298,7 +299,9 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
                               Expanded(
                                 child: Text(
                                   '${order.orderNumber} → ${item['order_number'] ?? 'N/A'}',
-                                  style: Theme.of(dialogContext).textTheme.bodySmall,
+                                  style: Theme.of(dialogContext)
+                                      .textTheme
+                                      .bodySmall,
                                 ),
                               ),
                             ],
@@ -351,7 +354,8 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
                                       style: Theme.of(dialogContext)
                                           .textTheme
                                           .bodySmall
-                                          ?.copyWith(fontWeight: FontWeight.w600),
+                                          ?.copyWith(
+                                              fontWeight: FontWeight.w600),
                                     ),
                                     Text(
                                       item['error']?.toString() ?? '未知错误',
@@ -577,8 +581,25 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     }
   }
 
-  void _createWorkOrder(SalesOrder order) {
-    context.go('/workorders/create?sales_order_id=${order.id}');
+  Future<void> _createWorkOrderDraft(
+    SalesOrderViewModel viewModel,
+    SalesOrder order,
+  ) async {
+    try {
+      final result = await viewModel.createWorkOrderFromSalesOrder({
+        'sales_order_id': order.id,
+      });
+      final workOrderId = int.tryParse(result['id']?.toString() ?? '') ??
+          int.tryParse(result['work_order_id']?.toString() ?? '');
+      ToastUtil.showSuccess('已生成施工单草稿');
+      await viewModel.loadSalesOrders(resetPage: false);
+      if (!mounted) return;
+      if (workOrderId != null && workOrderId > 0) {
+        context.go('/workorders/$workOrderId/edit');
+      }
+    } catch (err) {
+      ToastUtil.showError('生成施工单草稿失败: $err');
+    }
   }
 
   @override
@@ -879,9 +900,9 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     if (canCreateWorkOrder &&
         (status == 'approved' || status == 'in_production')) {
       actions.add(RowAction(
-        label: '生成施工单',
+        label: '生成施工单草稿',
         icon: Icons.assignment_outlined,
-        onPressed: () => _createWorkOrder(order),
+        onPressed: () => _createWorkOrderDraft(viewModel, order),
       ));
     }
 
@@ -935,7 +956,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
       case 'rejected':
         return '待修改后重提';
       case 'approved':
-        return workOrderCount > 0 ? '可继续补施工单或直接发货' : '可生成施工单或直接发货';
+        return workOrderCount > 0 ? '可继续补施工单草稿或直接发货' : '可生成施工单草稿或直接发货';
       case 'in_production':
         return workOrderCount > 0 ? '跟进生产进度，也可分批发货' : '待补施工单或直接发货';
       case 'completed':
@@ -1119,7 +1140,8 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     if (selectableOrders.isEmpty) {
       return false;
     }
-    return selectableOrders.every((order) => _selectedOrderIds.contains(order.id));
+    return selectableOrders
+        .every((order) => _selectedOrderIds.contains(order.id));
   }
 
   void _openQuickFilter({required String status}) {

@@ -82,7 +82,7 @@ Future<void> showWorkOrderSyncPreviewDialog(
           }
 
           return AppDialog(
-            title: '任务同步预览',
+            title: '同步工序任务',
             maxWidth: LayoutTokens.dialogWidthMd,
             content: SizedBox(
               width: LayoutTokens.dialogWidthMd,

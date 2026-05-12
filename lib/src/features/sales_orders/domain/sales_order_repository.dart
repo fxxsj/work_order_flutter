@@ -38,5 +38,9 @@ abstract class SalesOrderRepository {
     Map<String, dynamic> payload,
   );
 
+  Future<Map<String, dynamic>> createWorkOrderFromSalesOrder(
+    Map<String, dynamic> payload,
+  );
+
   Future<void> deleteSalesOrder(int id);
 }

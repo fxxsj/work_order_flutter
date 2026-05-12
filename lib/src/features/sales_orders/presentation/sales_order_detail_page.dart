@@ -321,8 +321,28 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     );
   }
 
-  void _goToCreateWorkOrder() {
-    context.go('/workorders/create?sales_order_id=${widget.orderId}');
+  Future<void> _createWorkOrderDraft() async {
+    if (_actionLoading) return;
+    setState(() => _actionLoading = true);
+    try {
+      final viewModel = context.read<SalesOrderViewModel>();
+      final result = await viewModel.createWorkOrderFromSalesOrder({
+        'sales_order_id': widget.orderId,
+      });
+      final workOrderId = int.tryParse(result['id']?.toString() ?? '') ??
+          int.tryParse(result['work_order_id']?.toString() ?? '');
+      if (!mounted) return;
+      ToastUtil.showSuccess('已生成施工单草稿');
+      if (workOrderId != null && workOrderId > 0) {
+        context.go('/workorders/$workOrderId/edit');
+      } else {
+        context.go('/workorders');
+      }
+    } catch (err) {
+      ToastUtil.showError('生成施工单草稿失败: $err');
+    } finally {
+      if (mounted) setState(() => _actionLoading = false);
+    }
   }
 
   String _formatDate(DateTime? value) {
@@ -406,9 +426,9 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
       if (canCreateWorkOrder &&
           (status == 'approved' || status == 'in_production'))
         SalesOrderActionItem(
-          label: '生成施工单',
+          label: '生成施工单草稿',
           icon: Icons.assignment_outlined,
-          onTap: _goToCreateWorkOrder,
+          onTap: _createWorkOrderDraft,
         ),
     ];
     return actions;
