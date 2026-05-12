@@ -5,11 +5,8 @@ import 'package:work_order_app/src/features/auth/presentation/profile_page.dart'
 import 'package:work_order_app/src/features/customer/presentation/customer_list_page.dart';
 import 'package:work_order_app/src/features/workorders/presentation/work_order_list_page.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_list_page.dart';
-import 'package:work_order_app/src/features/tasks/presentation/task_board_page.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_operator_center_page.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_supervisor_dashboard_page.dart';
-import 'package:work_order_app/src/features/tasks/presentation/task_stats_page.dart';
-import 'package:work_order_app/src/features/tasks/presentation/task_assignment_history_page.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_assignment_rule_page.dart';
 import 'package:work_order_app/src/features/sales_orders/presentation/sales_order_list_page.dart';
 import 'package:work_order_app/src/features/audit_logs/presentation/audit_log_list_page.dart';
@@ -49,12 +46,6 @@ Widget? buildFullPage(String id) {
       return const WorkOrderListEntry();
     case 'tasks_list':
       return const TaskListEntry();
-    case 'tasks_board':
-      return const TaskBoardEntry();
-    case 'tasks_stats':
-      return const TaskStatsEntry();
-    case 'tasks_history':
-      return const TaskAssignmentHistoryEntry();
     case 'tasks_rules':
       return const TaskAssignmentRuleEntry();
     case 'tasks_operator':

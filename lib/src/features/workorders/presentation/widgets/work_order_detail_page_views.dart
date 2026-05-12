@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/color_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
@@ -150,24 +151,24 @@ class WorkOrderDetailPageViews extends StatelessWidget {
     final (icon, color, message) = switch (status) {
       'draft' => (
           Icons.edit_note_outlined,
-          const Color(0xFF3B82F6),
+          ColorTokens.info,
           '补齐资料后提交审核',
         ),
-      'pending' || 'submitted' => (
+      'submitted' => (
           Icons.hourglass_empty,
-          const Color(0xFFF59E0B),
+          ColorTokens.warning,
           '等待审核，审核通过后自动生成任务',
         ),
       'rejected' => (
           Icons.cancel_outlined,
-          const Color(0xFFEF4444),
+          ColorTokens.danger,
           rejectionReason?.isNotEmpty == true
               ? '审核退回: $rejectionReason'
               : '审核退回，请修改后重新提交',
         ),
-      'approved' || 'in_progress' => (
+      'approved' => (
           Icons.check_circle_outline,
-          const Color(0xFF22C55E),
+          ColorTokens.success,
           '任务已分派至部门，主管可继续分派操作员',
         ),
       _ => (null, null, null),
@@ -179,10 +180,10 @@ class WorkOrderDetailPageViews extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: (color ?? const Color(0xFF3B82F6)).withValues(alpha: 0.08),
+        color: (color ?? ColorTokens.info).withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: (color ?? const Color(0xFF3B82F6)).withValues(alpha: 0.3),
+          color: (color ?? ColorTokens.info).withValues(alpha: 0.3),
         ),
       ),
       child: Row(
