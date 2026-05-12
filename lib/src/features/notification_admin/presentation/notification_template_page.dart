@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dar
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/auth/application/auth_controller.dart';
+import 'package:work_order_app/src/features/notification_admin/presentation/widgets/notification_admin_widgets.dart';
 
 class NotificationTemplatePage extends StatefulWidget {
   const NotificationTemplatePage({super.key});
@@ -27,7 +28,6 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
   _TemplateItem? _selectedTemplate;
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _messageController = TextEditingController();
-  final TextEditingController _variablesController = TextEditingController();
   final TextEditingController _previewController = TextEditingController();
   bool _isActive = true;
   String? _previewResult;
@@ -46,7 +46,6 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
   void dispose() {
     _titleController.dispose();
     _messageController.dispose();
-    _variablesController.dispose();
     _previewController.dispose();
     super.dispose();
   }
@@ -111,7 +110,6 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
       _selectedTemplate = item;
       _titleController.text = item.title;
       _messageController.text = item.message;
-      _variablesController.text = item.variables.join(', ');
       _previewController.text = _buildDefaultPreviewJson(item.variables);
       _isActive = item.isActive;
       _previewResult = null;
@@ -119,9 +117,7 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
   }
 
   String _buildDefaultPreviewJson(List<String> variables) {
-    final pairs = variables
-        .map((item) => '"$item": "$item-demo"')
-        .join(', ');
+    final pairs = variables.map((item) => '"$item": "$item-demo"').join(', ');
     return '{${pairs.isEmpty ? '' : pairs}}';
   }
 
@@ -132,11 +128,6 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
     }
     setState(() => _saving = true);
     try {
-      final variables = _variablesController.text
-          .split(',')
-          .map((item) => item.trim())
-          .where((item) => item.isNotEmpty)
-          .toList();
       await _runAuthorized(
         () => _apiClient!.post(
           '/notification-templates/update_template/',
@@ -144,7 +135,7 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
             'template_name': selected.key,
             'title': _titleController.text.trim(),
             'message': _messageController.text.trim(),
-            'variables': variables,
+            'variables': selected.variables,
             'is_active': _isActive,
           },
         ),
@@ -201,7 +192,8 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
     try {
       return await action();
     } on ApiException catch (err) {
-      if (err.statusCode == 401 && await (_apiClient?.refreshAccessToken() ?? Future.value(false))) {
+      if (err.statusCode == 401 &&
+          await (_apiClient?.refreshAccessToken() ?? Future.value(false))) {
         return action();
       }
       rethrow;
@@ -251,23 +243,19 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppCard(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('通知模板', style: Theme.of(context).textTheme.titleSmall),
-                OutlinedButton.icon(
-                  onPressed: _loading ? null : _loadTemplates,
-                  icon: _loading
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.refresh, size: 18),
-                  label: Text(_loading ? '刷新中' : '刷新'),
-                ),
-              ],
+          NotificationAdminSection(
+            title: '通知模板',
+            trailing: OutlinedButton.icon(
+              onPressed: _loading ? null : _loadTemplates,
+              icon: NotificationLoadingIcon(
+                loading: _loading,
+                icon: Icons.refresh,
+              ),
+              label: Text(_loading ? '刷新中' : '刷新'),
+            ),
+            child: Text(
+              '模板用于渲染任务分配、工序完成、交期预警和系统公告等自动通知。变量由系统事件提供，不建议手动修改变量名称。',
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           ),
           SizedBox(height: spacing),
@@ -310,41 +298,29 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
                 ),
                 SizedBox(height: spacing),
                 if (_selectedTemplate != null)
-                  AppCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  NotificationAdminSection(
+                    title: '编辑模板: ${_selectedTemplate!.key}',
+                    child: NotificationFieldList(
                       children: [
-                        Text(
-                          '编辑模板: ${_selectedTemplate!.key}',
-                          style: Theme.of(context).textTheme.titleSmall,
-                        ),
-                        const SizedBox(height: LayoutTokens.gapSm),
                         TextField(
                           controller: _titleController,
                           decoration: const InputDecoration(labelText: '标题模板'),
                         ),
-                        const SizedBox(height: LayoutTokens.gapSm),
                         TextField(
                           controller: _messageController,
                           maxLines: 4,
                           decoration: const InputDecoration(labelText: '内容模板'),
                         ),
-                        const SizedBox(height: LayoutTokens.gapSm),
-                        TextField(
-                          controller: _variablesController,
-                          decoration: const InputDecoration(
-                            labelText: '变量列表',
-                            hintText: 'task_name, workorder_number',
-                          ),
+                        _TemplateVariableChips(
+                          variables: _selectedTemplate!.variables,
                         ),
-                        const SizedBox(height: LayoutTokens.gapSm),
                         SwitchListTile(
                           value: _isActive,
-                          onChanged: (value) => setState(() => _isActive = value),
+                          onChanged: (value) =>
+                              setState(() => _isActive = value),
                           title: const Text('启用模板'),
                           contentPadding: EdgeInsets.zero,
                         ),
-                        const SizedBox(height: LayoutTokens.gapSm),
                         TextField(
                           controller: _previewController,
                           maxLines: 3,
@@ -353,31 +329,24 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
                             hintText: '{"task_name":"打样","assigned_by":"主管"}',
                           ),
                         ),
-                        const SizedBox(height: LayoutTokens.gapSm),
                         Wrap(
                           spacing: LayoutTokens.gapSm,
                           runSpacing: LayoutTokens.gapSm,
                           children: [
                             FilledButton.icon(
                               onPressed: _saving ? null : _saveTemplate,
-                              icon: _saving
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    )
-                                  : const Icon(Icons.save_outlined, size: 18),
+                              icon: NotificationLoadingIcon(
+                                loading: _saving,
+                                icon: Icons.save_outlined,
+                              ),
                               label: Text(_saving ? '保存中' : '保存'),
                             ),
                             OutlinedButton.icon(
                               onPressed: _previewing ? null : _previewTemplate,
-                              icon: _previewing
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    )
-                                  : const Icon(Icons.visibility_outlined, size: 18),
+                              icon: NotificationLoadingIcon(
+                                loading: _previewing,
+                                icon: Icons.visibility_outlined,
+                              ),
                               label: Text(_previewing ? '预览中' : '预览'),
                             ),
                           ],
@@ -388,7 +357,9 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
                             width: double.infinity,
                             padding: const EdgeInsets.all(LayoutTokens.gapSm),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHighest,
                               borderRadius: RadiusTokens.bMd,
                             ),
                             child: Text(_previewResult!),
@@ -401,6 +372,40 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
             ),
         ],
       ),
+    );
+  }
+}
+
+class _TemplateVariableChips extends StatelessWidget {
+  const _TemplateVariableChips({required this.variables});
+
+  final List<String> variables;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '可用变量',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: LayoutTokens.gapSm),
+        if (variables.isEmpty)
+          Text('该模板暂无变量', style: theme.textTheme.bodySmall)
+        else
+          Wrap(
+            spacing: LayoutTokens.gapSm,
+            runSpacing: LayoutTokens.gapSm,
+            children: [
+              for (final variable in variables)
+                Chip(label: Text('{$variable}')),
+            ],
+          ),
+      ],
     );
   }
 }

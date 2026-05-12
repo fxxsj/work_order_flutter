@@ -5,9 +5,10 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/api_exception.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/auth/application/auth_controller.dart';
+import 'package:work_order_app/src/features/notification_admin/presentation/widgets/notification_admin_widgets.dart';
 
 class SystemNotificationPage extends StatefulWidget {
   const SystemNotificationPage({super.key});
@@ -39,6 +40,8 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
 
   final TextEditingController _settingsJsonController = TextEditingController();
 
+  String _notificationType = 'announcement';
+  bool _showAdvanced = false;
   bool _loadingAnnouncement = false;
   bool _loadingAlert = false;
   bool _loadingSettings = false;
@@ -212,7 +215,8 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
     try {
       return await action();
     } on ApiException catch (err) {
-      if (err.statusCode == 401 && await (_apiClient?.refreshAccessToken() ?? Future.value(false))) {
+      if (err.statusCode == 401 &&
+          await (_apiClient?.refreshAccessToken() ?? Future.value(false))) {
         return action();
       }
       rethrow;
@@ -258,157 +262,133 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildAnnouncementCard(),
+          _buildSendNotificationCard(),
           SizedBox(height: spacing),
-          _buildAlertCard(),
-          SizedBox(height: spacing),
-          _buildSettingsCard(),
-          SizedBox(height: spacing),
-          _buildStatusCard(),
+          _buildAdvancedSection(),
         ],
       ),
     );
   }
 
-  Widget _buildAnnouncementCard() {
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildSendNotificationCard() {
+    final isUrgent = _notificationType == 'urgent';
+    final titleController =
+        isUrgent ? _alertTitleController : _announcementTitleController;
+    final contentController =
+        isUrgent ? _alertContentController : _announcementContentController;
+    final recipientsController = isUrgent
+        ? _alertRecipientsController
+        : _announcementRecipientsController;
+    final loading = isUrgent ? _loadingAlert : _loadingAnnouncement;
+    final result = isUrgent ? _alertResult : _announcementResult;
+    return NotificationAdminSection(
+      title: '发送通知',
+      child: NotificationFieldList(
         children: [
-          Text('系统公告', style: Theme.of(context).textTheme.titleSmall),
-          const SizedBox(height: LayoutTokens.gapSm),
+          AppSelect<String>(
+            key: ValueKey<String>('notification-type-$_notificationType'),
+            value: _notificationType,
+            decoration: const InputDecoration(labelText: '通知类型'),
+            options: const [
+              AppDropdownOption(value: 'announcement', label: '系统公告'),
+              AppDropdownOption(value: 'urgent', label: '紧急通知'),
+            ],
+            onChanged: (value) {
+              if (value == null) return;
+              setState(() => _notificationType = value);
+            },
+          ),
           TextField(
-            controller: _announcementTitleController,
+            controller: titleController,
             decoration: const InputDecoration(
-              hintText: '公告标题',
+              labelText: '标题',
               prefixIcon: Icon(Icons.campaign_outlined),
             ),
           ),
-          const SizedBox(height: LayoutTokens.gapSm),
           TextField(
-            controller: _announcementContentController,
+            controller: contentController,
             maxLines: 3,
             decoration: const InputDecoration(
-              hintText: '公告内容',
+              labelText: '内容',
               prefixIcon: Icon(Icons.notes_outlined),
             ),
           ),
-          const SizedBox(height: LayoutTokens.gapSm),
           TextField(
-            controller: _announcementRecipientsController,
+            controller: recipientsController,
             decoration: const InputDecoration(
-              hintText: '接收人ID（逗号分隔，可选）',
+              labelText: '指定接收人 ID（可选）',
+              hintText: '多个 ID 用逗号或换行分隔；留空发送给默认范围',
               prefixIcon: Icon(Icons.people_outline),
             ),
           ),
-          const SizedBox(height: LayoutTokens.gapSm),
-          TextField(
-            controller: _announcementExpiresController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              hintText: '有效天数（可选）',
-              prefixIcon: Icon(Icons.timer_outlined),
+          if (!isUrgent)
+            TextField(
+              controller: _announcementExpiresController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: '有效天数（可选）',
+                prefixIcon: Icon(Icons.timer_outlined),
+              ),
             ),
-          ),
-          const SizedBox(height: LayoutTokens.gapSm),
           SwitchListTile(
-            value: _announcementOnlyStaff,
-            onChanged: (value) =>
-                setState(() => _announcementOnlyStaff = value),
+            value: isUrgent ? _alertOnlyStaff : _announcementOnlyStaff,
+            onChanged: (value) => setState(() => isUrgent
+                ? _alertOnlyStaff = value
+                : _announcementOnlyStaff = value),
             title: const Text('仅发送给员工'),
             contentPadding: EdgeInsets.zero,
           ),
           Align(
             alignment: Alignment.centerLeft,
             child: FilledButton.icon(
-              onPressed: _loadingAnnouncement ? null : _createAnnouncement,
-              icon: _loadingAnnouncement
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.send_outlined, size: 18),
-              label: Text(_loadingAnnouncement ? '发送中' : '发送公告'),
+              onPressed: loading
+                  ? null
+                  : (isUrgent ? _sendUrgentAlert : _createAnnouncement),
+              icon: NotificationLoadingIcon(
+                loading: loading,
+                icon: isUrgent
+                    ? Icons.priority_high_outlined
+                    : Icons.send_outlined,
+              ),
+              label: Text(loading ? '发送中' : '发送通知'),
             ),
           ),
-          if (_announcementResult != null) ...[
-            const SizedBox(height: LayoutTokens.gapSm),
-            _buildResult(_announcementResult!),
-          ],
+          if (result != null) NotificationResultPanel(result: result),
         ],
       ),
     );
   }
 
-  Widget _buildAlertCard() {
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('紧急警报', style: Theme.of(context).textTheme.titleSmall),
-          const SizedBox(height: LayoutTokens.gapSm),
-          TextField(
-            controller: _alertTitleController,
-            decoration: const InputDecoration(
-              hintText: '警报标题',
-              prefixIcon: Icon(Icons.warning_amber_outlined),
-            ),
-          ),
-          const SizedBox(height: LayoutTokens.gapSm),
-          TextField(
-            controller: _alertContentController,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              hintText: '警报内容',
-              prefixIcon: Icon(Icons.report_outlined),
-            ),
-          ),
-          const SizedBox(height: LayoutTokens.gapSm),
-          TextField(
-            controller: _alertRecipientsController,
-            decoration: const InputDecoration(
-              hintText: '接收人ID（逗号分隔，可选）',
-              prefixIcon: Icon(Icons.people_outline),
-            ),
-          ),
-          const SizedBox(height: LayoutTokens.gapSm),
-          SwitchListTile(
-            value: _alertOnlyStaff,
-            onChanged: (value) => setState(() => _alertOnlyStaff = value),
-            title: const Text('仅发送给员工'),
-            contentPadding: EdgeInsets.zero,
-          ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: FilledButton.icon(
-              onPressed: _loadingAlert ? null : _sendUrgentAlert,
-              icon: _loadingAlert
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.flash_on_outlined, size: 18),
-              label: Text(_loadingAlert ? '发送中' : '发送警报'),
-            ),
-          ),
-          if (_alertResult != null) ...[
-            const SizedBox(height: LayoutTokens.gapSm),
-            _buildResult(_alertResult!),
-          ],
-        ],
+  Widget _buildAdvancedSection() {
+    return NotificationAdminSection(
+      title: '高级设置',
+      trailing: TextButton.icon(
+        onPressed: () => setState(() => _showAdvanced = !_showAdvanced),
+        icon: Icon(_showAdvanced ? Icons.expand_less : Icons.expand_more),
+        label: Text(_showAdvanced ? '收起' : '展开'),
       ),
+      child: _showAdvanced
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildSettingsCard(),
+                const SizedBox(height: LayoutTokens.gapLg),
+                _buildStatusCard(),
+              ],
+            )
+          : Text(
+              '全局通道、保留策略和系统状态属于低频配置，展开后查看和维护。',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
     );
   }
 
   Widget _buildSettingsCard() {
-    return AppCard(
+    return NotificationAdminSection(
+      title: '通知系统设置',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('通知系统设置', style: Theme.of(context).textTheme.titleSmall),
-          const SizedBox(height: LayoutTokens.gapSm),
           TextField(
             controller: _settingsJsonController,
             maxLines: 6,
@@ -424,31 +404,25 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
             children: [
               OutlinedButton.icon(
                 onPressed: _loadingSettings ? null : _loadSettings,
-                icon: _loadingSettings
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.refresh, size: 18),
+                icon: NotificationLoadingIcon(
+                  loading: _loadingSettings,
+                  icon: Icons.refresh,
+                ),
                 label: Text(_loadingSettings ? '获取中' : '获取设置'),
               ),
               FilledButton.icon(
                 onPressed: _loadingUpdateSettings ? null : _updateSettings,
-                icon: _loadingUpdateSettings
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.save_outlined, size: 18),
+                icon: NotificationLoadingIcon(
+                  loading: _loadingUpdateSettings,
+                  icon: Icons.save_outlined,
+                ),
                 label: Text(_loadingUpdateSettings ? '保存中' : '保存设置'),
               ),
             ],
           ),
           if (_settingsResult != null) ...[
             const SizedBox(height: LayoutTokens.gapSm),
-            _buildResult(_settingsResult!),
+            NotificationResultPanel(result: _settingsResult!),
           ],
         ],
       ),
@@ -456,46 +430,28 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
   }
 
   Widget _buildStatusCard() {
-    return AppCard(
+    return NotificationAdminSection(
+      title: '系统状态',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('系统状态', style: Theme.of(context).textTheme.titleSmall),
-          const SizedBox(height: LayoutTokens.gapSm),
           Align(
             alignment: Alignment.centerLeft,
             child: OutlinedButton.icon(
               onPressed: _loadingStatus ? null : _loadStatus,
-              icon: _loadingStatus
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.monitor_heart_outlined, size: 18),
+              icon: NotificationLoadingIcon(
+                loading: _loadingStatus,
+                icon: Icons.monitor_heart_outlined,
+              ),
               label: Text(_loadingStatus ? '获取中' : '获取状态'),
             ),
           ),
           if (_statusResult != null) ...[
             const SizedBox(height: LayoutTokens.gapSm),
-            _buildResult(_statusResult!),
+            NotificationResultPanel(result: _statusResult!),
           ],
         ],
       ),
-    );
-  }
-
-  Widget _buildResult(Map<String, dynamic> result) {
-    final pretty = const JsonEncoder.withIndent('  ').convert(result);
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(LayoutTokens.gapSm),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-      ),
-      child:
-          SelectableText(pretty, style: Theme.of(context).textTheme.bodySmall),
     );
   }
 }
