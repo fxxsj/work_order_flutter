@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:work_order_app/src/core/core.dart';
+import 'package:work_order_app/src/features/products/data/product_api_service.dart';
 import 'package:work_order_app/src/features/products/data/product_dto.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/products/domain/product_repository.dart';
@@ -67,5 +69,17 @@ class ProductViewModel extends PaginatedViewModel<Product> {
       page: result.page,
       pageSize: result.pageSize,
     );
+  }
+
+  /// 导出产品列表 Excel。
+  Future<void> exportProducts() async {
+    await _repository.exportProducts();
+  }
+
+  /// 导入产品 Excel。
+  Future<ImportProductsResult> importProducts(PlatformFile file) async {
+    final result = await _repository.importProducts(file);
+    await loadItems(resetPage: true);
+    return result;
   }
 }

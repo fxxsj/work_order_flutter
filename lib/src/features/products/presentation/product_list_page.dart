@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_pa
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
+import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/products/application/product_view_model.dart';
 import 'package:work_order_app/src/features/products/data/product_api_service.dart';
@@ -131,13 +133,82 @@ class ProductListPage extends StatelessWidget {
     BuildContext context,
     ProductViewModel viewModel,
   ) {
+    final permissions = PermissionUtil.snapshot(context);
+    final canChangeProduct = permissions.has('workorder.change_product');
+
     return [
-      PageActionButton.filled(
-        onPressed: () => _openEditPage(context, viewModel, null),
-        icon: const Icon(Icons.add),
-        label: '新建产品',
+      if (canChangeProduct)
+        PageActionButton.outlined(
+          onPressed: () => _handleExport(context, viewModel),
+          icon: const Icon(Icons.download),
+          label: '导出',
+        ),
+      PageActionButton.outlined(
+        onPressed: () => _handleImport(context, viewModel),
+        icon: const Icon(Icons.upload),
+        label: '导入',
       ),
+      if (canChangeProduct)
+        PageActionButton.filled(
+          onPressed: () => _openEditPage(context, viewModel, null),
+          icon: const Icon(Icons.add),
+          label: '新建产品',
+        ),
     ];
+  }
+
+  static Future<void> _handleExport(
+    BuildContext context,
+    ProductViewModel viewModel,
+  ) async {
+    try {
+      await viewModel.exportProducts();
+      if (context.mounted) {
+        ToastUtil.showSuccess('导出成功');
+      }
+    } catch (err) {
+      if (context.mounted) {
+        ToastUtil.showError('导出失败: $err');
+      }
+    }
+  }
+
+  static Future<void> _handleImport(
+    BuildContext context,
+    ProductViewModel viewModel,
+  ) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['xlsx', 'xls'],
+    );
+    if (result == null || result.files.isEmpty) {
+      return;
+    }
+    final file = result.files.first;
+    if (file.bytes == null) {
+      if (context.mounted) {
+        ToastUtil.showError('无法读取文件');
+      }
+      return;
+    }
+    try {
+      final importResult = await viewModel.importProducts(file);
+      if (context.mounted) {
+        final created = importResult.createdCount ?? 0;
+        final updated = importResult.updatedCount ?? 0;
+        if (importResult.errorCount == 0) {
+          ToastUtil.showSuccess('导入成功: 新增 $created 条, 更新 $updated 条');
+        } else {
+          ToastUtil.showError(
+            '导入完成: 新增 $created 条, 更新 $updated 条, 失败 ${importResult.errorCount} 条',
+          );
+        }
+      }
+    } catch (err) {
+      if (context.mounted) {
+        ToastUtil.showError('导入失败: $err');
+      }
+    }
   }
 
   static List<RowAction> _rowActions(
