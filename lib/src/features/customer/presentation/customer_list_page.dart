@@ -188,11 +188,13 @@ class CustomerListPage extends StatelessWidget {
     try {
       final importResult = await viewModel.importCustomers(file);
       if (context.mounted) {
+        final created = importResult.createdCount ?? 0;
+        final updated = importResult.updatedCount ?? 0;
         if (importResult.errorCount == 0) {
-          ToastUtil.showSuccess('导入成功: ${importResult.successCount} 条');
+          ToastUtil.showSuccess('导入成功: 新增 $created 条, 更新 $updated 条');
         } else {
           ToastUtil.showError(
-            '导入完成: 成功 ${importResult.successCount} 条, 失败 ${importResult.errorCount} 条',
+            '导入完成: 新增 $created 条, 更新 $updated 条, 失败 ${importResult.errorCount} 条',
           );
         }
       }

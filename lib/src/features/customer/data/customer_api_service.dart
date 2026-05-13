@@ -152,17 +152,23 @@ class ImportCustomersResult {
   const ImportCustomersResult({
     required this.successCount,
     required this.errorCount,
+    this.createdCount,
+    this.updatedCount,
     this.errors,
   });
 
   final int successCount;
   final int errorCount;
+  final int? createdCount;
+  final int? updatedCount;
   final List<String>? errors;
 
   factory ImportCustomersResult.fromJson(Map<String, dynamic> json) {
     return ImportCustomersResult(
       successCount: json['success_count'] as int? ?? 0,
       errorCount: json['error_count'] as int? ?? 0,
+      createdCount: json['created_count'] as int?,
+      updatedCount: json['updated_count'] as int?,
       errors: (json['errors'] as List<dynamic>?)
           ?.map((e) => e.toString())
           .toList(),
