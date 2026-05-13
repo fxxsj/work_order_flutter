@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -127,16 +128,79 @@ class CustomerListPage extends StatelessWidget {
   ) {
     final permissions = PermissionUtil.snapshot(context);
     final canCreateCustomer = permissions.has('workorder.add_customer');
-    if (!canCreateCustomer) {
-      return const [];
-    }
+    final canChangeCustomer = permissions.has('workorder.change_customer');
+
     return [
-      PageActionButton.filled(
-        onPressed: () => _openEditPage(context, viewModel, null),
-        icon: const Icon(Icons.add),
-        label: '新建客户',
+      if (canChangeCustomer)
+        PageActionButton.outlined(
+          onPressed: () => _handleExport(context, viewModel),
+          icon: const Icon(Icons.download),
+          label: '导出',
+        ),
+      PageActionButton.outlined(
+        onPressed: () => _handleImport(context, viewModel),
+        icon: const Icon(Icons.upload),
+        label: '导入',
       ),
+      if (canCreateCustomer)
+        PageActionButton.filled(
+          onPressed: () => _openEditPage(context, viewModel, null),
+          icon: const Icon(Icons.add),
+          label: '新建客户',
+        ),
     ];
+  }
+
+  static Future<void> _handleExport(
+    BuildContext context,
+    CustomerViewModel viewModel,
+  ) async {
+    try {
+      await viewModel.exportCustomers();
+      if (context.mounted) {
+        ToastUtil.showSuccess('导出成功');
+      }
+    } catch (err) {
+      if (context.mounted) {
+        ToastUtil.showError('导出失败: $err');
+      }
+    }
+  }
+
+  static Future<void> _handleImport(
+    BuildContext context,
+    CustomerViewModel viewModel,
+  ) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['xlsx', 'xls'],
+    );
+    if (result == null || result.files.isEmpty) {
+      return;
+    }
+    final file = result.files.first;
+    if (file.bytes == null) {
+      if (context.mounted) {
+        ToastUtil.showError('无法读取文件');
+      }
+      return;
+    }
+    try {
+      final importResult = await viewModel.importCustomers(file);
+      if (context.mounted) {
+        if (importResult.errorCount == 0) {
+          ToastUtil.showSuccess('导入成功: ${importResult.successCount} 条');
+        } else {
+          ToastUtil.showError(
+            '导入完成: 成功 ${importResult.successCount} 条, 失败 ${importResult.errorCount} 条',
+          );
+        }
+      }
+    } catch (err) {
+      if (context.mounted) {
+        ToastUtil.showError('导入失败: $err');
+      }
+    }
   }
 
   static List<RowAction> _rowActions(

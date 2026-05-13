@@ -1,3 +1,5 @@
+import 'package:file_picker/file_picker.dart';
+import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/customer/domain/salesperson.dart';
 
@@ -21,4 +23,10 @@ abstract class CustomerRepository {
 
   /// 获取业务员列表。
   Future<List<Salesperson>> getSalespersons();
+
+  /// 导出客户列表 Excel。
+  Future<void> exportCustomers();
+
+  /// 导入客户 Excel。
+  Future<ImportCustomersResult> importCustomers(PlatformFile file);
 }

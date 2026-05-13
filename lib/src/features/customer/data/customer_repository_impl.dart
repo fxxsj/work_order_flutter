@@ -1,4 +1,9 @@
+import 'dart:typed_data';
+
+import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:work_order_app/src/core/common/api_exception.dart';
+import 'package:work_order_app/src/core/utils/file_download.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
 import 'package:work_order_app/src/features/customer/data/customer_dto.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
@@ -74,6 +79,48 @@ class CustomerRepositoryImpl implements CustomerRepository {
       throw Exception(err.message.isNotEmpty ? err.message : '获取业务员列表失败');
     } catch (err) {
       throw Exception('获取业务员列表失败: $err');
+    }
+  }
+
+  /// 导出客户列表 Excel。
+  @override
+  Future<void> exportCustomers() async {
+    try {
+      final response = await _apiService.exportCustomers();
+      final bytes = response.data;
+      if (bytes is List<int>) {
+        await saveBytes(Uint8List.fromList(bytes), 'customers.xlsx');
+      }
+    } on ApiException catch (err) {
+      throw Exception(err.message.isNotEmpty ? err.message : '导出客户列表失败');
+    } catch (err) {
+      throw Exception('导出客户列表失败: $err');
+    }
+  }
+
+  /// 导入客户 Excel。
+  @override
+  Future<ImportCustomersResult> importCustomers(PlatformFile file) async {
+    try {
+      final extension = file.extension?.toLowerCase();
+      String contentType;
+      if (extension == 'xlsx') {
+        contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      } else if (extension == 'xls') {
+        contentType = 'application/vnd.ms-excel';
+      } else {
+        contentType = 'application/octet-stream';
+      }
+      final multipartFile = MultipartFile.fromBytes(
+        file.bytes!,
+        filename: file.name,
+        contentType: DioMediaType.parse(contentType),
+      );
+      return await _apiService.importCustomers(multipartFile);
+    } on ApiException catch (err) {
+      throw Exception(err.message.isNotEmpty ? err.message : '导入客户列表失败');
+    } catch (err) {
+      throw Exception('导入客户列表失败: $err');
     }
   }
 }

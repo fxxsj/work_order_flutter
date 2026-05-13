@@ -31,6 +31,7 @@ class ApiClient {
     dynamic data,
     Map<String, dynamic>? queryParameters,
     ResponseType responseType = ResponseType.json,
+    String? contentType,
   }) {
     return HttpClient.requestRaw(
       path,
@@ -38,6 +39,7 @@ class ApiClient {
       data: data,
       queryParameters: queryParameters,
       responseType: responseType,
+      contentType: contentType,
     );
   }
 

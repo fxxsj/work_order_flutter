@@ -1,4 +1,6 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:work_order_app/src/core/core.dart';
+import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/customer/domain/customer_repository.dart';
 import 'package:work_order_app/src/features/customer/domain/salesperson.dart';
@@ -89,5 +91,17 @@ class CustomerViewModel extends PaginatedViewModel<Customer> {
   /// 删除客户并刷新列表。
   Future<void> deleteCustomer(int id) async {
     await deleteAndReload(() => _repository.deleteCustomer(id));
+  }
+
+  /// 导出客户列表 Excel。
+  Future<void> exportCustomers() async {
+    await _repository.exportCustomers();
+  }
+
+  /// 导入客户 Excel。
+  Future<ImportCustomersResult> importCustomers(PlatformFile file) async {
+    final result = await _repository.importCustomers(file);
+    await loadItems(resetPage: true);
+    return result;
   }
 }

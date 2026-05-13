@@ -222,19 +222,24 @@ class HttpClient {
     dynamic data,
     Map<String, dynamic>? queryParameters,
     ResponseType responseType = ResponseType.json,
+    String? contentType,
   }) async {
     try {
       // 调试日志：打印完整的请求信息
       debugPrint('[HttpClient.requestRaw] ${method.toUpperCase()} ${_dio.options.baseUrl}$path');
       debugPrint('[HttpClient.requestRaw] data type: ${data.runtimeType}');
+      final options = Options(
+        method: method.toUpperCase(),
+        responseType: responseType,
+      );
+      if (contentType != null) {
+        options.contentType = contentType;
+      }
       final response = await _dio.request(
         path,
         data: data,
         queryParameters: queryParameters,
-        options: Options(
-          method: method.toUpperCase(),
-          responseType: responseType,
-        ),
+        options: options,
       );
       return response;
     } on DioException catch (err) {
