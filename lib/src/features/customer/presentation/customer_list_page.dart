@@ -146,7 +146,7 @@ class CustomerListPage extends StatelessWidget {
   ) {
     final permissions = PermissionUtil.snapshot(context);
     final canChangeCustomer = permissions.has('workorder.change_customer');
-    final canDeleteCustomer = permissions.has('workorder.delete_customer');
+    final canDeleteCustomer = permissions.isAdmin;
 
     return [
       RowAction(
