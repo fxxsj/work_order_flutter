@@ -1,5 +1,5 @@
-import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/utils/import_export_util.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/customer/data/customer_dto.dart';
 import 'package:work_order_app/src/features/customer/data/salesperson_dto.dart';
@@ -9,6 +9,9 @@ class CustomerApiService {
   CustomerApiService(this._client);
 
   final ApiClient _client;
+
+  /// 获取导入/导出服务
+  ImportExportService get importExportService => ImportExportService(_client);
 
   /// 获取客户分页列表。
   Future<CustomerPageDto> fetchCustomers({
@@ -116,62 +119,5 @@ class CustomerApiService {
           .toList();
     }
     return [];
-  }
-
-  /// 导出客户列表 Excel。
-  Future<Response<dynamic>> exportCustomers() {
-    return _client.requestRaw(
-      '/customers/export/',
-      method: 'get',
-      responseType: ResponseType.bytes,
-    );
-  }
-
-  /// 导入客户 Excel。
-  Future<ImportCustomersResult> importCustomers(MultipartFile file) async {
-    final formData = FormData.fromMap({'file': file});
-    final response = await _client.requestRaw(
-      '/customers/import_customers/',
-      method: 'post',
-      data: formData,
-    );
-    final payload = response.data;
-    if (payload is Map<String, dynamic>) {
-      final dataField = payload['data'];
-      if (dataField is Map<String, dynamic>) {
-        return ImportCustomersResult.fromJson(dataField);
-      }
-      return ImportCustomersResult.fromJson(payload);
-    }
-    return const ImportCustomersResult(successCount: 0, errorCount: 1, errors: ['未知响应格式']);
-  }
-}
-
-/// 客户导入结果。
-class ImportCustomersResult {
-  const ImportCustomersResult({
-    required this.successCount,
-    required this.errorCount,
-    this.createdCount,
-    this.updatedCount,
-    this.errors,
-  });
-
-  final int successCount;
-  final int errorCount;
-  final int? createdCount;
-  final int? updatedCount;
-  final List<String>? errors;
-
-  factory ImportCustomersResult.fromJson(Map<String, dynamic> json) {
-    return ImportCustomersResult(
-      successCount: json['success_count'] as int? ?? 0,
-      errorCount: json['error_count'] as int? ?? 0,
-      createdCount: json['created_count'] as int?,
-      updatedCount: json['updated_count'] as int?,
-      errors: (json['errors'] as List<dynamic>?)
-          ?.map((e) => e.toString())
-          .toList(),
-    );
   }
 }

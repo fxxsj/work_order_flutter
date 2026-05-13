@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:work_order_app/src/features/products/data/product_api_service.dart';
+import 'package:work_order_app/src/core/utils/import_export_util.dart';
 import 'package:work_order_app/src/features/products/data/product_dto.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
 
@@ -30,5 +30,5 @@ abstract class ProductRepository {
   Future<void> exportProducts();
 
   /// 导入产品 Excel。
-  Future<ImportProductsResult> importProducts(PlatformFile file);
+  Future<ImportResult> importProducts(PlatformFile file);
 }

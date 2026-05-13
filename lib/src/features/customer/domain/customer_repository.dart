@@ -1,5 +1,5 @@
 import 'package:file_picker/file_picker.dart';
-import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
+import 'package:work_order_app/src/core/utils/import_export_util.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/customer/domain/salesperson.dart';
 
@@ -28,5 +28,5 @@ abstract class CustomerRepository {
   Future<void> exportCustomers();
 
   /// 导入客户 Excel。
-  Future<ImportCustomersResult> importCustomers(PlatformFile file);
+  Future<ImportResult> importCustomers(PlatformFile file);
 }

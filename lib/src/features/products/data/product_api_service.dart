@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/common/api_exception.dart';
 import 'package:work_order_app/src/core/data/page_data.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/utils/import_export_util.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/products/data/product_dto.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
@@ -10,6 +11,9 @@ class ProductApiService {
   ProductApiService(this._client);
 
   final ApiClient _client;
+
+  /// 获取导入/导出服务
+  ImportExportService get importExportService => ImportExportService(_client);
 
   Future<List<ProductOption>> fetchProducts({
     int pageSize = 100,
@@ -134,34 +138,6 @@ class ProductApiService {
     await _client.delete('/products/$productId/images/$imageId/');
   }
 
-  /// 导出产品列表 Excel。
-  Future<Response<dynamic>> exportProducts() {
-    return _client.requestRaw(
-      '/products/export/',
-      method: 'get',
-      responseType: ResponseType.bytes,
-    );
-  }
-
-  /// 导入产品 Excel。
-  Future<ImportProductsResult> importProducts(MultipartFile file) async {
-    final formData = FormData.fromMap({'file': file});
-    final response = await _client.requestRaw(
-      '/products/import_products/',
-      method: 'post',
-      data: formData,
-    );
-    final payload = response.data;
-    if (payload is Map<String, dynamic>) {
-      final dataField = payload['data'];
-      if (dataField is Map<String, dynamic>) {
-        return ImportProductsResult.fromJson(dataField);
-      }
-      return ImportProductsResult.fromJson(payload);
-    }
-    return const ImportProductsResult(successCount: 0, errorCount: 1, errors: ['未知响应格式']);
-  }
-
   List<ProductOption> _parseProductOptions(dynamic payload) {
     if (payload is! List) {
       return const <ProductOption>[];
@@ -207,35 +183,6 @@ class ProductApiService {
     return ApiException(
       message: '$label 响应格式异常',
       data: data,
-    );
-  }
-}
-
-/// 产品导入结果。
-class ImportProductsResult {
-  const ImportProductsResult({
-    required this.successCount,
-    required this.errorCount,
-    this.createdCount,
-    this.updatedCount,
-    this.errors,
-  });
-
-  final int successCount;
-  final int errorCount;
-  final int? createdCount;
-  final int? updatedCount;
-  final List<String>? errors;
-
-  factory ImportProductsResult.fromJson(Map<String, dynamic> json) {
-    return ImportProductsResult(
-      successCount: json['success_count'] as int? ?? 0,
-      errorCount: json['error_count'] as int? ?? 0,
-      createdCount: json['created_count'] as int?,
-      updatedCount: json['updated_count'] as int?,
-      errors: (json['errors'] as List<dynamic>?)
-          ?.map((e) => e.toString())
-          .toList(),
     );
   }
 }
