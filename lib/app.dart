@@ -16,7 +16,6 @@ export 'src/core/models/user_info.dart';
 export 'src/core/network/api_client.dart';
 export 'src/core/router/app_router.dart';
 export 'src/core/storage/app_storage.dart';
-export 'src/core/utils/breakpoints_util.dart';
 export 'src/core/utils/store_util.dart';
 export 'src/core/utils/toast_util.dart';
 export 'src/core/utils/utils.dart';

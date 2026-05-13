@@ -39,7 +39,6 @@ export 'list_page_scaffold.dart';
 export 'list_toolbar.dart';
 export 'meta_chip.dart';
 export 'notification_list_item.dart';
-export 'notification_time_utils.dart';
 export 'page_header_bar.dart';
 export 'radio_group_field.dart';
 export 'rail_badge.dart';

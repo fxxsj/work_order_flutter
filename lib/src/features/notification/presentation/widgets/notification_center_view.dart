@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_loading_indicator.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/notification_time_utils.dart';
 import 'package:work_order_app/src/features/notification/application/notification_view_model.dart';
 import 'package:work_order_app/src/features/notification/domain/notification_model.dart';
 
@@ -256,7 +257,7 @@ class _NotificationListItem extends StatelessWidget {
                 ),
                 SizedBox(height: LayoutTokens.gapMd),
                 Text(
-                  _formatRelativeTime(item.createdAt),
+                  formatRelativeTime(item.createdAt),
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: subtleText,
                   ),
@@ -288,23 +289,4 @@ Color _levelColorFor(
     case NotificationLevel.info:
       return primary;
   }
-}
-
-String _formatRelativeTime(DateTime createdAt) {
-  final diff = DateTime.now().difference(createdAt);
-  if (diff.inMinutes < 1) {
-    return '刚刚';
-  }
-  if (diff.inMinutes < 60) {
-    return '${diff.inMinutes}分钟前';
-  }
-  if (diff.inHours < 24) {
-    return '${diff.inHours}小时前';
-  }
-  if (diff.inDays < 7) {
-    return '${diff.inDays}天前';
-  }
-  final hour = createdAt.hour.toString().padLeft(2, '0');
-  final minute = createdAt.minute.toString().padLeft(2, '0');
-  return '${createdAt.month}月${createdAt.day}日 $hour:$minute';
 }
