@@ -67,13 +67,16 @@ class PermissionProfile {
       isAdmin || isManager || hasRole('supervisor');
   bool get isOperator => hasRole('operator');
 
-  bool get canSeeSales => isSales || hasAnyPermission(RoleLabels.salesPermissions);
+  bool get canSeeSales =>
+      isSales || hasRole('sales');
   bool get canSeeProduction =>
       isAdmin ||
       isManager ||
       isSupervisor ||
       isOperator ||
-      hasAnyPermission(RoleLabels.productionPermissions);
+      hasRole('supervisor') ||
+      hasRole('manager') ||
+      hasRole('operator');
   bool get canSeeTasks =>
       canSeeProduction ||
       hasAnyPermission([
@@ -89,16 +92,20 @@ class PermissionProfile {
         'workorder.change_workordertask',
       ]);
   bool get canSeeFinance =>
-      hasRole('finance') || hasAnyPermission(RoleLabels.financePermissions);
+      hasRole('finance') || hasRole('manager');
   bool get canSeeInventory =>
-      hasRole('inventory') || hasAnyPermission(RoleLabels.inventoryPermissions);
+      hasRole('inventory') ||
+      hasRole('supervisor') ||
+      hasRole('manager');
   bool get canSeeQuality =>
-      hasRole('quality') || hasAnyPermission(RoleLabels.qualityPermissions);
+      hasRole('quality') ||
+      hasRole('supervisor') ||
+      hasRole('manager');
   bool get canSeeSystem =>
       hasRole('admin') ||
       isStaff ||
       isAdmin ||
-      hasAnyPermission(RoleLabels.systemPermissions);
+      hasRole('manager');
 
   bool get isFinanceFocused =>
       !isAdmin && !isManager && !isSales && !isSupervisor && canSeeFinance;
