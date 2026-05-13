@@ -14,6 +14,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/app_sidebar.
 import 'package:work_order_app/src/core/presentation/layout/widgets/content_container.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/storage/app_storage.dart';
+import 'package:work_order_app/src/core/common/app_metadata.dart';
 import 'package:work_order_app/src/features/notification/domain/notification_model.dart';
 
 class AdaptiveShell extends StatefulWidget {
@@ -26,7 +27,7 @@ class AdaptiveShell extends StatefulWidget {
 }
 
 class _AdaptiveShellState extends State<AdaptiveShell> {
-  static const String _appTitle = '新西彩订单管理';
+  static const String _appTitle = AppMetadata.displayName;
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   final ScrollController _railScrollController = ScrollController();
   bool _sidebarCollapsed = false;

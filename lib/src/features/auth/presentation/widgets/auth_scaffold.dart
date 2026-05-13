@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/common/app_metadata.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 
@@ -198,7 +199,9 @@ class _HeroPanel extends StatelessWidget {
         children: [
           SizedBox(height: compact ? 8 : 20),
           Text(
-            '新西彩',
+            AppMetadata.displayName.contains('订单管理')
+                ? AppMetadata.displayName.split('订单管理').first.trim()
+                : AppMetadata.displayName,
             style: theme.textTheme.displaySmall?.copyWith(
               height: 0.92,
               color: colors.sidebarText,

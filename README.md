@@ -1,4 +1,6 @@
-# 新西彩订单管理 - Flutter 前端
+# 工单管理系统 - Flutter 前端
+
+> 构建时通过 `--dart-define=APP_DISPLAY_NAME="我的印刷管理"` 指定显示名称，默认「工单管理系统」
 
 Flutter 3.x + Riverpod + GoRouter 跨平台应用
 
