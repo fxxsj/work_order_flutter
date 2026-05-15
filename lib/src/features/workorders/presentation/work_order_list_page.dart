@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -33,6 +31,7 @@ import 'package:work_order_app/src/features/workorders/data/work_order_repositor
 import 'package:work_order_app/src/features/workorders/domain/work_order.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_delete_confirm_dialog.dart';
+import 'package:work_order_app/src/core/utils/debounce_controller.dart';
 
 /// 施工单列表入口。
 class WorkOrderListEntry extends StatelessWidget {
@@ -71,7 +70,6 @@ class _WorkOrderListView extends StatefulWidget {
 
 class _WorkOrderListViewState extends State<_WorkOrderListView>
     with SingleTickerProviderStateMixin {
-  static const _searchDebounceDuration = AnimationTokens.slower;
   static const double _searchWidth = 320;
   static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
@@ -89,7 +87,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
   static const String _pageSizeLabel = '每页 {size}';
 
   final TextEditingController _searchController = TextEditingController();
-  Timer? _searchDebounce;
+  final _debounce = DebounceController();
   String? _statusFilter;
   String? _priorityFilter;
   String? _approvalStatusFilter;
@@ -142,19 +140,19 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
 
   @override
   void dispose() {
-    _searchDebounce?.cancel();
+    _debounce.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
   void _scheduleSearch(WorkOrderViewModel viewModel, {bool immediate = false}) {
-    _searchDebounce?.cancel();
+    _debounce.cancel();
     if (immediate) {
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadWorkOrders(resetPage: true);
       return;
     }
-    _searchDebounce = Timer(_searchDebounceDuration, () {
+    _debounce.run(() {
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadWorkOrders(resetPage: true);
     });

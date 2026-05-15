@@ -107,9 +107,6 @@ class _DashboardPageState extends State<_DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final colors = theme.extension<AppColors>()!;
     final currentUser = _readCurrentUser(context);
     final leaves = leafNavItemsByBranch(currentUser: currentUser);
     final quickEntries = _quickIds
@@ -145,10 +142,6 @@ class _DashboardPageState extends State<_DashboardPage> {
               _DashboardHero(
                 title: '工作台',
                 subtitle: _todayLabel(),
-                primary: scheme.primary,
-                accent: colors.sidebarText,
-                borderColor: colors.borderColor,
-                surface: colors.surface,
               ),
               SizedBox(height: LayoutTokens.gapMd),
               _DashboardStatsSection(
@@ -156,39 +149,19 @@ class _DashboardPageState extends State<_DashboardPage> {
                 loading: _loadingStats,
                 errorMessage: _errorMessage,
                 onRetry: _loadStats,
-                surface: colors.surface,
-                borderColor: colors.borderColor,
-                subtleText: colors.subtleText,
-                accent: colors.sidebarText,
-                primary: scheme.primary,
               ),
               SizedBox(height: LayoutTokens.gapLg),
               _DashboardChartsSection(
                 stats: _stats,
-                surface: colors.surface,
-                borderColor: colors.borderColor,
-                subtleText: colors.subtleText,
-                accent: colors.sidebarText,
-                primary: scheme.primary,
               ),
               SizedBox(height: LayoutTokens.gapLg),
               if (compact) ...[
                 _QuickEntrySection(
                   entries: quickEntries,
-                  surface: colors.surface,
-                  borderColor: colors.borderColor,
-                  accent: colors.sidebarText,
-                  subtleText: colors.subtleText,
-                  primary: scheme.primary,
                 ),
                 SizedBox(height: LayoutTokens.gapLg),
                 _SimpleModuleSection(
                   entries: spotlightEntries,
-                  surface: colors.surface,
-                  borderColor: colors.borderColor,
-                  accent: colors.sidebarText,
-                  subtleText: colors.subtleText,
-                  primary: scheme.primary,
                 ),
               ] else
                 Row(
@@ -198,11 +171,6 @@ class _DashboardPageState extends State<_DashboardPage> {
                       flex: 13,
                       child: _QuickEntrySection(
                         entries: quickEntries,
-                        surface: colors.surface,
-                        borderColor: colors.borderColor,
-                        accent: colors.sidebarText,
-                        subtleText: colors.subtleText,
-                        primary: scheme.primary,
                       ),
                     ),
                     SizedBox(width: LayoutTokens.gapLg),
@@ -210,11 +178,6 @@ class _DashboardPageState extends State<_DashboardPage> {
                       flex: 7,
                       child: _SimpleModuleSection(
                         entries: spotlightEntries,
-                        surface: colors.surface,
-                        borderColor: colors.borderColor,
-                        accent: colors.sidebarText,
-                        subtleText: colors.subtleText,
-                        primary: scheme.primary,
                       ),
                     ),
                   ],
@@ -222,11 +185,6 @@ class _DashboardPageState extends State<_DashboardPage> {
               SizedBox(height: LayoutTokens.gapLg),
               _GroupPanel(
                 groups: groups,
-                surface: colors.surface,
-                borderColor: colors.borderColor,
-                accent: colors.sidebarText,
-                subtleText: colors.subtleText,
-                primary: scheme.primary,
               ),
             ],
           ),
@@ -256,22 +214,12 @@ class _DashboardStatsSection extends StatelessWidget {
     required this.loading,
     required this.errorMessage,
     required this.onRetry,
-    required this.surface,
-    required this.borderColor,
-    required this.subtleText,
-    required this.accent,
-    required this.primary,
   });
 
   final Map<String, dynamic>? stats;
   final bool loading;
   final String? errorMessage;
   final VoidCallback onRetry;
-  final Color surface;
-  final Color borderColor;
-  final Color subtleText;
-  final Color accent;
-  final Color primary;
 
   @override
   Widget build(BuildContext context) {
@@ -315,11 +263,6 @@ class _DashboardStatsSection extends StatelessWidget {
                     title: metric.title,
                     value: metric.value,
                     subtitle: metric.subtitle,
-                    surface: surface,
-                    borderColor: borderColor,
-                    subtleText: subtleText,
-                    accent: accent,
-                    primary: primary,
                   ),
                 ),
               )
@@ -413,19 +356,9 @@ class _DashboardStatsSection extends StatelessWidget {
 class _DashboardChartsSection extends StatelessWidget {
   const _DashboardChartsSection({
     required this.stats,
-    required this.surface,
-    required this.borderColor,
-    required this.subtleText,
-    required this.accent,
-    required this.primary,
   });
 
   final Map<String, dynamic>? stats;
-  final Color surface;
-  final Color borderColor;
-  final Color subtleText;
-  final Color accent;
-  final Color primary;
 
   @override
   Widget build(BuildContext context) {
@@ -509,11 +442,6 @@ class _DashboardChartsSection extends StatelessWidget {
                   child: _ChartCard(
                     title: card.title,
                     items: card.items,
-                    surface: surface,
-                    borderColor: borderColor,
-                    subtleText: subtleText,
-                    accent: accent,
-                    primary: primary,
                     totalOverride: card.totalOverride,
                     showPercent: card.showPercent,
                   ),
@@ -700,27 +628,22 @@ class _ChartCard extends StatelessWidget {
   const _ChartCard({
     required this.title,
     required this.items,
-    required this.surface,
-    required this.borderColor,
-    required this.subtleText,
-    required this.accent,
-    required this.primary,
     this.totalOverride,
     this.showPercent = true,
   });
 
   final String title;
   final List<_ChartBarItem> items;
-  final Color surface;
-  final Color borderColor;
-  final Color subtleText;
-  final Color accent;
-  final Color primary;
   final double? totalOverride;
   final bool showPercent;
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    final surface = colors.surface;
+    final borderColor = colors.borderColor;
+    final accent = colors.sidebarText;
+
     return Container(
       padding: EdgeInsets.fromLTRB(
         LayoutTokens.gapMd,
@@ -747,10 +670,6 @@ class _ChartCard extends StatelessWidget {
             items: items,
             totalOverride: totalOverride,
             showPercent: showPercent,
-            primary: primary,
-            subtleText: subtleText,
-            accent: accent,
-            borderColor: borderColor,
           ),
         ],
       ),
@@ -775,19 +694,11 @@ class _ChartBarItem {
 class _ChartBarList extends StatelessWidget {
   const _ChartBarList({
     required this.items,
-    required this.primary,
-    required this.subtleText,
-    required this.accent,
-    required this.borderColor,
     this.totalOverride,
     this.showPercent = true,
   });
 
   final List<_ChartBarItem> items;
-  final Color primary;
-  final Color subtleText;
-  final Color accent;
-  final Color borderColor;
   final double? totalOverride;
   final bool showPercent;
 
@@ -810,10 +721,6 @@ class _ChartBarList extends StatelessWidget {
               item: item,
               total: total,
               showPercent: showPercent,
-              primary: primary,
-              subtleText: subtleText,
-              accent: accent,
-              borderColor: borderColor,
             ),
           ),
       ],
@@ -826,22 +733,21 @@ class _ChartBarRow extends StatelessWidget {
     required this.item,
     required this.total,
     required this.showPercent,
-    required this.primary,
-    required this.subtleText,
-    required this.accent,
-    required this.borderColor,
   });
 
   final _ChartBarItem item;
   final double total;
   final bool showPercent;
-  final Color primary;
-  final Color subtleText;
-  final Color accent;
-  final Color borderColor;
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    final scheme = Theme.of(context).colorScheme;
+    final primary = scheme.primary;
+    final subtleText = colors.subtleText;
+    final accent = colors.sidebarText;
+    final borderColor = colors.borderColor;
+
     final percent =
         total > 0 ? (item.value / total).clamp(0.0, 1.0).toDouble() : 0.0;
     final percentText = '${(percent * 100).toStringAsFixed(1)}%';
@@ -962,24 +868,20 @@ class _StatCard extends StatelessWidget {
     required this.title,
     required this.value,
     this.subtitle,
-    required this.surface,
-    required this.borderColor,
-    required this.subtleText,
-    required this.accent,
-    required this.primary,
   });
 
   final String title;
   final String value;
   final String? subtitle;
-  final Color surface;
-  final Color borderColor;
-  final Color subtleText;
-  final Color accent;
-  final Color primary;
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    final surface = colors.surface;
+    final borderColor = colors.borderColor;
+    final subtleText = colors.subtleText;
+    final accent = colors.sidebarText;
+
     return Container(
       padding: EdgeInsets.fromLTRB(
         LayoutTokens.gapMd,
@@ -1028,22 +930,20 @@ class _DashboardHero extends StatelessWidget {
   const _DashboardHero({
     required this.title,
     required this.subtitle,
-    required this.primary,
-    required this.accent,
-    required this.borderColor,
-    required this.surface,
   });
 
   final String title;
   final String subtitle;
-  final Color primary;
-  final Color accent;
-  final Color borderColor;
-  final Color surface;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>()!;
+    final scheme = theme.colorScheme;
+    final surface = colors.surface;
+    final borderColor = colors.borderColor;
+    final accent = colors.sidebarText;
+    final primary = scheme.primary;
 
     return Container(
       width: double.infinity,
@@ -1142,22 +1042,20 @@ class _DashboardHero extends StatelessWidget {
 class _QuickEntrySection extends StatelessWidget {
   const _QuickEntrySection({
     required this.entries,
-    required this.surface,
-    required this.borderColor,
-    required this.accent,
-    required this.subtleText,
-    required this.primary,
   });
 
   final List<NavItem> entries;
-  final Color surface;
-  final Color borderColor;
-  final Color accent;
-  final Color subtleText;
-  final Color primary;
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    final scheme = Theme.of(context).colorScheme;
+    final surface = colors.surface;
+    final borderColor = colors.borderColor;
+    final accent = colors.sidebarText;
+    final subtleText = colors.subtleText;
+    final primary = scheme.primary;
+
     return _PanelShell(
       title: '常用入口',
       subtitle: '优先处理高频操作。',
@@ -1193,22 +1091,20 @@ class _QuickEntrySection extends StatelessWidget {
 class _SimpleModuleSection extends StatelessWidget {
   const _SimpleModuleSection({
     required this.entries,
-    required this.surface,
-    required this.borderColor,
-    required this.accent,
-    required this.subtleText,
-    required this.primary,
   });
 
   final List<NavItem> entries;
-  final Color surface;
-  final Color borderColor;
-  final Color accent;
-  final Color subtleText;
-  final Color primary;
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    final scheme = Theme.of(context).colorScheme;
+    final surface = colors.surface;
+    final borderColor = colors.borderColor;
+    final accent = colors.sidebarText;
+    final subtleText = colors.subtleText;
+    final primary = scheme.primary;
+
     return _PanelShell(
       title: '常用模块',
       subtitle: '少量保留，避免首页过载。',
@@ -1235,22 +1131,20 @@ class _SimpleModuleSection extends StatelessWidget {
 class _GroupPanel extends StatelessWidget {
   const _GroupPanel({
     required this.groups,
-    required this.surface,
-    required this.borderColor,
-    required this.accent,
-    required this.subtleText,
-    required this.primary,
   });
 
   final List<NavItem> groups;
-  final Color surface;
-  final Color borderColor;
-  final Color accent;
-  final Color subtleText;
-  final Color primary;
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    final scheme = Theme.of(context).colorScheme;
+    final surface = colors.surface;
+    final borderColor = colors.borderColor;
+    final accent = colors.sidebarText;
+    final subtleText = colors.subtleText;
+    final primary = scheme.primary;
+
     return _PanelShell(
       title: '全部模块',
       subtitle: '按模块进入处理。',

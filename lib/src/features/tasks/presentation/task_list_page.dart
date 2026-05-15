@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -31,6 +29,7 @@ import 'package:work_order_app/src/features/tasks/presentation/task_ui_helper.da
 import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_repository.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_action_dialogs.dart';
+import 'package:work_order_app/src/core/utils/debounce_controller.dart';
 
 /// 任务列表入口。
 class TaskListEntry extends StatelessWidget {
@@ -66,7 +65,6 @@ class _TaskListView extends StatefulWidget {
 }
 
 class _TaskListViewState extends State<_TaskListView> {
-  static const _searchDebounceDuration = AnimationTokens.slower;
   static const double _searchWidth = LayoutTokens.searchWidth;
   static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
@@ -85,7 +83,7 @@ class _TaskListViewState extends State<_TaskListView> {
   static const String _completeButtonText = '完成任务';
 
   final TextEditingController _searchController = TextEditingController();
-  Timer? _searchDebounce;
+  final _debounce = DebounceController();
   String? _statusFilter;
   String? _priorityFilter;
   int? _departmentFilterId;
@@ -153,19 +151,19 @@ class _TaskListViewState extends State<_TaskListView> {
 
   @override
   void dispose() {
-    _searchDebounce?.cancel();
+    _debounce.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
   void _scheduleSearch(TaskViewModel viewModel, {bool immediate = false}) {
-    _searchDebounce?.cancel();
     if (immediate) {
+      _debounce.cancel();
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadTasks(resetPage: true);
       return;
     }
-    _searchDebounce = Timer(_searchDebounceDuration, () {
+    _debounce.run(() {
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadTasks(resetPage: true);
     });

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -30,6 +28,7 @@ import 'package:work_order_app/src/features/sales_orders/domain/sales_order_deta
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order_repository.dart';
 import 'package:work_order_app/src/features/sales_orders/presentation/widgets/sales_order_list_dialogs.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_flow_api_service.dart';
+import 'package:work_order_app/src/core/utils/debounce_controller.dart';
 
 /// 客户订单列表入口。
 class SalesOrderListEntry extends StatelessWidget {
@@ -69,7 +68,6 @@ class _SalesOrderListView extends StatefulWidget {
 }
 
 class _SalesOrderListViewState extends State<_SalesOrderListView> {
-  static const _searchDebounceDuration = AnimationTokens.slower;
   static const double _searchWidth = 320;
   static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
@@ -93,7 +91,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
   );
 
   final TextEditingController _searchController = TextEditingController();
-  Timer? _searchDebounce;
+  final _debounce = DebounceController();
   SalesOrderActionService? _actionService;
   String? _routeSignature;
   bool _selectionMode = false;
@@ -126,7 +124,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
 
   @override
   void dispose() {
-    _searchDebounce?.cancel();
+    _debounce.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -397,13 +395,13 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
 
   void _scheduleSearch(SalesOrderViewModel viewModel,
       {bool immediate = false}) {
-    _searchDebounce?.cancel();
+    _debounce.cancel();
     if (immediate) {
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadSalesOrders(resetPage: true);
       return;
     }
-    _searchDebounce = Timer(_searchDebounceDuration, () {
+    _debounce.run(() {
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadSalesOrders(resetPage: true);
     });

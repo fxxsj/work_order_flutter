@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
@@ -40,6 +38,7 @@ import 'package:work_order_app/src/features/suppliers/data/supplier_dto.dart';
 import 'package:work_order_app/src/features/suppliers/presentation/widgets/quick_supplier_create_dialog.dart';
 import 'package:work_order_app/src/features/materials/data/material_dto.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
+import 'package:work_order_app/src/core/utils/debounce_controller.dart';
 
 /// 采购单列表入口。
 class PurchaseOrderListEntry extends StatelessWidget {
@@ -77,7 +76,6 @@ class _PurchaseOrderListView extends StatefulWidget {
 }
 
 class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
-  static const _searchDebounceDuration = AnimationTokens.slower;
   static const double _searchWidth = 320;
   static const double _spacingSm = LayoutTokens.gapSm;
   static const String _emptyCellText = '-';
@@ -121,7 +119,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
   );
 
   final TextEditingController _searchController = TextEditingController();
-  Timer? _searchDebounce;
+  final _debounce = DebounceController();
   List<SupplierDto> _suppliers = [];
   bool _suppliersLoading = false;
   List<MaterialDto> _materials = [];
@@ -138,20 +136,20 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
 
   @override
   void dispose() {
-    _searchDebounce?.cancel();
+    _debounce.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
   void _scheduleSearch(PurchaseOrderViewModel viewModel,
       {bool immediate = false}) {
-    _searchDebounce?.cancel();
     if (immediate) {
+      _debounce.cancel();
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadPurchaseOrders(resetPage: true);
       return;
     }
-    _searchDebounce = Timer(_searchDebounceDuration, () {
+    _debounce.run(() {
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadPurchaseOrders(resetPage: true);
     });

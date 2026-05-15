@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -27,6 +25,7 @@ import 'package:work_order_app/src/features/inventory_stocks/data/product_stock_
 import 'package:work_order_app/src/features/inventory_stocks/domain/product_stock.dart';
 import 'package:work_order_app/src/features/inventory_stocks/domain/product_stock_repository.dart';
 import 'package:work_order_app/src/features/inventory_stocks/presentation/widgets/product_stock_dialogs.dart';
+import 'package:work_order_app/src/core/utils/debounce_controller.dart';
 
 /// 成品库存列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
 class ProductStockListEntry extends StatelessWidget {
@@ -64,7 +63,6 @@ class _ProductStockListView extends StatefulWidget {
 }
 
 class _ProductStockListViewState extends State<_ProductStockListView> {
-  static const _searchDebounceDuration = AnimationTokens.slower;
   static const double _searchWidth = 320;
   static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
@@ -91,7 +89,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
   static const String _pageSizeLabel = '每页 {size}';
 
   final TextEditingController _searchController = TextEditingController();
-  Timer? _searchDebounce;
+  final _debounce = DebounceController();
   bool _lowStockLoading = false;
   bool _expiredLoading = false;
   List<ProductStock> _lowStockList = [];
@@ -126,20 +124,20 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
 
   @override
   void dispose() {
-    _searchDebounce?.cancel();
+    _debounce.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
   void _scheduleSearch(ProductStockViewModel viewModel,
       {bool immediate = false}) {
-    _searchDebounce?.cancel();
     if (immediate) {
+      _debounce.cancel();
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadStocks(resetPage: true);
       return;
     }
-    _searchDebounce = Timer(_searchDebounceDuration, () {
+    _debounce.run(() {
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadStocks(resetPage: true);
     });

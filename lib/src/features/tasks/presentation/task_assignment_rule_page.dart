@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
@@ -24,6 +22,7 @@ import 'package:work_order_app/src/features/tasks/domain/task_assignment_rule.da
 import 'package:work_order_app/src/features/tasks/domain/task_assignment_rule_repository.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_assignment_rule_sections.dart';
+import 'package:work_order_app/src/core/utils/debounce_controller.dart';
 
 class TaskAssignmentRuleEntry extends StatelessWidget {
   const TaskAssignmentRuleEntry({super.key});
@@ -62,7 +61,6 @@ class _TaskAssignmentRuleView extends StatefulWidget {
 }
 
 class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
-  static const _searchDebounceDuration = Duration(milliseconds: 400);
   static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
   static const String _refreshButtonText = '刷新';
@@ -75,7 +73,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
   static const String _pageSizeLabel = '每页 {size}';
 
   final TextEditingController _searchController = TextEditingController();
-  Timer? _searchDebounce;
+  final _debounce = DebounceController();
   List<Process> _processes = [];
   List<TaskDepartmentOption> _departments = [];
   String? _lookupError;
@@ -99,7 +97,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
 
   @override
   void dispose() {
-    _searchDebounce?.cancel();
+    _debounce.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -166,13 +164,13 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
 
   void _scheduleSearch(TaskAssignmentRuleViewModel viewModel,
       {bool immediate = false}) {
-    _searchDebounce?.cancel();
     if (immediate) {
+      _debounce.cancel();
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadRules(resetPage: true);
       return;
     }
-    _searchDebounce = Timer(_searchDebounceDuration, () {
+    _debounce.run(() {
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadRules(resetPage: true);
     });

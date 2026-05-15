@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -33,6 +31,7 @@ import 'package:work_order_app/src/features/inventory_quality/data/quality_inspe
 import 'package:work_order_app/src/features/inventory_quality/data/quality_inspection_repository_impl.dart';
 import 'package:work_order_app/src/features/inventory_quality/domain/quality_inspection.dart';
 import 'package:work_order_app/src/features/inventory_quality/domain/quality_inspection_repository.dart';
+import 'package:work_order_app/src/core/utils/debounce_controller.dart';
 
 /// 质检列表入口。
 class QualityInspectionListEntry extends StatelessWidget {
@@ -75,7 +74,6 @@ class _QualityInspectionListView extends StatefulWidget {
 
 class _QualityInspectionListViewState
     extends State<_QualityInspectionListView> {
-  static const _searchDebounceDuration = AnimationTokens.slower;
   static const double _searchWidth = 320;
   static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
@@ -105,7 +103,7 @@ class _QualityInspectionListViewState
   ];
 
   final TextEditingController _searchController = TextEditingController();
-  Timer? _searchDebounce;
+  final _debounce = DebounceController();
   int? _uploadingInspectionId;
   String? _routeSignature;
 
@@ -144,20 +142,20 @@ class _QualityInspectionListViewState
 
   @override
   void dispose() {
-    _searchDebounce?.cancel();
+    _debounce.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
   void _scheduleSearch(QualityInspectionViewModel viewModel,
       {bool immediate = false}) {
-    _searchDebounce?.cancel();
+    _debounce.cancel();
     if (immediate) {
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadInspections(resetPage: true);
       return;
     }
-    _searchDebounce = Timer(_searchDebounceDuration, () {
+    _debounce.run(() {
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadInspections(resetPage: true);
     });

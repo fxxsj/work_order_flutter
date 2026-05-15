@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:work_order_app/src/core/presentation/layout/color_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
@@ -177,26 +177,26 @@ class WorkOrderDetailPageViews extends StatelessWidget {
     if (message == null) return const SizedBox.shrink();
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      margin: const EdgeInsets.only(bottom: SpacingTokens.md),
+      padding: SpacingTokens.h16v12,
       decoration: BoxDecoration(
-        color: (color ?? ColorTokens.info).withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
+        color: (color ?? ColorTokens.info).withValues(alpha: OpacityTokens.subtle),
+        borderRadius: RadiusTokens.bSm,
         border: Border.all(
-          color: (color ?? ColorTokens.info).withValues(alpha: 0.3),
+          color: (color ?? ColorTokens.info).withValues(alpha: OpacityTokens.distinct),
         ),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: color),
-          const SizedBox(width: 12),
+          Icon(icon, size: LayoutTokens.iconLg, color: color),
+          const SizedBox(width: SpacingTokens.md),
           Expanded(
             child: Text(
               message,
               style: TextStyle(
-                fontSize: 14,
-                color: color?.withValues(alpha: 0.9),
-                fontWeight: FontWeight.w500,
+                fontSize: TextTokens.fontSizeBodyMedium,
+                color: color?.withValues(alpha: OpacityTokens.textProminent),
+                fontWeight: TextTokens.medium,
               ),
             ),
           ),

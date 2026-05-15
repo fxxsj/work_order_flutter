@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -38,6 +36,7 @@ import 'package:work_order_app/src/features/finance_invoices/domain/invoice.dart
 import 'package:work_order_app/src/features/finance_invoices/domain/invoice_repository.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order.dart';
+import 'package:work_order_app/src/core/utils/debounce_controller.dart';
 
 /// 发票列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
 class InvoiceListEntry extends StatelessWidget {
@@ -73,7 +72,6 @@ class _InvoiceListView extends StatefulWidget {
 }
 
 class _InvoiceListViewState extends State<_InvoiceListView> {
-  static const _searchDebounceDuration = AnimationTokens.slower;
   static const double _searchWidth = 320;
   static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
@@ -103,7 +101,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
   );
 
   final TextEditingController _searchController = TextEditingController();
-  Timer? _searchDebounce;
+  final _debounce = DebounceController();
   bool _optionsLoading = false;
   bool _optionsLoaded = false;
   int? _uploadingInvoiceId;
@@ -177,19 +175,19 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
 
   @override
   void dispose() {
-    _searchDebounce?.cancel();
+    _debounce.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
   void _scheduleSearch(InvoiceViewModel viewModel, {bool immediate = false}) {
-    _searchDebounce?.cancel();
+    _debounce.cancel();
     if (immediate) {
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadInvoices(resetPage: true);
       return;
     }
-    _searchDebounce = Timer(_searchDebounceDuration, () {
+    _debounce.run(() {
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadInvoices(resetPage: true);
     });

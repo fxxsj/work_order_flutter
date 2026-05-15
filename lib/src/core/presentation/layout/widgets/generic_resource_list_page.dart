@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -22,6 +20,8 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
+import 'package:work_order_app/src/core/utils/value_formatter.dart';
+import 'package:work_order_app/src/core/utils/debounce_controller.dart';
 import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
 
 class GenericResourceConfig {
@@ -115,37 +115,19 @@ class GenericDetailField {
   final String Function(GenericRecord record) value;
 }
 
+/// 通用值格式化器 —— 委托给 [AppValueFormatter]。
+///
+/// 保留此类以维持向后兼容，所有逻辑已移至共享的 [AppValueFormatter]。
 class GenericValueFormatter {
-  static const String empty = '-';
+  GenericValueFormatter._();
 
-  static String text(dynamic value) {
-    if (value == null) return empty;
-    final asString = value.toString().trim();
-    return asString.isEmpty ? empty : asString;
-  }
+  static const String empty = AppValueFormatter.empty;
 
-  static String boolText(bool? value) {
-    if (value == null) return empty;
-    return value ? '是' : '否';
-  }
+  static String text(dynamic value) => AppValueFormatter.text(value);
 
-  static String date(dynamic value) {
-    if (value == null) return empty;
-    if (value is DateTime) {
-      return _formatDate(value);
-    }
-    if (value is String) {
-      final parsed = DateTime.tryParse(value);
-      return parsed == null ? text(value) : _formatDate(parsed);
-    }
-    return text(value);
-  }
+  static String boolText(bool? value) => AppValueFormatter.boolText(value);
 
-  static String _formatDate(DateTime value) {
-    final month = value.month.toString().padLeft(2, '0');
-    final day = value.day.toString().padLeft(2, '0');
-    return '${value.year}-$month-$day';
-  }
+  static String date(dynamic value) => AppValueFormatter.date(value);
 }
 
 class GenericResourceListEntry extends StatelessWidget {
@@ -184,12 +166,11 @@ class GenericResourceListPage extends StatefulWidget {
 }
 
 class _GenericResourceListPageState extends State<GenericResourceListPage> {
-  static const _searchDebounceDuration = AnimationTokens.slower;
   static const double _searchWidth = 320;
   static const double _spacingSm = LayoutTokens.gapSm;
 
   final TextEditingController _searchController = TextEditingController();
-  Timer? _searchDebounce;
+  final _debounce = DebounceController();
   String? _prefillKeyword;
   Map<String, dynamic> _prefillExtraParams = const {};
 
@@ -227,20 +208,20 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
 
   @override
   void dispose() {
-    _searchDebounce?.cancel();
+    _debounce.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
   void _scheduleSearch(GenericListViewModel viewModel,
       {bool immediate = false}) {
-    _searchDebounce?.cancel();
+    _debounce.cancel();
     if (immediate) {
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.reload(resetPage: true);
       return;
     }
-    _searchDebounce = Timer(_searchDebounceDuration, () {
+    _debounce.run(() {
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.reload(resetPage: true);
     });

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -33,6 +31,7 @@ import 'package:work_order_app/src/features/finance_statements/presentation/widg
 import 'package:work_order_app/src/features/suppliers/data/supplier_api_service.dart';
 import 'package:work_order_app/src/features/suppliers/domain/supplier.dart';
 import 'package:work_order_app/src/features/suppliers/presentation/widgets/quick_supplier_create_dialog.dart';
+import 'package:work_order_app/src/core/utils/debounce_controller.dart';
 
 /// 对账单列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
 class StatementListEntry extends StatelessWidget {
@@ -70,7 +69,6 @@ class _StatementListView extends StatefulWidget {
 }
 
 class _StatementListViewState extends State<_StatementListView> {
-  static const _searchDebounceDuration = AnimationTokens.slower;
   static const double _searchWidth = 320;
   static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
@@ -85,7 +83,7 @@ class _StatementListViewState extends State<_StatementListView> {
   static const String _pageSizeLabel = '每页 {size}';
 
   final TextEditingController _searchController = TextEditingController();
-  Timer? _searchDebounce;
+  final _debounce = DebounceController();
   bool _optionsLoading = false;
   bool _optionsLoaded = false;
   List<Customer> _customers = [];
@@ -117,19 +115,19 @@ class _StatementListViewState extends State<_StatementListView> {
 
   @override
   void dispose() {
-    _searchDebounce?.cancel();
+    _debounce.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
   void _scheduleSearch(StatementViewModel viewModel, {bool immediate = false}) {
-    _searchDebounce?.cancel();
+    _debounce.cancel();
     if (immediate) {
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadStatements(resetPage: true);
       return;
     }
-    _searchDebounce = Timer(_searchDebounceDuration, () {
+    _debounce.run(() {
       viewModel.setSearchText(_searchController.text.trim());
       viewModel.loadStatements(resetPage: true);
     });

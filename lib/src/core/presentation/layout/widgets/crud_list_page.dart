@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
@@ -15,6 +13,8 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
+import 'package:work_order_app/src/core/utils/debounce_controller.dart';
+import 'package:work_order_app/src/core/utils/value_formatter.dart';
 import 'package:work_order_app/src/core/viewmodels/paginated_view_model.dart';
 
 typedef CrudLoadItems<VM> = Future<void> Function(
@@ -178,28 +178,26 @@ class CrudListPage<T, VM extends PaginatedViewModel<T>> extends StatefulWidget {
 
 class _CrudListPageState<T, VM extends PaginatedViewModel<T>>
     extends State<CrudListPage<T, VM>> {
-  static const _searchDebounceDuration = AnimationTokens.slower;
-
   final TextEditingController _searchController = TextEditingController();
-  Timer? _searchDebounce;
+  final _debounce = DebounceController();
 
   CrudListConfig<T, VM> get _config => widget.config;
 
   @override
   void dispose() {
-    _searchDebounce?.cancel();
+    _debounce.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
   void _scheduleSearch(VM viewModel, {bool immediate = false}) {
-    _searchDebounce?.cancel();
+    _debounce.cancel();
     if (immediate) {
       viewModel.setSearchText(_searchController.text.trim());
       _config.loadItems(viewModel, resetPage: true);
       return;
     }
-    _searchDebounce = Timer(_searchDebounceDuration, () {
+    _debounce.run(() {
       viewModel.setSearchText(_searchController.text.trim());
       _config.loadItems(viewModel, resetPage: true);
     });
@@ -563,53 +561,31 @@ Future<void> confirmCrudAction<T>(
   }
 }
 
+/// CRUD 值格式化器 —— 委托给 [AppValueFormatter]。
+///
+/// 保留此类以维持向后兼容，所有逻辑已移至共享的 [AppValueFormatter]。
 class CrudValueFormatter {
-  static const String empty = '-';
+  CrudValueFormatter._();
 
-  static String text(String? value, {String fallback = empty}) {
-    final resolved = value?.trim() ?? '';
-    return resolved.isEmpty ? fallback : resolved;
-  }
+  static const String empty = AppValueFormatter.empty;
 
-  static String number(num? value, {String fallback = empty}) {
-    if (value == null) {
-      return fallback;
-    }
-    return value.toString();
-  }
+  static String text(String? value, {String fallback = empty}) =>
+      AppValueFormatter.textOr(value, fallback: fallback);
+
+  static String number(num? value, {String fallback = empty}) =>
+      AppValueFormatter.number(value, fallback: fallback);
 
   static String amount(
     num? value, {
     int fractionDigits = 2,
     String fallback = empty,
-  }) {
-    if (value == null) {
-      return fallback;
-    }
-    return value.toStringAsFixed(fractionDigits);
-  }
+  }) =>
+      AppValueFormatter.amount(value,
+          fractionDigits: fractionDigits, fallback: fallback);
 
-  static String date(DateTime? value, {String fallback = empty}) {
-    if (value == null) {
-      return fallback;
-    }
-    final local = value.toLocal();
-    final year = local.year.toString().padLeft(4, '0');
-    final month = local.month.toString().padLeft(2, '0');
-    final day = local.day.toString().padLeft(2, '0');
-    return '$year-$month-$day';
-  }
+  static String date(DateTime? value, {String fallback = empty}) =>
+      AppValueFormatter.date(value, fallback: fallback);
 
-  static String dateTime(DateTime? value, {String fallback = empty}) {
-    if (value == null) {
-      return fallback;
-    }
-    final local = value.toLocal();
-    final year = local.year.toString().padLeft(4, '0');
-    final month = local.month.toString().padLeft(2, '0');
-    final day = local.day.toString().padLeft(2, '0');
-    final hour = local.hour.toString().padLeft(2, '0');
-    final minute = local.minute.toString().padLeft(2, '0');
-    return '$year-$month-$day $hour:$minute';
-  }
+  static String dateTime(DateTime? value, {String fallback = empty}) =>
+      AppValueFormatter.dateTime(value, fallback: fallback);
 }
