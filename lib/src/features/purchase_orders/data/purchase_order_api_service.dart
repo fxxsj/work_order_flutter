@@ -133,6 +133,26 @@ class PurchaseOrderApiService {
     return _mapFromResponse(response.data);
   }
 
+  Future<Map<String, dynamic>> getProcurementSummary({String? workOrderStatus}) async {
+    final params = <String, dynamic>{};
+    if (workOrderStatus != null) params['work_order_status'] = workOrderStatus;
+    final response = await _client.get(
+      '/purchase-orders/procurement_summary/',
+      queryParameters: params,
+    );
+    return _mapFromResponse(response.data);
+  }
+
+  Future<Map<String, dynamic>> getDelayWarnings({String? severity}) async {
+    final params = <String, dynamic>{};
+    if (severity != null) params['severity'] = severity;
+    final response = await _client.get(
+      '/purchase-orders/delay_warnings/',
+      queryParameters: params,
+    );
+    return _mapFromResponse(response.data);
+  }
+
   Map<String, dynamic> _mapFromResponse(dynamic data) {
     if (data is Map<String, dynamic>) {
       return Map<String, dynamic>.from(data);

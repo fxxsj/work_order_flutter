@@ -87,6 +87,8 @@ class PurchaseOrderItemDetail with _$PurchaseOrderItemDetail {
     @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
     String? statusDisplay,
     @JsonKey(fromJson: _stringOrNullFromJson) String? notes,
+    @JsonKey(name: 'work_order_material', fromJson: _intOrNullFromJson)
+    int? workOrderMaterialId,
   }) = _PurchaseOrderItemDetail;
 
   factory PurchaseOrderItemDetail.fromJson(Map<String, dynamic> json) =>
