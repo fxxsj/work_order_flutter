@@ -1,0 +1,27 @@
+{
+  "count": 2,
+  "results": [
+    {
+      "id": 1,
+      "name": "客户A",
+      "code": "C001",
+      "contact": "张三",
+      "phone": "13800138001",
+      "email": "zhangsan@example.com",
+      "address": "测试地址1",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": 2,
+      "name": "客户B",
+      "code": "C002",
+      "contact": "李四",
+      "phone": "13800138002",
+      "email": "lisi@example.com",
+      "address": "测试地址2",
+      "created_at": "2026-02-01T00:00:00Z"
+    }
+  ],
+  "next": null,
+  "previous": null
+}
