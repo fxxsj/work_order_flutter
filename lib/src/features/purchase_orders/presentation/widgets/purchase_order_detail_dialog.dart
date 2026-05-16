@@ -36,7 +36,7 @@ Future<void> showPurchaseOrderDetailDialog(
               label: '关联施工单',
               value: _displayText(detail.workOrderNumber),
               onTap: detail.workOrderId != null && onWorkOrderTap != null
-                  ? () => onWorkOrderTap!(detail.workOrderId!)
+                  ? () => onWorkOrderTap(detail.workOrderId!)
                   : null,
             ),
             _DetailRow(label: '预计到货', value: _formatDate(detail.expectedDate)),

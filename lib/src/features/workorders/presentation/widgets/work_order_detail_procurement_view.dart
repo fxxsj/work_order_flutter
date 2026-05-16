@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:work_order_app/src/core/models/traceability_summary_item.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
@@ -70,7 +69,7 @@ class WorkOrderDetailProcurementView extends StatelessWidget {
           else
             ...detail.materials.map(
               (m) => Padding(
-                padding: const EdgeInsets.only(bottom: SpacingTokens.cardPaddingSm),
+                padding: const EdgeInsets.only(bottom: SpacingTokens.sm),
                 child: _MaterialStatusCard(
                   materialName: m.materialName ?? emptyText,
                   materialCode: m.materialCode ?? emptyText,
@@ -170,8 +169,8 @@ class _MaterialStatusCard extends StatelessWidget {
           ),
           Container(
             padding: const EdgeInsets.symmetric(
-              horizontal: SpacingTokens.cardPaddingSm,
-              vertical: SpacingTokens.gapSm,
+              horizontal: SpacingTokens.sm,
+              vertical: SpacingTokens.sm,
             ),
             decoration: BoxDecoration(
               color: statusColor.withValues(alpha: 0.1),
