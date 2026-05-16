@@ -123,6 +123,7 @@ class _TextInputFieldState extends State<TextInputField> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return TextFormField(
       controller: _controller,
       validator: widget.validator,
@@ -142,32 +143,32 @@ class _TextInputFieldState extends State<TextInputField> {
         suffixIcon: widget.suffixIcon,
         isDense: widget.isDense,
         filled: true,
-        fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+        fillColor: theme.colorScheme.surfaceContainerLowest,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
           borderSide: BorderSide(
-            color: ColorTokens.border,
+            color: theme.colorScheme.outline,
             width: 1,
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
           borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.primary,
+            color: theme.colorScheme.primary,
             width: 2,
           ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
           borderSide: BorderSide(
-            color: ColorTokens.danger,
+            color: theme.colorScheme.error,
             width: 1,
           ),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
           borderSide: BorderSide(
-            color: ColorTokens.danger,
+            color: theme.colorScheme.error,
             width: 2,
           ),
         ),
