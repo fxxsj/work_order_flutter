@@ -40,7 +40,7 @@ GoRouter createAppRouter(AuthController authController) {
     routes: [
       GoRoute(
         path: '/login',
-        pageBuilder: (context, state) => NoTransitionPage(child: Login()),
+        pageBuilder: (context, state) => NoTransitionPage(child: LoginPage()),
       ),
       GoRoute(
         path: '/register',
