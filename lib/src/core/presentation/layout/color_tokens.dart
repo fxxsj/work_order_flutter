@@ -1,78 +1,133 @@
 import 'package:flutter/material.dart';
 
-/// 语义化颜色令牌系统
+/// Linear 设计系统颜色令牌
 ///
-/// 用于整个应用的语义化颜色定义，确保视觉一致性
-/// 参考 shadcn/ui 配色方案，优化柔和度与对比度
+/// 基于 Linear App UI 风格：深色画布 + 薰衣草蓝强调色
+/// 参考 /DESIGN.md 规范
 class ColorTokens {
   const ColorTokens._();
 
+  // ==================== 画布与表面层级 ====================
+
+  /// 深色画布背景 - #010102，近乎纯黑带微弱蓝色调
+  static const Color canvas = Color(0xFF010102);
+
+  /// 表面层级 1 - 卡片/面板，比画布高一个层级
+  static const Color surface1 = Color(0xFF0f1011);
+
+  /// 表面层级 2 - 特惠/悬浮状态
+  static const Color surface2 = Color(0xFF141516);
+
+  /// 表面层级 3 - 子导航、下拉菜单
+  static const Color surface3 = Color(0xFF18191a);
+
+  /// 表面层级 4 - 最深的悬浮表面
+  static const Color surface4 = Color(0xFF191a1b);
+
+  // ==================== hairline 边框 ====================
+
+  /// 卡片和分割线的 1px 边框
+  static const Color hairline = Color(0xFF23252a);
+
+  /// 较强的 1px 边框 - 输入框聚焦环
+  static const Color hairlineStrong = Color(0xFF34343a);
+
+  /// 嵌套表面的第三级边框
+  static const Color hairlineTertiary = Color(0xFF3e3e44);
+
+  // ==================== 主色调 - 薰衣草蓝 ====================
+
+  /// Linear 标志色 - 主要 CTA、品牌标记
+  static const Color primary = Color(0xFF5e6ad2);
+
+  /// 主色上的文本
+  static const Color onPrimary = Color(0xFFffffff);
+
+  /// 主色悬浮状态 - 较浅薰衣草
+  static const Color primaryHover = Color(0xFF828fff);
+
+  /// 主色聚焦状态 - 聚焦环色调
+  static const Color primaryFocus = Color(0xFF5e69d1);
+
+  /// 品牌安全色 - 柔和薰衣草灰
+  static const Color brandSecure = Color(0xFF7a7fad);
+
+  // ==================== Ink 文本层级 ====================
+
+  /// 主要文本 - 浅灰色 #f7f8f8
+  static const Color ink = Color(0xFFf7f8f8);
+
+  /// 次要文本 - #d0d6e0
+  static const Color inkMuted = Color(0xFFd0d6e0);
+
+  /// 第三级文本 - #8a8f98
+  static const Color inkSubtle = Color(0xFF8a8f98);
+
+  /// 第四级文本 - #62666d，用于禁用和脚注
+  static const Color inkTertiary = Color(0xFF62666d);
+
+  // ==================== 反向（浅色）调色板 ====================
+
+  /// 反向画布 - 纯白
+  static const Color inverseCanvas = Color(0xFFffffff);
+
+  /// 反向表面 1
+  static const Color inverseSurface1 = Color(0xFFf5f6f6);
+
+  /// 反向表面 2
+  static const Color inverseSurface2 = Color(0xFFf6f7f7);
+
+  /// 反向墨水 - 白色表面上的文本
+  static const Color inverseInk = Color(0xFF000000);
+
   // ==================== 语义色 ====================
 
-  /// 成功色 (绿色) - shadcn 风格，略柔和
-  static const Color success = Color(0xFF22C55E);
-  static const Color successDark = Color(0xFF16A34A);
-  static const Color successBg = Color(0x0D22C55E);
-  static const Color successBorder = Color(0xFF86EFAC);
+  /// 成功绿 - 状态药丸和成功指示器
+  static const Color semanticSuccess = Color(0xFF27a644);
 
-  /// 警告色 (橙色)
-  static const Color warning = Color(0xFFF59E0B);
-  static const Color warningDark = Color(0xFFD97706);
-  static const Color warningBg = Color(0x0DF97316);
-  static const Color warningBorder = Color(0xFFFCD34D);
-
-  /// 危险色 (红色)
-  static const Color danger = Color(0xFFEF4444);
-  static const Color dangerDark = Color(0xFFDC2626);
-  static const Color dangerBg = Color(0x0DEF4444);
-  static const Color dangerBorder = Color(0xFFFCA5A5);
-
-  /// 信息色 (蓝色)
-  static const Color info = Color(0xFF3B82F6);
-  static const Color infoDark = Color(0xFF0284C7);
-  static const Color infoBg = Color(0x0D38BDF8);
-  static const Color infoBorder = Color(0xFF93C5FD);
+  /// 遮罩叠加层 - 模态框黑色叠加
+  static const Color semanticOverlay = Color(0xFF000000);
 
   // ==================== 状态色映射 ====================
 
   /// 状态颜色映射表
   static const Map<String, Color> statusColors = {
-    'success': success,
-    'completed': successDark,
-    'approved': successDark,
-    'done': success,
-    'warning': warning,
-    'pending': warning,
-    'waiting': warning,
-    'in_progress': warning,
-    'danger': danger,
-    'failed': dangerDark,
-    'rejected': dangerDark,
-    'cancelled': danger,
-    'error': danger,
-    'info': info,
-    'processing': info,
-    'new': info,
+    'success': semanticSuccess,
+    'completed': semanticSuccess,
+    'approved': semanticSuccess,
+    'done': semanticSuccess,
+    'warning': inkSubtle,
+    'pending': inkMuted,
+    'waiting': inkMuted,
+    'in_progress': inkMuted,
+    'danger': Color(0xFFef4444),
+    'failed': Color(0xFFdc2626),
+    'rejected': Color(0xFFdc2626),
+    'cancelled': Color(0xFFef4444),
+    'error': Color(0xFFef4444),
+    'info': primary,
+    'processing': inkMuted,
+    'new': primary,
   };
 
   /// 根据状态字符串获取对应颜色
   static Color colorForStatus(String? status, {Color? fallback}) {
-    if (status == null) return fallback ?? info;
-    return statusColors[status.toLowerCase()] ?? fallback ?? info;
+    if (status == null) return fallback ?? inkMuted;
+    return statusColors[status.toLowerCase()] ?? fallback ?? inkMuted;
   }
 
   // ==================== 标签色系 ====================
 
-  /// 常用标签颜色（shadcn 风格调色板）
+  /// 常用标签颜色（Linear 产品内使用，不用于营销）
   static const List<Color> tagColors = [
-    Color(0xFFEF4444), // red
-    Color(0xFFF97316), // orange
-    Color(0xFFEAB308), // yellow
-    Color(0xFF22C55E), // green
-    Color(0xFF14B8A6), // teal
-    Color(0xFF3B82F6), // blue
-    Color(0xFF6366F1), // indigo
-    Color(0xFFEC4899), // pink
+    Color(0xFFef4444), // red
+    Color(0xFFf97316), // orange
+    Color(0xFFeab308), // yellow
+    Color(0xFF22c55e), // green
+    Color(0xFF14b8a6), // teal
+    Color(0xFF3b82f6), // blue
+    Color(0xFF6366f1), // indigo
+    Color(0xFFec4899), // pink
   ];
 
   /// 根据索引获取标签颜色
@@ -80,61 +135,95 @@ class ColorTokens {
     return tagColors[index % tagColors.length];
   }
 
-  // ==================== 中性色 - shadcn slate 风格 ====================
+  // ==================== 兼容性别名 ====================
 
-  /// 主文本 - 浅色背景
-  static const Color textDark = Color(0xFF0F172A);
+  /// @deprecated 请使用 surface1
+  static const Color surfaceDark = surface1;
 
-  /// 深色模式主文本
-  static const Color textOnDark = Color(0xFFF1F5F9);
+  /// @deprecated 请使用 inverseCanvas
+  static const Color surfaceLight = inverseCanvas;
 
-  /// 次要文本 - 更柔和
-  static const Color textSecondary = Color(0xFF64748B);
+  /// @deprecated 请使用 hairline
+  static const Color border = hairline;
 
-  /// 禁用文本
-  static const Color textDisabled = Color(0xFF94A3B8);
+  /// @deprecated 请使用 hairlineStrong
+  static const Color borderDark = hairlineStrong;
 
-  /// 边框色 - 更柔和的 slate-200
-  static const Color border = Color(0xFFE2E8F0);
+  /// @deprecated 请使用 hairline
+  static const Color borderLight = hairline;
 
-  /// 分割线
-  static const Color divider = Color(0xFFE2E8F0);
+  /// @deprecated 请使用 semanticSuccess
+  static const Color success = semanticSuccess;
 
-  // ==================== 表面色 - 层次更分明 ====================
+  /// @deprecated 请使用 semanticSuccess (success dark variant)
+  static const Color successDark = Color(0xFF16A34A);
 
-  /// 浅色模式表面
-  static const Color surfaceLight = Color(0xFFFFFFFF);
+  /// @deprecated 请使用 semanticSuccess
+  static const Color successBg = Color(0xFF27a644);
 
-  /// 深色模式表面
-  static const Color surfaceDark = Color(0xFF0F172A);
+  // ── 兼容性别名：warning/danger/info ──────────────────────
 
-  /// 次级表面（卡片/面板背景）
-  static const Color surfaceAltLight = Color(0xFFF8FAFC);
-  static const Color surfaceAltDark = Color(0xFF1E293B);
+  /// @deprecated 请使用 inkSubtle (Linear 没有营销 warning 色)
+  static const Color warning = inkSubtle;
 
-  /// 基础背景
-  static const Color backgroundBaseLight = Color(0xFFF1F5F9);
-  static const Color backgroundBaseDark = Color(0xFF0B1120);
+  /// @deprecated 请使用 inkSubtle
+  static const Color warningDark = inkTertiary;
 
-  /// 侧边栏背景
-  static const Color sidebarBaseLight = Color(0xFFFFFFFF);
-  static const Color sidebarBaseDark = Color(0xFF0F172A);
+  /// @deprecated 请使用 inkSubtle
+  static const Color warningBg = Color(0xFF8a8f98);
 
-  /// 深色模式边框
-  static const Color borderDark = Color(0xFF334155);
-  static const Color borderLight = Color(0xFFE2E8F0);
+  /// @deprecated 请使用 semanticSuccess
+  static const Color danger = Color(0xFFef4444);
 
-  /// 侧边栏文本
-  static const Color sidebarTextLight = Color(0xFF475569);
-  static const Color sidebarTextDark = Color(0xFFCBD5E1);
+  /// @deprecated 请使用 semanticSuccess
+  static const Color dangerDark = Color(0xFFdc2626);
 
-  // ==================== 阴影色 ====================
+  /// @deprecated 请使用 primary
+  static const Color info = primary;
 
-  /// 阴影基础色（深色模式）
-  static const Color shadowDark = Color(0xFF000000);
+  /// @deprecated 请使用 primary
+  static const Color infoDark = Color(0xFF5e69d1);
 
-  /// 阴影基础色（浅色模式）
-  static const Color shadowLight = Color(0xFF0F172A);
+  /// @deprecated 请使用 primary
+  static const Color infoBg = Color(0xFF5e6ad2);
+
+  /// @deprecated 请使用 ink
+
+  /// @deprecated 请使用 ink
+  static const Color textOnDark = ink;
+
+  /// @deprecated 请使用 inverseInk
+  static const Color textDark = inverseInk;
+
+  /// @deprecated 请使用 inkSubtle
+  static const Color textSecondary = inkSubtle;
+
+  /// @deprecated 请使用 inkTertiary
+  static const Color textDisabled = inkTertiary;
+
+  /// @deprecated 请使用 canvas
+  static const Color backgroundBaseDark = canvas;
+
+  /// @deprecated 请使用 inverseCanvas
+  static const Color backgroundBaseLight = inverseCanvas;
+
+  /// @deprecated 请使用 surface1
+  static const Color sidebarBaseDark = surface1;
+
+  /// @deprecated 请使用 inverseCanvas
+  static const Color sidebarBaseLight = inverseCanvas;
+
+  /// @deprecated 请使用 inkMuted
+  static const Color sidebarTextDark = inkMuted;
+
+  /// @deprecated 请使用 inkSubtle
+  static const Color sidebarTextLight = inkSubtle;
+
+  /// 深色模式阴影
+  static const Color shadowDark = semanticOverlay;
+
+  /// 浅色模式阴影
+  static const Color shadowLight = Color(0xFF0f172a);
 }
 
 /// 颜色扩展方法

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../core/presentation/layout/opacity_tokens.dart';
 
+/// Linear 语义色扩展
+///
+/// 提供语义化颜色（成功、警告、危险、信息）和表面层级颜色
 @immutable
 class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
   const AppSemanticColors({
@@ -86,6 +89,9 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
   Color getInfoBg() => infoBg ?? info.withValues(alpha: OpacityTokens.subtle);
 }
 
+/// Linear 应用色扩展
+///
+/// 提供表面层级、文本和边框颜色
 @immutable
 class AppColors extends ThemeExtension<AppColors> {
   const AppColors({

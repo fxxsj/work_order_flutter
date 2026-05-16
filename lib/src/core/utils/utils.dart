@@ -1,100 +1,61 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/core/controllers/theme_controller.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class Utils {
   static getThemeData({Color? themeColor, Brightness? brightness}) {
-    final resolvedThemeColor = themeColor ?? ThemeController.defaultSeed;
+    final resolvedThemeColor = themeColor ?? const Color(0xFF5e6ad2);
     final resolvedBrightness = brightness ?? Brightness.light;
-    final baseScheme = ColorScheme.fromSeed(
-      seedColor: resolvedThemeColor,
+    final isDark = resolvedBrightness == Brightness.dark;
+
+    // Linear 基础色
+    const linearCanvas = Color(0xFF010102);
+    const linearSurface1 = Color(0xFF0f1011);
+    const linearHairline = Color(0xFF23252a);
+    const linearInk = Color(0xFFf7f8f8);
+    const linearInkMuted = Color(0xFFd0d6e0);
+    const linearInkSubtle = Color(0xFF8a8f98);
+    const linearSuccess = Color(0xFF27a644);
+
+    // 用户选择的 seed color 只影响 primary 相关颜色
+    final primary = resolvedThemeColor;
+
+    final scheme = ColorScheme.fromSeed(
+      seedColor: primary,
       brightness: resolvedBrightness,
-    );
-    Color shiftLightness(Color color, double amount) {
-      final hsl = HSLColor.fromColor(color);
-      return hsl
-          .withLightness((hsl.lightness + amount).clamp(0.0, 1.0))
-          .toColor();
-    }
-
-    final seed = resolvedThemeColor;
-    final seedLight = shiftLightness(seed, 0.28);
-    final seedDark = shiftLightness(seed, -0.22);
-    final scheme = baseScheme.copyWith(
-      primary: seed,
-      secondary: seed,
-      primaryContainer:
-          resolvedBrightness == Brightness.dark ? seedDark : seedLight,
-      secondaryContainer:
-          resolvedBrightness == Brightness.dark ? seedDark : seedLight,
-      surface: resolvedBrightness == Brightness.dark
-          ? ColorTokens.surfaceDark
-          : ColorTokens.surfaceLight,
+    ).copyWith(
+      primary: primary,
+      onPrimary: Colors.white,
+      surface: isDark ? linearSurface1 : Colors.white,
       surfaceTint: Colors.transparent,
-      shadow: resolvedBrightness == Brightness.dark
-          ? ColorTokens.shadowDark
-          : ColorTokens.shadowLight,
     );
-    final semantic = resolvedBrightness == Brightness.dark
-        ? const AppSemanticColors(
-            success: ColorTokens.success,
-            warning: ColorTokens.warning,
-            danger: ColorTokens.danger,
-            info: ColorTokens.info,
-            surfaceAlt: ColorTokens.surfaceAltDark,
-            shadowStrong: ColorTokens.shadowDark,
-            unreadBackground: Color(0xFF2D3748),
-            successBg: ColorTokens.successBg,
-            warningBg: ColorTokens.warningBg,
-            dangerBg: ColorTokens.dangerBg,
-            infoBg: Color(0x1A38BDF8),
-          )
-        : const AppSemanticColors(
-            success: ColorTokens.successDark,
-            warning: ColorTokens.warningDark,
-            danger: ColorTokens.dangerDark,
-            info: ColorTokens.infoDark,
-            surfaceAlt: ColorTokens.surfaceAltLight,
-            shadowStrong: ColorTokens.shadowLight,
-            unreadBackground: Color(0xFFEDF2F7),
-            successBg: Color(0x1A16A34A),
-            warningBg: Color(0x1AD97706),
-            dangerBg: Color(0x1ADC2626),
-            infoBg: Color(0x1A0284C7),
-          );
-    Color mix(Color a, Color b, double t) => Color.lerp(a, b, t) ?? a;
 
-    final seedBase = resolvedThemeColor;
-    final seedHsl = HSLColor.fromColor(seedBase);
-    final seedSoft = seedHsl
-        .withLightness((seedHsl.lightness + 0.32).clamp(0.0, 1.0))
-        .toColor();
-    final seedSoft2 = seedHsl
-        .withLightness((seedHsl.lightness + 0.42).clamp(0.0, 1.0))
-        .toColor();
-    final seedDeep = seedHsl
-        .withLightness((seedHsl.lightness - 0.28).clamp(0.0, 1.0))
-        .toColor();
+    // Semantic colors
+    final semantic = AppSemanticColors(
+      success: linearSuccess,
+      warning: isDark ? linearInkSubtle : const Color(0xFF8a8f98),
+      danger: const Color(0xFFef4444),
+      info: primary,
+      surfaceAlt: isDark ? const Color(0xFF141516) : const Color(0xFFF8FAFC),
+      shadowStrong: const Color(0xFF000000),
+      unreadBackground: isDark ? const Color(0xFF1a1a1a) : const Color(0xFFEDF2F7),
+      successBg: linearSuccess.withValues(alpha: 0.12),
+      warningBg: (isDark ? linearInkSubtle : const Color(0xFF8a8f98)).withValues(alpha: 0.12),
+      dangerBg: const Color(0xFFef4444).withValues(alpha: 0.12),
+      infoBg: primary.withValues(alpha: 0.12),
+    );
 
-    final appColors = resolvedBrightness == Brightness.dark
-        ? AppColors(
-            background: mix(ColorTokens.backgroundBaseDark, seedDeep, 0.22),
-            surface: mix(ColorTokens.surfaceDark, seedDeep, 0.18),
-            sidebar: mix(ColorTokens.sidebarBaseDark, seedDeep, 0.2),
-            subtleText: const Color(0xFF9AA4B2),
-            sidebarText: const Color(0xFFE2E8F0),
-            borderColor: mix(ColorTokens.borderDark, seedDeep, 0.24),
-          )
-        : AppColors(
-            background: mix(ColorTokens.backgroundBaseLight, seedSoft2, 0.12),
-            surface: mix(ColorTokens.surfaceLight, seedSoft, 0.04),
-            sidebar: mix(ColorTokens.sidebarBaseLight, seedSoft, 0.08),
-            subtleText: ColorTokens.textSecondary,
-            sidebarText: ColorTokens.sidebarTextLight,
-            borderColor: mix(ColorTokens.borderLight, seedSoft, 0.14),
-          );
+    // App colors - Linear surface hierarchy + seed influence
+    final appColors = AppColors(
+      background: isDark ? linearCanvas : const Color(0xFFF1F5F9),
+      surface: isDark ? linearSurface1 : Colors.white,
+      sidebar: isDark ? linearCanvas : Colors.white,
+      subtleText: isDark ? linearInkSubtle : const Color(0xFF64748B),
+      sidebarText: isDark ? linearInkMuted : const Color(0xFF475569),
+      borderColor: isDark ? linearHairline : const Color(0xFFE2E8F0),
+    );
+
     final baseTextTheme = ThemeData(brightness: resolvedBrightness).textTheme;
     const headingFont = 'AGENCYR';
     const bodyFont = 'Roboto';
@@ -167,6 +128,7 @@ class Utils {
         fontFamily: bodyFont,
       ),
     );
+
     final base = ThemeData(
       useMaterial3: true,
       brightness: resolvedBrightness,
@@ -178,8 +140,7 @@ class Utils {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: appColors.surface,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         border: OutlineInputBorder(
           borderRadius: RadiusTokens.bMd,
           borderSide: BorderSide(
@@ -194,7 +155,7 @@ class Utils {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: RadiusTokens.bMd,
-          borderSide: BorderSide(color: scheme.primary, width: 2),
+          borderSide: BorderSide(color: primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: RadiusTokens.bMd,
@@ -229,18 +190,14 @@ class Utils {
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: appColors.surface,
-        foregroundColor: resolvedBrightness == Brightness.dark
-            ? ColorTokens.textOnDark
-            : ColorTokens.textDark,
+        foregroundColor: isDark ? linearInk : const Color(0xFF0F172A),
         elevation: 0,
-        scrolledUnderElevation: 1.5,
+        scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
         titleTextStyle: TextStyle(
           fontSize: TextTokens.fontSizeTitleMedium,
           fontWeight: FontWeight.w600,
-          color: resolvedBrightness == Brightness.dark
-              ? ColorTokens.textOnDark
-              : ColorTokens.textDark,
+          color: isDark ? linearInk : const Color(0xFF0F172A),
         ),
       ),
       iconTheme: IconThemeData(color: scheme.primary),
@@ -255,8 +212,7 @@ class Utils {
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: RadiusTokens.bLg,
-          side:
-              BorderSide(color: appColors.borderColor.withValues(alpha: OpacityTokens.strong)),
+          side: BorderSide(color: appColors.borderColor.withValues(alpha: OpacityTokens.strong)),
         ),
       ),
       scrollbarTheme: ScrollbarThemeData(
@@ -281,8 +237,7 @@ class Utils {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: ButtonStyle(
-          side: WidgetStateProperty.all(
-              BorderSide(color: scheme.primary.withAlpha(128))),
+          side: WidgetStateProperty.all(BorderSide(color: scheme.primary.withAlpha(128))),
           foregroundColor: WidgetStateProperty.all(scheme.primary),
           mouseCursor: WidgetStateProperty.all(SystemMouseCursors.click),
           textStyle: WidgetStateProperty.all(
@@ -295,14 +250,13 @@ class Utils {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ButtonStyle(
-            backgroundColor: WidgetStateProperty.all(scheme.primary)),
+          backgroundColor: WidgetStateProperty.all(scheme.primary),
+        ),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: resolvedBrightness == Brightness.dark
-            ? ColorTokens.surfaceDark
-            : ColorTokens.sidebarBaseDark,
-        contentTextStyle: TextStyle(color: ColorTokens.textOnDark),
+        backgroundColor: isDark ? linearSurface1 : const Color(0xFF0F172A),
+        contentTextStyle: TextStyle(color: isDark ? linearInk : const Color(0xFFF1F5F9)),
       ),
       extensions: [semantic, appColors],
     );

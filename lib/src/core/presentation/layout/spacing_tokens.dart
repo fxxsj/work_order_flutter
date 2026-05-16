@@ -4,6 +4,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_l
 /// 间距设计令牌
 ///
 /// 统一所有间距值，禁止在业务代码中硬编码 SizedBox height/width 和 EdgeInsets 数值。
+/// 基于 Linear 设计系统规范，基础单元为 4px。
 ///
 /// 使用示例：
 /// ```dart
@@ -20,17 +21,17 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_l
 class SpacingTokens {
   const SpacingTokens._();
 
-  // ── 基础间距值 ──────────────────────────────────────────
+  // ── 基础间距值 (Linear 规范) ──────────────────────────
 
   static const double xxxs = 2;
-  static const double xxs = 6;
-  static const double xs = 4;
-  static const double sm = 8;
-  static const double md = 12;
-  static const double lg = 16;
-  static const double xl = 24;
-  static const double xxl = 32;
-  static const double xxxl = 48;
+  static const double xxs = 4;
+  static const double xs = 8;
+  static const double sm = 12;
+  static const double md = 16;
+  static const double lg = 24;
+  static const double xl = 32;
+  static const double xxl = 48;
+  static const double section = 96;
 
   // ── 垂直间距快捷方式（用于 SizedBox(height: ...)） ─────
 
@@ -41,6 +42,7 @@ class SpacingTokens {
   static const SizedBox vMd = SizedBox(height: md);
   static const SizedBox vLg = SizedBox(height: lg);
   static const SizedBox vXl = SizedBox(height: xl);
+  static const SizedBox vXxl = SizedBox(height: xxl);
 
   // ── 水平间距快捷方式（用于 SizedBox(width: ...)） ──────
 
@@ -60,33 +62,33 @@ class SpacingTokens {
 
   /// 8 水平 + 12 垂直
   static const EdgeInsets h8v12 =
-      EdgeInsets.symmetric(horizontal: sm, vertical: md);
+      EdgeInsets.symmetric(horizontal: xs, vertical: sm);
 
   /// 12 水平 + 12 垂直
   static const EdgeInsets h12v12 =
-      EdgeInsets.symmetric(horizontal: md, vertical: md);
+      EdgeInsets.symmetric(horizontal: sm, vertical: sm);
 
   /// 12 水平 + 16 垂直
   static const EdgeInsets h12v16 =
-      EdgeInsets.symmetric(horizontal: md, vertical: lg);
+      EdgeInsets.symmetric(horizontal: sm, vertical: md);
 
   /// 16 水平 + 12 垂直
   static const EdgeInsets h16v12 =
-      EdgeInsets.symmetric(horizontal: lg, vertical: md);
+      EdgeInsets.symmetric(horizontal: md, vertical: sm);
 
   /// 16 水平 + 16 垂直
   static const EdgeInsets h16v16 =
-      EdgeInsets.symmetric(horizontal: lg, vertical: lg);
+      EdgeInsets.symmetric(horizontal: md, vertical: md);
 
   /// 24 水平 + 12 垂直
   static const EdgeInsets h24v12 =
-      EdgeInsets.symmetric(horizontal: xl, vertical: md);
+      EdgeInsets.symmetric(horizontal: lg, vertical: sm);
 
   /// 24 水平 + 16 垂直
   static const EdgeInsets h24v16 =
-      EdgeInsets.symmetric(horizontal: xl, vertical: lg);
+      EdgeInsets.symmetric(horizontal: lg, vertical: md);
 
-  // ── 响应式间距方法 ──────────────────────────────────────
+  // ── 响应式间距方法 ─────────────────────────────────────
 
   static EdgeInsets pagePadding(BuildContext context) {
     final isXs = ResponsiveLayout.isXs(context);

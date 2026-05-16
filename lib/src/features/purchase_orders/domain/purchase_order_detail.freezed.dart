@@ -843,6 +843,8 @@ mixin _$PurchaseOrderItemDetail {
   String? get statusDisplay => throw _privateConstructorUsedError;
   @JsonKey(fromJson: _stringOrNullFromJson)
   String? get notes => throw _privateConstructorUsedError;
+  @JsonKey(name: 'work_order_material', fromJson: _intOrNullFromJson)
+  int? get workOrderMaterialId => throw _privateConstructorUsedError;
 
   /// Serializes this PurchaseOrderItemDetail to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -886,7 +888,9 @@ abstract class $PurchaseOrderItemDetailCopyWith<$Res> {
       @JsonKey(fromJson: _stringOrNullFromJson) String? status,
       @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
       String? statusDisplay,
-      @JsonKey(fromJson: _stringOrNullFromJson) String? notes});
+      @JsonKey(fromJson: _stringOrNullFromJson) String? notes,
+      @JsonKey(name: 'work_order_material', fromJson: _intOrNullFromJson)
+      int? workOrderMaterialId});
 }
 
 /// @nodoc
@@ -919,6 +923,7 @@ class _$PurchaseOrderItemDetailCopyWithImpl<$Res,
     Object? status = freezed,
     Object? statusDisplay = freezed,
     Object? notes = freezed,
+    Object? workOrderMaterialId = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -977,6 +982,10 @@ class _$PurchaseOrderItemDetailCopyWithImpl<$Res,
           ? _value.notes
           : notes // ignore: cast_nullable_to_non_nullable
               as String?,
+      workOrderMaterialId: freezed == workOrderMaterialId
+          ? _value.workOrderMaterialId
+          : workOrderMaterialId // ignore: cast_nullable_to_non_nullable
+              as int?,
     ) as $Val);
   }
 }
@@ -1016,7 +1025,9 @@ abstract class _$$PurchaseOrderItemDetailImplCopyWith<$Res>
       @JsonKey(fromJson: _stringOrNullFromJson) String? status,
       @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
       String? statusDisplay,
-      @JsonKey(fromJson: _stringOrNullFromJson) String? notes});
+      @JsonKey(fromJson: _stringOrNullFromJson) String? notes,
+      @JsonKey(name: 'work_order_material', fromJson: _intOrNullFromJson)
+      int? workOrderMaterialId});
 }
 
 /// @nodoc
@@ -1048,6 +1059,7 @@ class __$$PurchaseOrderItemDetailImplCopyWithImpl<$Res>
     Object? status = freezed,
     Object? statusDisplay = freezed,
     Object? notes = freezed,
+    Object? workOrderMaterialId = freezed,
   }) {
     return _then(_$PurchaseOrderItemDetailImpl(
       id: null == id
@@ -1106,6 +1118,10 @@ class __$$PurchaseOrderItemDetailImplCopyWithImpl<$Res>
           ? _value.notes
           : notes // ignore: cast_nullable_to_non_nullable
               as String?,
+      workOrderMaterialId: freezed == workOrderMaterialId
+          ? _value.workOrderMaterialId
+          : workOrderMaterialId // ignore: cast_nullable_to_non_nullable
+              as int?,
     ));
   }
 }
@@ -1138,7 +1154,9 @@ class _$PurchaseOrderItemDetailImpl implements _PurchaseOrderItemDetail {
       @JsonKey(fromJson: _stringOrNullFromJson) this.status,
       @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
       this.statusDisplay,
-      @JsonKey(fromJson: _stringOrNullFromJson) this.notes});
+      @JsonKey(fromJson: _stringOrNullFromJson) this.notes,
+      @JsonKey(name: 'work_order_material', fromJson: _intOrNullFromJson)
+      this.workOrderMaterialId});
 
   factory _$PurchaseOrderItemDetailImpl.fromJson(Map<String, dynamic> json) =>
       _$$PurchaseOrderItemDetailImplFromJson(json);
@@ -1188,10 +1206,13 @@ class _$PurchaseOrderItemDetailImpl implements _PurchaseOrderItemDetail {
   @override
   @JsonKey(fromJson: _stringOrNullFromJson)
   final String? notes;
+  @override
+  @JsonKey(name: 'work_order_material', fromJson: _intOrNullFromJson)
+  final int? workOrderMaterialId;
 
   @override
   String toString() {
-    return 'PurchaseOrderItemDetail(id: $id, materialId: $materialId, materialName: $materialName, materialCode: $materialCode, materialUnit: $materialUnit, supplierCode: $supplierCode, quantity: $quantity, receivedQuantity: $receivedQuantity, remainingQuantity: $remainingQuantity, unitPrice: $unitPrice, subtotal: $subtotal, status: $status, statusDisplay: $statusDisplay, notes: $notes)';
+    return 'PurchaseOrderItemDetail(id: $id, materialId: $materialId, materialName: $materialName, materialCode: $materialCode, materialUnit: $materialUnit, supplierCode: $supplierCode, quantity: $quantity, receivedQuantity: $receivedQuantity, remainingQuantity: $remainingQuantity, unitPrice: $unitPrice, subtotal: $subtotal, status: $status, statusDisplay: $statusDisplay, notes: $notes, workOrderMaterialId: $workOrderMaterialId)';
   }
 
   @override
@@ -1223,7 +1244,9 @@ class _$PurchaseOrderItemDetailImpl implements _PurchaseOrderItemDetail {
             (identical(other.status, status) || other.status == status) &&
             (identical(other.statusDisplay, statusDisplay) ||
                 other.statusDisplay == statusDisplay) &&
-            (identical(other.notes, notes) || other.notes == notes));
+            (identical(other.notes, notes) || other.notes == notes) &&
+            (identical(other.workOrderMaterialId, workOrderMaterialId) ||
+                other.workOrderMaterialId == workOrderMaterialId));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1243,7 +1266,8 @@ class _$PurchaseOrderItemDetailImpl implements _PurchaseOrderItemDetail {
       subtotal,
       status,
       statusDisplay,
-      notes);
+      notes,
+      workOrderMaterialId);
 
   /// Create a copy of PurchaseOrderItemDetail
   /// with the given fields replaced by the non-null parameter values.
@@ -1264,34 +1288,35 @@ class _$PurchaseOrderItemDetailImpl implements _PurchaseOrderItemDetail {
 
 abstract class _PurchaseOrderItemDetail implements PurchaseOrderItemDetail {
   const factory _PurchaseOrderItemDetail(
-          {@JsonKey(fromJson: _intFromJson) required final int id,
-          @JsonKey(name: 'material', fromJson: _intOrNullFromJson)
-          final int? materialId,
-          @JsonKey(name: 'material_name', fromJson: _stringOrNullFromJson)
-          final String? materialName,
-          @JsonKey(name: 'material_code', fromJson: _stringOrNullFromJson)
-          final String? materialCode,
-          @JsonKey(
-              name: 'material_unit',
-              readValue: _readMaterialUnit,
-              fromJson: _stringOrNullFromJson)
-          final String? materialUnit,
-          @JsonKey(name: 'supplier_code', fromJson: _stringOrNullFromJson)
-          final String? supplierCode,
-          @JsonKey(fromJson: _doubleOrNullFromJson) final double? quantity,
-          @JsonKey(name: 'received_quantity', fromJson: _doubleOrNullFromJson)
-          final double? receivedQuantity,
-          @JsonKey(name: 'remaining_quantity', fromJson: _doubleOrNullFromJson)
-          final double? remainingQuantity,
-          @JsonKey(name: 'unit_price', fromJson: _doubleOrNullFromJson)
-          final double? unitPrice,
-          @JsonKey(name: 'subtotal', fromJson: _doubleOrNullFromJson)
-          final double? subtotal,
-          @JsonKey(fromJson: _stringOrNullFromJson) final String? status,
-          @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
-          final String? statusDisplay,
-          @JsonKey(fromJson: _stringOrNullFromJson) final String? notes}) =
-      _$PurchaseOrderItemDetailImpl;
+      {@JsonKey(fromJson: _intFromJson) required final int id,
+      @JsonKey(name: 'material', fromJson: _intOrNullFromJson)
+      final int? materialId,
+      @JsonKey(name: 'material_name', fromJson: _stringOrNullFromJson)
+      final String? materialName,
+      @JsonKey(name: 'material_code', fromJson: _stringOrNullFromJson)
+      final String? materialCode,
+      @JsonKey(
+          name: 'material_unit',
+          readValue: _readMaterialUnit,
+          fromJson: _stringOrNullFromJson)
+      final String? materialUnit,
+      @JsonKey(name: 'supplier_code', fromJson: _stringOrNullFromJson)
+      final String? supplierCode,
+      @JsonKey(fromJson: _doubleOrNullFromJson) final double? quantity,
+      @JsonKey(name: 'received_quantity', fromJson: _doubleOrNullFromJson)
+      final double? receivedQuantity,
+      @JsonKey(name: 'remaining_quantity', fromJson: _doubleOrNullFromJson)
+      final double? remainingQuantity,
+      @JsonKey(name: 'unit_price', fromJson: _doubleOrNullFromJson)
+      final double? unitPrice,
+      @JsonKey(name: 'subtotal', fromJson: _doubleOrNullFromJson)
+      final double? subtotal,
+      @JsonKey(fromJson: _stringOrNullFromJson) final String? status,
+      @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
+      final String? statusDisplay,
+      @JsonKey(fromJson: _stringOrNullFromJson) final String? notes,
+      @JsonKey(name: 'work_order_material', fromJson: _intOrNullFromJson)
+      final int? workOrderMaterialId}) = _$PurchaseOrderItemDetailImpl;
 
   factory _PurchaseOrderItemDetail.fromJson(Map<String, dynamic> json) =
       _$PurchaseOrderItemDetailImpl.fromJson;
@@ -1341,6 +1366,9 @@ abstract class _PurchaseOrderItemDetail implements PurchaseOrderItemDetail {
   @override
   @JsonKey(fromJson: _stringOrNullFromJson)
   String? get notes;
+  @override
+  @JsonKey(name: 'work_order_material', fromJson: _intOrNullFromJson)
+  int? get workOrderMaterialId;
 
   /// Create a copy of PurchaseOrderItemDetail
   /// with the given fields replaced by the non-null parameter values.

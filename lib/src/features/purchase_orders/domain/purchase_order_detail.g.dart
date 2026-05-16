@@ -82,6 +82,7 @@ _$PurchaseOrderItemDetailImpl _$$PurchaseOrderItemDetailImplFromJson(
       status: _stringOrNullFromJson(json['status']),
       statusDisplay: _stringOrNullFromJson(json['status_display']),
       notes: _stringOrNullFromJson(json['notes']),
+      workOrderMaterialId: _intOrNullFromJson(json['work_order_material']),
     );
 
 Map<String, dynamic> _$$PurchaseOrderItemDetailImplToJson(
@@ -101,4 +102,5 @@ Map<String, dynamic> _$$PurchaseOrderItemDetailImplToJson(
       'status': instance.status,
       'status_display': instance.statusDisplay,
       'notes': instance.notes,
+      'work_order_material': instance.workOrderMaterialId,
     };
