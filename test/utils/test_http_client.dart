@@ -12,7 +12,7 @@ import 'package:work_order_app/src/core/models/api_response.dart';
 /// // Use mockDio in your test
 /// ```
 class MockDioClient {
-  final _handlers = <String, _MockHandler>[];
+  final List<_MockHandler> _handlers = [];
 
   Dio get dio => _createMockDio();
 
