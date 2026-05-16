@@ -16,6 +16,10 @@ class TestViewModel extends BaseViewModel {
       return 42;
     });
   }
+
+  /// 暴露 setLoading 用于测试
+  @override
+  void setLoading(bool value) => super.setLoading(value);
 }
 
 void main() {

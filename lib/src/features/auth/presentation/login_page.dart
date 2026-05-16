@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/api_exception.dart';
 import 'package:work_order_app/src/core/common/app_metadata.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/core/presentation/layout/animation_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/animated_button.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/models/api_response.dart';
 
@@ -79,7 +80,7 @@ class _MockHttpClientAdapter implements HttpClientAdapter {
   Future<ResponseBody> fetch(
     RequestOptions requestOptions,
     Stream<Uint8List>? requestStream,
-    CancelToken? cancelToken,
+    Future<void>? cancelFuture,
   ) async {
     final handler = _mockClient.getHandler(
       requestOptions.method,

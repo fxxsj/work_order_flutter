@@ -20,7 +20,6 @@ class MockGenericApiService implements GenericRepository {
     if (shouldFail) throw Exception('Fetch failed');
     lastParams = {'page': page, 'pageSize': pageSize, 'search': search, 'extraParams': extraParams};
     final start = (page - 1) * pageSize;
-    final end = start + pageSize;
     final items = mockData
         .skip(start)
         .take(pageSize)

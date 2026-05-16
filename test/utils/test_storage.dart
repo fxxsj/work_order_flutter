@@ -1,5 +1,3 @@
-import 'package:shared_preferences/shared_preferences.dart';
-
 /// Mock AppStorage for testing.
 ///
 /// Usage:
