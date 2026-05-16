@@ -8,6 +8,7 @@ Future<void> showPurchaseOrderDetailDialog(
   required PurchaseOrderDetail detail,
   String title = '采购单详情',
   String closeText = '取消',
+  ValueChanged<int>? onWorkOrderTap,
 }) {
   return showDialog<void>(
     context: context,
@@ -32,7 +33,12 @@ Future<void> showPurchaseOrderDetailDialog(
               value: _displayText(detail.statusDisplay ?? detail.status),
             ),
             _DetailRow(
-                label: '关联施工单', value: _displayText(detail.workOrderNumber)),
+              label: '关联施工单',
+              value: _displayText(detail.workOrderNumber),
+              onTap: detail.workOrderId != null && onWorkOrderTap != null
+                  ? () => onWorkOrderTap!(detail.workOrderId!)
+                  : null,
+            ),
             _DetailRow(label: '预计到货', value: _formatDate(detail.expectedDate)),
             _DetailRow(label: '下单日期', value: _formatDate(detail.orderedDate)),
             _DetailRow(
@@ -117,30 +123,43 @@ Future<void> showPurchaseOrderDetailDialog(
 }
 
 class _DetailRow extends StatelessWidget {
-  const _DetailRow({required this.label, required this.value});
+  const _DetailRow({required this.label, required this.value, this.onTap});
 
   final String label;
   final String value;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 96,
-            child: Text(
-              '$label：',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+    final content = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 96,
+          child: Text(
+            '$label：',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
             ),
           ),
-          Expanded(child: Text(value, style: theme.textTheme.bodyMedium)),
-        ],
+        ),
+        Expanded(child: Text(value, style: theme.textTheme.bodyMedium)),
+        if (onTap != null)
+          Icon(
+            Icons.arrow_outward,
+            size: 16,
+            color: theme.colorScheme.primary,
+          ),
+      ],
+    );
+    if (onTap == null) return Padding(padding: const EdgeInsets.only(bottom: 8), child: content);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(4),
+        child: content,
       ),
     );
   }

@@ -125,6 +125,14 @@ class PurchaseOrderApiService {
     return _mapFromResponse(response.data);
   }
 
+  Future<Map<String, dynamic>> createFromWorkOrder(int workOrderId) async {
+    final response = await _client.post(
+      '/purchase-orders/create_from_work_order/',
+      data: {'work_order_id': workOrderId},
+    );
+    return _mapFromResponse(response.data);
+  }
+
   Map<String, dynamic> _mapFromResponse(dynamic data) {
     if (data is Map<String, dynamic>) {
       return Map<String, dynamic>.from(data);

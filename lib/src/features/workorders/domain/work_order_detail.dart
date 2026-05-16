@@ -48,6 +48,7 @@ class WorkOrderDetail {
     this.salesOrderSummaries = const [],
     this.qualityInspectionSummaries = const [],
     this.invoiceSummaries = const [],
+    this.purchaseOrderSummaries = const [],
     this.products = const [],
     this.materials = const [],
     this.processes = const [],
@@ -110,6 +111,7 @@ class WorkOrderDetail {
   final List<TraceabilitySummaryItem> salesOrderSummaries;
   final List<TraceabilitySummaryItem> qualityInspectionSummaries;
   final List<TraceabilitySummaryItem> invoiceSummaries;
+  final List<TraceabilitySummaryItem> purchaseOrderSummaries;
   final List<WorkOrderProductItem> products;
   final List<WorkOrderMaterialItem> materials;
   final List<WorkOrderProcessItem> processes;
@@ -182,6 +184,9 @@ class WorkOrderDetail {
       invoiceSummaries: _parseSummaryList(
         json['invoice_summaries'],
         fallbackNumbers: json['invoice_numbers'],
+      ),
+      purchaseOrderSummaries: _parseSummaryList(
+        json['purchase_order_summaries'],
       ),
       products: _parseProducts(json['products']),
       materials: _parseMaterials(json['materials']),

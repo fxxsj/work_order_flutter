@@ -29,6 +29,7 @@ import 'package:work_order_app/src/features/workorders/presentation/widgets/work
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_page_views.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_print_preview_dialog.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_sync_preview_dialog.dart';
+import 'package:work_order_app/src/features/purchase_orders/data/purchase_order_api_service.dart';
 
 class WorkOrderDetailEntry extends StatelessWidget {
   const WorkOrderDetailEntry({super.key, required this.workOrderId});
@@ -432,6 +433,29 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     );
   }
 
+  Future<void> _handleCreatePurchaseOrder() async {
+    if (_detail == null) return;
+    try {
+      final api = context.read<PurchaseOrderApiService>();
+      final result = await api.createFromWorkOrder(_detail!.id);
+      final po = result['purchase_orders']?.first;
+      if (po != null) {
+        ToastUtil.showSuccess('已创建采购单 ${po['order_number']}');
+      }
+      await _loadDetail();
+    } catch (err) {
+      ToastUtil.showError('创建采购单失败: $err');
+    }
+  }
+
+  void _openPurchaseOrderDetail(int id) {
+    context.push('/purchase-orders/$id');
+  }
+
+  void _openPurchaseOrdersList() {
+    context.go('/purchase-orders?work_order=${_detail?.id}');
+  }
+
   Widget _buildSection(String title, Widget child) {
     return DetailSectionCard(title: title, child: child);
   }
@@ -589,6 +613,10 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                     value: WorkOrderDetailViewMode.approval,
                     label: '审批流程',
                   ),
+                  PageModeOption(
+                    value: WorkOrderDetailViewMode.procurement,
+                    label: '采购',
+                  ),
                 ],
                 onChanged: (value) => setState(() => _viewMode = value),
               ),
@@ -687,7 +715,12 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                       onAssignTask: _handleAssignTask,
                       onUpdateTask: _handleUpdateTask,
                       onCompleteTask: _handleCompleteTask,
-                      onSyncPreview: _showSyncPreviewDialog,
+                      onSyncPreview: _detail != null
+                          ? _showSyncPreviewDialog
+                          : (_) async {},
+                      onCreatePurchaseOrder: _handleCreatePurchaseOrder,
+                      onViewPurchaseOrder: (id) => _openPurchaseOrderDetail(id),
+                      onViewPurchaseOrdersList: _openPurchaseOrdersList,
                       emptyText: _emptyText,
                       formatDate: _formatDate,
                       formatAmount: _formatAmount,

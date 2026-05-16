@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
@@ -37,6 +38,7 @@ import 'package:work_order_app/src/features/suppliers/data/supplier_api_service.
 import 'package:work_order_app/src/features/suppliers/data/supplier_dto.dart';
 import 'package:work_order_app/src/features/suppliers/presentation/widgets/quick_supplier_create_dialog.dart';
 import 'package:work_order_app/src/features/materials/data/material_dto.dart';
+import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
 import 'package:work_order_app/src/core/utils/debounce_controller.dart';
 
@@ -270,6 +272,10 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
       detail: resolved,
       title: _detailTitle,
       closeText: _cancelText,
+      onWorkOrderTap: (woId) {
+        Navigator.of(context).pop(); // close dialog first
+        context.go('/workorders/$woId');
+      },
     );
   }
 
@@ -296,6 +302,24 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
         prefillMaterials: materials,
       ),
     );
+  }
+
+  void _navigateToWorkOrderByNumber(BuildContext context, String workOrderNumber) {
+    // 从采购单列表跳转到施工单，需要先查询施工单 ID
+    final api = context.read<WorkOrderApiService>();
+    api.fetchWorkOrders(search: workOrderNumber, approvalStatus: '').then((result) {
+      if (!mounted) return;
+      final matched = result.items.where(
+        (wo) => wo.orderNumber == workOrderNumber,
+      );
+      if (matched.isNotEmpty) {
+        context.go('/workorders/${matched.first.id}');
+      } else {
+        ToastUtil.showError('未找到施工单 $workOrderNumber');
+      }
+    }).catchError((err) {
+      ToastUtil.showError('跳转失败: $err');
+    });
   }
 
   Future<void> _openFormDialog(
@@ -707,8 +731,32 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
                       : '${order.receivedProgress!.toStringAsFixed(0)}%',
                   style: textStyle,
                 )),
-                DataCell(Text(_displayText(order.workOrderNumber),
-                    style: textStyle)),
+                DataCell(
+                  InkWell(
+                    onTap: order.workOrderNumber?.isNotEmpty == true
+                        ? () => _navigateToWorkOrderByNumber(
+                            context, order.workOrderNumber!)
+                        : null,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            _displayText(order.workOrderNumber),
+                            style: textStyle,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (order.workOrderNumber?.isNotEmpty == true)
+                          Icon(
+                            Icons.arrow_outward,
+                            size: 14,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
                 DataCell(RowActionGroup(
                   actions: [
                     if ((order.status ?? '') == 'draft')

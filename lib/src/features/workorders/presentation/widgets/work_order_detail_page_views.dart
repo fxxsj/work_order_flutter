@@ -7,6 +7,7 @@ import 'package:work_order_app/src/features/workorders/presentation/widgets/work
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_basic_view.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_process_view.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_products_view.dart';
+import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_procurement_view.dart';
 
 /// 详情页视图模式枚举
 enum WorkOrderDetailViewMode {
@@ -14,6 +15,7 @@ enum WorkOrderDetailViewMode {
   products,
   process,
   approval,
+  procurement,
 }
 
 /// 详情页视图切换组件
@@ -37,6 +39,9 @@ class WorkOrderDetailPageViews extends StatelessWidget {
     required this.onUpdateTask,
     required this.onCompleteTask,
     required this.onSyncPreview,
+    this.onCreatePurchaseOrder,
+    this.onViewPurchaseOrder,
+    this.onViewPurchaseOrdersList,
     required this.emptyText,
     required this.formatDate,
     required this.formatAmount,
@@ -64,6 +69,9 @@ class WorkOrderDetailPageViews extends StatelessWidget {
   final Future<void> Function(Task task) onUpdateTask;
   final Future<void> Function(Task task) onCompleteTask;
   final Future<void> Function(WorkOrderDetail detail) onSyncPreview;
+  final VoidCallback? onCreatePurchaseOrder;
+  final ValueChanged<int>? onViewPurchaseOrder;
+  final VoidCallback? onViewPurchaseOrdersList;
   final String emptyText;
   final String Function(DateTime? value) formatDate;
   final String Function(double? value) formatAmount;
@@ -140,6 +148,16 @@ class WorkOrderDetailPageViews extends StatelessWidget {
           rejectionReason: rejectionReason,
           rejectionComment: rejectionComment,
           onEditPressed: onEditPressed,
+        );
+
+      case WorkOrderDetailViewMode.procurement:
+        return WorkOrderDetailProcurementView(
+          detail: detail,
+          buildSection: buildSection,
+          emptyText: emptyText,
+          onCreatePurchaseOrder: onCreatePurchaseOrder,
+          onViewPurchaseOrder: onViewPurchaseOrder,
+          onViewPurchaseOrdersList: onViewPurchaseOrdersList,
         );
     }
   }

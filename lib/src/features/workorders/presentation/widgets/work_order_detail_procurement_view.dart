@@ -1,0 +1,201 @@
+import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/models/traceability_summary_item.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/traceability_summary_section.dart';
+
+/// 施工单详情 - 采购 Tab 视图
+class WorkOrderDetailProcurementView extends StatelessWidget {
+  const WorkOrderDetailProcurementView({
+    super.key,
+    required this.detail,
+    required this.buildSection,
+    required this.emptyText,
+    required this.onCreatePurchaseOrder,
+    required this.onViewPurchaseOrder,
+    required this.onViewPurchaseOrdersList,
+  });
+
+  final WorkOrderDetail detail;
+  final Widget Function(String title, Widget child) buildSection;
+  final String emptyText;
+  final VoidCallback? onCreatePurchaseOrder;
+  final ValueChanged<int>? onViewPurchaseOrder;
+  final VoidCallback? onViewPurchaseOrdersList;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasPendingMaterials = detail.materials
+        .any((m) => m.purchaseStatus == 'pending' || m.purchaseStatus == null);
+
+    return SingleChildScrollView(
+      padding: LayoutTokens.pagePadding(context),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 创建采购单按钮
+          if (hasPendingMaterials)
+            Padding(
+              padding: const EdgeInsets.only(bottom: SpacingTokens.md),
+              child: FilledButton.icon(
+                onPressed: onCreatePurchaseOrder,
+                icon: const Icon(Icons.add_shopping_cart),
+                label: const Text('创建采购单'),
+              ),
+            ),
+
+          // 物料采购状态
+          _buildMaterialsStatusSection(context),
+
+          const SizedBox(height: SpacingTokens.lg),
+
+          // 关联采购单
+          _buildPurchaseOrdersSection(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMaterialsStatusSection(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return DetailSectionCard(
+      title: '物料采购状态',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (detail.materials.isEmpty)
+            Text(emptyText, style: theme.textTheme.bodyMedium)
+          else
+            ...detail.materials.map(
+              (m) => Padding(
+                padding: const EdgeInsets.only(bottom: SpacingTokens.cardPaddingSm),
+                child: _MaterialStatusCard(
+                  materialName: m.materialName ?? emptyText,
+                  materialCode: m.materialCode ?? emptyText,
+                  purchaseStatus: m.purchaseStatus ?? 'pending',
+                  purchaseStatusDisplay: m.purchaseStatusDisplay ?? '待采购',
+                  unit: m.materialUnit ?? '',
+                  usage: m.materialUsage ?? '',
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPurchaseOrdersSection(BuildContext context) {
+    return TraceabilitySummarySection(
+      title: '关联采购单',
+      groups: [
+        TraceabilitySummaryGroupData(
+          title: '采购单',
+          items: detail.purchaseOrderSummaries,
+          actionLabel:
+              detail.purchaseOrderSummaries.isEmpty ? null : '查看全部',
+          onActionTap:
+              detail.purchaseOrderSummaries.isEmpty ? null : onViewPurchaseOrdersList,
+          onItemTap: (item) {
+            if (item.id != null) {
+              onViewPurchaseOrder?.call(item.id!);
+            }
+          },
+        ),
+      ],
+      emptyText: emptyText,
+    );
+  }
+}
+
+class _MaterialStatusCard extends StatelessWidget {
+  const _MaterialStatusCard({
+    required this.materialName,
+    required this.materialCode,
+    required this.purchaseStatus,
+    required this.purchaseStatusDisplay,
+    required this.unit,
+    required this.usage,
+  });
+
+  final String materialName;
+  final String materialCode;
+  final String purchaseStatus;
+  final String purchaseStatusDisplay;
+  final String unit;
+  final String usage;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final statusColor = _statusColor(purchaseStatus);
+
+    return Container(
+      padding: LayoutTokens.cardPadding(context),
+      decoration: BoxDecoration(
+        border: Border.all(color: theme.dividerColor),
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 48,
+            decoration: BoxDecoration(
+              color: statusColor,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: SpacingTokens.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  materialName,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$materialCode · $usage $unit',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: SpacingTokens.cardPaddingSm,
+              vertical: SpacingTokens.gapSm,
+            ),
+            decoration: BoxDecoration(
+              color: statusColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+            ),
+            child: Text(
+              purchaseStatusDisplay,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: statusColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _statusColor(String status) {
+    return switch (status) {
+      'received' || 'completed' => Colors.green,
+      'ordered' || 'cut' => Colors.blue,
+      'pending' => Colors.orange,
+      _ => Colors.grey,
+    };
+  }
+}
