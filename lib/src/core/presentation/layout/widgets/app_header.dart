@@ -154,9 +154,10 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
             final colors = theme.extension<AppColors>();
             final notificationSurface =
                 colors?.surface ?? theme.colorScheme.surface;
-            final notificationText = theme.brightness == Brightness.dark
-                ? const Color(0xFFf7f8f8) // ColorTokens.textOnDark -> ink
-                : const Color(0xFF000000); // ColorTokens.textDark -> inverseInk
+            final isDark = theme.brightness == Brightness.dark;
+            final notificationText = isDark
+                ? (colors?.sidebarText ?? const Color(0xFFf7f8f8))
+                : (colors?.borderColor ?? const Color(0xFF000000));
             final notificationSubtle =
                 colors?.subtleText ?? theme.colorScheme.onSurfaceVariant;
             final notificationPrimary = theme.colorScheme.primary;

@@ -5,6 +5,7 @@ import 'package:work_order_app/src/core/common/api_exception.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/animated_button.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/auth_input_decoration.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/utils/validators.dart';
 import 'package:work_order_app/src/features/auth/application/auth_view_model.dart';
@@ -166,33 +167,11 @@ class _LoginUsernameField extends StatelessWidget {
       controller: controller,
       focusNode: focusNode,
       textInputAction: TextInputAction.next,
-      decoration: InputDecoration(
+      decoration: AuthInputDecoration.authTextField(
+        context: context,
         labelText: '账号',
         hintText: '请输入用户名或工号',
         prefixIcon: const Icon(Icons.person_outline),
-        filled: true,
-        fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-          borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.outline,
-            width: 1,
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-          borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.primary,
-            width: 2,
-          ),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-          borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.error,
-            width: 1,
-          ),
-        ),
       ),
       onFieldSubmitted: (_) => onSubmitted(),
       validator: FormValidators.required('请输入账号'),
@@ -222,7 +201,8 @@ class _LoginPasswordField extends StatelessWidget {
       focusNode: focusNode,
       obscureText: obscureText,
       textInputAction: TextInputAction.done,
-      decoration: InputDecoration(
+      decoration: AuthInputDecoration.authTextField(
+        context: context,
         labelText: '密码',
         hintText: '请输入登录密码',
         prefixIcon: const Icon(Icons.lock_outline),
@@ -230,29 +210,6 @@ class _LoginPasswordField extends StatelessWidget {
           onPressed: onVisibilityToggle,
           icon: Icon(
             obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-          ),
-        ),
-        filled: true,
-        fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-          borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.outline,
-            width: 1,
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-          borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.primary,
-            width: 2,
-          ),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-          borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.error,
-            width: 1,
           ),
         ),
       ),

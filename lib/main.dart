@@ -7,6 +7,7 @@ import 'package:work_order_app/src/features/notification/data/notification_api.d
 import 'package:work_order_app/src/features/auth/application/auth_controller.dart';
 import 'package:work_order_app/src/features/notification/application/notification_view_model.dart';
 import 'package:work_order_app/src/app/app_providers.dart';
+import 'package:work_order_app/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -90,14 +91,8 @@ class _MyAppState extends State<MyApp> {
             scrollBehavior: const AppScrollBehavior(),
             debugShowCheckedModeBanner: false,
             title: AppMetadata.displayName,
-            theme: Utils.getThemeData(
-              themeColor: theme.seedColor,
-              brightness: Brightness.light,
-            ),
-            darkTheme: Utils.getThemeData(
-              themeColor: theme.seedColor,
-              brightness: Brightness.dark,
-            ),
+            theme: AppTheme.build(brightness: Brightness.light, seedColor: theme.seedColor),
+            darkTheme: AppTheme.build(brightness: Brightness.dark, seedColor: theme.seedColor),
             themeMode: theme.themeMode,
             builder: (context, child) {
               final media = MediaQuery.of(context);
