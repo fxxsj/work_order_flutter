@@ -170,9 +170,9 @@ class _AnimatedButtonState extends State<AnimatedButton> {
       case AnimatedButtonVariant.danger:
         return semantic?.danger ?? theme.colorScheme.error;
       case AnimatedButtonVariant.success:
-        return semantic?.success ?? ColorTokens.success;
+        return semantic?.success ?? const Color(0xFF27a644);
       case AnimatedButtonVariant.warning:
-        return semantic?.warning ?? ColorTokens.warning;
+        return semantic?.warning ?? theme.colorScheme.secondary;
     }
   }
 

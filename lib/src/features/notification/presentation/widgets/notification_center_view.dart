@@ -283,9 +283,9 @@ Color _levelColorFor(
 ) {
   switch (level) {
     case NotificationLevel.warning:
-      return semantic?.warning ?? ColorTokens.warning;
+      return semantic?.warning ?? const Color(0xFF8a8f98); // inkSubtle
     case NotificationLevel.urgent:
-      return semantic?.danger ?? ColorTokens.danger;
+      return semantic?.danger ?? const Color(0xFFef4444); // danger
     case NotificationLevel.info:
       return primary;
   }

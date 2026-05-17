@@ -114,7 +114,7 @@ class _TextareaFieldState extends State<TextareaField> {
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
           borderSide: BorderSide(
-            color: ColorTokens.border,
+            color: Theme.of(context).colorScheme.outline,
             width: 1,
           ),
         ),
@@ -128,14 +128,14 @@ class _TextareaFieldState extends State<TextareaField> {
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
           borderSide: BorderSide(
-            color: ColorTokens.danger,
+            color: Theme.of(context).colorScheme.error,
             width: 1,
           ),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
           borderSide: BorderSide(
-            color: ColorTokens.danger,
+            color: Theme.of(context).colorScheme.error,
             width: 2,
           ),
         ),

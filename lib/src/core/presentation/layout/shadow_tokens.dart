@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'color_tokens.dart';
 import 'opacity_tokens.dart';
 
 /// 阴影令牌系统
@@ -123,7 +122,7 @@ class ShadowTokens {
   /// 成功状态阴影
   static List<BoxShadow> success(BuildContext context) {
     final color = Theme.of(context).extension<AppSemanticColors>()?.success ??
-        ColorTokens.success;
+        const Color(0xFF27a644); // semanticSuccess
     return [
       BoxShadow(
         color: color.withValues(alpha: OpacityTokens.weak),
@@ -137,7 +136,7 @@ class ShadowTokens {
   /// 警告状态阴影
   static List<BoxShadow> warning(BuildContext context) {
     final color = Theme.of(context).extension<AppSemanticColors>()?.warning ??
-        ColorTokens.warning;
+        const Color(0xFF8a8f98); // inkSubtle
     return [
       BoxShadow(
         color: color.withValues(alpha: OpacityTokens.weak),
@@ -151,7 +150,7 @@ class ShadowTokens {
   /// 危险状态阴影
   static List<BoxShadow> danger(BuildContext context) {
     final color = Theme.of(context).extension<AppSemanticColors>()?.danger ??
-        ColorTokens.danger;
+        const Color(0xFFef4444); // danger
     return [
       BoxShadow(
         color: color.withValues(alpha: OpacityTokens.weak),
@@ -165,7 +164,7 @@ class ShadowTokens {
   /// 信息状态阴影
   static List<BoxShadow> info(BuildContext context) {
     final color = Theme.of(context).extension<AppSemanticColors>()?.info ??
-        ColorTokens.info;
+        const Color(0xFF5e6ad2); // primary
     return [
       BoxShadow(
         color: color.withValues(alpha: OpacityTokens.weak),

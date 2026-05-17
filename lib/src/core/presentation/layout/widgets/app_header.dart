@@ -155,8 +155,8 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
             final notificationSurface =
                 colors?.surface ?? theme.colorScheme.surface;
             final notificationText = theme.brightness == Brightness.dark
-                ? ColorTokens.textOnDark
-                : ColorTokens.textDark;
+                ? const Color(0xFFf7f8f8) // ColorTokens.textOnDark -> ink
+                : const Color(0xFF000000); // ColorTokens.textDark -> inverseInk
             final notificationSubtle =
                 colors?.subtleText ?? theme.colorScheme.onSurfaceVariant;
             final notificationPrimary = theme.colorScheme.primary;
@@ -218,7 +218,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                 child: Badge(
                   isLabelVisible: unread > 0,
                   label: Text(label),
-                  backgroundColor: semantic?.danger ?? ColorTokens.danger,
+                  backgroundColor: theme.extension<AppSemanticColors>()?.danger ?? theme.colorScheme.error,
                   offset: const Offset(6, -6),
                   child: const Icon(Icons.notifications_none_outlined),
                 ),

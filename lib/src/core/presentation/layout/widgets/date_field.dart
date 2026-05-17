@@ -36,7 +36,7 @@ class DateField extends FormField<String> {
                       borderRadius:
                           BorderRadius.circular(LayoutTokens.radiusSm),
                       borderSide: BorderSide(
-                        color: ColorTokens.border,
+                        color: Theme.of(ctx).colorScheme.outline,
                         width: 1,
                       ),
                     ),
@@ -52,7 +52,7 @@ class DateField extends FormField<String> {
                       borderRadius:
                           BorderRadius.circular(LayoutTokens.radiusSm),
                       borderSide: BorderSide(
-                        color: ColorTokens.danger,
+                        color: Theme.of(ctx).colorScheme.error,
                         width: 1,
                       ),
                     ),
@@ -60,7 +60,7 @@ class DateField extends FormField<String> {
                       borderRadius:
                           BorderRadius.circular(LayoutTokens.radiusSm),
                       borderSide: BorderSide(
-                        color: ColorTokens.danger,
+                        color: Theme.of(ctx).colorScheme.error,
                         width: 2,
                       ),
                     ),

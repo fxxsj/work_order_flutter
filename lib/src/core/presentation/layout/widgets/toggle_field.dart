@@ -26,7 +26,7 @@ class ToggleField extends FormField<bool> {
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
                   borderSide: BorderSide(
-                    color: ColorTokens.border,
+                    color: Theme.of(state.context).colorScheme.outline,
                     width: 1,
                   ),
                 ),
@@ -40,14 +40,14 @@ class ToggleField extends FormField<bool> {
                 errorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
                   borderSide: BorderSide(
-                    color: ColorTokens.danger,
+                    color: Theme.of(state.context).colorScheme.error,
                     width: 1,
                   ),
                 ),
                 focusedErrorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
                   borderSide: BorderSide(
-                    color: ColorTokens.danger,
+                    color: Theme.of(state.context).colorScheme.error,
                     width: 2,
                   ),
                 ),

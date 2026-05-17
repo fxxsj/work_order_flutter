@@ -44,7 +44,7 @@ GoRouter createAppRouter(AuthController authController) {
       ),
       GoRoute(
         path: '/register',
-        pageBuilder: (context, state) => NoTransitionPage(child: Register()),
+        pageBuilder: (context, state) => NoTransitionPage(child: RegisterPage()),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
