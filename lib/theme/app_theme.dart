@@ -2,12 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 
-export 'app_colors.dart';
-export 'app_typography.dart';
-export 'app_radius.dart';
-export 'app_spacing.dart';
-export 'app_breakpoints.dart';
-
 /// Theme factory — single source of truth for ThemeData.
 ///
 /// Accepts a dynamic [seedColor] so users can switch accent color at runtime

@@ -39,20 +39,14 @@ class WorkOrderMultiSelectField extends StatelessWidget {
       );
     }
 
-    return AppSelect<dynamic>(
-      value: Set<dynamic>.from(selected),
+    return AppSelect<Object>(
+      value: selected,
       isMultiSelect: true,
-      options: items
-          .map(
-            (item) => AppDropdownOption<dynamic>(
-              value: item.id,
-              label: item.label,
-            ),
-          )
-          .toList(),
-      decoration: InputDecoration(
-        hintText: placeholder,
-      ),
+      options: items.map((item) => AppDropdownOption<Object>(
+        value: item.id,
+        label: item.label,
+      )).toList(),
+      decoration: InputDecoration(hintText: placeholder),
       selectHintText: placeholder,
       searchConfig: const AppDropdownSearchConfig(
         enabled: true,
@@ -66,10 +60,15 @@ class WorkOrderMultiSelectField extends StatelessWidget {
       confirmText: '确定',
       selectAllText: '全选',
       onChanged: (value) {
-        selected
-          ..clear()
-          ..addAll((value as Set<dynamic>? ?? const <dynamic>{}).cast<int>());
-        onChanged();
+        if (value != null && value is Set) {
+          selected.clear();
+          for (final item in value) {
+            if (item is int) {
+              selected.add(item);
+            }
+          }
+          onChanged();
+        }
       },
     );
   }

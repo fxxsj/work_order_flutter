@@ -38,12 +38,7 @@ class AppDropdownSearchConfig {
   final bool Function(String query, AppDropdownOption<dynamic> option)? matcher;
   final bool highlightMatches;
 }
-
-/// 统一下拉选择框
-///
-/// 单选模式对齐 Flutter 官方 `DropdownMenu`。
-/// 多选模式使用确认式弹层，避免把多选伪装成普通 dropdown。
-class AppSelect<T> extends FormField<T?> {
+class AppSelect<T> extends FormField<T> {
   AppSelect({
     super.key,
     required this.options,
@@ -51,6 +46,7 @@ class AppSelect<T> extends FormField<T?> {
     this.decoration = const InputDecoration(),
     this.enabled = true,
     this.isMultiSelect = false,
+    this.menuHeight,
     T? value,
     FormFieldValidator<T?>? validator,
     AutovalidateMode? autovalidateMode,
@@ -97,17 +93,20 @@ class AppSelect<T> extends FormField<T?> {
               enabled: enabled,
               searchConfig: searchConfig,
               emptyText: emptyText,
+              noResultsText: noResultsText,
               selectHintText: selectHintText,
               minOptionsForSearch: minOptionsForSearch,
+              menuHeight: menuHeight,
             );
           },
         );
 
-  final List<dynamic> options;
+  final List<AppDropdownOption<T>> options;
   final ValueChanged<T?>? onChanged;
   final InputDecoration decoration;
   final bool enabled;
   final bool isMultiSelect;
+  final double? menuHeight;
   final AppDropdownSearchConfig searchConfig;
   final String emptyText;
   final String noResultsText;
@@ -119,6 +118,8 @@ class AppSelect<T> extends FormField<T?> {
   final int minOptionsForSearch;
 }
 
+// ==================== Single Select ====================
+
 class _SingleSelectDropdownField<T> extends StatefulWidget {
   const _SingleSelectDropdownField({
     required this.state,
@@ -129,20 +130,24 @@ class _SingleSelectDropdownField<T> extends StatefulWidget {
     required this.enabled,
     required this.searchConfig,
     required this.emptyText,
+    required this.noResultsText,
     required this.selectHintText,
     required this.minOptionsForSearch,
+    this.menuHeight,
   });
 
   final FormFieldState<T?> state;
   final T? value;
-  final List<dynamic> options;
+  final List<AppDropdownOption<T>> options;
   final ValueChanged<T?>? onChanged;
   final InputDecoration decoration;
   final bool enabled;
   final AppDropdownSearchConfig searchConfig;
   final String emptyText;
+  final String noResultsText;
   final String selectHintText;
   final int minOptionsForSearch;
+  final double? menuHeight;
 
   @override
   State<_SingleSelectDropdownField<T>> createState() =>
@@ -151,6 +156,8 @@ class _SingleSelectDropdownField<T> extends StatefulWidget {
 
 class _SingleSelectDropdownFieldState<T>
     extends State<_SingleSelectDropdownField<T>> {
+  final FocusNode _focusNode = FocusNode();
+
   @override
   void didUpdateWidget(covariant _SingleSelectDropdownField<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -163,16 +170,78 @@ class _SingleSelectDropdownFieldState<T>
     }
   }
 
-  List<AppDropdownOption<dynamic>> get _effectiveOptions {
-    return widget.options
-        .whereType<AppDropdownOption<dynamic>>()
-        .cast<AppDropdownOption<dynamic>>()
-        .toList();
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
   }
 
-  bool get _showSearch {
-    return widget.searchConfig.enabled &&
-        _effectiveOptions.length >= widget.minOptionsForSearch;
+  List<AppDropdownOption<T>> get _effectiveOptions => widget.options;
+
+  AppDropdownOption<T>? get _selectedOption {
+    for (final option in _effectiveOptions) {
+      if (option.onSelected == null && option.value == widget.state.value) {
+        return option;
+      }
+    }
+    return null;
+  }
+
+  Future<void> _openPicker(BuildContext context) async {
+    if (!widget.enabled) return;
+
+    final isMobile = MediaQuery.sizeOf(context).width < Breakpoints.sm;
+    final maxHeight = widget.menuHeight ?? (isMobile ? 500.0 : 400.0);
+
+    final result = isMobile
+        ? await showModalBottomSheet<T>(
+            context: context,
+            isScrollControlled: true,
+            useSafeArea: true,
+            showDragHandle: true,
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            shape:
+                const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+            builder: (_) => ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: maxHeight),
+              child: _SingleSelectPicker<T>(
+                title: widget.decoration.labelText,
+                options: _effectiveOptions,
+                initialValue: widget.state.value,
+                searchConfig: widget.searchConfig,
+                emptyText: widget.emptyText,
+                noResultsText: widget.noResultsText,
+                selectHintText: widget.selectHintText,
+                minOptionsForSearch: widget.minOptionsForSearch,
+              ),
+            ),
+          )
+        : await showDialog<T>(
+            context: context,
+            builder: (_) => Dialog(
+              insetPadding: const EdgeInsets.all(LayoutTokens.gapLg),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: 400,
+                  maxHeight: maxHeight,
+                ),
+                child: _SingleSelectPicker<T>(
+                  title: widget.decoration.labelText,
+                  options: _effectiveOptions,
+                  initialValue: widget.state.value,
+                  searchConfig: widget.searchConfig,
+                  emptyText: widget.emptyText,
+                  noResultsText: widget.noResultsText,
+                  selectHintText: widget.selectHintText,
+                  minOptionsForSearch: widget.minOptionsForSearch,
+                ),
+              ),
+            ),
+          );
+
+    if (result == null || result == widget.state.value) return;
+    widget.state.didChange(result);
+    widget.onChanged?.call(result);
   }
 
   @override
@@ -195,94 +264,248 @@ class _SingleSelectDropdownFieldState<T>
       );
     }
 
-    final menuEntries = List<_DropdownMenuEntryValue<dynamic>>.generate(
-      options.length,
-      (index) => _DropdownMenuEntryValue<dynamic>(
-        index: index,
-        option: options[index],
+    final selected = _selectedOption;
+    final effectiveDecoration = widget.decoration
+        .copyWith(
+          hintText: widget.decoration.hintText ?? widget.selectHintText,
+        )
+        .applyDefaults(theme.inputDecorationTheme)
+        .copyWith(
+          enabled: widget.enabled,
+          errorText: widget.state.errorText,
+          suffixIcon: const Icon(Icons.arrow_drop_down),
+        );
+
+    return Semantics(
+      label: widget.decoration.labelText,
+      button: true,
+      enabled: widget.enabled,
+      child: InkWell(
+        focusNode: _focusNode,
+        onTap: () => _openPicker(context),
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+        child: InputDecorator(
+          decoration: effectiveDecoration,
+          isEmpty: selected == null,
+          child: selected == null
+              ? const SizedBox.shrink()
+              : Text(selected.label),
+        ),
       ),
     );
+  }
+}
 
-    final selectedEntry = _findSelectedEntry(menuEntries, widget.state.value);
-    final showHint = selectedEntry == null;
+class _SingleSelectPicker<T> extends StatefulWidget {
+  const _SingleSelectPicker({
+    required this.title,
+    required this.options,
+    required this.initialValue,
+    required this.searchConfig,
+    required this.emptyText,
+    required this.noResultsText,
+    required this.selectHintText,
+    required this.minOptionsForSearch,
+  });
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width =
-            constraints.maxWidth.isFinite ? constraints.maxWidth : null;
+  final String? title;
+  final List<AppDropdownOption<T>> options;
+  final T? initialValue;
+  final AppDropdownSearchConfig searchConfig;
+  final String emptyText;
+  final String noResultsText;
+  final String selectHintText;
+  final int minOptionsForSearch;
 
-        return DropdownMenu<_DropdownMenuEntryValue<dynamic>>(
-          key: ValueKey<String>(
-            'single-${selectedEntry?.index ?? 'none'}-${menuEntries.length}-${widget.enabled}',
+  @override
+  State<_SingleSelectPicker<T>> createState() => _SingleSelectPickerState<T>();
+}
+
+class _SingleSelectPickerState<T> extends State<_SingleSelectPicker<T>> {
+  late final TextEditingController _searchController;
+  String _query = '';
+
+  bool get _showSearch =>
+      widget.searchConfig.enabled &&
+      widget.options.length >= widget.minOptionsForSearch;
+
+  List<AppDropdownOption<T>> get _normalOptions =>
+      widget.options.where((o) => o.onSelected == null).toList();
+
+  List<AppDropdownOption<T>> get _actionOptions =>
+      widget.options.where((o) => o.onSelected != null).toList();
+
+  List<AppDropdownOption<T>> get _filteredNormalOptions {
+    final normal = _normalOptions;
+    if (_query.isEmpty) return normal;
+    return _filterOptions<T>(normal, _query, widget.searchConfig);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final filtered = _filteredNormalOptions;
+    final hasResults = filtered.isNotEmpty;
+    final actionOptions = _actionOptions;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            LayoutTokens.gapLg,
+            LayoutTokens.gapLg,
+            LayoutTokens.gapMd,
+            LayoutTokens.gapSm,
           ),
-          width: width,
-          enabled: widget.enabled,
-          initialSelection: selectedEntry,
-          requestFocusOnTap: widget.enabled,
-          enableSearch: _showSearch,
-          enableFilter: _showSearch,
-          hintText: showHint
-              ? (widget.decoration.hintText ?? widget.selectHintText)
-              : null,
-          helperText: widget.state.errorText == null
-              ? widget.decoration.helperText
-              : null,
-          errorText: widget.state.errorText,
-          label: widget.decoration.labelText == null
-              ? null
-              : Text(widget.decoration.labelText!),
-          filterCallback: _showSearch
-              ? (entries, query) => _filterMenuEntries(
-                    entries,
-                    query,
-                    widget.searchConfig,
-                  )
-              : null,
-          dropdownMenuEntries: menuEntries
-              .map(
-                (entry) => DropdownMenuEntry<_DropdownMenuEntryValue<dynamic>>(
-                  value: entry,
-                  label: entry.option.label,
-                  enabled: entry.option.enabled,
-                  leadingIcon: entry.option.icon == null
-                      ? null
-                      : Icon(entry.option.icon),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  widget.title ?? '请选择',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              )
-              .toList(),
-          onSelected: widget.enabled
-              ? (selection) {
-                  final option = selection?.option;
-                  if (option == null) {
-                    return;
-                  }
-                  final action = option.onSelected;
-                  if (action != null) {
-                    action();
-                    return;
-                  }
-                  final nextValue = option.value as T?;
-                  widget.state.didChange(nextValue);
-                  widget.onChanged?.call(nextValue);
-                }
-              : null,
-        );
-      },
+              ),
+              IconButton(
+                tooltip: '关闭',
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.close),
+              ),
+            ],
+          ),
+        ),
+        if (_showSearch)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              LayoutTokens.gapLg,
+              0,
+              LayoutTokens.gapLg,
+              LayoutTokens.gapSm,
+            ),
+            child: TextField(
+              controller: _searchController,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: widget.searchConfig.hintText ?? '搜索',
+                prefixIcon: const Icon(Icons.search),
+                isDense: true,
+                border: const OutlineInputBorder(),
+              ),
+              onChanged: (value) => setState(() => _query = value.trim()),
+            ),
+          ),
+        const Divider(height: 1),
+        Expanded(
+          child: hasResults
+              ? ListView.separated(
+                  padding: EdgeInsets.zero,
+                  itemCount: filtered.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final option = filtered[index];
+                    final selected = option.value == widget.initialValue;
+
+                    return ListTile(
+                      title: _buildOptionLabel(theme, option),
+                      dense: true,
+                      enabled: option.enabled,
+                      selected: selected,
+                      trailing:
+                          selected ? const Icon(Icons.check, size: 20) : null,
+                      onTap: option.enabled
+                          ? () => Navigator.of(context).pop(option.value)
+                          : null,
+                    );
+                  },
+                )
+              : Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(LayoutTokens.gapLg),
+                    child: Text(
+                      widget.options.isEmpty
+                          ? widget.emptyText
+                          : widget.noResultsText,
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(color: theme.hintColor),
+                    ),
+                  ),
+                ),
+        ),
+        if (actionOptions.isNotEmpty) ...[
+          const Divider(height: 1),
+          ...actionOptions.map(
+            (option) => ListTile(
+              leading: Icon(option.icon ?? Icons.add, size: 20),
+              title: Text(option.label),
+              dense: true,
+              onTap: option.enabled
+                  ? () {
+                      Navigator.of(context).pop();
+                      option.onSelected?.call();
+                    }
+                  : null,
+            ),
+          ),
+        ],
+      ],
     );
   }
 
-  _DropdownMenuEntryValue<dynamic>? _findSelectedEntry(
-    List<_DropdownMenuEntryValue<dynamic>> entries,
-    T? value,
-  ) {
-    for (final entry in entries) {
-      if (entry.option.onSelected == null && entry.option.value == value) {
-        return entry;
-      }
+  Widget _buildOptionLabel(ThemeData theme, AppDropdownOption<T> option) {
+    final label = _buildHighlightedText(
+      text: option.label,
+      query: _query,
+      theme: theme,
+      baseStyle: theme.textTheme.bodyLarge,
+      highlightMatches: widget.searchConfig.highlightMatches,
+    );
+
+    if (option.secondaryLabel == null && option.icon == null) {
+      return label;
     }
-    return null;
+
+    return Row(
+      children: [
+        if (option.icon != null) ...[
+          Icon(option.icon, size: 16),
+          const SizedBox(width: LayoutTokens.gapSm),
+        ],
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              label,
+              if (option.secondaryLabel != null)
+                Text(
+                  option.secondaryLabel!,
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: theme.hintColor),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
+
+
+// ==================== Multi Select ====================
 
 class _MultiSelectDropdownField<T> extends StatefulWidget {
   const _MultiSelectDropdownField({
@@ -765,44 +988,8 @@ class _MultiSelectPickerState extends State<_MultiSelectPicker> {
   }
 }
 
-class _DropdownMenuEntryValue<T> {
-  const _DropdownMenuEntryValue({
-    required this.index,
-    required this.option,
-  });
-
-  final int index;
-  final AppDropdownOption<T> option;
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) {
-      return true;
-    }
-    return other is _DropdownMenuEntryValue<T> && other.index == index;
-  }
-
-  @override
-  int get hashCode => index.hashCode;
-}
-
-List<DropdownMenuEntry<_DropdownMenuEntryValue<dynamic>>> _filterMenuEntries(
-  List<DropdownMenuEntry<_DropdownMenuEntryValue<dynamic>>> entries,
-  String query,
-  AppDropdownSearchConfig searchConfig,
-) {
-  if (query.trim().isEmpty) {
-    return entries;
-  }
-
-  return entries.where((entry) {
-    final option = entry.value.option;
-    return _matchesQuery(query, option, searchConfig);
-  }).toList();
-}
-
-List<AppDropdownOption<dynamic>> _filterOptions(
-  List<AppDropdownOption<dynamic>> options,
+List<AppDropdownOption<T>> _filterOptions<T>(
+  List<AppDropdownOption<T>> options,
   String query,
   AppDropdownSearchConfig searchConfig,
 ) {
