@@ -31,16 +31,14 @@ void main() {
       ),
     );
 
-    EditableText editable =
-        tester.widget<EditableText>(find.byType(EditableText).first);
-    expect(editable.controller.text, '待处理');
+    // Single-select now renders via InputDecorator + Text (not DropdownMenu)
+    expect(find.text('待处理'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('change-selection')));
     await tester.pump();
     await tester.pump();
 
-    editable = tester.widget<EditableText>(find.byType(EditableText).first);
-    expect(editable.controller.text, '已完成');
+    expect(find.text('已完成'), findsOneWidget);
   });
 
   testWidgets(
@@ -66,9 +64,8 @@ void main() {
       ),
     );
 
-    final editable =
-        tester.widget<EditableText>(find.byType(EditableText).first);
-    expect(editable.controller.text, '全部客户');
+    // Single-select now renders via InputDecorator + Text
+    expect(find.text('全部客户'), findsOneWidget);
   });
 
   testWidgets('UnifiedDropdown multi select only commits on confirm',
