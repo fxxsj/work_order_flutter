@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/file_upload_dialog.dart';
 
 void main() {
   Future<void> pumpField(
@@ -111,5 +112,78 @@ void main() {
 
     expect(changedValue, isNull);
     expect(find.text('请选择文件'), findsOneWidget);
+  });
+
+  testWidgets('file upload dialog validates, picks, clears and replaces file',
+      (tester) async {
+    final picks = <MultipartFile>[
+      MultipartFile.fromBytes([1, 2], filename: 'first.pdf'),
+      MultipartFile.fromBytes([3, 4], filename: 'second.pdf'),
+    ];
+    CrudPickedFile? result;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) {
+            return Scaffold(
+              body: TextButton(
+                onPressed: () async {
+                  result = await showFileUploadDialog(
+                    context,
+                    title: '上传附件',
+                    label: '附件',
+                    allowedExtensions: const ['pdf', 'jpg'],
+                    fallbackFilename: 'fallback.bin',
+                    hintText: '请选择附件',
+                    picker: ({
+                      required allowedExtensions,
+                      required fallbackFilename,
+                    }) async {
+                      expect(allowedExtensions, const ['pdf', 'jpg']);
+                      expect(fallbackFilename, 'fallback.bin');
+                      return picks.removeAt(0);
+                    },
+                  );
+                },
+                child: const Text('打开'),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('打开'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('上传'));
+    await tester.pump();
+
+    expect(find.text('请选择文件'), findsOneWidget);
+    expect(result, isNull);
+
+    await tester.tap(find.text('选择文件'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('first.pdf'), findsOneWidget);
+
+    await tester.tap(find.text('清空'));
+    await tester.pump();
+    await tester.tap(find.text('上传'));
+    await tester.pump();
+
+    expect(find.text('请选择文件'), findsOneWidget);
+    expect(result, isNull);
+
+    await tester.tap(find.text('选择文件'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('second.pdf'), findsOneWidget);
+
+    await tester.tap(find.text('上传'));
+    await tester.pumpAndSettle();
+
+    expect(result?.filename, 'second.pdf');
   });
 }

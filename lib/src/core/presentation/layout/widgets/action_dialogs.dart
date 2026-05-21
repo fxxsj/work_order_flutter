@@ -4,7 +4,6 @@ import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
-import 'package:work_order_app/src/core/utils/toast_util.dart';
 
 // ─── Risk Action Dialog ────────────────────────────────────────────────────────
 
@@ -187,6 +186,74 @@ class ActionDecisionResult<T> {
   final String extraNotes;
 }
 
+/// Standard shell for action forms that need risk/context copy plus submit state.
+class AppActionFormDialog extends StatelessWidget {
+  const AppActionFormDialog({
+    super.key,
+    required this.title,
+    required this.formKey,
+    required this.onSubmit,
+    required this.content,
+    this.summary,
+    this.impacts = const [],
+    this.auditHint,
+    this.destructive = false,
+    this.cancelText = '取消',
+    this.submitText = '提交',
+    this.submitting = false,
+    this.maxWidth = LayoutTokens.dialogWidthSm,
+    this.onCancel,
+  });
+
+  final String title;
+  final GlobalKey<FormState> formKey;
+  final Future<void> Function() onSubmit;
+  final Widget content;
+  final String? summary;
+  final List<String> impacts;
+  final String? auditHint;
+  final bool destructive;
+  final String cancelText;
+  final String submitText;
+  final bool submitting;
+  final double maxWidth;
+  final VoidCallback? onCancel;
+
+  bool get _showDecisionHint =>
+      (summary ?? '').trim().isNotEmpty ||
+      impacts.isNotEmpty ||
+      (auditHint ?? '').trim().isNotEmpty;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppFormDialog(
+      title: title,
+      formKey: formKey,
+      onSubmit: onSubmit,
+      onCancel: onCancel,
+      submitText: submitText,
+      cancelText: cancelText,
+      submitting: submitting,
+      maxWidth: maxWidth,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_showDecisionHint) ...[
+            RiskActionHintPanel(
+              summary: (summary ?? '').trim(),
+              impacts: impacts,
+              auditHint: auditHint,
+              destructive: destructive,
+            ),
+            SizedBox(height: LayoutTokens.gapMd),
+          ],
+          content,
+        ],
+      ),
+    );
+  }
+}
+
 Future<ActionDecisionResult<T>?> showActionDecisionDialog<T>(
   BuildContext context, {
   required String title,
@@ -215,140 +282,205 @@ Future<ActionDecisionResult<T>?> showActionDecisionDialog<T>(
   String extraNotesErrorText = '请填写补充说明',
   int extraNotesMaxLines = 4,
 }) async {
-  T? selection = initialSelection;
-  final notesController = TextEditingController(text: initialNotes);
-  final extraNotesController = TextEditingController(text: initialExtraNotes);
-  bool submitting = false;
-
-  final result = await showDialog<ActionDecisionResult<T>>(
+  return showDialog<ActionDecisionResult<T>>(
     context: context,
     useRootNavigator: false,
-    builder: (dialogContext) {
-      return StatefulBuilder(
-        builder: (context, setState) {
-          void submit() {
-            final trimmedNotes = notesController.text.trim();
-            final trimmedExtraNotes = extraNotesController.text.trim();
-            if (requireSelection && selection == null) {
-              return;
-            }
-            if (requireNotes && trimmedNotes.isEmpty) {
-              return;
-            }
-            if (requireExtraNotes && trimmedExtraNotes.isEmpty) {
-              return;
-            }
-            Navigator.of(dialogContext).pop(
-              ActionDecisionResult<T>(
-                selection: selection,
-                notes: trimmedNotes,
-                extraNotes: trimmedExtraNotes,
-              ),
-            );
-          }
-
-          final showSelection = selectionLabel != null && options.isNotEmpty;
-          final showNotes = notesLabel != null;
-          final showExtraNotes = extraNotesLabel != null;
-          final showDecisionHint = (summary ?? '').trim().isNotEmpty ||
-              impacts.isNotEmpty ||
-              (auditHint ?? '').trim().isNotEmpty;
-
-          return AppDialog(
-            title: title,
-            maxWidth: maxWidth,
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (showDecisionHint) ...[
-                  RiskActionHintPanel(
-                    summary: (summary ?? '').trim(),
-                    impacts: impacts,
-                    auditHint: auditHint,
-                    destructive: destructive,
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                if (showSelection) ...[
-                  AppSelect<T>(
-                    key: ValueKey<T?>(selection),
-                    value: selection,
-                    options: options
-                        .map(
-                          (option) => AppDropdownOption<T>(
-                            value: option.value,
-                            label: option.label,
-                          ),
-                        )
-                        .toList(),
-                    decoration: InputDecoration(labelText: selectionLabel),
-                    onChanged: submitting
-                        ? null
-                        : (value) => setState(() => selection = value),
-                    validator: requireSelection
-                        ? (value) => value == null ? selectionErrorText : null
-                        : null,
-                  ),
-                  if (showNotes) const SizedBox(height: 12),
-                ],
-                if (showNotes)
-                  CrudFieldConfig.textarea(
-                    label: notesLabel,
-                    controller: notesController,
-                    enabled: !submitting,
-                    maxLines: notesMaxLines,
-                    hintText: notesHint,
-                  ).build(context),
-                if (showExtraNotes) ...[
-                  if (showNotes) const SizedBox(height: 12),
-                  CrudFieldConfig.textarea(
-                    label: extraNotesLabel,
-                    controller: extraNotesController,
-                    enabled: !submitting,
-                    maxLines: extraNotesMaxLines,
-                    hintText: extraNotesHint,
-                  ).build(context),
-                ],
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed:
-                    submitting ? null : () => Navigator.of(dialogContext).pop(),
-                child: Text(cancelText),
-              ),
-              FilledButton(
-                onPressed: submitting
-                    ? null
-                    : () {
-                        final trimmedNotes = notesController.text.trim();
-                        final trimmedExtraNotes =
-                            extraNotesController.text.trim();
-                        if (requireSelection && selection == null) {
-                          ToastUtil.showError(selectionErrorText);
-                          return;
-                        }
-                        if (requireNotes && trimmedNotes.isEmpty) {
-                          ToastUtil.showError(notesErrorText);
-                          return;
-                        }
-                        if (requireExtraNotes && trimmedExtraNotes.isEmpty) {
-                          ToastUtil.showError(extraNotesErrorText);
-                          return;
-                        }
-                        setState(() => submitting = true);
-                        submit();
-                      },
-                child: Text(submitting ? '提交中...' : submitText),
-              ),
-            ],
-          );
-        },
-      );
-    },
+    builder: (_) => _ActionDecisionDialog<T>(
+      title: title,
+      summary: summary,
+      impacts: impacts,
+      auditHint: auditHint,
+      destructive: destructive,
+      cancelText: cancelText,
+      submitText: submitText,
+      maxWidth: maxWidth,
+      selectionLabel: selectionLabel,
+      options: options,
+      initialSelection: initialSelection,
+      requireSelection: requireSelection,
+      selectionErrorText: selectionErrorText,
+      notesLabel: notesLabel,
+      notesHint: notesHint,
+      initialNotes: initialNotes,
+      requireNotes: requireNotes,
+      notesErrorText: notesErrorText,
+      notesMaxLines: notesMaxLines,
+      extraNotesLabel: extraNotesLabel,
+      extraNotesHint: extraNotesHint,
+      initialExtraNotes: initialExtraNotes,
+      requireExtraNotes: requireExtraNotes,
+      extraNotesErrorText: extraNotesErrorText,
+      extraNotesMaxLines: extraNotesMaxLines,
+    ),
   );
+}
 
-  // Controllers are local variables and will be garbage collected when
-  // the dialog route is removed. No manual disposal needed.
-  return result;
+class _ActionDecisionDialog<T> extends StatefulWidget {
+  const _ActionDecisionDialog({
+    required this.title,
+    required this.cancelText,
+    required this.submitText,
+    required this.maxWidth,
+    required this.options,
+    required this.requireSelection,
+    required this.selectionErrorText,
+    required this.initialNotes,
+    required this.requireNotes,
+    required this.notesErrorText,
+    required this.notesMaxLines,
+    required this.initialExtraNotes,
+    required this.requireExtraNotes,
+    required this.extraNotesErrorText,
+    required this.extraNotesMaxLines,
+    this.summary,
+    this.impacts = const [],
+    this.auditHint,
+    this.destructive = false,
+    this.selectionLabel,
+    this.initialSelection,
+    this.notesLabel,
+    this.notesHint,
+    this.extraNotesLabel,
+    this.extraNotesHint,
+  });
+
+  final String title;
+  final String? summary;
+  final List<String> impacts;
+  final String? auditHint;
+  final bool destructive;
+  final String cancelText;
+  final String submitText;
+  final double maxWidth;
+  final String? selectionLabel;
+  final List<ActionDecisionOption<T>> options;
+  final T? initialSelection;
+  final bool requireSelection;
+  final String selectionErrorText;
+  final String? notesLabel;
+  final String? notesHint;
+  final String initialNotes;
+  final bool requireNotes;
+  final String notesErrorText;
+  final int notesMaxLines;
+  final String? extraNotesLabel;
+  final String? extraNotesHint;
+  final String initialExtraNotes;
+  final bool requireExtraNotes;
+  final String extraNotesErrorText;
+  final int extraNotesMaxLines;
+
+  @override
+  State<_ActionDecisionDialog<T>> createState() =>
+      _ActionDecisionDialogState<T>();
+}
+
+class _ActionDecisionDialogState<T> extends State<_ActionDecisionDialog<T>> {
+  final formKey = GlobalKey<FormState>();
+  late T? selection = widget.initialSelection;
+  late final TextEditingController notesController =
+      TextEditingController(text: widget.initialNotes);
+  late final TextEditingController extraNotesController =
+      TextEditingController(text: widget.initialExtraNotes);
+  bool submitting = false;
+
+  bool get showSelection =>
+      widget.selectionLabel != null && widget.options.isNotEmpty;
+  bool get showNotes => widget.notesLabel != null;
+  bool get showExtraNotes => widget.extraNotesLabel != null;
+
+  @override
+  void dispose() {
+    notesController.dispose();
+    extraNotesController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AppActionFormDialog(
+      title: widget.title,
+      formKey: formKey,
+      onSubmit: _submit,
+      maxWidth: widget.maxWidth,
+      cancelText: widget.cancelText,
+      submitText: widget.submitText,
+      submitting: submitting,
+      summary: widget.summary,
+      impacts: widget.impacts,
+      auditHint: widget.auditHint,
+      destructive: widget.destructive,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (showSelection) ...[
+            AppSelect<T>(
+              key: ValueKey<T?>(selection),
+              value: selection,
+              options: widget.options
+                  .map(
+                    (option) => AppDropdownOption<T>(
+                      value: option.value,
+                      label: option.label,
+                    ),
+                  )
+                  .toList(),
+              decoration: InputDecoration(labelText: widget.selectionLabel),
+              onChanged: submitting
+                  ? null
+                  : (value) => setState(() => selection = value),
+              validator: widget.requireSelection
+                  ? (value) => value == null ? widget.selectionErrorText : null
+                  : null,
+            ),
+            if (showNotes) SizedBox(height: LayoutTokens.gapMd),
+          ],
+          if (showNotes)
+            CrudFieldConfig.textarea(
+              label: widget.notesLabel!,
+              controller: notesController,
+              enabled: !submitting,
+              maxLines: widget.notesMaxLines,
+              hintText: widget.notesHint,
+              validator: widget.requireNotes
+                  ? (value) => (value?.trim().isEmpty ?? true)
+                      ? widget.notesErrorText
+                      : null
+                  : null,
+            ).build(context),
+          if (showExtraNotes) ...[
+            if (showNotes) SizedBox(height: LayoutTokens.gapMd),
+            CrudFieldConfig.textarea(
+              label: widget.extraNotesLabel!,
+              controller: extraNotesController,
+              enabled: !submitting,
+              maxLines: widget.extraNotesMaxLines,
+              hintText: widget.extraNotesHint,
+              validator: widget.requireExtraNotes
+                  ? (value) => (value?.trim().isEmpty ?? true)
+                      ? widget.extraNotesErrorText
+                      : null
+                  : null,
+            ).build(context),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _submit() async {
+    if (!(formKey.currentState?.validate() ?? false)) {
+      return;
+    }
+    final trimmedNotes = notesController.text.trim();
+    final trimmedExtraNotes = extraNotesController.text.trim();
+    setState(() => submitting = true);
+    Navigator.of(context).pop(
+      ActionDecisionResult<T>(
+        selection: selection,
+        notes: trimmedNotes,
+        extraNotes: trimmedExtraNotes,
+      ),
+    );
+  }
 }

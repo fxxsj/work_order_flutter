@@ -177,7 +177,7 @@ class ProductListPage extends StatelessWidget {
     BuildContext context,
     ProductViewModel viewModel,
   ) async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['xlsx', 'xls'],
     );
@@ -296,14 +296,20 @@ class ProductListPage extends StatelessWidget {
 
   static String _productCode(Product p) => CrudValueFormatter.text(p.code);
   static String _productType(Product p) => _productTypeText(p);
-  static String _productGroup(Product p) => CrudValueFormatter.text(p.productGroupName);
-  static String _productSpec(Product p) => CrudValueFormatter.text(p.specification);
+  static String _productGroup(Product p) =>
+      CrudValueFormatter.text(p.productGroupName);
+  static String _productSpec(Product p) =>
+      CrudValueFormatter.text(p.specification);
   static String _productUnit(Product p) => CrudValueFormatter.text(p.unit);
-  static String _productPrice(Product p) => CrudValueFormatter.amount(p.unitPrice);
-  static String _productStock(Product p) => CrudValueFormatter.amount(p.stockQuantity);
-  static String _productMinStock(Product p) => CrudValueFormatter.amount(p.minStockQuantity);
+  static String _productPrice(Product p) =>
+      CrudValueFormatter.amount(p.unitPrice);
+  static String _productStock(Product p) =>
+      CrudValueFormatter.amount(p.stockQuantity);
+  static String _productMinStock(Product p) =>
+      CrudValueFormatter.amount(p.minStockQuantity);
   static String _productStatus(Product p) => _statusText(p);
-  static String _productDesc(Product p) => CrudValueFormatter.text(p.description);
+  static String _productDesc(Product p) =>
+      CrudValueFormatter.text(p.description);
 
   static Widget _buildNameCell(BuildContext context, Product product) {
     final theme = Theme.of(context);

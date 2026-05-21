@@ -304,10 +304,13 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
     );
   }
 
-  void _navigateToWorkOrderByNumber(BuildContext context, String workOrderNumber) {
+  void _navigateToWorkOrderByNumber(
+      BuildContext context, String workOrderNumber) {
     // 从采购单列表跳转到施工单，需要先查询施工单 ID
     final api = context.read<WorkOrderApiService>();
-    api.fetchWorkOrders(search: workOrderNumber, approvalStatus: '').then((result) {
+    api
+        .fetchWorkOrders(search: workOrderNumber, approvalStatus: '')
+        .then((result) {
       if (!mounted) return;
       final matched = result.items.where(
         (wo) => wo.orderNumber == workOrderNumber,
@@ -375,7 +378,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
 
     final formKey = GlobalKey<FormState>();
 
-    Future<void> submit(StateSetter setState) async {
+    Future<void> submit(VoidCallback refresh) async {
       if (!(formKey.currentState?.validate() ?? false)) return;
       if (supplierId == null || supplierId == 0) {
         ToastUtil.showError('请选择供应商');
@@ -896,8 +899,8 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
     return value.toStringAsFixed(2);
   }
 
-  Widget _mobileRow(BuildContext context, TextStyle? labelStyle, String label,
-      String value,
+  Widget _mobileRow(
+      BuildContext context, TextStyle? labelStyle, String label, String value,
       {bool last = false}) {
     final theme = Theme.of(context);
     final spacing = LayoutTokens.sectionSpacing(context) * 0.6;

@@ -112,11 +112,14 @@ class _TextInputFieldState extends State<TextInputField> {
   @override
   void dispose() {
     if (_ownsController) {
-      try {
-        _controller.dispose();
-      } catch (_) {
-        // Already disposed
-      }
+      final toDispose = _controller;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        try {
+          toDispose.dispose();
+        } catch (_) {
+          // Already disposed
+        }
+      });
     }
     super.dispose();
   }

@@ -433,7 +433,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
 
     Future<void> applySalesOrder(
       int id, {
-      StateSetter? setState,
+      VoidCallback? refresh,
     }) async {
       try {
         final detailDto = await supportService.fetchSalesOrderDetail(id);
@@ -468,11 +468,8 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
           }).toList();
         }
 
-        if (setState != null) {
-          setState(update);
-        } else {
-          update();
-        }
+        update();
+        refresh?.call();
       } catch (err) {
         ToastUtil.showError('获取客户订单失败: $err');
       }
@@ -482,7 +479,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       await applySalesOrder(prefillSalesOrderId);
     }
 
-    Future<void> submit(StateSetter setState) async {
+    Future<void> submit(VoidCallback refresh) async {
       if (!(formKey.currentState?.validate() ?? false)) return;
       if (items.isEmpty) {
         ToastUtil.showError('请添加发货明细');
@@ -898,7 +895,8 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
                   if (canEdit)
                     RowAction(
                       label: '编辑',
-                      onPressed: () => _openAppFormDialog(viewModel, order: order),
+                      onPressed: () =>
+                          _openAppFormDialog(viewModel, order: order),
                     ),
                   if (canShip)
                     RowAction(

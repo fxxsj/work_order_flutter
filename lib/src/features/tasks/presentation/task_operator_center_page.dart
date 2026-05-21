@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/action_dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
@@ -750,12 +750,25 @@ class _TaskUpdateDialogState extends State<_TaskUpdateDialog> {
     final completed = task.quantityCompleted ?? 0;
     final progress = total > 0 ? (completed / total * 100).round() : 0;
 
-    return AppFormDialog(
+    return AppActionFormDialog(
       title: _completeMode ? '完成任务' : '更新进度',
       formKey: _formKey,
       submitText: _completeMode ? '确认完成' : '确认更新',
       submitting: _submitting,
       maxWidth: LayoutTokens.dialogWidthSm,
+      summary: _completeMode
+          ? '确认将该任务标记为完成，并记录本次完成结果。'
+          : '记录本次生产进度，系统会累加完成数量并保留不良品信息。',
+      impacts: _completeMode
+          ? const [
+              '任务完成后会进入后续质检、入库或交接流程',
+              '不良品数量和完成说明会影响后续质量追踪',
+            ]
+          : const [
+              '完成数量会计入任务进度',
+              '不良品数量会用于后续质量统计',
+            ],
+      auditHint: _completeMode ? '完成理由和备注会进入任务流转记录。' : null,
       onSubmit: _submit,
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

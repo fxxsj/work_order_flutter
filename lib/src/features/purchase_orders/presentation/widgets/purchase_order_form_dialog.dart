@@ -10,7 +10,7 @@ import 'package:work_order_app/src/features/materials/data/material_dto.dart';
 import 'package:work_order_app/src/features/suppliers/data/supplier_dto.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
 
-typedef PurchaseFormSubmit = Future<void> Function(StateSetter setState);
+typedef PurchaseFormSubmit = Future<void> Function(VoidCallback refresh);
 
 Future<void> showPurchaseOrderFormDialog(
   BuildContext context, {
@@ -34,209 +34,278 @@ Future<void> showPurchaseOrderFormDialog(
   required ValueChanged<int?> onWorkOrderChanged,
   required PurchaseFormSubmit onSubmit,
 }) {
-  bool submitting = false;
-
   return showAdaptiveFilterDrawer(
     context,
     isMobile: ResponsiveLayout.isMobile(context),
     title: title,
     desktopWidth: LayoutTokens.pageWidthXwide,
-    child: StatefulBuilder(
-      builder: (context, setState) {
-        final workOrderOptions = List<WorkOrderDto>.from(workOrders);
-        if (selectedWorkOrderId != null &&
-            selectedWorkOrderId != 0 &&
-            !workOrderOptions.any((order) => order.id == selectedWorkOrderId)) {
-          workOrderOptions.add(
-            WorkOrderDto(
-              id: selectedWorkOrderId,
-              orderNumber:
-                  fallbackWorkOrderNumber ?? '施工单 #$selectedWorkOrderId',
-            ),
-          );
-        }
-
-        Future<void> submit() async {
-          if (submitting) return;
-          setState(() => submitting = true);
-          await onSubmit(setState);
-          if (context.mounted) {
-            setState(() => submitting = false);
-          }
-        }
-
-        return AdaptiveFormPanel(
-          formKey: formKey,
-          submitText: submitText,
-          cancelText: cancelText,
-          submitting: submitting,
-          onSubmit: submit,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _PurchaseFormSection(
-                title: '基础信息',
-                child: Column(
-                  children: [
-                    Builder(
-                      builder: (context) {
-                        Future<void> handleCreateSupplier() async {
-                          final created = await onCreateSupplier();
-                          if (created == null) return;
-                          onSupplierChanged(created.id);
-                        }
-
-                        final supplierOptions = suppliers
-                            .map(
-                              (supplier) => AppDropdownOption<int>(
-                                value: supplier.id,
-                                label: supplier.name,
-                              ),
-                            )
-                            .toList()
-                          ..add(
-                            AppDropdownOption<int>(
-                              value: -1,
-                              label: '新增供应商',
-                              icon: Icons.add,
-                              onSelected: handleCreateSupplier,
-                            ),
-                          );
-
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            AppSelect<int>(
-                              key: ValueKey<String>(
-                                'purchase_supplier_${selectedSupplierId ?? 'none'}',
-                              ),
-                              value: selectedSupplierId,
-                              decoration: const InputDecoration(
-                                labelText: '供应商',
-                                border: OutlineInputBorder(),
-                              ),
-                              options: supplierOptions,
-                              selectHintText:
-                                  suppliers.isEmpty ? '新增供应商' : '请选择',
-                              onChanged: submitting ? null : onSupplierChanged,
-                              validator: (value) {
-                                if (value == null || value == 0)
-                                  return '请选择供应商';
-                                return null;
-                              },
-                            ),
-                            if (suppliers.isEmpty) ...[
-                              const SizedBox(height: LayoutTokens.gapSm),
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: TextButton.icon(
-                                  onPressed:
-                                      submitting ? null : handleCreateSupplier,
-                                  icon: const Icon(Icons.add, size: 18),
-                                  label: const Text('新增供应商'),
-                                ),
-                              ),
-                            ],
-                          ],
-                        );
-                      },
-                    ),
-                    const SizedBox(height: LayoutTokens.gapMd),
-                    AppSelect<int>(
-                      key: ValueKey<String>(
-                        'purchase_workorder_${selectedWorkOrderId ?? 'none'}',
-                      ),
-                      value: selectedWorkOrderId,
-                      decoration: const InputDecoration(
-                        labelText: '关联施工单',
-                        border: OutlineInputBorder(),
-                      ),
-                      options: [
-                        const AppDropdownOption<int>(value: 0, label: '不关联'),
-                        ...workOrderOptions.map(
-                          (order) => AppDropdownOption<int>(
-                            value: order.id,
-                            label: order.orderNumber,
-                          ),
-                        ),
-                      ],
-                      onChanged: submitting ? null : onWorkOrderChanged,
-                    ),
-                    const SizedBox(height: LayoutTokens.gapMd),
-                    CrudFieldConfig.textarea(
-                      label: '备注',
-                      controller: notesController,
-                      maxLines: 3,
-                    ).build(context),
-                  ],
-                ),
-              ),
-              const SizedBox(height: LayoutTokens.gapLg),
-              _PurchaseFormSection(
-                title: '采购明细',
-                subtitle: '支持逐行选择物料、调整数量和单价。',
-                trailing: PageActionButton.outlined(
-                  onPressed: submitting || materialsLoading
-                      ? null
-                      : () {
-                          setState(() {
-                            items.add(
-                              PurchaseItemDraft(
-                                materialId: 0,
-                                materialName: '-',
-                                materialCode: '',
-                                quantity: 1,
-                                unitPrice: 0,
-                                unit: '',
-                              ),
-                            );
-                          });
-                        },
-                  icon: const Icon(Icons.add, size: 16),
-                  label: '添加明细',
-                ),
-                child: items.isEmpty
-                    ? Text(
-                        '暂无明细，请添加需要采购的物料。',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      )
-                    : Column(
-                        children: items
-                            .map(
-                              (item) => PurchaseItemRow(
-                                item: item,
-                                enabled: !submitting,
-                                materials: materials,
-                                onCreateMaterial: onCreateMaterial,
-                                onRemove: () {
-                                  setState(() {
-                                    items.remove(item);
-                                    item.dispose();
-                                  });
-                                },
-                                onMaterialChanged: (material) {
-                                  setState(() {
-                                    item.materialId = material.id;
-                                    item.materialName = material.name;
-                                    item.materialCode = material.code;
-                                    item.setUnit(material.unit ?? item.unit);
-                                    item.setUnitPrice(
-                                      material.unitPrice ?? item.unitPrice,
-                                    );
-                                  });
-                                },
-                                onChanged: () => setState(() {}),
-                              ),
-                            )
-                            .toList(),
-                      ),
-              ),
-            ],
-          ),
-        );
-      },
+    child: _PurchaseOrderFormPanel(
+      formKey: formKey,
+      cancelText: cancelText,
+      submitText: submitText,
+      materialsLoading: materialsLoading,
+      suppliers: suppliers,
+      workOrders: workOrders,
+      selectedSupplierId: selectedSupplierId,
+      selectedWorkOrderId: selectedWorkOrderId,
+      fallbackWorkOrderNumber: fallbackWorkOrderNumber,
+      notesController: notesController,
+      materials: materials,
+      items: items,
+      onCreateSupplier: onCreateSupplier,
+      onCreateMaterial: onCreateMaterial,
+      onSupplierChanged: onSupplierChanged,
+      onWorkOrderChanged: onWorkOrderChanged,
+      onSubmit: onSubmit,
     ),
   );
+}
+
+class _PurchaseOrderFormPanel extends StatefulWidget {
+  const _PurchaseOrderFormPanel({
+    required this.formKey,
+    required this.cancelText,
+    required this.submitText,
+    required this.materialsLoading,
+    required this.suppliers,
+    required this.workOrders,
+    required this.selectedSupplierId,
+    required this.selectedWorkOrderId,
+    required this.fallbackWorkOrderNumber,
+    required this.notesController,
+    required this.materials,
+    required this.items,
+    required this.onCreateSupplier,
+    required this.onCreateMaterial,
+    required this.onSupplierChanged,
+    required this.onWorkOrderChanged,
+    required this.onSubmit,
+  });
+
+  final GlobalKey<FormState> formKey;
+  final String cancelText;
+  final String submitText;
+  final bool materialsLoading;
+  final List<SupplierDto> suppliers;
+  final List<WorkOrderDto> workOrders;
+  final int? selectedSupplierId;
+  final int? selectedWorkOrderId;
+  final String? fallbackWorkOrderNumber;
+  final TextEditingController notesController;
+  final List<MaterialDto> materials;
+  final List<PurchaseItemDraft> items;
+  final Future<SupplierDto?> Function() onCreateSupplier;
+  final Future<MaterialDto?> Function() onCreateMaterial;
+  final ValueChanged<int?> onSupplierChanged;
+  final ValueChanged<int?> onWorkOrderChanged;
+  final PurchaseFormSubmit onSubmit;
+
+  @override
+  State<_PurchaseOrderFormPanel> createState() =>
+      _PurchaseOrderFormPanelState();
+}
+
+class _PurchaseOrderFormPanelState extends State<_PurchaseOrderFormPanel> {
+  bool submitting = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final workOrderOptions = List<WorkOrderDto>.from(widget.workOrders);
+    final selectedWorkOrderId = widget.selectedWorkOrderId;
+    if (selectedWorkOrderId != null &&
+        selectedWorkOrderId != 0 &&
+        !workOrderOptions.any((order) => order.id == selectedWorkOrderId)) {
+      workOrderOptions.add(
+        WorkOrderDto(
+          id: selectedWorkOrderId,
+          orderNumber:
+              widget.fallbackWorkOrderNumber ?? '施工单 #$selectedWorkOrderId',
+        ),
+      );
+    }
+
+    return AdaptiveFormPanel(
+      formKey: widget.formKey,
+      submitText: widget.submitText,
+      cancelText: widget.cancelText,
+      submitting: submitting,
+      onSubmit: _submit,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _PurchaseFormSection(
+            title: '基础信息',
+            child: Column(
+              children: [
+                _buildSupplierSelect(),
+                const SizedBox(height: LayoutTokens.gapMd),
+                AppSelect<int>(
+                  key: ValueKey<String>(
+                    'purchase_workorder_${widget.selectedWorkOrderId ?? 'none'}',
+                  ),
+                  value: widget.selectedWorkOrderId,
+                  decoration: const InputDecoration(
+                    labelText: '关联施工单',
+                    border: OutlineInputBorder(),
+                  ),
+                  options: [
+                    const AppDropdownOption<int>(value: 0, label: '不关联'),
+                    ...workOrderOptions.map(
+                      (order) => AppDropdownOption<int>(
+                        value: order.id,
+                        label: order.orderNumber,
+                      ),
+                    ),
+                  ],
+                  onChanged: submitting ? null : widget.onWorkOrderChanged,
+                ),
+                const SizedBox(height: LayoutTokens.gapMd),
+                CrudFieldConfig.textarea(
+                  label: '备注',
+                  controller: widget.notesController,
+                  enabled: !submitting,
+                  maxLines: 3,
+                ).build(context),
+              ],
+            ),
+          ),
+          const SizedBox(height: LayoutTokens.gapLg),
+          _PurchaseFormSection(
+            title: '采购明细',
+            subtitle: '支持逐行选择物料、调整数量和单价。',
+            trailing: PageActionButton.outlined(
+              onPressed: submitting || widget.materialsLoading
+                  ? null
+                  : () {
+                      setState(() {
+                        widget.items.add(
+                          PurchaseItemDraft(
+                            materialId: 0,
+                            materialName: '-',
+                            materialCode: '',
+                            quantity: 1,
+                            unitPrice: 0,
+                            unit: '',
+                          ),
+                        );
+                      });
+                    },
+              icon: const Icon(Icons.add, size: 16),
+              label: '添加明细',
+            ),
+            child: widget.items.isEmpty
+                ? Text(
+                    '暂无明细，请添加需要采购的物料。',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  )
+                : Column(
+                    children: widget.items
+                        .map(
+                          (item) => PurchaseItemRow(
+                            item: item,
+                            enabled: !submitting,
+                            materials: widget.materials,
+                            onCreateMaterial: widget.onCreateMaterial,
+                            onRemove: () {
+                              setState(() {
+                                widget.items.remove(item);
+                                item.dispose();
+                              });
+                            },
+                            onMaterialChanged: (material) {
+                              setState(() {
+                                item.materialId = material.id;
+                                item.materialName = material.name;
+                                item.materialCode = material.code;
+                                item.setUnit(material.unit ?? item.unit);
+                                item.setUnitPrice(
+                                  material.unitPrice ?? item.unitPrice,
+                                );
+                              });
+                            },
+                            onChanged: _refresh,
+                          ),
+                        )
+                        .toList(),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSupplierSelect() {
+    Future<void> handleCreateSupplier() async {
+      final created = await widget.onCreateSupplier();
+      if (created == null) return;
+      widget.onSupplierChanged(created.id);
+      _refresh();
+    }
+
+    final supplierOptions = widget.suppliers
+        .map(
+          (supplier) => AppDropdownOption<int>(
+            value: supplier.id,
+            label: supplier.name,
+          ),
+        )
+        .toList()
+      ..add(
+        AppDropdownOption<int>(
+          value: -1,
+          label: '新增供应商',
+          icon: Icons.add,
+          onSelected: handleCreateSupplier,
+        ),
+      );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppSelect<int>(
+          key: ValueKey<String>(
+            'purchase_supplier_${widget.selectedSupplierId ?? 'none'}',
+          ),
+          value: widget.selectedSupplierId,
+          decoration: const InputDecoration(
+            labelText: '供应商',
+            border: OutlineInputBorder(),
+          ),
+          options: supplierOptions,
+          selectHintText: widget.suppliers.isEmpty ? '新增供应商' : '请选择',
+          onChanged: submitting ? null : widget.onSupplierChanged,
+          validator: (value) {
+            if (value == null || value == 0) return '请选择供应商';
+            return null;
+          },
+        ),
+        if (widget.suppliers.isEmpty) ...[
+          const SizedBox(height: LayoutTokens.gapSm),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: submitting ? null : handleCreateSupplier,
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('新增供应商'),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  void _refresh() {
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _submit() async {
+    if (submitting) return;
+    setState(() => submitting = true);
+    await widget.onSubmit(_refresh);
+    if (mounted) {
+      setState(() => submitting = false);
+    }
+  }
 }
 
 class _PurchaseFormSection extends StatelessWidget {

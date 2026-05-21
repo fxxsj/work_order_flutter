@@ -37,221 +37,256 @@ Future<bool?> showPurchaseReceiveDialog(
   String title = '采购收货',
   String cancelText = '取消',
 }) async {
-  final receivedDate = ValueNotifier<DateTime?>(DateTime.now());
-  final deliveryNoteController = TextEditingController();
-  final items = detail.items
-      .map(
-        (item) => _ReceiveItemDraft(
-          itemId: item.id,
-          materialName: item.materialName ?? '-',
-          materialCode: item.materialCode ?? '-',
-          quantity: item.quantity ?? 0,
-          receivedQuantity: item.receivedQuantity ?? 0,
-          remainingQuantity: item.remainingQuantity ??
-              ((item.quantity ?? 0) - (item.receivedQuantity ?? 0)),
-        ),
-      )
-      .toList();
-
-  bool submitting = false;
-  final formKey = GlobalKey<FormState>();
   var submitted = false;
 
-  try {
-    await showAdaptiveFilterDrawer(
-      context,
-      isMobile: ResponsiveLayout.isMobile(context),
-      title: title,
-      desktopWidth: LayoutTokens.pageWidthXwide,
-      child: StatefulBuilder(
-        builder: (context, setState) {
-          final selectedItems =
-              items.where((item) => item.receiveQuantity > 0).toList();
-          final hasReceiveItems = selectedItems.isNotEmpty;
-          final totalQty = selectedItems.fold<double>(
-            0,
-            (sum, item) => sum + item.receiveQuantity,
-          );
-          final summaryText = hasReceiveItems
-              ? '本次收货 ${selectedItems.length} 种物料，共计 ${totalQty.toStringAsFixed(2)} 件'
-              : '请输入本次收货数量';
-          final supplier = _displayText(detail.supplierName);
-          final status = _displayText(detail.statusDisplay ?? detail.status);
-          final isCompact =
-              ResponsiveLayout.isXs(context) || ResponsiveLayout.isSm(context);
+  await showAdaptiveFilterDrawer(
+    context,
+    isMobile: ResponsiveLayout.isMobile(context),
+    title: title,
+    desktopWidth: LayoutTokens.pageWidthXwide,
+    child: _PurchaseReceivePanel(
+      detail: detail,
+      cancelText: cancelText,
+      onSubmit: onSubmit,
+      onSubmitted: () => submitted = true,
+    ),
+  );
+  return submitted ? true : null;
+}
 
-          Future<void> submit() async {
-            if (!(formKey.currentState?.validate() ?? false)) {
-              return;
-            }
-            final payloadItems = items
-                .where((item) => item.receiveQuantity > 0)
-                .map(
-                  (item) => PurchaseReceiveSubmissionItem(
-                    itemId: item.itemId,
-                    receivedQuantity: item.receiveQuantity,
-                    notes: item.notes,
-                  ),
-                )
-                .toList();
-            if (payloadItems.isEmpty) {
-              throw const FormatException('请输入收货数量');
-            }
-            setState(() => submitting = true);
-            try {
-              await onSubmit(
-                PurchaseReceiveSubmission(
-                  receivedDate: receivedDate.value,
-                  deliveryNoteNumber: deliveryNoteController.text.trim(),
-                  items: payloadItems,
-                ),
-              );
-              if (context.mounted) {
-                submitted = true;
-                Navigator.of(context).maybePop(true);
-              }
-            } finally {
-              if (context.mounted) {
-                setState(() => submitting = false);
-              }
-            }
-          }
+class _PurchaseReceivePanel extends StatefulWidget {
+  const _PurchaseReceivePanel({
+    required this.detail,
+    required this.cancelText,
+    required this.onSubmit,
+    required this.onSubmitted,
+  });
 
-          return AdaptiveFormPanel(
-            formKey: formKey,
-            submitText: '确认收货',
-            cancelText: cancelText,
-            submitting: submitting,
-            onSubmit: submit,
+  final PurchaseOrderDetail detail;
+  final String cancelText;
+  final Future<void> Function(PurchaseReceiveSubmission submission) onSubmit;
+  final VoidCallback onSubmitted;
+
+  @override
+  State<_PurchaseReceivePanel> createState() => _PurchaseReceivePanelState();
+}
+
+class _PurchaseReceivePanelState extends State<_PurchaseReceivePanel> {
+  final formKey = GlobalKey<FormState>();
+  final deliveryNoteController = TextEditingController();
+  late final List<_ReceiveItemDraft> items;
+  DateTime? receivedDate = DateTime.now();
+  bool submitting = false;
+  String? quantityErrorText;
+
+  @override
+  void initState() {
+    super.initState();
+    items = widget.detail.items
+        .map(
+          (item) => _ReceiveItemDraft(
+            itemId: item.id,
+            materialName: item.materialName ?? '-',
+            materialCode: item.materialCode ?? '-',
+            quantity: item.quantity ?? 0,
+            receivedQuantity: item.receivedQuantity ?? 0,
+            remainingQuantity: item.remainingQuantity ??
+                ((item.quantity ?? 0) - (item.receivedQuantity ?? 0)),
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  void dispose() {
+    deliveryNoteController.dispose();
+    for (final item in items) {
+      item.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final selectedItems =
+        items.where((item) => item.receiveQuantity > 0).toList();
+    final totalQty = selectedItems.fold<double>(
+      0,
+      (sum, item) => sum + item.receiveQuantity,
+    );
+    final summaryText = selectedItems.isNotEmpty
+        ? '本次收货 ${selectedItems.length} 种物料，共计 ${totalQty.toStringAsFixed(2)} 件'
+        : '请输入本次收货数量';
+    final supplier = _displayText(widget.detail.supplierName);
+    final status =
+        _displayText(widget.detail.statusDisplay ?? widget.detail.status);
+    final isCompact =
+        ResponsiveLayout.isXs(context) || ResponsiveLayout.isSm(context);
+
+    return AdaptiveFormPanel(
+      formKey: formKey,
+      submitText: '确认收货',
+      cancelText: widget.cancelText,
+      submitting: submitting,
+      onSubmit: _submit,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AppCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '采购收货',
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                      const SizedBox(height: LayoutTokens.gapXxs),
-                      Text(
-                        '按采购明细逐行录入本次收货数量，系统会据此更新后续质检与库存流转。',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      const SizedBox(height: LayoutTokens.gapMd),
-                      Wrap(
-                        spacing: LayoutTokens.gapMd,
-                        runSpacing: LayoutTokens.gapSm,
-                        children: [
-                          _ReceiveSummaryItem(
-                            label: '采购单号',
-                            value: detail.orderNumber,
-                          ),
-                          _ReceiveSummaryItem(
-                            label: '供应商',
-                            value: supplier,
-                          ),
-                          _ReceiveSummaryItem(
-                            label: '状态',
-                            value: status,
-                          ),
-                          _ReceiveSummaryItem(
-                            label: '本次收货',
-                            value: totalQty.toStringAsFixed(2),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                Text(
+                  '采购收货',
+                  style: Theme.of(context).textTheme.titleSmall,
                 ),
-                const SizedBox(height: LayoutTokens.gapLg),
-                AppCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '收货信息',
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                      const SizedBox(height: LayoutTokens.gapMd),
-                      if (isCompact) ...[
-                        _DateField(
-                          label: '收货日期',
-                          value: receivedDate.value,
-                          onPicked: (picked) =>
-                              setState(() => receivedDate.value = picked),
-                        ),
-                        const SizedBox(height: LayoutTokens.gapMd),
-                        CrudFieldConfig.text(
-                          label: '送货单号',
-                          controller: deliveryNoteController,
-                        ).build(context),
-                      ] else
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _DateField(
-                                label: '收货日期',
-                                value: receivedDate.value,
-                                onPicked: (picked) =>
-                                    setState(() => receivedDate.value = picked),
-                              ),
-                            ),
-                            const SizedBox(width: LayoutTokens.gapMd),
-                            Expanded(
-                              child: CrudFieldConfig.text(
-                                label: '送货单号',
-                                controller: deliveryNoteController,
-                              ).build(context),
-                            ),
-                          ],
-                        ),
-                    ],
-                  ),
+                const SizedBox(height: LayoutTokens.gapXxs),
+                Text(
+                  '按采购明细逐行录入本次收货数量，系统会据此更新后续质检与库存流转。',
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
-                const SizedBox(height: LayoutTokens.gapLg),
-                AppCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '收货明细',
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                      const SizedBox(height: LayoutTokens.gapXxxs),
-                      Text(
-                        '已选择数量会用于生成本次收货提交。',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      const SizedBox(height: LayoutTokens.gapMd),
-                      ...items.map(
-                        (item) => _ReceiveItemRow(
-                          item: item,
-                          enabled: !submitting,
-                          onChanged: () => setState(() {}),
-                        ),
-                      ),
-                      const SizedBox(height: LayoutTokens.gapSm),
-                      Text(
-                        summaryText,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
+                const SizedBox(height: LayoutTokens.gapMd),
+                Wrap(
+                  spacing: LayoutTokens.gapMd,
+                  runSpacing: LayoutTokens.gapSm,
+                  children: [
+                    _ReceiveSummaryItem(
+                      label: '采购单号',
+                      value: widget.detail.orderNumber,
+                    ),
+                    _ReceiveSummaryItem(label: '供应商', value: supplier),
+                    _ReceiveSummaryItem(label: '状态', value: status),
+                    _ReceiveSummaryItem(
+                      label: '本次收货',
+                      value: totalQty.toStringAsFixed(2),
+                    ),
+                  ],
                 ),
               ],
             ),
-          );
-        },
+          ),
+          const SizedBox(height: LayoutTokens.gapLg),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '收货信息',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: LayoutTokens.gapMd),
+                if (isCompact) ...[
+                  _DateField(
+                    label: '收货日期',
+                    value: receivedDate,
+                    onPicked: (picked) => setState(() => receivedDate = picked),
+                  ),
+                  const SizedBox(height: LayoutTokens.gapMd),
+                  CrudFieldConfig.text(
+                    label: '送货单号',
+                    controller: deliveryNoteController,
+                  ).build(context),
+                ] else
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _DateField(
+                          label: '收货日期',
+                          value: receivedDate,
+                          onPicked: (picked) =>
+                              setState(() => receivedDate = picked),
+                        ),
+                      ),
+                      const SizedBox(width: LayoutTokens.gapMd),
+                      Expanded(
+                        child: CrudFieldConfig.text(
+                          label: '送货单号',
+                          controller: deliveryNoteController,
+                        ).build(context),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: LayoutTokens.gapLg),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '收货明细',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: LayoutTokens.gapXxxs),
+                Text(
+                  '已选择数量会用于生成本次收货提交。',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: LayoutTokens.gapMd),
+                ...items.map(
+                  (item) => _ReceiveItemRow(
+                    item: item,
+                    enabled: !submitting,
+                    onChanged: () => setState(() => quantityErrorText = null),
+                  ),
+                ),
+                const SizedBox(height: LayoutTokens.gapSm),
+                Text(
+                  summaryText,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                if (quantityErrorText != null) ...[
+                  const SizedBox(height: LayoutTokens.gapXxs),
+                  Text(
+                    quantityErrorText!,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
-    return submitted ? true : null;
-  } finally {
-    deliveryNoteController.dispose();
-    receivedDate.dispose();
-    for (final item in items) {
-      item.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!(formKey.currentState?.validate() ?? false)) {
+      return;
+    }
+    final payloadItems = items
+        .where((item) => item.receiveQuantity > 0)
+        .map(
+          (item) => PurchaseReceiveSubmissionItem(
+            itemId: item.itemId,
+            receivedQuantity: item.receiveQuantity,
+            notes: item.notes,
+          ),
+        )
+        .toList();
+    if (payloadItems.isEmpty) {
+      setState(() => quantityErrorText = '请输入收货数量');
+      return;
+    }
+    setState(() => submitting = true);
+    try {
+      await widget.onSubmit(
+        PurchaseReceiveSubmission(
+          receivedDate: receivedDate,
+          deliveryNoteNumber: deliveryNoteController.text.trim(),
+          items: payloadItems,
+        ),
+      );
+      if (!mounted) return;
+      widget.onSubmitted();
+      Navigator.of(context).maybePop(true);
+    } finally {
+      if (mounted) {
+        setState(() => submitting = false);
+      }
     }
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/action_dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
@@ -165,12 +166,18 @@ class _TaskCompleteDialogState extends State<_TaskCompleteDialog> {
   @override
   Widget build(BuildContext context) {
     final task = widget.task;
-    return AppFormDialog(
+    return AppActionFormDialog(
       title: '完成任务',
       formKey: _formKey,
       submitText: '确认完成',
       submitting: _submitting,
       maxWidth: LayoutTokens.dialogWidthSm,
+      summary: '确认将该生产任务标记为完成，并记录本次完成结果。',
+      impacts: const [
+        '任务完成后会进入后续质检、入库或交接流程',
+        '不良品数量和完成说明会影响后续质量追踪',
+      ],
+      auditHint: '完成理由和备注会进入任务流转记录。',
       onSubmit: _submit,
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -325,7 +332,8 @@ class _TaskAssignDialogState extends State<_TaskAssignDialog> {
               decoration: const InputDecoration(labelText: '操作员'),
               options: _operators
                   .map(
-                    (op) => AppDropdownOption<int?>(value: op.id, label: op.name),
+                    (op) =>
+                        AppDropdownOption<int?>(value: op.id, label: op.name),
                   )
                   .toList(),
               onChanged: (value) => setState(() => _operatorId = value),

@@ -256,7 +256,7 @@ class StockInListEntry extends StatelessWidget {
       dateLabel: '入库日期',
       dateController: dateController,
       notesController: notesController,
-      fieldsBuilder: (context, setState, submitting) => [
+      fieldsBuilder: (context, refresh, submitting) => [
         TextField(
           controller: workOrderController,
           enabled: !submitting,

@@ -7,6 +7,7 @@ import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/action_dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -254,10 +255,13 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     return showDialog<void>(
       context: context,
       builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('批量创建结果'),
+        return AppDialog(
+          title: '批量创建结果',
+          maxWidth: LayoutTokens.dialogWidthLg,
+          scrollable: false,
           content: SizedBox(
-            width: double.maxFinite,
+            width: LayoutTokens.dialogWidthLg,
+            height: 420,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -375,9 +379,8 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
               ],
             ),
           ),
-          actions: <Widget>[
+          actions: [
             TextButton(
-              child: const Text('关闭'),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
                 viewModel.loadSalesOrders(resetPage: false);
@@ -386,6 +389,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
                   _selectedOrderIds.clear();
                 });
               },
+              child: const Text('关闭'),
             ),
           ],
         );

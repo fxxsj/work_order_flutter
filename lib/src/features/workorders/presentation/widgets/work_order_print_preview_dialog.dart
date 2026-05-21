@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/utils/html_print.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
@@ -39,60 +40,41 @@ class _WorkOrderPrintPreviewDialogState
         math.max(360.0, math.min(780.0, mediaSize.height - 32));
     final sheetWidth = math.min(900.0, dialogWidth - 48);
 
-    return Dialog(
+    return AppModalShell(
+      title: '施工单打印预览',
+      maxWidth: dialogWidth,
+      maxHeight: dialogHeight,
       insetPadding: const EdgeInsets.all(16),
-      child: SizedBox(
-        width: dialogWidth,
-        height: dialogHeight,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 12, 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      '施工单打印预览',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: _printing ? null : _print,
-                    icon: _printing
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.print_outlined, size: 18),
-                    label: const Text('打印'),
-                  ),
-                  const SizedBox(width: LayoutTokens.gapSm),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
-                    tooltip: '关闭',
-                  ),
-                ],
+      bodyPadding: EdgeInsets.zero,
+      scrollable: false,
+      showCloseButton: true,
+      titleActions: [
+        OutlinedButton.icon(
+          onPressed: _printing ? null : _print,
+          icon: _printing
+              ? const SizedBox(
+                  width: LayoutTokens.iconSm,
+                  height: LayoutTokens.iconSm,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.print_outlined, size: LayoutTokens.iconMd),
+          label: const Text('打印'),
+        ),
+        const SizedBox(width: LayoutTokens.gapSm),
+      ],
+      body: SizedBox.expand(
+        child: ColoredBox(
+          color: const Color(0xfff0f2f5),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(LayoutTokens.gapXl),
+            child: SizedBox(
+              width: dialogWidth - 48,
+              child: WorkOrderPrintSheet(
+                detail: widget.detail,
+                width: sheetWidth,
               ),
             ),
-            const Divider(height: 1),
-            Expanded(
-              child: ColoredBox(
-                color: const Color(0xfff0f2f5),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: SizedBox(
-                    width: dialogWidth - 48,
-                    child: WorkOrderPrintSheet(
-                      detail: widget.detail,
-                      width: sheetWidth,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

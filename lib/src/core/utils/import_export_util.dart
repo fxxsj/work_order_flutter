@@ -60,7 +60,8 @@ class ImportExportService {
       final extension = file.extension?.toLowerCase();
       String contentType;
       if (extension == 'xlsx') {
-        contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        contentType =
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
       } else if (extension == 'xls') {
         contentType = 'application/vnd.ms-excel';
       } else {
@@ -123,9 +124,8 @@ class ImportResult {
       errorCount: json['error_count'] as int? ?? 0,
       createdCount: json['created_count'] as int?,
       updatedCount: json['updated_count'] as int?,
-      errors: (json['errors'] as List<dynamic>?)
-          ?.map((e) => e.toString())
-          .toList(),
+      errors:
+          (json['errors'] as List<dynamic>?)?.map((e) => e.toString()).toList(),
     );
   }
 }
@@ -165,7 +165,7 @@ class ImportExportHelper {
     void Function(ImportResult result)? onSuccess,
     void Function(String error)? onError,
   }) async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: allowedExtensions,
     );

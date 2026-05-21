@@ -15,6 +15,11 @@ class CrudPickedFile {
   final MultipartFile file;
 }
 
+typedef FileUploadPicker = Future<MultipartFile?> Function({
+  required List<String> allowedExtensions,
+  required String fallbackFilename,
+});
+
 class FileUploadField extends FormField<CrudPickedFile?> {
   FileUploadField({
     super.key,
@@ -27,6 +32,7 @@ class FileUploadField extends FormField<CrudPickedFile?> {
     String? helperText,
     required List<String> allowedExtensions,
     String fallbackFilename = 'upload.bin',
+    FileUploadPicker? picker,
   })  : _label = label,
         _onChanged = onChanged,
         _enabled = enabled,
@@ -34,6 +40,7 @@ class FileUploadField extends FormField<CrudPickedFile?> {
         _helperText = helperText,
         _allowedExtensions = allowedExtensions,
         _fallbackFilename = fallbackFilename,
+        _picker = picker ?? pickMultipartFile,
         super(
           initialValue: value,
           validator: validator,
@@ -47,6 +54,7 @@ class FileUploadField extends FormField<CrudPickedFile?> {
   final String? _helperText;
   final List<String> _allowedExtensions;
   final String _fallbackFilename;
+  final FileUploadPicker _picker;
 }
 
 class _FileUploadFieldBody extends StatelessWidget {
@@ -69,7 +77,9 @@ class _FileUploadFieldBody extends StatelessWidget {
         helperText: _field._helperText ??
             (supportedTypes.isEmpty ? null : '支持格式: $supportedTypes'),
         errorText: state.errorText,
-      ).applyDefaults(theme.inputDecorationTheme).copyWith(enabled: _field._enabled),
+      )
+          .applyDefaults(theme.inputDecorationTheme)
+          .copyWith(enabled: _field._enabled),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -104,7 +114,7 @@ class _FileUploadFieldBody extends StatelessWidget {
 
   Future<void> _pickFile(BuildContext context) async {
     try {
-      final multipartFile = await pickMultipartFile(
+      final multipartFile = await _field._picker(
         allowedExtensions: _field._allowedExtensions,
         fallbackFilename: _field._fallbackFilename,
       );

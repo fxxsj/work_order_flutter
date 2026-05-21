@@ -272,7 +272,7 @@ class StockOutListEntry extends StatelessWidget {
       dateLabel: '出库日期',
       dateController: dateController,
       notesController: notesController,
-      fieldsBuilder: (context, setState, submitting) => [
+      fieldsBuilder: (context, refresh, submitting) => [
         AppSelect<String>(
           value: outTypeController.text,
           decoration: const InputDecoration(
@@ -450,7 +450,7 @@ class _DetailRow extends StatelessWidget {
               style: theme.textTheme.bodySmall,
             ),
           ),
-                      SpacingTokens.hSm,
+          SpacingTokens.hSm,
           Expanded(
             child: Text(value, style: theme.textTheme.bodyMedium),
           ),

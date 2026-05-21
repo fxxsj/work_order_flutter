@@ -109,6 +109,44 @@ void main() {
     expect(committedValue, <dynamic>{'A', 'B'});
   });
 
+  testWidgets('AppSelect picker uses shared modal scaffold structure',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildTheme(),
+        home: Scaffold(
+          body: Padding(
+            padding: const EdgeInsets.all(16),
+            child: AppSelect<String>(
+              value: 'A',
+              decoration: const InputDecoration(labelText: '标签'),
+              options: [
+                const AppDropdownOption(value: 'A', label: '标签 A'),
+                const AppDropdownOption(value: 'B', label: '标签 B'),
+                AppDropdownOption(
+                  value: 'create',
+                  label: '新增标签',
+                  icon: Icons.add,
+                  onSelected: () {},
+                ),
+              ],
+              onChanged: (_) {},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('标签 A'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('标签'), findsAtLeastNWidgets(1));
+    expect(find.byTooltip('关闭'), findsOneWidget);
+    expect(find.text('标签 B'), findsOneWidget);
+    expect(find.text('新增标签'), findsOneWidget);
+    expect(find.byType(Divider), findsWidgets);
+  });
+
   testWidgets('WorkOrderMultiSelectField now follows shared multi-select flow',
       (tester) async {
     final selected = <int>{1};

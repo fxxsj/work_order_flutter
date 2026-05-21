@@ -13,7 +13,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.d
 
 // Re-export commonly used types so existing imports don't break
 export 'package:work_order_app/src/core/presentation/layout/widgets/file_upload_field.dart'
-    show CrudPickedFile;
+    show CrudPickedFile, FileUploadPicker;
 export 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart'
     show AppDropdownOption;
 
@@ -327,6 +327,7 @@ sealed class CrudFieldConfig {
     String? helperText,
     required List<String> allowedExtensions,
     String fallbackFilename = 'upload.bin',
+    FileUploadPicker? picker,
   }) =>
       FileUploadFieldConfig(
         label: label,
@@ -339,6 +340,7 @@ sealed class CrudFieldConfig {
         helperText: helperText,
         allowedExtensions: allowedExtensions,
         fallbackFilename: fallbackFilename,
+        picker: picker,
       );
 
   static CrudFieldConfig multiSelect({

@@ -18,256 +18,244 @@ Future<void> showPurchaseInspectionDialog(
   String title = '质检确认',
   String cancelText = '取消',
 }) async {
-  List<Map<String, dynamic>> records = [];
-  bool loading = true;
-
-  Future<void> reload(StateSetter setState) async {
-    setState(() => loading = true);
-    try {
-      records = await loadRecords();
-    } catch (err) {
-      ToastUtil.showError('加载收货记录失败: $err');
-    } finally {
-      setState(() => loading = false);
-    }
-  }
-
   await showAdaptiveFilterDrawer(
     context,
     isMobile: ResponsiveLayout.isMobile(context),
     title: title,
     desktopWidth: LayoutTokens.dialogWidthLg,
-    child: StatefulBuilder(
-      builder: (context, setState) {
-        if (loading && records.isEmpty) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (context.mounted) {
-              reload(setState);
-            }
-          });
-        }
+    child: _PurchaseInspectionPanel(
+      loadRecords: loadRecords,
+      confirmInspection: confirmInspection,
+      stockIn: stockIn,
+      cancelText: cancelText,
+    ),
+  );
+}
 
-        final pendingCount = records
-            .where((record) =>
-                record['inspection_status']?.toString() == 'pending')
-            .length;
+class _PurchaseInspectionPanel extends StatefulWidget {
+  const _PurchaseInspectionPanel({
+    required this.loadRecords,
+    required this.confirmInspection,
+    required this.stockIn,
+    required this.cancelText,
+  });
 
-        return Column(
-          children: [
-            Expanded(
-              child: loading
-                  ? const AppLoadingIndicator()
-                  : records.isEmpty
-                      ? const Padding(
-                          padding: EdgeInsets.all(LayoutTokens.gapLg),
-                          child: EmptyStateCard(
-                            icon: Icons.verified_outlined,
-                            text: '暂无收货记录',
-                          ),
-                        )
-                      : ListView(
-                          padding: const EdgeInsets.all(LayoutTokens.gapLg),
-                          children: [
-                            AppCard(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+  final Future<List<Map<String, dynamic>>> Function() loadRecords;
+  final Future<void> Function(int recordId, Map<String, dynamic> payload)
+      confirmInspection;
+  final Future<void> Function(int recordId) stockIn;
+  final String cancelText;
+
+  @override
+  State<_PurchaseInspectionPanel> createState() =>
+      _PurchaseInspectionPanelState();
+}
+
+class _PurchaseInspectionPanelState extends State<_PurchaseInspectionPanel> {
+  var _records = <Map<String, dynamic>>[];
+  var _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _reload();
+  }
+
+  Future<void> _reload() async {
+    setState(() => _loading = true);
+    try {
+      final records = await widget.loadRecords();
+      if (!mounted) return;
+      setState(() => _records = records);
+    } catch (err) {
+      ToastUtil.showError('加载收货记录失败: $err');
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    }
+  }
+
+  Future<void> _confirmStockIn(Map<String, dynamic> record) async {
+    final qualified = _toDouble(record['qualified_quantity']) ?? 0;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (confirmContext) => AppDialog(
+        title: '确认入库',
+        maxWidth: LayoutTokens.dialogWidthXs,
+        scrollable: false,
+        content: Text('确定将 $qualified 件物料入库吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(confirmContext).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(confirmContext).pop(true),
+            child: const Text('确认'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await widget.stockIn(record['id'] as int);
+      ToastUtil.showSuccess('入库成功');
+      if (!mounted) return;
+      await _reload();
+    } catch (err) {
+      ToastUtil.showError('入库失败: $err');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pendingCount = _records
+        .where((record) => record['inspection_status']?.toString() == 'pending')
+        .length;
+
+    return Column(
+      children: [
+        Expanded(
+          child: _loading
+              ? const AppLoadingIndicator()
+              : _records.isEmpty
+                  ? const Padding(
+                      padding: EdgeInsets.all(LayoutTokens.gapLg),
+                      child: EmptyStateCard(
+                        icon: Icons.verified_outlined,
+                        text: '暂无收货记录',
+                      ),
+                    )
+                  : ListView(
+                      padding: const EdgeInsets.all(LayoutTokens.gapLg),
+                      children: [
+                        AppCard(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '收货记录质检',
+                                style: Theme.of(context).textTheme.titleSmall,
+                              ),
+                              const SizedBox(height: LayoutTokens.gapXxs),
+                              Text(
+                                '在当前上下文里完成质检确认，避免弹窗叠弹窗。',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                              const SizedBox(height: LayoutTokens.gapMd),
+                              Wrap(
+                                spacing: LayoutTokens.gapMd,
+                                runSpacing: LayoutTokens.gapSm,
                                 children: [
-                                  Text(
-                                    '收货记录质检',
-                                    style:
-                                        Theme.of(context).textTheme.titleSmall,
+                                  _InspectionSummaryItem(
+                                    label: '收货记录',
+                                    value: _records.length.toString(),
                                   ),
-                                  const SizedBox(height: LayoutTokens.gapXxs),
-                                  Text(
-                                    '在当前上下文里完成质检确认，避免弹窗叠弹窗。',
-                                    style:
-                                        Theme.of(context).textTheme.bodySmall,
-                                  ),
-                                  const SizedBox(height: LayoutTokens.gapMd),
-                                  Wrap(
-                                    spacing: LayoutTokens.gapMd,
-                                    runSpacing: LayoutTokens.gapSm,
-                                    children: [
-                                      _InspectionSummaryItem(
-                                        label: '收货记录',
-                                        value: records.length.toString(),
-                                      ),
-                                      _InspectionSummaryItem(
-                                        label: '待质检',
-                                        value: pendingCount.toString(),
-                                      ),
-                                    ],
+                                  _InspectionSummaryItem(
+                                    label: '待质检',
+                                    value: pendingCount.toString(),
                                   ),
                                 ],
                               ),
-                            ),
-                            const SizedBox(height: LayoutTokens.gapLg),
-                            ...records.map((record) {
-                              final status =
-                                  record['inspection_status']?.toString() ?? '';
-                              final statusDisplay =
-                                  record['inspection_status_display']
-                                          ?.toString() ??
-                                      '-';
-                              final qualified =
-                                  _toDouble(record['qualified_quantity']) ?? 0;
-                              final isStocked = record['is_stocked'] == true;
-                              final canInspect = status == 'pending';
-                              final canStockIn = (status == 'qualified' ||
-                                      status == 'partial_qualified') &&
-                                  !isStocked &&
-                                  qualified > 0;
-
-                              return Padding(
-                                padding: const EdgeInsets.only(
-                                  bottom: LayoutTokens.gapSm,
-                                ),
-                                child: AppCard(
-                                  padding: const EdgeInsets.all(
-                                    LayoutTokens.cardPaddingSm,
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        '${record['material_code'] ?? '-'} ${record['material_name'] ?? '-'}',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleSmall,
-                                      ),
-                                      const SizedBox(
-                                        height: LayoutTokens.gapXxs,
-                                      ),
-                                      Wrap(
-                                        spacing: LayoutTokens.gapMd,
-                                        runSpacing: LayoutTokens.gapXs,
-                                        children: [
-                                          _InlineMeta(
-                                            label: '收货数量',
-                                            value: record['received_quantity']
-                                                    ?.toString() ??
-                                                '-',
-                                          ),
-                                          _InlineMeta(
-                                            label: '状态',
-                                            value: statusDisplay,
-                                          ),
-                                          _InlineMeta(
-                                            label: '收货日期',
-                                            value: record['received_date']
-                                                    ?.toString() ??
-                                                '-',
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(
-                                        height: LayoutTokens.gapSm,
-                                      ),
-                                      Wrap(
-                                        spacing: LayoutTokens.gapSm,
-                                        children: [
-                                          if (canInspect)
-                                            OutlinedButton(
-                                              onPressed: () async {
-                                                await showPurchaseInspectionAppFormDialog(
-                                                  context,
-                                                  record: record,
-                                                  confirmInspection:
-                                                      confirmInspection,
-                                                );
-                                                if (!context.mounted) {
-                                                  return;
-                                                }
-                                                await reload(setState);
-                                              },
-                                              child: const Text('质检'),
-                                            ),
-                                          if (canStockIn)
-                                            OutlinedButton(
-                                              onPressed: () async {
-                                                final confirmed =
-                                                    await showDialog<bool>(
-                                                  context: context,
-                                                  builder: (confirmContext) =>
-                                                      AppDialog(
-                                                    title: '确认入库',
-                                                    maxWidth: LayoutTokens
-                                                        .dialogWidthXs,
-                                                    scrollable: false,
-                                                    content: Text(
-                                                      '确定将 $qualified 件物料入库吗？',
-                                                    ),
-                                                    actions: [
-                                                      TextButton(
-                                                        onPressed: () =>
-                                                            Navigator.of(
-                                                          confirmContext,
-                                                        ).pop(false),
-                                                        child: const Text('取消'),
-                                                      ),
-                                                      FilledButton(
-                                                        onPressed: () =>
-                                                            Navigator.of(
-                                                          confirmContext,
-                                                        ).pop(true),
-                                                        child: const Text('确认'),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                );
-                                                if (confirmed != true) return;
-                                                try {
-                                                  await stockIn(
-                                                    record['id'] as int,
-                                                  );
-                                                  ToastUtil.showSuccess(
-                                                    '入库成功',
-                                                  );
-                                                  if (!context.mounted) {
-                                                    return;
-                                                  }
-                                                  await reload(setState);
-                                                } catch (err) {
-                                                  ToastUtil.showError(
-                                                    '入库失败: $err',
-                                                  );
-                                                }
-                                              },
-                                              child: const Text('入库'),
-                                            ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }),
-                          ],
+                            ],
+                          ),
                         ),
+                        const SizedBox(height: LayoutTokens.gapLg),
+                        ..._records.map(_buildRecordCard),
+                      ],
+                    ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            LayoutTokens.gapLg,
+            LayoutTokens.gapMd,
+            LayoutTokens.gapLg,
+            LayoutTokens.gapLg,
+          ),
+          child: Row(
+            children: [
+              const Spacer(),
+              TextButton(
+                onPressed: () => Navigator.of(context).maybePop(),
+                child: Text(widget.cancelText),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRecordCard(Map<String, dynamic> record) {
+    final status = record['inspection_status']?.toString() ?? '';
+    final statusDisplay =
+        record['inspection_status_display']?.toString() ?? '-';
+    final qualified = _toDouble(record['qualified_quantity']) ?? 0;
+    final isStocked = record['is_stocked'] == true;
+    final canInspect = status == 'pending';
+    final canStockIn =
+        (status == 'qualified' || status == 'partial_qualified') &&
+            !isStocked &&
+            qualified > 0;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: LayoutTokens.gapSm),
+      child: AppCard(
+        padding: const EdgeInsets.all(LayoutTokens.cardPaddingSm),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${record['material_code'] ?? '-'} ${record['material_name'] ?? '-'}',
+              style: Theme.of(context).textTheme.titleSmall,
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                LayoutTokens.gapLg,
-                LayoutTokens.gapMd,
-                LayoutTokens.gapLg,
-                LayoutTokens.gapLg,
-              ),
-              child: Row(
-                children: [
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).maybePop(),
-                    child: Text(cancelText),
+            const SizedBox(height: LayoutTokens.gapXxs),
+            Wrap(
+              spacing: LayoutTokens.gapMd,
+              runSpacing: LayoutTokens.gapXs,
+              children: [
+                _InlineMeta(
+                  label: '收货数量',
+                  value: record['received_quantity']?.toString() ?? '-',
+                ),
+                _InlineMeta(label: '状态', value: statusDisplay),
+                _InlineMeta(
+                  label: '收货日期',
+                  value: record['received_date']?.toString() ?? '-',
+                ),
+              ],
+            ),
+            const SizedBox(height: LayoutTokens.gapSm),
+            Wrap(
+              spacing: LayoutTokens.gapSm,
+              children: [
+                if (canInspect)
+                  OutlinedButton(
+                    onPressed: () async {
+                      await showPurchaseInspectionAppFormDialog(
+                        context,
+                        record: record,
+                        confirmInspection: widget.confirmInspection,
+                      );
+                      if (!mounted) return;
+                      await _reload();
+                    },
+                    child: const Text('质检'),
                   ),
-                ],
-              ),
+                if (canStockIn)
+                  OutlinedButton(
+                    onPressed: () => _confirmStockIn(record),
+                    child: const Text('入库'),
+                  ),
+              ],
             ),
           ],
-        );
-      },
-    ),
-  );
+        ),
+      ),
+    );
+  }
 }
 
 class _InspectionSummaryItem extends StatelessWidget {
@@ -305,109 +293,145 @@ Future<void> showPurchaseInspectionAppFormDialog(
   required Future<void> Function(int recordId, Map<String, dynamic> payload)
       confirmInspection,
 }) async {
-  final formKey = GlobalKey<FormState>();
-  final received = _toDouble(record['received_quantity']) ?? 0;
-  final qualifiedController =
-      TextEditingController(text: received.toStringAsFixed(2));
-  final unqualifiedController = TextEditingController(text: '0');
-  final reasonController = TextEditingController();
-  bool submitting = false;
+  await showDialog<void>(
+    context: context,
+    builder: (_) => _PurchaseInspectionFormDialog(
+      record: record,
+      confirmInspection: confirmInspection,
+    ),
+  );
+}
 
-  Future<void> submit(StateSetter setState) async {
-    if (!(formKey.currentState?.validate() ?? false)) return;
-    final qualified = double.tryParse(qualifiedController.text.trim()) ?? 0;
-    final unqualified = double.tryParse(unqualifiedController.text.trim()) ?? 0;
-    if ((qualified + unqualified - received).abs() > 0.01) {
+class _PurchaseInspectionFormDialog extends StatefulWidget {
+  const _PurchaseInspectionFormDialog({
+    required this.record,
+    required this.confirmInspection,
+  });
+
+  final Map<String, dynamic> record;
+  final Future<void> Function(int recordId, Map<String, dynamic> payload)
+      confirmInspection;
+
+  @override
+  State<_PurchaseInspectionFormDialog> createState() =>
+      _PurchaseInspectionFormDialogState();
+}
+
+class _PurchaseInspectionFormDialogState
+    extends State<_PurchaseInspectionFormDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late final double _received;
+  late final TextEditingController _qualifiedController;
+  late final TextEditingController _unqualifiedController;
+  late final TextEditingController _reasonController;
+  var _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _received = _toDouble(widget.record['received_quantity']) ?? 0;
+    _qualifiedController =
+        TextEditingController(text: _received.toStringAsFixed(2));
+    _unqualifiedController = TextEditingController(text: '0');
+    _reasonController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _qualifiedController.dispose();
+    _unqualifiedController.dispose();
+    _reasonController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    final qualified = double.tryParse(_qualifiedController.text.trim()) ?? 0;
+    final unqualified =
+        double.tryParse(_unqualifiedController.text.trim()) ?? 0;
+    if ((qualified + unqualified - _received).abs() > 0.01) {
       ToastUtil.showError('合格数量 + 不合格数量 必须等于收货数量');
       return;
     }
-    setState(() => submitting = true);
+
+    setState(() => _submitting = true);
     try {
-      await confirmInspection(
-        record['id'] as int,
+      await widget.confirmInspection(
+        widget.record['id'] as int,
         {
           'qualified_quantity': qualified,
           'unqualified_quantity': unqualified,
-          'unqualified_reason': reasonController.text.trim(),
+          'unqualified_reason': _reasonController.text.trim(),
         },
       );
-      if (!context.mounted) return;
+      if (!mounted) return;
       Navigator.of(context).pop();
       ToastUtil.showSuccess('质检确认成功');
     } catch (err) {
-      if (!context.mounted) return;
-      setState(() => submitting = false);
+      if (!mounted) return;
+      setState(() => _submitting = false);
       ToastUtil.showError('质检确认失败: $err');
     }
   }
 
-  await showDialog<void>(
-    context: context,
-    builder: (dialogContext) {
-      return StatefulBuilder(
-        builder: (context, setState) {
-          return AppFormDialog(
-            title: '填写质检结果',
-            formKey: formKey,
-            submitText: '确认',
-            submitting: submitting,
-            maxWidth: LayoutTokens.dialogWidthSm,
-            onSubmit: () => submit(setState),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _DetailRow(
-                  label: '收货数量',
-                  value: received.toStringAsFixed(2),
-                ),
-                CrudFieldConfig.number(
-                  label: '合格数量',
-                  controller: qualifiedController,
-                  decimal: true,
-                  validator: (value) {
-                    final parsed = double.tryParse(value?.trim() ?? '');
-                    if (parsed == null || parsed < 0) return '请输入有效数量';
-                    return null;
-                  },
-                ).build(context),
-                SizedBox(height: LayoutTokens.gapMd),
-                CrudFieldConfig.number(
-                  label: '不合格数量',
-                  controller: unqualifiedController,
-                  decimal: true,
-                  validator: (value) {
-                    final parsed = double.tryParse(value?.trim() ?? '');
-                    if (parsed == null || parsed < 0) return '请输入有效数量';
-                    return null;
-                  },
-                ).build(context),
-                SizedBox(height: LayoutTokens.gapMd),
-                CrudFieldConfig.textarea(
-                  label: '不合格原因',
-                  controller: reasonController,
-                  maxLines: 3,
-                  validator: (value) {
-                    final unqualified = double.tryParse(
-                          unqualifiedController.text.trim(),
-                        ) ??
-                        0;
-                    if (unqualified > 0 && (value?.trim().isEmpty ?? true)) {
-                      return '请填写不合格原因';
-                    }
-                    return null;
-                  },
-                ).build(context),
-              ],
-            ),
-          );
-        },
-      );
-    },
-  );
-
-  qualifiedController.dispose();
-  unqualifiedController.dispose();
-  reasonController.dispose();
+  @override
+  Widget build(BuildContext context) {
+    return AppFormDialog(
+      title: '填写质检结果',
+      formKey: _formKey,
+      submitText: '确认',
+      submitting: _submitting,
+      maxWidth: LayoutTokens.dialogWidthSm,
+      onSubmit: _submit,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _DetailRow(
+            label: '收货数量',
+            value: _received.toStringAsFixed(2),
+          ),
+          CrudFieldConfig.number(
+            label: '合格数量',
+            controller: _qualifiedController,
+            decimal: true,
+            validator: (value) {
+              final parsed = double.tryParse(value?.trim() ?? '');
+              if (parsed == null || parsed < 0) return '请输入有效数量';
+              return null;
+            },
+          ).build(context),
+          SizedBox(height: LayoutTokens.gapMd),
+          CrudFieldConfig.number(
+            label: '不合格数量',
+            controller: _unqualifiedController,
+            decimal: true,
+            validator: (value) {
+              final parsed = double.tryParse(value?.trim() ?? '');
+              if (parsed == null || parsed < 0) return '请输入有效数量';
+              return null;
+            },
+          ).build(context),
+          SizedBox(height: LayoutTokens.gapMd),
+          CrudFieldConfig.textarea(
+            label: '不合格原因',
+            controller: _reasonController,
+            maxLines: 3,
+            validator: (value) {
+              final unqualified = double.tryParse(
+                    _unqualifiedController.text.trim(),
+                  ) ??
+                  0;
+              if (unqualified > 0 && (value?.trim().isEmpty ?? true)) {
+                return '请填写不合格原因';
+              }
+              return null;
+            },
+          ).build(context),
+        ],
+      ),
+    );
+  }
 }
 
 class _DetailRow extends StatelessWidget {

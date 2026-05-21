@@ -8,7 +8,6 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/action_dialo
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/approval_rejection_notice_card.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/file_upload_dialog.dart';
@@ -424,115 +423,14 @@ class _QualityInspectionListViewState
     QualityInspection inspection,
   ) async {
     final apiService = context.read<QualityInspectionApiService>();
-    final formKey = GlobalKey<FormState>();
-    final passedController = TextEditingController(
-      text: inspection.passedQuantity?.toStringAsFixed(0) ?? '',
-    );
-    final failedController = TextEditingController(
-      text: inspection.failedQuantity?.toStringAsFixed(0) ?? '',
-    );
-    String result = inspection.result == null || inspection.result == 'pending'
-        ? 'passed'
-        : inspection.result!;
-    bool submitting = false;
-
-    Future<void> submit(StateSetter setState) async {
-      if (!(formKey.currentState?.validate() ?? false)) return;
-      final passedText = passedController.text.trim();
-      final failedText = failedController.text.trim();
-      final passed = int.tryParse(passedText);
-      final failed = int.tryParse(failedText);
-      if (passed == null || failed == null) {
-        ToastUtil.showError('请输入有效数量');
-        return;
-      }
-      setState(() => submitting = true);
-      try {
-        await apiService.complete(inspection.id, {
-          'result': result,
-          'passed_quantity': passed,
-          'failed_quantity': failed,
-        });
-        if (!mounted) return;
-        Navigator.of(context).pop();
-        ToastUtil.showSuccess(_completeSuccessText);
-        await viewModel.loadInspections(resetPage: false);
-      } catch (err) {
-        if (!mounted) return;
-        setState(() => submitting = false);
-        ToastUtil.showError('$_completeErrorText$err');
-      }
-    }
-
     await showDialog<void>(
       context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AppFormDialog(
-              title: _completeTitle,
-              formKey: formKey,
-              submitting: submitting,
-              submitText: _submitText,
-              cancelText: _cancelText,
-              maxWidth: LayoutTokens.dialogWidthSm,
-              onCancel: () => Navigator.of(dialogContext).pop(),
-              onSubmit: () => submit(setState),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  AppSelect<String>(
-                    key: ValueKey<String>(result),
-                    value: result,
-                    decoration: const InputDecoration(labelText: '检验结果'),
-                    options: const [
-                      AppDropdownOption(value: 'passed', label: '合格'),
-                      AppDropdownOption(value: 'failed', label: '不合格'),
-                      AppDropdownOption(value: 'conditional', label: '条件接收'),
-                    ],
-                    onChanged: submitting
-                        ? null
-                        : (value) {
-                            if (value == null) return;
-                            setState(() => result = value);
-                          },
-                  ),
-                  SpacingTokens.vMd,
-                  CrudFieldConfig.number(
-                    label: '合格数量',
-                    controller: passedController,
-                    validator: (value) {
-                      final text = value?.trim() ?? '';
-                      final parsed = int.tryParse(text);
-                      if (parsed == null || parsed < 0) {
-                        return '请输入有效数量';
-                      }
-                      return null;
-                    },
-                  ).build(context),
-                  SpacingTokens.vMd,
-                  CrudFieldConfig.number(
-                    label: '不合格数量',
-                    controller: failedController,
-                    validator: (value) {
-                      final text = value?.trim() ?? '';
-                      final parsed = int.tryParse(text);
-                      if (parsed == null || parsed < 0) {
-                        return '请输入有效数量';
-                      }
-                      return null;
-                    },
-                  ).build(context),
-                ],
-              ),
-            );
-          },
-        );
-      },
+      builder: (_) => _QualityInspectionCompleteDialog(
+        inspection: inspection,
+        apiService: apiService,
+        viewModel: viewModel,
+      ),
     );
-
-    passedController.dispose();
-    failedController.dispose();
   }
 
   Future<void> _uploadAttachment(
@@ -1384,6 +1282,164 @@ class _QualityInspectionListViewState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: rows,
     );
+  }
+}
+
+class _QualityInspectionCompleteDialog extends StatefulWidget {
+  const _QualityInspectionCompleteDialog({
+    required this.inspection,
+    required this.apiService,
+    required this.viewModel,
+  });
+
+  final QualityInspection inspection;
+  final QualityInspectionApiService apiService;
+  final QualityInspectionViewModel viewModel;
+
+  @override
+  State<_QualityInspectionCompleteDialog> createState() =>
+      _QualityInspectionCompleteDialogState();
+}
+
+class _QualityInspectionCompleteDialogState
+    extends State<_QualityInspectionCompleteDialog> {
+  final formKey = GlobalKey<FormState>();
+  late final TextEditingController passedController;
+  late final TextEditingController failedController;
+  late String result;
+  bool submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    passedController = TextEditingController(
+      text: widget.inspection.passedQuantity?.toStringAsFixed(0) ?? '',
+    );
+    failedController = TextEditingController(
+      text: widget.inspection.failedQuantity?.toStringAsFixed(0) ?? '',
+    );
+    result = widget.inspection.result == null ||
+            widget.inspection.result == 'pending'
+        ? 'passed'
+        : widget.inspection.result!;
+  }
+
+  @override
+  void dispose() {
+    passedController.dispose();
+    failedController.dispose();
+    super.dispose();
+  }
+
+  Future<void> submit() async {
+    if (!(formKey.currentState?.validate() ?? false)) return;
+    final passedText = passedController.text.trim();
+    final failedText = failedController.text.trim();
+    final passed = int.tryParse(passedText);
+    final failed = int.tryParse(failedText);
+    if (passed == null || failed == null) {
+      ToastUtil.showError('请输入有效数量');
+      return;
+    }
+    setState(() => submitting = true);
+    try {
+      await widget.apiService.complete(widget.inspection.id, {
+        'result': result,
+        'passed_quantity': passed,
+        'failed_quantity': failed,
+      });
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ToastUtil.showSuccess(
+        _QualityInspectionListViewState._completeSuccessText,
+      );
+      await widget.viewModel.loadInspections(resetPage: false);
+    } catch (err) {
+      if (!mounted) return;
+      setState(() => submitting = false);
+      ToastUtil.showError(
+        '${_QualityInspectionListViewState._completeErrorText}$err',
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AppActionFormDialog(
+      title: _QualityInspectionListViewState._completeTitle,
+      formKey: formKey,
+      submitting: submitting,
+      submitText: _QualityInspectionListViewState._submitText,
+      cancelText: _QualityInspectionListViewState._cancelText,
+      maxWidth: LayoutTokens.dialogWidthSm,
+      onSubmit: submit,
+      summary: '请确认本次质检结果和数量，提交后将更新质检单状态并影响后续库存、返工或异常处理流程。',
+      impacts: _impactItems(),
+      auditHint: '提交前请核对合格与不合格数量，异常结果应继续登记处理结论，便于后续追踪。',
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AppSelect<String>(
+            key: ValueKey<String>(result),
+            value: result,
+            decoration: const InputDecoration(labelText: '检验结果'),
+            options: const [
+              AppDropdownOption(value: 'passed', label: '合格'),
+              AppDropdownOption(value: 'failed', label: '不合格'),
+              AppDropdownOption(value: 'conditional', label: '条件接收'),
+            ],
+            onChanged: submitting
+                ? null
+                : (value) {
+                    if (value == null) return;
+                    setState(() => result = value);
+                  },
+          ),
+          SpacingTokens.vMd,
+          CrudFieldConfig.number(
+            label: '合格数量',
+            controller: passedController,
+            validator: _quantityValidator,
+          ).build(context),
+          SpacingTokens.vMd,
+          CrudFieldConfig.number(
+            label: '不合格数量',
+            controller: failedController,
+            validator: _quantityValidator,
+          ).build(context),
+        ],
+      ),
+    );
+  }
+
+  List<String> _impactItems() {
+    final inspection = widget.inspection;
+    return [
+      '质检单号：${_QualityInspectionListViewState._displayText(inspection.inspectionNumber)}',
+      '产品：${_QualityInspectionListViewState._displayText(inspection.productName)}',
+      if ((inspection.workOrderNumber ?? '').trim().isNotEmpty)
+        '施工单：${inspection.workOrderNumber!.trim()}',
+      if ((inspection.batchNo ?? '').trim().isNotEmpty)
+        '批次：${inspection.batchNo!.trim()}',
+      if (inspection.inspectionQuantity != null)
+        '检验数量：${_formatQuantity(inspection.inspectionQuantity!)}',
+    ];
+  }
+
+  String _formatQuantity(double value) {
+    if (value == value.roundToDouble()) {
+      return value.toStringAsFixed(0);
+    }
+    return value.toStringAsFixed(2);
+  }
+
+  String? _quantityValidator(String? value) {
+    final text = value?.trim() ?? '';
+    final parsed = int.tryParse(text);
+    if (parsed == null || parsed < 0) {
+      return '请输入有效数量';
+    }
+    return null;
   }
 }
 

@@ -33,6 +33,43 @@ Future<StatementCreateResult?> showStatementCreateDialog(
   required Future<Customer?> Function() onCreateCustomer,
   required Future<Supplier?> Function() onCreateSupplier,
 }) async {
+  StatementCreateResult? result;
+  await showAdaptiveFilterDrawer(
+    context,
+    isMobile: ResponsiveLayout.isMobile(context),
+    title: '新建对账单',
+    desktopWidth: LayoutTokens.dialogWidthLg,
+    child: _StatementCreatePanel(
+      customers: customers,
+      suppliers: suppliers,
+      onCreateCustomer: onCreateCustomer,
+      onCreateSupplier: onCreateSupplier,
+      onCreated: (value) => result = value,
+    ),
+  );
+  return result;
+}
+
+class _StatementCreatePanel extends StatefulWidget {
+  const _StatementCreatePanel({
+    required this.customers,
+    required this.suppliers,
+    required this.onCreateCustomer,
+    required this.onCreateSupplier,
+    required this.onCreated,
+  });
+
+  final List<Customer> customers;
+  final List<Supplier> suppliers;
+  final Future<Customer?> Function() onCreateCustomer;
+  final Future<Supplier?> Function() onCreateSupplier;
+  final ValueChanged<StatementCreateResult> onCreated;
+
+  @override
+  State<_StatementCreatePanel> createState() => _StatementCreatePanelState();
+}
+
+class _StatementCreatePanelState extends State<_StatementCreatePanel> {
   final formKey = GlobalKey<FormState>();
   final periodController = TextEditingController();
   final startDateController = TextEditingController();
@@ -42,325 +79,39 @@ Future<StatementCreateResult?> showStatementCreateDialog(
   String statementType = 'customer';
   int? selectedCustomerId;
   int? selectedSupplierId;
-  var availableCustomers = List<Customer>.from(customers);
-  var availableSuppliers = List<Supplier>.from(suppliers);
-  try {
-    StatementCreateResult? result;
-    await showAdaptiveFilterDrawer(
-      context,
-      isMobile: ResponsiveLayout.isMobile(context),
-      title: '新建对账单',
-      desktopWidth: LayoutTokens.dialogWidthLg,
-      child: StatefulBuilder(
-        builder: (context, setState) {
-          final showCustomer = statementType == 'customer';
+  late var availableCustomers = List<Customer>.from(widget.customers);
+  late var availableSuppliers = List<Supplier>.from(widget.suppliers);
 
-          Future<void> submit() async {
-            if (!(formKey.currentState?.validate() ?? false)) return;
-            final payload = <String, dynamic>{
-              'statement_type': statementType,
-              'period': periodController.text.trim(),
-              'start_date': startDateController.text.trim(),
-              'end_date': endDateController.text.trim(),
-              'opening_balance':
-                  double.tryParse(openingBalanceController.text.trim()) ?? 0,
-              'notes': notesController.text.trim(),
-            };
-            if (showCustomer) {
-              payload['customer'] = selectedCustomerId;
-            } else {
-              payload['supplier'] = selectedSupplierId;
-            }
-            result = StatementCreateResult(payload: payload);
-            Navigator.of(context).maybePop();
-          }
+  bool get showCustomer => statementType == 'customer';
 
-          return AdaptiveFormPanel(
-            formKey: formKey,
-            onSubmit: submit,
-            submitText: '创建',
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AppCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '基础信息',
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                      const SizedBox(height: LayoutTokens.gapMd),
-                      CrudFieldConfig.radioGroup(
-                        label: '对账单类型',
-                        value: statementType,
-                        options: const [
-                          AppDropdownOption<dynamic>(
-                            value: 'customer',
-                            label: '客户对账单',
-                          ),
-                          AppDropdownOption<dynamic>(
-                            value: 'supplier',
-                            label: '供应商对账单',
-                          ),
-                        ],
-                        onChanged: (value) =>
-                            setState(() => statementType = value as String),
-                      ).build(context),
-                      const SizedBox(height: LayoutTokens.gapMd),
-                      if (showCustomer)
-                        Builder(
-                          builder: (context) {
-                            Future<void> handleCreateCustomer() async {
-                              final created = await onCreateCustomer();
-                              if (created == null) return;
-                              setState(() {
-                                availableCustomers = List<Customer>.from(
-                                  availableCustomers,
-                                )..removeWhere((item) => item.id == created.id);
-                                availableCustomers.add(created);
-                                availableCustomers.sort(
-                                  (left, right) => left.name.compareTo(
-                                    right.name,
-                                  ),
-                                );
-                                selectedCustomerId = created.id;
-                              });
-                            }
-
-                            final customerOptions = availableCustomers
-                                .map(
-                                  (customer) => AppDropdownOption<int?>(
-                                    value: customer.id,
-                                    label: customer.name,
-                                  ),
-                                )
-                                .toList()
-                              ..add(
-                                AppDropdownOption<int?>(
-                                  value: -1,
-                                  label: '新增客户',
-                                  icon: Icons.add,
-                                  onSelected: handleCreateCustomer,
-                                ),
-                              );
-
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                AppSelect<int?>(
-                                  key: ValueKey<String>(
-                                    'statement_create_customer_${selectedCustomerId ?? 'none'}',
-                                  ),
-                                  value: selectedCustomerId,
-                                  decoration: const InputDecoration(
-                                    labelText: '客户',
-                                    border: OutlineInputBorder(),
-                                  ),
-                                  options: customerOptions,
-                                  selectHintText:
-                                      availableCustomers.isEmpty ? '新增客户' : '请选择',
-                                  onChanged: (value) => setState(
-                                    () => selectedCustomerId = value,
-                                  ),
-                                  validator: (value) =>
-                                      value == null ? '请选择客户' : null,
-                                ),
-                                if (availableCustomers.isEmpty) ...[
-                                  const SizedBox(height: LayoutTokens.gapSm),
-                                  Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: TextButton.icon(
-                                      onPressed: handleCreateCustomer,
-                                      icon: const Icon(Icons.add, size: 18),
-                                      label: const Text('新增客户'),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            );
-                          },
-                        ),
-                      if (!showCustomer)
-                        Builder(
-                          builder: (context) {
-                            Future<void> handleCreateSupplier() async {
-                              final created = await onCreateSupplier();
-                              if (created == null) return;
-                              setState(() {
-                                availableSuppliers = List<Supplier>.from(
-                                  availableSuppliers,
-                                )..removeWhere((item) => item.id == created.id);
-                                availableSuppliers.add(created);
-                                availableSuppliers.sort(
-                                  (left, right) => left.name.compareTo(
-                                    right.name,
-                                  ),
-                                );
-                                selectedSupplierId = created.id;
-                              });
-                            }
-
-                            final supplierOptions = availableSuppliers
-                                .map(
-                                  (supplier) => AppDropdownOption<int?>(
-                                    value: supplier.id,
-                                    label: supplier.name,
-                                  ),
-                                )
-                                .toList()
-                              ..add(
-                                AppDropdownOption<int?>(
-                                  value: -1,
-                                  label: '新增供应商',
-                                  icon: Icons.add,
-                                  onSelected: handleCreateSupplier,
-                                ),
-                              );
-
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                AppSelect<int?>(
-                                  key: ValueKey<String>(
-                                    'statement_create_supplier_${selectedSupplierId ?? 'none'}',
-                                  ),
-                                  value: selectedSupplierId,
-                                  decoration: const InputDecoration(
-                                    labelText: '供应商',
-                                    border: OutlineInputBorder(),
-                                  ),
-                                  options: supplierOptions,
-                                  selectHintText:
-                                      availableSuppliers.isEmpty ? '新增供应商' : '请选择',
-                                  onChanged: (value) => setState(
-                                    () => selectedSupplierId = value,
-                                  ),
-                                  validator: (value) =>
-                                      value == null ? '请选择供应商' : null,
-                                ),
-                                if (availableSuppliers.isEmpty) ...[
-                                  const SizedBox(height: LayoutTokens.gapSm),
-                                  Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: TextButton.icon(
-                                      onPressed: handleCreateSupplier,
-                                      icon: const Icon(Icons.add, size: 18),
-                                      label: const Text('新增供应商'),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            );
-                          },
-                        ),
-                      const SizedBox(height: LayoutTokens.gapMd),
-                      CrudFieldConfig.text(
-                        label: '对账周期（YYYY-MM）',
-                        controller: periodController,
-                        validator: (value) =>
-                            (value == null || value.trim().isEmpty)
-                                ? '请输入对账周期'
-                                : null,
-                      ).build(context),
-                      const SizedBox(height: LayoutTokens.gapMd),
-                      CrudFieldConfig.dateRange(
-                        label: '对账日期范围',
-                        startController: startDateController,
-                        endController: endDateController,
-                        hintText: '请选择开始和结束日期',
-                        helperText: '会自动回填开始日期和结束日期',
-                        validator: (range) =>
-                            range == null ? '请选择对账日期范围' : null,
-                      ).build(context),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: LayoutTokens.gapLg),
-                AppCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '补充信息',
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                      const SizedBox(height: LayoutTokens.gapMd),
-                      CrudFieldConfig.number(
-                        label: '期初余额',
-                        controller: openingBalanceController,
-                        decimal: true,
-                      ).build(context),
-                      const SizedBox(height: LayoutTokens.gapMd),
-                      CrudFieldConfig.textarea(
-                        label: '备注（可选）',
-                        controller: notesController,
-                        maxLines: 3,
-                      ).build(context),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-    return result;
-  } finally {
+  @override
+  void dispose() {
     periodController.dispose();
     startDateController.dispose();
     endDateController.dispose();
     openingBalanceController.dispose();
     notesController.dispose();
+    super.dispose();
   }
-}
 
-Future<StatementGenerateResult?> showStatementGenerateDialog(
-  BuildContext context, {
-  required List<Customer> customers,
-  required List<Supplier> suppliers,
-  required Future<Customer?> Function() onCreateCustomer,
-  required Future<Supplier?> Function() onCreateSupplier,
-}) async {
-  final formKey = GlobalKey<FormState>();
-  final periodController = TextEditingController();
-  String statementType = 'customer';
-  int? selectedCustomerId;
-  int? selectedSupplierId;
-  var availableCustomers = List<Customer>.from(customers);
-  var availableSuppliers = List<Supplier>.from(suppliers);
-  try {
-    StatementGenerateResult? result;
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) {
-          final showCustomer = statementType == 'customer';
-
-          Future<void> submit() async {
-            if (!(formKey.currentState?.validate() ?? false)) return;
-            final params = <String, dynamic>{
-              'period': periodController.text.trim(),
-            };
-            if (showCustomer) {
-              params['customer'] = selectedCustomerId;
-            } else {
-              params['supplier'] = selectedSupplierId;
-            }
-            result = StatementGenerateResult(params: params);
-            Navigator.of(dialogContext).pop();
-          }
-
-          return AppFormDialog(
-            title: '生成对账数据',
-            formKey: formKey,
-            onSubmit: submit,
-            submitText: '生成',
-            maxWidth: 640,
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
+  @override
+  Widget build(BuildContext context) {
+    return AdaptiveFormPanel(
+      formKey: formKey,
+      onSubmit: _submit,
+      submitText: '创建',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text(
+                  '基础信息',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: LayoutTokens.gapMd),
                 CrudFieldConfig.radioGroup(
                   label: '对账单类型',
                   value: statementType,
@@ -377,148 +128,10 @@ Future<StatementGenerateResult?> showStatementGenerateDialog(
                   onChanged: (value) =>
                       setState(() => statementType = value as String),
                 ).build(context),
-                SizedBox(height: LayoutTokens.gapMd),
-                if (showCustomer)
-                  Builder(
-                    builder: (context) {
-                      Future<void> handleCreateCustomer() async {
-                        final created = await onCreateCustomer();
-                        if (created == null) return;
-                        setState(() {
-                          availableCustomers = List<Customer>.from(
-                            availableCustomers,
-                          )..removeWhere((item) => item.id == created.id);
-                          availableCustomers.add(created);
-                          availableCustomers.sort(
-                            (left, right) => left.name.compareTo(right.name),
-                          );
-                          selectedCustomerId = created.id;
-                        });
-                      }
-
-                      final customerOptions = availableCustomers
-                          .map(
-                            (customer) => AppDropdownOption<int?>(
-                              value: customer.id,
-                              label: customer.name,
-                            ),
-                          )
-                          .toList()
-                        ..add(
-                          AppDropdownOption<int?>(
-                            value: -1,
-                            label: '新增客户',
-                            icon: Icons.add,
-                            onSelected: handleCreateCustomer,
-                          ),
-                        );
-
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          AppSelect<int?>(
-                            key: ValueKey<String>(
-                              'statement_generate_customer_${selectedCustomerId ?? 'none'}',
-                            ),
-                            value: selectedCustomerId,
-                            decoration: const InputDecoration(
-                              labelText: '客户',
-                              border: OutlineInputBorder(),
-                            ),
-                            options: customerOptions,
-                            selectHintText:
-                                availableCustomers.isEmpty ? '新增客户' : '请选择',
-                            onChanged: (value) =>
-                                setState(() => selectedCustomerId = value),
-                            validator: (value) =>
-                                value == null ? '请选择客户' : null,
-                          ),
-                          if (availableCustomers.isEmpty) ...[
-                            const SizedBox(height: LayoutTokens.gapSm),
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: TextButton.icon(
-                                onPressed: handleCreateCustomer,
-                                icon: const Icon(Icons.add, size: 18),
-                                label: const Text('新增客户'),
-                              ),
-                            ),
-                          ],
-                        ],
-                      );
-                    },
-                  ),
-                if (!showCustomer)
-                  Builder(
-                    builder: (context) {
-                      Future<void> handleCreateSupplier() async {
-                        final created = await onCreateSupplier();
-                        if (created == null) return;
-                        setState(() {
-                          availableSuppliers = List<Supplier>.from(
-                            availableSuppliers,
-                          )..removeWhere((item) => item.id == created.id);
-                          availableSuppliers.add(created);
-                          availableSuppliers.sort(
-                            (left, right) => left.name.compareTo(right.name),
-                          );
-                          selectedSupplierId = created.id;
-                        });
-                      }
-
-                      final supplierOptions = availableSuppliers
-                          .map(
-                            (supplier) => AppDropdownOption<int?>(
-                              value: supplier.id,
-                              label: supplier.name,
-                            ),
-                          )
-                          .toList()
-                        ..add(
-                          AppDropdownOption<int?>(
-                            value: -1,
-                            label: '新增供应商',
-                            icon: Icons.add,
-                            onSelected: handleCreateSupplier,
-                          ),
-                        );
-
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          AppSelect<int?>(
-                            key: ValueKey<String>(
-                              'statement_generate_supplier_${selectedSupplierId ?? 'none'}',
-                            ),
-                            value: selectedSupplierId,
-                            decoration: const InputDecoration(
-                              labelText: '供应商',
-                              border: OutlineInputBorder(),
-                            ),
-                            options: supplierOptions,
-                            selectHintText:
-                                availableSuppliers.isEmpty ? '新增供应商' : '请选择',
-                            onChanged: (value) =>
-                                setState(() => selectedSupplierId = value),
-                            validator: (value) =>
-                                value == null ? '请选择供应商' : null,
-                          ),
-                          if (availableSuppliers.isEmpty) ...[
-                            const SizedBox(height: LayoutTokens.gapSm),
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: TextButton.icon(
-                                onPressed: handleCreateSupplier,
-                                icon: const Icon(Icons.add, size: 18),
-                                label: const Text('新增供应商'),
-                              ),
-                            ),
-                          ],
-                        ],
-                      );
-                    },
-                  ),
-                SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: LayoutTokens.gapMd),
+                if (showCustomer) _buildCustomerSelect(),
+                if (!showCustomer) _buildSupplierSelect(),
+                const SizedBox(height: LayoutTokens.gapMd),
                 CrudFieldConfig.text(
                   label: '对账周期（YYYY-MM）',
                   controller: periodController,
@@ -526,15 +139,428 @@ Future<StatementGenerateResult?> showStatementGenerateDialog(
                       ? '请输入对账周期'
                       : null,
                 ).build(context),
+                const SizedBox(height: LayoutTokens.gapMd),
+                CrudFieldConfig.dateRange(
+                  label: '对账日期范围',
+                  startController: startDateController,
+                  endController: endDateController,
+                  hintText: '请选择开始和结束日期',
+                  helperText: '会自动回填开始日期和结束日期',
+                  validator: (range) => range == null ? '请选择对账日期范围' : null,
+                ).build(context),
               ],
             ),
-          );
-        },
+          ),
+          const SizedBox(height: LayoutTokens.gapLg),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '补充信息',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: LayoutTokens.gapMd),
+                CrudFieldConfig.number(
+                  label: '期初余额',
+                  controller: openingBalanceController,
+                  decimal: true,
+                ).build(context),
+                const SizedBox(height: LayoutTokens.gapMd),
+                CrudFieldConfig.textarea(
+                  label: '备注（可选）',
+                  controller: notesController,
+                  maxLines: 3,
+                ).build(context),
+              ],
+            ),
+          ),
+        ],
       ),
     );
-    return result;
-  } finally {
+  }
+
+  Widget _buildCustomerSelect() {
+    final customerOptions = availableCustomers
+        .map(
+          (customer) => AppDropdownOption<int?>(
+            value: customer.id,
+            label: customer.name,
+          ),
+        )
+        .toList()
+      ..add(
+        AppDropdownOption<int?>(
+          value: -1,
+          label: '新增客户',
+          icon: Icons.add,
+          onSelected: _handleCreateCustomer,
+        ),
+      );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppSelect<int?>(
+          key: ValueKey<String>(
+            'statement_create_customer_${selectedCustomerId ?? 'none'}',
+          ),
+          value: selectedCustomerId,
+          decoration: const InputDecoration(
+            labelText: '客户',
+            border: OutlineInputBorder(),
+          ),
+          options: customerOptions,
+          selectHintText: availableCustomers.isEmpty ? '新增客户' : '请选择',
+          onChanged: (value) => setState(() => selectedCustomerId = value),
+          validator: (value) => value == null ? '请选择客户' : null,
+        ),
+        if (availableCustomers.isEmpty) ...[
+          const SizedBox(height: LayoutTokens.gapSm),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: _handleCreateCustomer,
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('新增客户'),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildSupplierSelect() {
+    final supplierOptions = availableSuppliers
+        .map(
+          (supplier) => AppDropdownOption<int?>(
+            value: supplier.id,
+            label: supplier.name,
+          ),
+        )
+        .toList()
+      ..add(
+        AppDropdownOption<int?>(
+          value: -1,
+          label: '新增供应商',
+          icon: Icons.add,
+          onSelected: _handleCreateSupplier,
+        ),
+      );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppSelect<int?>(
+          key: ValueKey<String>(
+            'statement_create_supplier_${selectedSupplierId ?? 'none'}',
+          ),
+          value: selectedSupplierId,
+          decoration: const InputDecoration(
+            labelText: '供应商',
+            border: OutlineInputBorder(),
+          ),
+          options: supplierOptions,
+          selectHintText: availableSuppliers.isEmpty ? '新增供应商' : '请选择',
+          onChanged: (value) => setState(() => selectedSupplierId = value),
+          validator: (value) => value == null ? '请选择供应商' : null,
+        ),
+        if (availableSuppliers.isEmpty) ...[
+          const SizedBox(height: LayoutTokens.gapSm),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: _handleCreateSupplier,
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('新增供应商'),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Future<void> _handleCreateCustomer() async {
+    final created = await widget.onCreateCustomer();
+    if (created == null) return;
+    setState(() {
+      availableCustomers = List<Customer>.from(availableCustomers)
+        ..removeWhere((item) => item.id == created.id)
+        ..add(created)
+        ..sort((left, right) => left.name.compareTo(right.name));
+      selectedCustomerId = created.id;
+    });
+  }
+
+  Future<void> _handleCreateSupplier() async {
+    final created = await widget.onCreateSupplier();
+    if (created == null) return;
+    setState(() {
+      availableSuppliers = List<Supplier>.from(availableSuppliers)
+        ..removeWhere((item) => item.id == created.id)
+        ..add(created)
+        ..sort((left, right) => left.name.compareTo(right.name));
+      selectedSupplierId = created.id;
+    });
+  }
+
+  Future<void> _submit() async {
+    if (!(formKey.currentState?.validate() ?? false)) return;
+    final payload = <String, dynamic>{
+      'statement_type': statementType,
+      'period': periodController.text.trim(),
+      'start_date': startDateController.text.trim(),
+      'end_date': endDateController.text.trim(),
+      'opening_balance':
+          double.tryParse(openingBalanceController.text.trim()) ?? 0,
+      'notes': notesController.text.trim(),
+    };
+    if (showCustomer) {
+      payload['customer'] = selectedCustomerId;
+    } else {
+      payload['supplier'] = selectedSupplierId;
+    }
+    widget.onCreated(StatementCreateResult(payload: payload));
+    Navigator.of(context).maybePop();
+  }
+}
+
+Future<StatementGenerateResult?> showStatementGenerateDialog(
+  BuildContext context, {
+  required List<Customer> customers,
+  required List<Supplier> suppliers,
+  required Future<Customer?> Function() onCreateCustomer,
+  required Future<Supplier?> Function() onCreateSupplier,
+}) async {
+  return showDialog<StatementGenerateResult>(
+    context: context,
+    builder: (_) => _StatementGenerateDialog(
+      customers: customers,
+      suppliers: suppliers,
+      onCreateCustomer: onCreateCustomer,
+      onCreateSupplier: onCreateSupplier,
+    ),
+  );
+}
+
+class _StatementGenerateDialog extends StatefulWidget {
+  const _StatementGenerateDialog({
+    required this.customers,
+    required this.suppliers,
+    required this.onCreateCustomer,
+    required this.onCreateSupplier,
+  });
+
+  final List<Customer> customers;
+  final List<Supplier> suppliers;
+  final Future<Customer?> Function() onCreateCustomer;
+  final Future<Supplier?> Function() onCreateSupplier;
+
+  @override
+  State<_StatementGenerateDialog> createState() =>
+      _StatementGenerateDialogState();
+}
+
+class _StatementGenerateDialogState extends State<_StatementGenerateDialog> {
+  final formKey = GlobalKey<FormState>();
+  final periodController = TextEditingController();
+  String statementType = 'customer';
+  int? selectedCustomerId;
+  int? selectedSupplierId;
+  late var availableCustomers = List<Customer>.from(widget.customers);
+  late var availableSuppliers = List<Supplier>.from(widget.suppliers);
+
+  bool get showCustomer => statementType == 'customer';
+
+  @override
+  void dispose() {
     periodController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AppActionFormDialog(
+      title: '生成对账数据',
+      formKey: formKey,
+      onSubmit: _submit,
+      submitText: '生成',
+      maxWidth: 640,
+      summary: '请确认对账对象和周期，系统会基于当前业务数据生成对应期间的对账汇总。',
+      impacts: [
+        if (showCustomer) '对账对象：客户' else '对账对象：供应商',
+        '生成结果会用于后续确认、异议处理和收付款跟进',
+      ],
+      auditHint: '生成前请核对周期格式和往来对象。',
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CrudFieldConfig.radioGroup(
+            label: '对账单类型',
+            value: statementType,
+            options: const [
+              AppDropdownOption<dynamic>(
+                value: 'customer',
+                label: '客户对账单',
+              ),
+              AppDropdownOption<dynamic>(
+                value: 'supplier',
+                label: '供应商对账单',
+              ),
+            ],
+            onChanged: (value) =>
+                setState(() => statementType = value as String),
+          ).build(context),
+          SizedBox(height: LayoutTokens.gapMd),
+          if (showCustomer) _buildCustomerSelect(),
+          if (!showCustomer) _buildSupplierSelect(),
+          SizedBox(height: LayoutTokens.gapMd),
+          CrudFieldConfig.text(
+            label: '对账周期（YYYY-MM）',
+            controller: periodController,
+            validator: (value) =>
+                (value == null || value.trim().isEmpty) ? '请输入对账周期' : null,
+          ).build(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCustomerSelect() {
+    final customerOptions = availableCustomers
+        .map(
+          (customer) => AppDropdownOption<int?>(
+            value: customer.id,
+            label: customer.name,
+          ),
+        )
+        .toList()
+      ..add(
+        AppDropdownOption<int?>(
+          value: -1,
+          label: '新增客户',
+          icon: Icons.add,
+          onSelected: _handleCreateCustomer,
+        ),
+      );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppSelect<int?>(
+          key: ValueKey<String>(
+            'statement_generate_customer_${selectedCustomerId ?? 'none'}',
+          ),
+          value: selectedCustomerId,
+          decoration: const InputDecoration(
+            labelText: '客户',
+            border: OutlineInputBorder(),
+          ),
+          options: customerOptions,
+          selectHintText: availableCustomers.isEmpty ? '新增客户' : '请选择',
+          onChanged: (value) => setState(() => selectedCustomerId = value),
+          validator: (value) => value == null ? '请选择客户' : null,
+        ),
+        if (availableCustomers.isEmpty) ...[
+          const SizedBox(height: LayoutTokens.gapSm),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: _handleCreateCustomer,
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('新增客户'),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildSupplierSelect() {
+    final supplierOptions = availableSuppliers
+        .map(
+          (supplier) => AppDropdownOption<int?>(
+            value: supplier.id,
+            label: supplier.name,
+          ),
+        )
+        .toList()
+      ..add(
+        AppDropdownOption<int?>(
+          value: -1,
+          label: '新增供应商',
+          icon: Icons.add,
+          onSelected: _handleCreateSupplier,
+        ),
+      );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppSelect<int?>(
+          key: ValueKey<String>(
+            'statement_generate_supplier_${selectedSupplierId ?? 'none'}',
+          ),
+          value: selectedSupplierId,
+          decoration: const InputDecoration(
+            labelText: '供应商',
+            border: OutlineInputBorder(),
+          ),
+          options: supplierOptions,
+          selectHintText: availableSuppliers.isEmpty ? '新增供应商' : '请选择',
+          onChanged: (value) => setState(() => selectedSupplierId = value),
+          validator: (value) => value == null ? '请选择供应商' : null,
+        ),
+        if (availableSuppliers.isEmpty) ...[
+          const SizedBox(height: LayoutTokens.gapSm),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: _handleCreateSupplier,
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('新增供应商'),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Future<void> _handleCreateCustomer() async {
+    final created = await widget.onCreateCustomer();
+    if (created == null) return;
+    setState(() {
+      availableCustomers = List<Customer>.from(availableCustomers)
+        ..removeWhere((item) => item.id == created.id)
+        ..add(created)
+        ..sort((left, right) => left.name.compareTo(right.name));
+      selectedCustomerId = created.id;
+    });
+  }
+
+  Future<void> _handleCreateSupplier() async {
+    final created = await widget.onCreateSupplier();
+    if (created == null) return;
+    setState(() {
+      availableSuppliers = List<Supplier>.from(availableSuppliers)
+        ..removeWhere((item) => item.id == created.id)
+        ..add(created)
+        ..sort((left, right) => left.name.compareTo(right.name));
+      selectedSupplierId = created.id;
+    });
+  }
+
+  Future<void> _submit() async {
+    if (!(formKey.currentState?.validate() ?? false)) return;
+    final params = <String, dynamic>{
+      'period': periodController.text.trim(),
+    };
+    if (showCustomer) {
+      params['customer'] = selectedCustomerId;
+    } else {
+      params['supplier'] = selectedSupplierId;
+    }
+    Navigator.of(context).pop(StatementGenerateResult(params: params));
   }
 }
 

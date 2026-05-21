@@ -98,6 +98,7 @@ final class FileUploadFieldConfig extends CrudFieldConfig {
     this.helperText,
     required this.allowedExtensions,
     this.fallbackFilename = 'upload.bin',
+    this.picker,
   });
 
   final String label;
@@ -110,6 +111,7 @@ final class FileUploadFieldConfig extends CrudFieldConfig {
   final String? helperText;
   final List<String> allowedExtensions;
   final String fallbackFilename;
+  final FileUploadPicker? picker;
 
   @override
   Widget build(BuildContext context) => FileUploadField(
@@ -123,6 +125,7 @@ final class FileUploadFieldConfig extends CrudFieldConfig {
         helperText: helperText,
         allowedExtensions: allowedExtensions,
         fallbackFilename: fallbackFilename,
+        picker: picker,
       );
 }
 

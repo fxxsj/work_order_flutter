@@ -45,7 +45,8 @@ class _TextareaFieldState extends State<TextareaField> {
   @override
   void initState() {
     super.initState();
-    _controller = widget.controller ?? TextEditingController(text: widget.initialValue);
+    _controller =
+        widget.controller ?? TextEditingController(text: widget.initialValue);
     _ownsController = widget.controller == null;
   }
 
@@ -84,11 +85,14 @@ class _TextareaFieldState extends State<TextareaField> {
   @override
   void dispose() {
     if (_ownsController) {
-      try {
-        _controller.dispose();
-      } catch (_) {
-        // Already disposed
-      }
+      final toDispose = _controller;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        try {
+          toDispose.dispose();
+        } catch (_) {
+          // Already disposed
+        }
+      });
     }
     super.dispose();
   }

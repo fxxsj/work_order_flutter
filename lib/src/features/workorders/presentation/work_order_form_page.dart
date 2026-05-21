@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
@@ -459,8 +461,10 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
   Future<bool?> _showSubmitApprovalDialog() async {
     return showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('保存成功'),
+      builder: (context) => AppDialog(
+        title: '保存成功',
+        maxWidth: LayoutTokens.dialogWidthSm,
+        scrollable: false,
         content: const Text('是否立即提交审核？'),
         actions: [
           TextButton(

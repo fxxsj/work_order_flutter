@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/constants/breakpoints.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 
 /// 下拉选项配置
 class AppDropdownOption<T> {
@@ -38,6 +39,7 @@ class AppDropdownSearchConfig {
   final bool Function(String query, AppDropdownOption<dynamic> option)? matcher;
   final bool highlightMatches;
 }
+
 class AppSelect<T> extends FormField<T> {
   AppSelect({
     super.key,
@@ -202,8 +204,8 @@ class _SingleSelectDropdownFieldState<T>
             backgroundColor: Theme.of(context).colorScheme.surface,
             shape:
                 const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-            builder: (_) => ConstrainedBox(
-              constraints: BoxConstraints(maxHeight: maxHeight),
+            builder: (_) => SizedBox(
+              height: maxHeight,
               child: _SingleSelectPicker<T>(
                 title: widget.decoration.labelText,
                 options: _effectiveOptions,
@@ -220,11 +222,10 @@ class _SingleSelectDropdownFieldState<T>
             context: context,
             builder: (_) => Dialog(
               insetPadding: const EdgeInsets.all(LayoutTokens.gapLg),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: 400,
-                  maxHeight: maxHeight,
-                ),
+              clipBehavior: Clip.antiAlias,
+              child: SizedBox(
+                width: 400,
+                height: maxHeight,
                 child: _SingleSelectPicker<T>(
                   title: widget.decoration.labelText,
                   options: _effectiveOptions,
@@ -287,9 +288,8 @@ class _SingleSelectDropdownFieldState<T>
         child: InputDecorator(
           decoration: effectiveDecoration,
           isEmpty: selected == null,
-          child: selected == null
-              ? const SizedBox.shrink()
-              : Text(selected.label),
+          child:
+              selected == null ? const SizedBox.shrink() : Text(selected.label),
         ),
       ),
     );
@@ -360,108 +360,89 @@ class _SingleSelectPickerState<T> extends State<_SingleSelectPicker<T>> {
     final hasResults = filtered.isNotEmpty;
     final actionOptions = _actionOptions;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            LayoutTokens.gapLg,
-            LayoutTokens.gapLg,
-            LayoutTokens.gapMd,
-            LayoutTokens.gapSm,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  widget.title ?? '请选择',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              IconButton(
-                tooltip: '关闭',
-                onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(Icons.close),
-              ),
-            ],
-          ),
-        ),
-        if (_showSearch)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              LayoutTokens.gapLg,
-              0,
-              LayoutTokens.gapLg,
-              LayoutTokens.gapSm,
-            ),
-            child: TextField(
-              controller: _searchController,
-              autofocus: true,
-              decoration: InputDecoration(
-                hintText: widget.searchConfig.hintText ?? '搜索',
-                prefixIcon: const Icon(Icons.search),
-                isDense: true,
-                border: const OutlineInputBorder(),
-              ),
-              onChanged: (value) => setState(() => _query = value.trim()),
-            ),
-          ),
-        const Divider(height: 1),
-        Expanded(
-          child: hasResults
-              ? ListView.separated(
-                  padding: EdgeInsets.zero,
-                  itemCount: filtered.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final option = filtered[index];
-                    final selected = option.value == widget.initialValue;
-
-                    return ListTile(
-                      title: _buildOptionLabel(theme, option),
-                      dense: true,
-                      enabled: option.enabled,
-                      selected: selected,
-                      trailing:
-                          selected ? const Icon(Icons.check, size: 20) : null,
-                      onTap: option.enabled
-                          ? () => Navigator.of(context).pop(option.value)
-                          : null,
-                    );
-                  },
-                )
-              : Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(LayoutTokens.gapLg),
-                    child: Text(
-                      widget.options.isEmpty
-                          ? widget.emptyText
-                          : widget.noResultsText,
-                      style: theme.textTheme.bodyMedium
-                          ?.copyWith(color: theme.hintColor),
-                    ),
-                  ),
-                ),
-        ),
-        if (actionOptions.isNotEmpty) ...[
-          const Divider(height: 1),
-          ...actionOptions.map(
-            (option) => ListTile(
-              leading: Icon(option.icon ?? Icons.add, size: 20),
-              title: Text(option.label),
-              dense: true,
-              onTap: option.enabled
+    return AppModalScaffold(
+      title: widget.title ?? '请选择',
+      showCloseButton: true,
+      scrollable: false,
+      bodyPadding: EdgeInsets.zero,
+      leadingActions: actionOptions
+          .map(
+            (option) => TextButton.icon(
+              onPressed: option.enabled
                   ? () {
                       Navigator.of(context).pop();
                       option.onSelected?.call();
                     }
                   : null,
+              icon: Icon(option.icon ?? Icons.add, size: LayoutTokens.iconSm),
+              label: Text(option.label),
             ),
+          )
+          .toList(),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_showSearch) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                LayoutTokens.gapLg,
+                LayoutTokens.gapMd,
+                LayoutTokens.gapLg,
+                LayoutTokens.gapSm,
+              ),
+              child: TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: widget.searchConfig.hintText ?? '搜索',
+                  prefixIcon: const Icon(Icons.search),
+                  isDense: true,
+                  border: const OutlineInputBorder(),
+                ),
+                onChanged: (value) => setState(() => _query = value.trim()),
+              ),
+            ),
+            const Divider(height: 1),
+          ],
+          Expanded(
+            child: hasResults
+                ? ListView.separated(
+                    padding: EdgeInsets.zero,
+                    itemCount: filtered.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final option = filtered[index];
+                      final selected = option.value == widget.initialValue;
+
+                      return ListTile(
+                        title: _buildOptionLabel(theme, option),
+                        dense: true,
+                        enabled: option.enabled,
+                        selected: selected,
+                        trailing: selected
+                            ? const Icon(Icons.check, size: LayoutTokens.iconLg)
+                            : null,
+                        onTap: option.enabled
+                            ? () => Navigator.of(context).pop(option.value)
+                            : null,
+                      );
+                    },
+                  )
+                : Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(LayoutTokens.gapLg),
+                      child: Text(
+                        widget.options.isEmpty
+                            ? widget.emptyText
+                            : widget.noResultsText,
+                        style: theme.textTheme.bodyMedium
+                            ?.copyWith(color: theme.hintColor),
+                      ),
+                    ),
+                  ),
           ),
         ],
-      ],
+      ),
     );
   }
 
@@ -503,7 +484,6 @@ class _SingleSelectPickerState<T> extends State<_SingleSelectPicker<T>> {
     );
   }
 }
-
 
 // ==================== Multi Select ====================
 
@@ -601,8 +581,8 @@ class _MultiSelectDropdownFieldState<T>
             backgroundColor: Theme.of(context).colorScheme.surface,
             shape:
                 const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-            builder: (sheetContext) => FractionallySizedBox(
-              heightFactor: 0.88,
+            builder: (sheetContext) => SizedBox(
+              height: MediaQuery.sizeOf(sheetContext).height * 0.88,
               child: _MultiSelectPicker(
                 title: widget.decoration.labelText,
                 options: _effectiveOptions,
@@ -622,11 +602,10 @@ class _MultiSelectDropdownFieldState<T>
             context: context,
             builder: (dialogContext) => Dialog(
               insetPadding: const EdgeInsets.all(LayoutTokens.gapLg),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: 520,
-                  maxHeight: 640,
-                ),
+              clipBehavior: Clip.antiAlias,
+              child: SizedBox(
+                width: 520,
+                height: 640,
                 child: _MultiSelectPicker(
                   title: widget.decoration.labelText,
                   options: _effectiveOptions,
@@ -789,163 +768,133 @@ class _MultiSelectPickerState extends State<_MultiSelectPicker> {
     final allFilteredSelected = hasResults &&
         selectableFiltered.every((value) => _currentSelection.contains(value));
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            LayoutTokens.gapLg,
-            LayoutTokens.gapLg,
-            LayoutTokens.gapMd,
-            LayoutTokens.gapSm,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  widget.title ?? '请选择',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              IconButton(
-                tooltip: '关闭',
-                onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(Icons.close),
-              ),
-            ],
-          ),
+    return AppModalScaffold(
+      title: widget.title ?? '请选择',
+      showCloseButton: true,
+      scrollable: false,
+      bodyPadding: EdgeInsets.zero,
+      leadingActions: [
+        TextButton(
+          onPressed: () => setState(() => _currentSelection = <dynamic>{}),
+          child: Text(widget.clearText),
         ),
-        if (_showSearch)
+      ],
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(widget.cancelText),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(_currentSelection),
+          child: Text(widget.confirmText),
+        ),
+      ],
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_showSearch)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                LayoutTokens.gapLg,
+                LayoutTokens.gapMd,
+                LayoutTokens.gapLg,
+                LayoutTokens.gapSm,
+              ),
+              child: TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: widget.searchConfig.hintText ?? '搜索',
+                  prefixIcon: const Icon(Icons.search),
+                  isDense: true,
+                  border: const OutlineInputBorder(),
+                ),
+                onChanged: (value) => setState(() => _query = value.trim()),
+              ),
+            ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(
+            padding: EdgeInsets.fromLTRB(
               LayoutTokens.gapLg,
-              0,
+              _showSearch ? 0 : LayoutTokens.gapMd,
               LayoutTokens.gapLg,
               LayoutTokens.gapSm,
             ),
-            child: TextField(
-              controller: _searchController,
-              autofocus: true,
-              decoration: InputDecoration(
-                hintText: widget.searchConfig.hintText ?? '搜索',
-                prefixIcon: const Icon(Icons.search),
-                isDense: true,
-                border: const OutlineInputBorder(),
-              ),
-              onChanged: (value) => setState(() => _query = value.trim()),
-            ),
-          ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            LayoutTokens.gapLg,
-            0,
-            LayoutTokens.gapLg,
-            LayoutTokens.gapSm,
-          ),
-          child: Row(
-            children: [
-              Text(
-                '已选 ${_currentSelection.length} 项',
-                style: theme.textTheme.bodySmall,
-              ),
-              const Spacer(),
-              TextButton(
-                onPressed: hasResults
-                    ? () {
-                        setState(() {
-                          if (allFilteredSelected) {
-                            for (final option in filtered) {
-                              _currentSelection.remove(option.value);
-                            }
-                          } else {
-                            for (final option in filtered) {
-                              if (option.enabled) {
-                                _currentSelection.add(option.value);
+            child: Row(
+              children: [
+                Text(
+                  '已选 ${_currentSelection.length} 项',
+                  style: theme.textTheme.bodySmall,
+                ),
+                const Spacer(),
+                TextButton(
+                  onPressed: hasResults
+                      ? () {
+                          setState(() {
+                            if (allFilteredSelected) {
+                              for (final option in filtered) {
+                                _currentSelection.remove(option.value);
+                              }
+                            } else {
+                              for (final option in filtered) {
+                                if (option.enabled) {
+                                  _currentSelection.add(option.value);
+                                }
                               }
                             }
-                          }
-                        });
-                      }
-                    : null,
-                child: Text(widget.selectAllText),
-              ),
-            ],
-          ),
-        ),
-        const Divider(height: 1),
-        Expanded(
-          child: hasResults
-              ? ListView.separated(
-                  padding: EdgeInsets.zero,
-                  itemCount: filtered.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final option = filtered[index];
-                    final selected = _currentSelection.contains(option.value);
-
-                    return CheckboxListTile(
-                      value: selected,
-                      dense: true,
-                      enabled: option.enabled,
-                      controlAffinity: ListTileControlAffinity.leading,
-                      title: _buildOptionLabel(theme, option),
-                      onChanged: option.enabled
-                          ? (checked) {
-                              setState(() {
-                                if (checked == true) {
-                                  _currentSelection.add(option.value);
-                                } else {
-                                  _currentSelection.remove(option.value);
-                                }
-                              });
-                            }
-                          : null,
-                    );
-                  },
-                )
-              : Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(LayoutTokens.gapLg),
-                    child: Text(
-                      widget.options.isEmpty
-                          ? widget.emptyText
-                          : widget.noResultsText,
-                      style: theme.textTheme.bodyMedium
-                          ?.copyWith(color: theme.hintColor),
-                    ),
-                  ),
+                          });
+                        }
+                      : null,
+                  child: Text(widget.selectAllText),
                 ),
-        ),
-        Container(
-          padding: const EdgeInsets.all(LayoutTokens.gapMd),
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(color: theme.dividerColor),
+              ],
             ),
           ),
-          child: Row(
-            children: [
-              TextButton(
-                onPressed: () =>
-                    setState(() => _currentSelection = <dynamic>{}),
-                child: Text(widget.clearText),
-              ),
-              const Spacer(),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(widget.cancelText),
-              ),
-              const SizedBox(width: LayoutTokens.gapSm),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(_currentSelection),
-                child: Text(widget.confirmText),
-              ),
-            ],
+          const Divider(height: 1),
+          Expanded(
+            child: hasResults
+                ? ListView.separated(
+                    padding: EdgeInsets.zero,
+                    itemCount: filtered.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final option = filtered[index];
+                      final selected = _currentSelection.contains(option.value);
+
+                      return CheckboxListTile(
+                        value: selected,
+                        dense: true,
+                        enabled: option.enabled,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        title: _buildOptionLabel(theme, option),
+                        onChanged: option.enabled
+                            ? (checked) {
+                                setState(() {
+                                  if (checked == true) {
+                                    _currentSelection.add(option.value);
+                                  } else {
+                                    _currentSelection.remove(option.value);
+                                  }
+                                });
+                              }
+                            : null,
+                      );
+                    },
+                  )
+                : Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(LayoutTokens.gapLg),
+                      child: Text(
+                        widget.options.isEmpty
+                            ? widget.emptyText
+                            : widget.noResultsText,
+                        style: theme.textTheme.bodyMedium
+                            ?.copyWith(color: theme.hintColor),
+                      ),
+                    ),
+                  ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -1067,7 +1016,8 @@ Widget _buildHighlightedText({
         style: TextStyle(
           color: theme.colorScheme.primary,
           fontWeight: FontWeight.w700,
-          backgroundColor: theme.colorScheme.primary.withValues(alpha: OpacityTokens.mild),
+          backgroundColor:
+              theme.colorScheme.primary.withValues(alpha: OpacityTokens.mild),
         ),
       ),
     );

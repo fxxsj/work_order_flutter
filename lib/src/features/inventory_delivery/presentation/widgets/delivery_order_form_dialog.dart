@@ -11,10 +11,10 @@ import 'package:work_order_app/src/features/sales_orders/data/sales_order_dto.da
 
 typedef DeliverySalesOrderChanged = Future<void> Function(
   int id, {
-  StateSetter? setState,
+  VoidCallback? refresh,
 });
 
-typedef DeliveryFormSubmit = Future<void> Function(StateSetter setState);
+typedef DeliveryFormSubmit = Future<void> Function(VoidCallback refresh);
 
 Future<void> showDeliveryOrderFormDialog(
   BuildContext context, {
@@ -42,248 +42,333 @@ Future<void> showDeliveryOrderFormDialog(
   required ValueChanged<DateTime> onDatePicked,
   required DeliveryFormSubmit onSubmit,
 }) {
-  bool submitting = false;
-
   return showAdaptiveFilterDrawer(
     context,
     isMobile: ResponsiveLayout.isMobile(context),
     title: title,
     desktopWidth: LayoutTokens.pageWidthXwide,
-    child: StatefulBuilder(
-      builder: (context, setState) {
-        final isCompact =
-            ResponsiveLayout.isXs(context) || ResponsiveLayout.isSm(context);
-        String? salesOrderLabel;
-        if (selectedSalesOrderId != null) {
-          for (final order in salesOrders) {
-            if (order.id == selectedSalesOrderId) {
-              salesOrderLabel = order.orderNumber;
-              break;
-            }
-          }
-          salesOrderLabel ??= '客户订单 #$selectedSalesOrderId';
-        }
+    child: _DeliveryOrderFormPanel(
+      isEdit: isEdit,
+      cancelText: cancelText,
+      submitText: submitText,
+      productsLoading: productsLoading,
+      formKey: formKey,
+      salesOrders: salesOrders,
+      products: products,
+      selectedSalesOrderId: selectedSalesOrderId,
+      deliveryDate: deliveryDate,
+      receiverNameController: receiverNameController,
+      receiverPhoneController: receiverPhoneController,
+      addressController: addressController,
+      logisticsController: logisticsController,
+      trackingController: trackingController,
+      freightController: freightController,
+      packageCountController: packageCountController,
+      packageWeightController: packageWeightController,
+      notesController: notesController,
+      items: items,
+      onSalesOrderChanged: onSalesOrderChanged,
+      onDatePicked: onDatePicked,
+      onSubmit: onSubmit,
+    ),
+  );
+}
 
-        Future<void> submit() async {
-          if (submitting) return;
-          setState(() => submitting = true);
-          await onSubmit(setState);
-          if (context.mounted) {
-            setState(() => submitting = false);
-          }
-        }
+class _DeliveryOrderFormPanel extends StatefulWidget {
+  const _DeliveryOrderFormPanel({
+    required this.isEdit,
+    required this.cancelText,
+    required this.submitText,
+    required this.productsLoading,
+    required this.formKey,
+    required this.salesOrders,
+    required this.products,
+    required this.selectedSalesOrderId,
+    required this.deliveryDate,
+    required this.receiverNameController,
+    required this.receiverPhoneController,
+    required this.addressController,
+    required this.logisticsController,
+    required this.trackingController,
+    required this.freightController,
+    required this.packageCountController,
+    required this.packageWeightController,
+    required this.notesController,
+    required this.items,
+    required this.onSalesOrderChanged,
+    required this.onDatePicked,
+    required this.onSubmit,
+  });
 
-        Widget buildMetricsFields() {
-          if (isCompact) {
-            return Column(
+  final bool isEdit;
+  final String cancelText;
+  final String submitText;
+  final bool productsLoading;
+  final GlobalKey<FormState> formKey;
+  final List<SalesOrderDto> salesOrders;
+  final List<ProductOption> products;
+  final int? selectedSalesOrderId;
+  final DateTime? deliveryDate;
+  final TextEditingController receiverNameController;
+  final TextEditingController receiverPhoneController;
+  final TextEditingController addressController;
+  final TextEditingController logisticsController;
+  final TextEditingController trackingController;
+  final TextEditingController freightController;
+  final TextEditingController packageCountController;
+  final TextEditingController packageWeightController;
+  final TextEditingController notesController;
+  final List<DeliveryItemDraft> items;
+  final DeliverySalesOrderChanged onSalesOrderChanged;
+  final ValueChanged<DateTime> onDatePicked;
+  final DeliveryFormSubmit onSubmit;
+
+  @override
+  State<_DeliveryOrderFormPanel> createState() =>
+      _DeliveryOrderFormPanelState();
+}
+
+class _DeliveryOrderFormPanelState extends State<_DeliveryOrderFormPanel> {
+  bool submitting = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return AdaptiveFormPanel(
+      formKey: widget.formKey,
+      cancelText: widget.cancelText,
+      submitText: widget.submitText,
+      submitting: submitting,
+      onSubmit: _submit,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!widget.isEdit) ...[
+            _DeliveryFormSection(
+              title: '关联单据',
+              subtitle: '先选择客户订单，系统会回填收货信息并带出待发货明细。',
+              child: AppSelect<int>(
+                key: ValueKey<int?>(widget.selectedSalesOrderId),
+                value: widget.selectedSalesOrderId,
+                decoration: const InputDecoration(
+                  labelText: '客户订单',
+                  border: OutlineInputBorder(),
+                ),
+                options: widget.salesOrders
+                    .map(
+                      (order) => AppDropdownOption<int>(
+                        value: order.id,
+                        label: order.orderNumber,
+                      ),
+                    )
+                    .toList(),
+                onChanged: submitting
+                    ? null
+                    : (value) {
+                        if (value == null) return;
+                        widget.onSalesOrderChanged(value, refresh: _refresh);
+                      },
+                validator: (value) {
+                  if (!widget.isEdit && (value == null || value == 0)) {
+                    return '请选择客户订单';
+                  }
+                  return null;
+                },
+              ),
+            ),
+            const SizedBox(height: LayoutTokens.gapLg),
+          ],
+          _DeliveryFormSection(
+            title: '收货信息',
+            child: Column(
               children: [
-                CrudFieldConfig.number(
-                  label: '运费',
-                  controller: freightController,
-                  decimal: true,
+                CrudFieldConfig.text(
+                  label: '收货人',
+                  controller: widget.receiverNameController,
+                  enabled: !submitting,
+                  validator: (value) =>
+                      (value?.trim().isEmpty ?? true) ? '请输入收货人' : null,
                 ).build(context),
                 const SizedBox(height: LayoutTokens.gapMd),
-                CrudFieldConfig.number(
-                  label: '包裹数',
-                  controller: packageCountController,
+                CrudFieldConfig.text(
+                  label: '联系电话',
+                  controller: widget.receiverPhoneController,
+                  enabled: !submitting,
+                  validator: (value) =>
+                      (value?.trim().isEmpty ?? true) ? '请输入联系电话' : null,
                 ).build(context),
                 const SizedBox(height: LayoutTokens.gapMd),
-                CrudFieldConfig.number(
-                  label: '总重量(kg)',
-                  controller: packageWeightController,
-                  decimal: true,
+                CrudFieldConfig.text(
+                  label: '送货地址',
+                  controller: widget.addressController,
+                  enabled: !submitting,
+                  validator: (value) =>
+                      (value?.trim().isEmpty ?? true) ? '请输入送货地址' : null,
+                ).build(context),
+                const SizedBox(height: LayoutTokens.gapMd),
+                DeliveryDateField(
+                  label: '发货日期',
+                  value: widget.deliveryDate,
+                  onPicked: widget.onDatePicked,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: LayoutTokens.gapLg),
+          _DeliveryFormSection(
+            title: '物流与备注',
+            child: Column(
+              children: [
+                CrudFieldConfig.text(
+                  label: '物流公司',
+                  controller: widget.logisticsController,
+                  enabled: !submitting,
+                ).build(context),
+                const SizedBox(height: LayoutTokens.gapMd),
+                CrudFieldConfig.text(
+                  label: '物流单号',
+                  controller: widget.trackingController,
+                  enabled: !submitting,
+                ).build(context),
+                const SizedBox(height: LayoutTokens.gapMd),
+                _buildMetricsFields(),
+                const SizedBox(height: LayoutTokens.gapMd),
+                CrudFieldConfig.textarea(
+                  label: '备注',
+                  controller: widget.notesController,
+                  enabled: !submitting,
+                  maxLines: 3,
                 ).build(context),
               ],
-            );
-          }
-
-          return Row(
-            children: [
-              Expanded(
-                child: CrudFieldConfig.number(
-                  label: '运费',
-                  controller: freightController,
-                  decimal: true,
-                ).build(context),
-              ),
-              const SizedBox(width: LayoutTokens.gapMd),
-              Expanded(
-                child: CrudFieldConfig.number(
-                  label: '包裹数',
-                  controller: packageCountController,
-                ).build(context),
-              ),
-              const SizedBox(width: LayoutTokens.gapMd),
-              Expanded(
-                child: CrudFieldConfig.number(
-                  label: '总重量(kg)',
-                  controller: packageWeightController,
-                  decimal: true,
-                ).build(context),
-              ),
-            ],
-          );
-        }
-
-        return AdaptiveFormPanel(
-          formKey: formKey,
-          cancelText: cancelText,
-          submitText: submitText,
-          submitting: submitting,
-          onSubmit: submit,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (!isEdit) ...[
-                _DeliveryFormSection(
-                  title: '关联单据',
-                  subtitle: '先选择客户订单，系统会回填收货信息并带出待发货明细。',
-                  child: AppSelect<int>(
-                    key: ValueKey<int?>(selectedSalesOrderId),
-                    value: selectedSalesOrderId,
-                    decoration: const InputDecoration(
-                      labelText: '客户订单',
-                      border: OutlineInputBorder(),
-                    ),
-                    options: salesOrders
+            ),
+          ),
+          const SizedBox(height: LayoutTokens.gapLg),
+          _DeliveryFormSection(
+            title: '发货明细',
+            subtitle: '支持逐行调整数量、单位、单价和批次。',
+            trailing: PageActionButton.outlined(
+              onPressed: submitting || widget.productsLoading
+                  ? null
+                  : () {
+                      setState(() {
+                        widget.items.add(
+                          DeliveryItemDraft(
+                            productId: 0,
+                            productName: '-',
+                            maxQuantity: 0,
+                            initialQuantity: 1,
+                          ),
+                        );
+                      });
+                    },
+              icon: const Icon(Icons.add, size: 16),
+              label: '添加明细',
+            ),
+            child: widget.items.isEmpty
+                ? Text(
+                    '暂无明细，请先选择客户订单或手动添加产品。',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  )
+                : Column(
+                    children: widget.items
                         .map(
-                          (order) => AppDropdownOption<int>(
-                            value: order.id,
-                            label: order.orderNumber,
+                          (item) => DeliveryItemRow(
+                            item: item,
+                            enabled: !submitting,
+                            products: widget.products,
+                            onRemove: () {
+                              setState(() {
+                                widget.items.remove(item);
+                                item.dispose();
+                              });
+                            },
+                            onProductChanged: (product) {
+                              setState(() {
+                                item.productId = product.id;
+                                item.productName = product.displayLabel;
+                              });
+                            },
                           ),
                         )
                         .toList(),
-                    onChanged: submitting
-                        ? null
-                        : (value) {
-                            if (value == null) return;
-                            onSalesOrderChanged(value, setState: setState);
-                          },
-                    validator: (value) {
-                      if (!isEdit && (value == null || value == 0)) {
-                        return '请选择客户订单';
-                      }
-                      return null;
-                    },
                   ),
-                ),
-                const SizedBox(height: LayoutTokens.gapLg),
-              ],
-              _DeliveryFormSection(
-                title: '收货信息',
-                child: Column(
-                  children: [
-                    CrudFieldConfig.text(
-                      label: '收货人',
-                      controller: receiverNameController,
-                      validator: (value) =>
-                          (value?.trim().isEmpty ?? true) ? '请输入收货人' : null,
-                    ).build(context),
-                    const SizedBox(height: LayoutTokens.gapMd),
-                    CrudFieldConfig.text(
-                      label: '联系电话',
-                      controller: receiverPhoneController,
-                      validator: (value) =>
-                          (value?.trim().isEmpty ?? true) ? '请输入联系电话' : null,
-                    ).build(context),
-                    const SizedBox(height: LayoutTokens.gapMd),
-                    CrudFieldConfig.text(
-                      label: '送货地址',
-                      controller: addressController,
-                      validator: (value) =>
-                          (value?.trim().isEmpty ?? true) ? '请输入送货地址' : null,
-                    ).build(context),
-                    const SizedBox(height: LayoutTokens.gapMd),
-                    DeliveryDateField(
-                      label: '发货日期',
-                      value: deliveryDate,
-                      onPicked: onDatePicked,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: LayoutTokens.gapLg),
-              _DeliveryFormSection(
-                title: '物流与备注',
-                child: Column(
-                  children: [
-                    CrudFieldConfig.text(
-                      label: '物流公司',
-                      controller: logisticsController,
-                    ).build(context),
-                    const SizedBox(height: LayoutTokens.gapMd),
-                    CrudFieldConfig.text(
-                      label: '物流单号',
-                      controller: trackingController,
-                    ).build(context),
-                    const SizedBox(height: LayoutTokens.gapMd),
-                    buildMetricsFields(),
-                    const SizedBox(height: LayoutTokens.gapMd),
-                    CrudFieldConfig.textarea(
-                      label: '备注',
-                      controller: notesController,
-                      maxLines: 3,
-                    ).build(context),
-                  ],
-                ),
-              ),
-              const SizedBox(height: LayoutTokens.gapLg),
-              _DeliveryFormSection(
-                title: '发货明细',
-                subtitle: '支持逐行调整数量、单位、单价和批次。',
-                trailing: PageActionButton.outlined(
-                  onPressed: submitting || productsLoading
-                      ? null
-                      : () {
-                          setState(() {
-                            items.add(
-                              DeliveryItemDraft(
-                                productId: 0,
-                                productName: '-',
-                                maxQuantity: 0,
-                                initialQuantity: 1,
-                              ),
-                            );
-                          });
-                        },
-                  icon: const Icon(Icons.add, size: 16),
-                  label: '添加明细',
-                ),
-                child: items.isEmpty
-                    ? Text(
-                        '暂无明细，请先选择客户订单或手动添加产品。',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      )
-                    : Column(
-                        children: items
-                            .map(
-                              (item) => DeliveryItemRow(
-                                item: item,
-                                enabled: !submitting,
-                                products: products,
-                                onRemove: () {
-                                  setState(() {
-                                    items.remove(item);
-                                    item.dispose();
-                                  });
-                                },
-                                onProductChanged: (product) {
-                                  setState(() {
-                                    item.productId = product.id;
-                                    item.productName = product.displayLabel;
-                                  });
-                                },
-                              ),
-                            )
-                            .toList(),
-                      ),
-              ),
-            ],
           ),
-        );
-      },
-    ),
-  );
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetricsFields() {
+    final isCompact =
+        ResponsiveLayout.isXs(context) || ResponsiveLayout.isSm(context);
+    if (isCompact) {
+      return Column(
+        children: [
+          CrudFieldConfig.number(
+            label: '运费',
+            controller: widget.freightController,
+            enabled: !submitting,
+            decimal: true,
+          ).build(context),
+          const SizedBox(height: LayoutTokens.gapMd),
+          CrudFieldConfig.number(
+            label: '包裹数',
+            controller: widget.packageCountController,
+            enabled: !submitting,
+          ).build(context),
+          const SizedBox(height: LayoutTokens.gapMd),
+          CrudFieldConfig.number(
+            label: '总重量(kg)',
+            controller: widget.packageWeightController,
+            enabled: !submitting,
+            decimal: true,
+          ).build(context),
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(
+          child: CrudFieldConfig.number(
+            label: '运费',
+            controller: widget.freightController,
+            enabled: !submitting,
+            decimal: true,
+          ).build(context),
+        ),
+        const SizedBox(width: LayoutTokens.gapMd),
+        Expanded(
+          child: CrudFieldConfig.number(
+            label: '包裹数',
+            controller: widget.packageCountController,
+            enabled: !submitting,
+          ).build(context),
+        ),
+        const SizedBox(width: LayoutTokens.gapMd),
+        Expanded(
+          child: CrudFieldConfig.number(
+            label: '总重量(kg)',
+            controller: widget.packageWeightController,
+            enabled: !submitting,
+            decimal: true,
+          ).build(context),
+        ),
+      ],
+    );
+  }
+
+  void _refresh() {
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _submit() async {
+    if (submitting) return;
+    setState(() => submitting = true);
+    await widget.onSubmit(_refresh);
+    if (mounted) {
+      setState(() => submitting = false);
+    }
+  }
 }
 
 class _DeliveryFormSection extends StatelessWidget {
