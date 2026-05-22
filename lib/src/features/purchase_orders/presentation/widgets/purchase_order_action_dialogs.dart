@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/action_dialogs.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_date_picker.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 
 Future<String?> showPurchaseReasonDialog(
@@ -83,7 +84,7 @@ Future<DateTime?> showPurchaseDateDialog(
   required String title,
 }) {
   final now = DateTime.now();
-  return showDatePicker(
+  return showAppDatePicker(
     context: context,
     initialDate: now,
     firstDate: DateTime(now.year - 5),

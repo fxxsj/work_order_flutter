@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_date_picker.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -298,7 +299,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     final initial = isOrderDate
         ? (_draft.orderDate ?? DateTime.now())
         : (_draft.deliveryDate ?? DateTime.now());
-    final picked = await showDatePicker(
+    final picked = await showAppDatePicker(
       context: context,
       initialDate: initial,
       firstDate: DateTime(2020),
@@ -316,7 +317,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
 
   Future<void> _pickActualDeliveryDate() async {
     final initial = _draft.actualDeliveryDate ?? DateTime.now();
-    final picked = await showDatePicker(
+    final picked = await showAppDatePicker(
       context: context,
       initialDate: initial,
       firstDate: DateTime(2020),

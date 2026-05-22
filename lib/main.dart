@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:work_order_app/app.dart';
@@ -91,6 +92,16 @@ class _MyAppState extends State<MyApp> {
             scrollBehavior: const AppScrollBehavior(),
             debugShowCheckedModeBanner: false,
             title: AppMetadata.displayName,
+            locale: const Locale('zh', 'CN'),
+            supportedLocales: const [
+              Locale('zh', 'CN'),
+              Locale('en', 'US'),
+            ],
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
             theme: AppTheme.build(
                 brightness: Brightness.light, seedColor: theme.seedColor),
             darkTheme: AppTheme.build(

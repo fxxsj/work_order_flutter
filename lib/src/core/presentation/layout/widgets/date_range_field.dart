@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_date_picker.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 
 class DateRangeField extends FormField<DateTimeRange?> {
@@ -26,7 +27,8 @@ class DateRangeField extends FormField<DateTimeRange?> {
         _firstDate = firstDate,
         _lastDate = lastDate,
         super(
-          initialValue: _dateRangeFromControllers(startController, endController),
+          initialValue:
+              _dateRangeFromControllers(startController, endController),
           validator: validator,
           builder: (state) => _DateRangeFieldBody(
             state: state,
@@ -92,13 +94,15 @@ class _DateRangeFieldBody extends StatelessWidget {
         : (_field._hintText ?? '请选择日期范围');
 
     return InkWell(
-      onTap: _field._enabled ? () => _pickDateRange(context, currentValue) : null,
+      onTap:
+          _field._enabled ? () => _pickDateRange(context, currentValue) : null,
       borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: _field._label,
           helperText: _field._helperText,
           errorText: state.errorText,
+          prefixIcon: const Icon(Icons.date_range_outlined, size: 18),
           suffixIcon: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -112,11 +116,13 @@ class _DateRangeFieldBody extends StatelessWidget {
                   },
                   icon: const Icon(Icons.clear, size: 18),
                 ),
-              const Icon(Icons.date_range_outlined),
+              const Icon(Icons.keyboard_arrow_down_rounded),
               SizedBox(width: LayoutTokens.gapMd),
             ],
           ),
-        ).applyDefaults(theme.inputDecorationTheme).copyWith(enabled: _field._enabled),
+        )
+            .applyDefaults(theme.inputDecorationTheme)
+            .copyWith(enabled: _field._enabled),
         child: Text(
           text,
           style: theme.textTheme.bodyMedium?.copyWith(
@@ -127,11 +133,12 @@ class _DateRangeFieldBody extends StatelessWidget {
     );
   }
 
-  Future<void> _pickDateRange(BuildContext context, DateTimeRange? currentValue) async {
+  Future<void> _pickDateRange(
+      BuildContext context, DateTimeRange? currentValue) async {
     final now = DateTime.now();
     final resolvedFirstDate = _field._firstDate ?? DateTime(now.year - 5);
     final resolvedLastDate = _field._lastDate ?? DateTime(now.year + 5, 12, 31);
-    final picked = await showDateRangePicker(
+    final picked = await showAppDateRangePicker(
       context: context,
       firstDate: resolvedFirstDate,
       lastDate: resolvedLastDate,
@@ -139,13 +146,15 @@ class _DateRangeFieldBody extends StatelessWidget {
       helpText: _field._label,
       confirmText: _field._confirmText,
       cancelText: _field._cancelText,
+      saveText: _field._confirmText,
     );
     if (picked == null) return;
     startController.text = _formatDateYmd(picked.start);
     endController.text = _formatDateYmd(picked.end);
     state.didChange(
       DateTimeRange(
-        start: DateTime(picked.start.year, picked.start.month, picked.start.day),
+        start:
+            DateTime(picked.start.year, picked.start.month, picked.start.day),
         end: DateTime(picked.end.year, picked.end.month, picked.end.day),
       ),
     );

@@ -48,9 +48,11 @@ class AppTheme {
       info: primary,
       surfaceAlt: isDark ? const Color(0xFF141516) : const Color(0xFFF8FAFC),
       shadowStrong: const Color(0xFF000000),
-      unreadBackground: isDark ? const Color(0xFF1a1a1a) : const Color(0xFFEDF2F7),
+      unreadBackground:
+          isDark ? const Color(0xFF1a1a1a) : const Color(0xFFEDF2F7),
       successBg: linearSuccess.withValues(alpha: 0.12),
-      warningBg: (isDark ? linearInkSubtle : const Color(0xFF8a8f98)).withValues(alpha: 0.12),
+      warningBg: (isDark ? linearInkSubtle : const Color(0xFF8a8f98))
+          .withValues(alpha: 0.12),
       dangerBg: const Color(0xFFef4444).withValues(alpha: 0.12),
       infoBg: primary.withValues(alpha: 0.12),
     );
@@ -64,6 +66,37 @@ class AppTheme {
       sidebarText: isDark ? linearInkMuted : const Color(0xFF475569),
       borderColor: isDark ? linearHairline : const Color(0xFFE2E8F0),
     );
+    final pickerSurface =
+        isDark ? const Color(0xFF141516) : const Color(0xFFFFFFFF);
+    final pickerHeader =
+        isDark ? const Color(0xFF18191A) : const Color(0xFFF8FAFC);
+    final pickerDayOverlay = WidgetStateProperty.resolveWith<Color?>((states) {
+      if (states.contains(WidgetState.selected)) {
+        return scheme.primary;
+      }
+      if (states.contains(WidgetState.hovered) ||
+          states.contains(WidgetState.focused)) {
+        return scheme.primary.withValues(alpha: 0.10);
+      }
+      return null;
+    });
+    final pickerDayForeground =
+        WidgetStateProperty.resolveWith<Color?>((states) {
+      if (states.contains(WidgetState.selected)) {
+        return scheme.onPrimary;
+      }
+      if (states.contains(WidgetState.disabled)) {
+        return appColors.subtleText.withValues(alpha: 0.44);
+      }
+      return isDark ? linearInk : const Color(0xFF0F172A);
+    });
+    final pickerDayShape =
+        WidgetStateProperty.resolveWith<OutlinedBorder?>((states) {
+      if (states.contains(WidgetState.selected)) {
+        return const RoundedRectangleBorder(borderRadius: RadiusTokens.bMd);
+      }
+      return const RoundedRectangleBorder(borderRadius: RadiusTokens.bSm);
+    });
 
     // ── Typography ───────────────────────────────────────
     final baseTextTheme = ThemeData(brightness: brightness).textTheme;
@@ -155,13 +188,15 @@ class AppTheme {
         border: OutlineInputBorder(
           borderRadius: RadiusTokens.bMd,
           borderSide: BorderSide(
-            color: appColors.borderColor.withValues(alpha: OpacityTokens.intense),
+            color:
+                appColors.borderColor.withValues(alpha: OpacityTokens.intense),
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: RadiusTokens.bMd,
           borderSide: BorderSide(
-            color: appColors.borderColor.withValues(alpha: OpacityTokens.intense),
+            color:
+                appColors.borderColor.withValues(alpha: OpacityTokens.intense),
           ),
         ),
         focusedBorder: OutlineInputBorder(
@@ -216,11 +251,170 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: appColors.surface,
         elevation: 0,
-        shadowColor: semantic.shadowStrong.withValues(alpha: OpacityTokens.subtle),
+        shadowColor:
+            semantic.shadowStrong.withValues(alpha: OpacityTokens.subtle),
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: RadiusTokens.bLg,
-          side: BorderSide(color: appColors.borderColor.withValues(alpha: OpacityTokens.strong)),
+          side: BorderSide(
+              color: appColors.borderColor
+                  .withValues(alpha: OpacityTokens.strong)),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: pickerSurface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 18,
+        shadowColor: semantic.shadowStrong.withValues(alpha: 0.18),
+        shape: RoundedRectangleBorder(
+          borderRadius: RadiusTokens.bXl,
+          side: BorderSide(
+            color:
+                appColors.borderColor.withValues(alpha: OpacityTokens.strong),
+          ),
+        ),
+      ),
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: pickerSurface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: RadiusTokens.bXl,
+          side: BorderSide(
+            color:
+                appColors.borderColor.withValues(alpha: OpacityTokens.strong),
+          ),
+        ),
+        headerBackgroundColor: pickerHeader,
+        headerForegroundColor: isDark ? linearInk : const Color(0xFF0F172A),
+        headerHeadlineStyle: textTheme.headlineSmall?.copyWith(
+          fontFamily: bodyFont,
+          fontSize: 20,
+          height: 1.12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0,
+        ),
+        headerHelpStyle: textTheme.labelMedium?.copyWith(
+          color: appColors.subtleText,
+          fontSize: 12,
+          height: 1.2,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0,
+        ),
+        dayBackgroundColor: pickerDayOverlay,
+        dayForegroundColor: pickerDayForeground,
+        dayOverlayColor: pickerDayOverlay,
+        dayShape: pickerDayShape,
+        todayForegroundColor: WidgetStateProperty.all(scheme.primary),
+        todayBackgroundColor: WidgetStateProperty.all(
+          scheme.primary.withValues(alpha: 0.10),
+        ),
+        todayBorder: BorderSide(color: scheme.primary, width: 1.2),
+        rangeSelectionBackgroundColor: scheme.primary.withValues(alpha: 0.14),
+        rangePickerBackgroundColor: pickerSurface,
+        rangePickerSurfaceTintColor: Colors.transparent,
+        rangePickerShape: RoundedRectangleBorder(
+          borderRadius: RadiusTokens.bXl,
+          side: BorderSide(
+            color:
+                appColors.borderColor.withValues(alpha: OpacityTokens.strong),
+          ),
+        ),
+        rangePickerHeaderBackgroundColor: pickerHeader,
+        rangePickerHeaderForegroundColor:
+            isDark ? linearInk : const Color(0xFF0F172A),
+        rangePickerHeaderHeadlineStyle: textTheme.titleMedium?.copyWith(
+          fontFamily: bodyFont,
+          fontSize: 18,
+          height: 1.16,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0,
+        ),
+        rangePickerHeaderHelpStyle: textTheme.labelMedium?.copyWith(
+          color: appColors.subtleText,
+          fontSize: 12,
+          height: 1.2,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0,
+        ),
+        dividerColor:
+            appColors.borderColor.withValues(alpha: OpacityTokens.strong),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: isDark ? const Color(0xFF18191A) : const Color(0xFFF8FAFC),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          border: OutlineInputBorder(
+            borderRadius: RadiusTokens.bMd,
+            borderSide: BorderSide(color: appColors.borderColor),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: RadiusTokens.bMd,
+            borderSide: BorderSide(color: appColors.borderColor),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: RadiusTokens.bMd,
+            borderSide: BorderSide(color: scheme.primary, width: 1.6),
+          ),
+        ),
+        confirmButtonStyle: TextButton.styleFrom(
+          foregroundColor: scheme.onPrimary,
+          backgroundColor: scheme.primary,
+          shape: RoundedRectangleBorder(borderRadius: RadiusTokens.bMd),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        ),
+        cancelButtonStyle: TextButton.styleFrom(
+          foregroundColor: appColors.sidebarText,
+          shape: RoundedRectangleBorder(borderRadius: RadiusTokens.bMd),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        ),
+      ),
+      timePickerTheme: TimePickerThemeData(
+        backgroundColor: pickerSurface,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: RadiusTokens.bXl,
+          side: BorderSide(
+            color:
+                appColors.borderColor.withValues(alpha: OpacityTokens.strong),
+          ),
+        ),
+        hourMinuteShape: RoundedRectangleBorder(borderRadius: RadiusTokens.bLg),
+        hourMinuteColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return scheme.primary.withValues(alpha: 0.14);
+          }
+          return isDark ? const Color(0xFF18191A) : const Color(0xFFF8FAFC);
+        }),
+        hourMinuteTextColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return scheme.primary;
+          return isDark ? linearInk : const Color(0xFF0F172A);
+        }),
+        dialBackgroundColor:
+            isDark ? const Color(0xFF18191A) : const Color(0xFFF8FAFC),
+        dialHandColor: scheme.primary,
+        dialTextColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return scheme.onPrimary;
+          return isDark ? linearInkMuted : const Color(0xFF334155);
+        }),
+        entryModeIconColor: scheme.primary,
+        dayPeriodBorderSide: BorderSide(color: appColors.borderColor),
+        dayPeriodShape: RoundedRectangleBorder(borderRadius: RadiusTokens.bMd),
+        helpTextStyle: textTheme.labelMedium?.copyWith(
+          color: appColors.subtleText,
+          fontWeight: FontWeight.w600,
+        ),
+        confirmButtonStyle: TextButton.styleFrom(
+          foregroundColor: scheme.onPrimary,
+          backgroundColor: scheme.primary,
+          shape: RoundedRectangleBorder(borderRadius: RadiusTokens.bMd),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        ),
+        cancelButtonStyle: TextButton.styleFrom(
+          foregroundColor: appColors.sidebarText,
+          shape: RoundedRectangleBorder(borderRadius: RadiusTokens.bMd),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         ),
       ),
       scrollbarTheme: ScrollbarThemeData(
@@ -245,7 +439,8 @@ class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: ButtonStyle(
-          side: WidgetStateProperty.all(BorderSide(color: scheme.primary.withAlpha(128))),
+          side: WidgetStateProperty.all(
+              BorderSide(color: scheme.primary.withAlpha(128))),
           foregroundColor: WidgetStateProperty.all(scheme.primary),
           mouseCursor: WidgetStateProperty.all(SystemMouseCursors.click),
           textStyle: WidgetStateProperty.all(
@@ -264,7 +459,8 @@ class AppTheme {
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: isDark ? linearSurface1 : const Color(0xFF0F172A),
-        contentTextStyle: TextStyle(color: isDark ? linearInk : const Color(0xFFF1F5F9)),
+        contentTextStyle:
+            TextStyle(color: isDark ? linearInk : const Color(0xFFF1F5F9)),
       ),
       extensions: [semantic, appColors],
     );

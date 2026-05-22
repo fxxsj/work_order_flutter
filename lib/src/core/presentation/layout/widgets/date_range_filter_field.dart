@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_date_picker.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 
 class DateRangeFilterField extends StatelessWidget {
@@ -40,6 +41,7 @@ class DateRangeFilterField extends StatelessWidget {
         decoration: InputDecoration(
           labelText: label,
           helperText: helperText,
+          prefixIcon: const Icon(Icons.date_range_outlined, size: 18),
           suffixIcon: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -49,7 +51,7 @@ class DateRangeFilterField extends StatelessWidget {
                   onPressed: () => onChanged(null),
                   icon: const Icon(Icons.close, size: 16),
                 ),
-              const Icon(Icons.date_range_outlined, size: 18),
+              const Icon(Icons.keyboard_arrow_down_rounded),
               SizedBox(width: LayoutTokens.gapMd),
             ],
           ),
@@ -71,12 +73,15 @@ class DateRangeFilterField extends StatelessWidget {
     final initialRange = startDate != null && endDate != null
         ? DateTimeRange(start: startDate!, end: endDate!)
         : null;
-    final picked = await showDateRangePicker(
+    final picked = await showAppDateRangePicker(
       context: context,
       firstDate: resolvedFirstDate,
       lastDate: resolvedLastDate,
       initialDateRange: initialRange,
       helpText: label,
+      confirmText: '确定',
+      cancelText: '取消',
+      saveText: '确定',
     );
     if (picked == null) {
       return;

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 
 /// Date field for [CrudFieldConfig.date].
 class DateField extends FormField<String> {
@@ -30,41 +29,20 @@ class DateField extends FormField<String> {
                     labelText: label,
                     hintText: hintText,
                     helperText: helperText,
-                    filled: true,
-                    fillColor: Theme.of(ctx).colorScheme.surfaceContainerLowest,
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(LayoutTokens.radiusSm),
-                      borderSide: BorderSide(
-                        color: Theme.of(ctx).colorScheme.outline,
-                        width: 1,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(LayoutTokens.radiusSm),
-                      borderSide: BorderSide(
-                        color: Theme.of(ctx).colorScheme.primary,
-                        width: 2,
-                      ),
-                    ),
-                    errorBorder: OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(LayoutTokens.radiusSm),
-                      borderSide: BorderSide(
-                        color: Theme.of(ctx).colorScheme.error,
-                        width: 1,
-                      ),
-                    ),
-                    focusedErrorBorder: OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(LayoutTokens.radiusSm),
-                      borderSide: BorderSide(
-                        color: Theme.of(ctx).colorScheme.error,
-                        width: 2,
-                      ),
-                    ),
+                    prefixIcon:
+                        const Icon(Icons.calendar_today_outlined, size: 18),
+                    suffixIcon: enabled && controller.text.isNotEmpty
+                        ? IconButton(
+                            tooltip: '清空日期',
+                            onPressed: () {
+                              controller.clear();
+                              state.didChange('');
+                            },
+                            icon: const Icon(Icons.close, size: 18),
+                          )
+                        : const Icon(Icons.keyboard_arrow_down_rounded),
                   ),
+                  onChanged: state.didChange,
                 );
               },
             );
