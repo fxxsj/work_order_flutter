@@ -1,7 +1,8 @@
-import 'package:work_order_app/src/features/audit_logs/data/audit_log_dto.dart';
+import 'package:work_order_app/src/core/data/page_data.dart';
+import 'package:work_order_app/src/features/audit_logs/domain/audit_log.dart';
 
 abstract class AuditLogRepository {
-  Future<AuditLogPageDto> getAuditLogs({
+  Future<PageData<AuditLog>> getAuditLogs({
     int page = 1,
     int pageSize = 20,
     String? search,

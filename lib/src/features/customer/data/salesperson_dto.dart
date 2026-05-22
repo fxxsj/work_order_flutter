@@ -17,7 +17,8 @@ class SalespersonDto {
     final username = json['username']?.toString() ?? '';
     final firstName = json['first_name']?.toString() ?? '';
     final lastName = json['last_name']?.toString() ?? '';
-    final name = _firstNonEmpty([json['name']?.toString() ?? '', username, '$lastName$firstName']);
+    final name = _firstNonEmpty(
+        [json['name']?.toString() ?? '', username, '$lastName$firstName']);
     return SalespersonDto(id: id, name: name.isEmpty ? '用户$id' : name);
   }
 

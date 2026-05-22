@@ -45,10 +45,7 @@ class ProductDto {
   factory ProductDto.fromJson(Map<String, dynamic> json) {
     final processes = json['default_processes'];
     final processIds = processes is List
-        ? processes
-            .map((item) => toInt(item))
-            .whereType<int>()
-            .toList()
+        ? processes.map((item) => toInt(item)).whereType<int>().toList()
         : const <int>[];
     final materials = json['default_materials'];
     final materialItems = materials is List
@@ -60,19 +57,16 @@ class ProductDto {
         : const <ProductMaterialItem>[];
     final images = json['images'];
     final imageItems = images is List
-        ? images
-            .whereType<Map>()
-            .map((item) {
-              final map = Map<String, dynamic>.from(item);
-              return ProductImage(
-                id: toInt(map['id']) ?? 0,
-                imageUrl: toStringOrNull(map['image']) ?? '',
-                sortOrder: toInt(map['sort_order']) ?? 0,
-                description: toStringOrNull(map['description']),
-                createdAt: toDateTime(map['created_at']),
-              );
-            })
-            .toList()
+        ? images.whereType<Map>().map((item) {
+            final map = Map<String, dynamic>.from(item);
+            return ProductImage(
+              id: toInt(map['id']) ?? 0,
+              imageUrl: toStringOrNull(map['image']) ?? '',
+              sortOrder: toInt(map['sort_order']) ?? 0,
+              description: toStringOrNull(map['description']),
+              createdAt: toDateTime(map['created_at']),
+            );
+          }).toList()
         : const <ProductImage>[];
     return ProductDto(
       id: toInt(json['id']) ?? 0,

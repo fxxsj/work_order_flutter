@@ -47,12 +47,7 @@ class ProductStockViewModel extends PaginatedViewModel<ProductStock> {
       search: search,
       status: _statusFilter.isEmpty ? null : _statusFilter,
     );
-    return PageData(
-      items: result.items.map((dto) => dto.toEntity()).toList(),
-      total: result.total,
-      page: result.page,
-      pageSize: result.pageSize,
-    );
+    return result;
   }
 
   Future<void> _loadSummary() async {

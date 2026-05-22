@@ -1,7 +1,8 @@
-import 'package:work_order_app/src/features/finance_statements/data/statement_dto.dart';
+import 'package:work_order_app/src/core/data/page_data.dart';
+import 'package:work_order_app/src/features/finance_statements/domain/statement.dart';
 
 abstract class StatementRepository {
-  Future<StatementPageDto> getStatements({
+  Future<PageData<Statement>> getStatements({
     int page = 1,
     int pageSize = 20,
     String? search,

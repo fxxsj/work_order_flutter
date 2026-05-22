@@ -2,7 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/content_page_types.dart';
 import 'package:work_order_app/src/features/notification/presentation/widgets/notification_center_view.dart';
 import 'package:work_order_app/src/features/auth/presentation/profile_page.dart';
-import 'package:work_order_app/src/features/customer/presentation/customer_list_page.dart';
+import 'package:work_order_app/src/features/customer/customer_module.dart';
 import 'package:work_order_app/src/features/workorders/presentation/work_order_list_page.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_list_page.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_operator_center_page.dart';
@@ -10,9 +10,9 @@ import 'package:work_order_app/src/features/tasks/presentation/task_supervisor_d
 import 'package:work_order_app/src/features/tasks/presentation/task_assignment_rule_page.dart';
 import 'package:work_order_app/src/features/sales_orders/presentation/sales_order_list_page.dart';
 import 'package:work_order_app/src/features/audit_logs/presentation/audit_log_list_page.dart';
-import 'package:work_order_app/src/features/products/presentation/product_list_page.dart';
-import 'package:work_order_app/src/features/materials/presentation/material_list_page.dart';
-import 'package:work_order_app/src/features/product_groups/presentation/product_group_list_page.dart';
+import 'package:work_order_app/src/features/products/product_module.dart';
+import 'package:work_order_app/src/features/materials/material_module.dart';
+import 'package:work_order_app/src/features/product_groups/product_group_module.dart';
 import 'package:work_order_app/src/features/purchase_orders/presentation/purchase_order_list_page.dart';
 import 'package:work_order_app/src/features/inventory_stocks/presentation/product_stock_list_page.dart';
 import 'package:work_order_app/src/features/inventory_delivery/presentation/delivery_order_list_page.dart';
@@ -36,7 +36,7 @@ import 'package:work_order_app/src/features/finance_payments/presentation/paymen
 import 'package:work_order_app/src/features/processes/presentation/process_log_list_page.dart';
 import 'package:work_order_app/src/features/notification_admin/presentation/notification_management_page.dart';
 
-final _pages = <String, Widget Function()> {
+final _pages = <String, Widget Function()>{
   'profile': () => const ProfilePage(),
   'customers': () => const CustomerListEntry(),
   'workorders': () => const WorkOrderListEntry(),

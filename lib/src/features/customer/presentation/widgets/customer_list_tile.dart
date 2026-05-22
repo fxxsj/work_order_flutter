@@ -28,10 +28,12 @@ class CustomerListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
-    final subtleText = theme.textTheme.bodySmall?.copyWith(color: theme.hintColor);
+    final subtleText =
+        theme.textTheme.bodySmall?.copyWith(color: theme.hintColor);
     final subtitleLines = <String>[];
 
-    if (customer.contactPerson != null && customer.contactPerson!.trim().isNotEmpty) {
+    if (customer.contactPerson != null &&
+        customer.contactPerson!.trim().isNotEmpty) {
       subtitleLines.add('$_contactLabel：${customer.contactPerson}');
     }
     if (customer.phone != null && customer.phone!.trim().isNotEmpty) {
@@ -40,7 +42,8 @@ class CustomerListTile extends StatelessWidget {
     if (customer.email != null && customer.email!.trim().isNotEmpty) {
       subtitleLines.add('$_emailLabel：${customer.email}');
     }
-    if (customer.salespersonName != null && customer.salespersonName!.trim().isNotEmpty) {
+    if (customer.salespersonName != null &&
+        customer.salespersonName!.trim().isNotEmpty) {
       subtitleLines.add('$_salespersonLabel：${customer.salespersonName}');
     }
 
@@ -48,11 +51,13 @@ class CustomerListTile extends StatelessWidget {
       leading: CircleAvatar(
         backgroundColor: primary.withAlpha(31),
         foregroundColor: primary,
-        child: Text(customer.name.isNotEmpty ? customer.name[0].toUpperCase() : '?'),
+        child: Text(
+            customer.name.isNotEmpty ? customer.name[0].toUpperCase() : '?'),
       ),
       title: Text(
         customer.name,
-        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+        style:
+            theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
       ),
       subtitle: subtitleLines.isEmpty
           ? Text(_emptySubtitle, style: subtleText)

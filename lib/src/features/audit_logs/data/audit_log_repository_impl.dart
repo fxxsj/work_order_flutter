@@ -1,5 +1,6 @@
+import 'package:work_order_app/src/core/data/page_data.dart';
 import 'package:work_order_app/src/features/audit_logs/data/audit_log_api_service.dart';
-import 'package:work_order_app/src/features/audit_logs/data/audit_log_dto.dart';
+import 'package:work_order_app/src/features/audit_logs/domain/audit_log.dart';
 import 'package:work_order_app/src/features/audit_logs/domain/audit_log_repository.dart';
 
 class AuditLogRepositoryImpl implements AuditLogRepository {
@@ -8,12 +9,22 @@ class AuditLogRepositoryImpl implements AuditLogRepository {
   final AuditLogApiService _apiService;
 
   @override
-  Future<AuditLogPageDto> getAuditLogs({
+  Future<PageData<AuditLog>> getAuditLogs({
     int page = 1,
     int pageSize = 20,
     String? search,
-  }) {
-    return _apiService.fetchAuditLogs(page: page, pageSize: pageSize, search: search);
+  }) async {
+    final result = await _apiService.fetchAuditLogs(
+      page: page,
+      pageSize: pageSize,
+      search: search,
+    );
+    return PageData(
+      items: result.items.map((dto) => dto.toEntity()).toList(),
+      total: result.total,
+      page: result.page,
+      pageSize: result.pageSize,
+    );
   }
 
   @override

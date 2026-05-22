@@ -1,7 +1,8 @@
-import 'package:work_order_app/src/features/finance_payments/data/payment_dto.dart';
+import 'package:work_order_app/src/core/data/page_data.dart';
+import 'package:work_order_app/src/features/finance_payments/domain/payment.dart';
 
 abstract class PaymentRepository {
-  Future<PaymentPageDto> getPayments({
+  Future<PageData<Payment>> getPayments({
     int page = 1,
     int pageSize = 20,
     String? search,

@@ -114,12 +114,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   Expanded(
                     child: Column(
                       children: [
-                        _buildBasicInfoCard(context, product, itemSpacing, labelStyle),
+                        _buildBasicInfoCard(
+                            context, product, itemSpacing, labelStyle),
                         SizedBox(height: sectionSpacing),
-                        _buildStockPriceCard(context, product, itemSpacing, labelStyle),
+                        _buildStockPriceCard(
+                            context, product, itemSpacing, labelStyle),
                         if (product.defaultMaterials.isNotEmpty) ...[
                           SizedBox(height: sectionSpacing),
-                          _buildMaterialsCard(context, product, itemSpacing, labelStyle),
+                          _buildMaterialsCard(
+                              context, product, itemSpacing, labelStyle),
                         ],
                       ],
                     ),
@@ -128,11 +131,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   Expanded(
                     child: Column(
                       children: [
-                        if (product.defaultProcessIds.isNotEmpty || _loadingProcesses) ...[
+                        if (product.defaultProcessIds.isNotEmpty ||
+                            _loadingProcesses) ...[
                           _buildProcessCard(context, product),
                           SizedBox(height: sectionSpacing),
                         ],
-                        _buildExtraInfoCard(context, product, itemSpacing, labelStyle),
+                        _buildExtraInfoCard(
+                            context, product, itemSpacing, labelStyle),
                         if (product.images.isNotEmpty) ...[
                           SizedBox(height: sectionSpacing),
                           _buildImageCard(context, product),
@@ -183,8 +188,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           _row(context, '产品名称', item.name, spacing, labelStyle),
           _row(context, '产品编码', item.code, spacing, labelStyle),
           _row(context, '产品类型', _productTypeText(item), spacing, labelStyle),
-          _row(context, '所属产品组', item.productGroupName ?? _empty, spacing, labelStyle, last: true),
-          _row(context, '规格', item.specification ?? _empty, spacing, labelStyle, last: true),
+          _row(context, '所属产品组', item.productGroupName ?? _empty, spacing,
+              labelStyle,
+              last: true),
+          _row(context, '规格', item.specification ?? _empty, spacing, labelStyle,
+              last: true),
         ],
       ),
     );
@@ -201,10 +209,22 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       child: Column(
         children: [
           _row(context, '单位', item.unit ?? _empty, spacing, labelStyle),
-          _row(context, '单价', item.unitPrice?.toStringAsFixed(2) ?? _empty, spacing, labelStyle),
-          _row(context, '库存数量', item.stockQuantity?.toStringAsFixed(0) ?? _empty, spacing, labelStyle),
-          _row(context, '最小库存', item.minStockQuantity?.toStringAsFixed(0) ?? _empty, spacing, labelStyle),
-          _row(context, '状态', _statusText(item), spacing, labelStyle, last: true),
+          _row(context, '单价', item.unitPrice?.toStringAsFixed(2) ?? _empty,
+              spacing, labelStyle),
+          _row(
+              context,
+              '库存数量',
+              item.stockQuantity?.toStringAsFixed(0) ?? _empty,
+              spacing,
+              labelStyle),
+          _row(
+              context,
+              '最小库存',
+              item.minStockQuantity?.toStringAsFixed(0) ?? _empty,
+              spacing,
+              labelStyle),
+          _row(context, '状态', _statusText(item), spacing, labelStyle,
+              last: true),
         ],
       ),
     );
@@ -218,7 +238,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   ) {
     return DetailSectionCard(
       title: '补充信息',
-      child: _row(context, '描述', item.description ?? _empty, spacing, labelStyle, last: true),
+      child: _row(
+          context, '描述', item.description ?? _empty, spacing, labelStyle,
+          last: true),
     );
   }
 
@@ -316,10 +338,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer.withValues(alpha: OpacityTokens.distinctStrong),
+              color: theme.colorScheme.primaryContainer
+                  .withValues(alpha: OpacityTokens.distinctStrong),
               borderRadius: RadiusTokens.bXs,
               border: Border.all(
-                color: theme.colorScheme.outlineVariant.withValues(alpha: OpacityTokens.borderMedium),
+                color: theme.colorScheme.outlineVariant
+                    .withValues(alpha: OpacityTokens.borderMedium),
               ),
             ),
             child: Text(
@@ -390,7 +414,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       children: [
         for (final image in images)
           GestureDetector(
-            onTap: () => _showImageViewer(context, images, images.indexOf(image)),
+            onTap: () =>
+                _showImageViewer(context, images, images.indexOf(image)),
             child: ClipRRect(
               borderRadius: RadiusTokens.bSm,
               child: Stack(
@@ -403,7 +428,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     errorBuilder: (context, error, stackTrace) => Container(
                       width: 120,
                       height: 120,
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      color:
+                          Theme.of(context).colorScheme.surfaceContainerHighest,
                       child: const Icon(Icons.broken_image_outlined),
                     ),
                   ),
@@ -413,7 +439,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     child: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: OpacityTokens.borderMedium),
+                        color: Colors.black
+                            .withValues(alpha: OpacityTokens.borderMedium),
                         borderRadius: RadiusTokens.bXs,
                       ),
                       child: const Icon(
@@ -539,7 +566,7 @@ class _ImageViewerDialogState extends State<_ImageViewerDialog> {
                         '${_currentIndex + 1} / ${widget.images.length}',
                         style: const TextStyle(color: Colors.white70),
                       ),
-                        SpacingTokens.hLg,
+                      SpacingTokens.hLg,
                     ],
                   ),
                 ),
@@ -562,7 +589,8 @@ class _ImageViewerDialogState extends State<_ImageViewerDialog> {
                         icon: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: OpacityTokens.borderMedium),
+                            color: Colors.black
+                                .withValues(alpha: OpacityTokens.borderMedium),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -591,7 +619,8 @@ class _ImageViewerDialogState extends State<_ImageViewerDialog> {
                         icon: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: OpacityTokens.borderMedium),
+                            color: Colors.black
+                                .withValues(alpha: OpacityTokens.borderMedium),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(

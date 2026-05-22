@@ -3,13 +3,12 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/constants/constant.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/content_page_types.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
-import 'package:work_order_app/src/core/presentation/layout/page_registry.dart';
+import 'package:work_order_app/src/app/page_registry.dart';
 import 'package:work_order_app/src/core/storage/app_storage.dart';
-import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
+import 'package:work_order_app/src/features/dashboard/application/dashboard_view_model.dart';
 
 const String _emptyText = '-';
 
@@ -54,11 +53,7 @@ class _DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<_DashboardPage> {
-  ApiClient? _apiClient;
-  bool _loadingStats = false;
   bool _initialized = false;
-  Map<String, dynamic>? _stats;
-  String? _errorMessage;
 
   static const List<String> _quickIds = [
     'workorders',
@@ -81,33 +76,17 @@ class _DashboardPageState extends State<_DashboardPage> {
     super.didChangeDependencies();
     if (_initialized) return;
     _initialized = true;
-    _apiClient ??= context.read<ApiClient>();
-    _loadStats();
-  }
-
-  Future<void> _loadStats() async {
-    final apiClient = _apiClient;
-    if (apiClient == null) return;
-    setState(() {
-      _loadingStats = true;
-      _errorMessage = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<DashboardViewModel>().loadStats();
     });
-    try {
-      final service = WorkOrderApiService(apiClient);
-      final result = await service.getStatistics();
-      if (!mounted) return;
-      setState(() => _stats = result);
-    } catch (err) {
-      if (!mounted) return;
-      setState(() => _errorMessage = '获取统计失败: $err');
-    } finally {
-      if (mounted) setState(() => _loadingStats = false);
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final currentUser = _readCurrentUser(context);
+    final dashboard = context.watch<DashboardViewModel>();
+    final stats = dashboard.stats;
     final leaves = leafNavItemsByBranch(currentUser: currentUser);
     final quickEntries = _quickIds
         .map((id) => leaves.where((item) => item.id == id).firstOrNull)
@@ -145,14 +124,14 @@ class _DashboardPageState extends State<_DashboardPage> {
               ),
               SizedBox(height: LayoutTokens.gapMd),
               _DashboardStatsSection(
-                stats: _stats,
-                loading: _loadingStats,
-                errorMessage: _errorMessage,
-                onRetry: _loadStats,
+                stats: stats,
+                loading: dashboard.loading,
+                errorMessage: dashboard.errorMessage,
+                onRetry: dashboard.loadStats,
               ),
               SizedBox(height: LayoutTokens.gapLg),
               _DashboardChartsSection(
-                stats: _stats,
+                stats: stats,
               ),
               SizedBox(height: LayoutTokens.gapLg),
               if (compact) ...[
@@ -653,7 +632,8 @@ class _ChartCard extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: surface,
-        border: Border.all(color: borderColor.withValues(alpha: OpacityTokens.heavy)),
+        border: Border.all(
+            color: borderColor.withValues(alpha: OpacityTokens.heavy)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -891,7 +871,8 @@ class _StatCard extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: surface,
-        border: Border.all(color: borderColor.withValues(alpha: OpacityTokens.heavy)),
+        border: Border.all(
+            color: borderColor.withValues(alpha: OpacityTokens.heavy)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1357,7 +1338,9 @@ class _QuickEntryCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     '进入处理',
-                    style: TextStyle(color: subtleText, fontSize: TextTokens.fontSizeLabelMedium),
+                    style: TextStyle(
+                        color: subtleText,
+                        fontSize: TextTokens.fontSizeLabelMedium),
                   ),
                 ],
               ),

@@ -50,11 +50,6 @@ class PaymentViewModel extends PaginatedViewModel<Payment> {
       search: search,
       todo: _todoFilter.isEmpty ? null : _todoFilter,
     );
-    return PageData(
-      items: result.items.map((dto) => dto.toEntity()).toList(),
-      total: result.total,
-      page: result.page,
-      pageSize: result.pageSize,
-    );
+    return result;
   }
 }

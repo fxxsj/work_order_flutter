@@ -21,41 +21,51 @@ class ProductionCostApiService {
       params['search'] = trimmed;
     }
 
-    final response = await _client.get('/production-costs/', queryParameters: params);
+    final response =
+        await _client.get('/production-costs/', queryParameters: params);
     final payload = response.data;
     if (payload is Map<String, dynamic>) {
       final results = payload['results'];
       final list = results is List
           ? results
               .whereType<Map>()
-              .map((item) => ProductionCostDto.fromJson(Map<String, dynamic>.from(item)))
+              .map((item) =>
+                  ProductionCostDto.fromJson(Map<String, dynamic>.from(item)))
               .toList()
           : <ProductionCostDto>[];
       final total = toInt(payload['count']) ?? list.length;
-      return ProductionCostPageDto(items: list, total: total, page: page, pageSize: pageSize);
+      return ProductionCostPageDto(
+          items: list, total: total, page: page, pageSize: pageSize);
     }
     if (payload is List) {
       final list = payload
           .whereType<Map>()
-          .map((item) => ProductionCostDto.fromJson(Map<String, dynamic>.from(item)))
+          .map((item) =>
+              ProductionCostDto.fromJson(Map<String, dynamic>.from(item)))
           .toList();
-      return ProductionCostPageDto(items: list, total: list.length, page: 1, pageSize: list.length);
+      return ProductionCostPageDto(
+          items: list, total: list.length, page: 1, pageSize: list.length);
     }
-    return const ProductionCostPageDto(items: [], total: 0, page: 1, pageSize: 20);
+    return const ProductionCostPageDto(
+        items: [], total: 0, page: 1, pageSize: 20);
   }
 
   Future<Map<String, dynamic>> calculateMaterial(int id) async {
-    final response = await _client.post('/production-costs/$id/calculate_material/');
+    final response =
+        await _client.post('/production-costs/$id/calculate_material/');
     return _mapFromResponse(response.data);
   }
 
   Future<Map<String, dynamic>> calculateTotal(int id) async {
-    final response = await _client.post('/production-costs/$id/calculate_total/');
+    final response =
+        await _client.post('/production-costs/$id/calculate_total/');
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> fetchStats({Map<String, dynamic>? params}) async {
-    final response = await _client.get('/production-costs/stats/', queryParameters: params);
+  Future<Map<String, dynamic>> fetchStats(
+      {Map<String, dynamic>? params}) async {
+    final response =
+        await _client.get('/production-costs/stats/', queryParameters: params);
     return _mapFromResponse(response.data);
   }
 

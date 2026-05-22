@@ -1,37 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/product_groups/application/product_group_view_model.dart';
-import 'package:work_order_app/src/features/product_groups/data/product_group_api_service.dart';
-import 'package:work_order_app/src/features/product_groups/data/product_group_repository_impl.dart';
 import 'package:work_order_app/src/features/product_groups/domain/product_group.dart';
-import 'package:work_order_app/src/features/product_groups/domain/product_group_repository.dart';
 import 'package:work_order_app/src/features/product_groups/presentation/product_group_edit_page.dart';
-
-/// 产品组列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class ProductGroupListEntry extends StatelessWidget {
-  const ProductGroupListEntry({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FeatureEntry<ProductGroupApiService, ProductGroupRepository,
-        ProductGroupViewModel>(
-      createService: (context) =>
-          ProductGroupApiService(context.read<ApiClient>()),
-      createRepository: (context) =>
-          ProductGroupRepositoryImpl(context.read<ProductGroupApiService>()),
-      createViewModel: (context) =>
-          ProductGroupViewModel(context.read<ProductGroupRepository>()),
-      initialize: (viewModel) => viewModel.initialize(),
-      child: const ProductGroupListPage(),
-    );
-  }
-}
 
 /// 产品组列表页视图，只负责渲染。
 class ProductGroupListPage extends StatelessWidget {

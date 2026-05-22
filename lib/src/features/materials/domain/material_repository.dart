@@ -1,16 +1,16 @@
 import 'package:work_order_app/src/core/data/page_data.dart';
-import 'package:work_order_app/src/features/materials/data/material_dto.dart';
+import 'package:work_order_app/src/features/materials/domain/material.dart';
 
 abstract class MaterialRepository {
-  Future<PageData<MaterialDto>> getMaterials({
+  Future<PageData<MaterialItem>> getMaterials({
     int page = 1,
     int pageSize = 20,
     String? search,
   });
 
-  Future<MaterialDto> createMaterial(MaterialDto dto);
+  Future<MaterialItem> createMaterial(MaterialItem material);
 
-  Future<MaterialDto> updateMaterial(MaterialDto dto);
+  Future<MaterialItem> updateMaterial(MaterialItem material);
 
   Future<void> deleteMaterial(int id);
 }

@@ -1,5 +1,6 @@
+import 'package:work_order_app/src/core/data/page_data.dart';
 import 'package:work_order_app/src/features/inventory_stocks/data/product_stock_api_service.dart';
-import 'package:work_order_app/src/features/inventory_stocks/data/product_stock_dto.dart';
+import 'package:work_order_app/src/features/inventory_stocks/domain/product_stock.dart';
 import 'package:work_order_app/src/features/inventory_stocks/domain/product_stock_repository.dart';
 
 class ProductStockRepositoryImpl implements ProductStockRepository {
@@ -8,17 +9,23 @@ class ProductStockRepositoryImpl implements ProductStockRepository {
   final ProductStockApiService _apiService;
 
   @override
-  Future<ProductStockPageDto> getProductStocks({
+  Future<PageData<ProductStock>> getProductStocks({
     int page = 1,
     int pageSize = 20,
     String? search,
     String? status,
-  }) {
-    return _apiService.fetchProductStocks(
+  }) async {
+    final result = await _apiService.fetchProductStocks(
       page: page,
       pageSize: pageSize,
       search: search,
       status: status,
+    );
+    return PageData(
+      items: result.items.map((dto) => dto.toEntity()).toList(),
+      total: result.total,
+      page: result.page,
+      pageSize: result.pageSize,
     );
   }
 

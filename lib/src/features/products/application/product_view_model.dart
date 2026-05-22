@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:work_order_app/src/core/core.dart';
 import 'package:work_order_app/src/core/utils/import_export_util.dart';
-import 'package:work_order_app/src/features/products/data/product_dto.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/products/domain/product_repository.dart';
 
@@ -15,18 +14,19 @@ class ProductViewModel extends PaginatedViewModel<Product> {
 
   Future<void> initialize() => loadItems(resetPage: true);
 
-  Future<void> loadProducts({bool resetPage = false}) => loadItems(resetPage: resetPage);
+  Future<void> loadProducts({bool resetPage = false}) =>
+      loadItems(resetPage: resetPage);
 
   Future<Product> createProduct(Product product) async {
-    final dto = await _repository.createProduct(product.toDto());
+    final created = await _repository.createProduct(product);
     await loadItems(resetPage: true);
-    return dto.toEntity();
+    return created;
   }
 
   Future<Product> updateProduct(Product product) async {
-    final dto = await _repository.updateProduct(product.toDto());
+    final updated = await _repository.updateProduct(product);
     await loadItems();
-    return dto.toEntity();
+    return updated;
   }
 
   Future<void> deleteProduct(int id) async {
@@ -63,12 +63,7 @@ class ProductViewModel extends PaginatedViewModel<Product> {
       pageSize: pageSize,
       search: search,
     );
-    return PageData(
-      items: result.items.map((dto) => dto.toEntity()).toList(),
-      total: result.total,
-      page: result.page,
-      pageSize: result.pageSize,
-    );
+    return result;
   }
 
   /// 导出产品列表 Excel。

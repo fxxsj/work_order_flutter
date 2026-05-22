@@ -1,5 +1,6 @@
+import 'package:work_order_app/src/core/data/page_data.dart';
 import 'package:work_order_app/src/features/finance_statements/data/statement_api_service.dart';
-import 'package:work_order_app/src/features/finance_statements/data/statement_dto.dart';
+import 'package:work_order_app/src/features/finance_statements/domain/statement.dart';
 import 'package:work_order_app/src/features/finance_statements/domain/statement_repository.dart';
 
 class StatementRepositoryImpl implements StatementRepository {
@@ -8,19 +9,25 @@ class StatementRepositoryImpl implements StatementRepository {
   final StatementApiService _apiService;
 
   @override
-  Future<StatementPageDto> getStatements({
+  Future<PageData<Statement>> getStatements({
     int page = 1,
     int pageSize = 20,
     String? search,
     String? status,
     String? todo,
-  }) {
-    return _apiService.fetchStatements(
+  }) async {
+    final result = await _apiService.fetchStatements(
       page: page,
       pageSize: pageSize,
       search: search,
       status: status,
       todo: todo,
+    );
+    return PageData(
+      items: result.items.map((dto) => dto.toEntity()).toList(),
+      total: result.total,
+      page: result.page,
+      pageSize: result.pageSize,
     );
   }
 

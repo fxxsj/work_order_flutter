@@ -11,7 +11,8 @@ class ProductionCostViewModel extends PaginatedViewModel<ProductionCost> {
 
   Future<void> initialize() => loadItems(resetPage: true);
 
-  Future<void> loadCosts({bool resetPage = false}) => loadItems(resetPage: resetPage);
+  Future<void> loadCosts({bool resetPage = false}) =>
+      loadItems(resetPage: resetPage);
 
   @override
   Future<PageData<ProductionCost>> fetchPage({
@@ -24,11 +25,6 @@ class ProductionCostViewModel extends PaginatedViewModel<ProductionCost> {
       pageSize: pageSize,
       search: search,
     );
-    return PageData(
-      items: result.items.map((dto) => dto.toEntity()).toList(),
-      total: result.total,
-      page: result.page,
-      pageSize: result.pageSize,
-    );
+    return result;
   }
 }

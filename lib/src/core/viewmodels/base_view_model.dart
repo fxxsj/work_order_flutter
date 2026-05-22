@@ -2,9 +2,6 @@ import 'package:flutter/foundation.dart';
 
 /// Base ViewModel providing loading, error state management,
 /// and safe notification after disposal.
-///
-/// Replaces the former `AppScaffoldController` (GetX) with a
-/// Provider-compatible `ChangeNotifier` base class.
 abstract class BaseViewModel extends ChangeNotifier {
   bool _loading = false;
   String? _errorMessage;

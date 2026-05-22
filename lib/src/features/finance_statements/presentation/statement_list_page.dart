@@ -551,8 +551,8 @@ class _StatementListViewState extends State<_StatementListView> {
     return '$year-$month-$day';
   }
 
-  Widget _mobileRow(BuildContext context, TextStyle? labelStyle, String label,
-      String value,
+  Widget _mobileRow(
+      BuildContext context, TextStyle? labelStyle, String label, String value,
       {bool last = false}) {
     final theme = Theme.of(context);
     final spacing = LayoutTokens.sectionSpacing(context) * 0.6;
@@ -599,8 +599,7 @@ class _StatementListViewState extends State<_StatementListView> {
       if (confirmedAt != null)
         _mobileRow(context, labelStyle, '确认时间', confirmedAt),
       if (confirmationNotes != null)
-        _mobileRow(context, labelStyle, '确认备注', confirmationNotes,
-            last: true),
+        _mobileRow(context, labelStyle, '确认备注', confirmationNotes, last: true),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

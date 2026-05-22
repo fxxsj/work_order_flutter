@@ -1,19 +1,19 @@
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:work_order_app/src/core/data/page_data.dart';
 import 'package:work_order_app/src/core/utils/import_export_util.dart';
-import 'package:work_order_app/src/features/products/data/product_dto.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
 
 abstract class ProductRepository {
-  Future<ProductPageDto> getProducts({
+  Future<PageData<Product>> getProducts({
     int page = 1,
     int pageSize = 20,
     String? search,
   });
 
-  Future<ProductDto> createProduct(ProductDto dto);
+  Future<Product> createProduct(Product product);
 
-  Future<ProductDto> updateProduct(ProductDto dto);
+  Future<Product> updateProduct(Product product);
 
   Future<void> deleteProduct(int id);
 

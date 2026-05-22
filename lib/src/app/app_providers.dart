@@ -10,6 +10,10 @@ import 'package:work_order_app/src/features/auth/application/auth_view_model.dar
 import 'package:work_order_app/src/features/auth/data/auth_api.dart';
 import 'package:work_order_app/src/features/auth/data/auth_repository_impl.dart';
 import 'package:work_order_app/src/features/auth/domain/auth_repository.dart';
+import 'package:work_order_app/src/features/dashboard/application/dashboard_view_model.dart';
+import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
+import 'package:work_order_app/src/features/workorders/data/work_order_repository_impl.dart';
+import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
 
 List<SingleChildWidget> buildAppProviders({
   required AppStorage storage,
@@ -26,12 +30,24 @@ List<SingleChildWidget> buildAppProviders({
     Provider<AuthRepository>(
       create: (context) => AuthRepositoryImpl(context.read<AuthApi>()),
     ),
+    Provider<WorkOrderApiService>(
+      create: (context) => WorkOrderApiService(context.read<ApiClient>()),
+    ),
+    Provider<WorkOrderRepository>(
+      create: (context) =>
+          WorkOrderRepositoryImpl(context.read<WorkOrderApiService>()),
+    ),
     ChangeNotifierProvider.value(value: auth),
     ChangeNotifierProvider<AuthViewModel>(
       create: (context) => AuthViewModel(
         context.read<AuthRepository>(),
         context.read<AppStorage>(),
         context.read<AuthController>(),
+      ),
+    ),
+    ChangeNotifierProvider<DashboardViewModel>(
+      create: (context) => DashboardViewModel(
+        context.read<WorkOrderRepository>(),
       ),
     ),
     ChangeNotifierProvider.value(value: theme),

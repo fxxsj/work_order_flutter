@@ -1,7 +1,8 @@
-import 'package:work_order_app/src/features/inventory_stocks/data/product_stock_dto.dart';
+import 'package:work_order_app/src/core/data/page_data.dart';
+import 'package:work_order_app/src/features/inventory_stocks/domain/product_stock.dart';
 
 abstract class ProductStockRepository {
-  Future<ProductStockPageDto> getProductStocks({
+  Future<PageData<ProductStock>> getProductStocks({
     int page = 1,
     int pageSize = 20,
     String? search,

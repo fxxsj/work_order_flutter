@@ -28,7 +28,8 @@ class MaterialApiService {
       final list = results is List
           ? results
               .whereType<Map>()
-              .map((item) => MaterialDto.fromJson(Map<String, dynamic>.from(item)))
+              .map((item) =>
+                  MaterialDto.fromJson(Map<String, dynamic>.from(item)))
               .toList()
           : <MaterialDto>[];
       return PageData.fromPayload(
@@ -61,14 +62,19 @@ class MaterialApiService {
   Future<MaterialDto> createMaterial(MaterialDto dto) async {
     final response = await _client.post('/materials/', data: dto.toPayload());
     final payload = response.data;
-    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    final map = payload is Map
+        ? Map<String, dynamic>.from(payload)
+        : <String, dynamic>{};
     return MaterialDto.fromJson(map);
   }
 
   Future<MaterialDto> updateMaterial(MaterialDto dto) async {
-    final response = await _client.put('/materials/${dto.id}/', data: dto.toPayload());
+    final response =
+        await _client.put('/materials/${dto.id}/', data: dto.toPayload());
     final payload = response.data;
-    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    final map = payload is Map
+        ? Map<String, dynamic>.from(payload)
+        : <String, dynamic>{};
     return MaterialDto.fromJson(map);
   }
 

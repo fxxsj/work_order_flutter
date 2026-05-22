@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:work_order_app/src/core/presentation/layout/adaptive_shell.dart';
-import 'package:work_order_app/src/core/presentation/layout/content_page.dart';
+import 'package:work_order_app/src/app/content_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/nav_config.dart';
 import 'package:work_order_app/src/features/auth/application/auth_controller.dart';
 import 'package:work_order_app/src/features/auth/presentation/login_page.dart';
@@ -44,7 +44,8 @@ GoRouter createAppRouter(AuthController authController) {
       ),
       GoRoute(
         path: '/register',
-        pageBuilder: (context, state) => NoTransitionPage(child: RegisterPage()),
+        pageBuilder: (context, state) =>
+            NoTransitionPage(child: RegisterPage()),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -103,8 +104,8 @@ List<GoRoute> _buildBranchRoutes(NavItem item) {
             path: 'create',
             name: 'workorder_create',
             pageBuilder: (context, state) {
-              final salesOrderId =
-                  int.tryParse(state.uri.queryParameters['sales_order_id'] ?? '');
+              final salesOrderId = int.tryParse(
+                  state.uri.queryParameters['sales_order_id'] ?? '');
               return NoTransitionPage(
                 child: WorkOrderFormEntry(
                   mode: WorkOrderFormMode.create,

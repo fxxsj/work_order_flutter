@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/router/app_router.dart';
+import 'package:work_order_app/src/app/app_router.dart';
 
 class ToastUtil {
   static final ValueNotifier<List<_ToastItem>> _items =

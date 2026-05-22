@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:work_order_app/src/core/data/page_data.dart';
 import 'package:work_order_app/src/core/utils/import_export_util.dart';
 import 'package:work_order_app/src/features/products/data/product_api_service.dart';
 import 'package:work_order_app/src/features/products/data/product_dto.dart';
@@ -15,22 +16,34 @@ class ProductRepositoryImpl implements ProductRepository {
   ImportExportService get _importExport => _apiService.importExportService;
 
   @override
-  Future<ProductPageDto> getProducts({
+  Future<PageData<Product>> getProducts({
     int page = 1,
     int pageSize = 20,
     String? search,
-  }) {
-    return _apiService.fetchProductPage(page: page, pageSize: pageSize, search: search);
+  }) async {
+    final result = await _apiService.fetchProductPage(
+      page: page,
+      pageSize: pageSize,
+      search: search,
+    );
+    return PageData(
+      items: result.items.map((dto) => dto.toEntity()).toList(),
+      total: result.total,
+      page: result.page,
+      pageSize: result.pageSize,
+    );
   }
 
   @override
-  Future<ProductDto> createProduct(ProductDto dto) {
-    return _apiService.createProduct(dto);
+  Future<Product> createProduct(Product product) async {
+    final dto = await _apiService.createProduct(product.toDto());
+    return dto.toEntity();
   }
 
   @override
-  Future<ProductDto> updateProduct(ProductDto dto) {
-    return _apiService.updateProduct(dto);
+  Future<Product> updateProduct(Product product) async {
+    final dto = await _apiService.updateProduct(product.toDto());
+    return dto.toEntity();
   }
 
   @override

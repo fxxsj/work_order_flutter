@@ -29,24 +29,29 @@ class AuditLogApiService {
       final list = results is List
           ? results
               .whereType<Map>()
-              .map((item) => AuditLogDto.fromJson(Map<String, dynamic>.from(item)))
+              .map((item) =>
+                  AuditLogDto.fromJson(Map<String, dynamic>.from(item)))
               .toList()
           : <AuditLogDto>[];
       final total = toInt(payload['count']) ?? list.length;
-      return AuditLogPageDto(items: list, total: total, page: page, pageSize: pageSize);
+      return AuditLogPageDto(
+          items: list, total: total, page: page, pageSize: pageSize);
     }
     if (payload is List) {
       final list = payload
           .whereType<Map>()
           .map((item) => AuditLogDto.fromJson(Map<String, dynamic>.from(item)))
           .toList();
-      return AuditLogPageDto(items: list, total: list.length, page: 1, pageSize: list.length);
+      return AuditLogPageDto(
+          items: list, total: list.length, page: 1, pageSize: list.length);
     }
     return const AuditLogPageDto(items: [], total: 0, page: 1, pageSize: 20);
   }
 
-  Future<Map<String, dynamic>> fetchStatistics({Map<String, dynamic>? params}) async {
-    final response = await _client.get('/audit-logs/statistics/', queryParameters: params);
+  Future<Map<String, dynamic>> fetchStatistics(
+      {Map<String, dynamic>? params}) async {
+    final response =
+        await _client.get('/audit-logs/statistics/', queryParameters: params);
     return _mapFromResponse(response.data);
   }
 
@@ -60,8 +65,10 @@ class AuditLogApiService {
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> fetchExportList({Map<String, dynamic>? params}) async {
-    final response = await _client.get('/audit-logs/exports/', queryParameters: params);
+  Future<Map<String, dynamic>> fetchExportList(
+      {Map<String, dynamic>? params}) async {
+    final response =
+        await _client.get('/audit-logs/exports/', queryParameters: params);
     return _mapFromResponse(response.data);
   }
 

@@ -1,6 +1,7 @@
 import 'package:work_order_app/src/core/data/page_data.dart';
 import 'package:work_order_app/src/features/materials/data/material_api_service.dart';
 import 'package:work_order_app/src/features/materials/data/material_dto.dart';
+import 'package:work_order_app/src/features/materials/domain/material.dart';
 import 'package:work_order_app/src/features/materials/domain/material_repository.dart';
 
 class MaterialRepositoryImpl implements MaterialRepository {
@@ -9,22 +10,34 @@ class MaterialRepositoryImpl implements MaterialRepository {
   final MaterialApiService _apiService;
 
   @override
-  Future<PageData<MaterialDto>> getMaterials({
+  Future<PageData<MaterialItem>> getMaterials({
     int page = 1,
     int pageSize = 20,
     String? search,
-  }) {
-    return _apiService.fetchMaterials(page: page, pageSize: pageSize, search: search);
+  }) async {
+    final result = await _apiService.fetchMaterials(
+      page: page,
+      pageSize: pageSize,
+      search: search,
+    );
+    return PageData(
+      items: result.items.map((dto) => dto.toEntity()).toList(),
+      total: result.total,
+      page: result.page,
+      pageSize: result.pageSize,
+    );
   }
 
   @override
-  Future<MaterialDto> createMaterial(MaterialDto dto) {
-    return _apiService.createMaterial(dto);
+  Future<MaterialItem> createMaterial(MaterialItem material) async {
+    final dto = await _apiService.createMaterial(material.toDto());
+    return dto.toEntity();
   }
 
   @override
-  Future<MaterialDto> updateMaterial(MaterialDto dto) {
-    return _apiService.updateMaterial(dto);
+  Future<MaterialItem> updateMaterial(MaterialItem material) async {
+    final dto = await _apiService.updateMaterial(material.toDto());
+    return dto.toEntity();
   }
 
   @override

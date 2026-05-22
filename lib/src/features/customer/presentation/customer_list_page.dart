@@ -1,40 +1,15 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/application/customer_view_model.dart';
-import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
-import 'package:work_order_app/src/features/customer/data/customer_repository_impl.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
-import 'package:work_order_app/src/features/customer/domain/customer_repository.dart';
 import 'package:work_order_app/src/features/customer/presentation/customer_detail_page.dart';
 import 'package:work_order_app/src/features/customer/presentation/customer_edit_page.dart';
-
-/// 客户列表入口。
-class CustomerListEntry extends StatelessWidget {
-  const CustomerListEntry({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FeatureEntry<CustomerApiService, CustomerRepository,
-        CustomerViewModel>(
-      createService: (context) => CustomerApiService(context.read<ApiClient>()),
-      createRepository: (context) =>
-          CustomerRepositoryImpl(context.read<CustomerApiService>()),
-      createViewModel: (context) =>
-          CustomerViewModel(context.read<CustomerRepository>()),
-      initialize: (viewModel) => viewModel.initialize(),
-      child: const CustomerListPage(),
-    );
-  }
-}
 
 /// 客户列表页视图，只负责渲染。
 class CustomerListPage extends StatelessWidget {

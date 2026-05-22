@@ -53,6 +53,9 @@ class AppModalShell extends StatelessWidget {
     return Dialog(
       insetPadding: insetPadding,
       clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+      ),
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: effectiveMaxWidth,

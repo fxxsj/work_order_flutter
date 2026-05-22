@@ -2,20 +2,20 @@
 
 > 构建时通过 `--dart-define=APP_DISPLAY_NAME="我的印刷管理"` 指定显示名称，默认「工单管理系统」
 
-Flutter 3.x + Riverpod + GoRouter 跨平台应用
+Flutter 3.x + Provider + GoRouter 跨平台应用
 
 ## 技术栈
 
 - Flutter 3.41.2
-- Riverpod（状态管理）
+- Provider / ChangeNotifier（状态管理与 ViewModel 注入）
 - GoRouter（路由）
 - Dio（HTTP 客户端）
-- Provider（ViewModel 注入）
 
 ## 项目结构
 
 ```
 lib/src/
+├── app/                   # 应用组合根：路由、全局 provider、页面注册
 ├── core/
 │   ├── common/              # 通用工具（Constant, ToastUtil, FormValidators）
 │   ├── constants/           # 常量定义
@@ -34,7 +34,6 @@ lib/src/
 │   ├── products/            # 产品
 │   ├── materials/           # 物料
 │   └── ...                  # 其他模块
-└── app.dart                 # App 入口
 ```
 
 ## 架构模式
@@ -48,6 +47,12 @@ features/<feature>/
 ├── domain/          # 实体和 Repository 接口
 └── data/            # Repository 实现（API 调用）
 ```
+
+依赖方向约束：
+
+- `domain/` 不直接依赖 `data/`；DTO 与 API payload 转换留在 `data/`。
+- `presentation/` 优先依赖 `application/` 和 `domain/`，页面装配逻辑放到 feature entry/module。
+- `core/` 只放基础设施和通用 UI，不注册具体业务页面。
 
 ## 设计系统
 

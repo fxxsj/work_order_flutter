@@ -45,7 +45,8 @@ class CostItemListEntry extends StatelessWidget {
   }
 
   static String _allocation(GenericRecord record) {
-    return GenericValueFormatter.text(record.getString('allocation_method_display'));
+    return GenericValueFormatter.text(
+        record.getString('allocation_method_display'));
   }
 
   static String _active(GenericRecord record) {

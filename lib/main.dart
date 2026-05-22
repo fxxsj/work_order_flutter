@@ -91,8 +91,10 @@ class _MyAppState extends State<MyApp> {
             scrollBehavior: const AppScrollBehavior(),
             debugShowCheckedModeBanner: false,
             title: AppMetadata.displayName,
-            theme: AppTheme.build(brightness: Brightness.light, seedColor: theme.seedColor),
-            darkTheme: AppTheme.build(brightness: Brightness.dark, seedColor: theme.seedColor),
+            theme: AppTheme.build(
+                brightness: Brightness.light, seedColor: theme.seedColor),
+            darkTheme: AppTheme.build(
+                brightness: Brightness.dark, seedColor: theme.seedColor),
             themeMode: theme.themeMode,
             builder: (context, child) {
               final media = MediaQuery.of(context);

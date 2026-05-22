@@ -55,11 +55,6 @@ class StatementViewModel extends PaginatedViewModel<Statement> {
       status: _statusFilter.isEmpty ? null : _statusFilter,
       todo: _todoFilter.isEmpty ? null : _todoFilter,
     );
-    return PageData(
-      items: result.items.map((dto) => dto.toEntity()).toList(),
-      total: result.total,
-      page: result.page,
-      pageSize: result.pageSize,
-    );
+    return result;
   }
 }

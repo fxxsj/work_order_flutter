@@ -1,36 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/materials/application/material_view_model.dart';
-import 'package:work_order_app/src/features/materials/data/material_api_service.dart';
-import 'package:work_order_app/src/features/materials/data/material_repository_impl.dart';
 import 'package:work_order_app/src/features/materials/domain/material.dart';
-import 'package:work_order_app/src/features/materials/domain/material_repository.dart';
 import 'package:work_order_app/src/features/materials/presentation/material_edit_page.dart';
-
-/// 物料列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class MaterialListEntry extends StatelessWidget {
-  const MaterialListEntry({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FeatureEntry<MaterialApiService, MaterialRepository,
-        MaterialViewModel>(
-      createService: (context) => MaterialApiService(context.read<ApiClient>()),
-      createRepository: (context) =>
-          MaterialRepositoryImpl(context.read<MaterialApiService>()),
-      createViewModel: (context) =>
-          MaterialViewModel(context.read<MaterialRepository>()),
-      initialize: (viewModel) => viewModel.initialize(),
-      child: const MaterialListPage(),
-    );
-  }
-}
 
 /// 物料列表页视图，只负责渲染。
 class MaterialListPage extends StatelessWidget {
