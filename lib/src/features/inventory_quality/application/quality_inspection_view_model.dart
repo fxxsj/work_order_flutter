@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/core.dart';
 import 'package:work_order_app/src/features/inventory_quality/data/quality_inspection_api_service.dart';
@@ -26,7 +28,7 @@ class QualityInspectionViewModel extends PaginatedViewModel<QualityInspection> {
 
   Future<void> loadInspections({bool resetPage = false}) async {
     await loadItems(resetPage: resetPage);
-    await _loadSummary();
+    unawaited(_loadSummary());
   }
 
   Future<void> setResultFilter(String value) async {

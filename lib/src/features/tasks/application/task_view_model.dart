@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:work_order_app/src/core/core.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_repository.dart';
@@ -12,6 +14,7 @@ class TaskViewModel extends PaginatedViewModel<Task> {
   int? _processFilterId;
   String? _todoFilter;
   Map<String, dynamic> _summary = const {};
+  int _summaryRequestToken = 0;
 
   List<Task> get tasks => items;
   Map<String, dynamic> get summary => _summary;
@@ -20,7 +23,7 @@ class TaskViewModel extends PaginatedViewModel<Task> {
 
   Future<void> loadTasks({bool resetPage = false}) async {
     await loadItems(resetPage: resetPage);
-    await _loadSummary();
+    unawaited(_loadSummary());
   }
 
   String? get statusFilter => _statusFilter;
@@ -69,8 +72,9 @@ class TaskViewModel extends PaginatedViewModel<Task> {
   }
 
   Future<void> _loadSummary() async {
+    final token = ++_summaryRequestToken;
     try {
-      _summary = await _repository.getSummary(
+      final summary = await _repository.getSummary(
         search: searchText,
         status: _statusFilter,
         priority: _priorityFilter,
@@ -78,8 +82,11 @@ class TaskViewModel extends PaginatedViewModel<Task> {
         processId: _processFilterId,
         todo: _todoFilter,
       );
+      if (token != _summaryRequestToken) return;
+      _summary = summary;
       safeNotify();
     } catch (_) {
+      if (token != _summaryRequestToken) return;
       // Keep the list usable even if summary loading fails.
     }
   }

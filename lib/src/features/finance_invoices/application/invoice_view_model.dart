@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/core.dart';
 import 'package:work_order_app/src/features/finance_invoices/domain/invoice.dart';
@@ -20,7 +22,7 @@ class InvoiceViewModel extends PaginatedViewModel<Invoice> {
 
   Future<void> loadInvoices({bool resetPage = false}) async {
     await loadItems(resetPage: resetPage);
-    await _loadSummary();
+    unawaited(_loadSummary());
   }
 
   Future<void> submitInvoice(int id) {

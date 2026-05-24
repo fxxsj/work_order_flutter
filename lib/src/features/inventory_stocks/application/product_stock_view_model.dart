@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:work_order_app/src/core/core.dart';
 import 'package:work_order_app/src/features/inventory_stocks/domain/product_stock.dart';
 import 'package:work_order_app/src/features/inventory_stocks/domain/product_stock_repository.dart';
@@ -18,7 +20,7 @@ class ProductStockViewModel extends PaginatedViewModel<ProductStock> {
 
   Future<void> loadStocks({bool resetPage = false}) async {
     await loadItems(resetPage: resetPage);
-    await _loadSummary();
+    unawaited(_loadSummary());
   }
 
   Future<void> setStatusFilter(String value) async {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:work_order_app/src/core/core.dart';
 import 'package:work_order_app/src/features/finance_payments/domain/payment.dart';
 import 'package:work_order_app/src/features/finance_payments/domain/payment_repository.dart';
@@ -17,7 +19,7 @@ class PaymentViewModel extends PaginatedViewModel<Payment> {
 
   Future<void> loadPayments({bool resetPage = false}) async {
     await loadItems(resetPage: resetPage);
-    await _loadSummary();
+    unawaited(_loadSummary());
   }
 
   Future<void> applyRoutePrefill({

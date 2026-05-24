@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:work_order_app/src/core/core.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order_detail.dart';
@@ -19,7 +21,7 @@ class SalesOrderViewModel extends PaginatedViewModel<SalesOrder> {
 
   Future<void> loadSalesOrders({bool resetPage = false}) async {
     await loadItems(resetPage: resetPage);
-    await _loadSummary();
+    unawaited(_loadSummary());
   }
 
   Future<void> applyRoutePrefill({

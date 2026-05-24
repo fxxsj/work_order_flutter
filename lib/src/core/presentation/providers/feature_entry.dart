@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -66,7 +67,15 @@ class _FeatureInitializerState<TViewModel extends ChangeNotifier>
     _initialized = true;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
+      final stopwatch = kDebugMode ? (Stopwatch()..start()) : null;
       await widget.initialize(context.read<TViewModel>());
+      if (kDebugMode && stopwatch != null) {
+        stopwatch.stop();
+        debugPrint(
+          'FeatureEntry<$TViewModel> initialized in '
+          '${stopwatch.elapsedMilliseconds}ms',
+        );
+      }
     });
   }
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:work_order_app/src/core/core.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_repository.dart';
@@ -23,7 +25,7 @@ class DeliveryOrderViewModel extends PaginatedViewModel<DeliveryOrder> {
 
   Future<void> loadDeliveryOrders({bool resetPage = false}) async {
     await loadItems(resetPage: resetPage);
-    await _loadSummary();
+    unawaited(_loadSummary());
   }
 
   Future<void> setStatusFilter(String value) async {

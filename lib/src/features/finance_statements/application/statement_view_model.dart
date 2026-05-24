@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:work_order_app/src/core/core.dart';
 import 'package:work_order_app/src/features/finance_statements/domain/statement.dart';
 import 'package:work_order_app/src/features/finance_statements/domain/statement_repository.dart';
@@ -19,7 +21,7 @@ class StatementViewModel extends PaginatedViewModel<Statement> {
 
   Future<void> loadStatements({bool resetPage = false}) async {
     await loadItems(resetPage: resetPage);
-    await _loadSummary();
+    unawaited(_loadSummary());
   }
 
   Future<void> applyRoutePrefill({

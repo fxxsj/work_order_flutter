@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/core.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order.dart';
@@ -24,7 +26,7 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
 
   Future<void> loadWorkOrders({bool resetPage = false}) async {
     await loadItems(resetPage: resetPage);
-    await _loadSummary();
+    unawaited(_loadSummary());
   }
 
   String? get statusFilter => _statusFilter;
@@ -112,7 +114,8 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
     return detail.toEntity();
   }
 
-  Future<WorkOrderDetail> rejectWorkOrder(int id, {required String reason}) async {
+  Future<WorkOrderDetail> rejectWorkOrder(int id,
+      {required String reason}) async {
     final detail = await _repository.rejectWorkOrder(id, reason: reason);
     return detail.toEntity();
   }
