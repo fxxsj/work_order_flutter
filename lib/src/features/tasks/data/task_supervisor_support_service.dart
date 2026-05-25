@@ -69,7 +69,7 @@ class TaskSupervisorSupportService {
   Future<List<TaskDepartmentOption>> fetchDepartments() async {
     final page = await DepartmentApiService(
       _client,
-    ).fetchDepartments(page: 1, pageSize: 200);
+    ).fetchDepartments(page: 1, pageSize: 50);
     return page.items
         .map(
           (dto) => TaskDepartmentOption(

@@ -46,12 +46,15 @@ class CustomerDropdown extends StatelessWidget {
     required this.customers,
     required this.onChanged,
     this.onCreateCustomer,
+    this.onSearch,
   });
 
   final int? customerId;
   final List<Customer> customers;
   final ValueChanged<int?> onChanged;
   final VoidCallback? onCreateCustomer;
+  /// 远程搜索回调，提供后将启用异步搜索。
+  final Future<List<AppDropdownOption<int>>> Function(String query)? onSearch;
 
   @override
   Widget build(BuildContext context) {
@@ -79,6 +82,11 @@ class CustomerDropdown extends StatelessWidget {
       selectHintText: customers.isEmpty ? '新增客户' : '请选择客户',
       minOptionsForSearch: 1,
       onChanged: onChanged,
+      searchConfig: AppDropdownSearchConfig(
+        asyncLoader: onSearch == null
+            ? null
+            : (query) => onSearch!(query),
+      ),
     );
   }
 }

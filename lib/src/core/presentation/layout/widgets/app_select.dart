@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/constants/breakpoints.dart';
@@ -25,6 +27,9 @@ class AppDropdownOption<T> {
   final VoidCallback? onSelected;
 }
 
+/// 异步搜索加载器类型定义
+typedef AppDropdownAsyncLoader = Future<List<AppDropdownOption<dynamic>>> Function(String query);
+
 /// 搜索配置
 class AppDropdownSearchConfig {
   const AppDropdownSearchConfig({
@@ -32,12 +37,15 @@ class AppDropdownSearchConfig {
     this.hintText,
     this.matcher,
     this.highlightMatches = false,
+    this.asyncLoader,
   });
 
   final bool enabled;
   final String? hintText;
   final bool Function(String query, AppDropdownOption<dynamic> option)? matcher;
   final bool highlightMatches;
+  /// 如果提供，搜索将转为远程异步加载，忽略本地 [matcher]。
+  final AppDropdownAsyncLoader? asyncLoader;
 }
 
 class AppSelect<T> extends FormField<T> {
@@ -324,10 +332,15 @@ class _SingleSelectPicker<T> extends StatefulWidget {
 class _SingleSelectPickerState<T> extends State<_SingleSelectPicker<T>> {
   late final TextEditingController _searchController;
   String _query = '';
+  bool _isSearching = false;
+  List<AppDropdownOption<T>> _searchResults = [];
+  Timer? _debounceTimer;
+
+  bool get _hasAsyncLoader => widget.searchConfig.asyncLoader != null;
 
   bool get _showSearch =>
       widget.searchConfig.enabled &&
-      widget.options.length >= widget.minOptionsForSearch;
+      (_hasAsyncLoader || widget.options.length >= widget.minOptionsForSearch);
 
   List<AppDropdownOption<T>> get _normalOptions =>
       widget.options.where((o) => o.onSelected == null).toList();
@@ -336,6 +349,10 @@ class _SingleSelectPickerState<T> extends State<_SingleSelectPicker<T>> {
       widget.options.where((o) => o.onSelected != null).toList();
 
   List<AppDropdownOption<T>> get _filteredNormalOptions {
+    if (_hasAsyncLoader) {
+      if (_query.isEmpty) return _normalOptions;
+      return _searchResults;
+    }
     final normal = _normalOptions;
     if (_query.isEmpty) return normal;
     return _filterOptions<T>(normal, _query, widget.searchConfig);
@@ -345,12 +362,39 @@ class _SingleSelectPickerState<T> extends State<_SingleSelectPicker<T>> {
   void initState() {
     super.initState();
     _searchController = TextEditingController();
+    _searchResults = _normalOptions;
   }
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged(String value) {
+    final trimmed = value.trim();
+    _debounceTimer?.cancel();
+    setState(() => _query = trimmed);
+    if (!_hasAsyncLoader) return;
+    if (trimmed.isEmpty) {
+      setState(() => _searchResults = _normalOptions);
+      return;
+    }
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () async {
+      if (!mounted) return;
+      setState(() => _isSearching = true);
+      try {
+        final results = await widget.searchConfig.asyncLoader!(trimmed);
+        if (mounted) {
+          setState(() => _searchResults = results.cast<AppDropdownOption<T>>());
+        }
+      } catch (_) {
+        if (mounted) setState(() => _searchResults = []);
+      } finally {
+        if (mounted) setState(() => _isSearching = false);
+      }
+    });
   }
 
   @override
@@ -399,47 +443,58 @@ class _SingleSelectPickerState<T> extends State<_SingleSelectPicker<T>> {
                   isDense: true,
                   border: const OutlineInputBorder(),
                 ),
-                onChanged: (value) => setState(() => _query = value.trim()),
+                onChanged: _onSearchChanged,
               ),
             ),
             const Divider(height: 1),
           ],
           Expanded(
-            child: hasResults
-                ? ListView.separated(
-                    padding: EdgeInsets.zero,
-                    itemCount: filtered.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final option = filtered[index];
-                      final selected = option.value == widget.initialValue;
-
-                      return ListTile(
-                        title: _buildOptionLabel(theme, option),
-                        dense: true,
-                        enabled: option.enabled,
-                        selected: selected,
-                        trailing: selected
-                            ? const Icon(Icons.check, size: LayoutTokens.iconLg)
-                            : null,
-                        onTap: option.enabled
-                            ? () => Navigator.of(context).pop(option.value)
-                            : null,
-                      );
-                    },
-                  )
-                : Center(
+            child: _isSearching
+                ? Center(
                     child: Padding(
                       padding: const EdgeInsets.all(LayoutTokens.gapLg),
-                      child: Text(
-                        widget.options.isEmpty
-                            ? widget.emptyText
-                            : widget.noResultsText,
-                        style: theme.textTheme.bodyMedium
-                            ?.copyWith(color: theme.hintColor),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: theme.colorScheme.primary,
                       ),
                     ),
-                  ),
+                  )
+                : hasResults
+                    ? ListView.separated(
+                        padding: EdgeInsets.zero,
+                        itemCount: filtered.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final option = filtered[index];
+                          final selected = option.value == widget.initialValue;
+
+                          return ListTile(
+                            title: _buildOptionLabel(theme, option),
+                            dense: true,
+                            enabled: option.enabled,
+                            selected: selected,
+                            trailing: selected
+                                ? const Icon(Icons.check,
+                                    size: LayoutTokens.iconLg)
+                                : null,
+                            onTap: option.enabled
+                                ? () => Navigator.of(context).pop(option.value)
+                                : null,
+                          );
+                        },
+                      )
+                    : Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(LayoutTokens.gapLg),
+                          child: Text(
+                            widget.options.isEmpty
+                                ? widget.emptyText
+                                : widget.noResultsText,
+                            style: theme.textTheme.bodyMedium
+                                ?.copyWith(color: theme.hintColor),
+                          ),
+                        ),
+                      ),
           ),
         ],
       ),

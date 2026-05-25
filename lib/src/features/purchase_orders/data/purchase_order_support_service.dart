@@ -31,10 +31,10 @@ class PurchaseOrderSupportService {
     final materialApi = MaterialApiService(_client);
     final workOrderApi = WorkOrderApiService(_client);
 
-    final supplierFuture = supplierApi.fetchSuppliers(pageSize: 200);
+    final supplierFuture = supplierApi.fetchSuppliers(pageSize: 50);
     final materialFuture = materialApi.fetchMaterials(pageSize: 400);
     final workOrderFuture = workOrderApi.fetchWorkOrders(
-      pageSize: 200,
+      pageSize: 50,
       approvalStatus: 'approved',
       ordering: '-created_at',
     );

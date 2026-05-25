@@ -22,9 +22,9 @@ class StatementSupportService {
 
   Future<StatementOptionsData> loadOptions() async {
     final customerFuture =
-        CustomerApiService(_client).fetchCustomers(page: 1, pageSize: 200);
+        CustomerApiService(_client).fetchCustomers(page: 1, pageSize: 50);
     final supplierFuture =
-        SupplierApiService(_client).fetchSuppliers(page: 1, pageSize: 200);
+        SupplierApiService(_client).fetchSuppliers(page: 1, pageSize: 50);
 
     final customerPage = await customerFuture;
     final supplierPage = await supplierFuture;

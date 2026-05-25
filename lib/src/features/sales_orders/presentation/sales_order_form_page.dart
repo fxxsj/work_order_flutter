@@ -147,9 +147,9 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
     final customerApi = CustomerApiService(apiClient);
     final productApi = ProductApiService(apiClient);
     try {
-      final customerFuture = customerApi.fetchCustomers(page: 1, pageSize: 200);
+      final customerFuture = customerApi.fetchCustomers(page: 1, pageSize: 50);
       final productFuture =
-          productApi.fetchProducts(pageSize: 200, isActive: true);
+          productApi.fetchProducts(pageSize: 50, isActive: true);
       final customerPage = await customerFuture;
       final productOptions = await productFuture;
       setState(() {

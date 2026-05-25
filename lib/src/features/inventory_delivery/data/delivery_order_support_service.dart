@@ -31,8 +31,8 @@ class DeliveryOrderSupportService {
     final salesOrderApi = SalesOrderApiService(_client);
     final productApi = ProductApiService(_client);
 
-    final customerFuture = customerApi.fetchCustomers(pageSize: 200);
-    final salesOrderFuture = salesOrderApi.fetchSalesOrders(pageSize: 200);
+    final customerFuture = customerApi.fetchCustomers(pageSize: 50);
+    final salesOrderFuture = salesOrderApi.fetchSalesOrders(pageSize: 50);
     final productFuture = productApi.fetchProducts(pageSize: 300);
 
     final customerPage = await customerFuture;

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_date_picker.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
@@ -197,6 +198,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
       final detail = await viewModel.fetchDetail(id);
       _draft.applyDetail(detail);
       _approvalStatus = detail.approvalStatus;
+      await _ensureCustomerLoaded();
       if (mounted) {
         setState(() {});
       }
@@ -205,6 +207,19 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     } finally {
       if (mounted) setState(() => _loadingDetail = false);
     }
+  }
+
+  Future<void> _ensureCustomerLoaded() async {
+    final customerId = _draft.customerId;
+    if (customerId == null) return;
+    final exists = _customers.any((c) => c.id == customerId);
+    if (exists) return;
+    final dto = await CustomerApiService(context.read<ApiClient>())
+        .fetchCustomerById(customerId);
+    if (dto == null || !mounted) return;
+    setState(() {
+      _customers = [..._customers, dto.toEntity()];
+    });
   }
 
   Future<void> _handleCreateCustomer() async {
@@ -230,6 +245,14 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
       _draft.customerId = created.id;
     });
     ToastUtil.showSuccess('客户已新增');
+  }
+
+  Future<List<AppDropdownOption<int>>> _handleSearchCustomer(String query) async {
+    final page = await CustomerApiService(context.read<ApiClient>())
+        .fetchCustomers(search: query, pageSize: 50);
+    return page.items
+        .map((dto) => AppDropdownOption<int>(value: dto.id, label: dto.name))
+        .toList();
   }
 
   Future<ProductOption?> _handleCreateProduct() async {
@@ -559,6 +582,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                 onSalesOrderChanged: _handleSalesOrderChanged,
                 onCustomerChanged: _handleCustomerChanged,
                 onCreateCustomer: _handleCreateCustomer,
+                onSearchCustomer: _handleSearchCustomer,
                 onStatusChanged: (value) =>
                     setState(() => _draft.status = value ?? 'pending'),
                 onPriorityChanged: (value) =>

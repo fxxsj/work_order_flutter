@@ -165,10 +165,10 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
     setState(() => _loadingPicklists = true);
     try {
       final products = await _productApi!.fetchProducts(isActive: true);
-      final dies = await _dieApi!.fetchDies(pageSize: 100);
-      final foiling = await _foilingApi!.fetchFoilingPlates(pageSize: 100);
+      final dies = await _dieApi!.fetchDies(pageSize: 50);
+      final foiling = await _foilingApi!.fetchFoilingPlates(pageSize: 50);
       final embossing =
-          await _embossingApi!.fetchEmbossingPlates(pageSize: 100);
+          await _embossingApi!.fetchEmbossingPlates(pageSize: 50);
       if (!mounted) return;
       setState(() {
         _productOptions

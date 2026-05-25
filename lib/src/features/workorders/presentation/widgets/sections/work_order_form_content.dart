@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/features/artworks/domain/artwork.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/dies/domain/die.dart';
@@ -54,6 +55,7 @@ class WorkOrderFormContent extends StatelessWidget {
     required this.onSalesOrderChanged,
     required this.onCustomerChanged,
     this.onCreateCustomer,
+    this.onSearchCustomer,
     required this.onStatusChanged,
     required this.onPriorityChanged,
     required this.onPickOrderDate,
@@ -106,6 +108,8 @@ class WorkOrderFormContent extends StatelessWidget {
   final ValueChanged<int?> onSalesOrderChanged;
   final ValueChanged<int?> onCustomerChanged;
   final VoidCallback? onCreateCustomer;
+  /// 客户远程搜索回调
+  final Future<List<AppDropdownOption<int>>> Function(String query)? onSearchCustomer;
   final ValueChanged<String?> onStatusChanged;
   final ValueChanged<String?> onPriorityChanged;
   final VoidCallback onPickOrderDate;
@@ -145,6 +149,7 @@ class WorkOrderFormContent extends StatelessWidget {
           onSalesOrderChanged: onSalesOrderChanged,
           onCustomerChanged: onCustomerChanged,
           onCreateCustomer: onCreateCustomer,
+          onSearchCustomer: onSearchCustomer,
           onStatusChanged: onStatusChanged,
           onPriorityChanged: onPriorityChanged,
           onPickOrderDate: onPickOrderDate,

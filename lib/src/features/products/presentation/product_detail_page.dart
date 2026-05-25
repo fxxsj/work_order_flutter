@@ -43,7 +43,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       final service = ProcessApiService(apiClient);
       final page = await service.fetchProcesses(
         page: 1,
-        pageSize: 200,
+        pageSize: 50,
       );
       if (!mounted) return;
       setState(() {

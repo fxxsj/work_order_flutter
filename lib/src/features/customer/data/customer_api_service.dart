@@ -107,6 +107,20 @@ class CustomerApiService {
     await _client.delete('/customers/$id/');
   }
 
+  /// 根据 ID 获取单个客户。
+  Future<CustomerDto?> fetchCustomerById(int id) async {
+    try {
+      final response = await _client.get('/customers/$id/');
+      final payload = response.data;
+      if (payload is Map<String, dynamic>) {
+        return CustomerDto.fromJson(payload);
+      }
+    } catch (_) {
+      // ignore
+    }
+    return null;
+  }
+
   /// 获取业务员列表。
   Future<List<SalespersonDto>> fetchSalespersons() async {
     final response = await _client.get('/auth/salespersons/');

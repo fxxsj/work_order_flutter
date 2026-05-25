@@ -29,6 +29,7 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
     required this.onSalesOrderChanged,
     required this.onCustomerChanged,
     this.onCreateCustomer,
+    this.onSearchCustomer,
     required this.onStatusChanged,
     required this.onPriorityChanged,
     required this.onPickOrderDate,
@@ -52,6 +53,8 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
   final ValueChanged<int?> onSalesOrderChanged;
   final ValueChanged<int?> onCustomerChanged;
   final VoidCallback? onCreateCustomer;
+  /// 客户远程搜索回调
+  final Future<List<AppDropdownOption<int>>> Function(String query)? onSearchCustomer;
   final ValueChanged<String?> onStatusChanged;
   final ValueChanged<String?> onPriorityChanged;
   final VoidCallback onPickOrderDate;
@@ -91,6 +94,7 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
                       customers: customers,
                       onChanged: onCustomerChanged,
                       onCreateCustomer: onCreateCustomer,
+                      onSearch: onSearchCustomer,
                     ),
                   ),
                   SizedBox(

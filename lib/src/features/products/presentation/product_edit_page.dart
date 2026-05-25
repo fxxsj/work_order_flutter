@@ -186,12 +186,12 @@ class _ProductEditPageState extends State<ProductEditPage> {
     try {
       final productGroupFuture = _productGroupApi.fetchProductGroups(
         page: 1,
-        pageSize: 200,
+        pageSize: 50,
         isActive: true,
       );
-      final processFuture = _processApi.fetchProcesses(page: 1, pageSize: 200);
+      final processFuture = _processApi.fetchProcesses(page: 1, pageSize: 50);
       final materialFuture =
-          _materialApi.fetchMaterials(page: 1, pageSize: 200);
+          _materialApi.fetchMaterials(page: 1, pageSize: 50);
       final groupPage = await productGroupFuture;
       final processPage = await processFuture;
       final materialPage = await materialFuture;
@@ -319,7 +319,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
     try {
       final existing = await _productMaterialApi.fetchProductMaterials(
         page: 1,
-        pageSize: 200,
+        pageSize: 50,
         params: {'product': productId},
       );
       for (final item in existing.items) {

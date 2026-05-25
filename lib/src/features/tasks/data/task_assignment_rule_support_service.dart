@@ -33,10 +33,10 @@ class TaskAssignmentRuleSupportService {
   Future<TaskAssignmentRuleLookupData> loadLookup() async {
     final processPage = await ProcessApiService(
       _client,
-    ).fetchProcesses(page: 1, pageSize: 200);
+    ).fetchProcesses(page: 1, pageSize: 50);
     final departmentPage = await DepartmentApiService(
       _client,
-    ).fetchDepartments(page: 1, pageSize: 200);
+    ).fetchDepartments(page: 1, pageSize: 50);
     return TaskAssignmentRuleLookupData(
       processes: processPage.items.map((dto) => dto.toEntity()).toList(),
       departments: departmentPage.items

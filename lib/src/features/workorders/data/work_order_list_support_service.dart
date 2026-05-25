@@ -38,11 +38,11 @@ class WorkOrderListSupportService {
 
   Future<WorkOrderListFilterOptions> loadFilterOptions() async {
     final customerFuture =
-        CustomerApiService(_client).fetchCustomers(page: 1, pageSize: 200);
+        CustomerApiService(_client).fetchCustomers(page: 1, pageSize: 50);
     final productFuture =
-        ProductApiService(_client).fetchProducts(pageSize: 200, isActive: true);
+        ProductApiService(_client).fetchProducts(pageSize: 50, isActive: true);
     final processFuture =
-        ProcessApiService(_client).fetchProcesses(page: 1, pageSize: 200);
+        ProcessApiService(_client).fetchProcesses(page: 1, pageSize: 50);
 
     final customerPage = await customerFuture;
     final productOptions = await productFuture;

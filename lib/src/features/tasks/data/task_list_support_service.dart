@@ -35,9 +35,9 @@ class TaskListSupportService {
 
   Future<TaskListFilterOptions> loadFilterOptions() async {
     final departmentFuture =
-        DepartmentApiService(_client).fetchDepartments(page: 1, pageSize: 200);
+        DepartmentApiService(_client).fetchDepartments(page: 1, pageSize: 50);
     final processFuture =
-        ProcessApiService(_client).fetchProcesses(page: 1, pageSize: 200);
+        ProcessApiService(_client).fetchProcesses(page: 1, pageSize: 50);
 
     final departmentPage = await departmentFuture;
     final processPage = await processFuture;
