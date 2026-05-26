@@ -27,7 +27,7 @@ void main() {
       };
       final response = ApiResponse.fromJson(json);
       expect(response.success, isFalse);
-      expect(response.code, equals('100001'));
+      expect(response.code, equals(100001));
       expect(response.message, equals('Unauthorized'));
     });
 
@@ -73,13 +73,13 @@ void main() {
       expect(updated.data, equals({'id': 1}));
     });
 
-    test('code is converted to string', () {
+    test('code is parsed as int', () {
       final response = ApiResponse.fromJson({
         'success': false,
         'code': 100001,
         'message': 'Error',
       });
-      expect(response.code, equals('100001'));
+      expect(response.code, equals(100001));
     });
 
     test('message is converted to string', () {
@@ -93,17 +93,29 @@ void main() {
     test('data field is preserved', () {
       final response = ApiResponse.fromJson({
         'success': true,
-        'data': {'items': [1, 2, 3]},
+        'data': {
+          'items': [1, 2, 3]
+        },
       });
-      expect(response.data, equals({'items': [1, 2, 3]}));
+      expect(
+          response.data,
+          equals({
+            'items': [1, 2, 3]
+          }));
     });
 
     test('errors field is preserved', () {
       final response = ApiResponse.fromJson({
         'success': false,
-        'errors': {'field': ['error1', 'error2']},
+        'errors': {
+          'field': ['error1', 'error2']
+        },
       });
-      expect(response.errors, equals({'field': ['error1', 'error2']}));
+      expect(
+          response.errors,
+          equals({
+            'field': ['error1', 'error2']
+          }));
     });
   });
 }

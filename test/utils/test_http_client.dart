@@ -40,9 +40,17 @@ class MockDioClient {
     final response = ApiResponse(
       success: false,
       message: message,
-      code: statusCode.toString(),
+      code: statusCode,
     );
-    _handlers.add(_MockHandler(method.toUpperCase(), path, response, error: true, statusCode: statusCode));
+    _handlers.add(
+      _MockHandler(
+        method.toUpperCase(),
+        path,
+        response,
+        error: true,
+        statusCode: statusCode,
+      ),
+    );
   }
 
   Dio _createMockDio() {
@@ -68,7 +76,8 @@ class _MockHandler {
   final bool error;
   final int? statusCode;
 
-  _MockHandler(this.method, this.path, this.response, {this.error = false, this.statusCode});
+  _MockHandler(this.method, this.path, this.response,
+      {this.error = false, this.statusCode});
 }
 
 class _MockHttpClientAdapter implements HttpClientAdapter {
@@ -130,7 +139,7 @@ ApiResponse successApiResponse({dynamic data, String? message}) {
 }
 
 /// Creates an error ApiResponse.
-ApiResponse errorApiResponse({String? message, String? code}) {
+ApiResponse errorApiResponse({String? message, int? code}) {
   return ApiResponse(
     success: false,
     message: message ?? 'Error',

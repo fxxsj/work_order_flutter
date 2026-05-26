@@ -114,68 +114,73 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
   }
 
   Future<bool> _handleSubmit(CustomerViewModel viewModel) async {
-    final requiredPermission = widget.customer == null
-        ? 'workorder.add_customer'
-        : 'workorder.change_customer';
-    final permissions = PermissionUtil.snapshot(context);
-    if (!permissions.has(requiredPermission)) {
-      ToastUtil.showError('当前账号无权执行该操作');
-      return false;
-    }
-
-    // 检查客户名称是否重复
-    final name = _nameController.text.trim();
-    if (name.length >= 2) {
-      final excludeId = widget.customer?.id;
-      final exists = await viewModel.checkCustomerNameExists(name, excludeId: excludeId);
-      if (exists) {
-        setState(() => _nameError = _duplicateNameError);
+    try {
+      final requiredPermission = widget.customer == null
+          ? 'workorder.add_customer'
+          : 'workorder.change_customer';
+      final permissions = PermissionUtil.snapshot(context);
+      if (!permissions.has(requiredPermission)) {
+        ToastUtil.showError('当前账号无权执行该操作');
         return false;
       }
-    }
 
-    String? salespersonName;
-    if (_salespersonId != null) {
-      for (final item in viewModel.salespersons) {
-        if (item.id == _salespersonId) {
-          salespersonName = item.name;
-          break;
+      // 检查客户名称是否重复
+      final name = _nameController.text.trim();
+      if (name.length >= 2) {
+        final excludeId = widget.customer?.id;
+        final exists = await viewModel.checkCustomerNameExists(
+          name,
+          excludeId: excludeId,
+        );
+        if (exists) {
+          setState(() => _nameError = _duplicateNameError);
+          return false;
         }
       }
-    }
 
-    final payload = Customer(
-      id: widget.customer?.id ?? 0,
-      name: name,
-      contactPerson: _contactController.text.trim(),
-      phone: _phoneController.text.trim(),
-      email: _emailController.text.trim(),
-      address: _addressController.text.trim(),
-      notes: _notesController.text.trim(),
-      salespersonId: _salespersonId,
-      salespersonName: salespersonName,
-      createdAt: widget.customer?.createdAt,
-      updatedAt: widget.customer?.updatedAt,
-    );
+      String? salespersonName;
+      if (_salespersonId != null) {
+        for (final item in viewModel.salespersons) {
+          if (item.id == _salespersonId) {
+            salespersonName = item.name;
+            break;
+          }
+        }
+      }
 
-    if (widget.customer == null) {
-      await viewModel.createCustomer(payload);
-    } else {
-      await viewModel.updateCustomer(payload);
-    }
-    return true;
-  } on ApiException catch (e) {
-    // 解析后端返回的字段验证错误
-    final nameError = e.getFieldError('name');
-    if (nameError != null) {
-      setState(() => _nameError = nameError);
+      final payload = Customer(
+        id: widget.customer?.id ?? 0,
+        name: name,
+        contactPerson: _contactController.text.trim(),
+        phone: _phoneController.text.trim(),
+        email: _emailController.text.trim(),
+        address: _addressController.text.trim(),
+        notes: _notesController.text.trim(),
+        salespersonId: _salespersonId,
+        salespersonName: salespersonName,
+        createdAt: widget.customer?.createdAt,
+        updatedAt: widget.customer?.updatedAt,
+      );
+
+      if (widget.customer == null) {
+        await viewModel.createCustomer(payload);
+      } else {
+        await viewModel.updateCustomer(payload);
+      }
+      return true;
+    } on ApiException catch (e) {
+      // 解析后端返回的字段验证错误
+      final nameError = e.getFieldError('name');
+      if (nameError != null) {
+        setState(() => _nameError = nameError);
+        return false;
+      }
+      // 如果没有字段级错误，显示通用错误
+      if (mounted) {
+        ToastUtil.showError('${_submitErrorText}${e.message}');
+      }
       return false;
     }
-    // 如果没有字段级错误，显示通用错误
-    if (mounted) {
-      ToastUtil.showError('${_submitErrorText}${e.message}');
-    }
-    return false;
   }
 
   Future<void> _submit(CustomerViewModel viewModel) async {
@@ -331,7 +336,6 @@ class _CustomerFormBody extends StatelessWidget {
     required this.readonlyField,
     required this.salespersonStateField,
     required this.onSalespersonChanged,
-    this.nameError,
   });
 
   final Customer? customer;
@@ -351,7 +355,6 @@ class _CustomerFormBody extends StatelessWidget {
     ThemeData theme,
   ) salespersonStateField;
   final ValueChanged<dynamic> onSalespersonChanged;
-  final String? nameError;
 
   @override
   Widget build(BuildContext context) {
