@@ -134,4 +134,21 @@ class CustomerApiService {
     }
     return [];
   }
+
+  /// 检查客户名称是否已存在（用于表单实时验证）
+  Future<bool> checkNameExists(String name, {int? excludeId}) async {
+    final params = <String, dynamic>{'name': name};
+    if (excludeId != null) {
+      params['exclude_id'] = excludeId.toString();
+    }
+    final response = await _client.get('/customers/check_name/', queryParameters: params);
+    final payload = response.data;
+    if (payload is Map<String, dynamic>) {
+      final data = payload['data'];
+      if (data is Map<String, dynamic>) {
+        return data['exists'] == true;
+      }
+    }
+    return false;
+  }
 }

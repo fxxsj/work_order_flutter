@@ -95,4 +95,16 @@ class CustomerRepositoryImpl implements CustomerRepository {
   Future<ImportResult> importCustomers(PlatformFile file) async {
     return _importExport.import('/customers/import_customers/', file);
   }
+
+  /// 检查客户名称是否已存在。
+  @override
+  Future<bool> checkNameExists(String name, {int? excludeId}) async {
+    try {
+      return await _apiService.checkNameExists(name, excludeId: excludeId);
+    } on ApiException catch (err) {
+      throw Exception(err.message.isNotEmpty ? err.message : '检查客户名称失败');
+    } catch (err) {
+      throw Exception('检查客户名称失败: $err');
+    }
+  }
 }

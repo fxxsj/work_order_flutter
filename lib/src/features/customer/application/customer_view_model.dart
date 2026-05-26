@@ -104,4 +104,9 @@ class CustomerViewModel extends PaginatedViewModel<Customer> {
     await loadItems(resetPage: true);
     return result;
   }
+
+  /// 检查客户名称是否已存在。
+  Future<bool> checkCustomerNameExists(String name, {int? excludeId}) async {
+    return _repository.checkNameExists(name, excludeId: excludeId);
+  }
 }

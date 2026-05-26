@@ -29,4 +29,7 @@ abstract class CustomerRepository {
 
   /// 导入客户 Excel。
   Future<ImportResult> importCustomers(PlatformFile file);
+
+  /// 检查客户名称是否已存在。
+  Future<bool> checkNameExists(String name, {int? excludeId});
 }

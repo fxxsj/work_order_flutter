@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/common/api_exception.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
@@ -57,6 +58,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
 
   static const String _loadingSalespersonsText = '正在加载业务员列表...';
   static const String _submitErrorText = '操作失败: ';
+  static const String _duplicateNameError = '该客户名称已存在';
 
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
@@ -68,6 +70,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
 
   int? _salespersonId;
   bool _submitting = false;
+  String? _nameError;
 
   @override
   void initState() {
@@ -81,6 +84,15 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
     _addressController = TextEditingController(text: customer?.address ?? '');
     _notesController = TextEditingController(text: customer?.notes ?? '');
     _salespersonId = customer?.salespersonId;
+
+    // 监听名称变化，清除错误提示
+    _nameController.addListener(_onNameChanged);
+  }
+
+  void _onNameChanged() {
+    if (_nameError != null) {
+      setState(() => _nameError = null);
+    }
   }
 
   @override
@@ -111,6 +123,17 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
       return false;
     }
 
+    // 检查客户名称是否重复
+    final name = _nameController.text.trim();
+    if (name.length >= 2) {
+      final excludeId = widget.customer?.id;
+      final exists = await viewModel.checkCustomerNameExists(name, excludeId: excludeId);
+      if (exists) {
+        setState(() => _nameError = _duplicateNameError);
+        return false;
+      }
+    }
+
     String? salespersonName;
     if (_salespersonId != null) {
       for (final item in viewModel.salespersons) {
@@ -123,7 +146,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
 
     final payload = Customer(
       id: widget.customer?.id ?? 0,
-      name: _nameController.text.trim(),
+      name: name,
       contactPerson: _contactController.text.trim(),
       phone: _phoneController.text.trim(),
       email: _emailController.text.trim(),
@@ -141,9 +164,27 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
       await viewModel.updateCustomer(payload);
     }
     return true;
+  } on ApiException catch (e) {
+    // 解析后端返回的字段验证错误
+    final nameError = e.getFieldError('name');
+    if (nameError != null) {
+      setState(() => _nameError = nameError);
+      return false;
+    }
+    // 如果没有字段级错误，显示通用错误
+    if (mounted) {
+      ToastUtil.showError('${_submitErrorText}${e.message}');
+    }
+    return false;
   }
 
   Future<void> _submit(CustomerViewModel viewModel) async {
+    // 先检查重复名称（如果已发现重复，直接显示错误）
+    if (_nameError != null) {
+      ToastUtil.showError(_nameError!);
+      return;
+    }
+
     final form = _formKey.currentState;
     if (form == null || !form.validate()) {
       return;
@@ -153,12 +194,28 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
     setState(() => _submitting = true);
     try {
       final saved = await _handleSubmit(viewModel);
-      if (!mounted || !saved) return;
+      if (!mounted || !saved) {
+        // 如果保存失败且有错误提示，显示错误
+        if (_nameError != null) {
+          ToastUtil.showError(_nameError!);
+        }
+        return;
+      }
       widget.onSaved?.call();
       Navigator.of(context).pop(true);
     } catch (err) {
       if (!mounted) return;
-      ToastUtil.showError('$_submitErrorText$err');
+      // 处理 ApiException
+      if (err is ApiException) {
+        // 如果已经有 nameError，显示 nameError
+        if (_nameError != null) {
+          ToastUtil.showError(_nameError!);
+        } else {
+          ToastUtil.showError('${_submitErrorText}${err.message}');
+        }
+      } else {
+        ToastUtil.showError('$_submitErrorText$err');
+      }
     } finally {
       if (mounted) {
         setState(() => _submitting = false);
@@ -274,6 +331,7 @@ class _CustomerFormBody extends StatelessWidget {
     required this.readonlyField,
     required this.salespersonStateField,
     required this.onSalespersonChanged,
+    this.nameError,
   });
 
   final Customer? customer;
@@ -293,6 +351,7 @@ class _CustomerFormBody extends StatelessWidget {
     ThemeData theme,
   ) salespersonStateField;
   final ValueChanged<dynamic> onSalespersonChanged;
+  final String? nameError;
 
   @override
   Widget build(BuildContext context) {

@@ -128,20 +128,9 @@ class HttpClient {
         ),
       );
 
-      final payload = response.data;
-      if (payload is Map<String, dynamic>) {
-        // simplejwt refresh endpoint returns tokens at top-level
-        if (payload['access'] != null) {
-          final access = payload['access']?.toString();
-          final refresh = payload['refresh']?.toString();
-          if (access != null && access.isNotEmpty) {
-            updateTokens(access, refresh);
-            return true;
-          }
-        }
-      }
-
-      final apiResponse = ApiResponse.fromJson(payload);
+      // 后端已统一返回标准格式:
+      // { "success": true, "code": 200, "data": { "access": "...", "refresh": "...", "access_expires_at": ... } }
+      final apiResponse = ApiResponse.fromJson(response.data);
       if (apiResponse.success && apiResponse.data != null) {
         final data = apiResponse.data as Map<String, dynamic>;
         final access = data['access']?.toString();
