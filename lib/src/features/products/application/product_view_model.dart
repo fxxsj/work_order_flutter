@@ -9,13 +9,28 @@ class ProductViewModel extends PaginatedViewModel<Product> {
   ProductViewModel(this._repository);
 
   final ProductRepository _repository;
+  bool? _isActiveFilter;
+  String? _ordering;
 
   List<Product> get products => items;
+
+  bool? get isActiveFilter => _isActiveFilter;
+  String? get ordering => _ordering;
 
   Future<void> initialize() => loadItems(resetPage: true);
 
   Future<void> loadProducts({bool resetPage = false}) =>
       loadItems(resetPage: resetPage);
+
+  void setIsActiveFilter(bool? value) {
+    _isActiveFilter = value;
+    loadItems(resetPage: true);
+  }
+
+  void setOrdering(String? value) {
+    _ordering = value;
+    loadItems(resetPage: true);
+  }
 
   Future<Product> createProduct(Product product) async {
     final created = await _repository.createProduct(product);
@@ -62,6 +77,8 @@ class ProductViewModel extends PaginatedViewModel<Product> {
       page: page,
       pageSize: pageSize,
       search: search,
+      isActive: _isActiveFilter,
+      ordering: _ordering,
     );
     return result;
   }

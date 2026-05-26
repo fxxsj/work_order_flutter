@@ -9,6 +9,8 @@ abstract class ProductRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    bool? isActive,
+    String? ordering,
   });
 
   Future<Product> createProduct(Product product);

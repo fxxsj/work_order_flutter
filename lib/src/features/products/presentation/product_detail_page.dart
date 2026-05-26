@@ -119,6 +119,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         SizedBox(height: sectionSpacing),
                         _buildStockPriceCard(
                             context, product, itemSpacing, labelStyle),
+                        if (product.productType == 'group_main') ...[
+                          SizedBox(height: sectionSpacing),
+                          _buildGroupCard(
+                              context, product, itemSpacing, labelStyle),
+                        ],
                         if (product.defaultMaterials.isNotEmpty) ...[
                           SizedBox(height: sectionSpacing),
                           _buildMaterialsCard(
@@ -153,6 +158,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             _buildBasicInfoCard(context, product, itemSpacing, labelStyle),
             SizedBox(height: sectionSpacing),
             _buildStockPriceCard(context, product, itemSpacing, labelStyle),
+            if (product.productType == 'group_main') ...[
+              SizedBox(height: sectionSpacing),
+              _buildGroupCard(context, product, itemSpacing, labelStyle),
+            ],
             if (product.defaultProcessIds.isNotEmpty || _loadingProcesses) ...[
               SizedBox(height: sectionSpacing),
               _buildProcessCard(context, product),
@@ -204,6 +213,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     double spacing,
     TextStyle? labelStyle,
   ) {
+    final isLowStock = item.stockQuantity != null &&
+        item.minStockQuantity != null &&
+        item.stockQuantity! < item.minStockQuantity!;
     return DetailSectionCard(
       title: '库存与价格',
       child: Column(
@@ -212,19 +224,60 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           _row(context, '单价', item.unitPrice?.toStringAsFixed(2) ?? _empty,
               spacing, labelStyle),
           _row(
-              context,
-              '库存数量',
-              item.stockQuantity?.toStringAsFixed(0) ?? _empty,
-              spacing,
-              labelStyle),
+            context,
+            '库存数量',
+            item.stockQuantity?.toString() ?? _empty,
+            spacing,
+            labelStyle,
+            valueColor: isLowStock ? Colors.red : null,
+          ),
           _row(
               context,
               '最小库存',
-              item.minStockQuantity?.toStringAsFixed(0) ?? _empty,
+              item.minStockQuantity?.toString() ?? _empty,
               spacing,
               labelStyle),
           _row(context, '状态', _statusText(item), spacing, labelStyle,
               last: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGroupCard(
+    BuildContext context,
+    Product item,
+    double spacing,
+    TextStyle? labelStyle,
+  ) {
+    if (item.productType != 'group_main') return const SizedBox.shrink();
+    return DetailSectionCard(
+      title: '套装信息',
+      child: Column(
+        children: [
+          if (item.availableGroupStock != null)
+            _row(
+              context,
+              '可用库存',
+              item.availableGroupStock.toString(),
+              spacing,
+              labelStyle,
+            ),
+          if (item.groupItems.isNotEmpty) ...[
+            SizedBox(height: spacing),
+            ...item.groupItems.asMap().entries.map((entry) {
+              final groupItem = entry.value;
+              final isLast = entry.key == item.groupItems.length - 1;
+              return _row(
+                context,
+                '${groupItem.code}',
+                '${groupItem.name} · 库存 ${groupItem.stockQuantity}',
+                spacing,
+                labelStyle,
+                last: isLast,
+              );
+            }).toList(),
+          ],
         ],
       ),
     );
@@ -291,6 +344,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     double spacing,
     TextStyle? labelStyle, {
     bool last = false,
+    Color? valueColor,
   }) {
     final theme = Theme.of(context);
     return Padding(
@@ -305,7 +359,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           Expanded(
             child: Text(
               value.isEmpty ? _empty : value,
-              style: theme.textTheme.bodyMedium,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: valueColor,
+                fontWeight: valueColor != null ? FontWeight.bold : null,
+              ),
             ),
           ),
         ],

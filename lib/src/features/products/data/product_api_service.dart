@@ -46,6 +46,8 @@ class ProductApiService {
     int page = 1,
     int pageSize = 20,
     String? search,
+    bool? isActive,
+    String? ordering,
   }) async {
     final params = <String, dynamic>{
       'page': page,
@@ -54,6 +56,12 @@ class ProductApiService {
     final trimmed = search?.trim();
     if (trimmed != null && trimmed.isNotEmpty) {
       params['search'] = trimmed;
+    }
+    if (isActive != null) {
+      params['is_active'] = isActive;
+    }
+    if (ordering != null && ordering.isNotEmpty) {
+      params['ordering'] = ordering;
     }
 
     final response = await _client.get('/products/', queryParameters: params);

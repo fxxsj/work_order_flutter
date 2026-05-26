@@ -371,8 +371,8 @@ class _ProductEditPageState extends State<ProductEditPage> {
           ? null
           : _unitController.text.trim(),
       unitPrice: _parseDouble(_unitPriceController.text),
-      stockQuantity: _parseDouble(_stockController.text),
-      minStockQuantity: _parseDouble(_minStockController.text),
+      stockQuantity: _parseInt(_stockController.text),
+      minStockQuantity: _parseInt(_minStockController.text),
       description: description.isEmpty ? null : description,
       isActive: _isActive,
       defaultProcessIds: _processIds,
@@ -387,6 +387,24 @@ class _ProductEditPageState extends State<ProductEditPage> {
   Future<Product> _persistProduct(ProductViewModel viewModel) async {
     if (_productType != 'single' && _productGroupId == null) {
       throw StateError('请选择产品组');
+    }
+    // 前端验证
+    final unitPrice = _parseDouble(_unitPriceController.text);
+    if (unitPrice != null && (unitPrice < 0 || unitPrice > 99999999.99)) {
+      throw StateError('单价需在0-99,999,999.99之间');
+    }
+    final stockQuantity = _parseInt(_stockController.text);
+    if (stockQuantity != null && stockQuantity < 0) {
+      throw StateError('库存数量不能为负数');
+    }
+    final minStockQuantity = _parseInt(_minStockController.text);
+    if (minStockQuantity != null && minStockQuantity < 0) {
+      throw StateError('最小库存不能为负数');
+    }
+    if (stockQuantity != null &&
+        minStockQuantity != null &&
+        minStockQuantity > stockQuantity) {
+      throw StateError('最小库存不能大于库存数量');
     }
     final payload = _buildPayload();
     final savedProduct = _product == null
@@ -462,6 +480,12 @@ class _ProductEditPageState extends State<ProductEditPage> {
     final text = raw.trim();
     if (text.isEmpty) return null;
     return double.tryParse(text);
+  }
+
+  int? _parseInt(String raw) {
+    final text = raw.trim();
+    if (text.isEmpty) return null;
+    return int.tryParse(text);
   }
 
   Widget _buildLoadingState(BuildContext context) {
@@ -601,6 +625,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
             validator: (value) {
               final text = value?.trim() ?? '';
               if (text.isEmpty) return _nameRequiredText;
+              if (text.length > 200) return '产品名称最多200个字符';
               return null;
             },
           ).build(context),

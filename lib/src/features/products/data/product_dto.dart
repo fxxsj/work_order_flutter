@@ -21,6 +21,8 @@ class ProductDto {
     this.defaultProcessIds = const [],
     this.defaultMaterials = const [],
     this.images = const [],
+    this.availableGroupStock,
+    this.groupItems = const [],
   });
 
   final int id;
@@ -34,13 +36,15 @@ class ProductDto {
   final String? specification;
   final String? unit;
   final double? unitPrice;
-  final double? stockQuantity;
-  final double? minStockQuantity;
+  final int? stockQuantity;
+  final int? minStockQuantity;
   final String? description;
   final bool? isActive;
   final List<int> defaultProcessIds;
   final List<ProductMaterialItem> defaultMaterials;
   final List<ProductImage> images;
+  final int? availableGroupStock;
+  final List<GroupItem> groupItems;
 
   factory ProductDto.fromJson(Map<String, dynamic> json) {
     final processes = json['default_processes'];
@@ -68,6 +72,13 @@ class ProductDto {
             );
           }).toList()
         : const <ProductImage>[];
+    final groupItems = json['group_items'];
+    final groupItemList = groupItems is List
+        ? groupItems
+            .whereType<Map>()
+            .map((item) => GroupItem.fromJson(Map<String, dynamic>.from(item)))
+            .toList()
+        : const <GroupItem>[];
     return ProductDto(
       id: toInt(json['id']) ?? 0,
       code: json['code']?.toString() ?? '',
@@ -80,13 +91,15 @@ class ProductDto {
       specification: toStringOrNull(json['specification']),
       unit: toStringOrNull(json['unit']),
       unitPrice: _toDouble(json['unit_price']),
-      stockQuantity: _toDouble(json['stock_quantity']),
-      minStockQuantity: _toDouble(json['min_stock_quantity']),
+      stockQuantity: toInt(json['stock_quantity']),
+      minStockQuantity: toInt(json['min_stock_quantity']),
       description: toStringOrNull(json['description']),
       isActive: json['is_active'] == null ? null : json['is_active'] == true,
       defaultProcessIds: processIds,
       defaultMaterials: materialItems,
       images: imageItems,
+      availableGroupStock: toInt(json['available_group_stock']),
+      groupItems: groupItemList,
     );
   }
 
@@ -128,6 +141,8 @@ class ProductDto {
       defaultProcessIds: defaultProcessIds,
       defaultMaterials: defaultMaterials,
       images: images,
+      availableGroupStock: availableGroupStock,
+      groupItems: groupItems,
     );
   }
 
@@ -159,6 +174,8 @@ extension ProductMapper on Product {
       defaultProcessIds: defaultProcessIds,
       defaultMaterials: defaultMaterials,
       images: images,
+      availableGroupStock: availableGroupStock,
+      groupItems: groupItems,
     );
   }
 }

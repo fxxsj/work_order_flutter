@@ -20,11 +20,15 @@ class ProductRepositoryImpl implements ProductRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    bool? isActive,
+    String? ordering,
   }) async {
     final result = await _apiService.fetchProductPage(
       page: page,
       pageSize: pageSize,
       search: search,
+      isActive: isActive,
+      ordering: ordering,
     );
     return PageData(
       items: result.items.map((dto) => dto.toEntity()).toList(),

@@ -58,6 +58,29 @@ class ProductMaterialItem {
   }
 }
 
+class GroupItem {
+  const GroupItem({
+    required this.id,
+    required this.code,
+    required this.name,
+    required this.stockQuantity,
+  });
+
+  final int id;
+  final String code;
+  final String name;
+  final int stockQuantity;
+
+  factory GroupItem.fromJson(Map<String, dynamic> json) {
+    return GroupItem(
+      id: toInt(json['id']) ?? 0,
+      code: json['code']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      stockQuantity: toInt(json['stock_quantity']) ?? 0,
+    );
+  }
+}
+
 class ProductImage {
   const ProductImage({
     required this.id,
@@ -94,6 +117,8 @@ class Product {
     this.defaultProcessIds = const [],
     this.defaultMaterials = const [],
     this.images = const [],
+    this.availableGroupStock,
+    this.groupItems = const [],
   });
 
   final int id;
@@ -107,11 +132,13 @@ class Product {
   final String? specification;
   final String? unit;
   final double? unitPrice;
-  final double? stockQuantity;
-  final double? minStockQuantity;
+  final int? stockQuantity;
+  final int? minStockQuantity;
   final String? description;
   final bool? isActive;
   final List<int> defaultProcessIds;
   final List<ProductMaterialItem> defaultMaterials;
   final List<ProductImage> images;
+  final int? availableGroupStock;
+  final List<GroupItem> groupItems;
 }

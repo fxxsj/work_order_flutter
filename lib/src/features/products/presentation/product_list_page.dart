@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
@@ -113,6 +114,47 @@ class ProductListPage extends StatelessWidget {
     final canChangeProduct = permissions.has('workorder.change_product');
 
     return [
+      // 状态过滤
+      SizedBox(
+        width: 120,
+        child: AppSelect<bool?>(
+          options: const [
+            AppDropdownOption(value: null, label: '全部状态'),
+            AppDropdownOption(value: true, label: '启用'),
+            AppDropdownOption(value: false, label: '停用'),
+          ],
+          value: viewModel.isActiveFilter,
+          onChanged: (value) => viewModel.setIsActiveFilter(value),
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
+      // 排序
+      SizedBox(
+        width: 120,
+        child: AppSelect<String>(
+          options: const [
+            AppDropdownOption(value: 'code', label: '编码升序'),
+            AppDropdownOption(value: '-code', label: '编码降序'),
+            AppDropdownOption(value: 'created_at', label: '创建时间升序'),
+            AppDropdownOption(value: '-created_at', label: '创建时间降序'),
+          ],
+          value: viewModel.ordering ?? 'code',
+          onChanged: (value) {
+            if (value != null) viewModel.setOrdering(value);
+          },
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
       if (canChangeProduct)
         PageActionButton.outlined(
           onPressed: () => _handleExport(context, viewModel),
