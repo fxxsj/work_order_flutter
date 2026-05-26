@@ -359,6 +359,9 @@ class WorkOrderMaterialItem {
     this.notes,
     this.purchaseStatus,
     this.purchaseStatusDisplay,
+    this.purchaseDate,
+    this.receivedDate,
+    this.cutDate,
   });
 
   final int id;
@@ -372,6 +375,9 @@ class WorkOrderMaterialItem {
   final String? notes;
   final String? purchaseStatus;
   final String? purchaseStatusDisplay;
+  final DateTime? purchaseDate;
+  final DateTime? receivedDate;
+  final DateTime? cutDate;
 
   factory WorkOrderMaterialItem.fromJson(Map<String, dynamic> json) {
     return WorkOrderMaterialItem(
@@ -387,6 +393,9 @@ class WorkOrderMaterialItem {
       notes: toStringOrNull(json['notes']),
       purchaseStatus: toStringOrNull(json['purchase_status']),
       purchaseStatusDisplay: toStringOrNull(json['purchase_status_display']),
+      purchaseDate: toDateTime(json['purchase_date']),
+      receivedDate: toDateTime(json['received_date']),
+      cutDate: toDateTime(json['cut_date']),
     );
   }
 }

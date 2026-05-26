@@ -44,6 +44,13 @@ class WorkOrderProductsSection extends StatelessWidget {
                 _DetailField('单位', item.unit ?? emptyText),
                 _DetailField('规格', item.specification ?? emptyText),
                 _DetailField(
+                  '来源',
+                  _joinParts([
+                    item.sourceTypeDisplay ?? item.sourceType,
+                    item.sourceSalesOrderNumber,
+                  ], emptyText),
+                ),
+                _DetailField(
                   '拼版数',
                   item.impositionQuantity?.toString() ?? emptyText,
                 ),
@@ -339,7 +346,8 @@ class WorkOrderProcessGanttSection extends StatelessWidget {
       case 'pending':
         return semantic?.info ?? theme.colorScheme.secondary;
       default:
-        return theme.colorScheme.primary.withValues(alpha: OpacityTokens.intense);
+        return theme.colorScheme.primary
+            .withValues(alpha: OpacityTokens.intense);
     }
   }
 }
@@ -383,6 +391,9 @@ class WorkOrderMaterialsSection extends StatelessWidget {
                       item.purchaseStatus ??
                       emptyText,
                 ),
+                _DetailField('采购日期', _formatDate(item.purchaseDate, emptyText)),
+                _DetailField('回料日期', _formatDate(item.receivedDate, emptyText)),
+                _DetailField('开料日期', _formatDate(item.cutDate, emptyText)),
               ],
             ),
           ),
@@ -541,8 +552,9 @@ class WorkOrderApprovalLogsSection extends StatelessWidget {
           decoration: BoxDecoration(
             color: theme.colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
-            border:
-                Border.all(color: theme.dividerColor.withValues(alpha: OpacityTokens.strong)),
+            border: Border.all(
+                color:
+                    theme.dividerColor.withValues(alpha: OpacityTokens.strong)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -566,6 +578,23 @@ class WorkOrderApprovalLogsSection extends StatelessWidget {
       }).toList(),
     );
   }
+}
+
+String _joinParts(List<String?> parts, String emptyText) {
+  final values = parts
+      .map((value) => value?.trim() ?? '')
+      .where((value) => value.isNotEmpty)
+      .toList();
+  return values.isEmpty ? emptyText : values.join(' · ');
+}
+
+String _formatDate(DateTime? value, String emptyText) {
+  if (value == null) return emptyText;
+  final local = value.toLocal();
+  final year = local.year.toString().padLeft(4, '0');
+  final month = local.month.toString().padLeft(2, '0');
+  final day = local.day.toString().padLeft(2, '0');
+  return '$year-$month-$day';
 }
 
 class _GanttRow {
@@ -742,7 +771,8 @@ class _ProcessTaskCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
-        border: Border.all(color: colors.borderColor.withValues(alpha: OpacityTokens.intense)),
+        border: Border.all(
+            color: colors.borderColor.withValues(alpha: OpacityTokens.intense)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
