@@ -15,11 +15,17 @@ class FoilingPlateRepositoryImpl implements FoilingPlateRepository {
     required int page,
     required int pageSize,
     String? search,
+    bool? confirmed,
+    String? foilingType,
+    String? ordering,
   }) async {
     final response = await _api.fetchFoilingPlates(
       page: page,
       pageSize: pageSize,
       search: search,
+      confirmed: confirmed,
+      foilingType: foilingType,
+      ordering: ordering,
     );
     return PageData(
       items: response.items.map((item) => item.toEntity()).toList(),
@@ -31,13 +37,17 @@ class FoilingPlateRepositoryImpl implements FoilingPlateRepository {
 
   @override
   Future<FoilingPlate> createFoilingPlate(FoilingPlate plate) async {
-    final dto = await _api.createFoilingPlate(FoilingPlateDto.fromEntity(plate));
+    final dto = await _api.createFoilingPlate(
+      FoilingPlateDto.fromEntity(plate),
+    );
     return dto.toEntity();
   }
 
   @override
   Future<FoilingPlate> updateFoilingPlate(FoilingPlate plate) async {
-    final dto = await _api.updateFoilingPlate(FoilingPlateDto.fromEntity(plate));
+    final dto = await _api.updateFoilingPlate(
+      FoilingPlateDto.fromEntity(plate),
+    );
     return dto.toEntity();
   }
 
@@ -52,8 +62,18 @@ class FoilingPlateRepositoryImpl implements FoilingPlateRepository {
   }
 
   @override
-  Future<FoilingPlateImage> uploadFoilingPlateImage(int plateId, MultipartFile imageFile, {int sortOrder = 0, String? description}) async {
-    return await _api.uploadImage(plateId, imageFile, sortOrder: sortOrder, description: description);
+  Future<FoilingPlateImage> uploadFoilingPlateImage(
+    int plateId,
+    MultipartFile imageFile, {
+    int sortOrder = 0,
+    String? description,
+  }) async {
+    return await _api.uploadImage(
+      plateId,
+      imageFile,
+      sortOrder: sortOrder,
+      description: description,
+    );
   }
 
   @override

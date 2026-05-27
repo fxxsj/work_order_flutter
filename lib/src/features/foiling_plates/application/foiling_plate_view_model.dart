@@ -8,13 +8,39 @@ class FoilingPlateViewModel extends PaginatedViewModel<FoilingPlate> {
 
   final FoilingPlateRepository _repository;
 
+  bool? _confirmed;
+  String? _foilingType;
+  String? _ordering;
+
   List<FoilingPlate> get foilingPlates => items;
+
+  bool? get confirmed => _confirmed;
+
+  String? get foilingType => _foilingType;
+
+  String? get ordering => _ordering;
 
   Future<void> initialize() async {
     await loadFoilingPlates(resetPage: true);
   }
 
-  Future<void> loadFoilingPlates({bool resetPage = false}) => loadItems(resetPage: resetPage);
+  Future<void> loadFoilingPlates({bool resetPage = false}) =>
+      loadItems(resetPage: resetPage);
+
+  void setConfirmed(bool? value) {
+    _confirmed = value;
+    loadItems(resetPage: true);
+  }
+
+  void setFoilingType(String? value) {
+    _foilingType = value;
+    loadItems(resetPage: true);
+  }
+
+  void setOrdering(String? value) {
+    _ordering = value;
+    loadItems(resetPage: true);
+  }
 
   @override
   Future<PageData<FoilingPlate>> fetchPage({
@@ -22,7 +48,14 @@ class FoilingPlateViewModel extends PaginatedViewModel<FoilingPlate> {
     required int pageSize,
     String? search,
   }) {
-    return _repository.getFoilingPlates(page: page, pageSize: pageSize, search: search);
+    return _repository.getFoilingPlates(
+      page: page,
+      pageSize: pageSize,
+      search: search,
+      confirmed: _confirmed,
+      foilingType: _foilingType,
+      ordering: _ordering,
+    );
   }
 
   Future<FoilingPlate> createFoilingPlate(FoilingPlate plate) async {
@@ -46,8 +79,18 @@ class FoilingPlateViewModel extends PaginatedViewModel<FoilingPlate> {
     await loadItems();
   }
 
-  Future<FoilingPlateImage> uploadFoilingPlateImage(int plateId, MultipartFile imageFile, {int sortOrder = 0, String? description}) async {
-    return await _repository.uploadFoilingPlateImage(plateId, imageFile, sortOrder: sortOrder, description: description);
+  Future<FoilingPlateImage> uploadFoilingPlateImage(
+    int plateId,
+    MultipartFile imageFile, {
+    int sortOrder = 0,
+    String? description,
+  }) async {
+    return await _repository.uploadFoilingPlateImage(
+      plateId,
+      imageFile,
+      sortOrder: sortOrder,
+      description: description,
+    );
   }
 
   Future<void> deleteFoilingPlateImage(int plateId, int imageId) async {

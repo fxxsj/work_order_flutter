@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
@@ -18,8 +19,11 @@ class FoilingPlateListEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FeatureEntry<FoilingPlateApiService, FoilingPlateRepository,
-        FoilingPlateViewModel>(
+    return FeatureEntry<
+      FoilingPlateApiService,
+      FoilingPlateRepository,
+      FoilingPlateViewModel
+    >(
       createService: (context) =>
           FoilingPlateApiService(context.read<ApiClient>()),
       createRepository: (context) =>
@@ -56,28 +60,28 @@ class FoilingPlateListPage extends StatelessWidget {
 
   static const CrudListConfig<FoilingPlate, FoilingPlateViewModel> _config =
       CrudListConfig(
-    searchHintText: '搜索烫金版编码、名称、尺寸、材质',
-    emptyText: '暂无烫金版数据',
-    emptyIcon: Icons.auto_fix_high_outlined,
-    loadItems: _loadFoilingPlates,
-    titleBuilder: _titleText,
-    subtitleBuilder: _subtitleText,
-    summaryChipsBuilder: _summaryChips,
-    summaryFieldsBuilder: _summaryFields,
-    headerActionsBuilder: _headerActions,
-    rowActionsBuilder: _rowActions,
-    columns: [
-      CrudTableColumn(label: '烫金版', cellBuilder: _buildNameCell),
-      CrudTableColumn(label: '编码', cellBuilder: _buildCodeCell),
-      CrudTableColumn(label: '类型', cellBuilder: _buildTypeCell),
-      CrudTableColumn(label: '尺寸', cellBuilder: _buildSizeCell),
-      CrudTableColumn(label: '材质', cellBuilder: _buildMaterialCell),
-      CrudTableColumn(label: '厚度', cellBuilder: _buildThicknessCell),
-      CrudTableColumn(label: '确认状态', cellBuilder: _buildConfirmedCell),
-      CrudTableColumn(label: '包含产品', cellBuilder: _buildProductsCell),
-      CrudTableColumn(label: '创建时间', cellBuilder: _buildCreatedAtCell),
-    ],
-  );
+        searchHintText: '搜索烫金版编码、名称、尺寸、材质',
+        emptyText: '暂无烫金版数据',
+        emptyIcon: Icons.auto_fix_high_outlined,
+        loadItems: _loadFoilingPlates,
+        titleBuilder: _titleText,
+        subtitleBuilder: _subtitleText,
+        summaryChipsBuilder: _summaryChips,
+        summaryFieldsBuilder: _summaryFields,
+        headerActionsBuilder: _headerActions,
+        rowActionsBuilder: _rowActions,
+        columns: [
+          CrudTableColumn(label: '烫金版', cellBuilder: _buildNameCell),
+          CrudTableColumn(label: '编码', cellBuilder: _buildCodeCell),
+          CrudTableColumn(label: '类型', cellBuilder: _buildTypeCell),
+          CrudTableColumn(label: '尺寸', cellBuilder: _buildSizeCell),
+          CrudTableColumn(label: '材质', cellBuilder: _buildMaterialCell),
+          CrudTableColumn(label: '厚度', cellBuilder: _buildThicknessCell),
+          CrudTableColumn(label: '确认状态', cellBuilder: _buildConfirmedCell),
+          CrudTableColumn(label: '包含产品', cellBuilder: _buildProductsCell),
+          CrudTableColumn(label: '创建时间', cellBuilder: _buildCreatedAtCell),
+        ],
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -156,6 +160,79 @@ class FoilingPlateListPage extends StatelessWidget {
     FoilingPlateViewModel viewModel,
   ) {
     return [
+      SizedBox(
+        width: 112,
+        child: AppSelect<String>(
+          options: const [
+            AppDropdownOption(value: '', label: '全部状态'),
+            AppDropdownOption(value: 'true', label: '已确认'),
+            AppDropdownOption(value: 'false', label: '待确认'),
+          ],
+          value: viewModel.confirmed == null
+              ? ''
+              : viewModel.confirmed == true
+              ? 'true'
+              : 'false',
+          onChanged: (value) {
+            if (value == null || value.isEmpty) {
+              viewModel.setConfirmed(null);
+            } else {
+              viewModel.setConfirmed(value == 'true');
+            }
+          },
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
+      SizedBox(
+        width: 112,
+        child: AppSelect<String>(
+          options: const [
+            AppDropdownOption(value: '', label: '全部类型'),
+            AppDropdownOption(value: 'gold', label: '烫金'),
+            AppDropdownOption(value: 'silver', label: '烫银'),
+          ],
+          value: viewModel.foilingType ?? '',
+          onChanged: (value) => viewModel.setFoilingType(
+            value == null || value.isEmpty ? null : value,
+          ),
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
+      SizedBox(
+        width: 132,
+        child: AppSelect<String>(
+          options: const [
+            AppDropdownOption(value: '-created_at', label: '最新创建'),
+            AppDropdownOption(value: 'created_at', label: '最早创建'),
+            AppDropdownOption(value: 'code', label: '编码升序'),
+            AppDropdownOption(value: '-code', label: '编码降序'),
+            AppDropdownOption(value: 'name', label: '名称升序'),
+            AppDropdownOption(value: '-name', label: '名称降序'),
+            AppDropdownOption(value: 'foiling_type', label: '类型升序'),
+            AppDropdownOption(value: 'confirmed', label: '状态升序'),
+          ],
+          value: viewModel.ordering ?? '-created_at',
+          onChanged: (value) {
+            if (value != null) viewModel.setOrdering(value);
+          },
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
       PageActionButton.filled(
         onPressed: () => _openEditPage(context, viewModel, null),
         icon: const Icon(Icons.add),
@@ -210,40 +287,27 @@ class FoilingPlateListPage extends StatelessWidget {
     return _buildBodyText(context, CrudValueFormatter.text(plate.material));
   }
 
-  static Widget _buildThicknessCell(
-    BuildContext context,
-    FoilingPlate plate,
-  ) {
+  static Widget _buildThicknessCell(BuildContext context, FoilingPlate plate) {
     return _buildBodyText(context, CrudValueFormatter.text(plate.thickness));
   }
 
-  static Widget _buildConfirmedCell(
-    BuildContext context,
-    FoilingPlate plate,
-  ) {
+  static Widget _buildConfirmedCell(BuildContext context, FoilingPlate plate) {
     return _buildBodyText(context, _confirmedText(plate));
   }
 
-  static Widget _buildProductsCell(
-    BuildContext context,
-    FoilingPlate plate,
-  ) {
+  static Widget _buildProductsCell(BuildContext context, FoilingPlate plate) {
     return _buildBodyText(context, _productSummary(plate.products));
   }
 
-  static Widget _buildCreatedAtCell(
-    BuildContext context,
-    FoilingPlate plate,
-  ) {
+  static Widget _buildCreatedAtCell(BuildContext context, FoilingPlate plate) {
     return _buildBodyText(
-        context, CrudValueFormatter.dateTime(plate.createdAt));
+      context,
+      CrudValueFormatter.dateTime(plate.createdAt),
+    );
   }
 
   static Widget _buildBodyText(BuildContext context, String value) {
-    return Text(
-      value,
-      style: Theme.of(context).textTheme.bodySmall,
-    );
+    return Text(value, style: Theme.of(context).textTheme.bodySmall);
   }
 
   static String _titleText(FoilingPlate plate) {
@@ -294,10 +358,7 @@ class FoilingPlateListPage extends StatelessWidget {
         label: '编码',
         value: CrudValueFormatter.text(plate.code),
       ),
-      CrudSummaryFieldData(
-        label: '类型',
-        value: _typeText(plate),
-      ),
+      CrudSummaryFieldData(label: '类型', value: _typeText(plate)),
       CrudSummaryFieldData(
         label: '尺寸',
         value: CrudValueFormatter.text(plate.size),
@@ -310,9 +371,14 @@ class FoilingPlateListPage extends StatelessWidget {
         label: '厚度',
         value: CrudValueFormatter.text(plate.thickness),
       ),
+      CrudSummaryFieldData(label: '确认状态', value: _confirmedText(plate)),
       CrudSummaryFieldData(
-        label: '确认状态',
-        value: _confirmedText(plate),
+        label: '确认人',
+        value: CrudValueFormatter.text(plate.confirmedByName),
+      ),
+      CrudSummaryFieldData(
+        label: '确认时间',
+        value: CrudValueFormatter.dateTime(plate.confirmedAt),
       ),
       CrudSummaryFieldData(
         label: '包含产品',
@@ -325,6 +391,10 @@ class FoilingPlateListPage extends StatelessWidget {
       CrudSummaryFieldData(
         label: '创建时间',
         value: CrudValueFormatter.dateTime(plate.createdAt),
+      ),
+      CrudSummaryFieldData(
+        label: '更新时间',
+        value: CrudValueFormatter.dateTime(plate.updatedAt),
       ),
     ];
   }

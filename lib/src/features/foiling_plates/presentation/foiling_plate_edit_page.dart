@@ -33,10 +33,7 @@ Future<bool> showFoilingPlateEditDrawer(
     desktopWidth: LayoutTokens.pageWidthXwide,
     child: ChangeNotifierProvider<FoilingPlateViewModel>.value(
       value: viewModel,
-      child: FoilingPlateEditPage(
-        plate: plate,
-        onSaved: () => saved = true,
-      ),
+      child: FoilingPlateEditPage(plate: plate, onSaved: () => saved = true),
     ),
   );
   return saved;
@@ -71,6 +68,12 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
   static const String _submitText = '保存';
   static const String _submitErrorText = '操作失败: ';
   static const String _nameRequiredText = '请输入烫金版名称';
+  static const String _nameLengthText = '烫金版名称不能超过200个字符';
+  static const String _codeLengthText = '烫金版编码不能超过50个字符';
+  static const String _sizeLengthText = '尺寸不能超过100个字符';
+  static const String _materialLengthText = '材质不能超过100个字符';
+  static const String _thicknessLengthText = '厚度不能超过50个字符';
+  static const String _quantityInvalidText = '数量必须大于0';
   static const String _basicSectionTitle = '基本信息';
   static const String _extraSectionTitle = '补充信息';
 
@@ -157,10 +160,18 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
   }
 
   void _addProductItem() {
+    if (_plate?.confirmed == true) {
+      ToastUtil.showError('已确认的烫金版不允许修改包含产品');
+      return;
+    }
     setState(() => _productItems.add(_PlateProductItem(quantity: 1)));
   }
 
   void _removeProductItem(int index) {
+    if (_plate?.confirmed == true) {
+      ToastUtil.showError('已确认的烫金版不允许修改包含产品');
+      return;
+    }
     setState(() {
       _productItems[index].dispose();
       _productItems.removeAt(index);
@@ -198,7 +209,8 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
         ..removeWhere((item) => item.id == option.id)
         ..add(option)
         ..sort(
-            (left, right) => left.displayLabel.compareTo(right.displayLabel));
+          (left, right) => left.displayLabel.compareTo(right.displayLabel),
+        );
     });
     ToastUtil.showSuccess('产品已新增');
     return option;
@@ -218,6 +230,32 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
 
   Future<FoilingPlate> _persistPlate(FoilingPlateViewModel viewModel) async {
     final currentPlate = _plate;
+    final code = _codeController.text.trim();
+    final name = _nameController.text.trim();
+    final size = _sizeController.text.trim();
+    final material = _materialController.text.trim();
+    final thickness = _thicknessController.text.trim();
+    final notes = _notesController.text.trim();
+
+    if (name.isEmpty) {
+      throw Exception(_nameRequiredText);
+    }
+    if (name.length > 200) {
+      throw Exception(_nameLengthText);
+    }
+    if (code.length > 50) {
+      throw Exception(_codeLengthText);
+    }
+    if (size.length > 100) {
+      throw Exception(_sizeLengthText);
+    }
+    if (material.length > 100) {
+      throw Exception(_materialLengthText);
+    }
+    if (thickness.length > 50) {
+      throw Exception(_thicknessLengthText);
+    }
+
     final products = _productItems
         .where((item) => item.productId != null)
         .map(
@@ -228,22 +266,26 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
           ),
         )
         .toList();
+    if (products.any((item) => (item.quantity ?? 0) < 1)) {
+      throw Exception(_quantityInvalidText);
+    }
 
     final payload = FoilingPlate(
       id: currentPlate?.id ?? 0,
-      code: _codeController.text.trim().isEmpty
-          ? null
-          : _codeController.text.trim(),
-      name: _nameController.text.trim(),
+      code: code.isEmpty ? null : code,
+      name: name,
       foilingType: _foilingType,
-      size: _sizeController.text.trim(),
-      material: _materialController.text.trim(),
-      thickness: _thicknessController.text.trim(),
-      notes: _notesController.text.trim(),
+      size: size,
+      material: material,
+      thickness: thickness,
+      notes: notes,
       confirmed: currentPlate?.confirmed ?? false,
+      confirmedByName: currentPlate?.confirmedByName,
+      confirmedAt: currentPlate?.confirmedAt,
       products: products,
       images: _images,
       createdAt: currentPlate?.createdAt,
+      updatedAt: currentPlate?.updatedAt,
     );
 
     final saved = currentPlate == null
@@ -256,6 +298,7 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
   }
 
   Widget _buildProductSection(BuildContext context) {
+    final isConfirmed = _plate?.confirmed == true;
     final theme = Theme.of(context);
     final sectionSpacing = LayoutTokens.formSectionSpacing(context);
     final colors = theme.extension<AppColors>();
@@ -268,26 +311,27 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
         : Column(
             children: List.generate(_productItems.length, (index) {
               final item = _productItems[index];
-              final productOptions = _productOptions
-                  .map(
-                    (product) => AppDropdownOption<int>(
-                      value: product.id,
-                      label: product.displayLabel,
-                    ),
-                  )
-                  .toList()
-                ..add(
-                  AppDropdownOption<int>(
-                    value: -1,
-                    label: '新增产品',
-                    icon: Icons.add,
-                    onSelected: () async {
-                      final created = await _handleCreateProduct();
-                      if (created == null || !mounted) return;
-                      setState(() => item.productId = created.id);
-                    },
-                  ),
-                );
+              final productOptions =
+                  _productOptions
+                      .map(
+                        (product) => AppDropdownOption<int>(
+                          value: product.id,
+                          label: product.displayLabel,
+                        ),
+                      )
+                      .toList()
+                    ..add(
+                      AppDropdownOption<int>(
+                        value: -1,
+                        label: '新增产品',
+                        icon: Icons.add,
+                        onSelected: () async {
+                          final created = await _handleCreateProduct();
+                          if (created == null || !mounted) return;
+                          setState(() => item.productId = created.id);
+                        },
+                      ),
+                    );
               return Padding(
                 padding: EdgeInsets.only(bottom: sectionSpacing),
                 child: Row(
@@ -296,17 +340,21 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
                       flex: 3,
                       child: AppSelect<int>(
                         value: item.productId,
-                        decoration:
-                            const InputDecoration(labelText: _productLabel),
+                        decoration: const InputDecoration(
+                          labelText: _productLabel,
+                        ),
                         options: productOptions,
-                        selectHintText:
-                            _productOptions.isEmpty ? '新增产品' : '请选择',
-                        onChanged: (value) {
-                          setState(() => item.productId = value);
-                        },
+                        selectHintText: _productOptions.isEmpty
+                            ? '新增产品'
+                            : '请选择',
+                        onChanged: isConfirmed
+                            ? null
+                            : (value) {
+                                setState(() => item.productId = value);
+                              },
                       ),
                     ),
-                    if (_productOptions.isEmpty)
+                    if (_productOptions.isEmpty && !isConfirmed)
                       Padding(
                         padding: EdgeInsets.only(left: LayoutTokens.gapSm),
                         child: TextButton.icon(
@@ -324,6 +372,14 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
                       child: CrudFieldConfig.number(
                         label: _quantityLabel,
                         controller: item.quantityController,
+                        enabled: !isConfirmed,
+                        validator: (value) {
+                          final quantity = int.tryParse(value?.trim() ?? '');
+                          if (quantity == null || quantity < 1) {
+                            return _quantityInvalidText;
+                          }
+                          return null;
+                        },
                       ).build(context),
                     ),
                     SizedBox(width: LayoutTokens.gapSm),
@@ -333,7 +389,9 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
                         Icons.delete_outline,
                         color: theme.colorScheme.error,
                       ),
-                      onPressed: () => _removeProductItem(index),
+                      onPressed: isConfirmed
+                          ? null
+                          : () => _removeProductItem(index),
                     ),
                   ],
                 ),
@@ -352,7 +410,7 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
         Align(
           alignment: Alignment.centerLeft,
           child: PageActionButton.outlined(
-            onPressed: _addProductItem,
+            onPressed: isConfirmed ? null : _addProductItem,
             icon: const Icon(Icons.add, size: 16),
             label: _addProductText,
           ),
@@ -362,9 +420,10 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
   }
 
   Widget _buildImageSection(BuildContext context) {
+    final isConfirmed = _plate?.confirmed == true;
     return ImageGalleryUploadSection<FoilingPlateImage>(
       images: _images,
-      canUpload: true,
+      canUpload: !isConfirmed,
       uploading: _uploadingImage,
       maxCount: _maxImageCount,
       limitHintText: '支持 JPG、PNG、WebP、GIF，单张不超过 10MB，最多 $_maxImageCount 张',
@@ -380,6 +439,10 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
   }
 
   Future<void> _pickAndUploadImage(FoilingPlateViewModel viewModel) async {
+    if (_plate?.confirmed == true) {
+      ToastUtil.showError('已确认的烫金版不允许修改图片');
+      return;
+    }
     if (_images.length >= _maxImageCount) {
       ToastUtil.showError('图片最多上传 $_maxImageCount 张');
       return;
@@ -413,9 +476,15 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
   }
 
   Future<void> _removeImage(
-      FoilingPlateViewModel viewModel, FoilingPlateImage image) async {
+    FoilingPlateViewModel viewModel,
+    FoilingPlateImage image,
+  ) async {
     final plate = _plate;
     if (plate == null) return;
+    if (plate.confirmed) {
+      ToastUtil.showError('已确认的烫金版不允许修改图片');
+      return;
+    }
     try {
       await viewModel.deleteFoilingPlateImage(plate.id, image.id);
       if (mounted) {
@@ -449,6 +518,12 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
                 controller: _codeController,
                 enabled: !isConfirmed,
                 hintText: '留空则系统自动生成',
+                validator: (value) {
+                  if ((value?.trim().length ?? 0) > 50) {
+                    return _codeLengthText;
+                  }
+                  return null;
+                },
               ),
               CrudFieldConfig.text(
                 label: _nameLabel,
@@ -458,6 +533,9 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
                   final text = value?.trim() ?? '';
                   if (text.isEmpty) {
                     return _nameRequiredText;
+                  }
+                  if (text.length > 200) {
+                    return _nameLengthText;
                   }
                   return null;
                 },
@@ -469,15 +547,24 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
                   AppDropdownOption(value: 'gold', label: '烫金'),
                   AppDropdownOption(value: 'silver', label: '烫银'),
                 ],
-                onChanged: (value) {
-                  if (value == null) return;
-                  setState(() => _foilingType = value as String);
-                },
+                enabled: !isConfirmed,
+                onChanged: isConfirmed
+                    ? null
+                    : (value) {
+                        if (value == null) return;
+                        setState(() => _foilingType = value as String);
+                      },
               ),
               CrudFieldConfig.text(
                 label: _sizeLabel,
                 controller: _sizeController,
                 enabled: !isConfirmed,
+                validator: (value) {
+                  if ((value?.trim().length ?? 0) > 100) {
+                    return _sizeLengthText;
+                  }
+                  return null;
+                },
               ),
             ],
           ),
@@ -489,11 +576,23 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
                 label: _materialLabel,
                 controller: _materialController,
                 enabled: !isConfirmed,
+                validator: (value) {
+                  if ((value?.trim().length ?? 0) > 100) {
+                    return _materialLengthText;
+                  }
+                  return null;
+                },
               ),
               CrudFieldConfig.text(
                 label: _thicknessLabel,
                 controller: _thicknessController,
                 enabled: !isConfirmed,
+                validator: (value) {
+                  if ((value?.trim().length ?? 0) > 50) {
+                    return _thicknessLengthText;
+                  }
+                  return null;
+                },
               ),
               CrudFieldConfig.textarea(
                 label: _notesLabel,
@@ -505,20 +604,12 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
           CrudFormSection(
             title: _productSectionTitle,
             column: 0,
-            fields: [
-              CrudFieldConfig.custom(
-                builder: _buildProductSection,
-              ),
-            ],
+            fields: [CrudFieldConfig.custom(builder: _buildProductSection)],
           ),
           CrudFormSection(
             title: _imageSectionTitle,
             column: 0,
-            fields: [
-              CrudFieldConfig.custom(
-                builder: _buildImageSection,
-              ),
-            ],
+            fields: [CrudFieldConfig.custom(builder: _buildImageSection)],
           ),
         ],
         onSave: (context, viewModel, item) => _handleSubmit(viewModel),
@@ -529,7 +620,7 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
 
 class _PlateProductItem {
   _PlateProductItem({this.productId, int quantity = 1})
-      : quantityController = TextEditingController(text: quantity.toString());
+    : quantityController = TextEditingController(text: quantity.toString());
 
   int? productId;
   final TextEditingController quantityController;

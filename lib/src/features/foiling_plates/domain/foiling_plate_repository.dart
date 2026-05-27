@@ -7,6 +7,9 @@ abstract class FoilingPlateRepository {
     required int page,
     required int pageSize,
     String? search,
+    bool? confirmed,
+    String? foilingType,
+    String? ordering,
   });
 
   Future<FoilingPlate> createFoilingPlate(FoilingPlate plate);
@@ -17,7 +20,12 @@ abstract class FoilingPlateRepository {
 
   Future<void> confirmFoilingPlate(int id);
 
-  Future<FoilingPlateImage> uploadFoilingPlateImage(int plateId, MultipartFile imageFile, {int sortOrder = 0, String? description});
+  Future<FoilingPlateImage> uploadFoilingPlateImage(
+    int plateId,
+    MultipartFile imageFile, {
+    int sortOrder = 0,
+    String? description,
+  });
 
   Future<void> deleteFoilingPlateImage(int plateId, int imageId);
 }
