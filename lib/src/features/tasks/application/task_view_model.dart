@@ -13,6 +13,7 @@ class TaskViewModel extends PaginatedViewModel<Task> {
   int? _departmentFilterId;
   int? _processFilterId;
   String? _todoFilter;
+  String _ordering = '-created_at';
   Map<String, dynamic> _summary = const {};
   int _summaryRequestToken = 0;
 
@@ -31,6 +32,7 @@ class TaskViewModel extends PaginatedViewModel<Task> {
   int? get departmentFilterId => _departmentFilterId;
   int? get processFilterId => _processFilterId;
   String? get todoFilter => _todoFilter;
+  String get ordering => _ordering;
 
   void setStatusFilter(String? value) {
     _statusFilter = value?.trim().isEmpty == true ? null : value;
@@ -52,6 +54,21 @@ class TaskViewModel extends PaginatedViewModel<Task> {
     _todoFilter = value?.trim().isEmpty == true ? null : value;
   }
 
+  void setOrdering(String? value) {
+    final trimmed = value?.trim() ?? '';
+    _ordering = trimmed.isEmpty ? '-created_at' : trimmed;
+  }
+
+  void resetFilters() {
+    setSearchText('');
+    _statusFilter = null;
+    _priorityFilter = null;
+    _departmentFilterId = null;
+    _processFilterId = null;
+    _todoFilter = null;
+    _ordering = '-created_at';
+  }
+
   Future<void> applyRoutePrefill({
     String? search,
     String? status,
@@ -59,15 +76,19 @@ class TaskViewModel extends PaginatedViewModel<Task> {
     int? departmentId,
     int? processId,
     String? todo,
+    String? ordering,
   }) async {
     setSearchText(search?.trim() ?? '');
     _statusFilter = status?.trim().isEmpty == true ? null : status?.trim();
-    _priorityFilter =
-        priority?.trim().isEmpty == true ? null : priority?.trim();
-    _departmentFilterId =
-        departmentId != null && departmentId > 0 ? departmentId : null;
+    _priorityFilter = priority?.trim().isEmpty == true
+        ? null
+        : priority?.trim();
+    _departmentFilterId = departmentId != null && departmentId > 0
+        ? departmentId
+        : null;
     _processFilterId = processId != null && processId > 0 ? processId : null;
     _todoFilter = todo?.trim().isEmpty == true ? null : todo?.trim();
+    setOrdering(ordering);
     await loadTasks(resetPage: true);
   }
 
@@ -105,6 +126,7 @@ class TaskViewModel extends PaginatedViewModel<Task> {
       priority: _priorityFilter,
       departmentId: _departmentFilterId,
       processId: _processFilterId,
+      ordering: _ordering,
       todo: _todoFilter,
     );
     return PageData(

@@ -27,10 +27,7 @@ class TaskApiService {
     String? ordering,
     String? todo,
   }) async {
-    final params = <String, dynamic>{
-      'page': page,
-      'page_size': pageSize,
-    };
+    final params = <String, dynamic>{'page': page, 'page_size': pageSize};
     final trimmed = search?.trim();
     if (trimmed != null && trimmed.isNotEmpty) {
       params['search'] = trimmed;
@@ -51,7 +48,7 @@ class TaskApiService {
       params['assigned_operator'] = assignedOperatorId;
     }
     if (processId != null && processId > 0) {
-      params['work_order_process'] = processId;
+      params['process'] = processId;
     }
     final trimmedWorkOrder = workOrderNumber?.trim();
     if (trimmedWorkOrder != null && trimmedWorkOrder.isNotEmpty) {
@@ -79,20 +76,28 @@ class TaskApiService {
       params['todo'] = todo.trim();
     }
 
-    final response =
-        await _client.get('/workorder-tasks/', queryParameters: params);
+    final response = await _client.get(
+      '/workorder-tasks/',
+      queryParameters: params,
+    );
     final payload = response.data;
     if (payload is Map<String, dynamic>) {
       final results = payload['results'];
       final list = results is List
           ? results
-              .whereType<Map>()
-              .map((item) => TaskDto.fromJson(Map<String, dynamic>.from(item)))
-              .toList()
+                .whereType<Map>()
+                .map(
+                  (item) => TaskDto.fromJson(Map<String, dynamic>.from(item)),
+                )
+                .toList()
           : <TaskDto>[];
       final total = toInt(payload['count']) ?? list.length;
       return TaskPageDto(
-          items: list, total: total, page: page, pageSize: pageSize);
+        items: list,
+        total: total,
+        page: page,
+        pageSize: pageSize,
+      );
     }
     if (payload is List) {
       final list = payload
@@ -100,7 +105,11 @@ class TaskApiService {
           .map((item) => TaskDto.fromJson(Map<String, dynamic>.from(item)))
           .toList();
       return TaskPageDto(
-          items: list, total: list.length, page: 1, pageSize: list.length);
+        items: list,
+        total: list.length,
+        page: 1,
+        pageSize: list.length,
+      );
     }
     throw _unexpectedPayload('任务列表', payload);
   }
@@ -128,51 +137,66 @@ class TaskApiService {
       params['assigned_department'] = departmentId;
     }
     if (processId != null && processId > 0) {
-      params['work_order_process'] = processId;
+      params['process'] = processId;
     }
     if (todo != null && todo.trim().isNotEmpty) {
       params['todo'] = todo.trim();
     }
-    final response =
-        await _client.get('/workorder-tasks/summary/', queryParameters: params);
+    final response = await _client.get(
+      '/workorder-tasks/summary/',
+      queryParameters: params,
+    );
     return _requireMap('任务汇总', response.data);
   }
 
   Future<Map<String, dynamic>> complete(
-      int id, Map<String, dynamic> payload) async {
-    final response =
-        await _client.post('/workorder-tasks/$id/complete/', data: payload);
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
+    final response = await _client.post(
+      '/workorder-tasks/$id/complete/',
+      data: payload,
+    );
     return _requireMap('完成任务', response.data);
   }
 
   Future<Map<String, dynamic>> updateQuantity(
-      int id, Map<String, dynamic> payload) async {
-    final response = await _client.post('/workorder-tasks/$id/update_quantity/',
-        data: payload);
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
+    final response = await _client.post(
+      '/workorder-tasks/$id/update_quantity/',
+      data: payload,
+    );
     return _requireMap('更新任务进度', response.data);
   }
 
   Future<Map<String, dynamic>> assign(
-      int id, Map<String, dynamic> payload) async {
-    final response =
-        await _client.post('/workorder-tasks/$id/assign/', data: payload);
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
+    final response = await _client.post(
+      '/workorder-tasks/$id/assign/',
+      data: payload,
+    );
     return _requireMap('分派任务', response.data);
   }
 
-  Future<Map<String, dynamic>> assignToOperator(int id,
-      {required int operatorId, String? notes}) async {
+  Future<Map<String, dynamic>> assignToOperator(
+    int id, {
+    required int operatorId,
+    String? notes,
+  }) async {
     final response = await _client.post(
       '/workorder-tasks/$id/assign/',
-      data: {
-        'assigned_operator': operatorId,
-        'notes': notes ?? '',
-      },
+      data: {'assigned_operator': operatorId, 'notes': notes ?? ''},
     );
     return _requireMap('指派任务操作员', response.data);
   }
 
   Future<List<Map<String, dynamic>>> fetchDepartmentOperators(
-      int departmentId) async {
+    int departmentId,
+  ) async {
     final response = await _client.get(
       '/workorder-tasks/department-operators/',
       queryParameters: {'department_id': departmentId},
@@ -180,7 +204,9 @@ class TaskApiService {
     return _requireList('部门操作员列表', response.data);
   }
 
-  Future<List<Map<String, dynamic>>> fetchProcessDepartments(int processId) async {
+  Future<List<Map<String, dynamic>>> fetchProcessDepartments(
+    int processId,
+  ) async {
     final response = await _client.get(
       '/workorder-tasks/process-departments/',
       queryParameters: {'process_id': processId},
@@ -196,45 +222,64 @@ class TaskApiService {
     return _requireMap('认领任务', response.data);
   }
 
-  Future<Map<String, dynamic>> fetchClaimableTasks(
-      {Map<String, dynamic>? params}) async {
-    final response = await _client.get('/workorder-tasks/claimable/',
-        queryParameters: params);
+  Future<Map<String, dynamic>> fetchClaimableTasks({
+    Map<String, dynamic>? params,
+  }) async {
+    final response = await _client.get(
+      '/workorder-tasks/claimable/',
+      queryParameters: params,
+    );
     return _requireMap('可认领任务', response.data);
   }
 
-  Future<Map<String, dynamic>> fetchOperatorCenterData(
-      {Map<String, dynamic>? params}) async {
-    final response = await _client.get('/workorder-tasks/operator_center/',
-        queryParameters: params);
+  Future<Map<String, dynamic>> fetchOperatorCenterData({
+    Map<String, dynamic>? params,
+  }) async {
+    final response = await _client.get(
+      '/workorder-tasks/operator_center/',
+      queryParameters: params,
+    );
     return _requireMap('操作员工作台', response.data);
   }
 
   Future<Map<String, dynamic>> splitTask(
-      int id, Map<String, dynamic> payload) async {
-    final response =
-        await _client.post('/workorder-tasks/$id/split/', data: payload);
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
+    final response = await _client.post(
+      '/workorder-tasks/$id/split/',
+      data: payload,
+    );
     return _requireMap('拆分任务', response.data);
   }
 
-  Future<Map<String, dynamic>> fetchCollaborationStats(
-      {Map<String, dynamic>? params}) async {
-    final response = await _client.get('/workorder-tasks/collaboration_stats/',
-        queryParameters: params);
+  Future<Map<String, dynamic>> fetchCollaborationStats({
+    Map<String, dynamic>? params,
+  }) async {
+    final response = await _client.get(
+      '/workorder-tasks/collaboration_stats/',
+      queryParameters: params,
+    );
     return _requireMap('任务协作统计', response.data);
   }
 
-  Future<Map<String, dynamic>> fetchDepartmentWorkload(
-      {Map<String, dynamic>? params}) async {
-    final response = await _client.get('/workorder-tasks/department_workload/',
-        queryParameters: params);
+  Future<Map<String, dynamic>> fetchDepartmentWorkload({
+    Map<String, dynamic>? params,
+  }) async {
+    final response = await _client.get(
+      '/workorder-tasks/department_workload/',
+      queryParameters: params,
+    );
     return _requireMap('部门任务负载', response.data);
   }
 
-  Future<Map<String, dynamic>> fetchAssignmentHistory(
-      {Map<String, dynamic>? params}) async {
-    final response = await _client.get('/workorder-tasks/assignment_history/',
-        queryParameters: params);
+  Future<Map<String, dynamic>> fetchAssignmentHistory({
+    Map<String, dynamic>? params,
+  }) async {
+    final response = await _client.get(
+      '/workorder-tasks/assignment_history/',
+      queryParameters: params,
+    );
     return _requireMap('任务分派历史', response.data);
   }
 
@@ -259,7 +304,8 @@ class TaskApiService {
       data: {
         'task_ids': taskIds ?? <int>[],
         'filters': filters ?? <String, dynamic>{},
-        'columns': columns ??
+        'columns':
+            columns ??
             const [
               'id',
               'work_order_number',
@@ -282,8 +328,10 @@ class TaskApiService {
   }
 
   Future<Map<String, dynamic>> batchAssign(Map<String, dynamic> payload) async {
-    final response =
-        await _client.post('/workorder-tasks/batch_assign/', data: payload);
+    final response = await _client.post(
+      '/workorder-tasks/batch_assign/',
+      data: payload,
+    );
     return _requireMap('批量分派任务', response.data);
   }
 
@@ -315,9 +363,6 @@ class TaskApiService {
   }
 
   ApiException _unexpectedPayload(String label, dynamic data) {
-    return ApiException(
-      message: '$label 响应格式异常',
-      data: data,
-    );
+    return ApiException(message: '$label 响应格式异常', data: data);
   }
 }

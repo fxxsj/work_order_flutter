@@ -31,6 +31,43 @@ abstract class Task with _$Task {
     double? productionQuantity,
     @JsonKey(name: 'quantity_completed', fromJson: _doubleOrNullFromJson)
     double? quantityCompleted,
+    @JsonKey(name: 'quantity_defective', fromJson: _doubleOrNullFromJson)
+    double? quantityDefective,
+    @JsonKey(name: 'auto_calculate_quantity', fromJson: _boolOrNullFromJson)
+    bool? autoCalculateQuantity,
+    @JsonKey(name: 'production_requirements', fromJson: _stringOrNullFromJson)
+    String? productionRequirements,
+    @JsonKey(name: 'material_purchase_status', fromJson: _stringOrNullFromJson)
+    String? materialPurchaseStatus,
+    @JsonKey(name: 'is_draft', fromJson: _boolOrNullFromJson) bool? isDraft,
+    @JsonKey(name: 'is_subtask', fromJson: _boolOrNullFromJson) bool? isSubtask,
+    @JsonKey(name: 'subtasks_count', fromJson: _intOrNullFromJson)
+    int? subtasksCount,
+    @JsonKey(name: 'parent_task_id', fromJson: _intOrNullFromJson)
+    int? parentTaskId,
+    @JsonKey(fromJson: _intOrNullFromJson) int? version,
+    @JsonKey(name: 'artwork_code', fromJson: _stringOrNullFromJson)
+    String? artworkCode,
+    @JsonKey(name: 'artwork_name', fromJson: _stringOrNullFromJson)
+    String? artworkName,
+    @JsonKey(name: 'die_code', fromJson: _stringOrNullFromJson) String? dieCode,
+    @JsonKey(name: 'die_name', fromJson: _stringOrNullFromJson) String? dieName,
+    @JsonKey(name: 'product_code', fromJson: _stringOrNullFromJson)
+    String? productCode,
+    @JsonKey(name: 'product_name', fromJson: _stringOrNullFromJson)
+    String? productName,
+    @JsonKey(name: 'material_code', fromJson: _stringOrNullFromJson)
+    String? materialCode,
+    @JsonKey(name: 'material_name', fromJson: _stringOrNullFromJson)
+    String? materialName,
+    @JsonKey(name: 'foiling_plate_code', fromJson: _stringOrNullFromJson)
+    String? foilingPlateCode,
+    @JsonKey(name: 'foiling_plate_name', fromJson: _stringOrNullFromJson)
+    String? foilingPlateName,
+    @JsonKey(name: 'embossing_plate_code', fromJson: _stringOrNullFromJson)
+    String? embossingPlateCode,
+    @JsonKey(name: 'embossing_plate_name', fromJson: _stringOrNullFromJson)
+    String? embossingPlateName,
     @JsonKey(
       name: 'work_order_id',
       readValue: _readWorkOrderId,
@@ -73,6 +110,10 @@ abstract class Task with _$Task {
       fromJson: _dateTimeOrNullFromJson,
     )
     DateTime? deliveryDate,
+    @JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson)
+    DateTime? createdAt,
+    @JsonKey(name: 'updated_at', fromJson: _dateTimeOrNullFromJson)
+    DateTime? updatedAt,
   }) = _Task;
 
   factory Task.fromJson(Map<String, dynamic> json) => _$TaskFromJson(json);
@@ -91,6 +132,15 @@ double? _doubleOrNullFromJson(Object? value) {
 String? _stringOrNullFromJson(Object? value) => toStringOrNull(value);
 
 DateTime? _dateTimeOrNullFromJson(Object? value) => toDateTime(value);
+
+bool? _boolOrNullFromJson(Object? value) {
+  if (value == null) return null;
+  if (value is bool) return value;
+  final text = value.toString().trim().toLowerCase();
+  if (text == 'true' || text == '1' || text == 'yes') return true;
+  if (text == 'false' || text == '0' || text == 'no') return false;
+  return null;
+}
 
 Object? _readWorkOrderId(Map json, String key) {
   return json[key] ?? _workOrderInfo(json)?['id'];

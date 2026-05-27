@@ -88,6 +88,7 @@ class _TaskListViewState extends State<_TaskListView> {
   String? _priorityFilter;
   int? _departmentFilterId;
   int? _processFilterId;
+  String _ordering = '-created_at';
 
   bool _loadingOptions = false;
   List<TaskDepartmentOption> _departments = [];
@@ -111,15 +112,21 @@ class _TaskListViewState extends State<_TaskListView> {
     final routeStatus = uri.queryParameters['status']?.trim() ?? '';
     final routePriority = uri.queryParameters['priority']?.trim() ?? '';
     final routeTodo = uri.queryParameters['todo']?.trim() ?? '';
-    final routeDepartmentId =
-        int.tryParse(uri.queryParameters['assigned_department'] ?? '');
-    final routeProcessId =
-        int.tryParse(uri.queryParameters['work_order_process'] ?? '');
+    final routeOrdering = uri.queryParameters['ordering']?.trim() ?? '';
+    final routeDepartmentId = int.tryParse(
+      uri.queryParameters['assigned_department'] ?? '',
+    );
+    final routeProcessId = int.tryParse(
+      uri.queryParameters['process'] ??
+          uri.queryParameters['work_order_process'] ??
+          '',
+    );
     final signature = [
       routeSearch,
       routeStatus,
       routePriority,
       routeTodo,
+      routeOrdering,
       routeDepartmentId?.toString() ?? '',
       routeProcessId?.toString() ?? '',
     ].join('|');
@@ -127,10 +134,12 @@ class _TaskListViewState extends State<_TaskListView> {
     if (_routeSignature == signature) return;
     _routeSignature = signature;
     _searchController.text = routeSearch;
-    final hasRouteFilter = routeSearch.isNotEmpty ||
+    final hasRouteFilter =
+        routeSearch.isNotEmpty ||
         routeStatus.isNotEmpty ||
         routePriority.isNotEmpty ||
         routeTodo.isNotEmpty ||
+        routeOrdering.isNotEmpty ||
         (routeDepartmentId != null && routeDepartmentId > 0) ||
         (routeProcessId != null && routeProcessId > 0);
     if (!hasRouteFilter && !hadRouteState) {
@@ -139,13 +148,14 @@ class _TaskListViewState extends State<_TaskListView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<TaskViewModel>().applyRoutePrefill(
-            search: routeSearch,
-            status: routeStatus,
-            priority: routePriority,
-            departmentId: routeDepartmentId,
-            processId: routeProcessId,
-            todo: routeTodo,
-          );
+        search: routeSearch,
+        status: routeStatus,
+        priority: routePriority,
+        departmentId: routeDepartmentId,
+        processId: routeProcessId,
+        todo: routeTodo,
+        ordering: routeOrdering,
+      );
     });
   }
 
@@ -174,7 +184,8 @@ class _TaskListViewState extends State<_TaskListView> {
       ..setStatusFilter(_statusFilter)
       ..setPriorityFilter(_priorityFilter)
       ..setDepartmentFilterId(_departmentFilterId)
-      ..setProcessFilterId(_processFilterId);
+      ..setProcessFilterId(_processFilterId)
+      ..setOrdering(_ordering);
     viewModel.loadTasks(resetPage: true);
   }
 
@@ -185,12 +196,9 @@ class _TaskListViewState extends State<_TaskListView> {
       _priorityFilter = null;
       _departmentFilterId = null;
       _processFilterId = null;
+      _ordering = '-created_at';
     });
-    viewModel
-      ..setStatusFilter(null)
-      ..setPriorityFilter(null)
-      ..setDepartmentFilterId(null)
-      ..setProcessFilterId(null);
+    viewModel.resetFilters();
     viewModel.loadTasks(resetPage: true);
   }
 
@@ -210,14 +218,18 @@ class _TaskListViewState extends State<_TaskListView> {
         if ((viewModel.departmentFilterId ?? 0) > 0)
           'assigned_department': viewModel.departmentFilterId,
         if ((viewModel.processFilterId ?? 0) > 0)
-          'work_order_process': viewModel.processFilterId,
+          'process': viewModel.processFilterId,
         if ((viewModel.todoFilter ?? '').isNotEmpty)
           'todo': viewModel.todoFilter,
+        if (viewModel.ordering.isNotEmpty) 'ordering': viewModel.ordering,
       };
       final result = await _supportService!.export(params);
-      final savedPath = await saveBytes(result.bytes, result.filename,
-          mimeType:
-              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      final savedPath = await saveBytes(
+        result.bytes,
+        result.filename,
+        mimeType:
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
       if (savedPath == null) {
         ToastUtil.showSuccess('导出已开始');
       } else {
@@ -264,6 +276,7 @@ class _TaskListViewState extends State<_TaskListView> {
         _priorityFilter = viewModel.priorityFilter;
         _departmentFilterId = viewModel.departmentFilterId;
         _processFilterId = viewModel.processFilterId;
+        _ordering = viewModel.ordering;
         return ListPageScaffold(
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
@@ -347,44 +360,52 @@ class _TaskListViewState extends State<_TaskListView> {
         DataColumn(label: Text('待办')),
         DataColumn(label: Text('操作')),
       ],
-      rows: tasks.map(
-        (task) {
-          final isCompleted = task.status == 'completed';
-          final isCancelled = task.status == 'cancelled';
-          final canUpdate = !(isCompleted || isCancelled);
-          final canComplete = !(isCompleted || isCancelled);
-          final source = TaskUiHelper.sourceSummary(task);
-          final quantity = TaskUiHelper.quantitySummary(task);
-          final deliveryDate = _formatDate(task.deliveryDate);
-          final deadlineRisk = TaskUiHelper.deadlineRiskText(task);
-          final followUp = TaskUiHelper.followUpText(task);
+      rows: tasks.map((task) {
+        final isCompleted = task.status == 'completed';
+        final isCancelled = task.status == 'cancelled';
+        final canUpdate = !(isCompleted || isCancelled);
+        final canComplete = !(isCompleted || isCancelled);
+        final source = TaskUiHelper.sourceSummary(task);
+        final quantity = TaskUiHelper.quantitySummary(task);
+        final deliveryDate = _formatDate(task.deliveryDate);
+        final deadlineRisk = TaskUiHelper.deadlineRiskText(task);
+        final followUp = TaskUiHelper.followUpText(task);
 
-          return DataRow(
-            cells: [
-              DataCell(Text(
+        return DataRow(
+          cells: [
+            DataCell(
+              Text(
                 _displayText(TaskUiHelper.title(task)),
                 style: theme.textTheme.bodyMedium,
-              )),
-              DataCell(Text(_displayText(source), style: textStyle)),
-              DataCell(Text(_displayText(task.processName), style: textStyle)),
-              DataCell(Text(_displayText(task.assignedDepartmentName),
-                  style: textStyle)),
-              DataCell(Text(_displayText(task.assignedOperatorName),
-                  style: textStyle)),
-              DataCell(Text(quantity, style: textStyle)),
-              DataCell(Text(TaskUiHelper.progressText(task), style: textStyle)),
-              DataCell(Text(
+              ),
+            ),
+            DataCell(Text(_displayText(source), style: textStyle)),
+            DataCell(Text(_displayText(task.processName), style: textStyle)),
+            DataCell(
+              Text(_displayText(task.assignedDepartmentName), style: textStyle),
+            ),
+            DataCell(
+              Text(_displayText(task.assignedOperatorName), style: textStyle),
+            ),
+            DataCell(Text(quantity, style: textStyle)),
+            DataCell(Text(TaskUiHelper.progressText(task), style: textStyle)),
+            DataCell(
+              Text(
                 deadlineRisk == null
                     ? deliveryDate
                     : '$deliveryDate · $deadlineRisk',
                 style: textStyle,
-              )),
-              DataCell(Text(
+              ),
+            ),
+            DataCell(
+              Text(
                 task.statusDisplay ?? task.status ?? _emptyCellText,
                 style: textStyle,
-              )),
-              DataCell(Text(followUp, style: textStyle)),
-              DataCell(RowActionGroup(
+              ),
+            ),
+            DataCell(Text(followUp, style: textStyle)),
+            DataCell(
+              RowActionGroup(
                 actions: [
                   if (task.workOrderId != null)
                     RowAction(
@@ -410,11 +431,11 @@ class _TaskListViewState extends State<_TaskListView> {
                         _openAssignDialog(context, viewModel, task),
                   ),
                 ],
-              )),
-            ],
-          );
-        },
-      ).toList(),
+              ),
+            ),
+          ],
+        );
+      }).toList(),
     );
   }
 
@@ -438,20 +459,50 @@ class _TaskListViewState extends State<_TaskListView> {
     final departmentItems = [
       const AppDropdownOption<int?>(value: null, label: '全部部门'),
       ..._departments.map(
-        (item) => AppDropdownOption<int?>(
-          value: item.id,
-          label: item.name,
-        ),
+        (item) => AppDropdownOption<int?>(value: item.id, label: item.name),
       ),
     ];
     final processItems = [
       const AppDropdownOption<int?>(value: null, label: '全部工序'),
       ..._processes.map(
-        (item) => AppDropdownOption<int?>(
-          value: item.id,
-          label: item.name,
-        ),
+        (item) => AppDropdownOption<int?>(value: item.id, label: item.name),
       ),
+    ];
+    final orderingItems = const [
+      AppDropdownOption(value: '-created_at', label: '最新创建'),
+      AppDropdownOption(value: 'created_at', label: '最早创建'),
+      AppDropdownOption(
+        value: 'work_order_process__work_order__order_number',
+        label: '施工单号升序',
+      ),
+      AppDropdownOption(
+        value: '-work_order_process__work_order__order_number',
+        label: '施工单号降序',
+      ),
+      AppDropdownOption(
+        value: 'work_order_process__process__name',
+        label: '工序升序',
+      ),
+      AppDropdownOption(
+        value: '-work_order_process__process__name',
+        label: '工序降序',
+      ),
+      AppDropdownOption(value: 'assigned_department__name', label: '部门升序'),
+      AppDropdownOption(value: '-assigned_department__name', label: '部门降序'),
+      AppDropdownOption(
+        value: 'work_order_process__work_order__delivery_date',
+        label: '交期升序',
+      ),
+      AppDropdownOption(
+        value: '-work_order_process__work_order__delivery_date',
+        label: '交期降序',
+      ),
+      AppDropdownOption(value: 'production_quantity', label: '数量升序'),
+      AppDropdownOption(value: '-production_quantity', label: '数量降序'),
+      AppDropdownOption(value: 'quantity_completed', label: '完成数升序'),
+      AppDropdownOption(value: '-quantity_completed', label: '完成数降序'),
+      AppDropdownOption(value: 'status', label: '状态升序'),
+      AppDropdownOption(value: '-status', label: '状态降序'),
     ];
 
     return PageHeaderBar(
@@ -462,12 +513,18 @@ class _TaskListViewState extends State<_TaskListView> {
       actions: LayoutBuilder(
         builder: (context, constraints) {
           final activeFilters = _activeFilterCount();
-          final overdueCount =
-              _summaryCount(viewModel.summary, 'overdue_count');
-          final dueSoonCount =
-              _summaryCount(viewModel.summary, 'due_soon_count');
-          final unassignedCount =
-              _summaryCount(viewModel.summary, 'unassigned_count');
+          final overdueCount = _summaryCount(
+            viewModel.summary,
+            'overdue_count',
+          );
+          final dueSoonCount = _summaryCount(
+            viewModel.summary,
+            'due_soon_count',
+          );
+          final unassignedCount = _summaryCount(
+            viewModel.summary,
+            'unassigned_count',
+          );
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -493,6 +550,7 @@ class _TaskListViewState extends State<_TaskListView> {
                 priorityItems: priorityItems,
                 departmentItems: departmentItems,
                 processItems: processItems,
+                orderingItems: orderingItems,
               ),
             );
           }
@@ -563,6 +621,7 @@ class _TaskListViewState extends State<_TaskListView> {
     required List<AppDropdownOption<String>> priorityItems,
     required List<AppDropdownOption<int?>> departmentItems,
     required List<AppDropdownOption<int?>> processItems,
+    required List<AppDropdownOption<String>> orderingItems,
   }) {
     return FilterPanelBody(
       bottomSpacing: LayoutTokens.formSectionSpacing(context),
@@ -606,6 +665,15 @@ class _TaskListViewState extends State<_TaskListView> {
             _applyFilters(viewModel);
           },
         ),
+        AppSelect<String>(
+          value: _ordering,
+          decoration: const InputDecoration(labelText: '排序'),
+          options: orderingItems,
+          onChanged: (value) {
+            setState(() => _ordering = value ?? '-created_at');
+            _applyFilters(viewModel);
+          },
+        ),
       ],
     );
   }
@@ -617,6 +685,7 @@ class _TaskListViewState extends State<_TaskListView> {
     if (_priorityFilter != null && _priorityFilter!.isNotEmpty) count += 1;
     if (_departmentFilterId != null) count += 1;
     if (_processFilterId != null) count += 1;
+    if (_ordering != '-created_at') count += 1;
     final todo = context.read<TaskViewModel>().todoFilter;
     if (todo != null && todo.isNotEmpty) count += 1;
     return count;
@@ -659,7 +728,10 @@ class _TaskListViewState extends State<_TaskListView> {
     }
     final processValue = processId ?? viewModel.processFilterId;
     if ((processValue ?? 0) > 0) {
-      query['work_order_process'] = processValue!.toString();
+      query['process'] = processValue!.toString();
+    }
+    if (_ordering.isNotEmpty && _ordering != '-created_at') {
+      query['ordering'] = _ordering;
     }
     if ((todo ?? '').trim().isNotEmpty) {
       query['todo'] = todo!.trim();
@@ -697,8 +769,12 @@ class _TaskListViewState extends State<_TaskListView> {
   }
 
   Widget _mobileRow(
-      BuildContext context, TextStyle? labelStyle, String label, String value,
-      {bool last = false}) {
+    BuildContext context,
+    TextStyle? labelStyle,
+    String label,
+    String value, {
+    bool last = false,
+  }) {
     final theme = Theme.of(context);
     final spacing = LayoutTokens.sectionSpacing(context) * 0.6;
     return Padding(
@@ -708,8 +784,11 @@ class _TaskListViewState extends State<_TaskListView> {
         children: [
           SizedBox(width: 72, child: Text(label, style: labelStyle)),
           Expanded(
-              child: Text(value.isEmpty ? _emptyCellText : value,
-                  style: theme.textTheme.bodyMedium)),
+            child: Text(
+              value.isEmpty ? _emptyCellText : value,
+              style: theme.textTheme.bodyMedium,
+            ),
+          ),
         ],
       ),
     );
@@ -794,9 +873,11 @@ class _TaskListViewState extends State<_TaskListView> {
                   ),
                   SizedBox(height: sectionSpacing),
                   Text(
-                    [customer, workOrder, process]
-                        .where((item) => item != _emptyCellText)
-                        .join(' · '),
+                    [
+                      customer,
+                      workOrder,
+                      process,
+                    ].where((item) => item != _emptyCellText).join(' · '),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colors?.subtleText ?? theme.hintColor,
                     ),
@@ -924,8 +1005,9 @@ class _TaskListViewState extends State<_TaskListView> {
 
     final List<TaskDepartmentOption> processDepartments;
     try {
-      processDepartments =
-          await _supportService!.loadProcessDepartments(processId);
+      processDepartments = await _supportService!.loadProcessDepartments(
+        processId,
+      );
     } catch (err) {
       ToastUtil.showError('加载工序负责部门失败: $err');
       return;
