@@ -53,6 +53,7 @@ class Artwork {
     this.images = const [],
     this.notes,
     this.createdAt,
+    this.updatedAt,
     this.dieIds = const [],
     this.foilingPlateIds = const [],
     this.embossingPlateIds = const [],
@@ -80,6 +81,7 @@ class Artwork {
   final List<ArtworkImage> images;
   final String? notes;
   final DateTime? createdAt;
+  final DateTime? updatedAt;
   final List<int> dieIds;
   final List<int> foilingPlateIds;
   final List<int> embossingPlateIds;
@@ -104,8 +106,12 @@ class Artwork {
       version: toInt(json['version']),
       name: json['name']?.toString() ?? '',
       colorDisplay: toStringOrNull(json['colorDisplay']),
-      cmykColors: cmyk is List ? cmyk.map((e) => e.toString()).toList() : const [],
-      otherColors: other is List ? other.map((e) => e.toString()).toList() : const [],
+      cmykColors: cmyk is List
+          ? cmyk.map((e) => e.toString()).toList()
+          : const [],
+      otherColors: other is List
+          ? other.map((e) => e.toString()).toList()
+          : const [],
       impositionSize: toStringOrNull(json['impositionSize']),
       confirmed: json['confirmed'] == true,
       confirmedByName: toStringOrNull(json['confirmedByName']),
@@ -131,6 +137,7 @@ class Artwork {
       products: const [],
       notes: toStringOrNull(json['notes']),
       createdAt: toDateTime(json['createdAt']),
+      updatedAt: toDateTime(json['updatedAt']),
       dieIds: const [],
       foilingPlateIds: const [],
       embossingPlateIds: const [],

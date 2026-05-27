@@ -15,14 +15,19 @@ class ArtworkApiService {
     int page = 1,
     int pageSize = 20,
     String? search,
+    bool? confirmed,
+    String? ordering,
   }) async {
-    final params = <String, dynamic>{
-      'page': page,
-      'page_size': pageSize,
-    };
+    final params = <String, dynamic>{'page': page, 'page_size': pageSize};
     final trimmed = search?.trim();
     if (trimmed != null && trimmed.isNotEmpty) {
       params['search'] = trimmed;
+    }
+    if (confirmed != null) {
+      params['confirmed'] = confirmed.toString();
+    }
+    if (ordering != null && ordering.trim().isNotEmpty) {
+      params['ordering'] = ordering.trim();
     }
     final response = await _client.get('/artworks/', queryParameters: params);
     final payload = response.data;
@@ -58,8 +63,10 @@ class ArtworkApiService {
   }
 
   Future<ArtworkDto> updateArtwork(ArtworkDto dto) async {
-    final response =
-        await _client.put('/artworks/${dto.id}/', data: dto.toPayload());
+    final response = await _client.put(
+      '/artworks/${dto.id}/',
+      data: dto.toPayload(),
+    );
     return ArtworkDto.fromJson(_requireMap('更新图稿', response.data));
   }
 
@@ -82,8 +89,12 @@ class ArtworkApiService {
 
   /// 上传图片到指定图稿
   /// 使用 requestRaw 发送 FormData，避免 HttpClient.post 的 contentType 强制覆盖
-  Future<ArtworkImage> uploadImage(int artworkId, MultipartFile imageFile,
-      {int sortOrder = 0, String? description}) async {
+  Future<ArtworkImage> uploadImage(
+    int artworkId,
+    MultipartFile imageFile, {
+    int sortOrder = 0,
+    String? description,
+  }) async {
     final formData = FormData.fromMap({
       'image': imageFile,
       'sort_order': sortOrder,
@@ -138,9 +149,6 @@ class ArtworkApiService {
   }
 
   ApiException _unexpectedPayload(String label, dynamic data) {
-    return ApiException(
-      message: '$label 响应格式异常',
-      data: data,
-    );
+    return ApiException(message: '$label 响应格式异常', data: data);
   }
 }

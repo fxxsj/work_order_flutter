@@ -7,6 +7,8 @@ abstract class ArtworkRepository {
     required int page,
     required int pageSize,
     String? search,
+    bool? confirmed,
+    String? ordering,
   });
 
   Future<Artwork> createArtwork(Artwork artwork);
@@ -19,7 +21,12 @@ abstract class ArtworkRepository {
 
   Future<void> createVersion(int id);
 
-  Future<ArtworkImage> uploadArtworkImage(int artworkId, MultipartFile imageFile, {int sortOrder = 0, String? description});
+  Future<ArtworkImage> uploadArtworkImage(
+    int artworkId,
+    MultipartFile imageFile, {
+    int sortOrder = 0,
+    String? description,
+  });
 
   Future<void> deleteArtworkImage(int artworkId, int imageId);
 }

@@ -39,10 +39,7 @@ Future<bool> showArtworkEditDrawer(
     desktopWidth: LayoutTokens.pageWidthXwide,
     child: ChangeNotifierProvider<ArtworkViewModel>.value(
       value: viewModel,
-      child: ArtworkEditPage(
-        artwork: artwork,
-        onSaved: () => saved = true,
-      ),
+      child: ArtworkEditPage(artwork: artwork, onSaved: () => saved = true),
     ),
   );
   return saved;
@@ -79,6 +76,8 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
   static const String _submitText = '保存';
   static const String _submitErrorText = '操作失败: ';
   static const String _nameRequiredText = '请输入图稿名称';
+  static const String _nameTooLongText = '图稿名称不能超过200个字符';
+  static const String _impositionTooLongText = '拼版尺寸不能超过100个字符';
   static const String _basicSectionTitle = '基本信息';
   static const String _extraSectionTitle = '补充信息';
   static const String _diePlaceholder = '请选择刀模（可多选）';
@@ -118,8 +117,9 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
     final artwork = _artwork;
     _baseCodeController = TextEditingController(text: artwork?.baseCode ?? '');
     _nameController = TextEditingController(text: artwork?.name ?? '');
-    _impositionController =
-        TextEditingController(text: artwork?.impositionSize ?? '');
+    _impositionController = TextEditingController(
+      text: artwork?.impositionSize ?? '',
+    );
     _notesController = TextEditingController(text: artwork?.notes ?? '');
     _selectedCmyk.addAll(artwork?.cmykColors ?? const []);
     _otherColors.addAll(artwork?.otherColors ?? const []);
@@ -167,8 +167,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
       final products = await _productApi!.fetchProducts(isActive: true);
       final dies = await _dieApi!.fetchDies(pageSize: 50);
       final foiling = await _foilingApi!.fetchFoilingPlates(pageSize: 50);
-      final embossing =
-          await _embossingApi!.fetchEmbossingPlates(pageSize: 50);
+      final embossing = await _embossingApi!.fetchEmbossingPlates(pageSize: 50);
       if (!mounted) return;
       setState(() {
         _productOptions
@@ -236,7 +235,8 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
         ..removeWhere((item) => item.id == option.id)
         ..add(option)
         ..sort(
-            (left, right) => left.displayLabel.compareTo(right.displayLabel));
+          (left, right) => left.displayLabel.compareTo(right.displayLabel),
+        );
     });
     ToastUtil.showSuccess('产品已新增');
     return option;
@@ -256,12 +256,31 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
     return '$name ($trimmed)';
   }
 
+  String? _validateImpositionSize(String? value) {
+    final text = value?.trim() ?? '';
+    if (text.length > 100) {
+      return _impositionTooLongText;
+    }
+    return null;
+  }
+
   Future<void> _handleSubmit(ArtworkViewModel viewModel) async {
     await _persistArtwork(viewModel);
   }
 
   Future<Artwork> _persistArtwork(ArtworkViewModel viewModel) async {
     final currentArtwork = _artwork;
+    final name = _nameController.text.trim();
+    final impositionSize = _impositionController.text.trim();
+    if (name.isEmpty) {
+      throw const FormatException(_nameRequiredText);
+    }
+    if (name.length > 200) {
+      throw const FormatException(_nameTooLongText);
+    }
+    if (impositionSize.length > 100) {
+      throw const FormatException(_impositionTooLongText);
+    }
     final products = _productItems
         .where((item) => item.productId != null)
         .map(
@@ -279,10 +298,13 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
           ? null
           : _baseCodeController.text.trim(),
       version: currentArtwork?.version,
-      name: _nameController.text.trim(),
+      name: name,
       cmykColors: _selectedCmyk.toList(),
-      otherColors: List<String>.from(_otherColors),
-      impositionSize: _impositionController.text.trim(),
+      otherColors: _otherColors
+          .map((item) => item.trim())
+          .where((item) => item.isNotEmpty)
+          .toList(),
+      impositionSize: impositionSize,
       notes: _notesController.text.trim(),
       confirmed: currentArtwork?.confirmed ?? false,
       confirmedByName: currentArtwork?.confirmedByName,
@@ -300,6 +322,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
       embossingPlateNames: currentArtwork?.embossingPlateNames ?? const [],
       products: products,
       createdAt: currentArtwork?.createdAt,
+      updatedAt: currentArtwork?.updatedAt,
     );
 
     final saved = currentArtwork == null
@@ -345,7 +368,9 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
   }
 
   Future<void> _removeImage(
-      ArtworkViewModel viewModel, ArtworkImage image) async {
+    ArtworkViewModel viewModel,
+    ArtworkImage image,
+  ) async {
     final artwork = _artwork;
     if (artwork == null) return;
     try {
@@ -380,26 +405,27 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
         : Column(
             children: List.generate(_productItems.length, (index) {
               final item = _productItems[index];
-              final productOptions = _productOptions
-                  .map(
-                    (product) => AppDropdownOption<int>(
-                      value: product.id,
-                      label: product.displayLabel,
-                    ),
-                  )
-                  .toList()
-                ..add(
-                  AppDropdownOption<int>(
-                    value: -1,
-                    label: '新增产品',
-                    icon: Icons.add,
-                    onSelected: () async {
-                      final created = await _handleCreateProduct();
-                      if (created == null || !mounted) return;
-                      setState(() => item.productId = created.id);
-                    },
-                  ),
-                );
+              final productOptions =
+                  _productOptions
+                      .map(
+                        (product) => AppDropdownOption<int>(
+                          value: product.id,
+                          label: product.displayLabel,
+                        ),
+                      )
+                      .toList()
+                    ..add(
+                      AppDropdownOption<int>(
+                        value: -1,
+                        label: '新增产品',
+                        icon: Icons.add,
+                        onSelected: () async {
+                          final created = await _handleCreateProduct();
+                          if (created == null || !mounted) return;
+                          setState(() => item.productId = created.id);
+                        },
+                      ),
+                    );
               return Padding(
                 padding: EdgeInsets.only(bottom: sectionSpacing),
                 child: Row(
@@ -408,11 +434,13 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                       flex: 3,
                       child: AppSelect<int>(
                         value: item.productId,
-                        decoration:
-                            const InputDecoration(labelText: _productLabel),
+                        decoration: const InputDecoration(
+                          labelText: _productLabel,
+                        ),
                         options: productOptions,
-                        selectHintText:
-                            _productOptions.isEmpty ? '新增产品' : '请选择',
+                        selectHintText: _productOptions.isEmpty
+                            ? '新增产品'
+                            : '请选择',
                         onChanged: (value) {
                           setState(() => item.productId = value);
                         },
@@ -520,9 +548,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                 enabled: currentArtwork == null,
               ),
               if (currentArtwork != null)
-                CrudFieldConfig.custom(
-                  builder: _buildVersionField,
-                ),
+                CrudFieldConfig.custom(builder: _buildVersionField),
               CrudFieldConfig.text(
                 label: _nameLabel,
                 controller: _nameController,
@@ -530,6 +556,9 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                   final text = value?.trim() ?? '';
                   if (text.isEmpty) {
                     return _nameRequiredText;
+                  }
+                  if (text.length > 200) {
+                    return _nameTooLongText;
                   }
                   return null;
                 },
@@ -584,17 +613,14 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                 CrudFieldConfig.text(
                   label: _impositionLabel,
                   controller: _impositionController,
+                  validator: _validateImpositionSize,
                 ),
             ],
           ),
           CrudFormSection(
             title: '图稿图片',
             column: 0,
-            fields: [
-              CrudFieldConfig.custom(
-                builder: _buildImageSection,
-              ),
-            ],
+            fields: [CrudFieldConfig.custom(builder: _buildImageSection)],
           ),
           CrudFormSection(
             title: _extraSectionTitle,
@@ -604,6 +630,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                 CrudFieldConfig.text(
                   label: _impositionLabel,
                   controller: _impositionController,
+                  validator: _validateImpositionSize,
                 ),
               CrudFieldConfig.multiSelect(
                 label: _dieLabel,
@@ -669,9 +696,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                 CrudFieldConfig.custom(
                   builder: (_) => const LinearProgressIndicator(minHeight: 2),
                 ),
-              CrudFieldConfig.custom(
-                builder: _buildProductSection,
-              ),
+              CrudFieldConfig.custom(builder: _buildProductSection),
               CrudFieldConfig.textarea(
                 label: _notesLabel,
                 controller: _notesController,
@@ -688,7 +713,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
 
 class _ArtworkProductItem {
   _ArtworkProductItem({this.productId, int quantity = 1})
-      : quantityController = TextEditingController(text: quantity.toString());
+    : quantityController = TextEditingController(text: quantity.toString());
 
   int? productId;
   final TextEditingController quantityController;

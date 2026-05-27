@@ -25,6 +25,7 @@ class ArtworkDto {
     this.images = const [],
     this.notes,
     this.createdAt,
+    this.updatedAt,
     this.dieIds = const [],
     this.foilingPlateIds = const [],
     this.embossingPlateIds = const [],
@@ -52,6 +53,7 @@ class ArtworkDto {
   final List<ArtworkImage> images;
   final String? notes;
   final DateTime? createdAt;
+  final DateTime? updatedAt;
   final List<int> dieIds;
   final List<int> foilingPlateIds;
   final List<int> embossingPlateIds;
@@ -63,7 +65,10 @@ class ArtworkDto {
       for (final item in rawProducts) {
         if (item is Map) {
           final productId = toInt(item['product']) ?? toInt(item['id']) ?? 0;
-          final productName = item['product_name']?.toString() ?? item['name']?.toString() ?? '';
+          final productName =
+              item['product_name']?.toString() ??
+              item['name']?.toString() ??
+              '';
           products.add(
             ArtworkProduct(
               productId: productId,
@@ -80,13 +85,15 @@ class ArtworkDto {
     if (rawImages is List) {
       for (final item in rawImages) {
         if (item is Map) {
-          images.add(ArtworkImage(
-            id: toInt(item['id']) ?? 0,
-            imageUrl: toStringOrNull(item['image']) ?? '',
-            sortOrder: toInt(item['sort_order']) ?? 0,
-            description: toStringOrNull(item['description']),
-            createdAt: toDateTime(item['created_at']),
-          ));
+          images.add(
+            ArtworkImage(
+              id: toInt(item['id']) ?? 0,
+              imageUrl: toStringOrNull(item['image']) ?? '',
+              sortOrder: toInt(item['sort_order']) ?? 0,
+              description: toStringOrNull(item['description']),
+              createdAt: toDateTime(item['created_at']),
+            ),
+          );
         }
       }
     }
@@ -140,6 +147,7 @@ class ArtworkDto {
       images: images,
       notes: toStringOrNull(json['notes']),
       createdAt: toDateTime(json['created_at']),
+      updatedAt: toDateTime(json['updated_at']),
       dieIds: parseIdList(json['dies']),
       foilingPlateIds: parseIdList(json['foiling_plates']),
       embossingPlateIds: parseIdList(json['embossing_plates']),
@@ -170,6 +178,7 @@ class ArtworkDto {
       images: entity.images,
       notes: entity.notes,
       createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
       dieIds: entity.dieIds,
       foilingPlateIds: entity.foilingPlateIds,
       embossingPlateIds: entity.embossingPlateIds,
@@ -200,6 +209,7 @@ class ArtworkDto {
       images: images,
       notes: notes,
       createdAt: createdAt,
+      updatedAt: updatedAt,
       dieIds: dieIds,
       foilingPlateIds: foilingPlateIds,
       embossingPlateIds: embossingPlateIds,

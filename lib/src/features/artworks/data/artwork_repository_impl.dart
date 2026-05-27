@@ -15,11 +15,15 @@ class ArtworkRepositoryImpl implements ArtworkRepository {
     required int page,
     required int pageSize,
     String? search,
+    bool? confirmed,
+    String? ordering,
   }) async {
     final response = await _api.fetchArtworks(
       page: page,
       pageSize: pageSize,
       search: search,
+      confirmed: confirmed,
+      ordering: ordering,
     );
     return PageData(
       items: response.items.map((item) => item.toEntity()).toList(),
@@ -57,8 +61,18 @@ class ArtworkRepositoryImpl implements ArtworkRepository {
   }
 
   @override
-  Future<ArtworkImage> uploadArtworkImage(int artworkId, MultipartFile imageFile, {int sortOrder = 0, String? description}) async {
-    return await _api.uploadImage(artworkId, imageFile, sortOrder: sortOrder, description: description);
+  Future<ArtworkImage> uploadArtworkImage(
+    int artworkId,
+    MultipartFile imageFile, {
+    int sortOrder = 0,
+    String? description,
+  }) async {
+    return await _api.uploadImage(
+      artworkId,
+      imageFile,
+      sortOrder: sortOrder,
+      description: description,
+    );
   }
 
   @override

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
@@ -64,29 +65,29 @@ class ArtworkListPage extends StatelessWidget {
 
   static const CrudListConfig<Artwork, ArtworkViewModel> _config =
       CrudListConfig(
-    searchHintText: '搜索图稿编码、名称、拼版尺寸',
-    emptyText: '暂无图稿数据',
-    emptyIcon: Icons.image_outlined,
-    loadItems: _loadArtworks,
-    titleBuilder: _titleText,
-    subtitleBuilder: _subtitleText,
-    summaryChipsBuilder: _summaryChips,
-    summaryFieldsBuilder: _summaryFields,
-    headerActionsBuilder: _headerActions,
-    rowActionsBuilder: _rowActions,
-    columns: [
-      CrudTableColumn(label: '稿件', cellBuilder: _buildNameCell),
-      CrudTableColumn(label: '编码', cellBuilder: _buildCodeCell),
-      CrudTableColumn(label: '色数', cellBuilder: _buildColorCell),
-      CrudTableColumn(label: '拼版尺寸', cellBuilder: _buildSizeCell),
-      CrudTableColumn(label: '状态', cellBuilder: _buildStatusCell),
-      CrudTableColumn(label: '关联刀模', cellBuilder: _buildDiesCell),
-      CrudTableColumn(label: '烫金版', cellBuilder: _buildFoilingCell),
-      CrudTableColumn(label: '压凸版', cellBuilder: _buildEmbossingCell),
-      CrudTableColumn(label: '包含产品', cellBuilder: _buildProductsCell),
-      CrudTableColumn(label: '创建时间', cellBuilder: _buildCreatedAtCell),
-    ],
-  );
+        searchHintText: '搜索图稿编码、名称、拼版尺寸',
+        emptyText: '暂无图稿数据',
+        emptyIcon: Icons.image_outlined,
+        loadItems: _loadArtworks,
+        titleBuilder: _titleText,
+        subtitleBuilder: _subtitleText,
+        summaryChipsBuilder: _summaryChips,
+        summaryFieldsBuilder: _summaryFields,
+        headerActionsBuilder: _headerActions,
+        rowActionsBuilder: _rowActions,
+        columns: [
+          CrudTableColumn(label: '稿件', cellBuilder: _buildNameCell),
+          CrudTableColumn(label: '编码', cellBuilder: _buildCodeCell),
+          CrudTableColumn(label: '色数', cellBuilder: _buildColorCell),
+          CrudTableColumn(label: '拼版尺寸', cellBuilder: _buildSizeCell),
+          CrudTableColumn(label: '状态', cellBuilder: _buildStatusCell),
+          CrudTableColumn(label: '关联刀模', cellBuilder: _buildDiesCell),
+          CrudTableColumn(label: '烫金版', cellBuilder: _buildFoilingCell),
+          CrudTableColumn(label: '压凸版', cellBuilder: _buildEmbossingCell),
+          CrudTableColumn(label: '包含产品', cellBuilder: _buildProductsCell),
+          CrudTableColumn(label: '创建时间', cellBuilder: _buildCreatedAtCell),
+        ],
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -176,6 +177,61 @@ class ArtworkListPage extends StatelessWidget {
     ArtworkViewModel viewModel,
   ) {
     return [
+      SizedBox(
+        width: 112,
+        child: AppSelect<String>(
+          options: const [
+            AppDropdownOption(value: '', label: '全部状态'),
+            AppDropdownOption(value: 'true', label: '已确认'),
+            AppDropdownOption(value: 'false', label: '待确认'),
+          ],
+          value: viewModel.confirmed == null
+              ? ''
+              : viewModel.confirmed == true
+              ? 'true'
+              : 'false',
+          onChanged: (value) {
+            if (value == null || value.isEmpty) {
+              viewModel.setConfirmed(null);
+            } else {
+              viewModel.setConfirmed(value == 'true');
+            }
+          },
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
+      SizedBox(
+        width: 132,
+        child: AppSelect<String>(
+          options: const [
+            AppDropdownOption(value: '-base_code,-version', label: '最新版本'),
+            AppDropdownOption(value: 'base_code,version', label: '最早版本'),
+            AppDropdownOption(value: 'base_code', label: '编码升序'),
+            AppDropdownOption(value: '-base_code', label: '编码降序'),
+            AppDropdownOption(value: 'name', label: '名称升序'),
+            AppDropdownOption(value: '-name', label: '名称降序'),
+            AppDropdownOption(value: 'confirmed', label: '状态升序'),
+            AppDropdownOption(value: '-confirmed', label: '状态降序'),
+            AppDropdownOption(value: '-created_at', label: '最新创建'),
+            AppDropdownOption(value: 'created_at', label: '最早创建'),
+          ],
+          value: viewModel.ordering ?? '-base_code,-version',
+          onChanged: (value) {
+            if (value != null) viewModel.setOrdering(value);
+          },
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
       PageActionButton.filled(
         onPressed: () => _openEditPage(context, viewModel, null),
         icon: const Icon(Icons.add),
@@ -270,14 +326,13 @@ class ArtworkListPage extends StatelessWidget {
 
   static Widget _buildCreatedAtCell(BuildContext context, Artwork artwork) {
     return _buildBodyText(
-        context, CrudValueFormatter.dateTime(artwork.createdAt));
+      context,
+      CrudValueFormatter.dateTime(artwork.createdAt),
+    );
   }
 
   static Widget _buildBodyText(BuildContext context, String value) {
-    return Text(
-      value,
-      style: Theme.of(context).textTheme.bodySmall,
-    );
+    return Text(value, style: Theme.of(context).textTheme.bodySmall);
   }
 
   static String _titleText(Artwork artwork) {
@@ -403,10 +458,7 @@ class ArtworkListPage extends StatelessWidget {
   }
 
   static List<String> _buildConfirmImpacts(Artwork artwork) {
-    return [
-      '确认后如需调整内容，应基于当前版本创建新版本',
-      '当前编码：${_codeText(artwork)}',
-    ];
+    return ['确认后如需调整内容，应基于当前版本创建新版本', '当前编码：${_codeText(artwork)}'];
   }
 
   static String _buildConfirmAuditHint(Artwork artwork) {
@@ -422,10 +474,7 @@ class ArtworkListPage extends StatelessWidget {
   }
 
   static List<String> _buildVersionImpacts(Artwork artwork) {
-    return [
-      '新版本适合用于后续修改，不影响当前版本历史记录',
-      '当前名称：${_titleText(artwork)}',
-    ];
+    return ['新版本适合用于后续修改，不影响当前版本历史记录', '当前名称：${_titleText(artwork)}'];
   }
 
   static String _buildVersionAuditHint(Artwork artwork) {
