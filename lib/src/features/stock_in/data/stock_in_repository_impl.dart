@@ -13,7 +13,11 @@ class StockInRepositoryImpl implements StockInRepository {
     int pageSize = 20,
     Map<String, dynamic>? params,
   }) {
-    return _apiService.fetchStockIns(page: page, pageSize: pageSize, params: params);
+    return _apiService.fetchStockIns(
+      page: page,
+      pageSize: pageSize,
+      params: params,
+    );
   }
 
   @override
@@ -27,7 +31,10 @@ class StockInRepositoryImpl implements StockInRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> updateStockIn(int id, Map<String, dynamic> payload) {
+  Future<Map<String, dynamic>> updateStockIn(
+    int id,
+    Map<String, dynamic> payload,
+  ) {
     return _apiService.updateStockIn(id, payload);
   }
 

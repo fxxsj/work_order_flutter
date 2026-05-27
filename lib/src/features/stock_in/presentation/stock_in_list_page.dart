@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/models/generic_record.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/generic_resource_list_page.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
@@ -14,6 +15,8 @@ import 'package:work_order_app/src/features/stock_in/data/stock_in_support_servi
 
 class StockInListEntry extends StatelessWidget {
   const StockInListEntry({super.key});
+
+  static const String _listRoute = '/inventory/stock-ins';
 
   @override
   Widget build(BuildContext context) {
@@ -56,29 +59,37 @@ class StockInListEntry extends StatelessWidget {
               onPressed: () => _openStockInForm(context, record: record),
             ),
           ];
-          final workOrderId = record.getNumber('work_order') ??
+          final workOrderId =
+              record.getNumber('work_order') ??
               int.tryParse(record.getString('work_order') ?? '');
           if (workOrderId != null && workOrderId.toInt() > 0) {
-            actions.add(RowAction(
-              label: '查看施工单',
-              icon: Icons.description_outlined,
-              onPressed: () => context.go('/workorders/${workOrderId.toInt()}'),
-            ));
+            actions.add(
+              RowAction(
+                label: '查看施工单',
+                icon: Icons.description_outlined,
+                onPressed: () =>
+                    context.go('/workorders/${workOrderId.toInt()}'),
+              ),
+            );
           }
           final status = record.getString('status');
           if (status == 'draft') {
-            actions.add(RowAction(
-              label: '提交',
-              icon: Icons.send_outlined,
-              onPressed: () => _submitStockIn(context, record.id),
-            ));
+            actions.add(
+              RowAction(
+                label: '提交',
+                icon: Icons.send_outlined,
+                onPressed: () => _submitStockIn(context, record.id),
+              ),
+            );
           }
           if (status == 'submitted') {
-            actions.add(RowAction(
-              label: '审核',
-              icon: Icons.fact_check_outlined,
-              onPressed: () => _approveStockIn(context, record.id),
-            ));
+            actions.add(
+              RowAction(
+                label: '审核',
+                icon: Icons.fact_check_outlined,
+                onPressed: () => _approveStockIn(context, record.id),
+              ),
+            );
           }
           return actions;
         },
@@ -163,7 +174,8 @@ class StockInListEntry extends StatelessWidget {
           count: _submittedCount(viewModel),
           icon: Icons.fact_check_outlined,
           selected: currentStatus == 'submitted',
-          onTap: () => _openQuickFilter(context, status: 'submitted'),
+          onTap: () =>
+              _openQuickFilter(context, viewModel, status: 'submitted'),
         ),
       if (_completedCount(viewModel) > 0)
         StatusHintChip(
@@ -171,14 +183,70 @@ class StockInListEntry extends StatelessWidget {
           count: _completedCount(viewModel),
           icon: Icons.inventory_2_outlined,
           selected: currentStatus == 'completed',
-          onTap: () => _openQuickFilter(context, status: 'completed'),
+          onTap: () =>
+              _openQuickFilter(context, viewModel, status: 'completed'),
         ),
       if (_hasActiveFilter(viewModel))
         OutlinedButton.icon(
-          onPressed: () => context.go('/inventory/stock-ins'),
+          onPressed: () => context.go(_listRoute),
           icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
           label: const Text('清除筛选'),
         ),
+      SizedBox(
+        width: 150,
+        child: AppSelect<String>(
+          key: ValueKey<String>(_currentStatus(viewModel)),
+          value: _currentStatus(viewModel).isEmpty
+              ? null
+              : _currentStatus(viewModel),
+          selectHintText: '状态',
+          options: const [
+            AppDropdownOption<String>(value: '', label: '全部状态'),
+            AppDropdownOption<String>(value: 'draft', label: '待提交'),
+            AppDropdownOption<String>(value: 'submitted', label: '待审核'),
+            AppDropdownOption<String>(value: 'completed', label: '已完成'),
+          ],
+          onChanged: (value) =>
+              _openQuickFilter(context, viewModel, status: value ?? ''),
+        ),
+      ),
+      SizedBox(
+        width: 170,
+        child: AppSelect<String>(
+          key: ValueKey<String>(_currentOrdering(viewModel)),
+          value: _currentOrdering(viewModel),
+          selectHintText: '排序',
+          options: const [
+            AppDropdownOption<String>(value: '-created_at', label: '最新创建'),
+            AppDropdownOption<String>(value: 'created_at', label: '最早创建'),
+            AppDropdownOption<String>(value: '-stock_in_date', label: '最新入库'),
+            AppDropdownOption<String>(value: 'stock_in_date', label: '最早入库'),
+            AppDropdownOption<String>(value: 'order_number', label: '入库单号升序'),
+            AppDropdownOption<String>(value: '-order_number', label: '入库单号降序'),
+            AppDropdownOption<String>(
+              value: 'work_order__order_number',
+              label: '施工单号升序',
+            ),
+            AppDropdownOption<String>(
+              value: '-work_order__order_number',
+              label: '施工单号降序',
+            ),
+            AppDropdownOption<String>(
+              value: 'work_order__customer__name',
+              label: '客户名称升序',
+            ),
+            AppDropdownOption<String>(
+              value: '-work_order__customer__name',
+              label: '客户名称降序',
+            ),
+          ],
+          onChanged: (value) => _openQuickFilter(
+            context,
+            viewModel,
+            ordering: value ?? '-created_at',
+          ),
+        ),
+      ),
       PageActionButton.filled(
         onPressed: () => _openStockInForm(context),
         icon: const Icon(Icons.add),
@@ -193,6 +261,16 @@ class StockInListEntry extends StatelessWidget {
     if (status.isNotEmpty) {
       extraParams['status'] = status;
     }
+    final startDate = uri.queryParameters['start_date']?.trim() ?? '';
+    if (startDate.isNotEmpty) {
+      extraParams['start_date'] = startDate;
+    }
+    final endDate = uri.queryParameters['end_date']?.trim() ?? '';
+    if (endDate.isNotEmpty) {
+      extraParams['end_date'] = endDate;
+    }
+    final ordering = uri.queryParameters['ordering']?.trim() ?? '';
+    extraParams['ordering'] = ordering.isEmpty ? '-created_at' : ordering;
     return extraParams;
   }
 
@@ -215,20 +293,49 @@ class StockInListEntry extends StatelessWidget {
     return viewModel.extraParams['status']?.toString().trim() ?? '';
   }
 
+  static String _currentOrdering(GenericListViewModel viewModel) {
+    final value = viewModel.extraParams['ordering']?.toString().trim() ?? '';
+    return value.isEmpty ? '-created_at' : value;
+  }
+
   static bool _hasActiveFilter(GenericListViewModel viewModel) {
-    return _currentStatus(viewModel).isNotEmpty;
+    return _currentStatus(viewModel).isNotEmpty ||
+        (viewModel.extraParams['start_date']?.toString().trim() ?? '')
+            .isNotEmpty ||
+        (viewModel.extraParams['end_date']?.toString().trim() ?? '')
+            .isNotEmpty ||
+        _currentOrdering(viewModel) != '-created_at';
   }
 
   static void _openQuickFilter(
-    BuildContext context, {
-    required String status,
+    BuildContext context,
+    GenericListViewModel viewModel, {
+    String? status,
+    String? ordering,
   }) {
-    context.go(
-      Uri(
-        path: '/inventory/stock-ins',
-        queryParameters: {'status': status},
-      ).toString(),
-    );
+    final query = <String, String>{};
+    final search = viewModel.searchText.trim();
+    if (search.isNotEmpty) {
+      query['search'] = search;
+    }
+    final nextStatus = status ?? _currentStatus(viewModel);
+    if (nextStatus.trim().isNotEmpty) {
+      query['status'] = nextStatus.trim();
+    }
+    final startDate =
+        viewModel.extraParams['start_date']?.toString().trim() ?? '';
+    if (startDate.isNotEmpty) {
+      query['start_date'] = startDate;
+    }
+    final endDate = viewModel.extraParams['end_date']?.toString().trim() ?? '';
+    if (endDate.isNotEmpty) {
+      query['end_date'] = endDate;
+    }
+    final nextOrdering = ordering ?? _currentOrdering(viewModel);
+    if (nextOrdering.trim().isNotEmpty && nextOrdering != '-created_at') {
+      query['ordering'] = nextOrdering.trim();
+    }
+    context.go(Uri(path: _listRoute, queryParameters: query).toString());
   }
 
   static Future<void> _openStockInForm(
@@ -239,7 +346,8 @@ class StockInListEntry extends StatelessWidget {
     final isEdit = record != null;
     final recordId = record?.id;
     final workOrderController = TextEditingController(
-      text: record?.getNumber('work_order')?.toString() ??
+      text:
+          record?.getNumber('work_order')?.toString() ??
           record?.getString('work_order') ??
           '',
     );
