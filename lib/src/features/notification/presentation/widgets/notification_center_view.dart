@@ -51,7 +51,16 @@ class NotificationCenterView extends StatelessWidget {
                 unreadCount: controller.unreadCount,
                 totalCount: controller.totalCount,
                 showUnreadOnly: showUnreadOnly,
+                notificationTypeFilter: controller.notificationTypeFilter,
+                priorityFilter: controller.priorityFilter,
+                ordering: controller.ordering,
+                searchQuery: controller.searchQuery,
                 onFilterChange: controller.setShowUnreadOnly,
+                onTypeFilterChange: controller.setNotificationTypeFilter,
+                onPriorityFilterChange: controller.setPriorityFilter,
+                onOrderingChange: controller.setOrdering,
+                onSearchChange: controller.setSearchQuery,
+                onClearFilters: controller.clearFilters,
                 onMarkAllRead: controller.markAllRead,
                 onRefresh: controller.refreshAll,
               ),
@@ -74,8 +83,9 @@ class NotificationCenterView extends StatelessWidget {
                   child: Center(
                     child: Text(
                       '暂无通知',
-                      style: theme.textTheme.bodyMedium
-                          ?.copyWith(color: subtleText),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: subtleText,
+                      ),
                     ),
                   ),
                 )
@@ -94,8 +104,9 @@ class NotificationCenterView extends StatelessWidget {
                   Align(
                     alignment: Alignment.center,
                     child: TextButton(
-                      onPressed:
-                          controller.isLoadingMore ? null : controller.loadMore,
+                      onPressed: controller.isLoadingMore
+                          ? null
+                          : controller.loadMore,
                       child: controller.isLoadingMore
                           ? const AppLoadingIndicator(
                               centered: false,
@@ -121,7 +132,16 @@ class _NotificationToolbar extends StatelessWidget {
     required this.unreadCount,
     required this.totalCount,
     required this.showUnreadOnly,
+    required this.notificationTypeFilter,
+    required this.priorityFilter,
+    required this.ordering,
+    required this.searchQuery,
     required this.onFilterChange,
+    required this.onTypeFilterChange,
+    required this.onPriorityFilterChange,
+    required this.onOrderingChange,
+    required this.onSearchChange,
+    required this.onClearFilters,
     required this.onMarkAllRead,
     required this.onRefresh,
   });
@@ -132,7 +152,16 @@ class _NotificationToolbar extends StatelessWidget {
   final int unreadCount;
   final int totalCount;
   final bool showUnreadOnly;
+  final String? notificationTypeFilter;
+  final String? priorityFilter;
+  final String ordering;
+  final String searchQuery;
   final ValueChanged<bool> onFilterChange;
+  final ValueChanged<String?> onTypeFilterChange;
+  final ValueChanged<String?> onPriorityFilterChange;
+  final ValueChanged<String> onOrderingChange;
+  final ValueChanged<String> onSearchChange;
+  final VoidCallback onClearFilters;
   final VoidCallback onMarkAllRead;
   final VoidCallback onRefresh;
 
@@ -160,11 +189,31 @@ class _NotificationToolbar extends StatelessWidget {
           selected: showUnreadOnly,
           onSelected: onFilterChange,
         ),
+        SizedBox(
+          width: 220,
+          child: _SearchField(value: searchQuery, onSubmitted: onSearchChange),
+        ),
+        _ToolbarDropdown(
+          value: notificationTypeFilter ?? '',
+          options: _notificationTypeOptions,
+          onChanged: onTypeFilterChange,
+        ),
+        _ToolbarDropdown(
+          value: priorityFilter ?? '',
+          options: _priorityOptions,
+          onChanged: onPriorityFilterChange,
+        ),
+        _ToolbarDropdown(
+          value: ordering,
+          options: _orderingOptions,
+          onChanged: (value) {
+            if (value != null && value.isNotEmpty) onOrderingChange(value);
+          },
+        ),
+        TextButton(onPressed: onClearFilters, child: const Text('重置')),
         TextButton.icon(
           onPressed: onMarkAllRead,
-          style: TextButton.styleFrom(
-            foregroundColor: primary,
-          ),
+          style: TextButton.styleFrom(foregroundColor: primary),
           icon: Icon(Icons.done_all, size: 18, color: primary),
           label: Text('全部已读', style: TextStyle(color: primary)),
         ),
@@ -177,6 +226,108 @@ class _NotificationToolbar extends StatelessWidget {
     );
   }
 }
+
+class _SearchField extends StatefulWidget {
+  const _SearchField({required this.value, required this.onSubmitted});
+
+  final String value;
+  final ValueChanged<String> onSubmitted;
+
+  @override
+  State<_SearchField> createState() => _SearchFieldState();
+}
+
+class _SearchFieldState extends State<_SearchField> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.value);
+  }
+
+  @override
+  void didUpdateWidget(covariant _SearchField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value && _controller.text != widget.value) {
+      _controller.text = widget.value;
+      _controller.selection = TextSelection.collapsed(
+        offset: widget.value.length,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: _controller,
+      decoration: const InputDecoration(
+        isDense: true,
+        prefixIcon: Icon(Icons.search, size: 18),
+        hintText: '搜索标题或内容',
+        border: OutlineInputBorder(),
+      ),
+      textInputAction: TextInputAction.search,
+      onSubmitted: widget.onSubmitted,
+    );
+  }
+}
+
+class _ToolbarDropdown extends StatelessWidget {
+  const _ToolbarDropdown({
+    required this.value,
+    required this.options,
+    required this.onChanged,
+  });
+
+  final String value;
+  final List<DropdownMenuItem<String>> options;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButton<String>(
+      value: value,
+      items: options,
+      onChanged: onChanged,
+    );
+  }
+}
+
+const _notificationTypeOptions = [
+  DropdownMenuItem(value: '', child: Text('全部类型')),
+  DropdownMenuItem(value: 'workorder_created', child: Text('施工单创建')),
+  DropdownMenuItem(value: 'workorder_updated', child: Text('施工单更新')),
+  DropdownMenuItem(value: 'approval_passed', child: Text('审核通过')),
+  DropdownMenuItem(value: 'approval_rejected', child: Text('审核拒绝')),
+  DropdownMenuItem(value: 'approval_requested', child: Text('请求审核')),
+  DropdownMenuItem(value: 'task_assigned', child: Text('任务分派')),
+  DropdownMenuItem(value: 'task_overdue', child: Text('任务逾期')),
+  DropdownMenuItem(value: 'process_completed', child: Text('工序完成')),
+  DropdownMenuItem(value: 'low_stock_warning', child: Text('库存不足预警')),
+  DropdownMenuItem(value: 'system', child: Text('系统通知')),
+];
+
+const _priorityOptions = [
+  DropdownMenuItem(value: '', child: Text('全部优先级')),
+  DropdownMenuItem(value: 'low', child: Text('低')),
+  DropdownMenuItem(value: 'normal', child: Text('普通')),
+  DropdownMenuItem(value: 'high', child: Text('高')),
+  DropdownMenuItem(value: 'urgent', child: Text('紧急')),
+];
+
+const _orderingOptions = [
+  DropdownMenuItem(value: '-created_at', child: Text('最新优先')),
+  DropdownMenuItem(value: 'created_at', child: Text('最早优先')),
+  DropdownMenuItem(value: 'is_read,-created_at', child: Text('未读优先')),
+  DropdownMenuItem(value: '-priority,-created_at', child: Text('高优先级优先')),
+];
 
 class _NotificationListItem extends StatelessWidget {
   const _NotificationListItem({

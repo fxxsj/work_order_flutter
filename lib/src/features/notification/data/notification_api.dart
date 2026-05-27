@@ -22,13 +22,33 @@ class NotificationApi {
   Future<NotificationPage> fetchNotifications({
     int page = 1,
     int pageSize = 20,
+    bool? isRead,
+    String? notificationType,
+    String? priority,
+    String ordering = '-created_at',
+    String? search,
   }) async {
+    final queryParameters = <String, dynamic>{
+      'page': page,
+      'page_size': pageSize,
+      'ordering': ordering,
+    };
+    if (isRead != null) {
+      queryParameters['is_read'] = isRead;
+    }
+    if (notificationType != null && notificationType.trim().isNotEmpty) {
+      queryParameters['notification_type'] = notificationType.trim();
+    }
+    if (priority != null && priority.trim().isNotEmpty) {
+      queryParameters['priority'] = priority.trim();
+    }
+    if (search != null && search.trim().isNotEmpty) {
+      queryParameters['search'] = search.trim();
+    }
+
     final ApiResponse response = await _client.get(
       '/notifications/',
-      queryParameters: {
-        'page': page,
-        'page_size': pageSize,
-      },
+      queryParameters: queryParameters,
     );
     final data = response.data;
     if (data is Map<String, dynamic>) {
@@ -36,7 +56,10 @@ class NotificationApi {
       if (results is List) {
         final items = results
             .whereType<Map>()
-            .map((item) => NotificationModel.fromJson(item.cast<String, dynamic>()))
+            .map(
+              (item) =>
+                  NotificationModel.fromJson(item.cast<String, dynamic>()),
+            )
             .toList();
         return NotificationPage(
           items: items,
@@ -49,7 +72,9 @@ class NotificationApi {
   }
 
   Future<int> fetchUnreadCount() async {
-    final ApiResponse response = await _client.get('/notifications/unread_count/');
+    final ApiResponse response = await _client.get(
+      '/notifications/unread_count/',
+    );
     final data = response.data;
     if (data is Map && data['unread_count'] != null) {
       return _toInt(data['unread_count']) ?? 0;
@@ -58,16 +83,22 @@ class NotificationApi {
   }
 
   Future<NotificationModel?> markRead(String id) async {
-    final ApiResponse response = await _client.post('/notifications/$id/mark_read/');
+    final ApiResponse response = await _client.post(
+      '/notifications/$id/mark_read/',
+    );
     final data = response.data;
     if (data is Map && data['notification'] is Map) {
-      return NotificationModel.fromJson((data['notification'] as Map).cast<String, dynamic>());
+      return NotificationModel.fromJson(
+        (data['notification'] as Map).cast<String, dynamic>(),
+      );
     }
     return null;
   }
 
   Future<int> markAllRead() async {
-    final ApiResponse response = await _client.post('/notifications/mark_all_read/');
+    final ApiResponse response = await _client.post(
+      '/notifications/mark_all_read/',
+    );
     final data = response.data;
     if (data is Map && data['count'] != null) {
       return _toInt(data['count']) ?? 0;
@@ -76,7 +107,9 @@ class NotificationApi {
   }
 
   Future<Map<String, dynamic>> fetchStatistics() async {
-    final ApiResponse response = await _client.get('/notifications/statistics/');
+    final ApiResponse response = await _client.get(
+      '/notifications/statistics/',
+    );
     final data = response.data;
     if (data is Map<String, dynamic>) {
       return Map<String, dynamic>.from(data);
@@ -89,7 +122,9 @@ class NotificationApi {
   }
 
   Future<int> deleteAllRead() async {
-    final ApiResponse response = await _client.delete('/notifications/delete_all_read/');
+    final ApiResponse response = await _client.delete(
+      '/notifications/delete_all_read/',
+    );
     final data = response.data;
     if (data is Map && data['count'] != null) {
       return _toInt(data['count']) ?? 0;

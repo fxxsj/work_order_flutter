@@ -22,6 +22,10 @@ class NotificationViewModel extends ChangeNotifier {
   bool _hasMore = false;
   int _totalCount = 0;
   bool _showUnreadOnly = false;
+  String? _notificationTypeFilter;
+  String? _priorityFilter;
+  String _ordering = '-created_at';
+  String _searchQuery = '';
 
   Timer? _poller;
   Timer? _reconnectTimer;
@@ -39,6 +43,10 @@ class NotificationViewModel extends ChangeNotifier {
   bool get hasMore => _hasMore;
   int get totalCount => _totalCount;
   bool get showUnreadOnly => _showUnreadOnly;
+  String? get notificationTypeFilter => _notificationTypeFilter;
+  String? get priorityFilter => _priorityFilter;
+  String get ordering => _ordering;
+  String get searchQuery => _searchQuery;
 
   void initialize() {
     _authController.addListener(_handleAuthChange);
@@ -185,8 +193,15 @@ class NotificationViewModel extends ChangeNotifier {
     _safeNotify();
     _page = 1;
     try {
-      final page =
-          await _api.fetchNotifications(page: _page, pageSize: _pageSize);
+      final page = await _api.fetchNotifications(
+        page: _page,
+        pageSize: _pageSize,
+        isRead: _showUnreadOnly ? false : null,
+        notificationType: _notificationTypeFilter,
+        priority: _priorityFilter,
+        ordering: _ordering,
+        search: _searchQuery,
+      );
       _notifications = page.items.toList();
       _totalCount = page.totalCount ?? page.items.length;
       _hasMore = page.hasMore;
@@ -211,8 +226,15 @@ class NotificationViewModel extends ChangeNotifier {
     _safeNotify();
     try {
       final nextPage = _page + 1;
-      final page =
-          await _api.fetchNotifications(page: nextPage, pageSize: _pageSize);
+      final page = await _api.fetchNotifications(
+        page: nextPage,
+        pageSize: _pageSize,
+        isRead: _showUnreadOnly ? false : null,
+        notificationType: _notificationTypeFilter,
+        priority: _priorityFilter,
+        ordering: _ordering,
+        search: _searchQuery,
+      );
       _notifications = [..._notifications, ...page.items];
       _page = nextPage;
       _hasMore = page.hasMore;
@@ -251,7 +273,7 @@ class NotificationViewModel extends ChangeNotifier {
     await _api.deleteNotification(id);
     final removedWasUnread =
         _recentList.any((item) => item.id == id && !item.isRead) ||
-            _notifications.any((item) => item.id == id && !item.isRead);
+        _notifications.any((item) => item.id == id && !item.isRead);
     _recentList = _recentList.where((item) => item.id != id).toList();
     _notifications = _notifications.where((item) => item.id != id).toList();
     _totalCount = _totalCount > 0 ? _totalCount - 1 : 0;
@@ -284,7 +306,11 @@ class NotificationViewModel extends ChangeNotifier {
 
   Future<void> _refreshRecent() async {
     try {
-      final page = await _api.fetchNotifications(page: 1, pageSize: 5);
+      final page = await _api.fetchNotifications(
+        page: 1,
+        pageSize: 5,
+        ordering: '-created_at',
+      );
       _recentList = page.items.toList();
       _safeNotify();
     } catch (_) {
@@ -297,15 +323,57 @@ class NotificationViewModel extends ChangeNotifier {
     if (recentIndex != -1) {
       _recentList = List.from(_recentList)..[recentIndex] = updated;
     }
-    final listIndex =
-        _notifications.indexWhere((item) => item.id == updated.id);
+    final listIndex = _notifications.indexWhere(
+      (item) => item.id == updated.id,
+    );
     if (listIndex != -1) {
       _notifications = List.from(_notifications)..[listIndex] = updated;
     }
   }
 
   void setShowUnreadOnly(bool value) {
+    if (_showUnreadOnly == value) return;
     _showUnreadOnly = value;
-    _safeNotify();
+    refreshAll();
+  }
+
+  void setNotificationTypeFilter(String? value) {
+    final normalized = value == null || value.trim().isEmpty
+        ? null
+        : value.trim();
+    if (_notificationTypeFilter == normalized) return;
+    _notificationTypeFilter = normalized;
+    refreshAll();
+  }
+
+  void setPriorityFilter(String? value) {
+    final normalized = value == null || value.trim().isEmpty
+        ? null
+        : value.trim();
+    if (_priorityFilter == normalized) return;
+    _priorityFilter = normalized;
+    refreshAll();
+  }
+
+  void setOrdering(String value) {
+    if (_ordering == value) return;
+    _ordering = value;
+    refreshAll();
+  }
+
+  void setSearchQuery(String value) {
+    final normalized = value.trim();
+    if (_searchQuery == normalized) return;
+    _searchQuery = normalized;
+    refreshAll();
+  }
+
+  void clearFilters() {
+    _showUnreadOnly = false;
+    _notificationTypeFilter = null;
+    _priorityFilter = null;
+    _ordering = '-created_at';
+    _searchQuery = '';
+    refreshAll();
   }
 }
