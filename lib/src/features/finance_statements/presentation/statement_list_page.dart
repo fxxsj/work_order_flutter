@@ -39,8 +39,11 @@ class StatementListEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FeatureEntry<StatementApiService, StatementRepository,
-        StatementViewModel>(
+    return FeatureEntry<
+      StatementApiService,
+      StatementRepository,
+      StatementViewModel
+    >(
       createService: (context) =>
           StatementApiService(context.read<ApiClient>()),
       createRepository: (context) =>
@@ -97,19 +100,47 @@ class _StatementListViewState extends State<_StatementListView> {
     _supportService ??= StatementSupportService(context.read<ApiClient>());
     final uri = GoRouterState.of(context).uri;
     final routeSearch = uri.queryParameters['search']?.trim() ?? '';
+    final routeStatementType =
+        uri.queryParameters['statement_type']?.trim() ??
+        uri.queryParameters['type']?.trim() ??
+        '';
     final routeStatus = uri.queryParameters['status']?.trim() ?? '';
     final routeTodo = uri.queryParameters['todo']?.trim() ?? '';
-    final signature = '$routeSearch|$routeStatus|$routeTodo';
+    final routeCustomer =
+        uri.queryParameters['customer']?.trim() ??
+        uri.queryParameters['partner']?.trim() ??
+        '';
+    final routeSupplier = uri.queryParameters['supplier']?.trim() ?? '';
+    final routePeriodStart = uri.queryParameters['period_start']?.trim() ?? '';
+    final routePeriodEnd = uri.queryParameters['period_end']?.trim() ?? '';
+    final routeOrdering = uri.queryParameters['ordering']?.trim() ?? '';
+    final signature = [
+      routeSearch,
+      routeStatementType,
+      routeStatus,
+      routeTodo,
+      routeCustomer,
+      routeSupplier,
+      routePeriodStart,
+      routePeriodEnd,
+      routeOrdering,
+    ].join('|');
     if (_lastRouteSignature == signature) return;
     _lastRouteSignature = signature;
     _searchController.text = routeSearch;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<StatementViewModel>().applyRoutePrefill(
-            search: routeSearch,
-            status: routeStatus,
-            todo: routeTodo,
-          );
+        search: routeSearch,
+        statementType: routeStatementType,
+        status: routeStatus,
+        todo: routeTodo,
+        customer: routeCustomer,
+        supplier: routeSupplier,
+        periodStart: routePeriodStart,
+        periodEnd: routePeriodEnd,
+        ordering: routeOrdering,
+      );
     });
   }
 
@@ -378,23 +409,38 @@ class _StatementListViewState extends State<_StatementListView> {
           .map(
             (statement) => DataRow(
               cells: [
-                DataCell(Text(
-                  _displayText(
-                      statement.statementNumber ?? '对账单 #${statement.id}'),
-                  style: theme.textTheme.bodyMedium,
-                )),
-                DataCell(Text(_displayText(statement.customerName),
-                    style: textStyle)),
+                DataCell(
+                  Text(
+                    _displayText(
+                      statement.statementNumber ?? '对账单 #${statement.id}',
+                    ),
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ),
+                DataCell(
+                  Text(_displayText(statement.customerName), style: textStyle),
+                ),
                 DataCell(Text(_statementTypeText(statement), style: textStyle)),
-                DataCell(Text(
+                DataCell(
+                  Text(
                     _formatPeriod(statement.periodStart, statement.periodEnd),
-                    style: textStyle)),
-                DataCell(Text(_formatAmount(statement.closingBalance),
-                    style: theme.textTheme.bodyMedium)),
-                DataCell(Text(
-                  statement.statusDisplay ?? statement.status ?? _emptyCellText,
-                  style: textStyle,
-                )),
+                    style: textStyle,
+                  ),
+                ),
+                DataCell(
+                  Text(
+                    _formatAmount(statement.closingBalance),
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ),
+                DataCell(
+                  Text(
+                    statement.statusDisplay ??
+                        statement.status ??
+                        _emptyCellText,
+                    style: textStyle,
+                  ),
+                ),
                 DataCell(Text(_followUpText(statement), style: textStyle)),
                 DataCell(_buildRowActions(viewModel, statement)),
               ],
@@ -417,10 +463,14 @@ class _StatementListViewState extends State<_StatementListView> {
       padding: EdgeInsets.zero,
       actions: LayoutBuilder(
         builder: (context, constraints) {
-          final pendingConfirmCount =
-              _summaryCount(viewModel.summary, 'pending_confirm_count');
-          final disputedCount =
-              _summaryCount(viewModel.summary, 'disputed_count');
+          final pendingConfirmCount = _summaryCount(
+            viewModel.summary,
+            'pending_confirm_count',
+          );
+          final disputedCount = _summaryCount(
+            viewModel.summary,
+            'disputed_count',
+          );
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -448,12 +498,12 @@ class _StatementListViewState extends State<_StatementListView> {
                 label: '异议待处理',
                 count: disputedCount,
                 icon: Icons.report_problem_outlined,
-                selected: viewModel.statusFilter == 'disputed' ||
+                selected:
+                    viewModel.statusFilter == 'disputed' ||
                     viewModel.todoFilter == 'disputed',
                 onTap: () => _openQuickFilter(status: 'disputed'),
               ),
-            if (viewModel.statusFilter.isNotEmpty ||
-                viewModel.todoFilter.isNotEmpty)
+            if (_hasActiveFilter(viewModel))
               PageActionButton.outlined(
                 onPressed: _clearFilters,
                 icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
@@ -496,28 +546,34 @@ class _StatementListViewState extends State<_StatementListView> {
     final actions = <RowAction>[];
     final status = statement.status ?? '';
     if (canChangeStatement && (status == 'draft' || status == 'sent')) {
-      actions.add(RowAction(
-        label: '确认',
-        icon: Icons.verified_outlined,
-        onPressed: () =>
-            _confirmStatement(viewModel, statement, confirmed: true),
-      ));
-      actions.add(RowAction(
-        label: '有异议',
-        icon: Icons.report_outlined,
-        destructive: true,
-        onPressed: () =>
-            _confirmStatement(viewModel, statement, confirmed: false),
-      ));
+      actions.add(
+        RowAction(
+          label: '确认',
+          icon: Icons.verified_outlined,
+          onPressed: () =>
+              _confirmStatement(viewModel, statement, confirmed: true),
+        ),
+      );
+      actions.add(
+        RowAction(
+          label: '有异议',
+          icon: Icons.report_outlined,
+          destructive: true,
+          onPressed: () =>
+              _confirmStatement(viewModel, statement, confirmed: false),
+        ),
+      );
     }
     final auditKeyword = (statement.statementNumber ?? '').trim();
     if (canViewAudit && auditKeyword.isNotEmpty) {
-      actions.add(RowAction(
-        label: '审计',
-        icon: Icons.history_outlined,
-        onPressed: () =>
-            AuditLogNavigation.open(context, keyword: auditKeyword),
-      ));
+      actions.add(
+        RowAction(
+          label: '审计',
+          icon: Icons.history_outlined,
+          onPressed: () =>
+              AuditLogNavigation.open(context, keyword: auditKeyword),
+        ),
+      );
     }
     if (actions.isEmpty) {
       return const SizedBox.shrink();
@@ -552,8 +608,12 @@ class _StatementListViewState extends State<_StatementListView> {
   }
 
   Widget _mobileRow(
-      BuildContext context, TextStyle? labelStyle, String label, String value,
-      {bool last = false}) {
+    BuildContext context,
+    TextStyle? labelStyle,
+    String label,
+    String value, {
+    bool last = false,
+  }) {
     final theme = Theme.of(context);
     final spacing = LayoutTokens.sectionSpacing(context) * 0.6;
     return Padding(
@@ -563,8 +623,11 @@ class _StatementListViewState extends State<_StatementListView> {
         children: [
           SizedBox(width: 72, child: Text(label, style: labelStyle)),
           Expanded(
-              child: Text(value.isEmpty ? _emptyCellText : value,
-                  style: theme.textTheme.bodyMedium)),
+            child: Text(
+              value.isEmpty ? _emptyCellText : value,
+              style: theme.textTheme.bodyMedium,
+            ),
+          ),
         ],
       ),
     );
@@ -601,22 +664,23 @@ class _StatementListViewState extends State<_StatementListView> {
       if (confirmationNotes != null)
         _mobileRow(context, labelStyle, '确认备注', confirmationNotes, last: true),
     ];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: rows,
-    );
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: rows);
   }
 
   Widget _buildSummaryCard(
-      BuildContext context, Statement statement, bool isMobile) {
+    BuildContext context,
+    Statement statement,
+    bool isMobile,
+  ) {
     final permissions = PermissionUtil.snapshot(context);
     final canChangeStatement = permissions.has('workorder.change_statement');
     final canViewAudit = AuditLogNavigation.canView(context);
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
-    final number =
-        _displayText(statement.statementNumber ?? '对账单 #${statement.id}');
+    final number = _displayText(
+      statement.statementNumber ?? '对账单 #${statement.id}',
+    );
     final customer = _displayText(statement.customerName);
     final statementType = _statementTypeText(statement);
     final period = _formatPeriod(statement.periodStart, statement.periodEnd);
@@ -629,41 +693,49 @@ class _StatementListViewState extends State<_StatementListView> {
     final actions = <RowAction>[];
     final statusCode = statement.status ?? '';
     if (canChangeStatement && (statusCode == 'draft' || statusCode == 'sent')) {
-      actions.add(RowAction(
-        label: '确认',
-        icon: Icons.verified_outlined,
-        onPressed: () => _confirmStatement(
-          context.read<StatementViewModel>(),
-          statement,
-          confirmed: true,
+      actions.add(
+        RowAction(
+          label: '确认',
+          icon: Icons.verified_outlined,
+          onPressed: () => _confirmStatement(
+            context.read<StatementViewModel>(),
+            statement,
+            confirmed: true,
+          ),
         ),
-      ));
-      actions.add(RowAction(
-        label: '有异议',
-        icon: Icons.report_outlined,
-        destructive: true,
-        onPressed: () => _confirmStatement(
-          context.read<StatementViewModel>(),
-          statement,
-          confirmed: false,
+      );
+      actions.add(
+        RowAction(
+          label: '有异议',
+          icon: Icons.report_outlined,
+          destructive: true,
+          onPressed: () => _confirmStatement(
+            context.read<StatementViewModel>(),
+            statement,
+            confirmed: false,
+          ),
         ),
-      ));
+      );
     }
     final auditKeyword = (statement.statementNumber ?? '').trim();
     if (canViewAudit && auditKeyword.isNotEmpty) {
-      actions.add(RowAction(
-        label: '审计',
-        icon: Icons.history_outlined,
-        onPressed: () =>
-            AuditLogNavigation.open(context, keyword: auditKeyword),
-      ));
+      actions.add(
+        RowAction(
+          label: '审计',
+          icon: Icons.history_outlined,
+          onPressed: () =>
+              AuditLogNavigation.open(context, keyword: auditKeyword),
+        ),
+      );
     }
     if ((statement.statementType ?? '') == 'customer') {
-      actions.add(RowAction(
-        label: '客户订单',
-        icon: Icons.point_of_sale_outlined,
-        onPressed: () => context.go('/sales-orders'),
-      ));
+      actions.add(
+        RowAction(
+          label: '客户订单',
+          icon: Icons.point_of_sale_outlined,
+          onPressed: () => context.go('/sales-orders'),
+        ),
+      );
     }
 
     return ExpandableSummaryCard(
@@ -751,8 +823,8 @@ class _StatementListViewState extends State<_StatementListView> {
                 : null,
             confirmationNotes:
                 (statement.confirmationNotes ?? '').trim().isNotEmpty
-                    ? _displayText(statement.confirmationNotes)
-                    : null,
+                ? _displayText(statement.confirmationNotes)
+                : null,
           ),
           if (actions.isNotEmpty) ...[
             SizedBox(height: sectionSpacing),
@@ -790,18 +862,27 @@ class _StatementListViewState extends State<_StatementListView> {
     if (search.isNotEmpty) {
       query['search'] = search;
     }
+    final viewModel = context.read<StatementViewModel>();
+    if (viewModel.ordering != '-period') {
+      query['ordering'] = viewModel.ordering;
+    }
     context.go(
-        Uri(path: '/finance/statements', queryParameters: query).toString());
+      Uri(path: '/finance/statements', queryParameters: query).toString(),
+    );
   }
 
-  void _openQuickFilter({
-    String? status,
-    String? todo,
-  }) {
+  void _openQuickFilter({String? status, String? todo}) {
     final query = <String, String>{};
     final search = _searchController.text.trim();
     if (search.isNotEmpty) {
       query['search'] = search;
+    }
+    final viewModel = context.read<StatementViewModel>();
+    if (viewModel.statementTypeFilter.isNotEmpty) {
+      query['statement_type'] = viewModel.statementTypeFilter;
+    }
+    if (viewModel.ordering != '-period') {
+      query['ordering'] = viewModel.ordering;
     }
     if ((status ?? '').trim().isNotEmpty) {
       query['status'] = status!.trim();
@@ -810,7 +891,19 @@ class _StatementListViewState extends State<_StatementListView> {
       query['todo'] = todo!.trim();
     }
     context.go(
-        Uri(path: '/finance/statements', queryParameters: query).toString());
+      Uri(path: '/finance/statements', queryParameters: query).toString(),
+    );
+  }
+
+  bool _hasActiveFilter(StatementViewModel viewModel) {
+    return viewModel.statementTypeFilter.isNotEmpty ||
+        viewModel.statusFilter.isNotEmpty ||
+        viewModel.todoFilter.isNotEmpty ||
+        viewModel.customerFilter.isNotEmpty ||
+        viewModel.supplierFilter.isNotEmpty ||
+        viewModel.periodStartFilter.isNotEmpty ||
+        viewModel.periodEndFilter.isNotEmpty ||
+        viewModel.ordering != '-period';
   }
 
   int _summaryCount(Map<String, dynamic> payload, String key) {

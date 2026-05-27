@@ -13,15 +13,27 @@ class StatementRepositoryImpl implements StatementRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? statementType,
     String? status,
     String? todo,
+    String? customer,
+    String? supplier,
+    String? periodStart,
+    String? periodEnd,
+    String? ordering,
   }) async {
     final result = await _apiService.fetchStatements(
       page: page,
       pageSize: pageSize,
       search: search,
+      statementType: statementType,
       status: status,
       todo: todo,
+      customer: customer,
+      supplier: supplier,
+      periodStart: periodStart,
+      periodEnd: periodEnd,
+      ordering: ordering,
     );
     return PageData(
       items: result.items.map((dto) => dto.toEntity()).toList(),
@@ -42,7 +54,7 @@ class StatementRepositoryImpl implements StatementRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> getSummary() {
-    return _apiService.fetchSummary();
+  Future<Map<String, dynamic>> getSummary({Map<String, dynamic>? params}) {
+    return _apiService.fetchSummary(params: params);
   }
 }
