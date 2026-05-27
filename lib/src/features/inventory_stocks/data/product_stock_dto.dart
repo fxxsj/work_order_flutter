@@ -34,7 +34,7 @@ class ProductStockDto {
   final double? quantity;
   final double? reservedQuantity;
   final double? availableQuantity;
-  final int? minStockLevel;
+  final double? minStockLevel;
   final String? location;
   final DateTime? productionDate;
   final double? unitCost;

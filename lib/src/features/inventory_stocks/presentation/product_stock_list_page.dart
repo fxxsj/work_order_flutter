@@ -33,8 +33,11 @@ class ProductStockListEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FeatureEntry<ProductStockApiService, ProductStockRepository,
-        ProductStockViewModel>(
+    return FeatureEntry<
+      ProductStockApiService,
+      ProductStockRepository,
+      ProductStockViewModel
+    >(
       createService: (context) =>
           ProductStockApiService(context.read<ApiClient>()),
       createRepository: (context) =>
@@ -84,6 +87,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
   static const String _lowStockText = '库存预警';
   static const String _expiredText = '过期库存';
   static const String _statusFilterLabel = '库存状态';
+  static const String _orderingLabel = '排序';
   static const String _resetButtonText = '重置筛选';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
   static const String _pageSizeLabel = '每页 {size}';
@@ -104,7 +108,8 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     final uri = GoRouterState.of(context).uri;
     final routeSearch = uri.queryParameters['search']?.trim() ?? '';
     final routeStatus = uri.queryParameters['status']?.trim() ?? '';
-    final signature = '$routeSearch|$routeStatus';
+    final routeOrdering = uri.queryParameters['ordering']?.trim() ?? '';
+    final signature = '$routeSearch|$routeStatus|$routeOrdering';
     final hadRouteState = _routeSignature != null;
     if (_routeSignature == signature) return;
     _routeSignature = signature;
@@ -116,9 +121,10 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<ProductStockViewModel>().applyRoutePrefill(
-            search: routeSearch,
-            status: routeStatus,
-          );
+        search: routeSearch,
+        status: routeStatus,
+        ordering: routeOrdering,
+      );
     });
   }
 
@@ -129,8 +135,10 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     super.dispose();
   }
 
-  void _scheduleSearch(ProductStockViewModel viewModel,
-      {bool immediate = false}) {
+  void _scheduleSearch(
+    ProductStockViewModel viewModel, {
+    bool immediate = false,
+  }) {
     if (immediate) {
       _debounce.cancel();
       viewModel.setSearchText(_searchController.text.trim());
@@ -215,9 +223,13 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
             value: _displayText(stock.productCode),
           ),
           ProductStockDetailRow(
-              label: '批次号', value: _displayText(stock.batchNo)),
+            label: '批次号',
+            value: _displayText(stock.batchNo),
+          ),
           ProductStockDetailRow(
-              label: '库存数量', value: _formatAmount(stock.quantity)),
+            label: '库存数量',
+            value: _formatAmount(stock.quantity),
+          ),
           ProductStockDetailRow(
             label: '预留数量',
             value: _formatAmount(stock.reservedQuantity),
@@ -228,24 +240,36 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
           ),
           ProductStockDetailRow(
             label: '最小库存',
-            value: stock.minStockLevel?.toString() ?? _emptyCellText,
+            value: _formatAmount(stock.minStockLevel),
           ),
           ProductStockDetailRow(
-              label: '库位', value: _displayText(stock.location)),
+            label: '库位',
+            value: _displayText(stock.location),
+          ),
           ProductStockDetailRow(
-              label: '生产日期', value: _formatDate(stock.productionDate)),
+            label: '生产日期',
+            value: _formatDate(stock.productionDate),
+          ),
           ProductStockDetailRow(
-              label: '到期日期', value: _formatDate(stock.expiryDate)),
+            label: '到期日期',
+            value: _formatDate(stock.expiryDate),
+          ),
           ProductStockDetailRow(
             label: '状态',
             value: _displayText(stock.statusDisplay ?? stock.status),
           ),
           ProductStockDetailRow(
-              label: '单位成本', value: _formatAmount(stock.unitCost)),
+            label: '单位成本',
+            value: _formatAmount(stock.unitCost),
+          ),
           ProductStockDetailRow(
-              label: '总价值', value: _formatAmount(stock.totalValue)),
+            label: '总价值',
+            value: _formatAmount(stock.totalValue),
+          ),
           ProductStockDetailRow(
-              label: '创建时间', value: _formatDate(stock.createdAt)),
+            label: '创建时间',
+            value: _formatDate(stock.createdAt),
+          ),
           if ((stock.notes ?? '').trim().isNotEmpty)
             ProductStockDetailRow(
               label: '备注',
@@ -404,35 +428,49 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
                 ),
                 DataCell(Text(_sourceSummary(stock), style: textStyle)),
                 DataCell(Text(_displayText(stock.batchNo), style: textStyle)),
-                DataCell(Text(
-                  _displayText(stock.statusDisplay ?? stock.status),
-                  style: textStyle,
-                )),
+                DataCell(
+                  Text(
+                    _displayText(stock.statusDisplay ?? stock.status),
+                    style: textStyle,
+                  ),
+                ),
                 DataCell(Text(_formatAmount(stock.quantity), style: textStyle)),
-                DataCell(Text(_formatAmount(stock.reservedQuantity),
-                    style: textStyle)),
-                DataCell(Text(_formatAmount(stock.availableQuantity),
-                    style: textStyle)),
+                DataCell(
+                  Text(_formatAmount(stock.reservedQuantity), style: textStyle),
+                ),
+                DataCell(
+                  Text(
+                    _formatAmount(stock.availableQuantity),
+                    style: textStyle,
+                  ),
+                ),
                 DataCell(Text(_followUpText(stock), style: textStyle)),
                 DataCell(Text(_displayText(stock.location), style: textStyle)),
                 DataCell(Text(_formatDate(stock.expiryDate), style: textStyle)),
-                DataCell(Text(_formatAmount(stock.totalValue),
-                    style: theme.textTheme.bodyMedium)),
-                DataCell(RowActionGroup(
-                  actions: [
-                    if ((stock.customerName ?? '').trim().isNotEmpty)
+                DataCell(
+                  Text(
+                    _formatAmount(stock.totalValue),
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ),
+                DataCell(
+                  RowActionGroup(
+                    actions: [
+                      if ((stock.customerName ?? '').trim().isNotEmpty)
+                        RowAction(
+                          label: '去发货',
+                          icon: Icons.local_shipping_outlined,
+                          onPressed: () =>
+                              _openDeliveryList(stock.customerName!),
+                        ),
                       RowAction(
-                        label: '去发货',
-                        icon: Icons.local_shipping_outlined,
-                        onPressed: () => _openDeliveryList(stock.customerName!),
+                        label: _adjustTitle,
+                        onPressed: () =>
+                            _openAdjustDialog(context, viewModel, stock),
                       ),
-                    RowAction(
-                      label: _adjustTitle,
-                      onPressed: () =>
-                          _openAdjustDialog(context, viewModel, stock),
-                    ),
-                  ],
-                )),
+                    ],
+                  ),
+                ),
               ],
             ),
           )
@@ -553,8 +591,9 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     ProductStockViewModel viewModel, {
     required double bottomSpacing,
   }) {
-    final statusValue =
-        viewModel.statusFilter.isEmpty ? '' : viewModel.statusFilter;
+    final statusValue = viewModel.statusFilter.isEmpty
+        ? ''
+        : viewModel.statusFilter;
     return FilterPanelBody(
       bottomSpacing: bottomSpacing,
       resetLabel: _resetButtonText,
@@ -573,6 +612,22 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
           ],
           onChanged: (value) => viewModel.setStatusFilter(value ?? ''),
         ),
+        AppSelect<String>(
+          key: ValueKey<String>(viewModel.ordering),
+          value: viewModel.ordering,
+          decoration: const InputDecoration(labelText: _orderingLabel),
+          options: const [
+            AppDropdownOption(value: '-created_at', label: '最新入库'),
+            AppDropdownOption(value: 'created_at', label: '最早入库'),
+            AppDropdownOption(value: 'product__name', label: '产品名称升序'),
+            AppDropdownOption(value: '-product__name', label: '产品名称降序'),
+            AppDropdownOption(value: 'quantity', label: '库存升序'),
+            AppDropdownOption(value: '-quantity', label: '库存降序'),
+            AppDropdownOption(value: 'expiry_date', label: '到期日升序'),
+            AppDropdownOption(value: '-expiry_date', label: '到期日降序'),
+          ],
+          onChanged: (value) => viewModel.setOrdering(value ?? '-created_at'),
+        ),
       ],
     );
   }
@@ -581,13 +636,11 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     var count = 0;
     if (_searchController.text.trim().isNotEmpty) count += 1;
     if (viewModel.statusFilter.isNotEmpty) count += 1;
+    if (viewModel.ordering != '-created_at') count += 1;
     return count;
   }
 
-  void _resetFilters(
-    BuildContext context,
-    ProductStockViewModel viewModel,
-  ) {
+  void _resetFilters(BuildContext context, ProductStockViewModel viewModel) {
     if (_hasRouteQuickFilter(viewModel) ||
         _searchController.text.trim().isNotEmpty) {
       context.go('/inventory/stocks');
@@ -595,8 +648,12 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     }
     _searchController.clear();
     viewModel.setSearchText('');
-    if (viewModel.statusFilter.isNotEmpty) {
-      viewModel.setStatusFilter('');
+    if (viewModel.statusFilter.isNotEmpty ||
+        viewModel.ordering != '-created_at') {
+      viewModel
+        ..setStatusFilterSilently('')
+        ..setOrderingSilently('-created_at');
+      viewModel.loadStocks(resetPage: true);
     } else {
       viewModel.loadStocks(resetPage: true);
     }
@@ -800,10 +857,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     bool highlightExpired = false,
   }) {
     if (items.isEmpty) {
-      return const EmptyStateCard(
-        icon: Icons.inventory_outlined,
-        text: '暂无数据',
-      );
+      return const EmptyStateCard(icon: Icons.inventory_outlined, text: '暂无数据');
     }
     return SizedBox(
       height: 360,
@@ -819,8 +873,8 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
           final daysText = days == null
               ? _emptyCellText
               : days >= 0
-                  ? '$days 天'
-                  : '已过期 ${days.abs()} 天';
+              ? '$days 天'
+              : '已过期 ${days.abs()} 天';
           final title = _displayText(stock.productName);
           final subtitle =
               '批次: ${_displayText(stock.batchNo)} · 库位: ${_displayText(stock.location)}';
@@ -838,22 +892,29 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          )),
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   SpacingTokens.vXs,
-                  Text(subtitle,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).hintColor,
-                          )),
+                  Text(
+                    subtitle,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).hintColor,
+                    ),
+                  ),
                   SpacingTokens.vSm,
                   Wrap(
                     spacing: 12,
                     runSpacing: 6,
                     children: [
                       ProductStockInlineMeta(
-                          label: '库存', value: qty, valueColor: valueColor),
+                        label: '库存',
+                        value: qty,
+                        valueColor: valueColor,
+                      ),
                       ProductStockInlineMeta(label: '可用', value: available),
                       ProductStockInlineMeta(label: '到期', value: expiry),
                       ProductStockInlineMeta(label: '剩余', value: daysText),

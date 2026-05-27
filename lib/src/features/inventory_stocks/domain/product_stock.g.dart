@@ -19,7 +19,7 @@ _ProductStock _$ProductStockFromJson(Map<String, dynamic> json) =>
       quantity: _doubleOrNullFromJson(json['quantity']),
       reservedQuantity: _doubleOrNullFromJson(json['reserved_quantity']),
       availableQuantity: _doubleOrNullFromJson(json['available_quantity']),
-      minStockLevel: _intOrNullFromJson(json['min_stock_level']),
+      minStockLevel: _doubleOrNullFromJson(json['min_stock_level']),
       location: _stringOrNullFromJson(json['location']),
       productionDate: _dateTimeOrNullFromJson(json['production_date']),
       unitCost: _doubleOrNullFromJson(json['unit_cost']),

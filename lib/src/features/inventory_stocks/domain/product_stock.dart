@@ -27,8 +27,8 @@ abstract class ProductStock with _$ProductStock {
     double? reservedQuantity,
     @JsonKey(name: 'available_quantity', fromJson: _doubleOrNullFromJson)
     double? availableQuantity,
-    @JsonKey(name: 'min_stock_level', fromJson: _intOrNullFromJson)
-    int? minStockLevel,
+    @JsonKey(name: 'min_stock_level', fromJson: _doubleOrNullFromJson)
+    double? minStockLevel,
     @JsonKey(fromJson: _stringOrNullFromJson) String? location,
     @JsonKey(name: 'production_date', fromJson: _dateTimeOrNullFromJson)
     DateTime? productionDate,

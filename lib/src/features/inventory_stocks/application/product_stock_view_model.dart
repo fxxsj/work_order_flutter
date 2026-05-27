@@ -9,11 +9,13 @@ class ProductStockViewModel extends PaginatedViewModel<ProductStock> {
 
   final ProductStockRepository _repository;
   String _statusFilter = '';
+  String _ordering = '-created_at';
   Map<String, dynamic> _summary = const {};
   int _summaryRequestToken = 0;
 
   List<ProductStock> get stocks => items;
   String get statusFilter => _statusFilter;
+  String get ordering => _ordering;
   Map<String, dynamic> get summary => _summary;
 
   Future<void> initialize() => loadStocks(resetPage: true);
@@ -28,12 +30,31 @@ class ProductStockViewModel extends PaginatedViewModel<ProductStock> {
     await loadStocks(resetPage: true);
   }
 
+  void setStatusFilterSilently(String value) {
+    _statusFilter = value;
+  }
+
+  Future<void> setOrdering(String value) async {
+    final next = value.trim().isEmpty ? '-created_at' : value.trim();
+    if (_ordering == next) return;
+    _ordering = next;
+    await loadStocks(resetPage: true);
+  }
+
+  void setOrderingSilently(String value) {
+    _ordering = value.trim().isEmpty ? '-created_at' : value.trim();
+  }
+
   Future<void> applyRoutePrefill({
     String? search,
     String? status,
+    String? ordering,
   }) async {
     setSearchText(search?.trim() ?? '');
     _statusFilter = status?.trim() ?? '';
+    _ordering = ordering?.trim().isNotEmpty == true
+        ? ordering!.trim()
+        : '-created_at';
     await loadStocks(resetPage: true);
   }
 
@@ -48,6 +69,7 @@ class ProductStockViewModel extends PaginatedViewModel<ProductStock> {
       pageSize: pageSize,
       search: search,
       status: _statusFilter.isEmpty ? null : _statusFilter,
+      ordering: _ordering,
     );
     return result;
   }

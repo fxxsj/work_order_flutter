@@ -7,6 +7,7 @@ abstract class ProductStockRepository {
     int pageSize = 20,
     String? search,
     String? status,
+    String? ordering,
   });
 
   Future<Map<String, dynamic>> getLowStock({Map<String, dynamic>? params});
@@ -18,5 +19,7 @@ abstract class ProductStockRepository {
   Future<Map<String, dynamic>> getSummary({Map<String, dynamic>? params});
 
   Future<Map<String, dynamic>> adjustStock(
-      int id, Map<String, dynamic> payload);
+    int id,
+    Map<String, dynamic> payload,
+  );
 }

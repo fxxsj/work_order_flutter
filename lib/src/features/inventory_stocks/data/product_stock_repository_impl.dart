@@ -14,12 +14,14 @@ class ProductStockRepositoryImpl implements ProductStockRepository {
     int pageSize = 20,
     String? search,
     String? status,
+    String? ordering,
   }) async {
     final result = await _apiService.fetchProductStocks(
       page: page,
       pageSize: pageSize,
       search: search,
       status: status,
+      ordering: ordering,
     );
     return PageData(
       items: result.items.map((dto) => dto.toEntity()).toList(),
@@ -51,7 +53,9 @@ class ProductStockRepositoryImpl implements ProductStockRepository {
 
   @override
   Future<Map<String, dynamic>> adjustStock(
-      int id, Map<String, dynamic> payload) {
+    int id,
+    Map<String, dynamic> payload,
+  ) {
     return _apiService.adjustStock(id, payload);
   }
 }
