@@ -13,11 +13,17 @@ class ProductionCostRepositoryImpl implements ProductionCostRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? periodStart,
+    String? periodEnd,
+    String? ordering,
   }) async {
     final result = await _apiService.fetchCosts(
       page: page,
       pageSize: pageSize,
       search: search,
+      periodStart: periodStart,
+      periodEnd: periodEnd,
+      ordering: ordering,
     );
     return PageData(
       items: result.items.map((dto) => dto.toEntity()).toList(),

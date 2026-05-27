@@ -6,6 +6,9 @@ abstract class ProductionCostRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? periodStart,
+    String? periodEnd,
+    String? ordering,
   });
 
   Future<Map<String, dynamic>> calculateMaterial(int id);

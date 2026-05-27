@@ -16,21 +16,45 @@ abstract class ProductionCost with _$ProductionCost {
       fromJson: _stringOrNullFromJson,
     )
     String? workOrderNumber,
+    @JsonKey(name: 'customer_name', fromJson: _stringOrNullFromJson)
+    String? customerName,
+    @JsonKey(name: 'product_name', fromJson: _stringOrNullFromJson)
+    String? productName,
+    @JsonKey(fromJson: _stringOrNullFromJson) String? period,
+    @JsonKey(name: 'material_cost', fromJson: _doubleOrNullFromJson)
+    double? materialCost,
+    @JsonKey(name: 'labor_cost', fromJson: _doubleOrNullFromJson)
+    double? laborCost,
+    @JsonKey(name: 'equipment_cost', fromJson: _doubleOrNullFromJson)
+    double? equipmentCost,
+    @JsonKey(name: 'overhead_cost', fromJson: _doubleOrNullFromJson)
+    double? overheadCost,
     @JsonKey(
       name: 'total_cost',
       readValue: _readTotalCost,
       fromJson: _doubleOrNullFromJson,
     )
     double? totalCost,
-    @JsonKey(fromJson: _stringOrNullFromJson) String? status,
-    @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
-    String? statusDisplay,
+    @JsonKey(name: 'standard_cost', fromJson: _doubleOrNullFromJson)
+    double? standardCost,
+    @JsonKey(fromJson: _doubleOrNullFromJson) double? variance,
+    @JsonKey(name: 'variance_rate', fromJson: _doubleOrNullFromJson)
+    double? varianceRate,
+    @JsonKey(name: 'variance_rate_formatted', fromJson: _stringOrNullFromJson)
+    String? varianceRateFormatted,
+    @JsonKey(name: 'calculated_by_name', fromJson: _stringOrNullFromJson)
+    String? calculatedByName,
+    @JsonKey(fromJson: _stringOrNullFromJson) String? notes,
     @JsonKey(
       name: 'calculated_at',
       readValue: _readCalculatedAt,
       fromJson: _dateTimeOrNullFromJson,
     )
     DateTime? calculatedAt,
+    @JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson)
+    DateTime? createdAt,
+    @JsonKey(name: 'updated_at', fromJson: _dateTimeOrNullFromJson)
+    DateTime? updatedAt,
   }) = _ProductionCost;
 
   factory ProductionCost.fromJson(Map<String, dynamic> json) =>

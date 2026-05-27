@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
@@ -11,6 +12,8 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -27,12 +30,16 @@ class ProductionCostListEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FeatureEntry<ProductionCostApiService, ProductionCostRepository,
-        ProductionCostViewModel>(
+    return FeatureEntry<
+      ProductionCostApiService,
+      ProductionCostRepository,
+      ProductionCostViewModel
+    >(
       createService: (context) =>
           ProductionCostApiService(context.read<ApiClient>()),
       createRepository: (context) => ProductionCostRepositoryImpl(
-          context.read<ProductionCostApiService>()),
+        context.read<ProductionCostApiService>(),
+      ),
       createViewModel: (context) =>
           ProductionCostViewModel(context.read<ProductionCostRepository>()),
       initialize: (viewModel) => viewModel.initialize(),
@@ -70,9 +77,40 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
   static const String _retryText = '重新加载';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
   static const String _pageSizeLabel = '每页 {size}';
+  static const String _orderingLabel = '排序';
+  static const String _resetButtonText = '重置筛选';
 
   final TextEditingController _searchController = TextEditingController();
   final _debounce = DebounceController();
+  String? _lastRouteSignature;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final uri = GoRouterState.of(context).uri;
+    final routeSearch = uri.queryParameters['search']?.trim() ?? '';
+    final routePeriodStart = uri.queryParameters['period_start']?.trim() ?? '';
+    final routePeriodEnd = uri.queryParameters['period_end']?.trim() ?? '';
+    final routeOrdering = uri.queryParameters['ordering']?.trim() ?? '';
+    final signature = [
+      routeSearch,
+      routePeriodStart,
+      routePeriodEnd,
+      routeOrdering,
+    ].join('|');
+    if (_lastRouteSignature == signature) return;
+    _lastRouteSignature = signature;
+    _searchController.text = routeSearch;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<ProductionCostViewModel>().applyRoutePrefill(
+        search: routeSearch,
+        periodStart: routePeriodStart,
+        periodEnd: routePeriodEnd,
+        ordering: routeOrdering,
+      );
+    });
+  }
 
   @override
   void dispose() {
@@ -81,8 +119,10 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
     super.dispose();
   }
 
-  void _scheduleSearch(ProductionCostViewModel viewModel,
-      {bool immediate = false}) {
+  void _scheduleSearch(
+    ProductionCostViewModel viewModel, {
+    bool immediate = false,
+  }) {
     if (immediate) {
       _debounce.cancel();
       viewModel.setSearchText(_searchController.text.trim());
@@ -121,6 +161,41 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
     } catch (err) {
       ToastUtil.showError('计算失败: $err');
     }
+  }
+
+  bool _hasActiveFilter(ProductionCostViewModel viewModel) {
+    return viewModel.periodStartFilter.isNotEmpty ||
+        viewModel.periodEndFilter.isNotEmpty ||
+        viewModel.ordering != '-period';
+  }
+
+  void _clearFilters() {
+    final search = _searchController.text.trim();
+    final query = <String, String>{};
+    if (search.isNotEmpty) {
+      query['search'] = search;
+    }
+    context.go(Uri(path: '/finance/costs', queryParameters: query).toString());
+  }
+
+  int _activeFilterCount(ProductionCostViewModel viewModel) {
+    var count = 0;
+    if (_searchController.text.trim().isNotEmpty) count += 1;
+    if (viewModel.periodStartFilter.isNotEmpty) count += 1;
+    if (viewModel.periodEndFilter.isNotEmpty) count += 1;
+    if (viewModel.ordering != '-period') count += 1;
+    return count;
+  }
+
+  void _resetFilters(BuildContext context, ProductionCostViewModel viewModel) {
+    if (_searchController.text.trim().isNotEmpty) {
+      context.go('/finance/costs');
+      return;
+    }
+    viewModel
+      ..setSearchText('')
+      ..setFiltersSilently(periodStart: '', periodEnd: '', ordering: '-period');
+    viewModel.loadCosts(resetPage: true);
   }
 
   static String _pageInfoText(ProductionCostViewModel viewModel) {
@@ -209,8 +284,13 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
     return AppDataTable(
       columns: const [
         DataColumn(label: Text('施工单号')),
+        DataColumn(label: Text('期间')),
+        DataColumn(label: Text('客户')),
+        DataColumn(label: Text('产品')),
+        DataColumn(label: Text('材料')),
+        DataColumn(label: Text('人工')),
         DataColumn(label: Text('总成本')),
-        DataColumn(label: Text('状态')),
+        DataColumn(label: Text('差异')),
         DataColumn(label: Text('计算时间')),
         DataColumn(label: Text('操作')),
       ],
@@ -218,17 +298,28 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
           .map(
             (cost) => DataRow(
               cells: [
-                DataCell(Text(
-                  _displayText(cost.workOrderNumber ?? '成本 #${cost.id}'),
-                  style: theme.textTheme.bodyMedium,
-                )),
-                DataCell(Text(_formatAmount(cost.totalCost), style: textStyle)),
-                DataCell(Text(
-                  cost.statusDisplay ?? cost.status ?? _emptyCellText,
-                  style: textStyle,
-                )),
                 DataCell(
-                    Text(_formatDate(cost.calculatedAt), style: textStyle)),
+                  Text(
+                    _displayText(cost.workOrderNumber ?? '成本 #${cost.id}'),
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ),
+                DataCell(Text(_displayText(cost.period), style: textStyle)),
+                DataCell(
+                  Text(_displayText(cost.customerName), style: textStyle),
+                ),
+                DataCell(
+                  Text(_displayText(cost.productName), style: textStyle),
+                ),
+                DataCell(
+                  Text(_formatAmount(cost.materialCost), style: textStyle),
+                ),
+                DataCell(Text(_formatAmount(cost.laborCost), style: textStyle)),
+                DataCell(Text(_formatAmount(cost.totalCost), style: textStyle)),
+                DataCell(Text(_formatAmount(cost.variance), style: textStyle)),
+                DataCell(
+                  Text(_formatDate(cost.calculatedAt), style: textStyle),
+                ),
                 DataCell(_buildRowActions(viewModel, cost)),
               ],
             ),
@@ -242,6 +333,18 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
     ProductionCostViewModel viewModel,
     bool isMobile,
   ) {
+    void openFilterDrawer() {
+      showAdaptiveFilterDrawer(
+        context,
+        isMobile: isMobile,
+        child: _buildFilterPanel(
+          context,
+          viewModel,
+          bottomSpacing: isMobile ? 16 : 20,
+        ),
+      );
+    }
+
     return PageHeaderBar(
       breadcrumb: null,
       useSurface: false,
@@ -263,10 +366,23 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
           );
 
           final actions = <Widget>[
+            if (_hasActiveFilter(viewModel))
+              PageActionButton.outlined(
+                onPressed: _clearFilters,
+                icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
+                label: '清除筛选',
+              ),
             PageActionButton.outlined(
               onPressed: () => viewModel.loadCosts(resetPage: true),
               icon: const Icon(Icons.refresh, size: 16),
               label: _refreshButtonText,
+            ),
+            PageActionButton.outlined(
+              onPressed: openFilterDrawer,
+              icon: const Icon(Icons.filter_alt_outlined, size: 16),
+              label: _activeFilterCount(viewModel) > 0
+                  ? '筛选 ${_activeFilterCount(viewModel)}'
+                  : '筛选',
             ),
           ];
 
@@ -278,6 +394,71 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildFilterPanel(
+    BuildContext context,
+    ProductionCostViewModel viewModel, {
+    required double bottomSpacing,
+  }) {
+    return FilterPanelBody(
+      bottomSpacing: bottomSpacing,
+      resetLabel: _resetButtonText,
+      onReset: () => _resetFilters(context, viewModel),
+      fields: [
+        TextFormField(
+          key: ValueKey<String>('start-${viewModel.periodStartFilter}'),
+          initialValue: viewModel.periodStartFilter,
+          decoration: const InputDecoration(
+            labelText: '起始期间',
+            hintText: 'YYYY-MM',
+          ),
+          onFieldSubmitted: viewModel.setPeriodStartFilter,
+          onChanged: viewModel.setPeriodStartFilter,
+        ),
+        TextFormField(
+          key: ValueKey<String>('end-${viewModel.periodEndFilter}'),
+          initialValue: viewModel.periodEndFilter,
+          decoration: const InputDecoration(
+            labelText: '结束期间',
+            hintText: 'YYYY-MM',
+          ),
+          onFieldSubmitted: viewModel.setPeriodEndFilter,
+          onChanged: viewModel.setPeriodEndFilter,
+        ),
+        AppSelect<String>(
+          key: ValueKey<String>(viewModel.ordering),
+          value: viewModel.ordering,
+          decoration: const InputDecoration(labelText: _orderingLabel),
+          options: const [
+            AppDropdownOption(value: '-period', label: '最新期间'),
+            AppDropdownOption(value: 'period', label: '最早期间'),
+            AppDropdownOption(
+              value: 'work_order__order_number',
+              label: '施工单号升序',
+            ),
+            AppDropdownOption(
+              value: '-work_order__order_number',
+              label: '施工单号降序',
+            ),
+            AppDropdownOption(
+              value: 'work_order__customer__name',
+              label: '客户名称升序',
+            ),
+            AppDropdownOption(
+              value: '-work_order__customer__name',
+              label: '客户名称降序',
+            ),
+            AppDropdownOption(value: 'total_cost', label: '总成本升序'),
+            AppDropdownOption(value: '-total_cost', label: '总成本降序'),
+            AppDropdownOption(value: 'variance', label: '成本差异升序'),
+            AppDropdownOption(value: '-variance', label: '成本差异降序'),
+            AppDropdownOption(value: '-calculated_at', label: '最近核算'),
+          ],
+          onChanged: (value) => viewModel.setOrdering(value ?? '-period'),
+        ),
+      ],
     );
   }
 
@@ -320,13 +501,21 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
   }
 
   Widget _buildSummaryCard(
-      BuildContext context, ProductionCost cost, bool isMobile) {
+    BuildContext context,
+    ProductionCost cost,
+    bool isMobile,
+  ) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
     final workOrder = _displayText(cost.workOrderNumber ?? '成本 #${cost.id}');
+    final period = _displayText(cost.period);
+    final customer = _displayText(cost.customerName);
+    final product = _displayText(cost.productName);
+    final materialCost = _formatAmount(cost.materialCost);
+    final laborCost = _formatAmount(cost.laborCost);
     final totalCost = _formatAmount(cost.totalCost);
-    final status = cost.statusDisplay ?? cost.status ?? _emptyCellText;
+    final variance = _formatAmount(cost.variance);
     final calculatedAt = _formatDate(cost.calculatedAt);
     final actions = <RowAction>[
       RowAction(
@@ -361,7 +550,7 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
                   ),
                   SizedBox(height: sectionSpacing),
                   Text(
-                    status,
+                    '$period · $customer',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colors?.subtleText ?? theme.hintColor,
                     ),
@@ -371,8 +560,10 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
+                      _SummaryChip(label: '材料', value: materialCost),
+                      _SummaryChip(label: '人工', value: laborCost),
                       _SummaryChip(label: '总成本', value: totalCost),
-                      _SummaryChip(label: '状态', value: status),
+                      _SummaryChip(label: '差异', value: variance),
                     ],
                   ),
                 ],
@@ -409,8 +600,13 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
           _buildMobileFields(
             context,
             workOrder: workOrder,
+            period: period,
+            customer: customer,
+            product: product,
+            materialCost: materialCost,
+            laborCost: laborCost,
             totalCost: totalCost,
-            status: status,
+            variance: variance,
             calculatedAt: calculatedAt,
           ),
           SizedBox(height: sectionSpacing),
@@ -423,8 +619,13 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
   static Widget _buildMobileFields(
     BuildContext context, {
     required String workOrder,
+    required String period,
+    required String customer,
+    required String product,
+    required String materialCost,
+    required String laborCost,
     required String totalCost,
-    required String status,
+    required String variance,
     required String calculatedAt,
   }) {
     final theme = Theme.of(context);
@@ -435,8 +636,13 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _mobileRow(context, labelStyle, '施工单号', workOrder),
+        _mobileRow(context, labelStyle, '期间', period),
+        _mobileRow(context, labelStyle, '客户', customer),
+        _mobileRow(context, labelStyle, '产品', product),
+        _mobileRow(context, labelStyle, '材料', materialCost),
+        _mobileRow(context, labelStyle, '人工', laborCost),
         _mobileRow(context, labelStyle, '总成本', totalCost),
-        _mobileRow(context, labelStyle, '状态', status),
+        _mobileRow(context, labelStyle, '差异', variance),
         _mobileRow(context, labelStyle, '计算时间', calculatedAt, last: true),
       ],
     );
