@@ -17,6 +17,9 @@ class QualityInspectionRepositoryImpl implements QualityInspectionRepository {
     String? inspectionType,
     int? departmentId,
     String? todo,
+    String? startDate,
+    String? endDate,
+    String? ordering,
   }) {
     return _apiService.fetchQualityInspections(
       page: page,
@@ -26,6 +29,9 @@ class QualityInspectionRepositoryImpl implements QualityInspectionRepository {
       inspectionType: inspectionType,
       departmentId: departmentId,
       todo: todo,
+      startDate: startDate,
+      endDate: endDate,
+      ordering: ordering,
     );
   }
 
@@ -36,7 +42,9 @@ class QualityInspectionRepositoryImpl implements QualityInspectionRepository {
 
   @override
   Future<Map<String, dynamic>> uploadAttachment(
-      int id, MultipartFile attachment) {
+    int id,
+    MultipartFile attachment,
+  ) {
     return _apiService.uploadAttachment(id, attachment);
   }
 
@@ -46,12 +54,16 @@ class QualityInspectionRepositoryImpl implements QualityInspectionRepository {
     String? result,
     String? inspectionType,
     String? todo,
+    String? startDate,
+    String? endDate,
   }) {
     return _apiService.fetchSummary(
       departmentId: departmentId,
       result: result,
       inspectionType: inspectionType,
       todo: todo,
+      startDate: startDate,
+      endDate: endDate,
     );
   }
 }

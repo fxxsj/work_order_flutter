@@ -38,8 +38,11 @@ class QualityInspectionListEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FeatureEntry<QualityInspectionApiService,
-        QualityInspectionRepository, QualityInspectionViewModel>(
+    return FeatureEntry<
+      QualityInspectionApiService,
+      QualityInspectionRepository,
+      QualityInspectionViewModel
+    >(
       createService: (context) =>
           QualityInspectionApiService(context.read<ApiClient>()),
       createRepository: (context) => QualityInspectionRepositoryImpl(
@@ -91,9 +94,12 @@ class _QualityInspectionListViewState
   static const String _detailTitle = '质检详情';
   static const String _resultFilterLabel = '检验结果';
   static const String _typeFilterLabel = '检验类型';
+  static const String _todoFilterLabel = '待办事项';
+  static const String _orderingLabel = '排序';
   static const String _resetButtonText = '重置筛选';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
   static const String _pageSizeLabel = '每页 {size}';
+  static const String _listRoute = '/inventory/quality';
   static const List<String> _attachmentExtensions = [
     'pdf',
     'png',
@@ -114,13 +120,20 @@ class _QualityInspectionListViewState
     final result = uri.queryParameters['result']?.trim() ?? '';
     final inspectionType = uri.queryParameters['type']?.trim() ?? '';
     final todo = uri.queryParameters['todo']?.trim() ?? '';
-    final departmentId =
-        int.tryParse(uri.queryParameters['department_id'] ?? '');
+    final startDate = uri.queryParameters['start_date']?.trim() ?? '';
+    final endDate = uri.queryParameters['end_date']?.trim() ?? '';
+    final ordering = uri.queryParameters['ordering']?.trim() ?? '';
+    final departmentId = int.tryParse(
+      uri.queryParameters['department_id'] ?? '',
+    );
     final signature = [
       search,
       result,
       inspectionType,
       todo,
+      startDate,
+      endDate,
+      ordering,
       departmentId?.toString() ?? '',
     ].join('|');
     if (_routeSignature == signature) return;
@@ -130,12 +143,15 @@ class _QualityInspectionListViewState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<QualityInspectionViewModel>().applyRoutePrefill(
-            search: search,
-            result: result,
-            inspectionType: inspectionType,
-            departmentId: departmentId,
-            todo: todo,
-          );
+        search: search,
+        result: result,
+        inspectionType: inspectionType,
+        departmentId: departmentId,
+        todo: todo,
+        startDate: startDate,
+        endDate: endDate,
+        ordering: ordering,
+      );
     });
   }
 
@@ -146,8 +162,10 @@ class _QualityInspectionListViewState
     super.dispose();
   }
 
-  void _scheduleSearch(QualityInspectionViewModel viewModel,
-      {bool immediate = false}) {
+  void _scheduleSearch(
+    QualityInspectionViewModel viewModel, {
+    bool immediate = false,
+  }) {
     _debounce.cancel();
     if (immediate) {
       viewModel.setSearchText(_searchController.text.trim());
@@ -247,8 +265,9 @@ class _QualityInspectionListViewState
                         : OutlinedButton.icon(
                             onPressed: () {
                               Navigator.of(context).maybePop();
-                              context
-                                  .go('/workorders/${inspection.workOrderId}');
+                              context.go(
+                                '/workorders/${inspection.workOrderId}',
+                              );
                             },
                             icon: const Icon(Icons.open_in_new, size: 18),
                             label: const Text('查看施工单'),
@@ -270,7 +289,9 @@ class _QualityInspectionListViewState
                         value: _displayText(inspection.customerName),
                       ),
                       _DetailRow(
-                          label: '质检单号', value: inspection.inspectionNumber),
+                        label: '质检单号',
+                        value: inspection.inspectionNumber,
+                      ),
                       _DetailRow(
                         label: '检验类型',
                         value: _displayText(
@@ -335,8 +356,9 @@ class _QualityInspectionListViewState
                       ),
                       _DetailRow(
                         label: '检验附件',
-                        value:
-                            _hasAttachment(inspection) ? '已上传' : _emptyCellText,
+                        value: _hasAttachment(inspection)
+                            ? '已上传'
+                            : _emptyCellText,
                       ),
                       if ((inspection.inspectionStandard ?? '')
                           .trim()
@@ -617,43 +639,47 @@ class _QualityInspectionListViewState
         DataColumn(label: Text('待办')),
         DataColumn(label: Text('操作')),
       ],
-      rows: inspections.map(
-        (inspection) {
-          final canComplete = (inspection.result ?? 'pending') == 'pending';
-          return DataRow(
-            cells: [
-              DataCell(
-                InkWell(
-                  onTap: () => _openDetailDialog(inspection),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Text(
-                      _displayText(inspection.inspectionNumber),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
+      rows: inspections.map((inspection) {
+        final canComplete = (inspection.result ?? 'pending') == 'pending';
+        return DataRow(
+          cells: [
+            DataCell(
+              InkWell(
+                onTap: () => _openDetailDialog(inspection),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Text(
+                    _displayText(inspection.inspectionNumber),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
               ),
-              DataCell(
-                  Text(_qualitySourceSummary(inspection), style: textStyle)),
-              DataCell(
-                  Text(_displayText(inspection.productName), style: textStyle)),
-              DataCell(Text(_displayText(inspection.inspectorName),
-                  style: textStyle)),
-              DataCell(Text(_formatDate(inspection.inspectionDate),
-                  style: textStyle)),
-              DataCell(Text(
+            ),
+            DataCell(Text(_qualitySourceSummary(inspection), style: textStyle)),
+            DataCell(
+              Text(_displayText(inspection.productName), style: textStyle),
+            ),
+            DataCell(
+              Text(_displayText(inspection.inspectorName), style: textStyle),
+            ),
+            DataCell(
+              Text(_formatDate(inspection.inspectionDate), style: textStyle),
+            ),
+            DataCell(
+              Text(
                 inspection.resultDisplay ?? inspection.result ?? _emptyCellText,
                 style: textStyle,
-              )),
-              DataCell(
-                  Text(_qualityQuantitySummary(inspection), style: textStyle)),
-              DataCell(
-                  Text(_qualityFollowUpText(inspection), style: textStyle)),
-              DataCell(RowActionGroup(
+              ),
+            ),
+            DataCell(
+              Text(_qualityQuantitySummary(inspection), style: textStyle),
+            ),
+            DataCell(Text(_qualityFollowUpText(inspection), style: textStyle)),
+            DataCell(
+              RowActionGroup(
                 actions: [
                   if (_needsExceptionFollowUp(inspection) ||
                       _hasRecordedExceptionAction(inspection))
@@ -694,11 +720,11 @@ class _QualityInspectionListViewState
                           _openCompleteDialog(context, viewModel, inspection),
                     ),
                 ],
-              )),
-            ],
-          );
-        },
-      ).toList(),
+              ),
+            ),
+          ],
+        );
+      }).toList(),
     );
   }
 
@@ -727,10 +753,14 @@ class _QualityInspectionListViewState
       actions: LayoutBuilder(
         builder: (context, constraints) {
           final activeFilters = _activeFilterCount(viewModel);
-          final pendingCount =
-              _summaryCount(viewModel.summary, 'pending_count');
-          final pendingExceptions =
-              _summaryCount(viewModel.summary, 'unresolved_exception_count');
+          final pendingCount = _summaryCount(
+            viewModel.summary,
+            'pending_count',
+          );
+          final pendingExceptions = _summaryCount(
+            viewModel.summary,
+            'unresolved_exception_count',
+          );
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -750,7 +780,8 @@ class _QualityInspectionListViewState
                 label: '待完成检验',
                 count: pendingCount,
                 icon: Icons.fact_check_outlined,
-                selected: viewModel.resultFilter == 'pending' &&
+                selected:
+                    viewModel.resultFilter == 'pending' &&
                     viewModel.todoFilter.isEmpty,
                 onTap: () => _openQuickFilter(viewModel, result: 'pending'),
               ),
@@ -796,9 +827,11 @@ class _QualityInspectionListViewState
     QualityInspectionViewModel viewModel, {
     required double bottomSpacing,
   }) {
-    final resultValue =
-        viewModel.resultFilter.isEmpty ? '' : viewModel.resultFilter;
+    final resultValue = viewModel.resultFilter.isEmpty
+        ? ''
+        : viewModel.resultFilter;
     final typeValue = viewModel.typeFilter.isEmpty ? '' : viewModel.typeFilter;
+    final todoValue = viewModel.todoFilter;
     return FilterPanelBody(
       bottomSpacing: bottomSpacing,
       resetLabel: _resetButtonText,
@@ -830,6 +863,78 @@ class _QualityInspectionListViewState
           ],
           onChanged: (value) => viewModel.setResultFilter(value ?? ''),
         ),
+        AppSelect<String>(
+          key: ValueKey<String>(todoValue),
+          value: todoValue.isEmpty ? null : todoValue,
+          decoration: const InputDecoration(labelText: _todoFilterLabel),
+          options: const [
+            AppDropdownOption<String>(value: '', label: '全部待办'),
+            AppDropdownOption<String>(
+              value: 'exception_followup',
+              label: '异常待处理',
+            ),
+          ],
+          onChanged: (value) => viewModel.setTodoFilter(value ?? ''),
+        ),
+        TextFormField(
+          key: ValueKey<String>('start-${viewModel.startDateFilter}'),
+          initialValue: viewModel.startDateFilter,
+          decoration: const InputDecoration(
+            labelText: '检验开始日期',
+            hintText: 'YYYY-MM-DD',
+          ),
+          onFieldSubmitted: viewModel.setStartDateFilter,
+          onChanged: viewModel.setStartDateFilter,
+        ),
+        TextFormField(
+          key: ValueKey<String>('end-${viewModel.endDateFilter}'),
+          initialValue: viewModel.endDateFilter,
+          decoration: const InputDecoration(
+            labelText: '检验结束日期',
+            hintText: 'YYYY-MM-DD',
+          ),
+          onFieldSubmitted: viewModel.setEndDateFilter,
+          onChanged: viewModel.setEndDateFilter,
+        ),
+        AppSelect<String>(
+          key: ValueKey<String>(viewModel.ordering),
+          value: viewModel.ordering,
+          decoration: const InputDecoration(labelText: _orderingLabel),
+          options: const [
+            AppDropdownOption<String>(value: '-inspection_date', label: '最新检验'),
+            AppDropdownOption<String>(value: 'inspection_date', label: '最早检验'),
+            AppDropdownOption<String>(
+              value: 'inspection_number',
+              label: '质检单号升序',
+            ),
+            AppDropdownOption<String>(
+              value: '-inspection_number',
+              label: '质检单号降序',
+            ),
+            AppDropdownOption<String>(
+              value: 'work_order__order_number',
+              label: '施工单号升序',
+            ),
+            AppDropdownOption<String>(
+              value: '-work_order__order_number',
+              label: '施工单号降序',
+            ),
+            AppDropdownOption<String>(
+              value: 'work_order__customer__name',
+              label: '客户名称升序',
+            ),
+            AppDropdownOption<String>(
+              value: '-work_order__customer__name',
+              label: '客户名称降序',
+            ),
+            AppDropdownOption<String>(value: 'product__name', label: '产品名称升序'),
+            AppDropdownOption<String>(value: '-product__name', label: '产品名称降序'),
+            AppDropdownOption<String>(value: 'defective_rate', label: '不良率升序'),
+            AppDropdownOption<String>(value: '-defective_rate', label: '不良率降序'),
+          ],
+          onChanged: (value) =>
+              viewModel.setOrdering(value ?? '-inspection_date'),
+        ),
       ],
     );
   }
@@ -841,12 +946,15 @@ class _QualityInspectionListViewState
     if (viewModel.resultFilter.isNotEmpty) count += 1;
     if (viewModel.todoFilter.isNotEmpty) count += 1;
     if (viewModel.departmentId > 0) count += 1;
+    if (viewModel.startDateFilter.isNotEmpty) count += 1;
+    if (viewModel.endDateFilter.isNotEmpty) count += 1;
+    if (viewModel.ordering != '-inspection_date') count += 1;
     return count;
   }
 
   void _resetFilters(QualityInspectionViewModel viewModel) {
     _searchController.clear();
-    context.go('/quality-inspections');
+    context.go(_listRoute);
   }
 
   void _clearQuickFilter(QualityInspectionViewModel viewModel) {
@@ -882,8 +990,16 @@ class _QualityInspectionListViewState
     if ((departmentId ?? 0) > 0) {
       query['department_id'] = departmentId!.toString();
     }
-    context.go(
-        Uri(path: '/quality-inspections', queryParameters: query).toString());
+    if (viewModel.startDateFilter.isNotEmpty) {
+      query['start_date'] = viewModel.startDateFilter;
+    }
+    if (viewModel.endDateFilter.isNotEmpty) {
+      query['end_date'] = viewModel.endDateFilter;
+    }
+    if (viewModel.ordering != '-inspection_date') {
+      query['ordering'] = viewModel.ordering;
+    }
+    context.go(Uri(path: _listRoute, queryParameters: query).toString());
   }
 
   int _summaryCount(Map<String, dynamic> payload, String key) {
@@ -941,8 +1057,9 @@ class _QualityInspectionListViewState
         inspection.resultDisplay ?? inspection.result ?? _emptyCellText;
     final defectiveRate = inspection.defectiveRateFormatted ?? _emptyCellText;
     final inspectionDate = _formatDate(inspection.inspectionDate);
-    final attachmentStatus =
-        _hasAttachment(inspection) ? '已上传' : _emptyCellText;
+    final attachmentStatus = _hasAttachment(inspection)
+        ? '已上传'
+        : _emptyCellText;
     final canComplete = (inspection.result ?? 'pending') == 'pending';
     final needsFollowUp = _needsExceptionFollowUp(inspection);
     final followUp = _qualityFollowUpText(inspection);
@@ -1041,9 +1158,14 @@ class _QualityInspectionListViewState
                   _hasRecordedExceptionAction(inspection))
                 OutlinedButton.icon(
                   onPressed: () => _openExceptionFollowUpDialog(
-                      context, viewModel, inspection),
-                  icon:
-                      const Icon(Icons.assignment_turned_in_outlined, size: 16),
+                    context,
+                    viewModel,
+                    inspection,
+                  ),
+                  icon: const Icon(
+                    Icons.assignment_turned_in_outlined,
+                    size: 16,
+                  ),
                   label: Text(
                     _hasRecordedExceptionAction(inspection) ? '更新处理' : '处理异常',
                   ),
@@ -1213,10 +1335,7 @@ class _QualityInspectionListViewState
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 72,
-            child: Text(label, style: labelStyle),
-          ),
+          SizedBox(width: 72, child: Text(label, style: labelStyle)),
           Expanded(
             child: Text(
               value.isEmpty ? _emptyCellText : value,
@@ -1258,30 +1377,30 @@ class _QualityInspectionListViewState
       _mobileRow(context, labelStyle, '结果', result),
       _mobileRow(context, labelStyle, '不良率', defectiveRate),
       _mobileRow(
-          context, labelStyle, '数量', _qualityQuantitySummary(inspection)),
+        context,
+        labelStyle,
+        '数量',
+        _qualityQuantitySummary(inspection),
+      ),
       _mobileRow(context, labelStyle, '附件', attachmentStatus),
       _mobileRow(context, labelStyle, '下一步', followUp),
     ];
     if (_hasRecordedExceptionAction(inspection)) {
-      rows.add(_mobileRow(
-        context,
-        labelStyle,
-        '处理结论',
-        _displayText(_qualityDispositionLabel(inspection)),
-      ));
+      rows.add(
+        _mobileRow(
+          context,
+          labelStyle,
+          '处理结论',
+          _displayText(_qualityDispositionLabel(inspection)),
+        ),
+      );
     }
     if (needsFollowUp) {
-      rows.add(_mobileRow(
-        context,
-        labelStyle,
-        '异常跟进',
-        _qualityNextStep(inspection),
-      ));
+      rows.add(
+        _mobileRow(context, labelStyle, '异常跟进', _qualityNextStep(inspection)),
+      );
     }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: rows,
-    );
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: rows);
   }
 }
 
@@ -1318,7 +1437,8 @@ class _QualityInspectionCompleteDialogState
     failedController = TextEditingController(
       text: widget.inspection.failedQuantity?.toStringAsFixed(0) ?? '',
     );
-    result = widget.inspection.result == null ||
+    result =
+        widget.inspection.result == null ||
             widget.inspection.result == 'pending'
         ? 'passed'
         : widget.inspection.result!;
@@ -1485,15 +1605,12 @@ class _DetailRow extends StatelessWidget {
             child: Text(
               label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).hintColor,
-                  ),
+                color: Theme.of(context).hintColor,
+              ),
             ),
           ),
           Expanded(
-            child: Text(
-              value,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            child: Text(value, style: Theme.of(context).textTheme.bodyMedium),
           ),
         ],
       ),
