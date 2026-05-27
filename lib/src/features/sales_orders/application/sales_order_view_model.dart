@@ -10,11 +10,15 @@ class SalesOrderViewModel extends PaginatedViewModel<SalesOrder> {
 
   final SalesOrderRepository _repository;
   String _statusFilter = '';
+  String _paymentStatusFilter = '';
+  String _ordering = '-created_at';
   Map<String, dynamic> _summary = const {};
   int _summaryRequestToken = 0;
 
   List<SalesOrder> get salesOrders => items;
   String get statusFilter => _statusFilter;
+  String get paymentStatusFilter => _paymentStatusFilter;
+  String get ordering => _ordering;
   Map<String, dynamic> get summary => _summary;
 
   Future<void> initialize() => loadSalesOrders(resetPage: true);
@@ -24,13 +28,33 @@ class SalesOrderViewModel extends PaginatedViewModel<SalesOrder> {
     unawaited(_loadSummary());
   }
 
-  Future<void> applyRoutePrefill({
-    String? search,
-    String? status,
-  }) async {
+  Future<void> applyRoutePrefill({String? search, String? status}) async {
     setSearchText(search?.trim() ?? '');
     _statusFilter = status?.trim() ?? '';
     await loadSalesOrders(resetPage: true);
+  }
+
+  void setStatusFilter(String value) {
+    _statusFilter = value.trim();
+    loadSalesOrders(resetPage: true);
+  }
+
+  void setPaymentStatusFilter(String value) {
+    _paymentStatusFilter = value.trim();
+    loadSalesOrders(resetPage: true);
+  }
+
+  void setOrdering(String value) {
+    _ordering = value.trim().isEmpty ? '-created_at' : value.trim();
+    loadSalesOrders(resetPage: true);
+  }
+
+  void resetFilters() {
+    setSearchText('');
+    _statusFilter = '';
+    _paymentStatusFilter = '';
+    _ordering = '-created_at';
+    loadSalesOrders(resetPage: true);
   }
 
   Future<SalesOrderDetail> fetchDetail(int id) async {
@@ -39,14 +63,17 @@ class SalesOrderViewModel extends PaginatedViewModel<SalesOrder> {
   }
 
   Future<SalesOrderDetail> createSalesOrder(
-      Map<String, dynamic> payload) async {
+    Map<String, dynamic> payload,
+  ) async {
     final detail = await _repository.createSalesOrder(payload);
     await loadSalesOrders(resetPage: true);
     return detail.toEntity();
   }
 
   Future<SalesOrderDetail> updateSalesOrder(
-      int id, Map<String, dynamic> payload) async {
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
     final detail = await _repository.updateSalesOrder(id, payload);
     await loadSalesOrders();
     return detail.toEntity();
@@ -111,6 +138,8 @@ class SalesOrderViewModel extends PaginatedViewModel<SalesOrder> {
       pageSize: pageSize,
       search: search,
       status: _statusFilter.isEmpty ? null : _statusFilter,
+      paymentStatus: _paymentStatusFilter.isEmpty ? null : _paymentStatusFilter,
+      ordering: _ordering,
     );
     return PageData(
       items: result.items.map((dto) => dto.toEntity()).toList(),
@@ -130,6 +159,9 @@ class SalesOrderViewModel extends PaginatedViewModel<SalesOrder> {
       }
       if (_statusFilter.isNotEmpty) {
         params['status'] = _statusFilter;
+      }
+      if (_paymentStatusFilter.isNotEmpty) {
+        params['payment_status'] = _paymentStatusFilter;
       }
       final summary = await _repository.getSummary(
         params: params.isEmpty ? null : params,

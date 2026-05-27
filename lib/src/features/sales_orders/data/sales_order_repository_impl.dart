@@ -5,9 +5,10 @@ import 'package:work_order_app/src/features/sales_orders/domain/sales_order_repo
 import 'package:work_order_app/src/features/workorders/data/work_order_flow_api_service.dart';
 
 class SalesOrderRepositoryImpl implements SalesOrderRepository {
-  SalesOrderRepositoryImpl(this._apiService,
-      [WorkOrderFlowApiService? workOrderFlowApiService])
-      : _workOrderFlowApiService = workOrderFlowApiService;
+  SalesOrderRepositoryImpl(
+    this._apiService, [
+    WorkOrderFlowApiService? workOrderFlowApiService,
+  ]) : _workOrderFlowApiService = workOrderFlowApiService;
 
   final SalesOrderApiService _apiService;
   final WorkOrderFlowApiService? _workOrderFlowApiService;
@@ -19,6 +20,7 @@ class SalesOrderRepositoryImpl implements SalesOrderRepository {
     String? search,
     String? status,
     String? paymentStatus,
+    String? ordering,
   }) {
     return _apiService.fetchSalesOrders(
       page: page,
@@ -26,6 +28,7 @@ class SalesOrderRepositoryImpl implements SalesOrderRepository {
       search: search,
       status: status,
       paymentStatus: paymentStatus,
+      ordering: ordering,
     );
   }
 
@@ -46,7 +49,9 @@ class SalesOrderRepositoryImpl implements SalesOrderRepository {
 
   @override
   Future<SalesOrderDetailDto> updateSalesOrder(
-      int id, Map<String, dynamic> payload) {
+    int id,
+    Map<String, dynamic> payload,
+  ) {
     return _apiService.updateSalesOrder(id, payload);
   }
 
@@ -71,8 +76,10 @@ class SalesOrderRepositoryImpl implements SalesOrderRepository {
   }
 
   @override
-  Future<SalesOrderDetailDto> complete(int id,
-      [Map<String, dynamic>? payload]) {
+  Future<SalesOrderDetailDto> complete(
+    int id, [
+    Map<String, dynamic>? payload,
+  ]) {
     return _apiService.complete(id, payload);
   }
 
@@ -83,7 +90,9 @@ class SalesOrderRepositoryImpl implements SalesOrderRepository {
 
   @override
   Future<SalesOrderDetailDto> updatePayment(
-      int id, Map<String, dynamic> payload) {
+    int id,
+    Map<String, dynamic> payload,
+  ) {
     return _apiService.updatePayment(id, payload);
   }
 

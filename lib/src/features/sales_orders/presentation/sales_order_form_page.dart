@@ -36,8 +36,11 @@ class SalesOrderFormEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FeatureEntry<SalesOrderApiService, SalesOrderRepository,
-        SalesOrderViewModel>(
+    return FeatureEntry<
+      SalesOrderApiService,
+      SalesOrderRepository,
+      SalesOrderViewModel
+    >(
       createService: (context) =>
           SalesOrderApiService(context.read<ApiClient>()),
       createRepository: (context) => SalesOrderRepositoryImpl(
@@ -76,14 +79,18 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
   final TextEditingController _shippingAddressController =
       TextEditingController();
   final TextEditingController _notesController = TextEditingController();
-  final TextEditingController _taxRateController =
-      TextEditingController(text: '0');
-  final TextEditingController _discountAmountController =
-      TextEditingController(text: '0');
-  final TextEditingController _depositAmountController =
-      TextEditingController(text: '0');
-  final TextEditingController _paidAmountController =
-      TextEditingController(text: '0');
+  final TextEditingController _taxRateController = TextEditingController(
+    text: '0',
+  );
+  final TextEditingController _discountAmountController = TextEditingController(
+    text: '0',
+  );
+  final TextEditingController _depositAmountController = TextEditingController(
+    text: '0',
+  );
+  final TextEditingController _paidAmountController = TextEditingController(
+    text: '0',
+  );
   final TextEditingController _paymentDateController = TextEditingController();
 
   DateTime? _orderDate;
@@ -148,8 +155,10 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
     final productApi = ProductApiService(apiClient);
     try {
       final customerFuture = customerApi.fetchCustomers(page: 1, pageSize: 50);
-      final productFuture =
-          productApi.fetchProducts(pageSize: 50, isActive: true);
+      final productFuture = productApi.fetchProducts(
+        pageSize: 50,
+        isActive: true,
+      );
       final customerPage = await customerFuture;
       final productOptions = await productFuture;
       setState(() {
@@ -194,8 +203,9 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
       _taxRateController.text = detail.taxRate!.toStringAsFixed(2);
     }
     if (detail.discountAmount != null) {
-      _discountAmountController.text =
-          detail.discountAmount!.toStringAsFixed(2);
+      _discountAmountController.text = detail.discountAmount!.toStringAsFixed(
+        2,
+      );
     }
     if (detail.depositAmount != null) {
       _depositAmountController.text = detail.depositAmount!.toStringAsFixed(2);
@@ -239,15 +249,21 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
     final shippingAddress = customer.address?.trim() ?? '';
 
     if (_shouldOverwriteAutoField(
-        _contactPersonController.text, _autoFilledContactPerson)) {
+      _contactPersonController.text,
+      _autoFilledContactPerson,
+    )) {
       _contactPersonController.text = contactPerson;
     }
     if (_shouldOverwriteAutoField(
-        _contactPhoneController.text, _autoFilledContactPhone)) {
+      _contactPhoneController.text,
+      _autoFilledContactPhone,
+    )) {
       _contactPhoneController.text = contactPhone;
     }
     if (_shouldOverwriteAutoField(
-        _shippingAddressController.text, _autoFilledShippingAddress)) {
+      _shippingAddressController.text,
+      _autoFilledShippingAddress,
+    )) {
       _shippingAddressController.text = shippingAddress;
     }
 
@@ -264,9 +280,10 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
         _autoFilledCustomerId == null) {
       return;
     }
-    final customer = _customers
-        .cast<Customer?>()
-        .firstWhere((item) => item?.id == customerId, orElse: () => null);
+    final customer = _customers.cast<Customer?>().firstWhere(
+      (item) => item?.id == customerId,
+      orElse: () => null,
+    );
     if (customer == null) return;
     _applyCustomerContactInfo(customer);
   }
@@ -325,7 +342,8 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
         ..removeWhere((item) => item.id == option.id)
         ..add(option)
         ..sort(
-            (left, right) => left.displayLabel.compareTo(right.displayLabel));
+          (left, right) => left.displayLabel.compareTo(right.displayLabel),
+        );
     });
     ToastUtil.showSuccess('产品已新增');
     return option;
@@ -435,8 +453,46 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
       ToastUtil.showError('请选择交货日期');
       return;
     }
+    if (_orderDate != null &&
+        _deliveryDate != null &&
+        _deliveryDate!.isBefore(_orderDate!)) {
+      ToastUtil.showError('交货日期不能早于订单日期');
+      return;
+    }
     if (_itemDrafts.every((draft) => draft.productId == null)) {
       ToastUtil.showError('请至少填写一条订单明细');
+      return;
+    }
+    final validDrafts = _itemDrafts
+        .where((draft) => draft.productId != null)
+        .toList();
+    if (validDrafts.any((draft) => draft.quantityValue <= 0)) {
+      ToastUtil.showError('产品数量必须大于 0');
+      return;
+    }
+    if (validDrafts.any((draft) => draft.unitPriceValue < 0)) {
+      ToastUtil.showError('产品单价不能小于 0');
+      return;
+    }
+    if (validDrafts.any(
+      (draft) => draft.taxRateValue < 0 || draft.taxRateValue > 100,
+    )) {
+      ToastUtil.showError('明细税率必须在 0-100 之间');
+      return;
+    }
+    if (validDrafts.any((draft) => draft.discountAmountValue < 0)) {
+      ToastUtil.showError('明细折扣不能小于 0');
+      return;
+    }
+    final taxRate = double.tryParse(_taxRateController.text.trim()) ?? 0;
+    if (taxRate < 0 || taxRate > 100) {
+      ToastUtil.showError('税率必须在 0-100 之间');
+      return;
+    }
+    if (_discountAmountValue < 0 ||
+        _depositAmountValue < 0 ||
+        _paidAmountValue < 0) {
+      ToastUtil.showError('金额不能小于 0');
       return;
     }
 
@@ -523,12 +579,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
 
   Widget _buildContextSection(double fieldWidth) {
     final customerOptions = _customers
-        .map(
-          (item) => AppDropdownOption<int>(
-            value: item.id,
-            label: item.name,
-          ),
-        )
+        .map((item) => AppDropdownOption<int>(value: item.id, label: item.name))
         .toList();
     customerOptions.add(
       AppDropdownOption<int>(
@@ -603,8 +654,8 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                     label: '订单号',
                     initialValue:
                         _detail?.orderNumber.trim().isNotEmpty ?? false
-                            ? _detail!.orderNumber
-                            : '保存后生成',
+                        ? _detail!.orderNumber
+                        : '保存后生成',
                     enabled: false,
                   ).build(context),
                 ),
@@ -701,8 +752,9 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
             children: [
               PageActionButton.outlined(
                 onPressed: () => setState(
-                  () => _itemDrafts
-                      .add(_ItemDraft(initialTaxRate: _orderTaxRateValue)),
+                  () => _itemDrafts.add(
+                    _ItemDraft(initialTaxRate: _orderTaxRateValue),
+                  ),
                 ),
                 icon: const Icon(Icons.add, size: 16),
                 label: '新增明细',
@@ -717,17 +769,15 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                 label: '税额合计',
                 value: _formatAmount(_itemsTaxAmountValue),
               ),
-              _InlineBadge(
-                label: '合计',
-                value: _formatAmount(_itemsTotalValue),
-              ),
+              _InlineBadge(label: '合计', value: _formatAmount(_itemsTotalValue)),
             ],
           ),
           SpacingTokens.vMd,
           for (int index = 0; index < _itemDrafts.length; index++)
             _ItemRow(
               key: ValueKey(
-                  'sales-order-item-$index-${_itemDrafts[index].productId ?? 0}'),
+                'sales-order-item-$index-${_itemDrafts[index].productId ?? 0}',
+              ),
               draft: _itemDrafts[index],
               products: _products,
               isDesktop: isDesktop,
@@ -735,9 +785,9 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               onChanged: () => setState(() {}),
               onRemove: _itemDrafts.length > 1
                   ? () => setState(() {
-                        final draft = _itemDrafts.removeAt(index);
-                        draft.dispose();
-                      })
+                      final draft = _itemDrafts.removeAt(index);
+                      draft.dispose();
+                    })
                   : null,
             ),
         ],
@@ -922,8 +972,8 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
             label: '关联发货单',
             numbers: detail.deliveryOrderSummaries.isNotEmpty
                 ? detail.deliveryOrderSummaries
-                    .map((item) => item.number)
-                    .toList()
+                      .map((item) => item.number)
+                      .toList()
                 : detail.deliveryOrderNumbers,
           ),
           SpacingTokens.vSm,
@@ -997,26 +1047,31 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
 
 class _ItemDraft {
   _ItemDraft({double initialTaxRate = 0})
-      : quantityController = TextEditingController(text: '1'),
-        unitController = TextEditingController(text: '件'),
-        unitPriceController = TextEditingController(text: '0'),
-        taxRateController =
-            TextEditingController(text: initialTaxRate.toStringAsFixed(2)),
-        discountAmountController = TextEditingController(text: '0'),
-        notesController = TextEditingController();
+    : quantityController = TextEditingController(text: '1'),
+      unitController = TextEditingController(text: '件'),
+      unitPriceController = TextEditingController(text: '0'),
+      taxRateController = TextEditingController(
+        text: initialTaxRate.toStringAsFixed(2),
+      ),
+      discountAmountController = TextEditingController(text: '0'),
+      notesController = TextEditingController();
 
   _ItemDraft.fromDetail(SalesOrderItem item, double? orderTaxRate)
-      : productId = item.productId,
-        quantityController =
-            TextEditingController(text: item.quantity?.toString() ?? '1'),
-        unitController = TextEditingController(text: item.unit ?? '件'),
-        unitPriceController = TextEditingController(
-            text: item.unitPrice?.toStringAsFixed(2) ?? '0'),
-        taxRateController = TextEditingController(
-            text: (item.taxRate ?? orderTaxRate ?? 0).toStringAsFixed(2)),
-        discountAmountController = TextEditingController(
-            text: item.discountAmount?.toStringAsFixed(2) ?? '0'),
-        notesController = TextEditingController(text: item.notes ?? '');
+    : productId = item.productId,
+      quantityController = TextEditingController(
+        text: item.quantity?.toString() ?? '1',
+      ),
+      unitController = TextEditingController(text: item.unit ?? '件'),
+      unitPriceController = TextEditingController(
+        text: item.unitPrice?.toStringAsFixed(2) ?? '0',
+      ),
+      taxRateController = TextEditingController(
+        text: (item.taxRate ?? orderTaxRate ?? 0).toStringAsFixed(2),
+      ),
+      discountAmountController = TextEditingController(
+        text: item.discountAmount?.toStringAsFixed(2) ?? '0',
+      ),
+      notesController = TextEditingController(text: item.notes ?? '');
 
   int? productId;
   final TextEditingController quantityController;
@@ -1076,16 +1131,16 @@ class _ItemRowState extends State<_ItemRow> {
       return null;
     }
     return widget.products.cast<ProductOption?>().firstWhere(
-          (item) => item?.id == productId,
-          orElse: () => null,
-        );
+      (item) => item?.id == productId,
+      orElse: () => null,
+    );
   }
 
   void _applyProductDefaults(ProductOption product) {
     widget.draft.unitController.text =
         (product.unit?.trim().isNotEmpty ?? false) ? product.unit!.trim() : '件';
-    widget.draft.unitPriceController.text =
-        (product.unitPrice ?? 0).toStringAsFixed(2);
+    widget.draft.unitPriceController.text = (product.unitPrice ?? 0)
+        .toStringAsFixed(2);
     widget.onChanged();
   }
 
@@ -1096,9 +1151,9 @@ class _ItemRowState extends State<_ItemRow> {
       return;
     }
     final product = widget.products.cast<ProductOption?>().firstWhere(
-          (item) => item?.id == value,
-          orElse: () => null,
-        );
+      (item) => item?.id == value,
+      orElse: () => null,
+    );
     if (product == null) {
       return;
     }
@@ -1125,10 +1180,8 @@ class _ItemRowState extends State<_ItemRow> {
     final lineTotal = safeSubtotal + lineTax;
     final productOptions = widget.products
         .map(
-          (item) => AppDropdownOption<int>(
-            value: item.id,
-            label: item.displayLabel,
-          ),
+          (item) =>
+              AppDropdownOption<int>(value: item.id, label: item.displayLabel),
         )
         .toList();
     productOptions.add(
@@ -1299,10 +1352,7 @@ class _ItemRowState extends State<_ItemRow> {
 }
 
 class _ReadOnlyMetric extends StatelessWidget {
-  const _ReadOnlyMetric({
-    required this.label,
-    required this.value,
-  });
+  const _ReadOnlyMetric({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -1317,10 +1367,7 @@ class _ReadOnlyMetric extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              label,
-              style: theme.textTheme.labelSmall,
-            ),
+            Text(label, style: theme.textTheme.labelSmall),
             SpacingTokens.vXs,
             Text(
               value,
@@ -1336,10 +1383,7 @@ class _ReadOnlyMetric extends StatelessWidget {
 }
 
 class _InlineBadge extends StatelessWidget {
-  const _InlineBadge({
-    required this.label,
-    required this.value,
-  });
+  const _InlineBadge({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -1350,25 +1394,21 @@ class _InlineBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest
-            .withValues(alpha: OpacityTokens.heavy),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: OpacityTokens.heavy,
+        ),
         borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
       ),
       child: Text(
         '$label：$value',
-        style: theme.textTheme.bodySmall?.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
+        style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
       ),
     );
   }
 }
 
 class _TraceabilityGroup extends StatelessWidget {
-  const _TraceabilityGroup({
-    required this.label,
-    required this.numbers,
-  });
+  const _TraceabilityGroup({required this.label, required this.numbers});
 
   final String label;
   final List<String> numbers;
@@ -1390,13 +1430,16 @@ class _TraceabilityGroup extends StatelessWidget {
             children: numbers
                 .map(
                   (number) => Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.surfaceContainerHighest
                           .withValues(alpha: OpacityTokens.heavy),
-                      borderRadius:
-                          BorderRadius.circular(LayoutTokens.radiusPill),
+                      borderRadius: BorderRadius.circular(
+                        LayoutTokens.radiusPill,
+                      ),
                     ),
                     child: Text(number, style: theme.textTheme.bodySmall),
                   ),

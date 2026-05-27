@@ -6,6 +6,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/action_dialogs.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
@@ -37,8 +38,11 @@ class SalesOrderListEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FeatureEntry<SalesOrderApiService, SalesOrderRepository,
-        SalesOrderViewModel>(
+    return FeatureEntry<
+      SalesOrderApiService,
+      SalesOrderRepository,
+      SalesOrderViewModel
+    >(
       createService: (context) =>
           SalesOrderApiService(context.read<ApiClient>()),
       createRepository: (context) => SalesOrderRepositoryImpl(
@@ -73,6 +77,9 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
   static const double _spacingSm = LayoutTokens.gapSm;
   static const double _controlHeight = PageActionStyle.height;
   static const String _searchHintText = '搜索订单号/客户';
+  static const String _statusFilterLabel = '状态';
+  static const String _paymentStatusFilterLabel = '付款';
+  static const String _orderingLabel = '排序';
   static const String _refreshButtonText = '刷新';
   static const String _createButtonText = '新建客户订单';
   static const String _emptyText = '暂无客户订单数据';
@@ -82,14 +89,14 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
   static const String _pageSizeLabel = '每页 {size}';
   static const CrudActionConfig<SalesOrder> _submitOrderConfig =
       CrudActionConfig(
-    title: '提交订单',
-    summaryBuilder: _submitSummary,
-    impactsBuilder: _submitImpacts,
-    auditHintBuilder: _submitAuditHint,
-    confirmText: '确认提交',
-    successMessageBuilder: _submitSuccessMessage,
-    errorMessagePrefix: '提交失败: ',
-  );
+        title: '提交订单',
+        summaryBuilder: _submitSummary,
+        impactsBuilder: _submitImpacts,
+        auditHintBuilder: _submitAuditHint,
+        confirmText: '确认提交',
+        successMessageBuilder: _submitSuccessMessage,
+        errorMessagePrefix: '提交失败: ',
+      );
 
   final TextEditingController _searchController = TextEditingController();
   final _debounce = DebounceController();
@@ -117,9 +124,9 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<SalesOrderViewModel>().applyRoutePrefill(
-            search: routeSearch,
-            status: routeStatus,
-          );
+        search: routeSearch,
+        status: routeStatus,
+      );
     });
   }
 
@@ -189,8 +196,9 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     if (result == null) return;
 
     final payload = <String, dynamic>{
-      'sales_order_ids':
-          selectedOrders.map((order) => order.id).toList(growable: false),
+      'sales_order_ids': selectedOrders
+          .map((order) => order.id)
+          .toList(growable: false),
       'priority': result.priority,
       'notes': result.notes,
       'allow_partial': true,
@@ -203,15 +211,15 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
       final response = await viewModel.createWorkOrdersFromSalesOrders(payload);
       final created = response['created'] is List
           ? (response['created'] as List)
-              .whereType<Map>()
-              .map((item) => Map<String, dynamic>.from(item))
-              .toList(growable: false)
+                .whereType<Map>()
+                .map((item) => Map<String, dynamic>.from(item))
+                .toList(growable: false)
           : const <Map<String, dynamic>>[];
       final failed = response['failed'] is List
           ? (response['failed'] as List)
-              .whereType<Map>()
-              .map((item) => Map<String, dynamic>.from(item))
-              .toList(growable: false)
+                .whereType<Map>()
+                .map((item) => Map<String, dynamic>.from(item))
+                .toList(growable: false)
           : const <Map<String, dynamic>>[];
 
       // 部分成功时显示详情对话框
@@ -295,15 +303,18 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
                           padding: const EdgeInsets.symmetric(vertical: 2),
                           child: Row(
                             children: [
-                              const Icon(Icons.check_circle,
-                                  color: Colors.green, size: 16),
+                              const Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                                size: 16,
+                              ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   '${order.orderNumber} → ${item['order_number'] ?? 'N/A'}',
-                                  style: Theme.of(dialogContext)
-                                      .textTheme
-                                      .bodySmall,
+                                  style: Theme.of(
+                                    dialogContext,
+                                  ).textTheme.bodySmall,
                                 ),
                               ),
                             ],
@@ -344,8 +355,11 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.error_outline,
-                                  color: Colors.red, size: 16),
+                              const Icon(
+                                Icons.error_outline,
+                                color: Colors.red,
+                                size: 16,
+                              ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Column(
@@ -357,7 +371,8 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
                                           .textTheme
                                           .bodySmall
                                           ?.copyWith(
-                                              fontWeight: FontWeight.w600),
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                     ),
                                     Text(
                                       item['error']?.toString() ?? '未知错误',
@@ -397,8 +412,10 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     );
   }
 
-  void _scheduleSearch(SalesOrderViewModel viewModel,
-      {bool immediate = false}) {
+  void _scheduleSearch(
+    SalesOrderViewModel viewModel, {
+    bool immediate = false,
+  }) {
     _debounce.cancel();
     if (immediate) {
       viewModel.setSearchText(_searchController.text.trim());
@@ -441,10 +458,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
       context,
       title: '审核通过',
       summary: '通过后，客户订单会进入生产准备和后续履约流程。',
-      impacts: const [
-        '请确认客户信息、产品规格、交期与金额已核对无误',
-        '通过后通常会进入施工单生成和排产准备',
-      ],
+      impacts: const ['请确认客户信息、产品规格、交期与金额已核对无误', '通过后通常会进入施工单生成和排产准备'],
       auditHint: '审批说明会进入业务与审计记录，建议保留必要结论。',
       notesLabel: '审核意见（可选）',
       notesMaxLines: 3,
@@ -468,10 +482,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
       context,
       title: '审核拒绝',
       summary: '拒绝客户订单后，业务需要补充资料或重新确认交期后再提交。',
-      impacts: const [
-        '请把缺少的资料、需要修改的内容写清楚',
-        '只写“有问题”会导致业务反复确认，无法直接修正',
-      ],
+      impacts: const ['请把缺少的资料、需要修改的内容写清楚', '只写“有问题”会导致业务反复确认，无法直接修正'],
       auditHint: '拒绝原因会直接进入审批和审计记录，后续会被客户、业务、生产共同参考。',
       destructive: true,
       notesLabel: '拒绝原因',
@@ -530,10 +541,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
       context,
       title: '取消订单',
       summary: '取消客户订单会中断后续施工、发货和财务闭环，相关部门需要同步停单。',
-      impacts: const [
-        '如果已排产或已出货，请先确认是否应走变更、退货或异常流程',
-        '建议填写取消原因，便于业务和财务后续对账追踪',
-      ],
+      impacts: const ['如果已排产或已出货，请先确认是否应走变更、退货或异常流程', '建议填写取消原因，便于业务和财务后续对账追踪'],
       auditHint: '订单取消原因会影响后续争议处理和经营复盘。',
       destructive: true,
       notesLabel: '取消原因（可选）',
@@ -590,7 +598,8 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
       final result = await viewModel.createWorkOrderFromSalesOrder({
         'sales_order_id': order.id,
       });
-      final workOrderId = int.tryParse(result['id']?.toString() ?? '') ??
+      final workOrderId =
+          int.tryParse(result['id']?.toString() ?? '') ??
           int.tryParse(result['work_order_id']?.toString() ?? '');
       ToastUtil.showSuccess('已生成施工单草稿');
       await viewModel.loadSalesOrders(resetPage: false);
@@ -643,8 +652,9 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     final permissions = PermissionUtil.snapshot(context);
     final canChangeSalesOrder = permissions.has('workorder.change_salesorder');
     final canCreateWorkOrder = permissions.has('workorder.add_workorder');
-    final canCreateDeliveryOrder =
-        permissions.has('workorder.add_deliveryorder');
+    final canCreateDeliveryOrder = permissions.has(
+      'workorder.add_deliveryorder',
+    );
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
     if (viewModel.loading && orders.isEmpty) {
       return const Center(child: CircularProgressIndicator());
@@ -710,20 +720,22 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final textStyle = theme.textTheme.bodySmall;
-    final selectableOrders =
-        orders.where(_isSelectableForWorkOrder).toList(growable: false);
+    final selectableOrders = orders
+        .where(_isSelectableForWorkOrder)
+        .toList(growable: false);
     final selectedOnPage = _selectedOrderIds.intersection(
       selectableOrders.map((item) => item.id).toSet(),
     );
-    final allSelected = selectableOrders.isNotEmpty &&
+    final allSelected =
+        selectableOrders.isNotEmpty &&
         selectableOrders.every((order) => _selectedOrderIds.contains(order.id));
     final bool? headerSelectionValue = selectableOrders.isEmpty
         ? false
         : allSelected
-            ? true
-            : selectedOnPage.isNotEmpty
-                ? null
-                : false;
+        ? true
+        : selectedOnPage.isNotEmpty
+        ? null
+        : false;
 
     return AppDataTable(
       columns: [
@@ -735,7 +747,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
               onChanged: selectableOrders.isEmpty
                   ? null
                   : (value) =>
-                      _toggleSelectAllCurrentPage(orders, value ?? false),
+                        _toggleSelectAllCurrentPage(orders, value ?? false),
             ),
           ),
         DataColumn(label: Text('订单号')),
@@ -760,7 +772,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
                       value: _selectedOrderIds.contains(order.id),
                       onChanged: _isSelectableForWorkOrder(order)
                           ? (value) =>
-                              _toggleOrderSelection(order, value ?? false)
+                                _toggleOrderSelection(order, value ?? false)
                           : null,
                     ),
                   ),
@@ -782,23 +794,34 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
                   ),
                 ),
                 DataCell(
-                    Text(_displayText(order.customerName), style: textStyle)),
-                DataCell(Text(
-                  _displayText(order.statusDisplay ?? order.status),
-                  style: textStyle?.copyWith(color: colors?.sidebarText),
-                )),
+                  Text(_displayText(order.customerName), style: textStyle),
+                ),
+                DataCell(
+                  Text(
+                    _displayText(order.statusDisplay ?? order.status),
+                    style: textStyle?.copyWith(color: colors?.sidebarText),
+                  ),
+                ),
                 DataCell(Text(_workOrderText(order), style: textStyle)),
                 DataCell(Text(_followUpText(order), style: textStyle)),
-                DataCell(Text(
-                  _displayText(
-                      order.paymentStatusDisplay ?? order.paymentStatus),
-                  style: textStyle,
-                )),
+                DataCell(
+                  Text(
+                    _displayText(
+                      order.paymentStatusDisplay ?? order.paymentStatus,
+                    ),
+                    style: textStyle,
+                  ),
+                ),
                 DataCell(Text(_formatDate(order.orderDate), style: textStyle)),
                 DataCell(
-                    Text(_formatDate(order.deliveryDate), style: textStyle)),
-                DataCell(Text(_formatAmount(order.totalAmount),
-                    style: theme.textTheme.bodyMedium)),
+                  Text(_formatDate(order.deliveryDate), style: textStyle),
+                ),
+                DataCell(
+                  Text(
+                    _formatAmount(order.totalAmount),
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ),
                 DataCell(
                   RowActionGroup(
                     actions: _buildActionsForOrder(
@@ -836,75 +859,93 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         ),
     ];
     if (canChangeSalesOrder && status == 'draft') {
-      actions.add(RowAction(
-        label: '提交',
-        icon: Icons.send_outlined,
-        onPressed: () => _submitOrder(viewModel, order),
-      ));
+      actions.add(
+        RowAction(
+          label: '提交',
+          icon: Icons.send_outlined,
+          onPressed: () => _submitOrder(viewModel, order),
+        ),
+      );
     }
     if (canChangeSalesOrder && status == 'rejected') {
-      actions.add(RowAction(
-        label: '重新提交',
-        icon: Icons.send_outlined,
-        onPressed: () => _submitOrder(viewModel, order),
-      ));
+      actions.add(
+        RowAction(
+          label: '重新提交',
+          icon: Icons.send_outlined,
+          onPressed: () => _submitOrder(viewModel, order),
+        ),
+      );
     }
     if (canChangeSalesOrder && status == 'submitted') {
-      actions.add(RowAction(
-        label: '审核通过',
-        icon: Icons.check_circle_outline,
-        onPressed: () => _approveOrder(viewModel, order),
-      ));
-      actions.add(RowAction(
-        label: '审核拒绝',
-        icon: Icons.cancel_outlined,
-        destructive: true,
-        onPressed: () => _rejectOrder(viewModel, order),
-      ));
+      actions.add(
+        RowAction(
+          label: '审核通过',
+          icon: Icons.check_circle_outline,
+          onPressed: () => _approveOrder(viewModel, order),
+        ),
+      );
+      actions.add(
+        RowAction(
+          label: '审核拒绝',
+          icon: Icons.cancel_outlined,
+          destructive: true,
+          onPressed: () => _rejectOrder(viewModel, order),
+        ),
+      );
     }
     if (canCreateWorkOrder &&
         (status == 'approved' || status == 'in_production')) {
-      actions.add(RowAction(
-        label: '生成施工单草稿',
-        icon: Icons.assignment_outlined,
-        onPressed: () => _createWorkOrderDraft(viewModel, order),
-      ));
+      actions.add(
+        RowAction(
+          label: '生成施工单草稿',
+          icon: Icons.assignment_outlined,
+          onPressed: () => _createWorkOrderDraft(viewModel, order),
+        ),
+      );
     }
     if (canCreateDeliveryOrder &&
         (status == 'approved' ||
             status == 'in_production' ||
             status == 'completed')) {
-      actions.add(RowAction(
-        label: '生成送货单',
-        icon: Icons.local_shipping_outlined,
-        onPressed: () => _goToCreateDeliveryOrder(order),
-      ));
+      actions.add(
+        RowAction(
+          label: '生成送货单',
+          icon: Icons.local_shipping_outlined,
+          onPressed: () => _goToCreateDeliveryOrder(order),
+        ),
+      );
     }
     if (canChangeSalesOrder) {
-      actions.add(RowAction(
-        label: '更新付款',
-        icon: Icons.payments_outlined,
-        onPressed: () => _updatePayment(viewModel, order),
-      ));
+      actions.add(
+        RowAction(
+          label: '更新付款',
+          icon: Icons.payments_outlined,
+          onPressed: () => _updatePayment(viewModel, order),
+        ),
+      );
     }
     if (canChangeSalesOrder &&
         (status == 'approved' || status == 'in_production')) {
-      actions.add(RowAction(
-        label: '完成订单',
-        icon: Icons.task_alt_outlined,
-        onPressed: () => _completeOrder(viewModel, order),
-      ));
+      actions.add(
+        RowAction(
+          label: '完成订单',
+          icon: Icons.task_alt_outlined,
+          onPressed: () => _completeOrder(viewModel, order),
+        ),
+      );
     }
     if (canChangeSalesOrder &&
         status.isNotEmpty &&
         status != 'completed' &&
         status != 'cancelled') {
-      actions.add(RowAction(
-        label: '取消订单',
-        icon: Icons.block_outlined,
-        destructive: true,
-        onPressed: () => _cancelOrder(viewModel, order),
-      ));
+      actions.add(
+        RowAction(
+          label: '取消订单',
+          icon: Icons.block_outlined,
+          destructive: true,
+          onPressed: () => _cancelOrder(viewModel, order),
+        ),
+      );
     }
 
     return actions;
@@ -928,10 +969,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
   }
 
   static List<String> _submitImpacts(SalesOrder order) {
-    return [
-      '客户：${_customerLabel(order)}',
-      '提交后建议尽快跟进审核，避免影响交期和生产准备',
-    ];
+    return ['客户：${_customerLabel(order)}', '提交后建议尽快跟进审核，避免影响交期和生产准备'];
   }
 
   static String _submitAuditHint(SalesOrder order) {
@@ -1034,7 +1072,91 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
             },
           );
 
+          final statusValue = viewModel.statusFilter.isEmpty
+              ? ''
+              : viewModel.statusFilter;
+          final statusField = SizedBox(
+            width: isMobile ? constraints.maxWidth : 150,
+            child: AppSelect<String>(
+              key: ValueKey<String>('sales-status-$statusValue'),
+              value: statusValue,
+              decoration: const InputDecoration(
+                labelText: _statusFilterLabel,
+                isDense: true,
+                border: OutlineInputBorder(),
+              ),
+              options: const [
+                AppDropdownOption(value: '', label: '全部状态'),
+                AppDropdownOption(value: 'draft', label: '草稿'),
+                AppDropdownOption(value: 'submitted', label: '已提交'),
+                AppDropdownOption(value: 'approved', label: '已审核'),
+                AppDropdownOption(value: 'rejected', label: '已拒绝'),
+                AppDropdownOption(value: 'in_production', label: '生产中'),
+                AppDropdownOption(value: 'completed', label: '已完成'),
+                AppDropdownOption(value: 'cancelled', label: '已取消'),
+              ],
+              onChanged: (value) => viewModel.setStatusFilter(value ?? ''),
+            ),
+          );
+
+          final paymentStatusValue = viewModel.paymentStatusFilter.isEmpty
+              ? ''
+              : viewModel.paymentStatusFilter;
+          final paymentStatusField = SizedBox(
+            width: isMobile ? constraints.maxWidth : 140,
+            child: AppSelect<String>(
+              key: ValueKey<String>('sales-payment-$paymentStatusValue'),
+              value: paymentStatusValue,
+              decoration: const InputDecoration(
+                labelText: _paymentStatusFilterLabel,
+                isDense: true,
+                border: OutlineInputBorder(),
+              ),
+              options: const [
+                AppDropdownOption(value: '', label: '全部付款'),
+                AppDropdownOption(value: 'unpaid', label: '未付款'),
+                AppDropdownOption(value: 'partial', label: '部分付款'),
+                AppDropdownOption(value: 'paid', label: '已付款'),
+              ],
+              onChanged: (value) =>
+                  viewModel.setPaymentStatusFilter(value ?? ''),
+            ),
+          );
+
+          final orderingField = SizedBox(
+            width: isMobile ? constraints.maxWidth : 160,
+            child: AppSelect<String>(
+              key: ValueKey<String>('sales-ordering-${viewModel.ordering}'),
+              value: viewModel.ordering,
+              decoration: const InputDecoration(
+                labelText: _orderingLabel,
+                isDense: true,
+                border: OutlineInputBorder(),
+              ),
+              options: const [
+                AppDropdownOption(value: '-created_at', label: '最新创建'),
+                AppDropdownOption(value: 'created_at', label: '最早创建'),
+                AppDropdownOption(value: 'order_number', label: '单号升序'),
+                AppDropdownOption(value: '-order_number', label: '单号降序'),
+                AppDropdownOption(value: 'customer__name', label: '客户升序'),
+                AppDropdownOption(value: '-customer__name', label: '客户降序'),
+                AppDropdownOption(value: 'order_date', label: '下单日期升序'),
+                AppDropdownOption(value: '-order_date', label: '下单日期降序'),
+                AppDropdownOption(value: 'delivery_date', label: '交期升序'),
+                AppDropdownOption(value: '-delivery_date', label: '交期降序'),
+                AppDropdownOption(value: 'total_amount', label: '金额升序'),
+                AppDropdownOption(value: '-total_amount', label: '金额降序'),
+              ],
+              onChanged: (value) {
+                if (value != null) viewModel.setOrdering(value);
+              },
+            ),
+          );
+
           final actions = <Widget>[
+            statusField,
+            paymentStatusField,
+            orderingField,
             if (submittedCount > 0)
               StatusHintChip(
                 label: '待审核订单',
@@ -1052,7 +1174,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
               ),
             if (_hasQuickFilter(viewModel))
               OutlinedButton.icon(
-                onPressed: () => context.go('/sales-orders'),
+                onPressed: () => _resetFilters(viewModel),
                 icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
                 label: const Text('清除筛选'),
               ),
@@ -1083,9 +1205,9 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
                 onPressed: _selectedOrderIds.isEmpty
                     ? null
                     : () => _createBatchWorkOrders(
-                          viewModel,
-                          viewModel.salesOrders,
-                        ),
+                        viewModel,
+                        viewModel.salesOrders,
+                      ),
                 icon: const Icon(Icons.assignment_add, size: 16),
                 label: '批量生成(${_selectedOrderIds.length})',
               ),
@@ -1134,17 +1256,29 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
   }
 
   bool _hasQuickFilter(SalesOrderViewModel viewModel) {
-    return viewModel.statusFilter.isNotEmpty;
+    return viewModel.statusFilter.isNotEmpty ||
+        viewModel.paymentStatusFilter.isNotEmpty ||
+        viewModel.ordering != '-created_at';
+  }
+
+  void _resetFilters(SalesOrderViewModel viewModel) {
+    _searchController.clear();
+    viewModel.resetFilters();
+    if (GoRouterState.of(context).uri.queryParameters.isNotEmpty) {
+      context.go('/sales-orders');
+    }
   }
 
   bool _allSelectableOrdersSelected(List<SalesOrder> orders) {
-    final selectableOrders =
-        orders.where(_isSelectableForWorkOrder).toList(growable: false);
+    final selectableOrders = orders
+        .where(_isSelectableForWorkOrder)
+        .toList(growable: false);
     if (selectableOrders.isEmpty) {
       return false;
     }
-    return selectableOrders
-        .every((order) => _selectedOrderIds.contains(order.id));
+    return selectableOrders.every(
+      (order) => _selectedOrderIds.contains(order.id),
+    );
   }
 
   void _openQuickFilter({required String status}) {
@@ -1182,8 +1316,9 @@ class _SalesOrderSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
-    final title =
-        order.orderNumber.isEmpty ? '客户订单 #${order.id}' : order.orderNumber;
+    final title = order.orderNumber.isEmpty
+        ? '客户订单 #${order.id}'
+        : order.orderNumber;
     final customer = order.customerName ?? _emptyCellText;
     final status = order.statusDisplay ?? order.status ?? _emptyCellText;
     final payment =
