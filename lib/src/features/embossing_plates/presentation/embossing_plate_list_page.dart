@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
@@ -18,12 +19,16 @@ class EmbossingPlateListEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FeatureEntry<EmbossingPlateApiService, EmbossingPlateRepository,
-        EmbossingPlateViewModel>(
+    return FeatureEntry<
+      EmbossingPlateApiService,
+      EmbossingPlateRepository,
+      EmbossingPlateViewModel
+    >(
       createService: (context) =>
           EmbossingPlateApiService(context.read<ApiClient>()),
       createRepository: (context) => EmbossingPlateRepositoryImpl(
-          context.read<EmbossingPlateApiService>()),
+        context.read<EmbossingPlateApiService>(),
+      ),
       createViewModel: (context) =>
           EmbossingPlateViewModel(context.read<EmbossingPlateRepository>()),
       initialize: (viewModel) => viewModel.initialize(),
@@ -37,48 +42,48 @@ class EmbossingPlateListPage extends StatelessWidget {
 
   static const CrudDeleteConfig<EmbossingPlate> _deleteConfig =
       CrudDeleteConfig(
-    title: '确认删除',
-    summaryBuilder: _buildDeleteSummary,
-    impactsBuilder: _buildDeleteImpacts,
-    auditHintBuilder: _buildDeleteAuditHint,
-    confirmText: '确认删除',
-    errorMessagePrefix: '删除失败: ',
-  );
+        title: '确认删除',
+        summaryBuilder: _buildDeleteSummary,
+        impactsBuilder: _buildDeleteImpacts,
+        auditHintBuilder: _buildDeleteAuditHint,
+        confirmText: '确认删除',
+        errorMessagePrefix: '删除失败: ',
+      );
 
   static const CrudActionConfig<EmbossingPlate> _confirmConfig =
       CrudActionConfig(
-    title: '确认压凸版',
-    summaryBuilder: _buildConfirmSummary,
-    impactsBuilder: _buildConfirmImpacts,
-    auditHintBuilder: _buildConfirmAuditHint,
-    confirmText: '确认压凸版',
-    successMessageBuilder: _buildConfirmSuccessMessage,
-    errorMessagePrefix: '确认失败: ',
-  );
+        title: '确认压凸版',
+        summaryBuilder: _buildConfirmSummary,
+        impactsBuilder: _buildConfirmImpacts,
+        auditHintBuilder: _buildConfirmAuditHint,
+        confirmText: '确认压凸版',
+        successMessageBuilder: _buildConfirmSuccessMessage,
+        errorMessagePrefix: '确认失败: ',
+      );
 
   static const CrudListConfig<EmbossingPlate, EmbossingPlateViewModel> _config =
       CrudListConfig(
-    searchHintText: '搜索压凸版编码、名称、尺寸、材质',
-    emptyText: '暂无压凸版数据',
-    emptyIcon: Icons.dashboard_customize_outlined,
-    loadItems: _loadEmbossingPlates,
-    titleBuilder: _titleText,
-    subtitleBuilder: _subtitleText,
-    summaryChipsBuilder: _summaryChips,
-    summaryFieldsBuilder: _summaryFields,
-    headerActionsBuilder: _headerActions,
-    rowActionsBuilder: _rowActions,
-    columns: [
-      CrudTableColumn(label: '压凸版', cellBuilder: _buildNameCell),
-      CrudTableColumn(label: '编码', cellBuilder: _buildCodeCell),
-      CrudTableColumn(label: '尺寸', cellBuilder: _buildSizeCell),
-      CrudTableColumn(label: '材质', cellBuilder: _buildMaterialCell),
-      CrudTableColumn(label: '厚度', cellBuilder: _buildThicknessCell),
-      CrudTableColumn(label: '确认状态', cellBuilder: _buildConfirmedCell),
-      CrudTableColumn(label: '包含产品', cellBuilder: _buildProductsCell),
-      CrudTableColumn(label: '创建时间', cellBuilder: _buildCreatedAtCell),
-    ],
-  );
+        searchHintText: '搜索压凸版编码、名称、尺寸、材质',
+        emptyText: '暂无压凸版数据',
+        emptyIcon: Icons.dashboard_customize_outlined,
+        loadItems: _loadEmbossingPlates,
+        titleBuilder: _titleText,
+        subtitleBuilder: _subtitleText,
+        summaryChipsBuilder: _summaryChips,
+        summaryFieldsBuilder: _summaryFields,
+        headerActionsBuilder: _headerActions,
+        rowActionsBuilder: _rowActions,
+        columns: [
+          CrudTableColumn(label: '压凸版', cellBuilder: _buildNameCell),
+          CrudTableColumn(label: '编码', cellBuilder: _buildCodeCell),
+          CrudTableColumn(label: '尺寸', cellBuilder: _buildSizeCell),
+          CrudTableColumn(label: '材质', cellBuilder: _buildMaterialCell),
+          CrudTableColumn(label: '厚度', cellBuilder: _buildThicknessCell),
+          CrudTableColumn(label: '确认状态', cellBuilder: _buildConfirmedCell),
+          CrudTableColumn(label: '包含产品', cellBuilder: _buildProductsCell),
+          CrudTableColumn(label: '创建时间', cellBuilder: _buildCreatedAtCell),
+        ],
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -157,6 +162,59 @@ class EmbossingPlateListPage extends StatelessWidget {
     EmbossingPlateViewModel viewModel,
   ) {
     return [
+      SizedBox(
+        width: 112,
+        child: AppSelect<String>(
+          options: const [
+            AppDropdownOption(value: '', label: '全部状态'),
+            AppDropdownOption(value: 'true', label: '已确认'),
+            AppDropdownOption(value: 'false', label: '待确认'),
+          ],
+          value: viewModel.confirmed == null
+              ? ''
+              : viewModel.confirmed == true
+              ? 'true'
+              : 'false',
+          onChanged: (value) {
+            if (value == null || value.isEmpty) {
+              viewModel.setConfirmed(null);
+            } else {
+              viewModel.setConfirmed(value == 'true');
+            }
+          },
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
+      SizedBox(
+        width: 132,
+        child: AppSelect<String>(
+          options: const [
+            AppDropdownOption(value: '-created_at', label: '最新创建'),
+            AppDropdownOption(value: 'created_at', label: '最早创建'),
+            AppDropdownOption(value: 'code', label: '编码升序'),
+            AppDropdownOption(value: '-code', label: '编码降序'),
+            AppDropdownOption(value: 'name', label: '名称升序'),
+            AppDropdownOption(value: '-name', label: '名称降序'),
+            AppDropdownOption(value: 'confirmed', label: '状态升序'),
+            AppDropdownOption(value: '-confirmed', label: '状态降序'),
+          ],
+          value: viewModel.ordering ?? '-created_at',
+          onChanged: (value) {
+            if (value != null) viewModel.setOrdering(value);
+          },
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
       PageActionButton.filled(
         onPressed: () => _openEditPage(context, viewModel, null),
         icon: const Icon(Icons.add),
@@ -221,10 +279,7 @@ class EmbossingPlateListPage extends StatelessWidget {
     return _buildBodyText(context, _confirmedText(plate));
   }
 
-  static Widget _buildProductsCell(
-    BuildContext context,
-    EmbossingPlate plate,
-  ) {
+  static Widget _buildProductsCell(BuildContext context, EmbossingPlate plate) {
     return _buildBodyText(context, _productSummary(plate.products));
   }
 
@@ -233,14 +288,13 @@ class EmbossingPlateListPage extends StatelessWidget {
     EmbossingPlate plate,
   ) {
     return _buildBodyText(
-        context, CrudValueFormatter.dateTime(plate.createdAt));
+      context,
+      CrudValueFormatter.dateTime(plate.createdAt),
+    );
   }
 
   static Widget _buildBodyText(BuildContext context, String value) {
-    return Text(
-      value,
-      style: Theme.of(context).textTheme.bodySmall,
-    );
+    return Text(value, style: Theme.of(context).textTheme.bodySmall);
   }
 
   static String _titleText(EmbossingPlate plate) {
@@ -293,9 +347,14 @@ class EmbossingPlateListPage extends StatelessWidget {
         label: '厚度',
         value: CrudValueFormatter.text(plate.thickness),
       ),
+      CrudSummaryFieldData(label: '确认状态', value: _confirmedText(plate)),
       CrudSummaryFieldData(
-        label: '确认状态',
-        value: _confirmedText(plate),
+        label: '确认人',
+        value: CrudValueFormatter.text(plate.confirmedByName),
+      ),
+      CrudSummaryFieldData(
+        label: '确认时间',
+        value: CrudValueFormatter.dateTime(plate.confirmedAt),
       ),
       CrudSummaryFieldData(
         label: '包含产品',
@@ -308,6 +367,10 @@ class EmbossingPlateListPage extends StatelessWidget {
       CrudSummaryFieldData(
         label: '创建时间',
         value: CrudValueFormatter.dateTime(plate.createdAt),
+      ),
+      CrudSummaryFieldData(
+        label: '更新时间',
+        value: CrudValueFormatter.dateTime(plate.updatedAt),
       ),
     ];
   }

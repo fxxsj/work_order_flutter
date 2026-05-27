@@ -33,10 +33,7 @@ Future<bool> showEmbossingPlateEditDrawer(
     desktopWidth: LayoutTokens.pageWidthXwide,
     child: ChangeNotifierProvider<EmbossingPlateViewModel>.value(
       value: viewModel,
-      child: EmbossingPlateEditPage(
-        plate: plate,
-        onSaved: () => saved = true,
-      ),
+      child: EmbossingPlateEditPage(plate: plate, onSaved: () => saved = true),
     ),
   );
   return saved;
@@ -70,6 +67,12 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
   static const String _submitText = '保存';
   static const String _submitErrorText = '操作失败: ';
   static const String _nameRequiredText = '请输入压凸版名称';
+  static const String _nameLengthText = '压凸版名称不能超过200个字符';
+  static const String _codeLengthText = '压凸版编码不能超过50个字符';
+  static const String _sizeLengthText = '尺寸不能超过100个字符';
+  static const String _materialLengthText = '材质不能超过100个字符';
+  static const String _thicknessLengthText = '厚度不能超过50个字符';
+  static const String _quantityInvalidText = '数量必须大于0';
   static const String _basicSectionTitle = '基本信息';
   static const String _extraSectionTitle = '补充信息';
 
@@ -154,10 +157,18 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
   }
 
   void _addProductItem() {
+    if (_plate?.confirmed == true) {
+      ToastUtil.showError('已确认的压凸版不允许修改包含产品');
+      return;
+    }
     setState(() => _productItems.add(_PlateProductItem(quantity: 1)));
   }
 
   void _removeProductItem(int index) {
+    if (_plate?.confirmed == true) {
+      ToastUtil.showError('已确认的压凸版不允许修改包含产品');
+      return;
+    }
     setState(() {
       _productItems[index].dispose();
       _productItems.removeAt(index);
@@ -195,7 +206,8 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
         ..removeWhere((item) => item.id == option.id)
         ..add(option)
         ..sort(
-            (left, right) => left.displayLabel.compareTo(right.displayLabel));
+          (left, right) => left.displayLabel.compareTo(right.displayLabel),
+        );
     });
     ToastUtil.showSuccess('产品已新增');
     return option;
@@ -217,6 +229,32 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
     EmbossingPlateViewModel viewModel,
   ) async {
     final currentPlate = _plate;
+    final code = _codeController.text.trim();
+    final name = _nameController.text.trim();
+    final size = _sizeController.text.trim();
+    final material = _materialController.text.trim();
+    final thickness = _thicknessController.text.trim();
+    final notes = _notesController.text.trim();
+
+    if (name.isEmpty) {
+      throw Exception(_nameRequiredText);
+    }
+    if (name.length > 200) {
+      throw Exception(_nameLengthText);
+    }
+    if (code.length > 50) {
+      throw Exception(_codeLengthText);
+    }
+    if (size.length > 100) {
+      throw Exception(_sizeLengthText);
+    }
+    if (material.length > 100) {
+      throw Exception(_materialLengthText);
+    }
+    if (thickness.length > 50) {
+      throw Exception(_thicknessLengthText);
+    }
+
     final products = _productItems
         .where((item) => item.productId != null)
         .map(
@@ -227,21 +265,25 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
           ),
         )
         .toList();
+    if (products.any((item) => (item.quantity ?? 0) < 1)) {
+      throw Exception(_quantityInvalidText);
+    }
 
     final payload = EmbossingPlate(
       id: currentPlate?.id ?? 0,
-      code: _codeController.text.trim().isEmpty
-          ? null
-          : _codeController.text.trim(),
-      name: _nameController.text.trim(),
-      size: _sizeController.text.trim(),
-      material: _materialController.text.trim(),
-      thickness: _thicknessController.text.trim(),
-      notes: _notesController.text.trim(),
+      code: code.isEmpty ? null : code,
+      name: name,
+      size: size,
+      material: material,
+      thickness: thickness,
+      notes: notes,
       confirmed: currentPlate?.confirmed ?? false,
+      confirmedByName: currentPlate?.confirmedByName,
+      confirmedAt: currentPlate?.confirmedAt,
       products: products,
       images: _images,
       createdAt: currentPlate?.createdAt,
+      updatedAt: currentPlate?.updatedAt,
     );
 
     final saved = currentPlate == null
@@ -254,6 +296,7 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
   }
 
   Widget _buildProductSection(BuildContext context) {
+    final isConfirmed = _plate?.confirmed == true;
     final theme = Theme.of(context);
     final sectionSpacing = LayoutTokens.formSectionSpacing(context);
     final colors = theme.extension<AppColors>();
@@ -266,26 +309,27 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
         : Column(
             children: List.generate(_productItems.length, (index) {
               final item = _productItems[index];
-              final productOptions = _productOptions
-                  .map(
-                    (product) => AppDropdownOption<int>(
-                      value: product.id,
-                      label: product.displayLabel,
-                    ),
-                  )
-                  .toList()
-                ..add(
-                  AppDropdownOption<int>(
-                    value: -1,
-                    label: '新增产品',
-                    icon: Icons.add,
-                    onSelected: () async {
-                      final created = await _handleCreateProduct();
-                      if (created == null || !mounted) return;
-                      setState(() => item.productId = created.id);
-                    },
-                  ),
-                );
+              final productOptions =
+                  _productOptions
+                      .map(
+                        (product) => AppDropdownOption<int>(
+                          value: product.id,
+                          label: product.displayLabel,
+                        ),
+                      )
+                      .toList()
+                    ..add(
+                      AppDropdownOption<int>(
+                        value: -1,
+                        label: '新增产品',
+                        icon: Icons.add,
+                        onSelected: () async {
+                          final created = await _handleCreateProduct();
+                          if (created == null || !mounted) return;
+                          setState(() => item.productId = created.id);
+                        },
+                      ),
+                    );
               return Padding(
                 padding: EdgeInsets.only(bottom: sectionSpacing),
                 child: Row(
@@ -294,17 +338,21 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
                       flex: 3,
                       child: AppSelect<int>(
                         value: item.productId,
-                        decoration:
-                            const InputDecoration(labelText: _productLabel),
+                        decoration: const InputDecoration(
+                          labelText: _productLabel,
+                        ),
                         options: productOptions,
-                        selectHintText:
-                            _productOptions.isEmpty ? '新增产品' : '请选择',
-                        onChanged: (value) {
-                          setState(() => item.productId = value);
-                        },
+                        selectHintText: _productOptions.isEmpty
+                            ? '新增产品'
+                            : '请选择',
+                        onChanged: isConfirmed
+                            ? null
+                            : (value) {
+                                setState(() => item.productId = value);
+                              },
                       ),
                     ),
-                    if (_productOptions.isEmpty)
+                    if (_productOptions.isEmpty && !isConfirmed)
                       Padding(
                         padding: EdgeInsets.only(left: LayoutTokens.gapSm),
                         child: TextButton.icon(
@@ -322,6 +370,14 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
                       child: CrudFieldConfig.number(
                         label: _quantityLabel,
                         controller: item.quantityController,
+                        enabled: !isConfirmed,
+                        validator: (value) {
+                          final quantity = int.tryParse(value?.trim() ?? '');
+                          if (quantity == null || quantity < 1) {
+                            return _quantityInvalidText;
+                          }
+                          return null;
+                        },
                       ).build(context),
                     ),
                     SizedBox(width: LayoutTokens.gapSm),
@@ -331,7 +387,9 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
                         Icons.delete_outline,
                         color: theme.colorScheme.error,
                       ),
-                      onPressed: () => _removeProductItem(index),
+                      onPressed: isConfirmed
+                          ? null
+                          : () => _removeProductItem(index),
                     ),
                   ],
                 ),
@@ -350,7 +408,7 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
         Align(
           alignment: Alignment.centerLeft,
           child: PageActionButton.outlined(
-            onPressed: _addProductItem,
+            onPressed: isConfirmed ? null : _addProductItem,
             icon: const Icon(Icons.add, size: 16),
             label: _addProductText,
           ),
@@ -360,9 +418,10 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
   }
 
   Widget _buildImageSection(BuildContext context) {
+    final isConfirmed = _plate?.confirmed == true;
     return ImageGalleryUploadSection<EmbossingPlateImage>(
       images: _images,
-      canUpload: true,
+      canUpload: !isConfirmed,
       uploading: _uploadingImage,
       maxCount: _maxImageCount,
       limitHintText: '支持 JPG、PNG、WebP、GIF，单张不超过 10MB，最多 $_maxImageCount 张',
@@ -378,6 +437,10 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
   }
 
   Future<void> _pickAndUploadImage(EmbossingPlateViewModel viewModel) async {
+    if (_plate?.confirmed == true) {
+      ToastUtil.showError('已确认的压凸版不允许修改图片');
+      return;
+    }
     if (_images.length >= _maxImageCount) {
       ToastUtil.showError('图片最多上传 $_maxImageCount 张');
       return;
@@ -411,9 +474,15 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
   }
 
   Future<void> _removeImage(
-      EmbossingPlateViewModel viewModel, EmbossingPlateImage image) async {
+    EmbossingPlateViewModel viewModel,
+    EmbossingPlateImage image,
+  ) async {
     final plate = _plate;
     if (plate == null) return;
+    if (plate.confirmed) {
+      ToastUtil.showError('已确认的压凸版不允许修改图片');
+      return;
+    }
     try {
       await viewModel.deleteEmbossingPlateImage(plate.id, image.id);
       if (mounted) {
@@ -447,6 +516,12 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
                 controller: _codeController,
                 enabled: !isConfirmed,
                 hintText: '留空则系统自动生成',
+                validator: (value) {
+                  if ((value?.trim().length ?? 0) > 50) {
+                    return _codeLengthText;
+                  }
+                  return null;
+                },
               ),
               CrudFieldConfig.text(
                 label: _nameLabel,
@@ -457,6 +532,9 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
                   if (text.isEmpty) {
                     return _nameRequiredText;
                   }
+                  if (text.length > 200) {
+                    return _nameLengthText;
+                  }
                   return null;
                 },
               ),
@@ -464,6 +542,12 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
                 label: _sizeLabel,
                 controller: _sizeController,
                 enabled: !isConfirmed,
+                validator: (value) {
+                  if ((value?.trim().length ?? 0) > 100) {
+                    return _sizeLengthText;
+                  }
+                  return null;
+                },
               ),
             ],
           ),
@@ -475,11 +559,23 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
                 label: _materialLabel,
                 controller: _materialController,
                 enabled: !isConfirmed,
+                validator: (value) {
+                  if ((value?.trim().length ?? 0) > 100) {
+                    return _materialLengthText;
+                  }
+                  return null;
+                },
               ),
               CrudFieldConfig.text(
                 label: _thicknessLabel,
                 controller: _thicknessController,
                 enabled: !isConfirmed,
+                validator: (value) {
+                  if ((value?.trim().length ?? 0) > 50) {
+                    return _thicknessLengthText;
+                  }
+                  return null;
+                },
               ),
               CrudFieldConfig.textarea(
                 label: _notesLabel,
@@ -491,20 +587,12 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
           CrudFormSection(
             title: _productSectionTitle,
             column: 0,
-            fields: [
-              CrudFieldConfig.custom(
-                builder: _buildProductSection,
-              ),
-            ],
+            fields: [CrudFieldConfig.custom(builder: _buildProductSection)],
           ),
           CrudFormSection(
             title: _imageSectionTitle,
             column: 0,
-            fields: [
-              CrudFieldConfig.custom(
-                builder: _buildImageSection,
-              ),
-            ],
+            fields: [CrudFieldConfig.custom(builder: _buildImageSection)],
           ),
         ],
         onSave: (context, viewModel, item) => _handleSubmit(viewModel),
@@ -515,7 +603,7 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
 
 class _PlateProductItem {
   _PlateProductItem({this.productId, int quantity = 1})
-      : quantityController = TextEditingController(text: quantity.toString());
+    : quantityController = TextEditingController(text: quantity.toString());
 
   int? productId;
   final TextEditingController quantityController;

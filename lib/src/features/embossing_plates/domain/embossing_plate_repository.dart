@@ -7,6 +7,8 @@ abstract class EmbossingPlateRepository {
     required int page,
     required int pageSize,
     String? search,
+    bool? confirmed,
+    String? ordering,
   });
 
   Future<EmbossingPlate> createEmbossingPlate(EmbossingPlate plate);
@@ -17,7 +19,12 @@ abstract class EmbossingPlateRepository {
 
   Future<void> confirmEmbossingPlate(int id);
 
-  Future<EmbossingPlateImage> uploadEmbossingPlateImage(int plateId, MultipartFile imageFile, {int sortOrder = 0, String? description});
+  Future<EmbossingPlateImage> uploadEmbossingPlateImage(
+    int plateId,
+    MultipartFile imageFile, {
+    int sortOrder = 0,
+    String? description,
+  });
 
   Future<void> deleteEmbossingPlateImage(int plateId, int imageId);
 }

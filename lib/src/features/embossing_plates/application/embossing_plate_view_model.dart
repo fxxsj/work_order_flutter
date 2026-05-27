@@ -8,13 +8,31 @@ class EmbossingPlateViewModel extends PaginatedViewModel<EmbossingPlate> {
 
   final EmbossingPlateRepository _repository;
 
+  bool? _confirmed;
+  String? _ordering;
+
   List<EmbossingPlate> get embossingPlates => items;
+
+  bool? get confirmed => _confirmed;
+
+  String? get ordering => _ordering;
 
   Future<void> initialize() async {
     await loadEmbossingPlates(resetPage: true);
   }
 
-  Future<void> loadEmbossingPlates({bool resetPage = false}) => loadItems(resetPage: resetPage);
+  Future<void> loadEmbossingPlates({bool resetPage = false}) =>
+      loadItems(resetPage: resetPage);
+
+  void setConfirmed(bool? value) {
+    _confirmed = value;
+    loadItems(resetPage: true);
+  }
+
+  void setOrdering(String? value) {
+    _ordering = value;
+    loadItems(resetPage: true);
+  }
 
   @override
   Future<PageData<EmbossingPlate>> fetchPage({
@@ -22,7 +40,13 @@ class EmbossingPlateViewModel extends PaginatedViewModel<EmbossingPlate> {
     required int pageSize,
     String? search,
   }) {
-    return _repository.getEmbossingPlates(page: page, pageSize: pageSize, search: search);
+    return _repository.getEmbossingPlates(
+      page: page,
+      pageSize: pageSize,
+      search: search,
+      confirmed: _confirmed,
+      ordering: _ordering,
+    );
   }
 
   Future<EmbossingPlate> createEmbossingPlate(EmbossingPlate plate) async {
@@ -46,8 +70,18 @@ class EmbossingPlateViewModel extends PaginatedViewModel<EmbossingPlate> {
     await loadItems();
   }
 
-  Future<EmbossingPlateImage> uploadEmbossingPlateImage(int plateId, MultipartFile imageFile, {int sortOrder = 0, String? description}) async {
-    return await _repository.uploadEmbossingPlateImage(plateId, imageFile, sortOrder: sortOrder, description: description);
+  Future<EmbossingPlateImage> uploadEmbossingPlateImage(
+    int plateId,
+    MultipartFile imageFile, {
+    int sortOrder = 0,
+    String? description,
+  }) async {
+    return await _repository.uploadEmbossingPlateImage(
+      plateId,
+      imageFile,
+      sortOrder: sortOrder,
+      description: description,
+    );
   }
 
   Future<void> deleteEmbossingPlateImage(int plateId, int imageId) async {

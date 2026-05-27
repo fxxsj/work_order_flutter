@@ -15,11 +15,15 @@ class EmbossingPlateRepositoryImpl implements EmbossingPlateRepository {
     required int page,
     required int pageSize,
     String? search,
+    bool? confirmed,
+    String? ordering,
   }) async {
     final response = await _api.fetchEmbossingPlates(
       page: page,
       pageSize: pageSize,
       search: search,
+      confirmed: confirmed,
+      ordering: ordering,
     );
     return PageData(
       items: response.items.map((item) => item.toEntity()).toList(),
@@ -31,15 +35,17 @@ class EmbossingPlateRepositoryImpl implements EmbossingPlateRepository {
 
   @override
   Future<EmbossingPlate> createEmbossingPlate(EmbossingPlate plate) async {
-    final dto =
-        await _api.createEmbossingPlate(EmbossingPlateDto.fromEntity(plate));
+    final dto = await _api.createEmbossingPlate(
+      EmbossingPlateDto.fromEntity(plate),
+    );
     return dto.toEntity();
   }
 
   @override
   Future<EmbossingPlate> updateEmbossingPlate(EmbossingPlate plate) async {
-    final dto =
-        await _api.updateEmbossingPlate(EmbossingPlateDto.fromEntity(plate));
+    final dto = await _api.updateEmbossingPlate(
+      EmbossingPlateDto.fromEntity(plate),
+    );
     return dto.toEntity();
   }
 
@@ -54,8 +60,18 @@ class EmbossingPlateRepositoryImpl implements EmbossingPlateRepository {
   }
 
   @override
-  Future<EmbossingPlateImage> uploadEmbossingPlateImage(int plateId, MultipartFile imageFile, {int sortOrder = 0, String? description}) async {
-    return await _api.uploadImage(plateId, imageFile, sortOrder: sortOrder, description: description);
+  Future<EmbossingPlateImage> uploadEmbossingPlateImage(
+    int plateId,
+    MultipartFile imageFile, {
+    int sortOrder = 0,
+    String? description,
+  }) async {
+    return await _api.uploadImage(
+      plateId,
+      imageFile,
+      sortOrder: sortOrder,
+      description: description,
+    );
   }
 
   @override
