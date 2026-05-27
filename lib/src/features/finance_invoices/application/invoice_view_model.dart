@@ -12,11 +12,14 @@ class InvoiceViewModel extends PaginatedViewModel<Invoice> {
   Map<String, dynamic> _summary = const {};
   String _statusFilter = '';
   String _todoFilter = '';
+  String _ordering = '-created_at';
+  int _summaryRequestToken = 0;
 
   List<Invoice> get invoices => items;
   Map<String, dynamic> get summary => _summary;
   String get statusFilter => _statusFilter;
   String get todoFilter => _todoFilter;
+  String get ordering => _ordering;
 
   Future<void> initialize() => loadInvoices(resetPage: true);
 
@@ -45,18 +48,65 @@ class InvoiceViewModel extends PaginatedViewModel<Invoice> {
     String? search,
     String? status,
     String? todo,
+    String? ordering,
   }) async {
     setSearchText(search?.trim() ?? '');
     _statusFilter = status?.trim() ?? '';
     _todoFilter = todo?.trim() ?? '';
+    _ordering = ordering?.trim().isNotEmpty == true
+        ? ordering!.trim()
+        : '-created_at';
     await loadInvoices(resetPage: true);
   }
 
+  Future<void> setStatusFilter(String value) async {
+    _statusFilter = value.trim();
+    await loadInvoices(resetPage: true);
+  }
+
+  Future<void> setTodoFilter(String value) async {
+    _todoFilter = value.trim();
+    await loadInvoices(resetPage: true);
+  }
+
+  Future<void> setOrdering(String value) async {
+    final next = value.trim().isEmpty ? '-created_at' : value.trim();
+    if (_ordering == next) return;
+    _ordering = next;
+    await loadInvoices(resetPage: true);
+  }
+
+  void setFiltersSilently({String? status, String? todo, String? ordering}) {
+    _statusFilter = status?.trim() ?? '';
+    _todoFilter = todo?.trim() ?? '';
+    _ordering = ordering?.trim().isNotEmpty == true
+        ? ordering!.trim()
+        : '-created_at';
+  }
+
   Future<void> _loadSummary() async {
+    final token = ++_summaryRequestToken;
     try {
-      _summary = await _repository.getSummary();
+      final params = <String, dynamic>{};
+      final trimmedSearch = searchText.trim();
+      if (trimmedSearch.isNotEmpty) {
+        params['search'] = trimmedSearch;
+      }
+      if (_statusFilter.isNotEmpty) {
+        params['status'] = _statusFilter;
+      }
+      if (_todoFilter.isNotEmpty) {
+        params['todo'] = _todoFilter;
+      }
+      _summary = await _repository.getSummary(
+        params: params.isEmpty ? null : params,
+      );
+      if (token != _summaryRequestToken) return;
       safeNotify();
     } catch (_) {
+      if (token != _summaryRequestToken) return;
+      _summary = const {};
+      safeNotify();
       // Keep the list usable even if the summary endpoint fails.
     }
   }
@@ -73,6 +123,7 @@ class InvoiceViewModel extends PaginatedViewModel<Invoice> {
       search: search,
       status: _statusFilter.isEmpty ? null : _statusFilter,
       todo: _todoFilter.isEmpty ? null : _todoFilter,
+      ordering: _ordering,
     );
     return PageData(
       items: result.items.map((dto) => dto.toEntity()).toList(),

@@ -90,6 +90,10 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
   static const String _retryText = '重新加载';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
   static const String _pageSizeLabel = '每页 {size}';
+  static const String _statusFilterLabel = '发票状态';
+  static const String _todoFilterLabel = '待办事项';
+  static const String _orderingLabel = '排序';
+  static const String _resetButtonText = '重置筛选';
   static const CrudActionConfig<Invoice> _submitConfig = CrudActionConfig(
     title: '提交发票',
     summaryBuilder: _buildSubmitSummary,
@@ -120,14 +124,17 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     final routeSearch = uri.queryParameters['search']?.trim() ?? '';
     final routeStatus = uri.queryParameters['status']?.trim() ?? '';
     final routeTodo = uri.queryParameters['todo']?.trim() ?? '';
+    final routeOrdering = uri.queryParameters['ordering']?.trim() ?? '';
     final createFlag = uri.queryParameters['create'];
-    final salesOrderId =
-        int.tryParse(uri.queryParameters['sales_order_id'] ?? '');
+    final salesOrderId = int.tryParse(
+      uri.queryParameters['sales_order_id'] ?? '',
+    );
     final customerId = int.tryParse(uri.queryParameters['customer_id'] ?? '');
     final signature = [
       routeSearch,
       routeStatus,
       routeTodo,
+      routeOrdering,
       createFlag ?? '',
       salesOrderId?.toString() ?? '',
       customerId?.toString() ?? '',
@@ -142,10 +149,11 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
           context.read<InvoiceViewModel>().applyRoutePrefill(
-                search: routeSearch,
-                status: routeStatus,
-                todo: routeTodo,
-              );
+            search: routeSearch,
+            status: routeStatus,
+            todo: routeTodo,
+            ordering: routeOrdering,
+          );
         });
         return;
       }
@@ -166,10 +174,11 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<InvoiceViewModel>().applyRoutePrefill(
-            search: routeSearch,
-            status: routeStatus,
-            todo: routeTodo,
-          );
+        search: routeSearch,
+        status: routeStatus,
+        todo: routeTodo,
+        ordering: routeOrdering,
+      );
     });
   }
 
@@ -211,8 +220,8 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
 
     final prefillSalesOrder =
         prefillSalesOrderId != null && prefillSalesOrderId > 0
-            ? prefillSalesOrderId
-            : null;
+        ? prefillSalesOrderId
+        : null;
     final prefillCustomer = prefillCustomerId != null && prefillCustomerId > 0
         ? prefillCustomerId
         : null;
@@ -234,7 +243,9 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
   }
 
   Future<void> _submitInvoice(
-      InvoiceViewModel viewModel, Invoice invoice) async {
+    InvoiceViewModel viewModel,
+    Invoice invoice,
+  ) async {
     try {
       await confirmCrudAction(
         context,
@@ -262,16 +273,11 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
           ? '确认收到后，发票会进入后续收款与对账环节。'
           : '作废后，这张发票将退出后续收款与对账闭环，需要业务和财务重新核对来源单据。',
       impacts: approved
-          ? const [
-              '请确认票据号码、金额和附件已齐全',
-              '错误确认会影响后续收款匹配',
-            ]
-          : const [
-              '如已发送给客户，请先确认是否应走红冲或换票流程',
-              '作废后建议同步核对客户订单、施工单和附件资料',
-            ],
-      auditHint:
-          approved ? '确认记录建议保留审批备注，便于后续收款追踪。' : '作废原因会进入审计记录，便于财务复盘和争议处理。',
+          ? const ['请确认票据号码、金额和附件已齐全', '错误确认会影响后续收款匹配']
+          : const ['如已发送给客户，请先确认是否应走红冲或换票流程', '作废后建议同步核对客户订单、施工单和附件资料'],
+      auditHint: approved
+          ? '确认记录建议保留审批备注，便于后续收款追踪。'
+          : '作废原因会进入审计记录，便于财务复盘和争议处理。',
       destructive: !approved,
       notesLabel: approved ? '确认说明（可选）' : '作废说明（可选）',
       notesMaxLines: 3,
@@ -332,8 +338,9 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     if (_optionsLoaded || _optionsLoading) return;
     setState(() => _optionsLoading = true);
     try {
-      final data =
-          await InvoiceFormOptionsLoader(context.read<ApiClient>()).load();
+      final data = await InvoiceFormOptionsLoader(
+        context.read<ApiClient>(),
+      ).load();
       if (!mounted) return;
       setState(() {
         _customers = data.customers;
@@ -534,12 +541,15 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
           .map(
             (invoice) => DataRow(
               cells: [
-                DataCell(Text(
-                  _displayText(invoice.invoiceNumber ?? '发票 #${invoice.id}'),
-                  style: theme.textTheme.bodyMedium,
-                )),
                 DataCell(
-                    Text(_displayText(invoice.customerName), style: textStyle)),
+                  Text(
+                    _displayText(invoice.invoiceNumber ?? '发票 #${invoice.id}'),
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ),
+                DataCell(
+                  Text(_displayText(invoice.customerName), style: textStyle),
+                ),
                 DataCell(
                   SizedBox(
                     width: 180,
@@ -553,17 +563,19 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                 ),
                 DataCell(Text(_invoiceTypeText(invoice), style: textStyle)),
                 DataCell(Text(_formatAmount(invoice.amount), style: textStyle)),
-                DataCell(Text(
-                  invoice.statusDisplay ?? invoice.status ?? _emptyCellText,
-                  style: textStyle,
-                )),
+                DataCell(
+                  Text(
+                    invoice.statusDisplay ?? invoice.status ?? _emptyCellText,
+                    style: textStyle,
+                  ),
+                ),
                 DataCell(Text(_followUpText(invoice), style: textStyle)),
                 DataCell(
-                    Text(_formatDate(invoice.issueDate), style: textStyle)),
-                DataCell(Text(
-                  _attachmentStatusText(invoice),
-                  style: textStyle,
-                )),
+                  Text(_formatDate(invoice.issueDate), style: textStyle),
+                ),
+                DataCell(
+                  Text(_attachmentStatusText(invoice), style: textStyle),
+                ),
                 DataCell(_buildRowActions(viewModel, invoice)),
               ],
             ),
@@ -578,6 +590,18 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     bool isMobile,
   ) {
     final permissions = PermissionUtil.snapshot(context);
+    void openFilterDrawer() {
+      showAdaptiveFilterDrawer(
+        context,
+        isMobile: isMobile,
+        child: _buildFilterPanel(
+          context,
+          viewModel,
+          bottomSpacing: isMobile ? 16 : 20,
+        ),
+      );
+    }
+
     return PageHeaderBar(
       breadcrumb: null,
       useSurface: false,
@@ -585,14 +609,22 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
       padding: EdgeInsets.zero,
       actions: LayoutBuilder(
         builder: (context, constraints) {
-          final missingAttachmentCount =
-              _summaryCount(viewModel.summary, 'pending_attachment_count');
-          final pendingReceiptCount =
-              _summaryCount(viewModel.summary, 'pending_receipt_count');
-          final pendingIssueCount =
-              _summaryCount(viewModel.summary, 'pending_issue_count');
-          final pendingPaymentCount =
-              _summaryCount(viewModel.summary, 'pending_payment_count');
+          final missingAttachmentCount = _summaryCount(
+            viewModel.summary,
+            'pending_attachment_count',
+          );
+          final pendingReceiptCount = _summaryCount(
+            viewModel.summary,
+            'pending_receipt_count',
+          );
+          final pendingIssueCount = _summaryCount(
+            viewModel.summary,
+            'pending_issue_count',
+          );
+          final pendingPaymentCount = _summaryCount(
+            viewModel.summary,
+            'pending_payment_count',
+          );
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -656,6 +688,13 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
               icon: const Icon(Icons.refresh, size: 16),
               label: _refreshButtonText,
             ),
+            PageActionButton.outlined(
+              onPressed: openFilterDrawer,
+              icon: const Icon(Icons.filter_alt_outlined, size: 16),
+              label: _activeFilterCount(viewModel) > 0
+                  ? '筛选 ${_activeFilterCount(viewModel)}'
+                  : '筛选',
+            ),
           ];
 
           return ListToolbar(
@@ -669,6 +708,69 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     );
   }
 
+  Widget _buildFilterPanel(
+    BuildContext context,
+    InvoiceViewModel viewModel, {
+    required double bottomSpacing,
+  }) {
+    final statusValue = viewModel.statusFilter.isEmpty
+        ? ''
+        : viewModel.statusFilter;
+    final todoValue = viewModel.todoFilter.isEmpty ? '' : viewModel.todoFilter;
+    return FilterPanelBody(
+      bottomSpacing: bottomSpacing,
+      resetLabel: _resetButtonText,
+      onReset: () => _resetFilters(context, viewModel),
+      fields: [
+        AppSelect<String>(
+          key: ValueKey<String>(statusValue),
+          value: statusValue,
+          decoration: const InputDecoration(labelText: _statusFilterLabel),
+          options: const [
+            AppDropdownOption(value: '', label: '全部状态'),
+            AppDropdownOption(value: 'draft', label: '待开具'),
+            AppDropdownOption(value: 'issued', label: '已开具'),
+            AppDropdownOption(value: 'sent', label: '已发送'),
+            AppDropdownOption(value: 'received', label: '已收到'),
+            AppDropdownOption(value: 'cancelled', label: '已作废'),
+            AppDropdownOption(value: 'refunded', label: '已红冲'),
+          ],
+          onChanged: (value) => viewModel.setStatusFilter(value ?? ''),
+        ),
+        AppSelect<String>(
+          key: ValueKey<String>(todoValue),
+          value: todoValue,
+          decoration: const InputDecoration(labelText: _todoFilterLabel),
+          options: const [
+            AppDropdownOption(value: '', label: '全部待办'),
+            AppDropdownOption(value: 'pending_attachment', label: '待补发票附件'),
+            AppDropdownOption(value: 'pending_receipt', label: '待确认客户收票'),
+            AppDropdownOption(value: 'pending_payment', label: '待跟进收款'),
+          ],
+          onChanged: (value) => viewModel.setTodoFilter(value ?? ''),
+        ),
+        AppSelect<String>(
+          key: ValueKey<String>(viewModel.ordering),
+          value: viewModel.ordering,
+          decoration: const InputDecoration(labelText: _orderingLabel),
+          options: const [
+            AppDropdownOption(value: '-created_at', label: '最新创建'),
+            AppDropdownOption(value: 'created_at', label: '最早创建'),
+            AppDropdownOption(value: 'invoice_number', label: '发票号升序'),
+            AppDropdownOption(value: '-invoice_number', label: '发票号降序'),
+            AppDropdownOption(value: 'customer__name', label: '客户名称升序'),
+            AppDropdownOption(value: '-customer__name', label: '客户名称降序'),
+            AppDropdownOption(value: 'total_amount', label: '价税合计升序'),
+            AppDropdownOption(value: '-total_amount', label: '价税合计降序'),
+            AppDropdownOption(value: 'issue_date', label: '开票日期升序'),
+            AppDropdownOption(value: '-issue_date', label: '开票日期降序'),
+          ],
+          onChanged: (value) => viewModel.setOrdering(value ?? '-created_at'),
+        ),
+      ],
+    );
+  }
+
   Widget _buildRowActions(InvoiceViewModel viewModel, Invoice invoice) {
     final permissions = PermissionUtil.snapshot(context);
     final canChangeInvoice = permissions.has('workorder.change_invoice');
@@ -676,61 +778,77 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     final actions = <RowAction>[];
     final status = invoice.status ?? '';
     if (canChangeInvoice) {
-      actions.add(RowAction(
-        label: _hasAttachment(invoice) ? '更新附件' : '上传附件',
-        icon: Icons.upload_file_outlined,
-        onPressed: () => _uploadAttachment(viewModel, invoice),
-      ));
+      actions.add(
+        RowAction(
+          label: _hasAttachment(invoice) ? '更新附件' : '上传附件',
+          icon: Icons.upload_file_outlined,
+          onPressed: () => _uploadAttachment(viewModel, invoice),
+        ),
+      );
     }
     if (_hasAttachment(invoice)) {
-      actions.add(RowAction(
-        label: '附件',
-        icon: Icons.attach_file_outlined,
-        onPressed: () => _openAttachment(invoice),
-      ));
+      actions.add(
+        RowAction(
+          label: '附件',
+          icon: Icons.attach_file_outlined,
+          onPressed: () => _openAttachment(invoice),
+        ),
+      );
     }
     if ((invoice.salesOrderId ?? 0) > 0) {
-      actions.add(RowAction(
-        label: '客户订单',
-        icon: Icons.point_of_sale_outlined,
-        onPressed: () => _openSalesOrder(invoice),
-      ));
+      actions.add(
+        RowAction(
+          label: '客户订单',
+          icon: Icons.point_of_sale_outlined,
+          onPressed: () => _openSalesOrder(invoice),
+        ),
+      );
     }
     if ((invoice.workOrderId ?? 0) > 0) {
-      actions.add(RowAction(
-        label: '施工单',
-        icon: Icons.assignment_outlined,
-        onPressed: () => _openWorkOrder(invoice),
-      ));
+      actions.add(
+        RowAction(
+          label: '施工单',
+          icon: Icons.assignment_outlined,
+          onPressed: () => _openWorkOrder(invoice),
+        ),
+      );
     }
     final auditKeyword = (invoice.invoiceNumber ?? '').trim();
     if (canViewAudit && auditKeyword.isNotEmpty) {
-      actions.add(RowAction(
-        label: '审计',
-        icon: Icons.history_outlined,
-        onPressed: () =>
-            AuditLogNavigation.open(context, keyword: auditKeyword),
-      ));
+      actions.add(
+        RowAction(
+          label: '审计',
+          icon: Icons.history_outlined,
+          onPressed: () =>
+              AuditLogNavigation.open(context, keyword: auditKeyword),
+        ),
+      );
     }
     if (canChangeInvoice && status == 'draft') {
-      actions.add(RowAction(
-        label: '提交',
-        icon: Icons.send_outlined,
-        onPressed: () => _submitInvoice(viewModel, invoice),
-      ));
+      actions.add(
+        RowAction(
+          label: '提交',
+          icon: Icons.send_outlined,
+          onPressed: () => _submitInvoice(viewModel, invoice),
+        ),
+      );
     }
     if (canChangeInvoice && status == 'issued') {
-      actions.add(RowAction(
-        label: '确认收到',
-        icon: Icons.verified_outlined,
-        onPressed: () => _approveInvoice(viewModel, invoice, approved: true),
-      ));
-      actions.add(RowAction(
-        label: '作废',
-        icon: Icons.cancel_outlined,
-        destructive: true,
-        onPressed: () => _approveInvoice(viewModel, invoice, approved: false),
-      ));
+      actions.add(
+        RowAction(
+          label: '确认收到',
+          icon: Icons.verified_outlined,
+          onPressed: () => _approveInvoice(viewModel, invoice, approved: true),
+        ),
+      );
+      actions.add(
+        RowAction(
+          label: '作废',
+          icon: Icons.cancel_outlined,
+          destructive: true,
+          onPressed: () => _approveInvoice(viewModel, invoice, approved: false),
+        ),
+      );
     }
     if (actions.isEmpty) {
       return const SizedBox.shrink();
@@ -775,7 +893,10 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
   }
 
   Widget _buildSummaryCard(
-      BuildContext context, Invoice invoice, bool isMobile) {
+    BuildContext context,
+    Invoice invoice,
+    bool isMobile,
+  ) {
     final permissions = PermissionUtil.snapshot(context);
     final canChangeInvoice = permissions.has('workorder.change_invoice');
     final canViewAudit = AuditLogNavigation.canView(context);
@@ -795,71 +916,87 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     final actions = <RowAction>[];
     final statusCode = invoice.status ?? '';
     if (canChangeInvoice) {
-      actions.add(RowAction(
-        label: _hasAttachment(invoice) ? '更新附件' : '上传附件',
-        icon: Icons.upload_file_outlined,
-        onPressed: () =>
-            _uploadAttachment(context.read<InvoiceViewModel>(), invoice),
-      ));
+      actions.add(
+        RowAction(
+          label: _hasAttachment(invoice) ? '更新附件' : '上传附件',
+          icon: Icons.upload_file_outlined,
+          onPressed: () =>
+              _uploadAttachment(context.read<InvoiceViewModel>(), invoice),
+        ),
+      );
     }
     if (_hasAttachment(invoice)) {
-      actions.add(RowAction(
-        label: '附件',
-        icon: Icons.attach_file_outlined,
-        onPressed: () => _openAttachment(invoice),
-      ));
+      actions.add(
+        RowAction(
+          label: '附件',
+          icon: Icons.attach_file_outlined,
+          onPressed: () => _openAttachment(invoice),
+        ),
+      );
     }
     if ((invoice.salesOrderId ?? 0) > 0) {
-      actions.add(RowAction(
-        label: '客户订单',
-        icon: Icons.point_of_sale_outlined,
-        onPressed: () => _openSalesOrder(invoice),
-      ));
+      actions.add(
+        RowAction(
+          label: '客户订单',
+          icon: Icons.point_of_sale_outlined,
+          onPressed: () => _openSalesOrder(invoice),
+        ),
+      );
     }
     if ((invoice.workOrderId ?? 0) > 0) {
-      actions.add(RowAction(
-        label: '施工单',
-        icon: Icons.assignment_outlined,
-        onPressed: () => _openWorkOrder(invoice),
-      ));
+      actions.add(
+        RowAction(
+          label: '施工单',
+          icon: Icons.assignment_outlined,
+          onPressed: () => _openWorkOrder(invoice),
+        ),
+      );
     }
     final auditKeyword = (invoice.invoiceNumber ?? '').trim();
     if (canViewAudit && auditKeyword.isNotEmpty) {
-      actions.add(RowAction(
-        label: '审计',
-        icon: Icons.history_outlined,
-        onPressed: () =>
-            AuditLogNavigation.open(context, keyword: auditKeyword),
-      ));
+      actions.add(
+        RowAction(
+          label: '审计',
+          icon: Icons.history_outlined,
+          onPressed: () =>
+              AuditLogNavigation.open(context, keyword: auditKeyword),
+        ),
+      );
     }
     if (canChangeInvoice && statusCode == 'draft') {
-      actions.add(RowAction(
-        label: '提交',
-        icon: Icons.send_outlined,
-        onPressed: () =>
-            _submitInvoice(context.read<InvoiceViewModel>(), invoice),
-      ));
+      actions.add(
+        RowAction(
+          label: '提交',
+          icon: Icons.send_outlined,
+          onPressed: () =>
+              _submitInvoice(context.read<InvoiceViewModel>(), invoice),
+        ),
+      );
     }
     if (canChangeInvoice && statusCode == 'issued') {
-      actions.add(RowAction(
-        label: '确认收到',
-        icon: Icons.verified_outlined,
-        onPressed: () => _approveInvoice(
-          context.read<InvoiceViewModel>(),
-          invoice,
-          approved: true,
+      actions.add(
+        RowAction(
+          label: '确认收到',
+          icon: Icons.verified_outlined,
+          onPressed: () => _approveInvoice(
+            context.read<InvoiceViewModel>(),
+            invoice,
+            approved: true,
+          ),
         ),
-      ));
-      actions.add(RowAction(
-        label: '作废',
-        icon: Icons.cancel_outlined,
-        destructive: true,
-        onPressed: () => _approveInvoice(
-          context.read<InvoiceViewModel>(),
-          invoice,
-          approved: false,
+      );
+      actions.add(
+        RowAction(
+          label: '作废',
+          icon: Icons.cancel_outlined,
+          destructive: true,
+          onPressed: () => _approveInvoice(
+            context.read<InvoiceViewModel>(),
+            invoice,
+            approved: false,
+          ),
         ),
-      ));
+      );
     }
 
     return ExpandableSummaryCard(
@@ -982,8 +1119,12 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
   }
 
   Widget _mobileRow(
-      BuildContext context, TextStyle? labelStyle, String label, String value,
-      {bool last = false}) {
+    BuildContext context,
+    TextStyle? labelStyle,
+    String label,
+    String value, {
+    bool last = false,
+  }) {
     final theme = Theme.of(context);
     final spacing = LayoutTokens.sectionSpacing(context) * 0.6;
     return Padding(
@@ -993,8 +1134,11 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
         children: [
           SizedBox(width: 72, child: Text(label, style: labelStyle)),
           Expanded(
-              child: Text(value.isEmpty ? _emptyCellText : value,
-                  style: theme.textTheme.bodyMedium)),
+            child: Text(
+              value.isEmpty ? _emptyCellText : value,
+              style: theme.textTheme.bodyMedium,
+            ),
+          ),
         ],
       ),
     );
@@ -1074,7 +1218,9 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
   }
 
   bool _hasActiveFilter(InvoiceViewModel viewModel) {
-    return viewModel.statusFilter.isNotEmpty || viewModel.todoFilter.isNotEmpty;
+    return viewModel.statusFilter.isNotEmpty ||
+        viewModel.todoFilter.isNotEmpty ||
+        viewModel.ordering != '-created_at';
   }
 
   void _clearFilters() {
@@ -1083,14 +1229,12 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     if (search.isNotEmpty) {
       query['search'] = search;
     }
-    context
-        .go(Uri(path: '/finance/invoices', queryParameters: query).toString());
+    context.go(
+      Uri(path: '/finance/invoices', queryParameters: query).toString(),
+    );
   }
 
-  void _openQuickFilter({
-    String? status,
-    String? todo,
-  }) {
+  void _openQuickFilter({String? status, String? todo}) {
     final query = <String, String>{};
     final search = _searchController.text.trim();
     if (search.isNotEmpty) {
@@ -1102,8 +1246,32 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     if ((todo ?? '').trim().isNotEmpty) {
       query['todo'] = todo!.trim();
     }
-    context
-        .go(Uri(path: '/finance/invoices', queryParameters: query).toString());
+    if (context.read<InvoiceViewModel>().ordering != '-created_at') {
+      query['ordering'] = context.read<InvoiceViewModel>().ordering;
+    }
+    context.go(
+      Uri(path: '/finance/invoices', queryParameters: query).toString(),
+    );
+  }
+
+  int _activeFilterCount(InvoiceViewModel viewModel) {
+    var count = 0;
+    if (_searchController.text.trim().isNotEmpty) count += 1;
+    if (viewModel.statusFilter.isNotEmpty) count += 1;
+    if (viewModel.todoFilter.isNotEmpty) count += 1;
+    if (viewModel.ordering != '-created_at') count += 1;
+    return count;
+  }
+
+  void _resetFilters(BuildContext context, InvoiceViewModel viewModel) {
+    if (_searchController.text.trim().isNotEmpty) {
+      context.go('/finance/invoices');
+      return;
+    }
+    viewModel
+      ..setSearchText('')
+      ..setFiltersSilently(status: '', todo: '', ordering: '-created_at');
+    viewModel.loadInvoices(resetPage: true);
   }
 
   int _summaryCount(Map<String, dynamic> payload, String key) {
@@ -1212,10 +1380,7 @@ class _InvoiceCreatePanelState extends State<_InvoiceCreatePanel> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '单据信息',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
+                Text('单据信息', style: Theme.of(context).textTheme.titleSmall),
                 const SizedBox(height: LayoutTokens.gapMd),
                 AppSelect<String>(
                   value: invoiceType,
@@ -1224,24 +1389,14 @@ class _InvoiceCreatePanelState extends State<_InvoiceCreatePanel> {
                     border: OutlineInputBorder(),
                   ),
                   options: const [
-                    AppDropdownOption(
-                      value: 'vat_special',
-                      label: '增值税专用发票',
-                    ),
-                    AppDropdownOption(
-                      value: 'vat_normal',
-                      label: '增值税普通发票',
-                    ),
-                    AppDropdownOption(
-                      value: 'electronic',
-                      label: '电子发票',
-                    ),
+                    AppDropdownOption(value: 'vat_special', label: '增值税专用发票'),
+                    AppDropdownOption(value: 'vat_normal', label: '增值税普通发票'),
+                    AppDropdownOption(value: 'electronic', label: '电子发票'),
                   ],
                   onChanged: submitting
                       ? null
-                      : (value) => setState(
-                            () => invoiceType = value ?? 'vat_normal',
-                          ),
+                      : (value) =>
+                            setState(() => invoiceType = value ?? 'vat_normal'),
                 ),
                 const SizedBox(height: LayoutTokens.gapMd),
                 AppSelect<int?>(
@@ -1251,10 +1406,7 @@ class _InvoiceCreatePanelState extends State<_InvoiceCreatePanel> {
                     border: OutlineInputBorder(),
                   ),
                   options: [
-                    const AppDropdownOption<int?>(
-                      value: null,
-                      label: '请选择客户',
-                    ),
+                    const AppDropdownOption<int?>(value: null, label: '请选择客户'),
                     ...widget.customers.map(
                       (customer) => AppDropdownOption<int?>(
                         value: customer.id,
@@ -1298,10 +1450,7 @@ class _InvoiceCreatePanelState extends State<_InvoiceCreatePanel> {
                     border: OutlineInputBorder(),
                   ),
                   options: [
-                    const AppDropdownOption<int?>(
-                      value: null,
-                      label: '不关联施工单',
-                    ),
+                    const AppDropdownOption<int?>(value: null, label: '不关联施工单'),
                     ...widget.workOrders.map(
                       (order) => AppDropdownOption<int?>(
                         value: order.id,
@@ -1321,10 +1470,7 @@ class _InvoiceCreatePanelState extends State<_InvoiceCreatePanel> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '开票金额',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
+                Text('开票金额', style: Theme.of(context).textTheme.titleSmall),
                 const SizedBox(height: LayoutTokens.gapMd),
                 CrudFieldConfig.number(
                   label: '金额（不含税）',

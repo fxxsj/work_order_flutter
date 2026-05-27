@@ -15,6 +15,7 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
     String? search,
     String? status,
     String? todo,
+    String? ordering,
   }) {
     return _apiService.fetchInvoices(
       page: page,
@@ -22,6 +23,7 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
       search: search,
       status: status,
       todo: todo,
+      ordering: ordering,
     );
   }
 
@@ -37,7 +39,9 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
 
   @override
   Future<Map<String, dynamic>> uploadAttachment(
-      int id, MultipartFile attachment) {
+    int id,
+    MultipartFile attachment,
+  ) {
     return _apiService.uploadAttachment(id, attachment);
   }
 
@@ -47,7 +51,7 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> getSummary() {
-    return _apiService.fetchSummary();
+  Future<Map<String, dynamic>> getSummary({Map<String, dynamic>? params}) {
+    return _apiService.fetchSummary(params: params);
   }
 }

@@ -8,6 +8,7 @@ abstract class InvoiceRepository {
     String? search,
     String? status,
     String? todo,
+    String? ordering,
   });
 
   Future<Map<String, dynamic>> submit(int id);
@@ -15,9 +16,11 @@ abstract class InvoiceRepository {
   Future<Map<String, dynamic>> create(Map<String, dynamic> payload);
 
   Future<Map<String, dynamic>> uploadAttachment(
-      int id, MultipartFile attachment);
+    int id,
+    MultipartFile attachment,
+  );
 
   Future<Map<String, dynamic>> approve(int id, Map<String, dynamic> payload);
 
-  Future<Map<String, dynamic>> getSummary();
+  Future<Map<String, dynamic>> getSummary({Map<String, dynamic>? params});
 }
