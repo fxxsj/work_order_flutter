@@ -7,7 +7,7 @@ part 'payment.freezed.dart';
 part 'payment.g.dart';
 
 @freezed
-class Payment with _$Payment {
+abstract class Payment with _$Payment {
   const factory Payment({
     @JsonKey(fromJson: _intFromJson) required int id,
     @JsonKey(

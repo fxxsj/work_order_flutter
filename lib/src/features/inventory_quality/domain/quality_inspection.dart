@@ -7,7 +7,7 @@ part 'quality_inspection.freezed.dart';
 part 'quality_inspection.g.dart';
 
 @freezed
-class QualityInspection with _$QualityInspection {
+abstract class QualityInspection with _$QualityInspection {
   const factory QualityInspection({
     @JsonKey(fromJson: _intFromJson) required int id,
     @JsonKey(name: 'inspection_number', fromJson: _stringFromJson)

@@ -7,7 +7,7 @@ part 'product_group.freezed.dart';
 part 'product_group.g.dart';
 
 @freezed
-class ProductGroup with _$ProductGroup {
+abstract class ProductGroup with _$ProductGroup {
   const factory ProductGroup({
     @JsonKey(fromJson: _intFromJson) required int id,
     @JsonKey(fromJson: _stringFromJson) required String code,

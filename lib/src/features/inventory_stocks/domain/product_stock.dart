@@ -7,7 +7,7 @@ part 'product_stock.freezed.dart';
 part 'product_stock.g.dart';
 
 @freezed
-class ProductStock with _$ProductStock {
+abstract class ProductStock with _$ProductStock {
   const factory ProductStock({
     @JsonKey(fromJson: _intFromJson) required int id,
     @JsonKey(name: 'product_name', fromJson: _stringOrNullFromJson)

@@ -6,14 +6,10 @@ part of 'salesperson.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$SalespersonImpl _$$SalespersonImplFromJson(Map<String, dynamic> json) =>
-    _$SalespersonImpl(
-      id: _intFromJson(json['id']),
-      name: _stringFromJson(json['name']),
-    );
+_Salesperson _$SalespersonFromJson(Map<String, dynamic> json) => _Salesperson(
+  id: _intFromJson(json['id']),
+  name: _stringFromJson(json['name']),
+);
 
-Map<String, dynamic> _$$SalespersonImplToJson(_$SalespersonImpl instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'name': instance.name,
-    };
+Map<String, dynamic> _$SalespersonToJson(_Salesperson instance) =>
+    <String, dynamic>{'id': instance.id, 'name': instance.name};

@@ -7,7 +7,7 @@ part 'purchase_order_detail.freezed.dart';
 part 'purchase_order_detail.g.dart';
 
 @freezed
-class PurchaseOrderDetail with _$PurchaseOrderDetail {
+abstract class PurchaseOrderDetail with _$PurchaseOrderDetail {
   const factory PurchaseOrderDetail({
     @JsonKey(fromJson: _intFromJson) required int id,
     @JsonKey(name: 'order_number', fromJson: _stringFromJson)
@@ -58,7 +58,7 @@ class PurchaseOrderDetail with _$PurchaseOrderDetail {
 }
 
 @freezed
-class PurchaseOrderItemDetail with _$PurchaseOrderItemDetail {
+abstract class PurchaseOrderItemDetail with _$PurchaseOrderItemDetail {
   const factory PurchaseOrderItemDetail({
     @JsonKey(fromJson: _intFromJson) required int id,
     @JsonKey(name: 'material', fromJson: _intOrNullFromJson) int? materialId,

@@ -14,7 +14,7 @@ part 'work_order_response.g.dart';
 /// final workOrder = WorkOrderResponse.fromJson(json);
 /// ```
 @freezed
-class WorkOrderResponse with _$WorkOrderResponse {
+abstract class WorkOrderResponse with _$WorkOrderResponse {
   const factory WorkOrderResponse({
     @JsonKey(fromJson: _intFromJson) required int id,
     @JsonKey(name: 'order_number', fromJson: _stringFromJson)
@@ -30,7 +30,8 @@ class WorkOrderResponse with _$WorkOrderResponse {
     @JsonKey(name: 'status', fromJson: _stringOrNullFromJson) String? status,
     @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
     String? statusDisplay,
-    @JsonKey(name: 'priority', fromJson: _stringOrNullFromJson) String? priority,
+    @JsonKey(name: 'priority', fromJson: _stringOrNullFromJson)
+    String? priority,
     @JsonKey(name: 'priority_display', fromJson: _stringOrNullFromJson)
     String? priorityDisplay,
     @JsonKey(name: 'order_date', fromJson: _dateTimeOrNullFromJson)

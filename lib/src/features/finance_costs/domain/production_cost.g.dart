@@ -6,20 +6,21 @@ part of 'production_cost.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$ProductionCostImpl _$$ProductionCostImplFromJson(Map<String, dynamic> json) =>
-    _$ProductionCostImpl(
+_ProductionCost _$ProductionCostFromJson(Map<String, dynamic> json) =>
+    _ProductionCost(
       id: _intFromJson(json['id']),
       workOrderNumber: _stringOrNullFromJson(
-          _readWorkOrderNumber(json, 'work_order_number')),
+        _readWorkOrderNumber(json, 'work_order_number'),
+      ),
       totalCost: _doubleOrNullFromJson(_readTotalCost(json, 'total_cost')),
       status: _stringOrNullFromJson(json['status']),
       statusDisplay: _stringOrNullFromJson(json['status_display']),
-      calculatedAt:
-          _dateTimeOrNullFromJson(_readCalculatedAt(json, 'calculated_at')),
+      calculatedAt: _dateTimeOrNullFromJson(
+        _readCalculatedAt(json, 'calculated_at'),
+      ),
     );
 
-Map<String, dynamic> _$$ProductionCostImplToJson(
-        _$ProductionCostImpl instance) =>
+Map<String, dynamic> _$ProductionCostToJson(_ProductionCost instance) =>
     <String, dynamic>{
       'id': instance.id,
       'work_order_number': instance.workOrderNumber,

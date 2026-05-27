@@ -6,8 +6,8 @@ part of 'product_group.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$ProductGroupImpl _$$ProductGroupImplFromJson(Map<String, dynamic> json) =>
-    _$ProductGroupImpl(
+_ProductGroup _$ProductGroupFromJson(Map<String, dynamic> json) =>
+    _ProductGroup(
       id: _intFromJson(json['id']),
       code: _stringFromJson(json['code']),
       name: _stringFromJson(json['name']),
@@ -16,7 +16,7 @@ _$ProductGroupImpl _$$ProductGroupImplFromJson(Map<String, dynamic> json) =>
       itemsCount: _intOrNullFromJson(_readItemsCount(json, 'items_count')),
     );
 
-Map<String, dynamic> _$$ProductGroupImplToJson(_$ProductGroupImpl instance) =>
+Map<String, dynamic> _$ProductGroupToJson(_ProductGroup instance) =>
     <String, dynamic>{
       'id': instance.id,
       'code': instance.code,

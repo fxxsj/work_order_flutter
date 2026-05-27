@@ -7,7 +7,7 @@ part 'invoice.freezed.dart';
 part 'invoice.g.dart';
 
 @freezed
-class Invoice with _$Invoice {
+abstract class Invoice with _$Invoice {
   const factory Invoice({
     @JsonKey(fromJson: _intFromJson) required int id,
     @JsonKey(

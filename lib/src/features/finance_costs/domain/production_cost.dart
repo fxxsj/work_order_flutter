@@ -7,7 +7,7 @@ part 'production_cost.freezed.dart';
 part 'production_cost.g.dart';
 
 @freezed
-class ProductionCost with _$ProductionCost {
+abstract class ProductionCost with _$ProductionCost {
   const factory ProductionCost({
     @JsonKey(fromJson: _intFromJson) required int id,
     @JsonKey(

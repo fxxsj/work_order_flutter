@@ -8,7 +8,7 @@ part 'sales_order_detail.freezed.dart';
 part 'sales_order_detail.g.dart';
 
 @freezed
-class SalesOrderDetail with _$SalesOrderDetail {
+abstract class SalesOrderDetail with _$SalesOrderDetail {
   const factory SalesOrderDetail({
     @JsonKey(fromJson: _intFromJson) required int id,
     @JsonKey(name: 'order_number', fromJson: _stringFromJson)
@@ -117,7 +117,7 @@ class SalesOrderDetail with _$SalesOrderDetail {
 }
 
 @freezed
-class SalesOrderItem with _$SalesOrderItem {
+abstract class SalesOrderItem with _$SalesOrderItem {
   const factory SalesOrderItem({
     @JsonKey(fromJson: _intFromJson) required int id,
     @JsonKey(name: 'product', fromJson: _intOrNullFromJson) int? productId,
@@ -169,8 +169,9 @@ List<TraceabilitySummaryItem> _traceabilitySummaryListFromJson(Object? value) {
   final items = <TraceabilitySummaryItem>[];
   for (final item in value) {
     if (item is Map) {
-      final summary =
-          TraceabilitySummaryItem.fromJson(Map<String, dynamic>.from(item));
+      final summary = TraceabilitySummaryItem.fromJson(
+        Map<String, dynamic>.from(item),
+      );
       if (summary.number.trim().isNotEmpty) {
         items.add(summary);
       }

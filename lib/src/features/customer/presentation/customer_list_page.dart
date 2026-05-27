@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
@@ -26,25 +27,25 @@ class CustomerListPage extends StatelessWidget {
 
   static const CrudListConfig<Customer, CustomerViewModel> _config =
       CrudListConfig(
-    searchHintText: '搜索客户名称、联系人、电话',
-    emptyText: '暂无客户数据',
-    emptyIcon: Icons.people_outline,
-    loadItems: _loadCustomers,
-    titleBuilder: _titleText,
-    subtitleBuilder: _subtitleText,
-    summaryChipsBuilder: _summaryChips,
-    summaryFieldsBuilder: _summaryFields,
-    headerActionsBuilder: _headerActions,
-    rowActionsBuilder: _rowActions,
-    columns: [
-      CrudTableColumn(label: '客户', cellBuilder: _buildNameCell),
-      CrudTableColumn(label: '联系人', cellBuilder: _buildContactCell),
-      CrudTableColumn(label: '电话', cellBuilder: _buildPhoneCell),
-      CrudTableColumn(label: '业务员', cellBuilder: _buildSalespersonCell),
-      CrudTableColumn(label: '更新日期', cellBuilder: _buildUpdatedAtCell),
-      CrudTableColumn(label: '地址', cellBuilder: _buildAddressCell),
-    ],
-  );
+        searchHintText: '搜索客户名称、联系人、电话',
+        emptyText: '暂无客户数据',
+        emptyIcon: Icons.people_outline,
+        loadItems: _loadCustomers,
+        titleBuilder: _titleText,
+        subtitleBuilder: _subtitleText,
+        summaryChipsBuilder: _summaryChips,
+        summaryFieldsBuilder: _summaryFields,
+        headerActionsBuilder: _headerActions,
+        rowActionsBuilder: _rowActions,
+        columns: [
+          CrudTableColumn(label: '客户', cellBuilder: _buildNameCell),
+          CrudTableColumn(label: '联系人', cellBuilder: _buildContactCell),
+          CrudTableColumn(label: '电话', cellBuilder: _buildPhoneCell),
+          CrudTableColumn(label: '业务员', cellBuilder: _buildSalespersonCell),
+          CrudTableColumn(label: '更新日期', cellBuilder: _buildUpdatedAtCell),
+          CrudTableColumn(label: '地址', cellBuilder: _buildAddressCell),
+        ],
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -86,10 +87,7 @@ class CustomerListPage extends StatelessWidget {
     );
   }
 
-  static Future<void> _openDetailPage(
-    BuildContext context,
-    Customer customer,
-  ) {
+  static Future<void> _openDetailPage(BuildContext context, Customer customer) {
     return context.pushNamed<void>(
       'customers_detail',
       pathParameters: {'id': customer.id.toString()},
@@ -106,6 +104,28 @@ class CustomerListPage extends StatelessWidget {
     final canChangeCustomer = permissions.has('workorder.change_customer');
 
     return [
+      SizedBox(
+        width: 132,
+        child: AppSelect<String>(
+          options: const [
+            AppDropdownOption(value: '-created_at', label: '最新创建'),
+            AppDropdownOption(value: 'name', label: '名称升序'),
+            AppDropdownOption(value: '-name', label: '名称降序'),
+            AppDropdownOption(value: 'contact_person', label: '联系人升序'),
+            AppDropdownOption(value: 'phone', label: '电话升序'),
+          ],
+          value: viewModel.ordering ?? '-created_at',
+          onChanged: (value) {
+            if (value != null) viewModel.setOrdering(value);
+          },
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
       if (canChangeCustomer)
         PageActionButton.outlined(
           onPressed: () => _handleExport(context, viewModel),
@@ -217,7 +237,9 @@ class CustomerListPage extends StatelessWidget {
 
   static Widget _buildContactCell(BuildContext context, Customer customer) {
     return _buildBodyText(
-        context, CrudValueFormatter.text(customer.contactPerson));
+      context,
+      CrudValueFormatter.text(customer.contactPerson),
+    );
   }
 
   static Widget _buildPhoneCell(BuildContext context, Customer customer) {
@@ -240,10 +262,7 @@ class CustomerListPage extends StatelessWidget {
   }
 
   static Widget _buildBodyText(BuildContext context, String value) {
-    return Text(
-      value,
-      style: Theme.of(context).textTheme.bodySmall,
-    );
+    return Text(value, style: Theme.of(context).textTheme.bodySmall);
   }
 
   static String _titleText(Customer customer) {

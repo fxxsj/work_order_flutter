@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
@@ -88,6 +89,47 @@ class MaterialListPage extends StatelessWidget {
     MaterialViewModel viewModel,
   ) {
     return [
+      SizedBox(
+        width: 120,
+        child: AppSelect<bool?>(
+          options: const [
+            AppDropdownOption(value: null, label: '全部状态'),
+            AppDropdownOption(value: true, label: '启用'),
+            AppDropdownOption(value: false, label: '停用'),
+          ],
+          value: viewModel.isActiveFilter,
+          onChanged: (value) => viewModel.setIsActiveFilter(value),
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
+      SizedBox(
+        width: 120,
+        child: AppSelect<String>(
+          options: const [
+            AppDropdownOption(value: 'code', label: '编码升序'),
+            AppDropdownOption(value: '-code', label: '编码降序'),
+            AppDropdownOption(value: 'name', label: '名称升序'),
+            AppDropdownOption(value: '-name', label: '名称降序'),
+            AppDropdownOption(value: 'stock_quantity', label: '库存升序'),
+            AppDropdownOption(value: '-stock_quantity', label: '库存降序'),
+          ],
+          value: viewModel.ordering ?? 'code',
+          onChanged: (value) {
+            if (value != null) viewModel.setOrdering(value);
+          },
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
       PageActionButton.filled(
         onPressed: () => _openEditPage(context, viewModel, null),
         icon: const Icon(Icons.add),

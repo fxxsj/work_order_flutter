@@ -1,5 +1,5 @@
-// coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
@@ -9,363 +9,284 @@ part of 'production_cost.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// dart format off
 T _$identity<T>(T value) => value;
-
-final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
-
-ProductionCost _$ProductionCostFromJson(Map<String, dynamic> json) {
-  return _ProductionCost.fromJson(json);
-}
 
 /// @nodoc
 mixin _$ProductionCost {
-  @JsonKey(fromJson: _intFromJson)
-  int get id => throw _privateConstructorUsedError;
-  @JsonKey(
-      name: 'work_order_number',
-      readValue: _readWorkOrderNumber,
-      fromJson: _stringOrNullFromJson)
-  String? get workOrderNumber => throw _privateConstructorUsedError;
-  @JsonKey(
-      name: 'total_cost',
-      readValue: _readTotalCost,
-      fromJson: _doubleOrNullFromJson)
-  double? get totalCost => throw _privateConstructorUsedError;
-  @JsonKey(fromJson: _stringOrNullFromJson)
-  String? get status => throw _privateConstructorUsedError;
-  @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
-  String? get statusDisplay => throw _privateConstructorUsedError;
-  @JsonKey(
-      name: 'calculated_at',
-      readValue: _readCalculatedAt,
-      fromJson: _dateTimeOrNullFromJson)
-  DateTime? get calculatedAt => throw _privateConstructorUsedError;
+
+@JsonKey(fromJson: _intFromJson) int get id;@JsonKey(name: 'work_order_number', readValue: _readWorkOrderNumber, fromJson: _stringOrNullFromJson) String? get workOrderNumber;@JsonKey(name: 'total_cost', readValue: _readTotalCost, fromJson: _doubleOrNullFromJson) double? get totalCost;@JsonKey(fromJson: _stringOrNullFromJson) String? get status;@JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson) String? get statusDisplay;@JsonKey(name: 'calculated_at', readValue: _readCalculatedAt, fromJson: _dateTimeOrNullFromJson) DateTime? get calculatedAt;
+/// Create a copy of ProductionCost
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ProductionCostCopyWith<ProductionCost> get copyWith => _$ProductionCostCopyWithImpl<ProductionCost>(this as ProductionCost, _$identity);
 
   /// Serializes this ProductionCost to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  Map<String, dynamic> toJson();
 
-  /// Create a copy of ProductionCost
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $ProductionCostCopyWith<ProductionCost> get copyWith =>
-      throw _privateConstructorUsedError;
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProductionCost&&(identical(other.id, id) || other.id == id)&&(identical(other.workOrderNumber, workOrderNumber) || other.workOrderNumber == workOrderNumber)&&(identical(other.totalCost, totalCost) || other.totalCost == totalCost)&&(identical(other.status, status) || other.status == status)&&(identical(other.statusDisplay, statusDisplay) || other.statusDisplay == statusDisplay)&&(identical(other.calculatedAt, calculatedAt) || other.calculatedAt == calculatedAt));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,id,workOrderNumber,totalCost,status,statusDisplay,calculatedAt);
+
+@override
+String toString() {
+  return 'ProductionCost(id: $id, workOrderNumber: $workOrderNumber, totalCost: $totalCost, status: $status, statusDisplay: $statusDisplay, calculatedAt: $calculatedAt)';
+}
+
+
 }
 
 /// @nodoc
-abstract class $ProductionCostCopyWith<$Res> {
-  factory $ProductionCostCopyWith(
-          ProductionCost value, $Res Function(ProductionCost) then) =
-      _$ProductionCostCopyWithImpl<$Res, ProductionCost>;
-  @useResult
-  $Res call(
-      {@JsonKey(fromJson: _intFromJson) int id,
-      @JsonKey(
-          name: 'work_order_number',
-          readValue: _readWorkOrderNumber,
-          fromJson: _stringOrNullFromJson)
-      String? workOrderNumber,
-      @JsonKey(
-          name: 'total_cost',
-          readValue: _readTotalCost,
-          fromJson: _doubleOrNullFromJson)
-      double? totalCost,
-      @JsonKey(fromJson: _stringOrNullFromJson) String? status,
-      @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
-      String? statusDisplay,
-      @JsonKey(
-          name: 'calculated_at',
-          readValue: _readCalculatedAt,
-          fromJson: _dateTimeOrNullFromJson)
-      DateTime? calculatedAt});
-}
+abstract mixin class $ProductionCostCopyWith<$Res>  {
+  factory $ProductionCostCopyWith(ProductionCost value, $Res Function(ProductionCost) _then) = _$ProductionCostCopyWithImpl;
+@useResult
+$Res call({
+@JsonKey(fromJson: _intFromJson) int id,@JsonKey(name: 'work_order_number', readValue: _readWorkOrderNumber, fromJson: _stringOrNullFromJson) String? workOrderNumber,@JsonKey(name: 'total_cost', readValue: _readTotalCost, fromJson: _doubleOrNullFromJson) double? totalCost,@JsonKey(fromJson: _stringOrNullFromJson) String? status,@JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson) String? statusDisplay,@JsonKey(name: 'calculated_at', readValue: _readCalculatedAt, fromJson: _dateTimeOrNullFromJson) DateTime? calculatedAt
+});
 
+
+
+
+}
 /// @nodoc
-class _$ProductionCostCopyWithImpl<$Res, $Val extends ProductionCost>
+class _$ProductionCostCopyWithImpl<$Res>
     implements $ProductionCostCopyWith<$Res> {
-  _$ProductionCostCopyWithImpl(this._value, this._then);
+  _$ProductionCostCopyWithImpl(this._self, this._then);
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
+  final ProductionCost _self;
+  final $Res Function(ProductionCost) _then;
 
-  /// Create a copy of ProductionCost
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? id = null,
-    Object? workOrderNumber = freezed,
-    Object? totalCost = freezed,
-    Object? status = freezed,
-    Object? statusDisplay = freezed,
-    Object? calculatedAt = freezed,
-  }) {
-    return _then(_value.copyWith(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as int,
-      workOrderNumber: freezed == workOrderNumber
-          ? _value.workOrderNumber
-          : workOrderNumber // ignore: cast_nullable_to_non_nullable
-              as String?,
-      totalCost: freezed == totalCost
-          ? _value.totalCost
-          : totalCost // ignore: cast_nullable_to_non_nullable
-              as double?,
-      status: freezed == status
-          ? _value.status
-          : status // ignore: cast_nullable_to_non_nullable
-              as String?,
-      statusDisplay: freezed == statusDisplay
-          ? _value.statusDisplay
-          : statusDisplay // ignore: cast_nullable_to_non_nullable
-              as String?,
-      calculatedAt: freezed == calculatedAt
-          ? _value.calculatedAt
-          : calculatedAt // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
-    ) as $Val);
-  }
+/// Create a copy of ProductionCost
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? workOrderNumber = freezed,Object? totalCost = freezed,Object? status = freezed,Object? statusDisplay = freezed,Object? calculatedAt = freezed,}) {
+  return _then(_self.copyWith(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,workOrderNumber: freezed == workOrderNumber ? _self.workOrderNumber : workOrderNumber // ignore: cast_nullable_to_non_nullable
+as String?,totalCost: freezed == totalCost ? _self.totalCost : totalCost // ignore: cast_nullable_to_non_nullable
+as double?,status: freezed == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String?,statusDisplay: freezed == statusDisplay ? _self.statusDisplay : statusDisplay // ignore: cast_nullable_to_non_nullable
+as String?,calculatedAt: freezed == calculatedAt ? _self.calculatedAt : calculatedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
+  ));
 }
 
-/// @nodoc
-abstract class _$$ProductionCostImplCopyWith<$Res>
-    implements $ProductionCostCopyWith<$Res> {
-  factory _$$ProductionCostImplCopyWith(_$ProductionCostImpl value,
-          $Res Function(_$ProductionCostImpl) then) =
-      __$$ProductionCostImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call(
-      {@JsonKey(fromJson: _intFromJson) int id,
-      @JsonKey(
-          name: 'work_order_number',
-          readValue: _readWorkOrderNumber,
-          fromJson: _stringOrNullFromJson)
-      String? workOrderNumber,
-      @JsonKey(
-          name: 'total_cost',
-          readValue: _readTotalCost,
-          fromJson: _doubleOrNullFromJson)
-      double? totalCost,
-      @JsonKey(fromJson: _stringOrNullFromJson) String? status,
-      @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
-      String? statusDisplay,
-      @JsonKey(
-          name: 'calculated_at',
-          readValue: _readCalculatedAt,
-          fromJson: _dateTimeOrNullFromJson)
-      DateTime? calculatedAt});
 }
 
-/// @nodoc
-class __$$ProductionCostImplCopyWithImpl<$Res>
-    extends _$ProductionCostCopyWithImpl<$Res, _$ProductionCostImpl>
-    implements _$$ProductionCostImplCopyWith<$Res> {
-  __$$ProductionCostImplCopyWithImpl(
-      _$ProductionCostImpl _value, $Res Function(_$ProductionCostImpl) _then)
-      : super(_value, _then);
 
-  /// Create a copy of ProductionCost
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? id = null,
-    Object? workOrderNumber = freezed,
-    Object? totalCost = freezed,
-    Object? status = freezed,
-    Object? statusDisplay = freezed,
-    Object? calculatedAt = freezed,
-  }) {
-    return _then(_$ProductionCostImpl(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as int,
-      workOrderNumber: freezed == workOrderNumber
-          ? _value.workOrderNumber
-          : workOrderNumber // ignore: cast_nullable_to_non_nullable
-              as String?,
-      totalCost: freezed == totalCost
-          ? _value.totalCost
-          : totalCost // ignore: cast_nullable_to_non_nullable
-              as double?,
-      status: freezed == status
-          ? _value.status
-          : status // ignore: cast_nullable_to_non_nullable
-              as String?,
-      statusDisplay: freezed == statusDisplay
-          ? _value.statusDisplay
-          : statusDisplay // ignore: cast_nullable_to_non_nullable
-              as String?,
-      calculatedAt: freezed == calculatedAt
-          ? _value.calculatedAt
-          : calculatedAt // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
-    ));
-  }
+/// Adds pattern-matching-related methods to [ProductionCost].
+extension ProductionCostPatterns on ProductionCost {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ProductionCost value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ProductionCost() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ProductionCost value)  $default,){
+final _that = this;
+switch (_that) {
+case _ProductionCost():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ProductionCost value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ProductionCost() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(name: 'work_order_number', readValue: _readWorkOrderNumber, fromJson: _stringOrNullFromJson)  String? workOrderNumber, @JsonKey(name: 'total_cost', readValue: _readTotalCost, fromJson: _doubleOrNullFromJson)  double? totalCost, @JsonKey(fromJson: _stringOrNullFromJson)  String? status, @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)  String? statusDisplay, @JsonKey(name: 'calculated_at', readValue: _readCalculatedAt, fromJson: _dateTimeOrNullFromJson)  DateTime? calculatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ProductionCost() when $default != null:
+return $default(_that.id,_that.workOrderNumber,_that.totalCost,_that.status,_that.statusDisplay,_that.calculatedAt);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(name: 'work_order_number', readValue: _readWorkOrderNumber, fromJson: _stringOrNullFromJson)  String? workOrderNumber, @JsonKey(name: 'total_cost', readValue: _readTotalCost, fromJson: _doubleOrNullFromJson)  double? totalCost, @JsonKey(fromJson: _stringOrNullFromJson)  String? status, @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)  String? statusDisplay, @JsonKey(name: 'calculated_at', readValue: _readCalculatedAt, fromJson: _dateTimeOrNullFromJson)  DateTime? calculatedAt)  $default,) {final _that = this;
+switch (_that) {
+case _ProductionCost():
+return $default(_that.id,_that.workOrderNumber,_that.totalCost,_that.status,_that.statusDisplay,_that.calculatedAt);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(name: 'work_order_number', readValue: _readWorkOrderNumber, fromJson: _stringOrNullFromJson)  String? workOrderNumber, @JsonKey(name: 'total_cost', readValue: _readTotalCost, fromJson: _doubleOrNullFromJson)  double? totalCost, @JsonKey(fromJson: _stringOrNullFromJson)  String? status, @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)  String? statusDisplay, @JsonKey(name: 'calculated_at', readValue: _readCalculatedAt, fromJson: _dateTimeOrNullFromJson)  DateTime? calculatedAt)?  $default,) {final _that = this;
+switch (_that) {
+case _ProductionCost() when $default != null:
+return $default(_that.id,_that.workOrderNumber,_that.totalCost,_that.status,_that.statusDisplay,_that.calculatedAt);case _:
+  return null;
+
+}
+}
+
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$ProductionCostImpl implements _ProductionCost {
-  const _$ProductionCostImpl(
-      {@JsonKey(fromJson: _intFromJson) required this.id,
-      @JsonKey(
-          name: 'work_order_number',
-          readValue: _readWorkOrderNumber,
-          fromJson: _stringOrNullFromJson)
-      this.workOrderNumber,
-      @JsonKey(
-          name: 'total_cost',
-          readValue: _readTotalCost,
-          fromJson: _doubleOrNullFromJson)
-      this.totalCost,
-      @JsonKey(fromJson: _stringOrNullFromJson) this.status,
-      @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
-      this.statusDisplay,
-      @JsonKey(
-          name: 'calculated_at',
-          readValue: _readCalculatedAt,
-          fromJson: _dateTimeOrNullFromJson)
-      this.calculatedAt});
 
-  factory _$ProductionCostImpl.fromJson(Map<String, dynamic> json) =>
-      _$$ProductionCostImplFromJson(json);
+class _ProductionCost implements ProductionCost {
+  const _ProductionCost({@JsonKey(fromJson: _intFromJson) required this.id, @JsonKey(name: 'work_order_number', readValue: _readWorkOrderNumber, fromJson: _stringOrNullFromJson) this.workOrderNumber, @JsonKey(name: 'total_cost', readValue: _readTotalCost, fromJson: _doubleOrNullFromJson) this.totalCost, @JsonKey(fromJson: _stringOrNullFromJson) this.status, @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson) this.statusDisplay, @JsonKey(name: 'calculated_at', readValue: _readCalculatedAt, fromJson: _dateTimeOrNullFromJson) this.calculatedAt});
+  factory _ProductionCost.fromJson(Map<String, dynamic> json) => _$ProductionCostFromJson(json);
 
-  @override
-  @JsonKey(fromJson: _intFromJson)
-  final int id;
-  @override
-  @JsonKey(
-      name: 'work_order_number',
-      readValue: _readWorkOrderNumber,
-      fromJson: _stringOrNullFromJson)
-  final String? workOrderNumber;
-  @override
-  @JsonKey(
-      name: 'total_cost',
-      readValue: _readTotalCost,
-      fromJson: _doubleOrNullFromJson)
-  final double? totalCost;
-  @override
-  @JsonKey(fromJson: _stringOrNullFromJson)
-  final String? status;
-  @override
-  @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
-  final String? statusDisplay;
-  @override
-  @JsonKey(
-      name: 'calculated_at',
-      readValue: _readCalculatedAt,
-      fromJson: _dateTimeOrNullFromJson)
-  final DateTime? calculatedAt;
+@override@JsonKey(fromJson: _intFromJson) final  int id;
+@override@JsonKey(name: 'work_order_number', readValue: _readWorkOrderNumber, fromJson: _stringOrNullFromJson) final  String? workOrderNumber;
+@override@JsonKey(name: 'total_cost', readValue: _readTotalCost, fromJson: _doubleOrNullFromJson) final  double? totalCost;
+@override@JsonKey(fromJson: _stringOrNullFromJson) final  String? status;
+@override@JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson) final  String? statusDisplay;
+@override@JsonKey(name: 'calculated_at', readValue: _readCalculatedAt, fromJson: _dateTimeOrNullFromJson) final  DateTime? calculatedAt;
 
-  @override
-  String toString() {
-    return 'ProductionCost(id: $id, workOrderNumber: $workOrderNumber, totalCost: $totalCost, status: $status, statusDisplay: $statusDisplay, calculatedAt: $calculatedAt)';
-  }
+/// Create a copy of ProductionCost
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ProductionCostCopyWith<_ProductionCost> get copyWith => __$ProductionCostCopyWithImpl<_ProductionCost>(this, _$identity);
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$ProductionCostImpl &&
-            (identical(other.id, id) || other.id == id) &&
-            (identical(other.workOrderNumber, workOrderNumber) ||
-                other.workOrderNumber == workOrderNumber) &&
-            (identical(other.totalCost, totalCost) ||
-                other.totalCost == totalCost) &&
-            (identical(other.status, status) || other.status == status) &&
-            (identical(other.statusDisplay, statusDisplay) ||
-                other.statusDisplay == statusDisplay) &&
-            (identical(other.calculatedAt, calculatedAt) ||
-                other.calculatedAt == calculatedAt));
-  }
-
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  int get hashCode => Object.hash(runtimeType, id, workOrderNumber, totalCost,
-      status, statusDisplay, calculatedAt);
-
-  /// Create a copy of ProductionCost
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$ProductionCostImplCopyWith<_$ProductionCostImpl> get copyWith =>
-      __$$ProductionCostImplCopyWithImpl<_$ProductionCostImpl>(
-          this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$ProductionCostImplToJson(
-      this,
-    );
-  }
+@override
+Map<String, dynamic> toJson() {
+  return _$ProductionCostToJson(this, );
 }
 
-abstract class _ProductionCost implements ProductionCost {
-  const factory _ProductionCost(
-      {@JsonKey(fromJson: _intFromJson) required final int id,
-      @JsonKey(
-          name: 'work_order_number',
-          readValue: _readWorkOrderNumber,
-          fromJson: _stringOrNullFromJson)
-      final String? workOrderNumber,
-      @JsonKey(
-          name: 'total_cost',
-          readValue: _readTotalCost,
-          fromJson: _doubleOrNullFromJson)
-      final double? totalCost,
-      @JsonKey(fromJson: _stringOrNullFromJson) final String? status,
-      @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
-      final String? statusDisplay,
-      @JsonKey(
-          name: 'calculated_at',
-          readValue: _readCalculatedAt,
-          fromJson: _dateTimeOrNullFromJson)
-      final DateTime? calculatedAt}) = _$ProductionCostImpl;
-
-  factory _ProductionCost.fromJson(Map<String, dynamic> json) =
-      _$ProductionCostImpl.fromJson;
-
-  @override
-  @JsonKey(fromJson: _intFromJson)
-  int get id;
-  @override
-  @JsonKey(
-      name: 'work_order_number',
-      readValue: _readWorkOrderNumber,
-      fromJson: _stringOrNullFromJson)
-  String? get workOrderNumber;
-  @override
-  @JsonKey(
-      name: 'total_cost',
-      readValue: _readTotalCost,
-      fromJson: _doubleOrNullFromJson)
-  double? get totalCost;
-  @override
-  @JsonKey(fromJson: _stringOrNullFromJson)
-  String? get status;
-  @override
-  @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
-  String? get statusDisplay;
-  @override
-  @JsonKey(
-      name: 'calculated_at',
-      readValue: _readCalculatedAt,
-      fromJson: _dateTimeOrNullFromJson)
-  DateTime? get calculatedAt;
-
-  /// Create a copy of ProductionCost
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$ProductionCostImplCopyWith<_$ProductionCostImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProductionCost&&(identical(other.id, id) || other.id == id)&&(identical(other.workOrderNumber, workOrderNumber) || other.workOrderNumber == workOrderNumber)&&(identical(other.totalCost, totalCost) || other.totalCost == totalCost)&&(identical(other.status, status) || other.status == status)&&(identical(other.statusDisplay, statusDisplay) || other.statusDisplay == statusDisplay)&&(identical(other.calculatedAt, calculatedAt) || other.calculatedAt == calculatedAt));
 }
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,id,workOrderNumber,totalCost,status,statusDisplay,calculatedAt);
+
+@override
+String toString() {
+  return 'ProductionCost(id: $id, workOrderNumber: $workOrderNumber, totalCost: $totalCost, status: $status, statusDisplay: $statusDisplay, calculatedAt: $calculatedAt)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ProductionCostCopyWith<$Res> implements $ProductionCostCopyWith<$Res> {
+  factory _$ProductionCostCopyWith(_ProductionCost value, $Res Function(_ProductionCost) _then) = __$ProductionCostCopyWithImpl;
+@override @useResult
+$Res call({
+@JsonKey(fromJson: _intFromJson) int id,@JsonKey(name: 'work_order_number', readValue: _readWorkOrderNumber, fromJson: _stringOrNullFromJson) String? workOrderNumber,@JsonKey(name: 'total_cost', readValue: _readTotalCost, fromJson: _doubleOrNullFromJson) double? totalCost,@JsonKey(fromJson: _stringOrNullFromJson) String? status,@JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson) String? statusDisplay,@JsonKey(name: 'calculated_at', readValue: _readCalculatedAt, fromJson: _dateTimeOrNullFromJson) DateTime? calculatedAt
+});
+
+
+
+
+}
+/// @nodoc
+class __$ProductionCostCopyWithImpl<$Res>
+    implements _$ProductionCostCopyWith<$Res> {
+  __$ProductionCostCopyWithImpl(this._self, this._then);
+
+  final _ProductionCost _self;
+  final $Res Function(_ProductionCost) _then;
+
+/// Create a copy of ProductionCost
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? workOrderNumber = freezed,Object? totalCost = freezed,Object? status = freezed,Object? statusDisplay = freezed,Object? calculatedAt = freezed,}) {
+  return _then(_ProductionCost(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,workOrderNumber: freezed == workOrderNumber ? _self.workOrderNumber : workOrderNumber // ignore: cast_nullable_to_non_nullable
+as String?,totalCost: freezed == totalCost ? _self.totalCost : totalCost // ignore: cast_nullable_to_non_nullable
+as double?,status: freezed == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String?,statusDisplay: freezed == statusDisplay ? _self.statusDisplay : statusDisplay // ignore: cast_nullable_to_non_nullable
+as String?,calculatedAt: freezed == calculatedAt ? _self.calculatedAt : calculatedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
+  ));
+}
+
+
+}
+
+// dart format on

@@ -6,25 +6,23 @@ part of 'sales_order.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$SalesOrderImpl _$$SalesOrderImplFromJson(Map<String, dynamic> json) =>
-    _$SalesOrderImpl(
-      id: _intFromJson(json['id']),
-      orderNumber: _stringFromJson(json['order_number']),
-      customerName: _stringOrNullFromJson(json['customer_name']),
-      customerCode: _stringOrNullFromJson(json['customer_code']),
-      status: _stringOrNullFromJson(json['status']),
-      statusDisplay: _stringOrNullFromJson(json['status_display']),
-      paymentStatus: _stringOrNullFromJson(json['payment_status']),
-      paymentStatusDisplay:
-          _stringOrNullFromJson(json['payment_status_display']),
-      totalAmount: _doubleOrNullFromJson(json['total_amount']),
-      orderDate: _dateTimeOrNullFromJson(json['order_date']),
-      deliveryDate: _dateTimeOrNullFromJson(json['delivery_date']),
-      itemsCount: _intOrNullFromJson(json['items_count']),
-      workOrderCount: _intOrNullFromJson(json['work_order_count']),
-    );
+_SalesOrder _$SalesOrderFromJson(Map<String, dynamic> json) => _SalesOrder(
+  id: _intFromJson(json['id']),
+  orderNumber: _stringFromJson(json['order_number']),
+  customerName: _stringOrNullFromJson(json['customer_name']),
+  customerCode: _stringOrNullFromJson(json['customer_code']),
+  status: _stringOrNullFromJson(json['status']),
+  statusDisplay: _stringOrNullFromJson(json['status_display']),
+  paymentStatus: _stringOrNullFromJson(json['payment_status']),
+  paymentStatusDisplay: _stringOrNullFromJson(json['payment_status_display']),
+  totalAmount: _doubleOrNullFromJson(json['total_amount']),
+  orderDate: _dateTimeOrNullFromJson(json['order_date']),
+  deliveryDate: _dateTimeOrNullFromJson(json['delivery_date']),
+  itemsCount: _intOrNullFromJson(json['items_count']),
+  workOrderCount: _intOrNullFromJson(json['work_order_count']),
+);
 
-Map<String, dynamic> _$$SalesOrderImplToJson(_$SalesOrderImpl instance) =>
+Map<String, dynamic> _$SalesOrderToJson(_SalesOrder instance) =>
     <String, dynamic>{
       'id': instance.id,
       'order_number': instance.orderNumber,

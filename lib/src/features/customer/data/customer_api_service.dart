@@ -18,14 +18,16 @@ class CustomerApiService {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? ordering,
   }) async {
-    final params = <String, dynamic>{
-      'page': page,
-      'page_size': pageSize,
-    };
+    final params = <String, dynamic>{'page': page, 'page_size': pageSize};
     final trimmed = search?.trim();
     if (trimmed != null && trimmed.isNotEmpty) {
       params['search'] = trimmed;
+    }
+    final trimmedOrdering = ordering?.trim();
+    if (trimmedOrdering != null && trimmedOrdering.isNotEmpty) {
+      params['ordering'] = trimmedOrdering;
     }
 
     final response = await _client.get('/customers/', queryParameters: params);
@@ -36,7 +38,8 @@ class CustomerApiService {
         final list = results
             .whereType<Map>()
             .map(
-                (item) => CustomerDto.fromJson(Map<String, dynamic>.from(item)))
+              (item) => CustomerDto.fromJson(Map<String, dynamic>.from(item)),
+            )
             .toList();
         final total = toInt(payload['count']) ?? list.length;
         return CustomerPageDto(
@@ -52,7 +55,8 @@ class CustomerApiService {
         final list = items
             .whereType<Map>()
             .map(
-                (item) => CustomerDto.fromJson(Map<String, dynamic>.from(item)))
+              (item) => CustomerDto.fromJson(Map<String, dynamic>.from(item)),
+            )
             .toList();
         final pagination = payload['pagination'];
         final total = pagination is Map<String, dynamic>
@@ -93,8 +97,10 @@ class CustomerApiService {
 
   /// 更新客户。
   Future<CustomerDto> updateCustomer(CustomerDto dto) async {
-    final response =
-        await _client.put('/customers/${dto.id}/', data: dto.toPayload());
+    final response = await _client.put(
+      '/customers/${dto.id}/',
+      data: dto.toPayload(),
+    );
     final payload = response.data;
     final map = payload is Map
         ? Map<String, dynamic>.from(payload)
@@ -128,8 +134,9 @@ class CustomerApiService {
     if (payload is List) {
       return payload
           .whereType<Map>()
-          .map((item) =>
-              SalespersonDto.fromJson(Map<String, dynamic>.from(item)))
+          .map(
+            (item) => SalespersonDto.fromJson(Map<String, dynamic>.from(item)),
+          )
           .toList();
     }
     return [];
@@ -141,7 +148,10 @@ class CustomerApiService {
     if (excludeId != null) {
       params['exclude_id'] = excludeId.toString();
     }
-    final response = await _client.get('/customers/check_name/', queryParameters: params);
+    final response = await _client.get(
+      '/customers/check_name/',
+      queryParameters: params,
+    );
     final payload = response.data;
     if (payload is Map<String, dynamic>) {
       final data = payload['data'];

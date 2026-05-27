@@ -8,7 +8,7 @@ part 'salesperson.g.dart';
 
 /// 业务员领域模型。
 @freezed
-class Salesperson with _$Salesperson {
+abstract class Salesperson with _$Salesperson {
   /// 创建一个业务员对象。
   const factory Salesperson({
     @JsonKey(fromJson: _intFromJson) required int id,

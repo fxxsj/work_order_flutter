@@ -6,9 +6,8 @@ part of 'work_order_response.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$WorkOrderResponseImpl _$$WorkOrderResponseImplFromJson(
-        Map<String, dynamic> json) =>
-    _$WorkOrderResponseImpl(
+_WorkOrderResponse _$WorkOrderResponseFromJson(Map<String, dynamic> json) =>
+    _WorkOrderResponse(
       id: _intFromJson(json['id']),
       orderNumber: _stringFromJson(json['order_number']),
       customerName: _stringOrNullFromJson(json['customer_name']),
@@ -24,8 +23,9 @@ _$WorkOrderResponseImpl _$$WorkOrderResponseImplFromJson(
       deliveryDate: _dateTimeOrNullFromJson(json['delivery_date']),
       totalAmount: _doubleOrNull_fromJson(json['total_amount']),
       approvalStatus: _stringOrNullFromJson(json['approval_status']),
-      approvalStatusDisplay:
-          _stringOrNullFromJson(json['approval_status_display']),
+      approvalStatusDisplay: _stringOrNullFromJson(
+        json['approval_status_display'],
+      ),
       managerName: _stringOrNullFromJson(json['manager_name']),
       progressPercentage: _intOrNull_fromJson(json['progress_percentage']),
       totalTaskCount: _intOrNull_fromJson(json['total_task_count']),
@@ -33,8 +33,7 @@ _$WorkOrderResponseImpl _$$WorkOrderResponseImplFromJson(
       salesOrderNumber: _stringOrNullFromJson(json['sales_order_number']),
     );
 
-Map<String, dynamic> _$$WorkOrderResponseImplToJson(
-        _$WorkOrderResponseImpl instance) =>
+Map<String, dynamic> _$WorkOrderResponseToJson(_WorkOrderResponse instance) =>
     <String, dynamic>{
       'id': instance.id,
       'order_number': instance.orderNumber,

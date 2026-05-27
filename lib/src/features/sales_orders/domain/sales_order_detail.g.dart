@@ -6,9 +6,8 @@ part of 'sales_order_detail.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$SalesOrderDetailImpl _$$SalesOrderDetailImplFromJson(
-        Map<String, dynamic> json) =>
-    _$SalesOrderDetailImpl(
+_SalesOrderDetail _$SalesOrderDetailFromJson(Map<String, dynamic> json) =>
+    _SalesOrderDetail(
       id: _intFromJson(json['id']),
       orderNumber: _stringFromJson(json['order_number']),
       customerId: _intOrNullFromJson(json['customer']),
@@ -22,8 +21,9 @@ _$SalesOrderDetailImpl _$$SalesOrderDetailImplFromJson(
       approvalComment: _stringOrNullFromJson(json['approval_comment']),
       rejectionReason: _stringOrNullFromJson(json['rejection_reason']),
       paymentStatus: _stringOrNullFromJson(json['payment_status']),
-      paymentStatusDisplay:
-          _stringOrNullFromJson(json['payment_status_display']),
+      paymentStatusDisplay: _stringOrNullFromJson(
+        json['payment_status_display'],
+      ),
       orderDate: _dateTimeOrNullFromJson(json['order_date']),
       deliveryDate: _dateTimeOrNullFromJson(json['delivery_date']),
       actualDeliveryDate: _dateTimeOrNullFromJson(json['actual_delivery_date']),
@@ -40,10 +40,12 @@ _$SalesOrderDetailImpl _$$SalesOrderDetailImplFromJson(
       shippingAddress: _stringOrNullFromJson(json['shipping_address']),
       notes: _stringOrNullFromJson(json['notes']),
       paymentCount: _intOrNullFromJson(json['payment_count']),
-      pendingPaymentPlanCount:
-          _intOrNullFromJson(json['pending_payment_plan_count']),
-      pendingPaymentPlanAmount:
-          _doubleOrNullFromJson(json['pending_payment_plan_amount']),
+      pendingPaymentPlanCount: _intOrNullFromJson(
+        json['pending_payment_plan_count'],
+      ),
+      pendingPaymentPlanAmount: _doubleOrNullFromJson(
+        json['pending_payment_plan_amount'],
+      ),
       unpaidAmount: _doubleOrNullFromJson(json['unpaid_amount']),
       workOrderNumbers: json['work_order_numbers'] == null
           ? const <String>[]
@@ -56,26 +58,27 @@ _$SalesOrderDetailImpl _$$SalesOrderDetailImplFromJson(
           : _stringListFromJson(json['invoice_numbers']),
       workOrderSummaries:
           _readWorkOrderSummaries(json, 'work_order_summaries') == null
-              ? const <TraceabilitySummaryItem>[]
-              : _traceabilitySummaryListFromJson(
-                  _readWorkOrderSummaries(json, 'work_order_summaries')),
-      deliveryOrderSummaries: _readDeliveryOrderSummaries(
-                  json, 'delivery_order_summaries') ==
-              null
           ? const <TraceabilitySummaryItem>[]
           : _traceabilitySummaryListFromJson(
-              _readDeliveryOrderSummaries(json, 'delivery_order_summaries')),
+              _readWorkOrderSummaries(json, 'work_order_summaries'),
+            ),
+      deliveryOrderSummaries:
+          _readDeliveryOrderSummaries(json, 'delivery_order_summaries') == null
+          ? const <TraceabilitySummaryItem>[]
+          : _traceabilitySummaryListFromJson(
+              _readDeliveryOrderSummaries(json, 'delivery_order_summaries'),
+            ),
       invoiceSummaries: _readInvoiceSummaries(json, 'invoice_summaries') == null
           ? const <TraceabilitySummaryItem>[]
           : _traceabilitySummaryListFromJson(
-              _readInvoiceSummaries(json, 'invoice_summaries')),
+              _readInvoiceSummaries(json, 'invoice_summaries'),
+            ),
       items: json['items'] == null
           ? const <SalesOrderItem>[]
           : _salesOrderItemListFromJson(json['items']),
     );
 
-Map<String, dynamic> _$$SalesOrderDetailImplToJson(
-        _$SalesOrderDetailImpl instance) =>
+Map<String, dynamic> _$SalesOrderDetailToJson(_SalesOrderDetail instance) =>
     <String, dynamic>{
       'id': instance.id,
       'order_number': instance.orderNumber,
@@ -113,17 +116,20 @@ Map<String, dynamic> _$$SalesOrderDetailImplToJson(
       'work_order_numbers': instance.workOrderNumbers,
       'delivery_order_numbers': instance.deliveryOrderNumbers,
       'invoice_numbers': instance.invoiceNumbers,
-      'work_order_summaries':
-          _traceabilitySummaryListToJson(instance.workOrderSummaries),
-      'delivery_order_summaries':
-          _traceabilitySummaryListToJson(instance.deliveryOrderSummaries),
-      'invoice_summaries':
-          _traceabilitySummaryListToJson(instance.invoiceSummaries),
+      'work_order_summaries': _traceabilitySummaryListToJson(
+        instance.workOrderSummaries,
+      ),
+      'delivery_order_summaries': _traceabilitySummaryListToJson(
+        instance.deliveryOrderSummaries,
+      ),
+      'invoice_summaries': _traceabilitySummaryListToJson(
+        instance.invoiceSummaries,
+      ),
       'items': instance.items,
     };
 
-_$SalesOrderItemImpl _$$SalesOrderItemImplFromJson(Map<String, dynamic> json) =>
-    _$SalesOrderItemImpl(
+_SalesOrderItem _$SalesOrderItemFromJson(Map<String, dynamic> json) =>
+    _SalesOrderItem(
       id: _intFromJson(json['id']),
       productId: _intOrNullFromJson(json['product']),
       productName: _stringOrNullFromJson(json['product_name']),
@@ -138,8 +144,7 @@ _$SalesOrderItemImpl _$$SalesOrderItemImplFromJson(Map<String, dynamic> json) =>
       notes: _stringOrNullFromJson(json['notes']),
     );
 
-Map<String, dynamic> _$$SalesOrderItemImplToJson(
-        _$SalesOrderItemImpl instance) =>
+Map<String, dynamic> _$SalesOrderItemToJson(_SalesOrderItem instance) =>
     <String, dynamic>{
       'id': instance.id,
       'product': instance.productId,

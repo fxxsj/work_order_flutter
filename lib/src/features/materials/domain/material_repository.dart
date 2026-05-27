@@ -6,6 +6,8 @@ abstract class MaterialRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    bool? isActive,
+    String? ordering,
   });
 
   Future<MaterialItem> createMaterial(MaterialItem material);
@@ -13,4 +15,6 @@ abstract class MaterialRepository {
   Future<MaterialItem> updateMaterial(MaterialItem material);
 
   Future<void> deleteMaterial(int id);
+
+  Future<List<MaterialSupplierOption>> getActiveSupplierOptions();
 }

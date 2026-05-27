@@ -8,7 +8,7 @@ part 'process.g.dart';
 
 /// 工序领域模型。
 @freezed
-class Process with _$Process {
+abstract class Process with _$Process {
   const factory Process({
     @JsonKey(fromJson: _intFromJson) required int id,
     @JsonKey(fromJson: _stringFromJson) required String code,

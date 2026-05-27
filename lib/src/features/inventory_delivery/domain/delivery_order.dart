@@ -7,7 +7,7 @@ part 'delivery_order.freezed.dart';
 part 'delivery_order.g.dart';
 
 @freezed
-class DeliveryOrder with _$DeliveryOrder {
+abstract class DeliveryOrder with _$DeliveryOrder {
   const factory DeliveryOrder({
     @JsonKey(fromJson: _intFromJson) required int id,
     @JsonKey(fromJson: _stringFromJson, name: 'order_number')

@@ -6,14 +6,15 @@ part of 'delivery_order.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$DeliveryOrderImpl _$$DeliveryOrderImplFromJson(Map<String, dynamic> json) =>
-    _$DeliveryOrderImpl(
+_DeliveryOrder _$DeliveryOrderFromJson(Map<String, dynamic> json) =>
+    _DeliveryOrder(
       id: _intFromJson(json['id']),
       orderNumber: _stringFromJson(json['order_number']),
       customerId: _intOrNullFromJson(_readCustomerId(json, 'customer_id')),
       customerName: _stringOrNullFromJson(json['customer_name']),
-      salesOrderId:
-          _intOrNullFromJson(_readSalesOrderId(json, 'sales_order_id')),
+      salesOrderId: _intOrNullFromJson(
+        _readSalesOrderId(json, 'sales_order_id'),
+      ),
       salesOrderNumber: _stringOrNullFromJson(json['sales_order_number']),
       deliveryDate: _dateTimeOrNullFromJson(json['delivery_date']),
       status: _stringOrNullFromJson(json['status']),
@@ -24,14 +25,16 @@ _$DeliveryOrderImpl _$$DeliveryOrderImplFromJson(Map<String, dynamic> json) =>
       logisticsCompany: _stringOrNullFromJson(json['logistics_company']),
       trackingNumber: _stringOrNullFromJson(json['tracking_number']),
       exceptionResolution: _stringOrNullFromJson(json['exception_resolution']),
-      exceptionResolutionDisplay:
-          _stringOrNullFromJson(json['exception_resolution_display']),
-      exceptionResolutionNotes:
-          _stringOrNullFromJson(json['exception_resolution_notes']),
+      exceptionResolutionDisplay: _stringOrNullFromJson(
+        json['exception_resolution_display'],
+      ),
+      exceptionResolutionNotes: _stringOrNullFromJson(
+        json['exception_resolution_notes'],
+      ),
       exceptionClosed: _boolOrNullFromJson(json['exception_closed']),
     );
 
-Map<String, dynamic> _$$DeliveryOrderImplToJson(_$DeliveryOrderImpl instance) =>
+Map<String, dynamic> _$DeliveryOrderToJson(_DeliveryOrder instance) =>
     <String, dynamic>{
       'id': instance.id,
       'order_number': instance.orderNumber,

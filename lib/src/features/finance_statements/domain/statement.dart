@@ -7,7 +7,7 @@ part 'statement.freezed.dart';
 part 'statement.g.dart';
 
 @freezed
-class Statement with _$Statement {
+abstract class Statement with _$Statement {
   const factory Statement({
     @JsonKey(fromJson: _intFromJson) required int id,
     @JsonKey(

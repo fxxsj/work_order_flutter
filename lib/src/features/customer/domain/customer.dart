@@ -8,7 +8,7 @@ part 'customer.g.dart';
 
 /// 客户领域模型。
 @freezed
-class Customer with _$Customer {
+abstract class Customer with _$Customer {
   /// 创建一个客户实体。
   const factory Customer({
     @JsonKey(fromJson: _intFromJson) required int id,

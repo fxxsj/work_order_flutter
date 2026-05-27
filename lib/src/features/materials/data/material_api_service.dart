@@ -1,6 +1,7 @@
 import 'package:work_order_app/src/core/data/page_data.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/features/materials/data/material_dto.dart';
+import 'package:work_order_app/src/features/materials/domain/material.dart';
 
 class MaterialApiService {
   MaterialApiService(this._client);
@@ -11,6 +12,8 @@ class MaterialApiService {
     int page = 1,
     int pageSize = 20,
     String? search,
+    bool? isActive,
+    String? ordering,
   }) async {
     final params = <String, dynamic>{
       'page': page,
@@ -19,6 +22,13 @@ class MaterialApiService {
     final trimmed = search?.trim();
     if (trimmed != null && trimmed.isNotEmpty) {
       params['search'] = trimmed;
+    }
+    if (isActive != null) {
+      params['is_active'] = isActive;
+    }
+    final trimmedOrdering = ordering?.trim();
+    if (trimmedOrdering != null && trimmedOrdering.isNotEmpty) {
+      params['ordering'] = trimmedOrdering;
     }
 
     final response = await _client.get('/materials/', queryParameters: params);
@@ -80,5 +90,27 @@ class MaterialApiService {
 
   Future<void> deleteMaterial(int id) async {
     await _client.delete('/materials/$id/');
+  }
+
+  Future<List<MaterialSupplierOption>> fetchActiveSupplierOptions() async {
+    final response = await _client.get(
+      '/suppliers/',
+      queryParameters: {
+        'page_size': 100,
+        'status': 'active',
+        'ordering': 'code',
+      },
+    );
+    final payload = response.data;
+    final source =
+        payload is Map<String, dynamic> ? payload['results'] : payload;
+    if (source is! List) return const [];
+    return source
+        .whereType<Map>()
+        .map((item) => MaterialSupplierOption.fromJson(
+              Map<String, dynamic>.from(item),
+            ))
+        .where((item) => item.id > 0)
+        .toList();
   }
 }

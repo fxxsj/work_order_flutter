@@ -10,6 +10,7 @@ abstract class CustomerRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? ordering,
   });
 
   /// 创建客户。

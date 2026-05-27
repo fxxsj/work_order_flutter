@@ -6,38 +6,34 @@ part of 'statement.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$StatementImpl _$$StatementImplFromJson(Map<String, dynamic> json) =>
-    _$StatementImpl(
-      id: _intFromJson(json['id']),
-      statementNumber:
-          _stringOrNullFromJson(_readStatementNumber(json, 'statement_number')),
-      statementType: _stringOrNullFromJson(json['statement_type']),
-      statementTypeDisplay:
-          _stringOrNullFromJson(json['statement_type_display']),
-      partnerName: _stringOrNullFromJson(json['partner_name']),
-      customerName:
-          _stringOrNullFromJson(_readCustomerName(json, 'customer_name')),
-      periodStart:
-          _dateTimeOrNullFromJson(_readPeriodStart(json, 'period_start')),
-      periodEnd: _dateTimeOrNullFromJson(_readPeriodEnd(json, 'period_end')),
-      totalAmount:
-          _doubleOrNullFromJson(_readTotalAmount(json, 'total_amount')),
-      debitAmount:
-          _doubleOrNullFromJson(_readDebitAmount(json, 'debit_amount')),
-      creditAmount:
-          _doubleOrNullFromJson(_readCreditAmount(json, 'credit_amount')),
-      closingBalance:
-          _doubleOrNullFromJson(_readClosingBalance(json, 'closing_balance')),
-      status: _stringOrNullFromJson(json['status']),
-      statusDisplay: _stringOrNullFromJson(json['status_display']),
-      followUpText: _stringOrNullFromJson(json['follow_up_text']),
-      confirmedByName: _stringOrNullFromJson(json['confirmed_by_name']),
-      confirmedAt: _dateTimeOrNullFromJson(json['confirmed_at']),
-      confirmationNotes: _stringOrNullFromJson(
-          _readConfirmationNotes(json, 'confirmation_notes')),
-    );
+_Statement _$StatementFromJson(Map<String, dynamic> json) => _Statement(
+  id: _intFromJson(json['id']),
+  statementNumber: _stringOrNullFromJson(
+    _readStatementNumber(json, 'statement_number'),
+  ),
+  statementType: _stringOrNullFromJson(json['statement_type']),
+  statementTypeDisplay: _stringOrNullFromJson(json['statement_type_display']),
+  partnerName: _stringOrNullFromJson(json['partner_name']),
+  customerName: _stringOrNullFromJson(_readCustomerName(json, 'customer_name')),
+  periodStart: _dateTimeOrNullFromJson(_readPeriodStart(json, 'period_start')),
+  periodEnd: _dateTimeOrNullFromJson(_readPeriodEnd(json, 'period_end')),
+  totalAmount: _doubleOrNullFromJson(_readTotalAmount(json, 'total_amount')),
+  debitAmount: _doubleOrNullFromJson(_readDebitAmount(json, 'debit_amount')),
+  creditAmount: _doubleOrNullFromJson(_readCreditAmount(json, 'credit_amount')),
+  closingBalance: _doubleOrNullFromJson(
+    _readClosingBalance(json, 'closing_balance'),
+  ),
+  status: _stringOrNullFromJson(json['status']),
+  statusDisplay: _stringOrNullFromJson(json['status_display']),
+  followUpText: _stringOrNullFromJson(json['follow_up_text']),
+  confirmedByName: _stringOrNullFromJson(json['confirmed_by_name']),
+  confirmedAt: _dateTimeOrNullFromJson(json['confirmed_at']),
+  confirmationNotes: _stringOrNullFromJson(
+    _readConfirmationNotes(json, 'confirmation_notes'),
+  ),
+);
 
-Map<String, dynamic> _$$StatementImplToJson(_$StatementImpl instance) =>
+Map<String, dynamic> _$StatementToJson(_Statement instance) =>
     <String, dynamic>{
       'id': instance.id,
       'statement_number': instance.statementNumber,

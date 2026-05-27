@@ -6,8 +6,8 @@ part of 'purchase_order.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$PurchaseOrderImpl _$$PurchaseOrderImplFromJson(Map<String, dynamic> json) =>
-    _$PurchaseOrderImpl(
+_PurchaseOrder _$PurchaseOrderFromJson(Map<String, dynamic> json) =>
+    _PurchaseOrder(
       id: _intFromJson(json['id']),
       orderNumber: _stringFromJson(json['order_number']),
       supplierName: _stringOrNullFromJson(json['supplier_name']),
@@ -26,7 +26,7 @@ _$PurchaseOrderImpl _$$PurchaseOrderImplFromJson(Map<String, dynamic> json) =>
       approvedAt: _dateTimeOrNullFromJson(json['approved_at']),
     );
 
-Map<String, dynamic> _$$PurchaseOrderImplToJson(_$PurchaseOrderImpl instance) =>
+Map<String, dynamic> _$PurchaseOrderToJson(_PurchaseOrder instance) =>
     <String, dynamic>{
       'id': instance.id,
       'order_number': instance.orderNumber,

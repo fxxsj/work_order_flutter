@@ -6,9 +6,8 @@ part of 'delivery_order_detail.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$DeliveryOrderDetailImpl _$$DeliveryOrderDetailImplFromJson(
-        Map<String, dynamic> json) =>
-    _$DeliveryOrderDetailImpl(
+_DeliveryOrderDetail _$DeliveryOrderDetailFromJson(Map<String, dynamic> json) =>
+    _DeliveryOrderDetail(
       id: _intFromJson(json['id']),
       orderNumber: _stringFromJson(json['order_number']),
       salesOrderId: _intOrNullFromJson(json['sales_order']),
@@ -38,49 +37,50 @@ _$DeliveryOrderDetailImpl _$$DeliveryOrderDetailImplFromJson(
           ? const <DeliveryOrderItem>[]
           : _deliveryOrderItemListFromJson(json['items']),
       exceptionResolution: _stringOrNullFromJson(json['exception_resolution']),
-      exceptionResolutionDisplay:
-          _stringOrNullFromJson(json['exception_resolution_display']),
-      exceptionResolutionNotes:
-          _stringOrNullFromJson(json['exception_resolution_notes']),
+      exceptionResolutionDisplay: _stringOrNullFromJson(
+        json['exception_resolution_display'],
+      ),
+      exceptionResolutionNotes: _stringOrNullFromJson(
+        json['exception_resolution_notes'],
+      ),
       exceptionClosed: _boolOrNullFromJson(json['exception_closed']),
     );
 
-Map<String, dynamic> _$$DeliveryOrderDetailImplToJson(
-        _$DeliveryOrderDetailImpl instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'order_number': instance.orderNumber,
-      'sales_order': instance.salesOrderId,
-      'sales_order_number': instance.salesOrderNumber,
-      'customer': instance.customerId,
-      'customer_name': instance.customerName,
-      'status': instance.status,
-      'status_display': instance.statusDisplay,
-      'delivery_date': instance.deliveryDate?.toIso8601String(),
-      'receiver_name': instance.receiverName,
-      'receiver_phone': instance.receiverPhone,
-      'delivery_address': instance.deliveryAddress,
-      'logistics_company': instance.logisticsCompany,
-      'tracking_number': instance.trackingNumber,
-      'freight': instance.freight,
-      'package_count': instance.packageCount,
-      'package_weight': instance.packageWeight,
-      'received_date': instance.receivedDate?.toIso8601String(),
-      'received_notes': instance.receivedNotes,
-      'receiver_signature': instance.receiverSignatureUrl,
-      'notes': instance.notes,
-      'invoice_count': instance.invoiceCount,
-      'invoice_numbers': instance.invoiceNumbers,
-      'items': instance.items,
-      'exception_resolution': instance.exceptionResolution,
-      'exception_resolution_display': instance.exceptionResolutionDisplay,
-      'exception_resolution_notes': instance.exceptionResolutionNotes,
-      'exception_closed': instance.exceptionClosed,
-    };
+Map<String, dynamic> _$DeliveryOrderDetailToJson(
+  _DeliveryOrderDetail instance,
+) => <String, dynamic>{
+  'id': instance.id,
+  'order_number': instance.orderNumber,
+  'sales_order': instance.salesOrderId,
+  'sales_order_number': instance.salesOrderNumber,
+  'customer': instance.customerId,
+  'customer_name': instance.customerName,
+  'status': instance.status,
+  'status_display': instance.statusDisplay,
+  'delivery_date': instance.deliveryDate?.toIso8601String(),
+  'receiver_name': instance.receiverName,
+  'receiver_phone': instance.receiverPhone,
+  'delivery_address': instance.deliveryAddress,
+  'logistics_company': instance.logisticsCompany,
+  'tracking_number': instance.trackingNumber,
+  'freight': instance.freight,
+  'package_count': instance.packageCount,
+  'package_weight': instance.packageWeight,
+  'received_date': instance.receivedDate?.toIso8601String(),
+  'received_notes': instance.receivedNotes,
+  'receiver_signature': instance.receiverSignatureUrl,
+  'notes': instance.notes,
+  'invoice_count': instance.invoiceCount,
+  'invoice_numbers': instance.invoiceNumbers,
+  'items': instance.items,
+  'exception_resolution': instance.exceptionResolution,
+  'exception_resolution_display': instance.exceptionResolutionDisplay,
+  'exception_resolution_notes': instance.exceptionResolutionNotes,
+  'exception_closed': instance.exceptionClosed,
+};
 
-_$DeliveryOrderItemImpl _$$DeliveryOrderItemImplFromJson(
-        Map<String, dynamic> json) =>
-    _$DeliveryOrderItemImpl(
+_DeliveryOrderItem _$DeliveryOrderItemFromJson(Map<String, dynamic> json) =>
+    _DeliveryOrderItem(
       id: _intFromJson(json['id']),
       productId: _intOrNullFromJson(json['product']),
       productName: _stringOrNullFromJson(json['product_name']),
@@ -93,8 +93,7 @@ _$DeliveryOrderItemImpl _$$DeliveryOrderItemImplFromJson(
       notes: _stringOrNullFromJson(json['notes']),
     );
 
-Map<String, dynamic> _$$DeliveryOrderItemImplToJson(
-        _$DeliveryOrderItemImpl instance) =>
+Map<String, dynamic> _$DeliveryOrderItemToJson(_DeliveryOrderItem instance) =>
     <String, dynamic>{
       'id': instance.id,
       'product': instance.productId,

@@ -14,11 +14,15 @@ class MaterialRepositoryImpl implements MaterialRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    bool? isActive,
+    String? ordering,
   }) async {
     final result = await _apiService.fetchMaterials(
       page: page,
       pageSize: pageSize,
       search: search,
+      isActive: isActive,
+      ordering: ordering,
     );
     return PageData(
       items: result.items.map((dto) => dto.toEntity()).toList(),
@@ -43,5 +47,10 @@ class MaterialRepositoryImpl implements MaterialRepository {
   @override
   Future<void> deleteMaterial(int id) {
     return _apiService.deleteMaterial(id);
+  }
+
+  @override
+  Future<List<MaterialSupplierOption>> getActiveSupplierOptions() {
+    return _apiService.fetchActiveSupplierOptions();
   }
 }

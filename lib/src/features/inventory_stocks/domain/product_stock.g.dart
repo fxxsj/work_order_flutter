@@ -6,8 +6,8 @@ part of 'product_stock.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$ProductStockImpl _$$ProductStockImplFromJson(Map<String, dynamic> json) =>
-    _$ProductStockImpl(
+_ProductStock _$ProductStockFromJson(Map<String, dynamic> json) =>
+    _ProductStock(
       id: _intFromJson(json['id']),
       productName: _stringOrNullFromJson(json['product_name']),
       productCode: _stringOrNullFromJson(json['product_code']),
@@ -31,7 +31,7 @@ _$ProductStockImpl _$$ProductStockImplFromJson(Map<String, dynamic> json) =>
       notes: _stringOrNullFromJson(json['notes']),
     );
 
-Map<String, dynamic> _$$ProductStockImplToJson(_$ProductStockImpl instance) =>
+Map<String, dynamic> _$ProductStockToJson(_ProductStock instance) =>
     <String, dynamic>{
       'id': instance.id,
       'product_name': instance.productName,

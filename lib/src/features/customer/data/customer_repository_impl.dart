@@ -18,11 +18,19 @@ class CustomerRepositoryImpl implements CustomerRepository {
 
   /// 获取客户列表。
   @override
-  Future<CustomerPage> getCustomers(
-      {int page = 1, int pageSize = 20, String? search}) async {
+  Future<CustomerPage> getCustomers({
+    int page = 1,
+    int pageSize = 20,
+    String? search,
+    String? ordering,
+  }) async {
     try {
       final dto = await _apiService.fetchCustomers(
-          page: page, pageSize: pageSize, search: search);
+        page: page,
+        pageSize: pageSize,
+        search: search,
+        ordering: ordering,
+      );
       return dto.toEntity();
     } on ApiException catch (err) {
       throw Exception(err.message.isNotEmpty ? err.message : '获取客户列表失败');

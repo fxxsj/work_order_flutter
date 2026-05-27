@@ -6,15 +6,15 @@ part of 'quality_inspection.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$QualityInspectionImpl _$$QualityInspectionImplFromJson(
-        Map<String, dynamic> json) =>
-    _$QualityInspectionImpl(
+_QualityInspection _$QualityInspectionFromJson(Map<String, dynamic> json) =>
+    _QualityInspection(
       id: _intFromJson(json['id']),
       inspectionNumber: _stringFromJson(json['inspection_number']),
       workOrderId: _intOrNullFromJson(json['work_order']),
       inspectionType: _stringOrNullFromJson(json['inspection_type']),
-      inspectionTypeDisplay:
-          _stringOrNullFromJson(json['inspection_type_display']),
+      inspectionTypeDisplay: _stringOrNullFromJson(
+        json['inspection_type_display'],
+      ),
       result: _stringOrNullFromJson(json['result']),
       resultDisplay: _stringOrNullFromJson(json['result_display']),
       customerName: _stringOrNullFromJson(json['customer_name']),
@@ -26,8 +26,9 @@ _$QualityInspectionImpl _$$QualityInspectionImplFromJson(
       inspectionQuantity: _doubleOrNullFromJson(json['inspection_quantity']),
       passedQuantity: _doubleOrNullFromJson(json['passed_quantity']),
       failedQuantity: _doubleOrNullFromJson(json['failed_quantity']),
-      defectiveRateFormatted:
-          _stringOrNullFromJson(json['defective_rate_formatted']),
+      defectiveRateFormatted: _stringOrNullFromJson(
+        json['defective_rate_formatted'],
+      ),
       inspectionStandard: _stringOrNullFromJson(json['inspection_standard']),
       inspectionItems: json['inspection_items'] == null
           ? const <String>[]
@@ -42,8 +43,7 @@ _$QualityInspectionImpl _$$QualityInspectionImplFromJson(
       notes: _stringOrNullFromJson(json['notes']),
     );
 
-Map<String, dynamic> _$$QualityInspectionImplToJson(
-        _$QualityInspectionImpl instance) =>
+Map<String, dynamic> _$QualityInspectionToJson(_QualityInspection instance) =>
     <String, dynamic>{
       'id': instance.id,
       'inspection_number': instance.inspectionNumber,

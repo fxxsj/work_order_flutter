@@ -7,7 +7,7 @@ part 'supplier.freezed.dart';
 part 'supplier.g.dart';
 
 @freezed
-class Supplier with _$Supplier {
+abstract class Supplier with _$Supplier {
   const factory Supplier({
     @JsonKey(fromJson: _intFromJson) required int id,
     @JsonKey(fromJson: _stringFromJson) required String name,

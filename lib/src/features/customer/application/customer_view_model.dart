@@ -17,6 +17,7 @@ class CustomerViewModel extends PaginatedViewModel<Customer> {
   List<Salesperson> _salespersons = [];
   bool _loadingSalespersons = false;
   String? _salespersonsError;
+  String? _ordering;
 
   /// 当前客户列表（[items] 的别名，兼容现有 UI）。
   List<Customer> get customers => items;
@@ -30,17 +31,21 @@ class CustomerViewModel extends PaginatedViewModel<Customer> {
   /// 业务员列表错误信息（不影响客户列表加载）。
   String? get salespersonsError => _salespersonsError;
 
+  String? get ordering => _ordering;
+
   /// 初始化加载数据。
   Future<void> initialize() async {
-    await Future.wait([
-      loadSalespersons(),
-      loadItems(resetPage: true),
-    ]);
+    await Future.wait([loadSalespersons(), loadItems(resetPage: true)]);
   }
 
   /// 加载客户列表（[loadItems] 的别名，兼容现有调用点）。
   Future<void> loadCustomers({bool resetPage = false}) =>
       loadItems(resetPage: resetPage);
+
+  void setOrdering(String? value) {
+    _ordering = value;
+    loadItems(resetPage: true);
+  }
 
   @override
   Future<PageData<Customer>> fetchPage({
@@ -52,6 +57,7 @@ class CustomerViewModel extends PaginatedViewModel<Customer> {
       page: page,
       pageSize: pageSize,
       search: search,
+      ordering: _ordering,
     );
     return PageData(
       items: result.items,

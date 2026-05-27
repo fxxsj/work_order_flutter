@@ -7,7 +7,7 @@ part 'delivery_order_detail.freezed.dart';
 part 'delivery_order_detail.g.dart';
 
 @freezed
-class DeliveryOrderDetail with _$DeliveryOrderDetail {
+abstract class DeliveryOrderDetail with _$DeliveryOrderDetail {
   const factory DeliveryOrderDetail({
     @JsonKey(fromJson: _intFromJson) required int id,
     @JsonKey(name: 'order_number', fromJson: _stringFromJson)
@@ -75,7 +75,7 @@ class DeliveryOrderDetail with _$DeliveryOrderDetail {
 }
 
 @freezed
-class DeliveryOrderItem with _$DeliveryOrderItem {
+abstract class DeliveryOrderItem with _$DeliveryOrderItem {
   const factory DeliveryOrderItem({
     @JsonKey(fromJson: _intFromJson) required int id,
     @JsonKey(name: 'product', fromJson: _intOrNullFromJson) int? productId,
@@ -127,7 +127,8 @@ List<DeliveryOrderItem> _deliveryOrderItemListFromJson(Object? value) {
   return value
       .whereType<Map>()
       .map(
-          (item) => DeliveryOrderItem.fromJson(Map<String, dynamic>.from(item)))
+        (item) => DeliveryOrderItem.fromJson(Map<String, dynamic>.from(item)),
+      )
       .toList(growable: false);
 }
 
