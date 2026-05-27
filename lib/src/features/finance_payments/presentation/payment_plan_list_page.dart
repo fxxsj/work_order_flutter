@@ -170,11 +170,17 @@ class PaymentPlanListEntry extends StatelessWidget {
     final extraParams = <String, dynamic>{};
     final status = uri.queryParameters['status']?.trim() ?? '';
     final todo = uri.queryParameters['todo']?.trim() ?? '';
+    final ordering = uri.queryParameters['ordering']?.trim() ?? '';
     if (status.isNotEmpty) {
       extraParams['status'] = status;
     }
     if (todo.isNotEmpty) {
       extraParams['todo'] = todo;
+    }
+    if (ordering.isNotEmpty) {
+      extraParams['ordering'] = ordering;
+    } else {
+      extraParams['ordering'] = 'plan_date';
     }
     return extraParams;
   }
@@ -197,7 +203,8 @@ class PaymentPlanListEntry extends StatelessWidget {
   static bool _hasActiveFilter(GenericListViewModel viewModel) {
     final params = viewModel.extraParams;
     return (params['status']?.toString().trim() ?? '').isNotEmpty ||
-        (params['todo']?.toString().trim() ?? '').isNotEmpty;
+        (params['todo']?.toString().trim() ?? '').isNotEmpty ||
+        ((params['ordering']?.toString().trim() ?? 'plan_date') != 'plan_date');
   }
 
   static String _currentStatus(GenericListViewModel viewModel) {
@@ -220,7 +227,15 @@ class PaymentPlanListEntry extends StatelessWidget {
     if ((todo ?? '').trim().isNotEmpty) {
       query['todo'] = todo!.trim();
     }
+    final ordering = context
+        .read<GenericListViewModel>()
+        .extraParams['ordering']
+        ?.toString();
+    if ((ordering ?? '').trim().isNotEmpty && ordering != 'plan_date') {
+      query['ordering'] = ordering!.trim();
+    }
     context.go(
-        Uri(path: '/finance/payment-plans', queryParameters: query).toString());
+      Uri(path: '/finance/payment-plans', queryParameters: query).toString(),
+    );
   }
 }

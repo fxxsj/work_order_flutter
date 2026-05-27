@@ -6,8 +6,13 @@ abstract class PaymentRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? customer,
+    String? paymentMethod,
     String? todo,
+    String? ordering,
+    String? startDate,
+    String? endDate,
   });
 
-  Future<Map<String, dynamic>> getSummary();
+  Future<Map<String, dynamic>> getSummary({Map<String, dynamic>? params});
 }

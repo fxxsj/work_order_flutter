@@ -6,6 +6,8 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
@@ -75,6 +77,11 @@ class _PaymentListViewState extends State<_PaymentListView> {
   static const String _retryText = '重新加载';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
   static const String _pageSizeLabel = '每页 {size}';
+  static const String _customerFilterLabel = '客户';
+  static const String _paymentMethodFilterLabel = '收款方式';
+  static const String _todoFilterLabel = '待办事项';
+  static const String _orderingLabel = '排序';
+  static const String _resetButtonText = '重置筛选';
 
   final TextEditingController _searchController = TextEditingController();
   final _debounce = DebounceController();
@@ -92,17 +99,36 @@ class _PaymentListViewState extends State<_PaymentListView> {
     _supportService ??= PaymentSupportService(context.read<ApiClient>());
     final uri = GoRouterState.of(context).uri;
     final routeSearch = uri.queryParameters['search']?.trim() ?? '';
+    final routeCustomer = uri.queryParameters['customer']?.trim() ?? '';
+    final routePaymentMethod =
+        uri.queryParameters['payment_method']?.trim() ?? '';
     final routeTodo = uri.queryParameters['todo']?.trim() ?? '';
-    final signature = '$routeSearch|$routeTodo';
+    final routeOrdering = uri.queryParameters['ordering']?.trim() ?? '';
+    final routeStartDate = uri.queryParameters['start_date']?.trim() ?? '';
+    final routeEndDate = uri.queryParameters['end_date']?.trim() ?? '';
+    final signature = [
+      routeSearch,
+      routeCustomer,
+      routePaymentMethod,
+      routeTodo,
+      routeOrdering,
+      routeStartDate,
+      routeEndDate,
+    ].join('|');
     if (_lastRouteSignature == signature) return;
     _lastRouteSignature = signature;
     _searchController.text = routeSearch;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<PaymentViewModel>().applyRoutePrefill(
-            search: routeSearch,
-            todo: routeTodo,
-          );
+        search: routeSearch,
+        customer: routeCustomer,
+        paymentMethod: routePaymentMethod,
+        todo: routeTodo,
+        ordering: routeOrdering,
+        startDate: routeStartDate,
+        endDate: routeEndDate,
+      );
     });
   }
 
@@ -271,12 +297,15 @@ class _PaymentListViewState extends State<_PaymentListView> {
           .map(
             (payment) => DataRow(
               cells: [
-                DataCell(Text(
-                  _displayText(payment.paymentNumber ?? '收款 #${payment.id}'),
-                  style: theme.textTheme.bodyMedium,
-                )),
                 DataCell(
-                    Text(_displayText(payment.customerName), style: textStyle)),
+                  Text(
+                    _displayText(payment.paymentNumber ?? '收款 #${payment.id}'),
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ),
+                DataCell(
+                  Text(_displayText(payment.customerName), style: textStyle),
+                ),
                 DataCell(
                   SizedBox(
                     width: 200,
@@ -292,7 +321,8 @@ class _PaymentListViewState extends State<_PaymentListView> {
                 DataCell(Text(_formatAmount(payment.amount), style: textStyle)),
                 DataCell(Text(_followUpText(payment), style: textStyle)),
                 DataCell(
-                    Text(_formatDate(payment.paymentDate), style: textStyle)),
+                  Text(_formatDate(payment.paymentDate), style: textStyle),
+                ),
                 DataCell(_buildRowActions(payment)),
               ],
             ),
@@ -307,6 +337,20 @@ class _PaymentListViewState extends State<_PaymentListView> {
     bool isMobile,
   ) {
     final permissions = PermissionUtil.snapshot(context);
+    Future<void> openFilterDrawer() async {
+      await _loadOptions();
+      if (!mounted) return;
+      showAdaptiveFilterDrawer(
+        context,
+        isMobile: isMobile,
+        child: _buildFilterPanel(
+          context,
+          viewModel,
+          bottomSpacing: isMobile ? 16 : 20,
+        ),
+      );
+    }
+
     return PageHeaderBar(
       breadcrumb: null,
       useSurface: false,
@@ -314,10 +358,14 @@ class _PaymentListViewState extends State<_PaymentListView> {
       padding: EdgeInsets.zero,
       actions: LayoutBuilder(
         builder: (context, constraints) {
-          final pendingWriteOffCount =
-              _summaryCount(viewModel.summary, 'pending_writeoff_count');
-          final missingInvoiceLinkCount =
-              _summaryCount(viewModel.summary, 'missing_invoice_link_count');
+          final pendingWriteOffCount = _summaryCount(
+            viewModel.summary,
+            'pending_writeoff_count',
+          );
+          final missingInvoiceLinkCount = _summaryCount(
+            viewModel.summary,
+            'missing_invoice_link_count',
+          );
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -348,7 +396,7 @@ class _PaymentListViewState extends State<_PaymentListView> {
                 selected: viewModel.todoFilter == 'missing_invoice_link',
                 onTap: () => _openQuickFilter(todo: 'missing_invoice_link'),
               ),
-            if (viewModel.todoFilter.isNotEmpty)
+            if (_hasActiveFilter(viewModel))
               PageActionButton.outlined(
                 onPressed: _clearFilters,
                 icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
@@ -365,6 +413,13 @@ class _PaymentListViewState extends State<_PaymentListView> {
               icon: const Icon(Icons.refresh, size: 16),
               label: _refreshButtonText,
             ),
+            PageActionButton.outlined(
+              onPressed: _optionsLoading ? null : openFilterDrawer,
+              icon: const Icon(Icons.filter_alt_outlined, size: 16),
+              label: _activeFilterCount(viewModel) > 0
+                  ? '筛选 ${_activeFilterCount(viewModel)}'
+                  : '筛选',
+            ),
           ];
 
           return ListToolbar(
@@ -375,6 +430,86 @@ class _PaymentListViewState extends State<_PaymentListView> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildFilterPanel(
+    BuildContext context,
+    PaymentViewModel viewModel, {
+    required double bottomSpacing,
+  }) {
+    final customerValue = viewModel.customerFilter.isEmpty
+        ? ''
+        : viewModel.customerFilter;
+    final methodValue = viewModel.paymentMethodFilter.isEmpty
+        ? ''
+        : viewModel.paymentMethodFilter;
+    final todoValue = viewModel.todoFilter.isEmpty ? '' : viewModel.todoFilter;
+    return FilterPanelBody(
+      bottomSpacing: bottomSpacing,
+      resetLabel: _resetButtonText,
+      onReset: () => _resetFilters(context, viewModel),
+      fields: [
+        AppSelect<String>(
+          key: ValueKey<String>('payment-customer-$customerValue'),
+          value: customerValue,
+          decoration: const InputDecoration(labelText: _customerFilterLabel),
+          options: [
+            const AppDropdownOption(value: '', label: '全部客户'),
+            ..._customers.map(
+              (customer) => AppDropdownOption(
+                value: customer.id.toString(),
+                label: customer.name,
+              ),
+            ),
+          ],
+          onChanged: (value) => viewModel.setCustomerFilter(value ?? ''),
+        ),
+        AppSelect<String>(
+          key: ValueKey<String>('payment-method-$methodValue'),
+          value: methodValue,
+          decoration: const InputDecoration(
+            labelText: _paymentMethodFilterLabel,
+          ),
+          options: const [
+            AppDropdownOption(value: '', label: '全部方式'),
+            AppDropdownOption(value: 'cash', label: '现金'),
+            AppDropdownOption(value: 'transfer', label: '转账'),
+            AppDropdownOption(value: 'check', label: '支票'),
+            AppDropdownOption(value: 'acceptance', label: '承兑汇票'),
+          ],
+          onChanged: (value) => viewModel.setPaymentMethodFilter(value ?? ''),
+        ),
+        AppSelect<String>(
+          key: ValueKey<String>('payment-todo-$todoValue'),
+          value: todoValue,
+          decoration: const InputDecoration(labelText: _todoFilterLabel),
+          options: const [
+            AppDropdownOption(value: '', label: '全部待办'),
+            AppDropdownOption(value: 'pending_writeoff', label: '待核销'),
+            AppDropdownOption(value: 'missing_invoice_link', label: '待关联发票'),
+          ],
+          onChanged: (value) => viewModel.setTodoFilter(value ?? ''),
+        ),
+        AppSelect<String>(
+          key: ValueKey<String>(viewModel.ordering),
+          value: viewModel.ordering,
+          decoration: const InputDecoration(labelText: _orderingLabel),
+          options: const [
+            AppDropdownOption(value: '-payment_date', label: '收款日期降序'),
+            AppDropdownOption(value: 'payment_date', label: '收款日期升序'),
+            AppDropdownOption(value: 'payment_number', label: '收款单号升序'),
+            AppDropdownOption(value: '-payment_number', label: '收款单号降序'),
+            AppDropdownOption(value: 'customer__name', label: '客户名称升序'),
+            AppDropdownOption(value: '-customer__name', label: '客户名称降序'),
+            AppDropdownOption(value: 'amount', label: '收款金额升序'),
+            AppDropdownOption(value: '-amount', label: '收款金额降序'),
+            AppDropdownOption(value: 'remaining_amount', label: '未核销升序'),
+            AppDropdownOption(value: '-remaining_amount', label: '未核销降序'),
+          ],
+          onChanged: (value) => viewModel.setOrdering(value ?? '-payment_date'),
+        ),
+      ],
     );
   }
 
@@ -398,7 +533,10 @@ class _PaymentListViewState extends State<_PaymentListView> {
   }
 
   Widget _buildSummaryCard(
-      BuildContext context, Payment payment, bool isMobile) {
+    BuildContext context,
+    Payment payment,
+    bool isMobile,
+  ) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
@@ -507,18 +645,22 @@ class _PaymentListViewState extends State<_PaymentListView> {
   List<RowAction> _buildActions(Payment payment) {
     final actions = <RowAction>[];
     if ((payment.invoiceId ?? 0) > 0) {
-      actions.add(RowAction(
-        label: '发票',
-        icon: Icons.receipt_long_outlined,
-        onPressed: () => context.go('/finance/invoices'),
-      ));
+      actions.add(
+        RowAction(
+          label: '发票',
+          icon: Icons.receipt_long_outlined,
+          onPressed: () => context.go('/finance/invoices'),
+        ),
+      );
     }
     if ((payment.salesOrderId ?? 0) > 0) {
-      actions.add(RowAction(
-        label: '客户订单',
-        icon: Icons.point_of_sale_outlined,
-        onPressed: () => context.go('/sales-orders/${payment.salesOrderId}'),
-      ));
+      actions.add(
+        RowAction(
+          label: '客户订单',
+          icon: Icons.point_of_sale_outlined,
+          onPressed: () => context.go('/sales-orders/${payment.salesOrderId}'),
+        ),
+      );
     }
     return actions;
   }
@@ -562,8 +704,9 @@ class _PaymentListViewState extends State<_PaymentListView> {
     if (search.isNotEmpty) {
       query['search'] = search;
     }
-    context
-        .go(Uri(path: '/finance/payments', queryParameters: query).toString());
+    context.go(
+      Uri(path: '/finance/payments', queryParameters: query).toString(),
+    );
   }
 
   void _openQuickFilter({String? todo}) {
@@ -572,11 +715,61 @@ class _PaymentListViewState extends State<_PaymentListView> {
     if (search.isNotEmpty) {
       query['search'] = search;
     }
+    final viewModel = context.read<PaymentViewModel>();
+    if (viewModel.customerFilter.isNotEmpty) {
+      query['customer'] = viewModel.customerFilter;
+    }
+    if (viewModel.paymentMethodFilter.isNotEmpty) {
+      query['payment_method'] = viewModel.paymentMethodFilter;
+    }
+    if (viewModel.ordering != '-payment_date') {
+      query['ordering'] = viewModel.ordering;
+    }
     if ((todo ?? '').trim().isNotEmpty) {
       query['todo'] = todo!.trim();
     }
-    context
-        .go(Uri(path: '/finance/payments', queryParameters: query).toString());
+    context.go(
+      Uri(path: '/finance/payments', queryParameters: query).toString(),
+    );
+  }
+
+  bool _hasActiveFilter(PaymentViewModel viewModel) {
+    return viewModel.customerFilter.isNotEmpty ||
+        viewModel.paymentMethodFilter.isNotEmpty ||
+        viewModel.todoFilter.isNotEmpty ||
+        viewModel.ordering != '-payment_date' ||
+        viewModel.startDateFilter.isNotEmpty ||
+        viewModel.endDateFilter.isNotEmpty;
+  }
+
+  int _activeFilterCount(PaymentViewModel viewModel) {
+    var count = 0;
+    if (_searchController.text.trim().isNotEmpty) count += 1;
+    if (viewModel.customerFilter.isNotEmpty) count += 1;
+    if (viewModel.paymentMethodFilter.isNotEmpty) count += 1;
+    if (viewModel.todoFilter.isNotEmpty) count += 1;
+    if (viewModel.ordering != '-payment_date') count += 1;
+    if (viewModel.startDateFilter.isNotEmpty) count += 1;
+    if (viewModel.endDateFilter.isNotEmpty) count += 1;
+    return count;
+  }
+
+  void _resetFilters(BuildContext context, PaymentViewModel viewModel) {
+    if (_searchController.text.trim().isNotEmpty) {
+      context.go('/finance/payments');
+      return;
+    }
+    viewModel
+      ..setSearchText('')
+      ..setFiltersSilently(
+        customer: '',
+        paymentMethod: '',
+        todo: '',
+        ordering: '-payment_date',
+        startDate: '',
+        endDate: '',
+      );
+    viewModel.loadPayments(resetPage: true);
   }
 
   int _summaryCount(Map<String, dynamic> payload, String key) {

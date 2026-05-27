@@ -13,13 +13,23 @@ class PaymentRepositoryImpl implements PaymentRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? customer,
+    String? paymentMethod,
     String? todo,
+    String? ordering,
+    String? startDate,
+    String? endDate,
   }) async {
     final result = await _apiService.fetchPayments(
       page: page,
       pageSize: pageSize,
       search: search,
+      customer: customer,
+      paymentMethod: paymentMethod,
       todo: todo,
+      ordering: ordering,
+      startDate: startDate,
+      endDate: endDate,
     );
     return PageData(
       items: result.items.map((dto) => dto.toEntity()).toList(),
@@ -30,7 +40,7 @@ class PaymentRepositoryImpl implements PaymentRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> getSummary() {
-    return _apiService.fetchSummary();
+  Future<Map<String, dynamic>> getSummary({Map<String, dynamic>? params}) {
+    return _apiService.fetchSummary(params: params);
   }
 }

@@ -4,9 +4,17 @@ class PaymentDto {
   const PaymentDto({
     required this.id,
     this.paymentNumber,
+    this.salesOrderId,
+    this.salesOrderNumber,
+    this.invoiceId,
+    this.invoiceNumber,
     this.workOrderNumber,
     this.customerName,
     this.amount,
+    this.paymentMethod,
+    this.paymentMethodDisplay,
+    this.appliedAmount,
+    this.remainingAmount,
     this.status,
     this.statusDisplay,
     this.followUpText,
@@ -15,9 +23,17 @@ class PaymentDto {
 
   final int id;
   final String? paymentNumber;
+  final int? salesOrderId;
+  final String? salesOrderNumber;
+  final int? invoiceId;
+  final String? invoiceNumber;
   final String? workOrderNumber;
   final String? customerName;
   final double? amount;
+  final String? paymentMethod;
+  final String? paymentMethodDisplay;
+  final double? appliedAmount;
+  final double? remainingAmount;
   final String? status;
   final String? statusDisplay;
   final String? followUpText;
@@ -31,9 +47,17 @@ class PaymentDto {
     return Payment(
       id: id,
       paymentNumber: paymentNumber,
+      salesOrderId: salesOrderId,
+      salesOrderNumber: salesOrderNumber,
+      invoiceId: invoiceId,
+      invoiceNumber: invoiceNumber,
       workOrderNumber: workOrderNumber,
       customerName: customerName,
       amount: amount,
+      paymentMethod: paymentMethod,
+      paymentMethodDisplay: paymentMethodDisplay,
+      appliedAmount: appliedAmount,
+      remainingAmount: remainingAmount,
       status: status,
       statusDisplay: statusDisplay,
       followUpText: followUpText,
@@ -47,9 +71,17 @@ extension PaymentMapper on Payment {
     return PaymentDto(
       id: id,
       paymentNumber: paymentNumber,
+      salesOrderId: salesOrderId,
+      salesOrderNumber: salesOrderNumber,
+      invoiceId: invoiceId,
+      invoiceNumber: invoiceNumber,
       workOrderNumber: workOrderNumber,
       customerName: customerName,
       amount: amount,
+      paymentMethod: paymentMethod,
+      paymentMethodDisplay: paymentMethodDisplay,
+      appliedAmount: appliedAmount,
+      remainingAmount: remainingAmount,
       status: status,
       statusDisplay: statusDisplay,
       followUpText: followUpText,

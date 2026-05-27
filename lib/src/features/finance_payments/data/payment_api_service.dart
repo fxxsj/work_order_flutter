@@ -11,19 +11,41 @@ class PaymentApiService {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? customer,
+    String? paymentMethod,
     String? todo,
+    String? ordering,
+    String? startDate,
+    String? endDate,
   }) async {
-    final params = <String, dynamic>{
-      'page': page,
-      'page_size': pageSize,
-    };
+    final params = <String, dynamic>{'page': page, 'page_size': pageSize};
     final trimmed = search?.trim();
     if (trimmed != null && trimmed.isNotEmpty) {
       params['search'] = trimmed;
     }
+    final customerValue = customer?.trim();
+    if (customerValue != null && customerValue.isNotEmpty) {
+      params['customer'] = customerValue;
+    }
+    final paymentMethodValue = paymentMethod?.trim();
+    if (paymentMethodValue != null && paymentMethodValue.isNotEmpty) {
+      params['payment_method'] = paymentMethodValue;
+    }
     final todoValue = todo?.trim();
     if (todoValue != null && todoValue.isNotEmpty) {
       params['todo'] = todoValue;
+    }
+    final orderingValue = ordering?.trim();
+    if (orderingValue != null && orderingValue.isNotEmpty) {
+      params['ordering'] = orderingValue;
+    }
+    final start = startDate?.trim();
+    if (start != null && start.isNotEmpty) {
+      params['start_date'] = start;
+    }
+    final end = endDate?.trim();
+    if (end != null && end.isNotEmpty) {
+      params['end_date'] = end;
     }
 
     final response = await _client.get('/payments/', queryParameters: params);
@@ -32,14 +54,20 @@ class PaymentApiService {
       final results = payload['results'];
       final list = results is List
           ? results
-              .whereType<Map>()
-              .map((item) =>
-                  PaymentDto.fromJson(Map<String, dynamic>.from(item)))
-              .toList()
+                .whereType<Map>()
+                .map(
+                  (item) =>
+                      PaymentDto.fromJson(Map<String, dynamic>.from(item)),
+                )
+                .toList()
           : <PaymentDto>[];
       final total = toInt(payload['count']) ?? list.length;
       return PaymentPageDto(
-          items: list, total: total, page: page, pageSize: pageSize);
+        items: list,
+        total: total,
+        page: page,
+        pageSize: pageSize,
+      );
     }
     if (payload is List) {
       final list = payload
@@ -47,13 +75,22 @@ class PaymentApiService {
           .map((item) => PaymentDto.fromJson(Map<String, dynamic>.from(item)))
           .toList();
       return PaymentPageDto(
-          items: list, total: list.length, page: 1, pageSize: list.length);
+        items: list,
+        total: list.length,
+        page: 1,
+        pageSize: list.length,
+      );
     }
     return const PaymentPageDto(items: [], total: 0, page: 1, pageSize: 20);
   }
 
-  Future<Map<String, dynamic>> fetchSummary() async {
-    final response = await _client.get('/payments/summary/');
+  Future<Map<String, dynamic>> fetchSummary({
+    Map<String, dynamic>? params,
+  }) async {
+    final response = await _client.get(
+      '/payments/summary/',
+      queryParameters: params,
+    );
     final data = response.data;
     if (data is Map<String, dynamic>) {
       return Map<String, dynamic>.from(data);
@@ -62,7 +99,8 @@ class PaymentApiService {
   }
 
   Future<Map<String, dynamic>> createPayment(
-      Map<String, dynamic> payload) async {
+    Map<String, dynamic> payload,
+  ) async {
     final response = await _client.post('/payments/', data: payload);
     final data = response.data;
     if (data is Map<String, dynamic>) {
@@ -72,7 +110,9 @@ class PaymentApiService {
   }
 
   Future<Map<String, dynamic>> updatePayment(
-      int id, Map<String, dynamic> payload) async {
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
     final response = await _client.put('/payments/$id/', data: payload);
     final data = response.data;
     if (data is Map<String, dynamic>) {
