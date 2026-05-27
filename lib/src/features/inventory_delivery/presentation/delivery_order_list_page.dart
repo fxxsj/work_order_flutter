@@ -42,8 +42,11 @@ class DeliveryOrderListEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FeatureEntry<DeliveryOrderApiService, DeliveryOrderRepository,
-        DeliveryOrderViewModel>(
+    return FeatureEntry<
+      DeliveryOrderApiService,
+      DeliveryOrderRepository,
+      DeliveryOrderViewModel
+    >(
       createService: (context) =>
           DeliveryOrderApiService(context.read<ApiClient>()),
       createRepository: (context) =>
@@ -99,6 +102,8 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
   static const String _deleteErrorText = '删除失败: ';
   static const String _statusFilterLabel = '发货状态';
   static const String _customerFilterLabel = '客户';
+  static const String _todoFilterLabel = '待办事项';
+  static const String _orderingLabel = '排序';
   static const String _resetButtonText = '重置筛选';
   static const String _submitText = '提交';
   static const String _cancelText = '取消';
@@ -150,17 +155,26 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     final routeSearch = uri.queryParameters['search']?.trim() ?? '';
     final routeStatus = uri.queryParameters['status']?.trim() ?? '';
     final routeTodo = uri.queryParameters['todo']?.trim() ?? '';
-    final routeCustomerId =
-        int.tryParse(uri.queryParameters['customer_id'] ?? '');
-    final routeDepartmentId =
-        int.tryParse(uri.queryParameters['department_id'] ?? '');
-    final salesOrderId =
-        int.tryParse(uri.queryParameters['sales_order_id'] ?? '');
+    final routeStartDate = uri.queryParameters['start_date']?.trim() ?? '';
+    final routeEndDate = uri.queryParameters['end_date']?.trim() ?? '';
+    final routeOrdering = uri.queryParameters['ordering']?.trim() ?? '';
+    final routeCustomerId = int.tryParse(
+      uri.queryParameters['customer_id'] ?? '',
+    );
+    final routeDepartmentId = int.tryParse(
+      uri.queryParameters['department_id'] ?? '',
+    );
+    final salesOrderId = int.tryParse(
+      uri.queryParameters['sales_order_id'] ?? '',
+    );
     final signature = [
       createFlag ?? '',
       routeSearch,
       routeStatus,
       routeTodo,
+      routeStartDate,
+      routeEndDate,
+      routeOrdering,
       routeCustomerId?.toString() ?? '',
       routeDepartmentId?.toString() ?? '',
       salesOrderId?.toString() ?? '',
@@ -176,12 +190,15 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<DeliveryOrderViewModel>().applyRoutePrefill(
-            search: routeSearch,
-            status: routeStatus,
-            customerId: routeCustomerId,
-            departmentId: routeDepartmentId,
-            todo: routeTodo,
-          );
+        search: routeSearch,
+        status: routeStatus,
+        customerId: routeCustomerId,
+        departmentId: routeDepartmentId,
+        todo: routeTodo,
+        startDate: routeStartDate,
+        endDate: routeEndDate,
+        ordering: routeOrdering,
+      );
     });
   }
 
@@ -192,8 +209,10 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     super.dispose();
   }
 
-  void _scheduleSearch(DeliveryOrderViewModel viewModel,
-      {bool immediate = false}) {
+  void _scheduleSearch(
+    DeliveryOrderViewModel viewModel, {
+    bool immediate = false,
+  }) {
     _debounce.cancel();
     if (immediate) {
       viewModel.setSearchText(_searchController.text.trim());
@@ -214,8 +233,9 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       _productsLoading = true;
     });
     try {
-      final data = await DeliveryOrderSupportService(context.read<ApiClient>())
-          .loadFormOptions();
+      final data = await DeliveryOrderSupportService(
+        context.read<ApiClient>(),
+      ).loadFormOptions();
       if (!mounted) return;
       setState(() {
         _customers = data.customers;
@@ -377,8 +397,9 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     int? prefillSalesOrderId,
   }) async {
     final apiService = context.read<DeliveryOrderApiService>();
-    final supportService =
-        DeliveryOrderSupportService(context.read<ApiClient>());
+    final supportService = DeliveryOrderSupportService(
+      context.read<ApiClient>(),
+    );
     final isEdit = order != null;
     DeliveryOrderDetail? detail;
     if (isEdit) {
@@ -391,16 +412,21 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     int? selectedSalesOrderId = detail?.salesOrderId ?? prefillSalesOrderId;
     int? selectedCustomerId = detail?.customerId;
     DateTime? deliveryDate = detail?.deliveryDate;
-    final receiverNameController =
-        TextEditingController(text: detail?.receiverName ?? '');
-    final receiverPhoneController =
-        TextEditingController(text: detail?.receiverPhone ?? '');
-    final addressController =
-        TextEditingController(text: detail?.deliveryAddress ?? '');
-    final logisticsController =
-        TextEditingController(text: detail?.logisticsCompany ?? '');
-    final trackingController =
-        TextEditingController(text: detail?.trackingNumber ?? '');
+    final receiverNameController = TextEditingController(
+      text: detail?.receiverName ?? '',
+    );
+    final receiverPhoneController = TextEditingController(
+      text: detail?.receiverPhone ?? '',
+    );
+    final addressController = TextEditingController(
+      text: detail?.deliveryAddress ?? '',
+    );
+    final logisticsController = TextEditingController(
+      text: detail?.logisticsCompany ?? '',
+    );
+    final trackingController = TextEditingController(
+      text: detail?.trackingNumber ?? '',
+    );
     final freightController = TextEditingController(
       text: detail?.freight == null ? '' : detail!.freight!.toStringAsFixed(2),
     );
@@ -417,24 +443,23 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     List<DeliveryItemDraft> items = [];
     if (detail != null && detail.items.isNotEmpty) {
       items = detail.items
-          .map((item) => DeliveryItemDraft(
-                productId: item.productId ?? 0,
-                productName: item.productName ?? '-',
-                maxQuantity: item.quantity ?? 0,
-                initialQuantity: item.quantity ?? 0,
-                unitPrice: item.unitPrice ?? 0,
-                unit: item.unit ?? '',
-                stockBatch: item.stockBatch ?? '',
-              ))
+          .map(
+            (item) => DeliveryItemDraft(
+              productId: item.productId ?? 0,
+              productName: item.productName ?? '-',
+              maxQuantity: item.quantity ?? 0,
+              initialQuantity: item.quantity ?? 0,
+              unitPrice: item.unitPrice ?? 0,
+              unit: item.unit ?? '',
+              stockBatch: item.stockBatch ?? '',
+            ),
+          )
           .toList();
     }
 
     final formKey = GlobalKey<FormState>();
 
-    Future<void> applySalesOrder(
-      int id, {
-      VoidCallback? refresh,
-    }) async {
+    Future<void> applySalesOrder(int id, {VoidCallback? refresh}) async {
       try {
         final detailDto = await supportService.fetchSalesOrderDetail(id);
         final salesDetail = detailDto.toEntity();
@@ -455,8 +480,9 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
           items = salesDetail.items.map((item) {
             final ordered = item.quantity ?? 0;
             final delivered = (item.deliveredQuantity ?? 0).toDouble();
-            final remaining =
-                (ordered - delivered).clamp(0, ordered).toDouble();
+            final remaining = (ordered - delivered)
+                .clamp(0, ordered)
+                .toDouble();
             return DeliveryItemDraft(
               productId: item.productId ?? 0,
               productName: item.productName ?? '-',
@@ -487,8 +513,9 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       }
       try {
         final payload = <String, dynamic>{
-          'delivery_date':
-              deliveryDate == null ? null : _formatDate(deliveryDate),
+          'delivery_date': deliveryDate == null
+              ? null
+              : _formatDate(deliveryDate),
           'receiver_name': receiverNameController.text.trim(),
           'receiver_phone': receiverPhoneController.text.trim(),
           'delivery_address': addressController.text.trim(),
@@ -496,17 +523,20 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
           'tracking_number': trackingController.text.trim(),
           'freight': double.tryParse(freightController.text.trim()),
           'package_count': int.tryParse(packageCountController.text.trim()),
-          'package_weight':
-              double.tryParse(packageWeightController.text.trim()),
+          'package_weight': double.tryParse(
+            packageWeightController.text.trim(),
+          ),
           'notes': notesController.text.trim(),
           'items_data': items
-              .map((item) => {
-                    'product': item.productId,
-                    'quantity': item.quantity,
-                    'unit_price': item.unitPrice,
-                    'unit': item.unit,
-                    'stock_batch': item.stockBatch,
-                  })
+              .map(
+                (item) => {
+                  'product': item.productId,
+                  'quantity': item.quantity,
+                  'unit_price': item.unitPrice,
+                  'unit': item.unit,
+                  'stock_batch': item.stockBatch,
+                },
+              )
               .toList(),
         };
 
@@ -822,55 +852,64 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
         DataColumn(label: Text('下一步')),
         DataColumn(label: Text('操作')),
       ],
-      rows: orders.map(
-        (order) {
-          final statusCode = order.status ?? '';
-          final canShip = statusCode == 'pending';
-          final canReceive =
-              statusCode == 'shipped' || statusCode == 'in_transit';
-          final canReject = canReceive;
-          final canEdit = statusCode == 'pending';
-          final canDelete = statusCode == 'pending';
+      rows: orders.map((order) {
+        final statusCode = order.status ?? '';
+        final canShip = statusCode == 'pending';
+        final canReceive =
+            statusCode == 'shipped' || statusCode == 'in_transit';
+        final canReject = canReceive;
+        final canEdit = statusCode == 'pending';
+        final canDelete = statusCode == 'pending';
 
-          return DataRow(
-            cells: [
-              DataCell(
-                InkWell(
-                  onTap: () => _openDetailDialog(order),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Text(
-                      order.orderNumber.isEmpty
-                          ? '发货单 #${order.id}'
-                          : order.orderNumber,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
+        return DataRow(
+          cells: [
+            DataCell(
+              InkWell(
+                onTap: () => _openDetailDialog(order),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Text(
+                    order.orderNumber.isEmpty
+                        ? '发货单 #${order.id}'
+                        : order.orderNumber,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
               ),
-              DataCell(
-                  Text(_displayText(order.customerName), style: textStyle)),
-              DataCell(
-                  Text(_displayText(order.salesOrderNumber), style: textStyle)),
-              DataCell(Text(
+            ),
+            DataCell(Text(_displayText(order.customerName), style: textStyle)),
+            DataCell(
+              Text(_displayText(order.salesOrderNumber), style: textStyle),
+            ),
+            DataCell(
+              Text(
                 _displayText(order.statusDisplay ?? order.status),
                 style: textStyle,
-              )),
-              DataCell(Text(_formatDate(order.deliveryDate), style: textStyle)),
-              DataCell(Text(order.itemsCount?.toString() ?? _emptyCellText,
-                  style: textStyle)),
-              DataCell(
-                  Text(_formatAmount(order.totalQuantity), style: textStyle)),
-              DataCell(
-                  Text(_displayText(order.logisticsCompany), style: textStyle)),
-              DataCell(
-                  Text(_displayText(order.trackingNumber), style: textStyle)),
-              DataCell(Text(_invoiceFollowUpText(order), style: textStyle)),
-              DataCell(Text(_deliveryFollowUpText(order), style: textStyle)),
-              DataCell(RowActionGroup(
+              ),
+            ),
+            DataCell(Text(_formatDate(order.deliveryDate), style: textStyle)),
+            DataCell(
+              Text(
+                order.itemsCount?.toString() ?? _emptyCellText,
+                style: textStyle,
+              ),
+            ),
+            DataCell(
+              Text(_formatAmount(order.totalQuantity), style: textStyle),
+            ),
+            DataCell(
+              Text(_displayText(order.logisticsCompany), style: textStyle),
+            ),
+            DataCell(
+              Text(_displayText(order.trackingNumber), style: textStyle),
+            ),
+            DataCell(Text(_invoiceFollowUpText(order), style: textStyle)),
+            DataCell(Text(_deliveryFollowUpText(order), style: textStyle)),
+            DataCell(
+              RowActionGroup(
                 actions: [
                   if (_shouldPromptInvoice(order))
                     RowAction(
@@ -923,11 +962,11 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
                       destructive: true,
                     ),
                 ],
-              )),
-            ],
-          );
-        },
-      ).toList(),
+              ),
+            ),
+          ],
+        );
+      }).toList(),
     );
   }
 
@@ -956,12 +995,18 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       actions: LayoutBuilder(
         builder: (context, constraints) {
           final activeFilters = _activeFilterCount(viewModel);
-          final rejectedCount =
-              _summaryCount(viewModel.summary, 'rejected_followup_count');
-          final pendingReceiveCount =
-              _summaryCount(viewModel.summary, 'pending_receive_count');
-          final pendingInvoiceCount =
-              _summaryCount(viewModel.summary, 'pending_invoice_count');
+          final rejectedCount = _summaryCount(
+            viewModel.summary,
+            'rejected_followup_count',
+          );
+          final pendingReceiveCount = _summaryCount(
+            viewModel.summary,
+            'pending_receive_count',
+          );
+          final pendingInvoiceCount = _summaryCount(
+            viewModel.summary,
+            'pending_invoice_count',
+          );
           final searchField = ListSearchField(
             controller: _searchController,
             hintText: _searchHintText,
@@ -1043,9 +1088,11 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     DeliveryOrderViewModel viewModel, {
     required double bottomSpacing,
   }) {
-    final statusValue =
-        viewModel.statusFilter.isEmpty ? '' : viewModel.statusFilter;
+    final statusValue = viewModel.statusFilter.isEmpty
+        ? ''
+        : viewModel.statusFilter;
     final customerValue = viewModel.customerId;
+    final todoValue = viewModel.todoFilter;
     return FilterPanelBody(
       bottomSpacing: bottomSpacing,
       resetLabel: _resetButtonText,
@@ -1082,6 +1129,60 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
               ? null
               : (value) => viewModel.setCustomerId(value ?? 0),
         ),
+        AppSelect<String>(
+          key: ValueKey<String>(todoValue),
+          value: todoValue.isEmpty ? null : todoValue,
+          decoration: const InputDecoration(labelText: _todoFilterLabel),
+          options: const [
+            AppDropdownOption<String>(value: '', label: '全部待办'),
+            AppDropdownOption<String>(value: 'pending_receive', label: '待签收'),
+            AppDropdownOption<String>(value: 'pending_invoice', label: '待开票'),
+            AppDropdownOption<String>(
+              value: 'rejected_followup',
+              label: '拒收待处理',
+            ),
+          ],
+          onChanged: (value) => viewModel.setTodoFilter(value ?? ''),
+        ),
+        TextFormField(
+          key: ValueKey<String>('start-${viewModel.startDateFilter}'),
+          initialValue: viewModel.startDateFilter,
+          decoration: const InputDecoration(
+            labelText: '发货开始日期',
+            hintText: 'YYYY-MM-DD',
+          ),
+          onFieldSubmitted: viewModel.setStartDateFilter,
+          onChanged: viewModel.setStartDateFilter,
+        ),
+        TextFormField(
+          key: ValueKey<String>('end-${viewModel.endDateFilter}'),
+          initialValue: viewModel.endDateFilter,
+          decoration: const InputDecoration(
+            labelText: '发货结束日期',
+            hintText: 'YYYY-MM-DD',
+          ),
+          onFieldSubmitted: viewModel.setEndDateFilter,
+          onChanged: viewModel.setEndDateFilter,
+        ),
+        AppSelect<String>(
+          key: ValueKey<String>(viewModel.ordering),
+          value: viewModel.ordering,
+          decoration: const InputDecoration(labelText: _orderingLabel),
+          options: const [
+            AppDropdownOption<String>(value: '-created_at', label: '最新创建'),
+            AppDropdownOption<String>(value: 'created_at', label: '最早创建'),
+            AppDropdownOption<String>(value: 'order_number', label: '发货单号升序'),
+            AppDropdownOption<String>(value: '-order_number', label: '发货单号降序'),
+            AppDropdownOption<String>(value: 'customer__name', label: '客户名称升序'),
+            AppDropdownOption<String>(
+              value: '-customer__name',
+              label: '客户名称降序',
+            ),
+            AppDropdownOption<String>(value: 'delivery_date', label: '发货日期升序'),
+            AppDropdownOption<String>(value: '-delivery_date', label: '发货日期降序'),
+          ],
+          onChanged: (value) => viewModel.setOrdering(value ?? '-created_at'),
+        ),
       ],
     );
   }
@@ -1093,12 +1194,15 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     if (viewModel.customerId > 0) count += 1;
     if (viewModel.todoFilter.isNotEmpty) count += 1;
     if (viewModel.departmentId > 0) count += 1;
+    if (viewModel.startDateFilter.isNotEmpty) count += 1;
+    if (viewModel.endDateFilter.isNotEmpty) count += 1;
+    if (viewModel.ordering != '-created_at') count += 1;
     return count;
   }
 
   void _resetFilters(DeliveryOrderViewModel viewModel) {
     _searchController.clear();
-    context.go('/delivery-orders');
+    context.go('/inventory/delivery');
   }
 
   void _clearQuickFilter(DeliveryOrderViewModel viewModel) {
@@ -1134,8 +1238,18 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     if ((todo ?? '').trim().isNotEmpty) {
       query['todo'] = todo!.trim();
     }
-    context
-        .go(Uri(path: '/delivery-orders', queryParameters: query).toString());
+    if (viewModel.startDateFilter.isNotEmpty) {
+      query['start_date'] = viewModel.startDateFilter;
+    }
+    if (viewModel.endDateFilter.isNotEmpty) {
+      query['end_date'] = viewModel.endDateFilter;
+    }
+    if (viewModel.ordering != '-created_at') {
+      query['ordering'] = viewModel.ordering;
+    }
+    context.go(
+      Uri(path: '/inventory/delivery', queryParameters: query).toString(),
+    );
   }
 
   int _summaryCount(Map<String, dynamic> payload, String key) {
@@ -1181,8 +1295,9 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
-    final number =
-        order.orderNumber.isEmpty ? '发货单 #${order.id}' : order.orderNumber;
+    final number = order.orderNumber.isEmpty
+        ? '发货单 #${order.id}'
+        : order.orderNumber;
     final customer = _displayText(order.customerName);
     final salesOrder = _displayText(order.salesOrderNumber);
     final deliveryDate = _formatDate(order.deliveryDate);
@@ -1300,8 +1415,10 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
                 OutlinedButton.icon(
                   onPressed: () =>
                       _openResolveExceptionDialog(viewModel, order),
-                  icon:
-                      const Icon(Icons.assignment_turned_in_outlined, size: 16),
+                  icon: const Icon(
+                    Icons.assignment_turned_in_outlined,
+                    size: 16,
+                  ),
                   label: Text(
                     _hasResolvedRejectedException(order) ? '更新处理' : '处理拒收',
                   ),
@@ -1432,10 +1549,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       ('下一步', followUp),
     ];
     if (_hasResolvedRejectedException(order)) {
-      fields.add((
-        '拒收处理',
-        _displayText(order.exceptionResolutionDisplay),
-      ));
+      fields.add(('拒收处理', _displayText(order.exceptionResolutionDisplay)));
     }
     return Column(
       children: [
@@ -1465,10 +1579,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 72,
-            child: Text(label, style: labelStyle),
-          ),
+          SizedBox(width: 72, child: Text(label, style: labelStyle)),
           Expanded(
             child: Text(
               value.isEmpty ? _emptyCellText : value,

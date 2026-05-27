@@ -17,11 +17,11 @@ class DeliveryOrderApiService {
     int? customerId,
     int? departmentId,
     String? todo,
+    String? startDate,
+    String? endDate,
+    String? ordering,
   }) async {
-    final params = <String, dynamic>{
-      'page': page,
-      'page_size': pageSize,
-    };
+    final params = <String, dynamic>{'page': page, 'page_size': pageSize};
     final trimmed = search?.trim();
     if (trimmed != null && trimmed.isNotEmpty) {
       params['search'] = trimmed;
@@ -40,59 +40,104 @@ class DeliveryOrderApiService {
     if (todoTrimmed != null && todoTrimmed.isNotEmpty) {
       params['todo'] = todoTrimmed;
     }
+    final startDateTrimmed = startDate?.trim();
+    if (startDateTrimmed != null && startDateTrimmed.isNotEmpty) {
+      params['start_date'] = startDateTrimmed;
+    }
+    final endDateTrimmed = endDate?.trim();
+    if (endDateTrimmed != null && endDateTrimmed.isNotEmpty) {
+      params['end_date'] = endDateTrimmed;
+    }
+    final orderingTrimmed = ordering?.trim();
+    if (orderingTrimmed != null && orderingTrimmed.isNotEmpty) {
+      params['ordering'] = orderingTrimmed;
+    }
 
-    final response =
-        await _client.get('/delivery-orders/', queryParameters: params);
+    final response = await _client.get(
+      '/delivery-orders/',
+      queryParameters: params,
+    );
     final payload = response.data;
     if (payload is Map<String, dynamic>) {
       final results = payload['results'];
       final list = results is List
           ? results
-              .whereType<Map>()
-              .map((item) =>
-                  DeliveryOrderDto.fromJson(Map<String, dynamic>.from(item)))
-              .toList()
+                .whereType<Map>()
+                .map(
+                  (item) => DeliveryOrderDto.fromJson(
+                    Map<String, dynamic>.from(item),
+                  ),
+                )
+                .toList()
           : <DeliveryOrderDto>[];
       final total = toInt(payload['count']) ?? list.length;
       return DeliveryOrderPageDto(
-          items: list, total: total, page: page, pageSize: pageSize);
+        items: list,
+        total: total,
+        page: page,
+        pageSize: pageSize,
+      );
     }
     if (payload is List) {
       final list = payload
           .whereType<Map>()
-          .map((item) =>
-              DeliveryOrderDto.fromJson(Map<String, dynamic>.from(item)))
+          .map(
+            (item) =>
+                DeliveryOrderDto.fromJson(Map<String, dynamic>.from(item)),
+          )
           .toList();
       return DeliveryOrderPageDto(
-          items: list, total: list.length, page: 1, pageSize: list.length);
+        items: list,
+        total: list.length,
+        page: 1,
+        pageSize: list.length,
+      );
     }
     return const DeliveryOrderPageDto(
-        items: [], total: 0, page: 1, pageSize: 20);
+      items: [],
+      total: 0,
+      page: 1,
+      pageSize: 20,
+    );
   }
 
   Future<Map<String, dynamic>> ship(
-      int id, Map<String, dynamic> payload) async {
-    final response =
-        await _client.post('/delivery-orders/$id/ship/', data: payload);
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
+    final response = await _client.post(
+      '/delivery-orders/$id/ship/',
+      data: payload,
+    );
     return _mapFromResponse(response.data);
   }
 
   Future<Map<String, dynamic>> receive(
-      int id, Map<String, dynamic> payload) async {
-    final response =
-        await _client.post('/delivery-orders/$id/receive/', data: payload);
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
+    final response = await _client.post(
+      '/delivery-orders/$id/receive/',
+      data: payload,
+    );
     return _mapFromResponse(response.data);
   }
 
   Future<Map<String, dynamic>> reject(
-      int id, Map<String, dynamic> payload) async {
-    final response =
-        await _client.post('/delivery-orders/$id/reject/', data: payload);
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
+    final response = await _client.post(
+      '/delivery-orders/$id/reject/',
+      data: payload,
+    );
     return _mapFromResponse(response.data);
   }
 
   Future<Map<String, dynamic>> resolveException(
-      int id, Map<String, dynamic> payload) async {
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
     final response = await _client.post(
       '/delivery-orders/$id/resolve_exception/',
       data: payload,
@@ -105,6 +150,8 @@ class DeliveryOrderApiService {
     String? status,
     int? customerId,
     String? todo,
+    String? startDate,
+    String? endDate,
   }) async {
     final params = <String, dynamic>{};
     if (departmentId != null && departmentId > 0) {
@@ -121,8 +168,18 @@ class DeliveryOrderApiService {
     if (todoTrimmed != null && todoTrimmed.isNotEmpty) {
       params['todo'] = todoTrimmed;
     }
-    final response =
-        await _client.get('/delivery-orders/summary/', queryParameters: params);
+    final startDateTrimmed = startDate?.trim();
+    if (startDateTrimmed != null && startDateTrimmed.isNotEmpty) {
+      params['start_date'] = startDateTrimmed;
+    }
+    final endDateTrimmed = endDate?.trim();
+    if (endDateTrimmed != null && endDateTrimmed.isNotEmpty) {
+      params['end_date'] = endDateTrimmed;
+    }
+    final response = await _client.get(
+      '/delivery-orders/summary/',
+      queryParameters: params,
+    );
     return _mapFromResponse(response.data);
   }
 
@@ -136,7 +193,8 @@ class DeliveryOrderApiService {
   }
 
   Future<DeliveryOrderDetail> createDeliveryOrder(
-      Map<String, dynamic> payload) async {
+    Map<String, dynamic> payload,
+  ) async {
     final response = await _client.post('/delivery-orders/', data: payload);
     final map = response.data is Map
         ? Map<String, dynamic>.from(response.data)
@@ -145,7 +203,9 @@ class DeliveryOrderApiService {
   }
 
   Future<DeliveryOrderDetail> updateDeliveryOrder(
-      int id, Map<String, dynamic> payload) async {
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
     final response = await _client.put('/delivery-orders/$id/', data: payload);
     final map = response.data is Map
         ? Map<String, dynamic>.from(response.data)

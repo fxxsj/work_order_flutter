@@ -16,6 +16,9 @@ class DeliveryOrderRepositoryImpl implements DeliveryOrderRepository {
     int? customerId,
     int? departmentId,
     String? todo,
+    String? startDate,
+    String? endDate,
+    String? ordering,
   }) {
     return _apiService.fetchDeliveryOrders(
       page: page,
@@ -25,6 +28,9 @@ class DeliveryOrderRepositoryImpl implements DeliveryOrderRepository {
       customerId: customerId,
       departmentId: departmentId,
       todo: todo,
+      startDate: startDate,
+      endDate: endDate,
+      ordering: ordering,
     );
   }
 
@@ -49,12 +55,16 @@ class DeliveryOrderRepositoryImpl implements DeliveryOrderRepository {
     String? status,
     int? customerId,
     String? todo,
+    String? startDate,
+    String? endDate,
   }) {
     return _apiService.fetchSummary(
       departmentId: departmentId,
       status: status,
       customerId: customerId,
       todo: todo,
+      startDate: startDate,
+      endDate: endDate,
     );
   }
 }

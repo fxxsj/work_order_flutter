@@ -9,6 +9,9 @@ abstract class DeliveryOrderRepository {
     int? customerId,
     int? departmentId,
     String? todo,
+    String? startDate,
+    String? endDate,
+    String? ordering,
   });
 
   Future<Map<String, dynamic>> ship(int id, Map<String, dynamic> payload);
@@ -22,5 +25,7 @@ abstract class DeliveryOrderRepository {
     String? status,
     int? customerId,
     String? todo,
+    String? startDate,
+    String? endDate,
   });
 }
