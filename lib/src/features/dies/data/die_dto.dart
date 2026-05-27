@@ -12,10 +12,13 @@ class DieDto {
     this.material,
     this.thickness,
     this.confirmed = false,
+    this.confirmedByName,
+    this.confirmedAt,
     this.products = const [],
     this.images = const [],
     this.notes,
     this.createdAt,
+    this.updatedAt,
   });
 
   final int id;
@@ -27,10 +30,13 @@ class DieDto {
   final String? material;
   final String? thickness;
   final bool confirmed;
+  final String? confirmedByName;
+  final DateTime? confirmedAt;
   final List<DieProduct> products;
   final List<DieImage> images;
   final String? notes;
   final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   factory DieDto.fromJson(Map<String, dynamic> json) {
     final products = <DieProduct>[];
@@ -39,7 +45,10 @@ class DieDto {
       for (final item in rawProducts) {
         if (item is Map) {
           final productId = toInt(item['product']) ?? toInt(item['id']) ?? 0;
-          final productName = item['product_name']?.toString() ?? item['name']?.toString() ?? '';
+          final productName =
+              item['product_name']?.toString() ??
+              item['name']?.toString() ??
+              '';
           products.add(
             DieProduct(
               productId: productId,
@@ -57,13 +66,15 @@ class DieDto {
     if (rawImages is List) {
       for (final item in rawImages) {
         if (item is Map) {
-          images.add(DieImage(
-            id: toInt(item['id']) ?? 0,
-            imageUrl: toStringOrNull(item['image']) ?? '',
-            sortOrder: toInt(item['sort_order']) ?? 0,
-            description: toStringOrNull(item['description']),
-            createdAt: toDateTime(item['created_at']),
-          ));
+          images.add(
+            DieImage(
+              id: toInt(item['id']) ?? 0,
+              imageUrl: toStringOrNull(item['image']) ?? '',
+              sortOrder: toInt(item['sort_order']) ?? 0,
+              description: toStringOrNull(item['description']),
+              createdAt: toDateTime(item['created_at']),
+            ),
+          );
         }
       }
     }
@@ -78,10 +89,13 @@ class DieDto {
       material: toStringOrNull(json['material']),
       thickness: toStringOrNull(json['thickness']),
       confirmed: json['confirmed'] == true,
+      confirmedByName: toStringOrNull(json['confirmed_by_name']),
+      confirmedAt: toDateTime(json['confirmed_at']),
       products: products,
       images: images,
       notes: toStringOrNull(json['notes']),
       createdAt: toDateTime(json['created_at']),
+      updatedAt: toDateTime(json['updated_at']),
     );
   }
 
@@ -96,10 +110,13 @@ class DieDto {
       material: entity.material,
       thickness: entity.thickness,
       confirmed: entity.confirmed,
+      confirmedByName: entity.confirmedByName,
+      confirmedAt: entity.confirmedAt,
       products: entity.products,
       images: entity.images,
       notes: entity.notes,
       createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
     );
   }
 
@@ -114,10 +131,13 @@ class DieDto {
       material: material,
       thickness: thickness,
       confirmed: confirmed,
+      confirmedByName: confirmedByName,
+      confirmedAt: confirmedAt,
       products: products,
       images: images,
       notes: notes,
       createdAt: createdAt,
+      updatedAt: updatedAt,
     );
   }
 

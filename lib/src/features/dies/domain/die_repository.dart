@@ -7,6 +7,9 @@ abstract class DieRepository {
     required int page,
     required int pageSize,
     String? search,
+    bool? confirmed,
+    String? dieType,
+    String? ordering,
   });
 
   Future<Die> createDie(Die die);
@@ -17,7 +20,12 @@ abstract class DieRepository {
 
   Future<void> confirmDie(int id);
 
-  Future<DieImage> uploadDieImage(int dieId, MultipartFile imageFile, {int sortOrder = 0, String? description});
+  Future<DieImage> uploadDieImage(
+    int dieId,
+    MultipartFile imageFile, {
+    int sortOrder = 0,
+    String? description,
+  });
 
   Future<void> deleteDieImage(int dieId, int imageId);
 }

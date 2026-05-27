@@ -15,11 +15,17 @@ class DieRepositoryImpl implements DieRepository {
     required int page,
     required int pageSize,
     String? search,
+    bool? confirmed,
+    String? dieType,
+    String? ordering,
   }) async {
     final response = await _api.fetchDies(
       page: page,
       pageSize: pageSize,
       search: search,
+      confirmed: confirmed,
+      dieType: dieType,
+      ordering: ordering,
     );
     return PageData(
       items: response.items.map((item) => item.toEntity()).toList(),
@@ -52,8 +58,18 @@ class DieRepositoryImpl implements DieRepository {
   }
 
   @override
-  Future<DieImage> uploadDieImage(int dieId, MultipartFile imageFile, {int sortOrder = 0, String? description}) async {
-    return await _api.uploadImage(dieId, imageFile, sortOrder: sortOrder, description: description);
+  Future<DieImage> uploadDieImage(
+    int dieId,
+    MultipartFile imageFile, {
+    int sortOrder = 0,
+    String? description,
+  }) async {
+    return await _api.uploadImage(
+      dieId,
+      imageFile,
+      sortOrder: sortOrder,
+      description: description,
+    );
   }
 
   @override

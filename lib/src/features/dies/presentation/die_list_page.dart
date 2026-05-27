@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
@@ -127,6 +128,80 @@ class DieListPage extends StatelessWidget {
     DieViewModel viewModel,
   ) {
     return [
+      SizedBox(
+        width: 112,
+        child: AppSelect<String>(
+          options: const [
+            AppDropdownOption(value: '', label: '全部状态'),
+            AppDropdownOption(value: 'true', label: '已确认'),
+            AppDropdownOption(value: 'false', label: '待确认'),
+          ],
+          value: viewModel.confirmed == null
+              ? ''
+              : viewModel.confirmed == true
+              ? 'true'
+              : 'false',
+          onChanged: (value) {
+            if (value == null || value.isEmpty) {
+              viewModel.setConfirmed(null);
+            } else {
+              viewModel.setConfirmed(value == 'true');
+            }
+          },
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
+      SizedBox(
+        width: 132,
+        child: AppSelect<String>(
+          options: const [
+            AppDropdownOption(value: '', label: '全部类型'),
+            AppDropdownOption(value: 'combined', label: '拼版刀模'),
+            AppDropdownOption(value: 'dedicated', label: '专用刀模'),
+            AppDropdownOption(value: 'universal', label: '通用刀模'),
+          ],
+          value: viewModel.dieType ?? '',
+          onChanged: (value) => viewModel.setDieType(
+            value == null || value.isEmpty ? null : value,
+          ),
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
+      SizedBox(
+        width: 132,
+        child: AppSelect<String>(
+          options: const [
+            AppDropdownOption(value: '-created_at', label: '最新创建'),
+            AppDropdownOption(value: 'created_at', label: '最早创建'),
+            AppDropdownOption(value: 'code', label: '编码升序'),
+            AppDropdownOption(value: '-code', label: '编码降序'),
+            AppDropdownOption(value: 'name', label: '名称升序'),
+            AppDropdownOption(value: '-name', label: '名称降序'),
+            AppDropdownOption(value: 'die_type', label: '类型升序'),
+            AppDropdownOption(value: 'confirmed', label: '状态升序'),
+          ],
+          value: viewModel.ordering ?? '-created_at',
+          onChanged: (value) {
+            if (value != null) viewModel.setOrdering(value);
+          },
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
       PageActionButton.filled(
         onPressed: () => _openEditPage(context, viewModel, null),
         icon: const Icon(Icons.add),
@@ -154,10 +229,7 @@ class DieListPage extends StatelessWidget {
   }
 
   static Widget _buildNameCell(BuildContext context, Die die) {
-    return Text(
-      _titleText(die),
-      style: Theme.of(context).textTheme.bodyMedium,
-    );
+    return Text(_titleText(die), style: Theme.of(context).textTheme.bodyMedium);
   }
 
   static Widget _buildCodeCell(BuildContext context, Die die) {
@@ -193,10 +265,7 @@ class DieListPage extends StatelessWidget {
   }
 
   static Widget _buildBodyText(BuildContext context, String value) {
-    return Text(
-      value,
-      style: Theme.of(context).textTheme.bodySmall,
-    );
+    return Text(value, style: Theme.of(context).textTheme.bodySmall);
   }
 
   static String _titleText(Die die) {
@@ -253,10 +322,7 @@ class DieListPage extends StatelessWidget {
         label: '编码',
         value: CrudValueFormatter.text(die.code),
       ),
-      CrudSummaryFieldData(
-        label: '类型',
-        value: _dieTypeText(die),
-      ),
+      CrudSummaryFieldData(label: '类型', value: _dieTypeText(die)),
       CrudSummaryFieldData(
         label: '尺寸',
         value: CrudValueFormatter.text(die.size),
@@ -269,14 +335,16 @@ class DieListPage extends StatelessWidget {
         label: '厚度',
         value: CrudValueFormatter.text(die.thickness),
       ),
+      CrudSummaryFieldData(label: '确认状态', value: _confirmedText(die)),
       CrudSummaryFieldData(
-        label: '确认状态',
-        value: _confirmedText(die),
+        label: '确认人',
+        value: CrudValueFormatter.text(die.confirmedByName),
       ),
       CrudSummaryFieldData(
-        label: '包含产品',
-        value: _productSummary(die.products),
+        label: '确认时间',
+        value: CrudValueFormatter.dateTime(die.confirmedAt),
       ),
+      CrudSummaryFieldData(label: '包含产品', value: _productSummary(die.products)),
       CrudSummaryFieldData(
         label: '备注',
         value: CrudValueFormatter.text(die.notes),
@@ -284,6 +352,10 @@ class DieListPage extends StatelessWidget {
       CrudSummaryFieldData(
         label: '创建时间',
         value: CrudValueFormatter.dateTime(die.createdAt),
+      ),
+      CrudSummaryFieldData(
+        label: '更新时间',
+        value: CrudValueFormatter.dateTime(die.updatedAt),
       ),
     ];
   }

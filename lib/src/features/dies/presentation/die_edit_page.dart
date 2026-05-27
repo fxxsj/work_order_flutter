@@ -34,10 +34,7 @@ Future<bool> showDieEditDrawer(
     desktopWidth: LayoutTokens.pageWidthXwide,
     child: ChangeNotifierProvider<DieViewModel>.value(
       value: viewModel,
-      child: DieEditPage(
-        die: die,
-        onSaved: () => saved = true,
-      ),
+      child: DieEditPage(die: die, onSaved: () => saved = true),
     ),
   );
   return saved;
@@ -72,6 +69,12 @@ class _DieEditPageState extends State<DieEditPage> {
   static const String _submitText = '保存';
   static const String _submitErrorText = '操作失败: ';
   static const String _nameRequiredText = '请输入刀模名称';
+  static const String _nameLengthText = '刀模名称不能超过200个字符';
+  static const String _codeLengthText = '刀模编码不能超过50个字符';
+  static const String _sizeLengthText = '尺寸不能超过100个字符';
+  static const String _materialLengthText = '材质不能超过100个字符';
+  static const String _thicknessLengthText = '厚度不能超过50个字符';
+  static const String _quantityInvalidText = '拼版个数必须大于0';
   static const String _basicSectionTitle = '基本信息';
   static const String _extraSectionTitle = '补充信息';
 
@@ -171,6 +174,10 @@ class _DieEditPageState extends State<DieEditPage> {
   }
 
   void _addProductItem() {
+    if (_die?.confirmed == true) {
+      ToastUtil.showError('已确认的刀模不允许修改包含产品');
+      return;
+    }
     if (!_canAddMoreProducts) {
       ToastUtil.showError('专用刀模只能添加1个产品');
       return;
@@ -179,6 +186,10 @@ class _DieEditPageState extends State<DieEditPage> {
   }
 
   void _removeProductItem(int index) {
+    if (_die?.confirmed == true) {
+      ToastUtil.showError('已确认的刀模不允许修改包含产品');
+      return;
+    }
     setState(() {
       _productItems[index].dispose();
       _productItems.removeAt(index);
@@ -216,7 +227,8 @@ class _DieEditPageState extends State<DieEditPage> {
         ..removeWhere((item) => item.id == option.id)
         ..add(option)
         ..sort(
-            (left, right) => left.displayLabel.compareTo(right.displayLabel));
+          (left, right) => left.displayLabel.compareTo(right.displayLabel),
+        );
     });
     ToastUtil.showSuccess('产品已新增');
     return option;
@@ -232,6 +244,7 @@ class _DieEditPageState extends State<DieEditPage> {
 
   Future<void> _handleDieTypeChange(String? value) async {
     if (value == null) return;
+    if (_die?.confirmed == true) return;
     if (value == 'dedicated' && _productItems.length > 1) {
       final keepFirst = await showDialog<bool>(
         context: context,
@@ -274,6 +287,32 @@ class _DieEditPageState extends State<DieEditPage> {
 
   Future<Die> _persistDie(DieViewModel viewModel) async {
     final currentDie = _die;
+    final code = _codeController.text.trim();
+    final name = _nameController.text.trim();
+    final size = _sizeController.text.trim();
+    final material = _materialController.text.trim();
+    final thickness = _thicknessController.text.trim();
+    final notes = _notesController.text.trim();
+
+    if (name.isEmpty) {
+      throw Exception(_nameRequiredText);
+    }
+    if (name.length > 200) {
+      throw Exception(_nameLengthText);
+    }
+    if (code.length > 50) {
+      throw Exception(_codeLengthText);
+    }
+    if (size.length > 100) {
+      throw Exception(_sizeLengthText);
+    }
+    if (material.length > 100) {
+      throw Exception(_materialLengthText);
+    }
+    if (thickness.length > 50) {
+      throw Exception(_thicknessLengthText);
+    }
+
     final relationType = _dieType == 'combined' ? 'imposition' : 'exclusive';
     final products = _productItems
         .where((item) => item.productId != null)
@@ -286,23 +325,27 @@ class _DieEditPageState extends State<DieEditPage> {
           ),
         )
         .toList();
+    if (products.any((item) => (item.quantity ?? 0) < 1)) {
+      throw Exception(_quantityInvalidText);
+    }
 
     final payload = Die(
       id: currentDie?.id ?? 0,
-      code: _codeController.text.trim().isEmpty
-          ? null
-          : _codeController.text.trim(),
-      name: _nameController.text.trim(),
+      code: code.isEmpty ? null : code,
+      name: name,
       dieType: _dieType,
-      size: _sizeController.text.trim(),
-      material: _materialController.text.trim(),
-      thickness: _thicknessController.text.trim(),
-      notes: _notesController.text.trim(),
+      size: size,
+      material: material,
+      thickness: thickness,
+      notes: notes,
       confirmed: currentDie?.confirmed ?? false,
+      confirmedByName: currentDie?.confirmedByName,
+      confirmedAt: currentDie?.confirmedAt,
       dieTypeDisplay: currentDie?.dieTypeDisplay,
       products: products,
       images: _images,
       createdAt: currentDie?.createdAt,
+      updatedAt: currentDie?.updatedAt,
     );
 
     final saved = currentDie == null
@@ -328,6 +371,7 @@ class _DieEditPageState extends State<DieEditPage> {
   }
 
   Widget _buildProductSection(BuildContext context) {
+    final isConfirmed = _die?.confirmed == true;
     final theme = Theme.of(context);
     final sectionSpacing = LayoutTokens.formSectionSpacing(context);
     final colors = theme.extension<AppColors>();
@@ -340,26 +384,27 @@ class _DieEditPageState extends State<DieEditPage> {
         : Column(
             children: List.generate(_productItems.length, (index) {
               final item = _productItems[index];
-              final productOptions = _productOptions
-                  .map(
-                    (product) => AppDropdownOption<int>(
-                      value: product.id,
-                      label: product.displayLabel,
-                    ),
-                  )
-                  .toList()
-                ..add(
-                  AppDropdownOption<int>(
-                    value: -1,
-                    label: '新增产品',
-                    icon: Icons.add,
-                    onSelected: () async {
-                      final created = await _handleCreateProduct();
-                      if (created == null || !mounted) return;
-                      setState(() => item.productId = created.id);
-                    },
-                  ),
-                );
+              final productOptions =
+                  _productOptions
+                      .map(
+                        (product) => AppDropdownOption<int>(
+                          value: product.id,
+                          label: product.displayLabel,
+                        ),
+                      )
+                      .toList()
+                    ..add(
+                      AppDropdownOption<int>(
+                        value: -1,
+                        label: '新增产品',
+                        icon: Icons.add,
+                        onSelected: () async {
+                          final created = await _handleCreateProduct();
+                          if (created == null || !mounted) return;
+                          setState(() => item.productId = created.id);
+                        },
+                      ),
+                    );
               return Padding(
                 padding: EdgeInsets.only(bottom: sectionSpacing),
                 child: Row(
@@ -368,17 +413,21 @@ class _DieEditPageState extends State<DieEditPage> {
                       flex: 3,
                       child: AppSelect<int>(
                         value: item.productId,
-                        decoration:
-                            const InputDecoration(labelText: _productLabel),
+                        decoration: const InputDecoration(
+                          labelText: _productLabel,
+                        ),
                         options: productOptions,
-                        selectHintText:
-                            _productOptions.isEmpty ? '新增产品' : '请选择',
-                        onChanged: (value) {
-                          setState(() => item.productId = value);
-                        },
+                        selectHintText: _productOptions.isEmpty
+                            ? '新增产品'
+                            : '请选择',
+                        onChanged: isConfirmed
+                            ? null
+                            : (value) {
+                                setState(() => item.productId = value);
+                              },
                       ),
                     ),
-                    if (_productOptions.isEmpty)
+                    if (_productOptions.isEmpty && !isConfirmed)
                       Padding(
                         padding: EdgeInsets.only(left: LayoutTokens.gapSm),
                         child: TextButton.icon(
@@ -396,6 +445,14 @@ class _DieEditPageState extends State<DieEditPage> {
                       child: CrudFieldConfig.number(
                         label: _quantityLabel,
                         controller: item.quantityController,
+                        enabled: !isConfirmed,
+                        validator: (value) {
+                          final quantity = int.tryParse(value?.trim() ?? '');
+                          if (quantity == null || quantity < 1) {
+                            return _quantityInvalidText;
+                          }
+                          return null;
+                        },
                       ).build(context),
                     ),
                     SizedBox(width: LayoutTokens.gapSm),
@@ -405,7 +462,9 @@ class _DieEditPageState extends State<DieEditPage> {
                         Icons.delete_outline,
                         color: theme.colorScheme.error,
                       ),
-                      onPressed: () => _removeProductItem(index),
+                      onPressed: isConfirmed
+                          ? null
+                          : () => _removeProductItem(index),
                     ),
                   ],
                 ),
@@ -429,7 +488,7 @@ class _DieEditPageState extends State<DieEditPage> {
         Align(
           alignment: Alignment.centerLeft,
           child: PageActionButton.outlined(
-            onPressed: _addProductItem,
+            onPressed: isConfirmed ? null : _addProductItem,
             icon: const Icon(Icons.add, size: 16),
             label: _addProductText,
           ),
@@ -439,9 +498,10 @@ class _DieEditPageState extends State<DieEditPage> {
   }
 
   Widget _buildImageSection(BuildContext context) {
+    final isConfirmed = _die?.confirmed == true;
     return ImageGalleryUploadSection<DieImage>(
       images: _images,
-      canUpload: true,
+      canUpload: !isConfirmed,
       uploading: _uploadingImage,
       maxCount: _maxImageCount,
       limitHintText: '支持 JPG、PNG、WebP、GIF，单张不超过 10MB，最多 $_maxImageCount 张',
@@ -455,6 +515,10 @@ class _DieEditPageState extends State<DieEditPage> {
   }
 
   Future<void> _pickAndUploadImage(DieViewModel viewModel) async {
+    if (_die?.confirmed == true) {
+      ToastUtil.showError('已确认的刀模不允许修改图片');
+      return;
+    }
     if (_images.length >= _maxImageCount) {
       ToastUtil.showError('图片最多上传 $_maxImageCount 张');
       return;
@@ -490,6 +554,10 @@ class _DieEditPageState extends State<DieEditPage> {
   Future<void> _removeImage(DieViewModel viewModel, DieImage image) async {
     final die = _die;
     if (die == null) return;
+    if (die.confirmed) {
+      ToastUtil.showError('已确认的刀模不允许修改图片');
+      return;
+    }
     try {
       await viewModel.deleteDieImage(die.id, image.id);
       if (mounted) {
@@ -523,6 +591,12 @@ class _DieEditPageState extends State<DieEditPage> {
                 controller: _codeController,
                 enabled: !isConfirmed,
                 hintText: '留空则系统自动生成',
+                validator: (value) {
+                  if ((value?.trim().length ?? 0) > 50) {
+                    return _codeLengthText;
+                  }
+                  return null;
+                },
               ),
               CrudFieldConfig.text(
                 label: _nameLabel,
@@ -532,6 +606,9 @@ class _DieEditPageState extends State<DieEditPage> {
                   final text = value?.trim() ?? '';
                   if (text.isEmpty) {
                     return _nameRequiredText;
+                  }
+                  if (text.length > 200) {
+                    return _nameLengthText;
                   }
                   return null;
                 },
@@ -556,6 +633,12 @@ class _DieEditPageState extends State<DieEditPage> {
                 label: _sizeLabel,
                 controller: _sizeController,
                 enabled: !isConfirmed,
+                validator: (value) {
+                  if ((value?.trim().length ?? 0) > 100) {
+                    return _sizeLengthText;
+                  }
+                  return null;
+                },
               ),
             ],
           ),
@@ -567,11 +650,23 @@ class _DieEditPageState extends State<DieEditPage> {
                 label: _materialLabel,
                 controller: _materialController,
                 enabled: !isConfirmed,
+                validator: (value) {
+                  if ((value?.trim().length ?? 0) > 100) {
+                    return _materialLengthText;
+                  }
+                  return null;
+                },
               ),
               CrudFieldConfig.text(
                 label: _thicknessLabel,
                 controller: _thicknessController,
                 enabled: !isConfirmed,
+                validator: (value) {
+                  if ((value?.trim().length ?? 0) > 50) {
+                    return _thicknessLengthText;
+                  }
+                  return null;
+                },
               ),
               CrudFieldConfig.textarea(
                 label: _notesLabel,
@@ -583,20 +678,12 @@ class _DieEditPageState extends State<DieEditPage> {
           CrudFormSection(
             title: _productSectionTitle,
             column: 0,
-            fields: [
-              CrudFieldConfig.custom(
-                builder: _buildProductSection,
-              ),
-            ],
+            fields: [CrudFieldConfig.custom(builder: _buildProductSection)],
           ),
           CrudFormSection(
             title: _imageSectionTitle,
             column: 0,
-            fields: [
-              CrudFieldConfig.custom(
-                builder: _buildImageSection,
-              ),
-            ],
+            fields: [CrudFieldConfig.custom(builder: _buildImageSection)],
           ),
         ],
         onSave: (context, viewModel, item) => _handleSubmit(viewModel),
@@ -607,7 +694,7 @@ class _DieEditPageState extends State<DieEditPage> {
 
 class _DieProductItem {
   _DieProductItem({this.productId, int quantity = 1})
-      : quantityController = TextEditingController(text: quantity.toString());
+    : quantityController = TextEditingController(text: quantity.toString());
 
   int? productId;
   final TextEditingController quantityController;
