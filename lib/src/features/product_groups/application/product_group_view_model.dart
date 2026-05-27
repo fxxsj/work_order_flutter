@@ -7,12 +7,29 @@ class ProductGroupViewModel extends PaginatedViewModel<ProductGroup> {
 
   final ProductGroupRepository _repository;
 
+  bool? _isActive;
+  String? _ordering;
+
   List<ProductGroup> get productGroups => items;
+
+  bool? get isActive => _isActive;
+
+  String? get ordering => _ordering;
 
   Future<void> initialize() => loadItems(resetPage: true);
 
   Future<void> loadProductGroups({bool resetPage = false}) =>
       loadItems(resetPage: resetPage);
+
+  void setIsActive(bool? value) {
+    _isActive = value;
+    loadItems(resetPage: true);
+  }
+
+  void setOrdering(String? value) {
+    _ordering = value;
+    loadItems(resetPage: true);
+  }
 
   Future<void> createProductGroup(ProductGroup group) async {
     await _repository.createProductGroup(group);
@@ -38,6 +55,8 @@ class ProductGroupViewModel extends PaginatedViewModel<ProductGroup> {
       page: page,
       pageSize: pageSize,
       search: search,
+      isActive: _isActive,
+      ordering: _ordering,
     );
     return result;
   }

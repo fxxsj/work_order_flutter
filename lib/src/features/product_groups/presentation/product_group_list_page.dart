@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
@@ -22,24 +23,24 @@ class ProductGroupListPage extends StatelessWidget {
 
   static const CrudListConfig<ProductGroup, ProductGroupViewModel> _config =
       CrudListConfig(
-    searchHintText: '搜索产品组名称/编码',
-    emptyText: '暂无产品组数据',
-    emptyIcon: Icons.group_work_outlined,
-    loadItems: _loadProductGroups,
-    titleBuilder: _titleText,
-    subtitleBuilder: _subtitleText,
-    summaryChipsBuilder: _summaryChips,
-    summaryFieldsBuilder: _summaryFields,
-    headerActionsBuilder: _headerActions,
-    rowActionsBuilder: _rowActions,
-    columns: [
-      CrudTableColumn(label: '产品组', cellBuilder: _buildNameCell),
-      CrudTableColumn(label: '编码', cellBuilder: _buildCodeCell),
-      CrudTableColumn(label: '状态', cellBuilder: _buildStatusCell),
-      CrudTableColumn(label: '明细数', cellBuilder: _buildItemsCountCell),
-      CrudTableColumn(label: '描述', cellBuilder: _buildDescriptionCell),
-    ],
-  );
+        searchHintText: '搜索产品组名称/编码',
+        emptyText: '暂无产品组数据',
+        emptyIcon: Icons.group_work_outlined,
+        loadItems: _loadProductGroups,
+        titleBuilder: _titleText,
+        subtitleBuilder: _subtitleText,
+        summaryChipsBuilder: _summaryChips,
+        summaryFieldsBuilder: _summaryFields,
+        headerActionsBuilder: _headerActions,
+        rowActionsBuilder: _rowActions,
+        columns: [
+          CrudTableColumn(label: '产品组', cellBuilder: _buildNameCell),
+          CrudTableColumn(label: '编码', cellBuilder: _buildCodeCell),
+          CrudTableColumn(label: '状态', cellBuilder: _buildStatusCell),
+          CrudTableColumn(label: '明细数', cellBuilder: _buildItemsCountCell),
+          CrudTableColumn(label: '描述', cellBuilder: _buildDescriptionCell),
+        ],
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -88,6 +89,58 @@ class ProductGroupListPage extends StatelessWidget {
     ProductGroupViewModel viewModel,
   ) {
     return [
+      SizedBox(
+        width: 112,
+        child: AppSelect<String>(
+          options: const [
+            AppDropdownOption(value: '', label: '全部状态'),
+            AppDropdownOption(value: 'true', label: '启用'),
+            AppDropdownOption(value: 'false', label: '停用'),
+          ],
+          value: viewModel.isActive == null
+              ? ''
+              : viewModel.isActive == true
+              ? 'true'
+              : 'false',
+          onChanged: (value) {
+            if (value == null || value.isEmpty) {
+              viewModel.setIsActive(null);
+            } else {
+              viewModel.setIsActive(value == 'true');
+            }
+          },
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
+      SizedBox(
+        width: 132,
+        child: AppSelect<String>(
+          options: const [
+            AppDropdownOption(value: 'code', label: '编码升序'),
+            AppDropdownOption(value: '-code', label: '编码降序'),
+            AppDropdownOption(value: 'name', label: '名称升序'),
+            AppDropdownOption(value: '-name', label: '名称降序'),
+            AppDropdownOption(value: '-created_at', label: '最新创建'),
+            AppDropdownOption(value: 'created_at', label: '最早创建'),
+            AppDropdownOption(value: 'is_active', label: '状态升序'),
+          ],
+          value: viewModel.ordering ?? 'code',
+          onChanged: (value) {
+            if (value != null) viewModel.setOrdering(value);
+          },
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
       PageActionButton.filled(
         onPressed: () => _openEditPage(context, viewModel, null),
         icon: const Icon(Icons.add),
@@ -141,10 +194,7 @@ class ProductGroupListPage extends StatelessWidget {
   }
 
   static Widget _buildBodyText(BuildContext context, String value) {
-    return Text(
-      value,
-      style: Theme.of(context).textTheme.bodySmall,
-    );
+    return Text(value, style: Theme.of(context).textTheme.bodySmall);
   }
 
   static String _titleText(ProductGroup group) {
@@ -179,10 +229,7 @@ class ProductGroupListPage extends StatelessWidget {
         label: '编码',
         value: CrudValueFormatter.text(group.code),
       ),
-      CrudSummaryFieldData(
-        label: '状态',
-        value: _statusText(group),
-      ),
+      CrudSummaryFieldData(label: '状态', value: _statusText(group)),
       CrudSummaryFieldData(
         label: '明细数',
         value: CrudValueFormatter.number(group.itemsCount),
@@ -190,6 +237,14 @@ class ProductGroupListPage extends StatelessWidget {
       CrudSummaryFieldData(
         label: '描述',
         value: CrudValueFormatter.text(group.description),
+      ),
+      CrudSummaryFieldData(
+        label: '创建时间',
+        value: CrudValueFormatter.dateTime(group.createdAt),
+      ),
+      CrudSummaryFieldData(
+        label: '更新时间',
+        value: CrudValueFormatter.dateTime(group.updatedAt),
       ),
     ];
   }

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ProductGroup {
 
-@JsonKey(fromJson: _intFromJson) int get id;@JsonKey(fromJson: _stringFromJson) String get code;@JsonKey(fromJson: _stringFromJson) String get name;@JsonKey(fromJson: _stringOrNullFromJson) String? get description;@JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson) bool? get isActive;@JsonKey(name: 'items_count', readValue: _readItemsCount, fromJson: _intOrNullFromJson) int? get itemsCount;
+@JsonKey(fromJson: _intFromJson) int get id;@JsonKey(fromJson: _stringFromJson) String get code;@JsonKey(fromJson: _stringFromJson) String get name;@JsonKey(fromJson: _stringOrNullFromJson) String? get description;@JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson) bool? get isActive;@JsonKey(name: 'items_count', readValue: _readItemsCount, fromJson: _intOrNullFromJson) int? get itemsCount;@JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson) DateTime? get createdAt;@JsonKey(name: 'updated_at', fromJson: _dateTimeOrNullFromJson) DateTime? get updatedAt;
 /// Create a copy of ProductGroup
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $ProductGroupCopyWith<ProductGroup> get copyWith => _$ProductGroupCopyWithImpl<P
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProductGroup&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.itemsCount, itemsCount) || other.itemsCount == itemsCount));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProductGroup&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.itemsCount, itemsCount) || other.itemsCount == itemsCount)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,code,name,description,isActive,itemsCount);
+int get hashCode => Object.hash(runtimeType,id,code,name,description,isActive,itemsCount,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'ProductGroup(id: $id, code: $code, name: $name, description: $description, isActive: $isActive, itemsCount: $itemsCount)';
+  return 'ProductGroup(id: $id, code: $code, name: $name, description: $description, isActive: $isActive, itemsCount: $itemsCount, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $ProductGroupCopyWith<$Res>  {
   factory $ProductGroupCopyWith(ProductGroup value, $Res Function(ProductGroup) _then) = _$ProductGroupCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(fromJson: _intFromJson) int id,@JsonKey(fromJson: _stringFromJson) String code,@JsonKey(fromJson: _stringFromJson) String name,@JsonKey(fromJson: _stringOrNullFromJson) String? description,@JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson) bool? isActive,@JsonKey(name: 'items_count', readValue: _readItemsCount, fromJson: _intOrNullFromJson) int? itemsCount
+@JsonKey(fromJson: _intFromJson) int id,@JsonKey(fromJson: _stringFromJson) String code,@JsonKey(fromJson: _stringFromJson) String name,@JsonKey(fromJson: _stringOrNullFromJson) String? description,@JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson) bool? isActive,@JsonKey(name: 'items_count', readValue: _readItemsCount, fromJson: _intOrNullFromJson) int? itemsCount,@JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson) DateTime? createdAt,@JsonKey(name: 'updated_at', fromJson: _dateTimeOrNullFromJson) DateTime? updatedAt
 });
 
 
@@ -65,7 +65,7 @@ class _$ProductGroupCopyWithImpl<$Res>
 
 /// Create a copy of ProductGroup
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? code = null,Object? name = null,Object? description = freezed,Object? isActive = freezed,Object? itemsCount = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? code = null,Object? name = null,Object? description = freezed,Object? isActive = freezed,Object? itemsCount = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
@@ -73,7 +73,9 @@ as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non
 as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,isActive: freezed == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
 as bool?,itemsCount: freezed == itemsCount ? _self.itemsCount : itemsCount // ignore: cast_nullable_to_non_nullable
-as int?,
+as int?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 
@@ -158,10 +160,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(fromJson: _stringFromJson)  String code, @JsonKey(fromJson: _stringFromJson)  String name, @JsonKey(fromJson: _stringOrNullFromJson)  String? description, @JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson)  bool? isActive, @JsonKey(name: 'items_count', readValue: _readItemsCount, fromJson: _intOrNullFromJson)  int? itemsCount)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(fromJson: _stringFromJson)  String code, @JsonKey(fromJson: _stringFromJson)  String name, @JsonKey(fromJson: _stringOrNullFromJson)  String? description, @JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson)  bool? isActive, @JsonKey(name: 'items_count', readValue: _readItemsCount, fromJson: _intOrNullFromJson)  int? itemsCount, @JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson)  DateTime? createdAt, @JsonKey(name: 'updated_at', fromJson: _dateTimeOrNullFromJson)  DateTime? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ProductGroup() when $default != null:
-return $default(_that.id,_that.code,_that.name,_that.description,_that.isActive,_that.itemsCount);case _:
+return $default(_that.id,_that.code,_that.name,_that.description,_that.isActive,_that.itemsCount,_that.createdAt,_that.updatedAt);case _:
   return orElse();
 
 }
@@ -179,10 +181,10 @@ return $default(_that.id,_that.code,_that.name,_that.description,_that.isActive,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(fromJson: _stringFromJson)  String code, @JsonKey(fromJson: _stringFromJson)  String name, @JsonKey(fromJson: _stringOrNullFromJson)  String? description, @JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson)  bool? isActive, @JsonKey(name: 'items_count', readValue: _readItemsCount, fromJson: _intOrNullFromJson)  int? itemsCount)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(fromJson: _stringFromJson)  String code, @JsonKey(fromJson: _stringFromJson)  String name, @JsonKey(fromJson: _stringOrNullFromJson)  String? description, @JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson)  bool? isActive, @JsonKey(name: 'items_count', readValue: _readItemsCount, fromJson: _intOrNullFromJson)  int? itemsCount, @JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson)  DateTime? createdAt, @JsonKey(name: 'updated_at', fromJson: _dateTimeOrNullFromJson)  DateTime? updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _ProductGroup():
-return $default(_that.id,_that.code,_that.name,_that.description,_that.isActive,_that.itemsCount);case _:
+return $default(_that.id,_that.code,_that.name,_that.description,_that.isActive,_that.itemsCount,_that.createdAt,_that.updatedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -199,10 +201,10 @@ return $default(_that.id,_that.code,_that.name,_that.description,_that.isActive,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(fromJson: _stringFromJson)  String code, @JsonKey(fromJson: _stringFromJson)  String name, @JsonKey(fromJson: _stringOrNullFromJson)  String? description, @JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson)  bool? isActive, @JsonKey(name: 'items_count', readValue: _readItemsCount, fromJson: _intOrNullFromJson)  int? itemsCount)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(fromJson: _stringFromJson)  String code, @JsonKey(fromJson: _stringFromJson)  String name, @JsonKey(fromJson: _stringOrNullFromJson)  String? description, @JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson)  bool? isActive, @JsonKey(name: 'items_count', readValue: _readItemsCount, fromJson: _intOrNullFromJson)  int? itemsCount, @JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson)  DateTime? createdAt, @JsonKey(name: 'updated_at', fromJson: _dateTimeOrNullFromJson)  DateTime? updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _ProductGroup() when $default != null:
-return $default(_that.id,_that.code,_that.name,_that.description,_that.isActive,_that.itemsCount);case _:
+return $default(_that.id,_that.code,_that.name,_that.description,_that.isActive,_that.itemsCount,_that.createdAt,_that.updatedAt);case _:
   return null;
 
 }
@@ -214,7 +216,7 @@ return $default(_that.id,_that.code,_that.name,_that.description,_that.isActive,
 @JsonSerializable()
 
 class _ProductGroup implements ProductGroup {
-  const _ProductGroup({@JsonKey(fromJson: _intFromJson) required this.id, @JsonKey(fromJson: _stringFromJson) required this.code, @JsonKey(fromJson: _stringFromJson) required this.name, @JsonKey(fromJson: _stringOrNullFromJson) this.description, @JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson) this.isActive, @JsonKey(name: 'items_count', readValue: _readItemsCount, fromJson: _intOrNullFromJson) this.itemsCount});
+  const _ProductGroup({@JsonKey(fromJson: _intFromJson) required this.id, @JsonKey(fromJson: _stringFromJson) required this.code, @JsonKey(fromJson: _stringFromJson) required this.name, @JsonKey(fromJson: _stringOrNullFromJson) this.description, @JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson) this.isActive, @JsonKey(name: 'items_count', readValue: _readItemsCount, fromJson: _intOrNullFromJson) this.itemsCount, @JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson) this.createdAt, @JsonKey(name: 'updated_at', fromJson: _dateTimeOrNullFromJson) this.updatedAt});
   factory _ProductGroup.fromJson(Map<String, dynamic> json) => _$ProductGroupFromJson(json);
 
 @override@JsonKey(fromJson: _intFromJson) final  int id;
@@ -223,6 +225,8 @@ class _ProductGroup implements ProductGroup {
 @override@JsonKey(fromJson: _stringOrNullFromJson) final  String? description;
 @override@JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson) final  bool? isActive;
 @override@JsonKey(name: 'items_count', readValue: _readItemsCount, fromJson: _intOrNullFromJson) final  int? itemsCount;
+@override@JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson) final  DateTime? createdAt;
+@override@JsonKey(name: 'updated_at', fromJson: _dateTimeOrNullFromJson) final  DateTime? updatedAt;
 
 /// Create a copy of ProductGroup
 /// with the given fields replaced by the non-null parameter values.
@@ -237,16 +241,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProductGroup&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.itemsCount, itemsCount) || other.itemsCount == itemsCount));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProductGroup&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.itemsCount, itemsCount) || other.itemsCount == itemsCount)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,code,name,description,isActive,itemsCount);
+int get hashCode => Object.hash(runtimeType,id,code,name,description,isActive,itemsCount,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'ProductGroup(id: $id, code: $code, name: $name, description: $description, isActive: $isActive, itemsCount: $itemsCount)';
+  return 'ProductGroup(id: $id, code: $code, name: $name, description: $description, isActive: $isActive, itemsCount: $itemsCount, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -257,7 +261,7 @@ abstract mixin class _$ProductGroupCopyWith<$Res> implements $ProductGroupCopyWi
   factory _$ProductGroupCopyWith(_ProductGroup value, $Res Function(_ProductGroup) _then) = __$ProductGroupCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(fromJson: _intFromJson) int id,@JsonKey(fromJson: _stringFromJson) String code,@JsonKey(fromJson: _stringFromJson) String name,@JsonKey(fromJson: _stringOrNullFromJson) String? description,@JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson) bool? isActive,@JsonKey(name: 'items_count', readValue: _readItemsCount, fromJson: _intOrNullFromJson) int? itemsCount
+@JsonKey(fromJson: _intFromJson) int id,@JsonKey(fromJson: _stringFromJson) String code,@JsonKey(fromJson: _stringFromJson) String name,@JsonKey(fromJson: _stringOrNullFromJson) String? description,@JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson) bool? isActive,@JsonKey(name: 'items_count', readValue: _readItemsCount, fromJson: _intOrNullFromJson) int? itemsCount,@JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson) DateTime? createdAt,@JsonKey(name: 'updated_at', fromJson: _dateTimeOrNullFromJson) DateTime? updatedAt
 });
 
 
@@ -274,7 +278,7 @@ class __$ProductGroupCopyWithImpl<$Res>
 
 /// Create a copy of ProductGroup
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? code = null,Object? name = null,Object? description = freezed,Object? isActive = freezed,Object? itemsCount = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? code = null,Object? name = null,Object? description = freezed,Object? isActive = freezed,Object? itemsCount = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
   return _then(_ProductGroup(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
@@ -282,7 +286,9 @@ as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non
 as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,isActive: freezed == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
 as bool?,itemsCount: freezed == itemsCount ? _self.itemsCount : itemsCount // ignore: cast_nullable_to_non_nullable
-as int?,
+as int?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 

@@ -13,21 +13,25 @@ class ProductGroupApiService {
     int pageSize = 20,
     String? search,
     bool? isActive,
+    String? ordering,
   }) async {
-    final params = <String, dynamic>{
-      'page': page,
-      'page_size': pageSize,
-    };
+    final params = <String, dynamic>{'page': page, 'page_size': pageSize};
     if (isActive != null) {
       params['is_active'] = isActive;
+    }
+    final trimmedOrdering = ordering?.trim();
+    if (trimmedOrdering != null && trimmedOrdering.isNotEmpty) {
+      params['ordering'] = trimmedOrdering;
     }
     final trimmed = search?.trim();
     if (trimmed != null && trimmed.isNotEmpty) {
       params['search'] = trimmed;
     }
 
-    final response =
-        await _client.get('/product-groups/', queryParameters: params);
+    final response = await _client.get(
+      '/product-groups/',
+      queryParameters: params,
+    );
     final payload = response.data;
     if (payload is Map<String, dynamic>) {
       final pageData = PageData.fromPayload(
@@ -56,14 +60,18 @@ class ProductGroupApiService {
   }
 
   Future<ProductGroupDto> createProductGroup(ProductGroupDto dto) async {
-    final response =
-        await _client.post('/product-groups/', data: dto.toPayload());
+    final response = await _client.post(
+      '/product-groups/',
+      data: dto.toPayload(),
+    );
     return ProductGroupDto.fromJson(_requireMap('创建产品组', response.data));
   }
 
   Future<ProductGroupDto> updateProductGroup(ProductGroupDto dto) async {
-    final response =
-        await _client.put('/product-groups/${dto.id}/', data: dto.toPayload());
+    final response = await _client.put(
+      '/product-groups/${dto.id}/',
+      data: dto.toPayload(),
+    );
     return ProductGroupDto.fromJson(_requireMap('更新产品组', response.data));
   }
 
@@ -94,9 +102,6 @@ class ProductGroupApiService {
   }
 
   ApiException _unexpectedPayload(String label, dynamic data) {
-    return ApiException(
-      message: '$label 响应格式异常',
-      data: data,
-    );
+    return ApiException(message: '$label 响应格式异常', data: data);
   }
 }

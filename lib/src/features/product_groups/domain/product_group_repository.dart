@@ -6,6 +6,8 @@ abstract class ProductGroupRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    bool? isActive,
+    String? ordering,
   });
 
   Future<ProductGroup> createProductGroup(ProductGroup group);

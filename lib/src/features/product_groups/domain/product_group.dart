@@ -20,6 +20,10 @@ abstract class ProductGroup with _$ProductGroup {
       fromJson: _intOrNullFromJson,
     )
     int? itemsCount,
+    @JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson)
+    DateTime? createdAt,
+    @JsonKey(name: 'updated_at', fromJson: _dateTimeOrNullFromJson)
+    DateTime? updatedAt,
   }) = _ProductGroup;
 
   factory ProductGroup.fromJson(Map<String, dynamic> json) =>
@@ -38,6 +42,8 @@ bool? _boolOrNullFromJson(Object? value) {
   if (value == null) return null;
   return value == true;
 }
+
+DateTime? _dateTimeOrNullFromJson(Object? value) => toDateTime(value);
 
 Object? _readItemsCount(Map json, String key) {
   final items = json['items'];

@@ -14,6 +14,8 @@ _ProductGroup _$ProductGroupFromJson(Map<String, dynamic> json) =>
       description: _stringOrNullFromJson(json['description']),
       isActive: _boolOrNullFromJson(json['is_active']),
       itemsCount: _intOrNullFromJson(_readItemsCount(json, 'items_count')),
+      createdAt: _dateTimeOrNullFromJson(json['created_at']),
+      updatedAt: _dateTimeOrNullFromJson(json['updated_at']),
     );
 
 Map<String, dynamic> _$ProductGroupToJson(_ProductGroup instance) =>
@@ -24,4 +26,6 @@ Map<String, dynamic> _$ProductGroupToJson(_ProductGroup instance) =>
       'description': instance.description,
       'is_active': instance.isActive,
       'items_count': instance.itemsCount,
+      'created_at': instance.createdAt?.toIso8601String(),
+      'updated_at': instance.updatedAt?.toIso8601String(),
     };

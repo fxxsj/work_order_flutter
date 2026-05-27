@@ -22,10 +22,7 @@ Future<bool> showProductGroupEditDrawer(
     desktopWidth: LayoutTokens.pageWidthXwide,
     child: ChangeNotifierProvider<ProductGroupViewModel>.value(
       value: viewModel,
-      child: ProductGroupEditPage(
-        group: group,
-        onSaved: () => saved = true,
-      ),
+      child: ProductGroupEditPage(group: group, onSaved: () => saved = true),
     ),
   );
   return saved;
@@ -50,9 +47,10 @@ class _ProductGroupEditPageState extends State<ProductGroupEditPage> {
   static const String _submitText = '保存';
   static const String _submitErrorText = '操作失败: ';
   static const String _codeRequiredText = '请输入产品组编码';
-  static const String _codeLengthText = '编码长度在2-50个字符之间';
+  static const String _codeLengthText = '产品组编码不能超过50个字符';
   static const String _codeInvalidText = '编码只能包含字母、数字和连字符';
   static const String _nameRequiredText = '请输入产品组名称';
+  static const String _nameLengthText = '产品组名称不能超过200个字符';
   static const String _basicSectionTitle = '基本信息';
   static const String _extraSectionTitle = '补充信息';
 
@@ -89,6 +87,8 @@ class _ProductGroupEditPageState extends State<ProductGroupEditPage> {
       description: description.isEmpty ? null : description,
       isActive: _isActive,
       itemsCount: widget.group?.itemsCount,
+      createdAt: widget.group?.createdAt,
+      updatedAt: widget.group?.updatedAt,
     );
 
     if (widget.group == null) {
@@ -118,7 +118,7 @@ class _ProductGroupEditPageState extends State<ProductGroupEditPage> {
                 validator: (value) {
                   final text = value?.trim() ?? '';
                   if (text.isEmpty) return _codeRequiredText;
-                  if (text.length < 2 || text.length > 50) {
+                  if (text.length > 50) {
                     return _codeLengthText;
                   }
                   if (!RegExp(r'^[A-Za-z0-9-]+$').hasMatch(text)) {
@@ -133,6 +133,7 @@ class _ProductGroupEditPageState extends State<ProductGroupEditPage> {
                 validator: (value) {
                   final text = value?.trim() ?? '';
                   if (text.isEmpty) return _nameRequiredText;
+                  if (text.length > 200) return _nameLengthText;
                   return null;
                 },
               ),
