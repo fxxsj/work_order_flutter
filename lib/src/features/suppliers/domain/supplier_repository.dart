@@ -6,6 +6,8 @@ abstract class SupplierRepository {
     required int page,
     required int pageSize,
     String? search,
+    String? status,
+    String? ordering,
   });
 
   Future<void> createSupplier(Supplier supplier);

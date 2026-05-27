@@ -14,11 +14,15 @@ class SupplierRepositoryImpl implements SupplierRepository {
     required int page,
     required int pageSize,
     String? search,
+    String? status,
+    String? ordering,
   }) async {
     final response = await _api.fetchSuppliers(
       page: page,
       pageSize: pageSize,
       search: search,
+      status: status,
+      ordering: ordering,
     );
     return PageData(
       items: response.items.map((item) => item.toEntity()).toList(),

@@ -11,14 +11,22 @@ class SupplierApiService {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? status,
+    String? ordering,
   }) async {
     final trimmed = search?.trim();
+    final trimmedStatus = status?.trim();
+    final trimmedOrdering = ordering?.trim();
     final response = await _client.get(
       '/suppliers/',
       queryParameters: {
         'page': page,
         'page_size': pageSize,
         if (trimmed != null && trimmed.isNotEmpty) 'search': trimmed,
+        if (trimmedStatus != null && trimmedStatus.isNotEmpty)
+          'status': trimmedStatus,
+        if (trimmedOrdering != null && trimmedOrdering.isNotEmpty)
+          'ordering': trimmedOrdering,
       },
     );
     final payload = response.data;
@@ -26,19 +34,32 @@ class SupplierApiService {
       final results = payload['results'];
       final list = results is List
           ? results
-              .whereType<Map>()
-              .map((item) => SupplierDto.fromJson(Map<String, dynamic>.from(item)))
-              .toList()
+                .whereType<Map>()
+                .map(
+                  (item) =>
+                      SupplierDto.fromJson(Map<String, dynamic>.from(item)),
+                )
+                .toList()
           : <SupplierDto>[];
       final total = toInt(payload['count']) ?? list.length;
-      return SupplierPageDto(items: list, total: total, page: page, pageSize: pageSize);
+      return SupplierPageDto(
+        items: list,
+        total: total,
+        page: page,
+        pageSize: pageSize,
+      );
     }
     if (payload is List) {
       final list = payload
           .whereType<Map>()
           .map((item) => SupplierDto.fromJson(Map<String, dynamic>.from(item)))
           .toList();
-      return SupplierPageDto(items: list, total: list.length, page: 1, pageSize: list.length);
+      return SupplierPageDto(
+        items: list,
+        total: list.length,
+        page: 1,
+        pageSize: list.length,
+      );
     }
     return const SupplierPageDto(items: [], total: 0, page: 1, pageSize: 20);
   }
@@ -46,14 +67,21 @@ class SupplierApiService {
   Future<SupplierDto> createSupplier(SupplierDto dto) async {
     final response = await _client.post('/suppliers/', data: dto.toPayload());
     final payload = response.data;
-    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    final map = payload is Map
+        ? Map<String, dynamic>.from(payload)
+        : <String, dynamic>{};
     return SupplierDto.fromJson(map);
   }
 
   Future<SupplierDto> updateSupplier(SupplierDto dto) async {
-    final response = await _client.put('/suppliers/${dto.id}/', data: dto.toPayload());
+    final response = await _client.put(
+      '/suppliers/${dto.id}/',
+      data: dto.toPayload(),
+    );
     final payload = response.data;
-    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    final map = payload is Map
+        ? Map<String, dynamic>.from(payload)
+        : <String, dynamic>{};
     return SupplierDto.fromJson(map);
   }
 

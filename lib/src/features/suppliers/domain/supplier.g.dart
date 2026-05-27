@@ -18,6 +18,8 @@ _Supplier _$SupplierFromJson(Map<String, dynamic> json) => _Supplier(
   statusDisplay: _stringOrNullFromJson(json['status_display']),
   materialCount: _intOrNullFromJson(json['material_count']),
   notes: _stringOrNullFromJson(json['notes']),
+  createdAt: _dateTimeOrNullFromJson(json['createdAt']),
+  updatedAt: _dateTimeOrNullFromJson(json['updatedAt']),
 );
 
 Map<String, dynamic> _$SupplierToJson(_Supplier instance) => <String, dynamic>{
@@ -32,4 +34,6 @@ Map<String, dynamic> _$SupplierToJson(_Supplier instance) => <String, dynamic>{
   'status_display': instance.statusDisplay,
   'material_count': instance.materialCount,
   'notes': instance.notes,
+  'createdAt': _dateTimeOrNullToJson(instance.createdAt),
+  'updatedAt': _dateTimeOrNullToJson(instance.updatedAt),
 };

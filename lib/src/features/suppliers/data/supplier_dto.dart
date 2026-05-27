@@ -1,4 +1,5 @@
 import 'package:work_order_app/src/features/suppliers/domain/supplier.dart';
+import 'package:work_order_app/src/core/utils/parse_utils.dart';
 
 /// 供应商数据传输对象。
 class SupplierDto {
@@ -14,6 +15,8 @@ class SupplierDto {
     this.statusDisplay,
     this.materialCount,
     this.notes,
+    this.createdAt,
+    this.updatedAt,
   });
 
   final int id;
@@ -27,9 +30,25 @@ class SupplierDto {
   final String? statusDisplay;
   final int? materialCount;
   final String? notes;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   factory SupplierDto.fromJson(Map<String, dynamic> json) {
-    return SupplierDto.fromEntity(Supplier.fromJson(json));
+    return SupplierDto(
+      id: toInt(json['id']) ?? 0,
+      name: json['name']?.toString() ?? '',
+      code: toStringOrNull(json['code']),
+      contactPerson: toStringOrNull(json['contact_person']),
+      phone: toStringOrNull(json['phone']),
+      email: toStringOrNull(json['email']),
+      address: toStringOrNull(json['address']),
+      status: toStringOrNull(json['status']),
+      statusDisplay: toStringOrNull(json['status_display']),
+      materialCount: toInt(json['material_count']),
+      notes: toStringOrNull(json['notes']),
+      createdAt: toDateTime(json['created_at']),
+      updatedAt: toDateTime(json['updated_at']),
+    );
   }
 
   factory SupplierDto.fromEntity(Supplier entity) {
@@ -45,6 +64,8 @@ class SupplierDto {
       statusDisplay: entity.statusDisplay,
       materialCount: entity.materialCount,
       notes: entity.notes,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
     );
   }
 
@@ -61,6 +82,8 @@ class SupplierDto {
       statusDisplay: statusDisplay,
       materialCount: materialCount,
       notes: notes,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
     );
   }
 

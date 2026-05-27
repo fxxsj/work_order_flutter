@@ -23,10 +23,7 @@ Future<bool> showSupplierEditDrawer(
     desktopWidth: LayoutTokens.pageWidthXwide,
     child: ChangeNotifierProvider<SupplierViewModel>.value(
       value: viewModel,
-      child: SupplierEditPage(
-        supplier: supplier,
-        onSaved: () => saved = true,
-      ),
+      child: SupplierEditPage(supplier: supplier, onSaved: () => saved = true),
     ),
   );
   return saved;
@@ -60,9 +57,10 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
   static const String _submitErrorText = '操作失败: ';
   static const String _codeRequiredText = '请输入供应商编码';
   static const String _codeLengthText = '编码长度在2-50个字符之间';
-  static const String _codeInvalidText = '编码只能包含字母、数字和连字符';
+  static const String _codeInvalidText = '编码只能包含中文、字母、数字和连字符';
   static const String _nameRequiredText = '请输入供应商名称';
-  static const String _phoneInvalidText = '请输入正确的联系电话';
+  static const String _nameLengthText = '供应商名称不能超过200个字符';
+  static const String _phoneInvalidText = '请输入正确的联系电话（手机号或座机号）';
   static const String _emailInvalidText = '请输入正确的邮箱地址';
   static const String _basicSectionTitle = '基本信息';
   static const String _contactSectionTitle = '联系信息';
@@ -84,8 +82,9 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
     final supplier = widget.supplier;
     _codeController = TextEditingController(text: supplier?.code ?? '');
     _nameController = TextEditingController(text: supplier?.name ?? '');
-    _contactController =
-        TextEditingController(text: supplier?.contactPerson ?? '');
+    _contactController = TextEditingController(
+      text: supplier?.contactPerson ?? '',
+    );
     _phoneController = TextEditingController(text: supplier?.phone ?? '');
     _emailController = TextEditingController(text: supplier?.email ?? '');
     _addressController = TextEditingController(text: supplier?.address ?? '');
@@ -118,6 +117,8 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
       notes: _notesController.text.trim(),
       statusDisplay: widget.supplier?.statusDisplay,
       materialCount: widget.supplier?.materialCount,
+      createdAt: widget.supplier?.createdAt,
+      updatedAt: widget.supplier?.updatedAt,
     );
 
     if (widget.supplier == null) {
@@ -149,7 +150,7 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
                   FormValidators.required(_codeRequiredText),
                   FormValidators.lengthRange(2, 50, _codeLengthText),
                   FormValidators.pattern(
-                    RegExp(r'^[A-Za-z0-9-]+$'),
+                    RegExp(r'^[\u4e00-\u9fa5A-Za-z0-9-]+$'),
                     _codeInvalidText,
                   ),
                 ]),
@@ -157,7 +158,10 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
               CrudFieldConfig.text(
                 label: _nameLabel,
                 controller: _nameController,
-                validator: FormValidators.required(_nameRequiredText),
+                validator: FormValidators.compose<String>([
+                  FormValidators.required(_nameRequiredText),
+                  FormValidators.maxLength(200, _nameLengthText),
+                ]),
               ),
             ],
           ),
@@ -172,7 +176,10 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
               CrudFieldConfig.phone(
                 label: _phoneLabel,
                 controller: _phoneController,
-                validator: FormValidators.phone(_phoneInvalidText),
+                validator: FormValidators.pattern(
+                  RegExp(r'^(1[3-9]\d{9}|0\d{2,3}-?\d{7,8})$'),
+                  _phoneInvalidText,
+                ),
               ),
               CrudFieldConfig.email(
                 label: _emailLabel,

@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_detail_page.dart';
+import 'package:work_order_app/src/core/utils/extensions/datetime_extensions.dart';
 import 'package:work_order_app/src/features/suppliers/domain/supplier.dart';
 
 class SupplierDetailPage extends StatelessWidget {
-  const SupplierDetailPage({
-    super.key,
-    required this.supplier,
-  });
+  const SupplierDetailPage({super.key, required this.supplier});
 
   final Supplier supplier;
 
@@ -47,8 +45,14 @@ class SupplierDetailPage extends StatelessWidget {
           CrudDetailSection(
             title: '补充信息',
             column: isMobile ? 0 : 1,
+            items: [CrudDetailItem(label: '备注', value: item.notes)],
+          ),
+          CrudDetailSection(
+            title: '系统信息',
+            column: isMobile ? 0 : 1,
             items: [
-              CrudDetailItem(label: '备注', value: item.notes),
+              CrudDetailItem(label: '创建时间', value: item.createdAt.toYMDHM),
+              CrudDetailItem(label: '更新时间', value: item.updatedAt.toYMDHM),
             ],
           ),
         ],

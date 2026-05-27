@@ -23,6 +23,10 @@ abstract class Supplier with _$Supplier {
     @JsonKey(name: 'material_count', fromJson: _intOrNullFromJson)
     int? materialCount,
     @JsonKey(fromJson: _stringOrNullFromJson) String? notes,
+    @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson)
+    DateTime? createdAt,
+    @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson)
+    DateTime? updatedAt,
   }) = _Supplier;
 
   factory Supplier.fromJson(Map<String, dynamic> json) =>
@@ -36,3 +40,7 @@ int? _intOrNullFromJson(Object? value) => toInt(value);
 String _stringFromJson(Object? value) => value?.toString() ?? '';
 
 String? _stringOrNullFromJson(Object? value) => toStringOrNull(value);
+
+DateTime? _dateTimeOrNullFromJson(Object? value) => toDateTime(value);
+
+String? _dateTimeOrNullToJson(DateTime? value) => value?.toIso8601String();

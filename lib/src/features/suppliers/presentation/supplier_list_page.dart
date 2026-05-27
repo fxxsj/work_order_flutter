@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
@@ -21,8 +22,11 @@ class SupplierListEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FeatureEntry<SupplierApiService, SupplierRepository,
-        SupplierViewModel>(
+    return FeatureEntry<
+      SupplierApiService,
+      SupplierRepository,
+      SupplierViewModel
+    >(
       createService: (context) => SupplierApiService(context.read<ApiClient>()),
       createRepository: (context) =>
           SupplierRepositoryImpl(context.read<SupplierApiService>()),
@@ -49,25 +53,25 @@ class SupplierListPage extends StatelessWidget {
 
   static const CrudListConfig<Supplier, SupplierViewModel> _config =
       CrudListConfig(
-    searchHintText: '搜索供应商名称/编码',
-    emptyText: '暂无供应商数据',
-    emptyIcon: Icons.storefront_outlined,
-    loadItems: _loadSuppliers,
-    titleBuilder: _titleText,
-    subtitleBuilder: _subtitleText,
-    summaryChipsBuilder: _summaryChips,
-    summaryFieldsBuilder: _summaryFields,
-    headerActionsBuilder: _headerActions,
-    rowActionsBuilder: _rowActions,
-    columns: [
-      CrudTableColumn(label: '供应商', cellBuilder: _buildNameCell),
-      CrudTableColumn(label: '编码', cellBuilder: _buildCodeCell),
-      CrudTableColumn(label: '联系人', cellBuilder: _buildContactCell),
-      CrudTableColumn(label: '电话', cellBuilder: _buildPhoneCell),
-      CrudTableColumn(label: '状态', cellBuilder: _buildStatusCell),
-      CrudTableColumn(label: '物料数', cellBuilder: _buildMaterialCountCell),
-    ],
-  );
+        searchHintText: '搜索供应商名称/编码',
+        emptyText: '暂无供应商数据',
+        emptyIcon: Icons.storefront_outlined,
+        loadItems: _loadSuppliers,
+        titleBuilder: _titleText,
+        subtitleBuilder: _subtitleText,
+        summaryChipsBuilder: _summaryChips,
+        summaryFieldsBuilder: _summaryFields,
+        headerActionsBuilder: _headerActions,
+        rowActionsBuilder: _rowActions,
+        columns: [
+          CrudTableColumn(label: '供应商', cellBuilder: _buildNameCell),
+          CrudTableColumn(label: '编码', cellBuilder: _buildCodeCell),
+          CrudTableColumn(label: '联系人', cellBuilder: _buildContactCell),
+          CrudTableColumn(label: '电话', cellBuilder: _buildPhoneCell),
+          CrudTableColumn(label: '状态', cellBuilder: _buildStatusCell),
+          CrudTableColumn(label: '物料数', cellBuilder: _buildMaterialCountCell),
+        ],
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -109,10 +113,7 @@ class SupplierListPage extends StatelessWidget {
     );
   }
 
-  static Future<void> _openDetailPage(
-    BuildContext context,
-    Supplier supplier,
-  ) {
+  static Future<void> _openDetailPage(BuildContext context, Supplier supplier) {
     return context.pushNamed<void>(
       'suppliers_detail',
       pathParameters: {'id': supplier.id.toString()},
@@ -125,6 +126,47 @@ class SupplierListPage extends StatelessWidget {
     SupplierViewModel viewModel,
   ) {
     return [
+      SizedBox(
+        width: 112,
+        child: AppSelect<String>(
+          options: const [
+            AppDropdownOption(value: '', label: '全部状态'),
+            AppDropdownOption(value: 'active', label: '启用'),
+            AppDropdownOption(value: 'inactive', label: '停用'),
+          ],
+          value: viewModel.status ?? '',
+          onChanged: (value) =>
+              viewModel.setStatus(value?.isEmpty ?? true ? null : value),
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
+      SizedBox(
+        width: 132,
+        child: AppSelect<String>(
+          options: const [
+            AppDropdownOption(value: '-created_at', label: '最新创建'),
+            AppDropdownOption(value: 'code', label: '编码升序'),
+            AppDropdownOption(value: '-code', label: '编码降序'),
+            AppDropdownOption(value: 'name', label: '名称升序'),
+            AppDropdownOption(value: '-name', label: '名称降序'),
+          ],
+          value: viewModel.ordering ?? '-created_at',
+          onChanged: (value) {
+            if (value != null) viewModel.setOrdering(value);
+          },
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
       PageActionButton.filled(
         onPressed: () => _openEditPage(context, viewModel, null),
         icon: const Icon(Icons.add),
@@ -182,7 +224,9 @@ class SupplierListPage extends StatelessWidget {
   }
 
   static Widget _buildMaterialCountCell(
-      BuildContext context, Supplier supplier) {
+    BuildContext context,
+    Supplier supplier,
+  ) {
     return _buildBodyText(
       context,
       CrudValueFormatter.number(supplier.materialCount),
@@ -190,10 +234,7 @@ class SupplierListPage extends StatelessWidget {
   }
 
   static Widget _buildBodyText(BuildContext context, String value) {
-    return Text(
-      value,
-      style: Theme.of(context).textTheme.bodySmall,
-    );
+    return Text(value, style: Theme.of(context).textTheme.bodySmall);
   }
 
   static String _titleText(Supplier supplier) {
@@ -233,10 +274,7 @@ class SupplierListPage extends StatelessWidget {
         label: '邮箱',
         value: CrudValueFormatter.text(supplier.email),
       ),
-      CrudSummaryFieldData(
-        label: '状态',
-        value: _statusText(supplier),
-      ),
+      CrudSummaryFieldData(label: '状态', value: _statusText(supplier)),
       CrudSummaryFieldData(
         label: '供应物料数',
         value: CrudValueFormatter.number(supplier.materialCount),

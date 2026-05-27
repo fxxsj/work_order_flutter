@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Supplier {
 
-@JsonKey(fromJson: _intFromJson) int get id;@JsonKey(fromJson: _stringFromJson) String get name;@JsonKey(fromJson: _stringOrNullFromJson) String? get code;@JsonKey(name: 'contact_person', fromJson: _stringOrNullFromJson) String? get contactPerson;@JsonKey(fromJson: _stringOrNullFromJson) String? get phone;@JsonKey(fromJson: _stringOrNullFromJson) String? get email;@JsonKey(fromJson: _stringOrNullFromJson) String? get address;@JsonKey(fromJson: _stringOrNullFromJson) String? get status;@JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson) String? get statusDisplay;@JsonKey(name: 'material_count', fromJson: _intOrNullFromJson) int? get materialCount;@JsonKey(fromJson: _stringOrNullFromJson) String? get notes;
+@JsonKey(fromJson: _intFromJson) int get id;@JsonKey(fromJson: _stringFromJson) String get name;@JsonKey(fromJson: _stringOrNullFromJson) String? get code;@JsonKey(name: 'contact_person', fromJson: _stringOrNullFromJson) String? get contactPerson;@JsonKey(fromJson: _stringOrNullFromJson) String? get phone;@JsonKey(fromJson: _stringOrNullFromJson) String? get email;@JsonKey(fromJson: _stringOrNullFromJson) String? get address;@JsonKey(fromJson: _stringOrNullFromJson) String? get status;@JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson) String? get statusDisplay;@JsonKey(name: 'material_count', fromJson: _intOrNullFromJson) int? get materialCount;@JsonKey(fromJson: _stringOrNullFromJson) String? get notes;@JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) DateTime? get createdAt;@JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) DateTime? get updatedAt;
 /// Create a copy of Supplier
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $SupplierCopyWith<Supplier> get copyWith => _$SupplierCopyWithImpl<Supplier>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Supplier&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.code, code) || other.code == code)&&(identical(other.contactPerson, contactPerson) || other.contactPerson == contactPerson)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.email, email) || other.email == email)&&(identical(other.address, address) || other.address == address)&&(identical(other.status, status) || other.status == status)&&(identical(other.statusDisplay, statusDisplay) || other.statusDisplay == statusDisplay)&&(identical(other.materialCount, materialCount) || other.materialCount == materialCount)&&(identical(other.notes, notes) || other.notes == notes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Supplier&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.code, code) || other.code == code)&&(identical(other.contactPerson, contactPerson) || other.contactPerson == contactPerson)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.email, email) || other.email == email)&&(identical(other.address, address) || other.address == address)&&(identical(other.status, status) || other.status == status)&&(identical(other.statusDisplay, statusDisplay) || other.statusDisplay == statusDisplay)&&(identical(other.materialCount, materialCount) || other.materialCount == materialCount)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,code,contactPerson,phone,email,address,status,statusDisplay,materialCount,notes);
+int get hashCode => Object.hash(runtimeType,id,name,code,contactPerson,phone,email,address,status,statusDisplay,materialCount,notes,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'Supplier(id: $id, name: $name, code: $code, contactPerson: $contactPerson, phone: $phone, email: $email, address: $address, status: $status, statusDisplay: $statusDisplay, materialCount: $materialCount, notes: $notes)';
+  return 'Supplier(id: $id, name: $name, code: $code, contactPerson: $contactPerson, phone: $phone, email: $email, address: $address, status: $status, statusDisplay: $statusDisplay, materialCount: $materialCount, notes: $notes, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $SupplierCopyWith<$Res>  {
   factory $SupplierCopyWith(Supplier value, $Res Function(Supplier) _then) = _$SupplierCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(fromJson: _intFromJson) int id,@JsonKey(fromJson: _stringFromJson) String name,@JsonKey(fromJson: _stringOrNullFromJson) String? code,@JsonKey(name: 'contact_person', fromJson: _stringOrNullFromJson) String? contactPerson,@JsonKey(fromJson: _stringOrNullFromJson) String? phone,@JsonKey(fromJson: _stringOrNullFromJson) String? email,@JsonKey(fromJson: _stringOrNullFromJson) String? address,@JsonKey(fromJson: _stringOrNullFromJson) String? status,@JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson) String? statusDisplay,@JsonKey(name: 'material_count', fromJson: _intOrNullFromJson) int? materialCount,@JsonKey(fromJson: _stringOrNullFromJson) String? notes
+@JsonKey(fromJson: _intFromJson) int id,@JsonKey(fromJson: _stringFromJson) String name,@JsonKey(fromJson: _stringOrNullFromJson) String? code,@JsonKey(name: 'contact_person', fromJson: _stringOrNullFromJson) String? contactPerson,@JsonKey(fromJson: _stringOrNullFromJson) String? phone,@JsonKey(fromJson: _stringOrNullFromJson) String? email,@JsonKey(fromJson: _stringOrNullFromJson) String? address,@JsonKey(fromJson: _stringOrNullFromJson) String? status,@JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson) String? statusDisplay,@JsonKey(name: 'material_count', fromJson: _intOrNullFromJson) int? materialCount,@JsonKey(fromJson: _stringOrNullFromJson) String? notes,@JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) DateTime? createdAt,@JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) DateTime? updatedAt
 });
 
 
@@ -65,7 +65,7 @@ class _$SupplierCopyWithImpl<$Res>
 
 /// Create a copy of Supplier
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? code = freezed,Object? contactPerson = freezed,Object? phone = freezed,Object? email = freezed,Object? address = freezed,Object? status = freezed,Object? statusDisplay = freezed,Object? materialCount = freezed,Object? notes = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? code = freezed,Object? contactPerson = freezed,Object? phone = freezed,Object? email = freezed,Object? address = freezed,Object? status = freezed,Object? statusDisplay = freezed,Object? materialCount = freezed,Object? notes = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -78,7 +78,9 @@ as String?,status: freezed == status ? _self.status : status // ignore: cast_nul
 as String?,statusDisplay: freezed == statusDisplay ? _self.statusDisplay : statusDisplay // ignore: cast_nullable_to_non_nullable
 as String?,materialCount: freezed == materialCount ? _self.materialCount : materialCount // ignore: cast_nullable_to_non_nullable
 as int?,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 
@@ -163,10 +165,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(fromJson: _stringFromJson)  String name, @JsonKey(fromJson: _stringOrNullFromJson)  String? code, @JsonKey(name: 'contact_person', fromJson: _stringOrNullFromJson)  String? contactPerson, @JsonKey(fromJson: _stringOrNullFromJson)  String? phone, @JsonKey(fromJson: _stringOrNullFromJson)  String? email, @JsonKey(fromJson: _stringOrNullFromJson)  String? address, @JsonKey(fromJson: _stringOrNullFromJson)  String? status, @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)  String? statusDisplay, @JsonKey(name: 'material_count', fromJson: _intOrNullFromJson)  int? materialCount, @JsonKey(fromJson: _stringOrNullFromJson)  String? notes)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(fromJson: _stringFromJson)  String name, @JsonKey(fromJson: _stringOrNullFromJson)  String? code, @JsonKey(name: 'contact_person', fromJson: _stringOrNullFromJson)  String? contactPerson, @JsonKey(fromJson: _stringOrNullFromJson)  String? phone, @JsonKey(fromJson: _stringOrNullFromJson)  String? email, @JsonKey(fromJson: _stringOrNullFromJson)  String? address, @JsonKey(fromJson: _stringOrNullFromJson)  String? status, @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)  String? statusDisplay, @JsonKey(name: 'material_count', fromJson: _intOrNullFromJson)  int? materialCount, @JsonKey(fromJson: _stringOrNullFromJson)  String? notes, @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson)  DateTime? createdAt, @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson)  DateTime? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Supplier() when $default != null:
-return $default(_that.id,_that.name,_that.code,_that.contactPerson,_that.phone,_that.email,_that.address,_that.status,_that.statusDisplay,_that.materialCount,_that.notes);case _:
+return $default(_that.id,_that.name,_that.code,_that.contactPerson,_that.phone,_that.email,_that.address,_that.status,_that.statusDisplay,_that.materialCount,_that.notes,_that.createdAt,_that.updatedAt);case _:
   return orElse();
 
 }
@@ -184,10 +186,10 @@ return $default(_that.id,_that.name,_that.code,_that.contactPerson,_that.phone,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(fromJson: _stringFromJson)  String name, @JsonKey(fromJson: _stringOrNullFromJson)  String? code, @JsonKey(name: 'contact_person', fromJson: _stringOrNullFromJson)  String? contactPerson, @JsonKey(fromJson: _stringOrNullFromJson)  String? phone, @JsonKey(fromJson: _stringOrNullFromJson)  String? email, @JsonKey(fromJson: _stringOrNullFromJson)  String? address, @JsonKey(fromJson: _stringOrNullFromJson)  String? status, @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)  String? statusDisplay, @JsonKey(name: 'material_count', fromJson: _intOrNullFromJson)  int? materialCount, @JsonKey(fromJson: _stringOrNullFromJson)  String? notes)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(fromJson: _stringFromJson)  String name, @JsonKey(fromJson: _stringOrNullFromJson)  String? code, @JsonKey(name: 'contact_person', fromJson: _stringOrNullFromJson)  String? contactPerson, @JsonKey(fromJson: _stringOrNullFromJson)  String? phone, @JsonKey(fromJson: _stringOrNullFromJson)  String? email, @JsonKey(fromJson: _stringOrNullFromJson)  String? address, @JsonKey(fromJson: _stringOrNullFromJson)  String? status, @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)  String? statusDisplay, @JsonKey(name: 'material_count', fromJson: _intOrNullFromJson)  int? materialCount, @JsonKey(fromJson: _stringOrNullFromJson)  String? notes, @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson)  DateTime? createdAt, @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson)  DateTime? updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _Supplier():
-return $default(_that.id,_that.name,_that.code,_that.contactPerson,_that.phone,_that.email,_that.address,_that.status,_that.statusDisplay,_that.materialCount,_that.notes);case _:
+return $default(_that.id,_that.name,_that.code,_that.contactPerson,_that.phone,_that.email,_that.address,_that.status,_that.statusDisplay,_that.materialCount,_that.notes,_that.createdAt,_that.updatedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -204,10 +206,10 @@ return $default(_that.id,_that.name,_that.code,_that.contactPerson,_that.phone,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(fromJson: _stringFromJson)  String name, @JsonKey(fromJson: _stringOrNullFromJson)  String? code, @JsonKey(name: 'contact_person', fromJson: _stringOrNullFromJson)  String? contactPerson, @JsonKey(fromJson: _stringOrNullFromJson)  String? phone, @JsonKey(fromJson: _stringOrNullFromJson)  String? email, @JsonKey(fromJson: _stringOrNullFromJson)  String? address, @JsonKey(fromJson: _stringOrNullFromJson)  String? status, @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)  String? statusDisplay, @JsonKey(name: 'material_count', fromJson: _intOrNullFromJson)  int? materialCount, @JsonKey(fromJson: _stringOrNullFromJson)  String? notes)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(fromJson: _stringFromJson)  String name, @JsonKey(fromJson: _stringOrNullFromJson)  String? code, @JsonKey(name: 'contact_person', fromJson: _stringOrNullFromJson)  String? contactPerson, @JsonKey(fromJson: _stringOrNullFromJson)  String? phone, @JsonKey(fromJson: _stringOrNullFromJson)  String? email, @JsonKey(fromJson: _stringOrNullFromJson)  String? address, @JsonKey(fromJson: _stringOrNullFromJson)  String? status, @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)  String? statusDisplay, @JsonKey(name: 'material_count', fromJson: _intOrNullFromJson)  int? materialCount, @JsonKey(fromJson: _stringOrNullFromJson)  String? notes, @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson)  DateTime? createdAt, @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson)  DateTime? updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _Supplier() when $default != null:
-return $default(_that.id,_that.name,_that.code,_that.contactPerson,_that.phone,_that.email,_that.address,_that.status,_that.statusDisplay,_that.materialCount,_that.notes);case _:
+return $default(_that.id,_that.name,_that.code,_that.contactPerson,_that.phone,_that.email,_that.address,_that.status,_that.statusDisplay,_that.materialCount,_that.notes,_that.createdAt,_that.updatedAt);case _:
   return null;
 
 }
@@ -219,7 +221,7 @@ return $default(_that.id,_that.name,_that.code,_that.contactPerson,_that.phone,_
 @JsonSerializable()
 
 class _Supplier implements Supplier {
-  const _Supplier({@JsonKey(fromJson: _intFromJson) required this.id, @JsonKey(fromJson: _stringFromJson) required this.name, @JsonKey(fromJson: _stringOrNullFromJson) this.code, @JsonKey(name: 'contact_person', fromJson: _stringOrNullFromJson) this.contactPerson, @JsonKey(fromJson: _stringOrNullFromJson) this.phone, @JsonKey(fromJson: _stringOrNullFromJson) this.email, @JsonKey(fromJson: _stringOrNullFromJson) this.address, @JsonKey(fromJson: _stringOrNullFromJson) this.status, @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson) this.statusDisplay, @JsonKey(name: 'material_count', fromJson: _intOrNullFromJson) this.materialCount, @JsonKey(fromJson: _stringOrNullFromJson) this.notes});
+  const _Supplier({@JsonKey(fromJson: _intFromJson) required this.id, @JsonKey(fromJson: _stringFromJson) required this.name, @JsonKey(fromJson: _stringOrNullFromJson) this.code, @JsonKey(name: 'contact_person', fromJson: _stringOrNullFromJson) this.contactPerson, @JsonKey(fromJson: _stringOrNullFromJson) this.phone, @JsonKey(fromJson: _stringOrNullFromJson) this.email, @JsonKey(fromJson: _stringOrNullFromJson) this.address, @JsonKey(fromJson: _stringOrNullFromJson) this.status, @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson) this.statusDisplay, @JsonKey(name: 'material_count', fromJson: _intOrNullFromJson) this.materialCount, @JsonKey(fromJson: _stringOrNullFromJson) this.notes, @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) this.createdAt, @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) this.updatedAt});
   factory _Supplier.fromJson(Map<String, dynamic> json) => _$SupplierFromJson(json);
 
 @override@JsonKey(fromJson: _intFromJson) final  int id;
@@ -233,6 +235,8 @@ class _Supplier implements Supplier {
 @override@JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson) final  String? statusDisplay;
 @override@JsonKey(name: 'material_count', fromJson: _intOrNullFromJson) final  int? materialCount;
 @override@JsonKey(fromJson: _stringOrNullFromJson) final  String? notes;
+@override@JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) final  DateTime? createdAt;
+@override@JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) final  DateTime? updatedAt;
 
 /// Create a copy of Supplier
 /// with the given fields replaced by the non-null parameter values.
@@ -247,16 +251,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Supplier&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.code, code) || other.code == code)&&(identical(other.contactPerson, contactPerson) || other.contactPerson == contactPerson)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.email, email) || other.email == email)&&(identical(other.address, address) || other.address == address)&&(identical(other.status, status) || other.status == status)&&(identical(other.statusDisplay, statusDisplay) || other.statusDisplay == statusDisplay)&&(identical(other.materialCount, materialCount) || other.materialCount == materialCount)&&(identical(other.notes, notes) || other.notes == notes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Supplier&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.code, code) || other.code == code)&&(identical(other.contactPerson, contactPerson) || other.contactPerson == contactPerson)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.email, email) || other.email == email)&&(identical(other.address, address) || other.address == address)&&(identical(other.status, status) || other.status == status)&&(identical(other.statusDisplay, statusDisplay) || other.statusDisplay == statusDisplay)&&(identical(other.materialCount, materialCount) || other.materialCount == materialCount)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,code,contactPerson,phone,email,address,status,statusDisplay,materialCount,notes);
+int get hashCode => Object.hash(runtimeType,id,name,code,contactPerson,phone,email,address,status,statusDisplay,materialCount,notes,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'Supplier(id: $id, name: $name, code: $code, contactPerson: $contactPerson, phone: $phone, email: $email, address: $address, status: $status, statusDisplay: $statusDisplay, materialCount: $materialCount, notes: $notes)';
+  return 'Supplier(id: $id, name: $name, code: $code, contactPerson: $contactPerson, phone: $phone, email: $email, address: $address, status: $status, statusDisplay: $statusDisplay, materialCount: $materialCount, notes: $notes, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -267,7 +271,7 @@ abstract mixin class _$SupplierCopyWith<$Res> implements $SupplierCopyWith<$Res>
   factory _$SupplierCopyWith(_Supplier value, $Res Function(_Supplier) _then) = __$SupplierCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(fromJson: _intFromJson) int id,@JsonKey(fromJson: _stringFromJson) String name,@JsonKey(fromJson: _stringOrNullFromJson) String? code,@JsonKey(name: 'contact_person', fromJson: _stringOrNullFromJson) String? contactPerson,@JsonKey(fromJson: _stringOrNullFromJson) String? phone,@JsonKey(fromJson: _stringOrNullFromJson) String? email,@JsonKey(fromJson: _stringOrNullFromJson) String? address,@JsonKey(fromJson: _stringOrNullFromJson) String? status,@JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson) String? statusDisplay,@JsonKey(name: 'material_count', fromJson: _intOrNullFromJson) int? materialCount,@JsonKey(fromJson: _stringOrNullFromJson) String? notes
+@JsonKey(fromJson: _intFromJson) int id,@JsonKey(fromJson: _stringFromJson) String name,@JsonKey(fromJson: _stringOrNullFromJson) String? code,@JsonKey(name: 'contact_person', fromJson: _stringOrNullFromJson) String? contactPerson,@JsonKey(fromJson: _stringOrNullFromJson) String? phone,@JsonKey(fromJson: _stringOrNullFromJson) String? email,@JsonKey(fromJson: _stringOrNullFromJson) String? address,@JsonKey(fromJson: _stringOrNullFromJson) String? status,@JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson) String? statusDisplay,@JsonKey(name: 'material_count', fromJson: _intOrNullFromJson) int? materialCount,@JsonKey(fromJson: _stringOrNullFromJson) String? notes,@JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) DateTime? createdAt,@JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) DateTime? updatedAt
 });
 
 
@@ -284,7 +288,7 @@ class __$SupplierCopyWithImpl<$Res>
 
 /// Create a copy of Supplier
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? code = freezed,Object? contactPerson = freezed,Object? phone = freezed,Object? email = freezed,Object? address = freezed,Object? status = freezed,Object? statusDisplay = freezed,Object? materialCount = freezed,Object? notes = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? code = freezed,Object? contactPerson = freezed,Object? phone = freezed,Object? email = freezed,Object? address = freezed,Object? status = freezed,Object? statusDisplay = freezed,Object? materialCount = freezed,Object? notes = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
   return _then(_Supplier(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -297,7 +301,9 @@ as String?,status: freezed == status ? _self.status : status // ignore: cast_nul
 as String?,statusDisplay: freezed == statusDisplay ? _self.statusDisplay : statusDisplay // ignore: cast_nullable_to_non_nullable
 as String?,materialCount: freezed == materialCount ? _self.materialCount : materialCount // ignore: cast_nullable_to_non_nullable
 as int?,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 

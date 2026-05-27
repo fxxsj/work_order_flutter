@@ -7,13 +7,31 @@ class SupplierViewModel extends PaginatedViewModel<Supplier> {
 
   final SupplierRepository _repository;
 
+  String? _status;
+  String? _ordering;
+
   List<Supplier> get suppliers => items;
+
+  String? get status => _status;
+
+  String? get ordering => _ordering;
 
   Future<void> initialize() async {
     await loadSuppliers(resetPage: true);
   }
 
-  Future<void> loadSuppliers({bool resetPage = false}) => loadItems(resetPage: resetPage);
+  Future<void> loadSuppliers({bool resetPage = false}) =>
+      loadItems(resetPage: resetPage);
+
+  void setStatus(String? value) {
+    _status = value;
+    loadItems(resetPage: true);
+  }
+
+  void setOrdering(String? value) {
+    _ordering = value;
+    loadItems(resetPage: true);
+  }
 
   Future<void> createSupplier(Supplier supplier) async {
     await _repository.createSupplier(supplier);
@@ -35,6 +53,12 @@ class SupplierViewModel extends PaginatedViewModel<Supplier> {
     required int pageSize,
     String? search,
   }) {
-    return _repository.getSuppliers(page: page, pageSize: pageSize, search: search);
+    return _repository.getSuppliers(
+      page: page,
+      pageSize: pageSize,
+      search: search,
+      status: _status,
+      ordering: _ordering,
+    );
   }
 }
