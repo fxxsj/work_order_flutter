@@ -39,8 +39,11 @@ class WorkOrderListEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FeatureEntry<WorkOrderApiService, WorkOrderRepository,
-        WorkOrderViewModel>(
+    return FeatureEntry<
+      WorkOrderApiService,
+      WorkOrderRepository,
+      WorkOrderViewModel
+    >(
       createService: (context) =>
           WorkOrderApiService(context.read<ApiClient>()),
       createRepository: (context) =>
@@ -94,6 +97,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
   int? _customerFilterId;
   int? _productFilterId;
   int? _processFilterId;
+  String _ordering = '-created_at';
 
   bool _loadingOptions = false;
   List<Customer> _customers = [];
@@ -122,8 +126,9 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     if (_routeSignature == signature) return;
     _routeSignature = signature;
     _searchController.text = routeSearch;
-    _approvalStatusFilter =
-        routeApprovalStatus.isEmpty ? null : routeApprovalStatus;
+    _approvalStatusFilter = routeApprovalStatus.isEmpty
+        ? null
+        : routeApprovalStatus;
     final hasRouteFilter =
         routeSearch.isNotEmpty || routeApprovalStatus.isNotEmpty;
     if (!hasRouteFilter && !hadRouteState) {
@@ -132,9 +137,9 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<WorkOrderViewModel>().applyRoutePrefill(
-            search: routeSearch,
-            approvalStatus: routeApprovalStatus,
-          );
+        search: routeSearch,
+        approvalStatus: routeApprovalStatus,
+      );
     });
   }
 
@@ -165,11 +170,12 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
       ..setApprovalStatusFilter(_approvalStatusFilter)
       ..setCustomerFilterId(_customerFilterId)
       ..setProductFilterId(_productFilterId)
-      ..setProcessFilterId(_processFilterId);
+      ..setProcessFilterId(_processFilterId)
+      ..setOrdering(_ordering);
     viewModel.loadWorkOrders(resetPage: true);
   }
 
-  void _resetFilters(WorkOrderViewModel viewModel) {
+  Future<void> _resetFilters(WorkOrderViewModel viewModel) async {
     _searchController.clear();
     _statusFilter = null;
     _priorityFilter = null;
@@ -177,8 +183,8 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     _customerFilterId = null;
     _productFilterId = null;
     _processFilterId = null;
-    viewModel.setSearchText('');
-    _applyFilters(viewModel);
+    _ordering = '-created_at';
+    await viewModel.resetFilters();
   }
 
   Future<void> _exportWorkOrders(WorkOrderViewModel viewModel) async {
@@ -205,9 +211,12 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
           'process': viewModel.processFilterId,
       };
       final result = await _supportService!.export(params);
-      final savedPath = await saveBytes(result.bytes, result.filename,
-          mimeType:
-              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      final savedPath = await saveBytes(
+        result.bytes,
+        result.filename,
+        mimeType:
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
       if (savedPath == null) {
         ToastUtil.showSuccess('导出已开始');
       } else {
@@ -257,6 +266,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
         _customerFilterId = viewModel.customerFilterId;
         _productFilterId = viewModel.productFilterId;
         _processFilterId = viewModel.processFilterId;
+        _ordering = viewModel.ordering;
         return ListPageScaffold(
           spacing: _spacingSm,
           header: _buildPageHeader(context, viewModel, isMobile),
@@ -382,63 +392,95 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
                     ),
                   ),
                 ),
-                DataCell(Text(workOrder.customerName ?? _emptyCellText,
-                    style: textStyle)),
-                DataCell(Text(workOrder.productName ?? _emptyCellText,
-                    style: textStyle)),
-                DataCell(Text(
-                  workOrder.statusDisplay ?? workOrder.status ?? _emptyCellText,
-                  style: textStyle,
-                )),
-                DataCell(Text(
-                  workOrder.approvalStatusDisplay ??
-                      workOrder.approvalStatus ??
-                      _emptyCellText,
-                  style: textStyle,
-                )),
+                DataCell(
+                  Text(
+                    workOrder.customerName ?? _emptyCellText,
+                    style: textStyle,
+                  ),
+                ),
+                DataCell(
+                  Text(
+                    workOrder.productName ?? _emptyCellText,
+                    style: textStyle,
+                  ),
+                ),
+                DataCell(
+                  Text(
+                    workOrder.statusDisplay ??
+                        workOrder.status ??
+                        _emptyCellText,
+                    style: textStyle,
+                  ),
+                ),
+                DataCell(
+                  Text(
+                    workOrder.approvalStatusDisplay ??
+                        workOrder.approvalStatus ??
+                        _emptyCellText,
+                    style: textStyle,
+                  ),
+                ),
                 DataCell(Text(_taskSummaryText(workOrder), style: textStyle)),
                 DataCell(Text(_followUpText(workOrder), style: textStyle)),
-                DataCell(Text(
-                  workOrder.priorityDisplay ??
-                      workOrder.priority ??
-                      _emptyCellText,
-                  style: textStyle,
-                )),
-                DataCell(Text(_formatDate(workOrder.deliveryDate),
-                    style: textStyle)),
-                DataCell(Text(_formatAmount(workOrder.totalAmount),
-                    style: textStyle)),
-                DataCell(Text(
-                  workOrder.progressPercentage == null
-                      ? _emptyCellText
-                      : '${workOrder.progressPercentage}%',
-                  style: textStyle,
-                )),
-                DataCell(Text(workOrder.managerName ?? _emptyCellText,
-                    style: textStyle)),
-                DataCell(Text(workOrder.salespersonName ?? _emptyCellText,
-                    style: textStyle)),
-                DataCell(Text(
-                  _formatQuantity(workOrder.quantity, workOrder.unit),
-                  style: textStyle,
-                )),
-                DataCell(RowActionGroup(
-                  actions: [
-                    if (canChangeWorkOrder)
-                      RowAction(
-                        label: '编辑',
-                        onPressed: () =>
-                            context.go('/workorders/${workOrder.id}/edit'),
-                      ),
-                    if (canDeleteWorkOrder)
-                      RowAction(
-                        label: '删除',
-                        onPressed: () =>
-                            _confirmDelete(context, viewModel, workOrder),
-                        destructive: true,
-                      ),
-                  ],
-                )),
+                DataCell(
+                  Text(
+                    workOrder.priorityDisplay ??
+                        workOrder.priority ??
+                        _emptyCellText,
+                    style: textStyle,
+                  ),
+                ),
+                DataCell(
+                  Text(_formatDate(workOrder.deliveryDate), style: textStyle),
+                ),
+                DataCell(
+                  Text(_formatAmount(workOrder.totalAmount), style: textStyle),
+                ),
+                DataCell(
+                  Text(
+                    workOrder.progressPercentage == null
+                        ? _emptyCellText
+                        : '${workOrder.progressPercentage}%',
+                    style: textStyle,
+                  ),
+                ),
+                DataCell(
+                  Text(
+                    workOrder.managerName ?? _emptyCellText,
+                    style: textStyle,
+                  ),
+                ),
+                DataCell(
+                  Text(
+                    workOrder.salespersonName ?? _emptyCellText,
+                    style: textStyle,
+                  ),
+                ),
+                DataCell(
+                  Text(
+                    _formatQuantity(workOrder.quantity, workOrder.unit),
+                    style: textStyle,
+                  ),
+                ),
+                DataCell(
+                  RowActionGroup(
+                    actions: [
+                      if (canChangeWorkOrder)
+                        RowAction(
+                          label: '编辑',
+                          onPressed: () =>
+                              context.go('/workorders/${workOrder.id}/edit'),
+                        ),
+                      if (canDeleteWorkOrder)
+                        RowAction(
+                          label: '删除',
+                          onPressed: () =>
+                              _confirmDelete(context, viewModel, workOrder),
+                          destructive: true,
+                        ),
+                    ],
+                  ),
+                ),
               ],
             ),
           )
@@ -462,7 +504,8 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     final product = workOrder.productName ?? _emptyCellText;
     final status =
         workOrder.statusDisplay ?? workOrder.status ?? _emptyCellText;
-    final approval = workOrder.approvalStatusDisplay ??
+    final approval =
+        workOrder.approvalStatusDisplay ??
         workOrder.approvalStatus ??
         _emptyCellText;
     final priority =
@@ -611,6 +654,20 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
       AppDropdownOption(value: 'approved', label: '已通过'),
       AppDropdownOption(value: 'rejected', label: '已拒绝'),
     ];
+    final orderingItems = const [
+      AppDropdownOption(value: '-created_at', label: '最新创建'),
+      AppDropdownOption(value: 'created_at', label: '最早创建'),
+      AppDropdownOption(value: 'order_number', label: '单号升序'),
+      AppDropdownOption(value: '-order_number', label: '单号降序'),
+      AppDropdownOption(value: 'customer__name', label: '客户升序'),
+      AppDropdownOption(value: '-customer__name', label: '客户降序'),
+      AppDropdownOption(value: 'priority', label: '优先级升序'),
+      AppDropdownOption(value: '-priority', label: '优先级降序'),
+      AppDropdownOption(value: 'delivery_date', label: '交期升序'),
+      AppDropdownOption(value: '-delivery_date', label: '交期降序'),
+      AppDropdownOption(value: 'total_amount', label: '金额升序'),
+      AppDropdownOption(value: '-total_amount', label: '金额降序'),
+    ];
     final customerItems = [
       const AppDropdownOption<int?>(value: null, label: '全部客户'),
       ..._customers.map(
@@ -641,6 +698,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
           statusItems: statusItems,
           priorityItems: priorityItems,
           approvalItems: approvalItems,
+          orderingItems: orderingItems,
           customerItems: customerItems,
           productItems: productItems,
           processItems: processItems,
@@ -705,7 +763,10 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
               ),
             if (_hasQuickFilter(viewModel))
               OutlinedButton.icon(
-                onPressed: () => context.go('/workorders'),
+                onPressed: () async {
+                  await _resetFilters(viewModel);
+                  if (mounted) context.go('/workorders');
+                },
                 icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
                 label: const Text('清除筛选'),
               ),
@@ -750,6 +811,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     required List<AppDropdownOption<String>> statusItems,
     required List<AppDropdownOption<String>> priorityItems,
     required List<AppDropdownOption<String>> approvalItems,
+    required List<AppDropdownOption<String>> orderingItems,
     required List<AppDropdownOption<int?>> customerItems,
     required List<AppDropdownOption<int?>> productItems,
     required List<AppDropdownOption<int?>> processItems,
@@ -785,6 +847,15 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
           options: approvalItems,
           onChanged: (value) {
             setState(() => _approvalStatusFilter = value);
+            _applyFilters(viewModel);
+          },
+        ),
+        AppSelect<String>(
+          value: _ordering,
+          decoration: const InputDecoration(labelText: '排序'),
+          options: orderingItems,
+          onChanged: (value) {
+            setState(() => _ordering = value ?? '-created_at');
             _applyFilters(viewModel);
           },
         ),
@@ -826,6 +897,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     if (_priorityFilter != null && _priorityFilter!.isNotEmpty) count += 1;
     if (_approvalStatusFilter != null && _approvalStatusFilter!.isNotEmpty)
       count += 1;
+    if (_ordering != '-created_at') count += 1;
     if (_customerFilterId != null) count += 1;
     if (_productFilterId != null) count += 1;
     if (_processFilterId != null) count += 1;
@@ -852,7 +924,8 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
   }
 
   bool _hasQuickFilter(WorkOrderViewModel viewModel) {
-    return (viewModel.approvalStatusFilter ?? '').isNotEmpty;
+    return (viewModel.approvalStatusFilter ?? '').isNotEmpty ||
+        viewModel.ordering != '-created_at';
   }
 
   void _openQuickFilter(String approvalStatus) {
@@ -882,8 +955,9 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
       customerName: workOrder.customerName,
     );
     if (confirmed != true) return;
-    await viewModel
-        .deleteAndReload(() => viewModel.deleteWorkOrder(workOrder.id));
+    await viewModel.deleteAndReload(
+      () => viewModel.deleteWorkOrder(workOrder.id),
+    );
   }
 
   String _formatDate(DateTime? value) {
@@ -998,10 +1072,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 72,
-            child: Text(label, style: labelStyle),
-          ),
+          SizedBox(width: 72, child: Text(label, style: labelStyle)),
           Expanded(
             child: Text(
               value.isEmpty ? _emptyCellText : value,

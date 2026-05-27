@@ -54,6 +54,21 @@ class WorkOrderFormSubmission {
     if (input.deliveryDate == null) {
       return '请选择交货日期';
     }
+    if (input.orderDate != null &&
+        input.deliveryDate != null &&
+        input.deliveryDate!.isBefore(input.orderDate!)) {
+      return '交货日期不能早于下单日期';
+    }
+    final productionQuantity = int.tryParse(
+      input.productionQuantityText.trim(),
+    );
+    if (productionQuantity == null || productionQuantity <= 0) {
+      return '生产数量必须大于 0';
+    }
+    final defectiveQuantity = int.tryParse(input.defectiveQuantityText.trim());
+    if (defectiveQuantity != null && defectiveQuantity < 0) {
+      return '预损数量不能小于 0';
+    }
     if (input.productDrafts.every((draft) => draft.productId == null)) {
       return '请至少填写一个产品';
     }
@@ -63,6 +78,17 @@ class WorkOrderFormSubmission {
       }
       if (draft.sourceType == 'sales_order' && draft.salesOrderItemId == null) {
         return '客户订单来源的产品必须选择来源订单产品';
+      }
+      if (draft.quantityValue <= 0) {
+        return '产品数量必须大于 0';
+      }
+    }
+    for (final draft in input.materialDrafts) {
+      if (draft.materialId == null) {
+        continue;
+      }
+      if (draft.usageValue.isEmpty) {
+        return '请填写物料用量';
       }
     }
     return null;
@@ -106,8 +132,9 @@ class WorkOrderFormSubmission {
     final orderDate = _formatDate(input.orderDate);
     final deliveryDate = _formatDate(input.deliveryDate);
     final actualDeliveryDate = _formatDate(input.actualDeliveryDate);
-    final productionQuantity =
-        int.tryParse(input.productionQuantityText.trim());
+    final productionQuantity = int.tryParse(
+      input.productionQuantityText.trim(),
+    );
     final defectiveQuantity = int.tryParse(input.defectiveQuantityText.trim());
 
     return {
@@ -117,8 +144,9 @@ class WorkOrderFormSubmission {
       'priority': input.priority,
       'order_date': orderDate.isEmpty ? null : orderDate,
       'delivery_date': deliveryDate.isEmpty ? null : deliveryDate,
-      'actual_delivery_date':
-          actualDeliveryDate.isEmpty ? null : actualDeliveryDate,
+      'actual_delivery_date': actualDeliveryDate.isEmpty
+          ? null
+          : actualDeliveryDate,
       'production_quantity': productionQuantity,
       'defective_quantity': defectiveQuantity,
       'notes': input.notes.trim(),

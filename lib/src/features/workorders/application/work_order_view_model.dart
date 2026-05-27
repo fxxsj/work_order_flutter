@@ -16,6 +16,7 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
   int? _customerFilterId;
   int? _productFilterId;
   int? _processFilterId;
+  String _ordering = '-created_at';
   Map<String, dynamic> _summary = const {};
   int _summaryRequestToken = 0;
 
@@ -35,6 +36,7 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
   int? get customerFilterId => _customerFilterId;
   int? get productFilterId => _productFilterId;
   int? get processFilterId => _processFilterId;
+  String get ordering => _ordering;
 
   void setStatusFilter(String? value) {
     _statusFilter = value?.trim().isEmpty == true ? null : value;
@@ -60,13 +62,30 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
     _processFilterId = value;
   }
 
+  void setOrdering(String value) {
+    _ordering = value.trim().isEmpty ? '-created_at' : value.trim();
+  }
+
+  Future<void> resetFilters() async {
+    setSearchText('');
+    _statusFilter = null;
+    _priorityFilter = null;
+    _approvalStatusFilter = null;
+    _customerFilterId = null;
+    _productFilterId = null;
+    _processFilterId = null;
+    _ordering = '-created_at';
+    await loadWorkOrders(resetPage: true);
+  }
+
   Future<void> applyRoutePrefill({
     String? search,
     String? approvalStatus,
   }) async {
     setSearchText(search?.trim() ?? '');
-    _approvalStatusFilter =
-        approvalStatus?.trim().isEmpty == true ? null : approvalStatus?.trim();
+    _approvalStatusFilter = approvalStatus?.trim().isEmpty == true
+        ? null
+        : approvalStatus?.trim();
     await loadWorkOrders(resetPage: true);
   }
 
@@ -82,14 +101,18 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
   }
 
   Future<WorkOrderDetail> updateWorkOrder(
-      int id, Map<String, dynamic> payload) async {
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
     final detail = await _repository.updateWorkOrder(id, payload);
     await loadWorkOrders();
     return detail.toEntity();
   }
 
   Future<WorkOrderDetail> uploadDesignFile(
-      int id, MultipartFile designFile) async {
+    int id,
+    MultipartFile designFile,
+  ) async {
     final detail = await _repository.uploadDesignFile(id, designFile);
     return detail.toEntity();
   }
@@ -114,8 +137,10 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
     return detail.toEntity();
   }
 
-  Future<WorkOrderDetail> rejectWorkOrder(int id,
-      {required String reason}) async {
+  Future<WorkOrderDetail> rejectWorkOrder(
+    int id, {
+    required String reason,
+  }) async {
     final detail = await _repository.rejectWorkOrder(id, reason: reason);
     return detail.toEntity();
   }
@@ -149,6 +174,7 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
       customerId: _customerFilterId,
       productId: _productFilterId,
       processId: _processFilterId,
+      ordering: _ordering,
     );
     return PageData(
       items: result.items.map((dto) => dto.toEntity()).toList(),
