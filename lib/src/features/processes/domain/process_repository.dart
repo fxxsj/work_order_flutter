@@ -6,6 +6,9 @@ abstract class ProcessRepository {
     required int page,
     required int pageSize,
     String? search,
+    bool? isActive,
+    String? taskGenerationRule,
+    String? ordering,
   });
 
   Future<void> createProcess(Process process);

@@ -14,11 +14,17 @@ class ProcessRepositoryImpl implements ProcessRepository {
     required int page,
     required int pageSize,
     String? search,
+    bool? isActive,
+    String? taskGenerationRule,
+    String? ordering,
   }) async {
     final response = await _api.fetchProcesses(
       page: page,
       pageSize: pageSize,
       search: search,
+      isActive: isActive,
+      taskGenerationRule: taskGenerationRule,
+      ordering: ordering,
     );
     return PageData(
       items: response.items.map((item) => item.toEntity()).toList(),

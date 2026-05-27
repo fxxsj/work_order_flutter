@@ -13,13 +13,20 @@ class ProcessApiService {
     int pageSize = 20,
     String? search,
     bool? isActive,
+    String? taskGenerationRule,
+    String? ordering,
   }) async {
-    final params = <String, dynamic>{
-      'page': page,
-      'page_size': pageSize,
-    };
+    final params = <String, dynamic>{'page': page, 'page_size': pageSize};
     if (isActive != null) {
       params['is_active'] = isActive;
+    }
+    final trimmedRule = taskGenerationRule?.trim();
+    if (trimmedRule != null && trimmedRule.isNotEmpty) {
+      params['task_generation_rule'] = trimmedRule;
+    }
+    final trimmedOrdering = ordering?.trim();
+    if (trimmedOrdering != null && trimmedOrdering.isNotEmpty) {
+      params['ordering'] = trimmedOrdering;
     }
     final trimmed = search?.trim();
     if (trimmed != null && trimmed.isNotEmpty) {
@@ -60,8 +67,10 @@ class ProcessApiService {
   }
 
   Future<ProcessDto> updateProcess(ProcessDto dto) async {
-    final response =
-        await _client.put('/processes/${dto.id}/', data: dto.toPayload());
+    final response = await _client.put(
+      '/processes/${dto.id}/',
+      data: dto.toPayload(),
+    );
     return ProcessDto.fromJson(_requireMap('更新工序', response.data));
   }
 
@@ -90,9 +99,6 @@ class ProcessApiService {
   }
 
   ApiException _unexpectedPayload(String label, dynamic data) {
-    return ApiException(
-      message: '$label 响应格式异常',
-      data: data,
-    );
+    return ApiException(message: '$label 响应格式异常', data: data);
   }
 }

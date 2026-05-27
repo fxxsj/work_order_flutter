@@ -7,13 +7,39 @@ class ProcessViewModel extends PaginatedViewModel<Process> {
 
   final ProcessRepository _repository;
 
+  bool? _isActive;
+  String? _taskGenerationRule;
+  String? _ordering;
+
   List<Process> get processes => items;
+
+  bool? get isActive => _isActive;
+
+  String? get taskGenerationRule => _taskGenerationRule;
+
+  String? get ordering => _ordering;
 
   Future<void> initialize() async {
     await loadProcesses(resetPage: true);
   }
 
-  Future<void> loadProcesses({bool resetPage = false}) => loadItems(resetPage: resetPage);
+  Future<void> loadProcesses({bool resetPage = false}) =>
+      loadItems(resetPage: resetPage);
+
+  void setIsActive(bool? value) {
+    _isActive = value;
+    loadItems(resetPage: true);
+  }
+
+  void setTaskGenerationRule(String? value) {
+    _taskGenerationRule = value;
+    loadItems(resetPage: true);
+  }
+
+  void setOrdering(String? value) {
+    _ordering = value;
+    loadItems(resetPage: true);
+  }
 
   @override
   Future<PageData<Process>> fetchPage({
@@ -21,7 +47,14 @@ class ProcessViewModel extends PaginatedViewModel<Process> {
     required int pageSize,
     String? search,
   }) {
-    return _repository.getProcesses(page: page, pageSize: pageSize, search: search);
+    return _repository.getProcesses(
+      page: page,
+      pageSize: pageSize,
+      search: search,
+      isActive: _isActive,
+      taskGenerationRule: _taskGenerationRule,
+      ordering: _ordering,
+    );
   }
 
   Future<void> createProcess(Process process) async {
