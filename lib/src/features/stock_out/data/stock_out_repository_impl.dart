@@ -13,7 +13,11 @@ class StockOutRepositoryImpl implements StockOutRepository {
     int pageSize = 20,
     Map<String, dynamic>? params,
   }) {
-    return _apiService.fetchStockOuts(page: page, pageSize: pageSize, params: params);
+    return _apiService.fetchStockOuts(
+      page: page,
+      pageSize: pageSize,
+      params: params,
+    );
   }
 
   @override
@@ -27,12 +31,25 @@ class StockOutRepositoryImpl implements StockOutRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> updateStockOut(int id, Map<String, dynamic> payload) {
+  Future<Map<String, dynamic>> updateStockOut(
+    int id,
+    Map<String, dynamic> payload,
+  ) {
     return _apiService.updateStockOut(id, payload);
   }
 
   @override
   Future<void> deleteStockOut(int id) {
     return _apiService.deleteStockOut(id);
+  }
+
+  @override
+  Future<Map<String, dynamic>> submit(int id) {
+    return _apiService.submit(id);
+  }
+
+  @override
+  Future<Map<String, dynamic>> approve(int id) {
+    return _apiService.approve(id);
   }
 }

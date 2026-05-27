@@ -11,7 +11,14 @@ abstract class StockOutRepository {
 
   Future<Map<String, dynamic>> createStockOut(Map<String, dynamic> payload);
 
-  Future<Map<String, dynamic>> updateStockOut(int id, Map<String, dynamic> payload);
+  Future<Map<String, dynamic>> updateStockOut(
+    int id,
+    Map<String, dynamic> payload,
+  );
 
   Future<void> deleteStockOut(int id);
+
+  Future<Map<String, dynamic>> submit(int id);
+
+  Future<Map<String, dynamic>> approve(int id);
 }

@@ -8,10 +8,7 @@ class StockOutSupportService {
 
   final ApiClient _client;
 
-  Future<void> save({
-    required Map<String, dynamic> payload,
-    int? id,
-  }) async {
+  Future<void> save({required Map<String, dynamic> payload, int? id}) async {
     final apiService = StockOutApiService(_client);
     if (id != null) {
       await apiService.updateStockOut(id, payload);
@@ -23,5 +20,15 @@ class StockOutSupportService {
   Future<DeliveryOrderDetail> fetchDeliveryOrderDetail(int id) async {
     final apiService = DeliveryOrderApiService(_client);
     return apiService.fetchDetail(id);
+  }
+
+  Future<void> submit(int id) async {
+    final apiService = StockOutApiService(_client);
+    await apiService.submit(id);
+  }
+
+  Future<void> approve(int id) async {
+    final apiService = StockOutApiService(_client);
+    await apiService.approve(id);
   }
 }
