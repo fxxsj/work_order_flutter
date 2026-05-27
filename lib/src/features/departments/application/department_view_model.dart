@@ -11,6 +11,8 @@ class DepartmentViewModel extends PaginatedViewModel<Department> {
   List<ProcessOption> _processOptions = [];
   bool _loadingOptions = false;
   String? _optionsError;
+  bool? _isActive;
+  String? _ordering;
 
   List<Department> get departments => items;
 
@@ -22,15 +24,26 @@ class DepartmentViewModel extends PaginatedViewModel<Department> {
 
   String? get optionsError => _optionsError;
 
+  bool? get isActive => _isActive;
+
+  String? get ordering => _ordering;
+
   Future<void> initialize() async {
-    await Future.wait([
-      loadItems(resetPage: true),
-      loadOptions(),
-    ]);
+    await Future.wait([loadItems(resetPage: true), loadOptions()]);
   }
 
   Future<void> loadDepartments({bool resetPage = false}) =>
       loadItems(resetPage: resetPage);
+
+  void setIsActive(bool? value) {
+    _isActive = value;
+    loadItems(resetPage: true);
+  }
+
+  void setOrdering(String? value) {
+    _ordering = value;
+    loadItems(resetPage: true);
+  }
 
   Future<void> loadOptions() async {
     _loadingOptions = true;
@@ -56,23 +69,22 @@ class DepartmentViewModel extends PaginatedViewModel<Department> {
     String? search,
   }) async {
     return _repository.getDepartments(
-        page: page, pageSize: pageSize, search: search);
+      page: page,
+      pageSize: pageSize,
+      search: search,
+      isActive: _isActive,
+      ordering: _ordering,
+    );
   }
 
   Future<void> createDepartment(Department department) async {
     await _repository.createDepartment(department);
-    await Future.wait([
-      loadItems(resetPage: true),
-      loadOptions(),
-    ]);
+    await Future.wait([loadItems(resetPage: true), loadOptions()]);
   }
 
   Future<void> updateDepartment(Department department) async {
     await _repository.updateDepartment(department);
-    await Future.wait([
-      loadItems(),
-      loadOptions(),
-    ]);
+    await Future.wait([loadItems(), loadOptions()]);
   }
 
   Future<void> deleteDepartment(int id) async {

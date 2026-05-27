@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
@@ -21,8 +22,11 @@ class DepartmentListEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FeatureEntry<DepartmentApiService, DepartmentRepository,
-        DepartmentViewModel>(
+    return FeatureEntry<
+      DepartmentApiService,
+      DepartmentRepository,
+      DepartmentViewModel
+    >(
       createService: (context) =>
           DepartmentApiService(context.read<ApiClient>()),
       createRepository: (context) =>
@@ -50,27 +54,27 @@ class DepartmentListPage extends StatelessWidget {
 
   static const CrudListConfig<Department, DepartmentViewModel> _config =
       CrudListConfig(
-    searchHintText: '搜索部门名称、编码',
-    emptyText: '暂无部门数据',
-    emptyIcon: Icons.apartment_outlined,
-    loadItems: _loadDepartments,
-    titleBuilder: _titleText,
-    subtitleBuilder: _subtitleText,
-    summaryChipsBuilder: _summaryChips,
-    summaryFieldsBuilder: _summaryFields,
-    headerActionsBuilder: _headerActions,
-    rowActionsBuilder: _rowActions,
-    columns: [
-      CrudTableColumn(label: '部门', cellBuilder: _buildNameCell),
-      CrudTableColumn(label: '编码', cellBuilder: _buildCodeCell),
-      CrudTableColumn(label: '上级部门', cellBuilder: _buildParentCell),
-      CrudTableColumn(label: '子部门', cellBuilder: _buildChildrenCountCell),
-      CrudTableColumn(label: '工序', cellBuilder: _buildProcessesCell),
-      CrudTableColumn(label: '排序', cellBuilder: _buildSortOrderCell),
-      CrudTableColumn(label: '状态', cellBuilder: _buildStatusCell),
-      CrudTableColumn(label: '创建时间', cellBuilder: _buildCreatedAtCell),
-    ],
-  );
+        searchHintText: '搜索部门名称、编码',
+        emptyText: '暂无部门数据',
+        emptyIcon: Icons.apartment_outlined,
+        loadItems: _loadDepartments,
+        titleBuilder: _titleText,
+        subtitleBuilder: _subtitleText,
+        summaryChipsBuilder: _summaryChips,
+        summaryFieldsBuilder: _summaryFields,
+        headerActionsBuilder: _headerActions,
+        rowActionsBuilder: _rowActions,
+        columns: [
+          CrudTableColumn(label: '部门', cellBuilder: _buildNameCell),
+          CrudTableColumn(label: '编码', cellBuilder: _buildCodeCell),
+          CrudTableColumn(label: '上级部门', cellBuilder: _buildParentCell),
+          CrudTableColumn(label: '子部门', cellBuilder: _buildChildrenCountCell),
+          CrudTableColumn(label: '工序', cellBuilder: _buildProcessesCell),
+          CrudTableColumn(label: '排序', cellBuilder: _buildSortOrderCell),
+          CrudTableColumn(label: '状态', cellBuilder: _buildStatusCell),
+          CrudTableColumn(label: '创建时间', cellBuilder: _buildCreatedAtCell),
+        ],
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -117,6 +121,57 @@ class DepartmentListPage extends StatelessWidget {
     DepartmentViewModel viewModel,
   ) {
     return [
+      SizedBox(
+        width: 112,
+        child: AppSelect<String>(
+          options: const [
+            AppDropdownOption(value: '', label: '全部状态'),
+            AppDropdownOption(value: 'true', label: '启用'),
+            AppDropdownOption(value: 'false', label: '禁用'),
+          ],
+          value: viewModel.isActive == null
+              ? ''
+              : viewModel.isActive == true
+              ? 'true'
+              : 'false',
+          onChanged: (value) {
+            if (value == null || value.isEmpty) {
+              viewModel.setIsActive(null);
+            } else {
+              viewModel.setIsActive(value == 'true');
+            }
+          },
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
+      SizedBox(
+        width: 132,
+        child: AppSelect<String>(
+          options: const [
+            AppDropdownOption(value: 'sort_order', label: '排序升序'),
+            AppDropdownOption(value: '-sort_order', label: '排序降序'),
+            AppDropdownOption(value: 'code', label: '编码升序'),
+            AppDropdownOption(value: '-code', label: '编码降序'),
+            AppDropdownOption(value: 'name', label: '名称升序'),
+            AppDropdownOption(value: '-name', label: '名称降序'),
+          ],
+          value: viewModel.ordering ?? 'sort_order',
+          onChanged: (value) {
+            if (value != null) viewModel.setOrdering(value);
+          },
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
       PageActionButton.filled(
         onPressed: () => _openEditPage(context, viewModel, null),
         icon: const Icon(Icons.add),
@@ -203,10 +258,7 @@ class DepartmentListPage extends StatelessWidget {
   }
 
   static Widget _buildBodyText(BuildContext context, String value) {
-    return Text(
-      value,
-      style: Theme.of(context).textTheme.bodySmall,
-    );
+    return Text(value, style: Theme.of(context).textTheme.bodySmall);
   }
 
   static String _titleText(Department department) {
@@ -253,18 +305,12 @@ class DepartmentListPage extends StatelessWidget {
         label: '子部门',
         value: CrudValueFormatter.number(department.childrenCount),
       ),
-      CrudSummaryFieldData(
-        label: '工序',
-        value: _processesText(department),
-      ),
+      CrudSummaryFieldData(label: '工序', value: _processesText(department)),
       CrudSummaryFieldData(
         label: '排序',
         value: CrudValueFormatter.number(department.sortOrder),
       ),
-      CrudSummaryFieldData(
-        label: '状态',
-        value: _statusText(department),
-      ),
+      CrudSummaryFieldData(label: '状态', value: _statusText(department)),
       CrudSummaryFieldData(
         label: '创建时间',
         value: CrudValueFormatter.dateTime(department.createdAt),
@@ -292,9 +338,7 @@ class DepartmentListPage extends StatelessWidget {
 }
 
 class _DepartmentProcessesCell extends StatefulWidget {
-  const _DepartmentProcessesCell({
-    required this.processNames,
-  });
+  const _DepartmentProcessesCell({required this.processNames});
 
   final List<String> processNames;
 
@@ -324,8 +368,8 @@ class _DepartmentProcessesCellState extends State<_DepartmentProcessesCell> {
 
     final visibleProcesses =
         _expanded || processNames.length <= _collapsedVisibleCount
-            ? processNames
-            : processNames.take(_collapsedVisibleCount).toList();
+        ? processNames
+        : processNames.take(_collapsedVisibleCount).toList();
     final remainingCount = processNames.length - _collapsedVisibleCount;
 
     return SingleChildScrollView(
@@ -349,9 +393,7 @@ class _DepartmentProcessesCellState extends State<_DepartmentProcessesCell> {
 }
 
 class _ProcessTag extends StatelessWidget {
-  const _ProcessTag({
-    required this.label,
-  });
+  const _ProcessTag({required this.label});
 
   final String label;
 
@@ -412,8 +454,9 @@ class _ProcessToggleTag extends StatelessWidget {
           vertical: LayoutTokens.gapXxs,
         ),
         decoration: BoxDecoration(
-          color:
-              theme.colorScheme.primary.withValues(alpha: OpacityTokens.faint),
+          color: theme.colorScheme.primary.withValues(
+            alpha: OpacityTokens.faint,
+          ),
           borderRadius: BorderRadius.circular(LayoutTokens.radiusXs),
           border: Border.all(color: colors?.borderColor ?? theme.dividerColor),
         ),

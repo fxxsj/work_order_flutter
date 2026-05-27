@@ -12,18 +12,26 @@ class DepartmentApiService {
     int page = 1,
     int pageSize = 20,
     String? search,
+    bool? isActive,
+    String? ordering,
   }) async {
-    final params = <String, dynamic>{
-      'page': page,
-      'page_size': pageSize,
-    };
+    final params = <String, dynamic>{'page': page, 'page_size': pageSize};
     final trimmed = search?.trim();
     if (trimmed != null && trimmed.isNotEmpty) {
       params['search'] = trimmed;
     }
+    if (isActive != null) {
+      params['is_active'] = isActive.toString();
+    }
+    final trimmedOrdering = ordering?.trim();
+    if (trimmedOrdering != null && trimmedOrdering.isNotEmpty) {
+      params['ordering'] = trimmedOrdering;
+    }
 
-    final response =
-        await _client.get('/departments/', queryParameters: params);
+    final response = await _client.get(
+      '/departments/',
+      queryParameters: params,
+    );
     final payload = response.data;
     if (payload is Map<String, dynamic>) {
       final pageData = PageData.fromPayload(
@@ -61,8 +69,10 @@ class DepartmentApiService {
     if (isActive != null) {
       params['is_active'] = isActive.toString();
     }
-    final response = await _client.get('/departments/all/',
-        queryParameters: params.isEmpty ? null : params);
+    final response = await _client.get(
+      '/departments/all/',
+      queryParameters: params.isEmpty ? null : params,
+    );
     return _listFromResponse(response.data);
   }
 
@@ -72,8 +82,10 @@ class DepartmentApiService {
   }
 
   Future<DepartmentDto> updateDepartment(DepartmentDto dto) async {
-    final response =
-        await _client.put('/departments/${dto.id}/', data: dto.toPayload());
+    final response = await _client.put(
+      '/departments/${dto.id}/',
+      data: dto.toPayload(),
+    );
     return DepartmentDto.fromJson(_requireMap('更新部门', response.data));
   }
 
@@ -82,26 +94,30 @@ class DepartmentApiService {
   }
 
   Future<List<ProcessOptionDto>> fetchProcesses() async {
-    final response = await _client.get('/processes/', queryParameters: {
-      'is_active': true,
-      'page_size': 200,
-    });
+    final response = await _client.get(
+      '/processes/',
+      queryParameters: {'is_active': true, 'page_size': 200},
+    );
     final payload = response.data;
     if (payload is Map<String, dynamic>) {
       final results = payload['results'];
       if (results is List) {
         return results
             .whereType<Map>()
-            .map((item) =>
-                ProcessOptionDto.fromJson(Map<String, dynamic>.from(item)))
+            .map(
+              (item) =>
+                  ProcessOptionDto.fromJson(Map<String, dynamic>.from(item)),
+            )
             .toList();
       }
     }
     if (payload is List) {
       return payload
           .whereType<Map>()
-          .map((item) =>
-              ProcessOptionDto.fromJson(Map<String, dynamic>.from(item)))
+          .map(
+            (item) =>
+                ProcessOptionDto.fromJson(Map<String, dynamic>.from(item)),
+          )
           .toList();
     }
     return [];
@@ -138,9 +154,6 @@ class DepartmentApiService {
   }
 
   ApiException _unexpectedPayload(String label, dynamic data) {
-    return ApiException(
-      message: '$label 响应格式异常',
-      data: data,
-    );
+    return ApiException(message: '$label 响应格式异常', data: data);
   }
 }

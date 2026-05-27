@@ -6,6 +6,8 @@ abstract class DepartmentRepository {
     required int page,
     required int pageSize,
     String? search,
+    bool? isActive,
+    String? ordering,
   });
 
   Future<List<Department>> getAllDepartments({bool? isActive});

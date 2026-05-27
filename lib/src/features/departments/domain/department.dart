@@ -14,6 +14,7 @@ class Department {
     this.sortOrder,
     this.isActive = true,
     this.createdAt,
+    this.updatedAt,
     this.level,
     this.processIds = const [],
   });
@@ -29,6 +30,7 @@ class Department {
   final int? sortOrder;
   final bool isActive;
   final DateTime? createdAt;
+  final DateTime? updatedAt;
   final int? level;
   final List<int> processIds;
 
@@ -44,6 +46,7 @@ class Department {
     int? sortOrder,
     bool? isActive,
     DateTime? createdAt,
+    DateTime? updatedAt,
     int? level,
     List<int>? processIds,
   }) {
@@ -59,6 +62,7 @@ class Department {
       sortOrder: sortOrder ?? this.sortOrder,
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
       level: level ?? this.level,
       processIds: processIds ?? this.processIds,
     );
@@ -77,6 +81,7 @@ class Department {
       'sortOrder': sortOrder,
       'isActive': isActive,
       'createdAt': createdAt?.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
       'level': level,
       'processIds': processIds,
     };
@@ -106,13 +111,14 @@ class Department {
       sortOrder: toInt(json['sortOrder']),
       isActive: json['isActive'] == null ? true : json['isActive'] == true,
       createdAt: toDateTime(json['createdAt']),
+      updatedAt: toDateTime(json['updatedAt']),
       level: toInt(json['level']),
       processIds: (json['processIds'] is List)
           ? json['processIds']
-              .where((value) => value != null)
-              .map((value) => toInt(value) ?? 0)
-              .where((value) => value > 0)
-              .toList()
+                .where((value) => value != null)
+                .map((value) => toInt(value) ?? 0)
+                .where((value) => value > 0)
+                .toList()
           : const [],
     );
   }

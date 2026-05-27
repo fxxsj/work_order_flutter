@@ -53,8 +53,11 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
   static const String _submitText = '保存';
   static const String _submitErrorText = '操作失败: ';
   static const String _codeRequiredText = '请输入部门编码';
+  static const String _codeLengthText = '部门编码长度必须在2-20个字符之间';
   static const String _codeInvalidText = '部门编码只能包含小写字母、数字和下划线';
   static const String _nameRequiredText = '请输入部门名称';
+  static const String _nameLengthText = '部门名称长度必须在2-50个字符之间';
+  static const String _sortInvalidText = '排序值必须在0-99999之间';
   static const String _basicSectionTitle = '基本信息';
   static const String _extraSectionTitle = '补充信息';
   static const String _processPlaceholder = '请选择工序（可多选）';
@@ -73,8 +76,9 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
     final department = widget.department;
     _codeController = TextEditingController(text: department?.code ?? '');
     _nameController = TextEditingController(text: department?.name ?? '');
-    _sortController =
-        TextEditingController(text: (department?.sortOrder ?? 0).toString());
+    _sortController = TextEditingController(
+      text: (department?.sortOrder ?? 0).toString(),
+    );
     _parentId = department?.parentId;
     _isActive = department?.isActive ?? true;
     _processIds = List<int>.from(department?.processIds ?? const []);
@@ -102,6 +106,7 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
       processNames: widget.department?.processNames ?? const [],
       childrenCount: widget.department?.childrenCount,
       createdAt: widget.department?.createdAt,
+      updatedAt: widget.department?.updatedAt,
       level: widget.department?.level,
     );
 
@@ -129,7 +134,8 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
   Widget build(BuildContext context) {
     final viewModel = context.watch<DepartmentViewModel>();
     final availableParents = _availableParents(viewModel.departmentOptions);
-    final disableParent = widget.department != null &&
+    final disableParent =
+        widget.department != null &&
         (widget.department?.childrenCount ?? 0) > 0;
 
     return CrudDrawerEditPanel<Department, DepartmentViewModel>(
@@ -153,6 +159,9 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
                   if (text.isEmpty) {
                     return _codeRequiredText;
                   }
+                  if (text.length < 2 || text.length > 20) {
+                    return _codeLengthText;
+                  }
                   if (!RegExp(r'^[a-z0-9_]+$').hasMatch(text)) {
                     return _codeInvalidText;
                   }
@@ -166,6 +175,9 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
                   final text = value?.trim() ?? '';
                   if (text.isEmpty) {
                     return _nameRequiredText;
+                  }
+                  if (text.length < 2 || text.length > 50) {
+                    return _nameLengthText;
                   }
                   return null;
                 },
@@ -194,6 +206,13 @@ class _DepartmentEditPageState extends State<DepartmentEditPage> {
               CrudFieldConfig.number(
                 label: _sortLabel,
                 controller: _sortController,
+                validator: (value) {
+                  final sortValue = int.tryParse(value?.trim() ?? '');
+                  if (sortValue == null || sortValue < 0 || sortValue > 99999) {
+                    return _sortInvalidText;
+                  }
+                  return null;
+                },
               ),
               CrudFieldConfig.multiSelect(
                 label: _processLabel,

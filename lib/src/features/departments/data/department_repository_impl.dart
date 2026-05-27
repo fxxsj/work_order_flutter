@@ -14,11 +14,15 @@ class DepartmentRepositoryImpl implements DepartmentRepository {
     required int page,
     required int pageSize,
     String? search,
+    bool? isActive,
+    String? ordering,
   }) async {
     final response = await _api.fetchDepartments(
       page: page,
       pageSize: pageSize,
       search: search,
+      isActive: isActive,
+      ordering: ordering,
     );
     return PageData(
       items: response.items.map((item) => item.toEntity()).toList(),
@@ -40,7 +44,10 @@ class DepartmentRepositoryImpl implements DepartmentRepository {
     final items = <Department>[];
 
     while (true) {
-      final pageResponse = await _api.fetchDepartments(page: page, pageSize: pageSize);
+      final pageResponse = await _api.fetchDepartments(
+        page: page,
+        pageSize: pageSize,
+      );
       items.addAll(pageResponse.items.map((item) => item.toEntity()));
       if (items.length >= pageResponse.total || pageResponse.items.isEmpty) {
         break;

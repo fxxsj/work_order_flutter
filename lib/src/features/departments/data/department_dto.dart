@@ -14,6 +14,7 @@ class DepartmentDto {
     this.sortOrder,
     this.isActive = true,
     this.createdAt,
+    this.updatedAt,
     this.level,
     this.processIds = const [],
   });
@@ -29,13 +30,16 @@ class DepartmentDto {
   final int? sortOrder;
   final bool isActive;
   final DateTime? createdAt;
+  final DateTime? updatedAt;
   final int? level;
   final List<int> processIds;
 
   factory DepartmentDto.fromJson(Map<String, dynamic> json) {
     final parent = json['parent'];
     final parentId = parent is Map ? toInt(parent['id']) : toInt(parent);
-    final parentName = json['parent_name']?.toString() ?? (parent is Map ? parent['name']?.toString() : null);
+    final parentName =
+        json['parent_name']?.toString() ??
+        (parent is Map ? parent['name']?.toString() : null);
 
     final processNames = <String>[];
     final processIds = <int>[];
@@ -65,9 +69,12 @@ class DepartmentDto {
     final childrenRaw = json['children'];
     final children = childrenRaw is List
         ? childrenRaw
-            .whereType<Map>()
-            .map((item) => DepartmentDto.fromJson(Map<String, dynamic>.from(item)))
-            .toList()
+              .whereType<Map>()
+              .map(
+                (item) =>
+                    DepartmentDto.fromJson(Map<String, dynamic>.from(item)),
+              )
+              .toList()
         : <DepartmentDto>[];
 
     return DepartmentDto(
@@ -82,6 +89,7 @@ class DepartmentDto {
       sortOrder: toInt(json['sort_order']),
       isActive: json['is_active'] == null ? true : json['is_active'] == true,
       createdAt: toDateTime(json['created_at']),
+      updatedAt: toDateTime(json['updated_at']),
       level: toInt(json['level']),
       processIds: processIds,
     );
@@ -95,11 +103,14 @@ class DepartmentDto {
       parentId: entity.parentId,
       parentName: entity.parentName,
       childrenCount: entity.childrenCount,
-      children: entity.children.map((child) => DepartmentDto.fromEntity(child)).toList(),
+      children: entity.children
+          .map((child) => DepartmentDto.fromEntity(child))
+          .toList(),
       processNames: entity.processNames,
       sortOrder: entity.sortOrder,
       isActive: entity.isActive,
       createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
       level: entity.level,
       processIds: entity.processIds,
     );
@@ -118,6 +129,7 @@ class DepartmentDto {
       sortOrder: sortOrder,
       isActive: isActive,
       createdAt: createdAt,
+      updatedAt: updatedAt,
       level: level,
       processIds: processIds,
     );
@@ -168,5 +180,6 @@ class ProcessOptionDto {
     );
   }
 
-  ProcessOption toEntity() => ProcessOption(id: id, name: name, isActive: isActive);
+  ProcessOption toEntity() =>
+      ProcessOption(id: id, name: name, isActive: isActive);
 }
