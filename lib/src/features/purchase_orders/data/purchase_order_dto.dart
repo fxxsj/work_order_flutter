@@ -12,7 +12,9 @@ class PurchaseOrderDto {
     this.itemsCount,
     this.receivedProgress,
     this.workOrderNumber,
-    this.orderDate,
+    this.orderedDate,
+    this.expectedDate,
+    this.actualReceivedDate,
     this.submittedByName,
     this.approvedByName,
     this.createdAt,
@@ -30,7 +32,9 @@ class PurchaseOrderDto {
   final int? itemsCount;
   final double? receivedProgress;
   final String? workOrderNumber;
-  final DateTime? orderDate;
+  final DateTime? orderedDate;
+  final DateTime? expectedDate;
+  final DateTime? actualReceivedDate;
   final String? submittedByName;
   final String? approvedByName;
   final DateTime? createdAt;
@@ -53,7 +57,9 @@ class PurchaseOrderDto {
       itemsCount: itemsCount,
       receivedProgress: receivedProgress,
       workOrderNumber: workOrderNumber,
-      orderDate: orderDate,
+      orderedDate: orderedDate,
+      expectedDate: expectedDate,
+      actualReceivedDate: actualReceivedDate,
       submittedByName: submittedByName,
       approvedByName: approvedByName,
       createdAt: createdAt,
@@ -76,7 +82,9 @@ extension PurchaseOrderMapper on PurchaseOrder {
       itemsCount: itemsCount,
       receivedProgress: receivedProgress,
       workOrderNumber: workOrderNumber,
-      orderDate: orderDate,
+      orderedDate: orderedDate,
+      expectedDate: expectedDate,
+      actualReceivedDate: actualReceivedDate,
       submittedByName: submittedByName,
       approvedByName: approvedByName,
       createdAt: createdAt,

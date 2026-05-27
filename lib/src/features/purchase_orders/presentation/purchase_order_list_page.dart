@@ -48,8 +48,11 @@ class PurchaseOrderListEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FeatureEntry<PurchaseOrderApiService, PurchaseOrderRepository,
-        PurchaseOrderViewModel>(
+    return FeatureEntry<
+      PurchaseOrderApiService,
+      PurchaseOrderRepository,
+      PurchaseOrderViewModel
+    >(
       createService: (context) =>
           PurchaseOrderApiService(context.read<ApiClient>()),
       createRepository: (context) =>
@@ -92,6 +95,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
   static const String _retryText = '重新加载';
   static const String _statusFilterLabel = '状态';
   static const String _supplierFilterLabel = '供应商';
+  static const String _orderingLabel = '排序';
   static const String _detailTitle = '采购单详情';
   static const String _createTitle = '新增采购单';
   static const String _editTitle = '编辑采购单';
@@ -110,15 +114,15 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
   static const String _pageSizeLabel = '每页 {size}';
   static const CrudActionConfig<PurchaseOrder> _cancelOrderConfig =
       CrudActionConfig(
-    title: _cancelOrderText,
-    summaryBuilder: _buildCancelSummary,
-    impactsBuilder: _buildCancelImpacts,
-    auditHintBuilder: _buildCancelAuditHint,
-    confirmText: '确认取消',
-    successMessageBuilder: _buildCancelSuccessMessage,
-    errorMessagePrefix: '取消失败: ',
-    destructive: true,
-  );
+        title: _cancelOrderText,
+        summaryBuilder: _buildCancelSummary,
+        impactsBuilder: _buildCancelImpacts,
+        auditHintBuilder: _buildCancelAuditHint,
+        confirmText: '确认取消',
+        successMessageBuilder: _buildCancelSuccessMessage,
+        errorMessagePrefix: '取消失败: ',
+        destructive: true,
+      );
 
   final TextEditingController _searchController = TextEditingController();
   final _debounce = DebounceController();
@@ -143,17 +147,17 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
     super.dispose();
   }
 
-  void _scheduleSearch(PurchaseOrderViewModel viewModel,
-      {bool immediate = false}) {
+  void _scheduleSearch(
+    PurchaseOrderViewModel viewModel, {
+    bool immediate = false,
+  }) {
     if (immediate) {
       _debounce.cancel();
-      viewModel.setSearchText(_searchController.text.trim());
-      viewModel.loadPurchaseOrders(resetPage: true);
+      viewModel.setSearchTextAndReload(_searchController.text.trim());
       return;
     }
     _debounce.run(() {
-      viewModel.setSearchText(_searchController.text.trim());
-      viewModel.loadPurchaseOrders(resetPage: true);
+      viewModel.setSearchTextAndReload(_searchController.text.trim());
     });
   }
 
@@ -163,8 +167,9 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
       _materialsLoading = true;
     });
     try {
-      final data = await PurchaseOrderSupportService(context.read<ApiClient>())
-          .loadFormOptions();
+      final data = await PurchaseOrderSupportService(
+        context.read<ApiClient>(),
+      ).loadFormOptions();
       if (!mounted) return;
       setState(() {
         _suppliers = data.suppliers;
@@ -189,9 +194,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
 
   void _resetFilters(PurchaseOrderViewModel viewModel) {
     _searchController.clear();
-    viewModel.setSearchText('');
-    viewModel.setStatusFilter('');
-    viewModel.setSupplierId(0);
+    viewModel.resetFilters();
   }
 
   String _formatDate(DateTime? value) {
@@ -257,7 +260,8 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
   Future<void> _openDetailDialog(PurchaseOrder order) async {
     final detail = await _fetchDetail(order.id);
     if (!mounted) return;
-    final resolved = detail ??
+    final resolved =
+        detail ??
         PurchaseOrderDetail(
           id: order.id,
           orderNumber: order.orderNumber,
@@ -279,11 +283,10 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
     );
   }
 
-  Future<void> _openLowStockDialog(
-    PurchaseOrderViewModel viewModel,
-  ) async {
-    final supportService =
-        PurchaseOrderSupportService(context.read<ApiClient>());
+  Future<void> _openLowStockDialog(PurchaseOrderViewModel viewModel) async {
+    final supportService = PurchaseOrderSupportService(
+      context.read<ApiClient>(),
+    );
     List<Map<String, dynamic>> materials = [];
     try {
       materials = await supportService.loadLowStockMaterials();
@@ -297,32 +300,33 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
       materials: materials,
       title: _lowStockTitle,
       closeText: _cancelText,
-      onCreateOrder: () => _openFormDialog(
-        viewModel,
-        prefillMaterials: materials,
-      ),
+      onCreateOrder: () =>
+          _openFormDialog(viewModel, prefillMaterials: materials),
     );
   }
 
   void _navigateToWorkOrderByNumber(
-      BuildContext context, String workOrderNumber) {
+    BuildContext context,
+    String workOrderNumber,
+  ) {
     // 从采购单列表跳转到施工单，需要先查询施工单 ID
     final api = context.read<WorkOrderApiService>();
     api
         .fetchWorkOrders(search: workOrderNumber, approvalStatus: '')
         .then((result) {
-      if (!mounted) return;
-      final matched = result.items.where(
-        (wo) => wo.orderNumber == workOrderNumber,
-      );
-      if (matched.isNotEmpty) {
-        context.go('/workorders/${matched.first.id}');
-      } else {
-        ToastUtil.showError('未找到施工单 $workOrderNumber');
-      }
-    }).catchError((err) {
-      ToastUtil.showError('跳转失败: $err');
-    });
+          if (!mounted) return;
+          final matched = result.items.where(
+            (wo) => wo.orderNumber == workOrderNumber,
+          );
+          if (matched.isNotEmpty) {
+            context.go('/workorders/${matched.first.id}');
+          } else {
+            ToastUtil.showError('未找到施工单 $workOrderNumber');
+          }
+        })
+        .catchError((err) {
+          ToastUtil.showError('跳转失败: $err');
+        });
   }
 
   Future<void> _openFormDialog(
@@ -345,14 +349,16 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
 
     if (detail != null && detail.items.isNotEmpty) {
       items = detail.items
-          .map((item) => PurchaseItemDraft(
-                materialId: item.materialId ?? 0,
-                materialName: item.materialName ?? '-',
-                materialCode: item.materialCode ?? '',
-                unit: item.materialUnit ?? '',
-                unitPrice: item.unitPrice ?? 0,
-                quantity: item.quantity ?? 0,
-              ))
+          .map(
+            (item) => PurchaseItemDraft(
+              materialId: item.materialId ?? 0,
+              materialName: item.materialName ?? '-',
+              materialCode: item.materialCode ?? '',
+              unit: item.materialUnit ?? '',
+              unitPrice: item.unitPrice ?? 0,
+              quantity: item.quantity ?? 0,
+            ),
+          )
           .toList();
     }
 
@@ -362,9 +368,10 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
         final materialName = item['name']?.toString() ?? '-';
         final materialCode = item['code']?.toString() ?? '';
         final needed = _toDouble(item['needed_quantity']) ?? 0;
-        final match = _materials
-            .cast<MaterialDto?>()
-            .firstWhere((m) => m?.id == materialId, orElse: () => null);
+        final match = _materials.cast<MaterialDto?>().firstWhere(
+          (m) => m?.id == materialId,
+          orElse: () => null,
+        );
         return PurchaseItemDraft(
           materialId: materialId,
           materialName: materialName,
@@ -394,11 +401,13 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
           'work_order': workOrderId,
           'notes': notesController.text.trim(),
           'items_data': items
-              .map((item) => {
-                    'material': item.materialId,
-                    'quantity': item.quantity,
-                    'unit_price': item.unitPrice,
-                  })
+              .map(
+                (item) => {
+                  'material': item.materialId,
+                  'quantity': item.quantity,
+                  'unit_price': item.unitPrice,
+                },
+              )
               .toList(),
         };
 
@@ -541,8 +550,9 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
   }
 
   Future<void> _openInspectionDialog(PurchaseOrder order) async {
-    final supportService =
-        PurchaseOrderSupportService(context.read<ApiClient>());
+    final supportService = PurchaseOrderSupportService(
+      context.read<ApiClient>(),
+    );
     if (!mounted) return;
     await showPurchaseInspectionDialog(
       context,
@@ -577,10 +587,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
         await apiService.reject(order.id, {'rejection_reason': reason});
         ToastUtil.showSuccess('已拒绝，采购单已退回草稿');
       } else if (action == 'place') {
-        final date = await showPurchaseDateDialog(
-          context,
-          title: '下单日期',
-        );
+        final date = await showPurchaseDateDialog(context, title: '下单日期');
         final payload = <String, dynamic>{};
         if (date != null) {
           payload['ordered_date'] = _formatDate(date);
@@ -695,6 +702,9 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
         DataColumn(label: Text('明细数')),
         DataColumn(label: Text('收货进度')),
         DataColumn(label: Text('关联施工单')),
+        DataColumn(label: Text('下单日期')),
+        DataColumn(label: Text('预计到货')),
+        DataColumn(label: Text('实际到货')),
         DataColumn(label: Text('操作')),
       ],
       rows: orders
@@ -719,26 +729,38 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
                   ),
                 ),
                 DataCell(
-                    Text(_displayText(order.supplierName), style: textStyle)),
-                DataCell(Text(
-                  _displayText(order.statusDisplay ?? order.status),
-                  style: textStyle,
-                )),
+                  Text(_displayText(order.supplierName), style: textStyle),
+                ),
                 DataCell(
-                    Text(_formatAmount(order.totalAmount), style: textStyle)),
-                DataCell(Text(order.itemsCount?.toString() ?? _emptyCellText,
-                    style: textStyle)),
-                DataCell(Text(
-                  order.receivedProgress == null
-                      ? _emptyCellText
-                      : '${order.receivedProgress!.toStringAsFixed(0)}%',
-                  style: textStyle,
-                )),
+                  Text(
+                    _displayText(order.statusDisplay ?? order.status),
+                    style: textStyle,
+                  ),
+                ),
+                DataCell(
+                  Text(_formatAmount(order.totalAmount), style: textStyle),
+                ),
+                DataCell(
+                  Text(
+                    order.itemsCount?.toString() ?? _emptyCellText,
+                    style: textStyle,
+                  ),
+                ),
+                DataCell(
+                  Text(
+                    order.receivedProgress == null
+                        ? _emptyCellText
+                        : '${order.receivedProgress!.toStringAsFixed(0)}%',
+                    style: textStyle,
+                  ),
+                ),
                 DataCell(
                   InkWell(
                     onTap: order.workOrderNumber?.isNotEmpty == true
                         ? () => _navigateToWorkOrderByNumber(
-                            context, order.workOrderNumber!)
+                            context,
+                            order.workOrderNumber!,
+                          )
                         : null,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -760,16 +782,27 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
                     ),
                   ),
                 ),
-                DataCell(RowActionGroup(
-                  actions: [
-                    if ((order.status ?? '') == 'draft')
-                      RowAction(
-                        label: '编辑',
-                        onPressed: () =>
-                            _openFormDialog(viewModel, order: order),
-                      ),
-                  ],
-                )),
+                DataCell(
+                  Text(_formatDate(order.orderedDate), style: textStyle),
+                ),
+                DataCell(
+                  Text(_formatDate(order.expectedDate), style: textStyle),
+                ),
+                DataCell(
+                  Text(_formatDate(order.actualReceivedDate), style: textStyle),
+                ),
+                DataCell(
+                  RowActionGroup(
+                    actions: [
+                      if ((order.status ?? '') == 'draft')
+                        RowAction(
+                          label: '编辑',
+                          onPressed: () =>
+                              _openFormDialog(viewModel, order: order),
+                        ),
+                    ],
+                  ),
+                ),
               ],
             ),
           )
@@ -802,8 +835,9 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
             },
           );
 
-          final statusValue =
-              viewModel.statusFilter.isEmpty ? '' : viewModel.statusFilter;
+          final statusValue = viewModel.statusFilter.isEmpty
+              ? ''
+              : viewModel.statusFilter;
           final statusField = SizedBox(
             width: isMobile ? constraints.maxWidth : 150,
             child: AppSelect<String>(
@@ -853,9 +887,38 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
             ),
           );
 
+          final orderingField = SizedBox(
+            width: isMobile ? constraints.maxWidth : 160,
+            child: AppSelect<String>(
+              key: ValueKey<String>(viewModel.ordering),
+              value: viewModel.ordering,
+              decoration: const InputDecoration(
+                labelText: _orderingLabel,
+                isDense: true,
+                border: OutlineInputBorder(),
+              ),
+              options: const [
+                AppDropdownOption(value: '-created_at', label: '最新创建'),
+                AppDropdownOption(value: 'created_at', label: '最早创建'),
+                AppDropdownOption(value: 'order_number', label: '单号升序'),
+                AppDropdownOption(value: '-order_number', label: '单号降序'),
+                AppDropdownOption(value: 'supplier__name', label: '供应商升序'),
+                AppDropdownOption(value: '-supplier__name', label: '供应商降序'),
+                AppDropdownOption(value: 'total_amount', label: '金额升序'),
+                AppDropdownOption(value: '-total_amount', label: '金额降序'),
+                AppDropdownOption(value: 'expected_date', label: '预计到货升序'),
+                AppDropdownOption(value: '-expected_date', label: '预计到货降序'),
+              ],
+              onChanged: (value) {
+                if (value != null) viewModel.setOrdering(value);
+              },
+            ),
+          );
+
           final actions = <Widget>[
             statusField,
             supplierField,
+            orderingField,
             PageActionButton.outlined(
               onPressed: () => viewModel.loadPurchaseOrders(resetPage: true),
               icon: const Icon(Icons.refresh, size: 16),
@@ -900,8 +963,12 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
   }
 
   Widget _mobileRow(
-      BuildContext context, TextStyle? labelStyle, String label, String value,
-      {bool last = false}) {
+    BuildContext context,
+    TextStyle? labelStyle,
+    String label,
+    String value, {
+    bool last = false,
+  }) {
     final theme = Theme.of(context);
     final spacing = LayoutTokens.sectionSpacing(context) * 0.6;
     return Padding(
@@ -911,8 +978,11 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
         children: [
           SizedBox(width: 72, child: Text(label, style: labelStyle)),
           Expanded(
-              child: Text(value.isEmpty ? _emptyCellText : value,
-                  style: theme.textTheme.bodyMedium)),
+            child: Text(
+              value.isEmpty ? _emptyCellText : value,
+              style: theme.textTheme.bodyMedium,
+            ),
+          ),
         ],
       ),
     );
@@ -928,6 +998,9 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
     required String itemsCount,
     required String receivedProgress,
     required String workOrder,
+    required String orderedDate,
+    required String expectedDate,
+    required String actualReceivedDate,
     required String submittedBy,
     required String approvedBy,
     required String createdAt,
@@ -942,6 +1015,9 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
         _mobileRow(context, labelStyle, '明细数', itemsCount),
         _mobileRow(context, labelStyle, '收货进度', receivedProgress),
         _mobileRow(context, labelStyle, '关联施工单', workOrder),
+        _mobileRow(context, labelStyle, '下单日期', orderedDate),
+        _mobileRow(context, labelStyle, '预计到货', expectedDate),
+        _mobileRow(context, labelStyle, '实际到货', actualReceivedDate),
         _mobileRow(context, labelStyle, '提交人', submittedBy),
         _mobileRow(context, labelStyle, '审核人', approvedBy),
         _mobileRow(context, labelStyle, '创建时间', createdAt, last: true),
@@ -958,8 +1034,9 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
-    final number =
-        order.orderNumber.isEmpty ? '采购单 #${order.id}' : order.orderNumber;
+    final number = order.orderNumber.isEmpty
+        ? '采购单 #${order.id}'
+        : order.orderNumber;
     final supplier = _displayText(order.supplierName);
     final status = order.statusDisplay ?? order.status ?? _emptyCellText;
     final totalAmount = _formatAmount(order.totalAmount);
@@ -968,6 +1045,9 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
         ? _emptyCellText
         : '${order.receivedProgress!.toStringAsFixed(0)}%';
     final workOrder = _displayText(order.workOrderNumber);
+    final orderedDate = _formatDate(order.orderedDate);
+    final expectedDate = _formatDate(order.expectedDate);
+    final actualReceivedDate = _formatDate(order.actualReceivedDate);
     final submittedBy = _displayText(order.submittedByName);
     final approvedBy = _displayText(order.approvedByName);
     final createdAt = _formatDateTime(order.createdAt);
@@ -979,7 +1059,8 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
     final canPlaceOrder = statusCode == 'approved';
     final canReceive = statusCode == 'ordered';
     final canInspect = statusCode == 'ordered';
-    final canCancel = statusCode == 'draft' ||
+    final canCancel =
+        statusCode == 'draft' ||
         statusCode == 'submitted' ||
         statusCode == 'approved';
 
@@ -1052,6 +1133,9 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
             itemsCount: itemsCount,
             receivedProgress: receivedProgress,
             workOrder: workOrder,
+            orderedDate: orderedDate,
+            expectedDate: expectedDate,
+            actualReceivedDate: actualReceivedDate,
             submittedBy: submittedBy,
             approvedBy: approvedBy,
             createdAt: createdAt,

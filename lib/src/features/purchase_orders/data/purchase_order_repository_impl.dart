@@ -14,6 +14,7 @@ class PurchaseOrderRepositoryImpl implements PurchaseOrderRepository {
     String? search,
     String? status,
     int? supplierId,
+    String? ordering,
   }) {
     return _apiService.fetchPurchaseOrders(
       page: page,
@@ -21,6 +22,7 @@ class PurchaseOrderRepositoryImpl implements PurchaseOrderRepository {
       search: search,
       status: status,
       supplierId: supplierId,
+      ordering: ordering,
     );
   }
 
@@ -40,7 +42,10 @@ class PurchaseOrderRepositoryImpl implements PurchaseOrderRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> placeOrder(int id, Map<String, dynamic> payload) {
+  Future<Map<String, dynamic>> placeOrder(
+    int id,
+    Map<String, dynamic> payload,
+  ) {
     return _apiService.placeOrder(id, payload);
   }
 
@@ -68,5 +73,4 @@ class PurchaseOrderRepositoryImpl implements PurchaseOrderRepository {
   Future<Map<String, dynamic>> getLowStockMaterials() {
     return _apiService.getLowStockMaterials();
   }
-
 }

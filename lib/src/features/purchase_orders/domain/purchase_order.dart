@@ -26,8 +26,12 @@ abstract class PurchaseOrder with _$PurchaseOrder {
     double? receivedProgress,
     @JsonKey(name: 'work_order_number', fromJson: _stringOrNullFromJson)
     String? workOrderNumber,
-    @JsonKey(name: 'order_date', fromJson: _dateTimeOrNullFromJson)
-    DateTime? orderDate,
+    @JsonKey(name: 'ordered_date', fromJson: _dateTimeOrNullFromJson)
+    DateTime? orderedDate,
+    @JsonKey(name: 'expected_date', fromJson: _dateTimeOrNullFromJson)
+    DateTime? expectedDate,
+    @JsonKey(name: 'actual_received_date', fromJson: _dateTimeOrNullFromJson)
+    DateTime? actualReceivedDate,
     @JsonKey(name: 'submitted_by_name', fromJson: _stringOrNullFromJson)
     String? submittedByName,
     @JsonKey(name: 'approved_by_name', fromJson: _stringOrNullFromJson)

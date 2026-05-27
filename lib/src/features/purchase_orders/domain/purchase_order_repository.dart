@@ -7,6 +7,7 @@ abstract class PurchaseOrderRepository {
     String? search,
     String? status,
     int? supplierId,
+    String? ordering,
   });
 
   Future<Map<String, dynamic>> submit(int id);

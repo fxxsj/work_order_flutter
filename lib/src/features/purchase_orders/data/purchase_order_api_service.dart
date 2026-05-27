@@ -14,11 +14,9 @@ class PurchaseOrderApiService {
     String? search,
     String? status,
     int? supplierId,
+    String? ordering,
   }) async {
-    final params = <String, dynamic>{
-      'page': page,
-      'page_size': pageSize,
-    };
+    final params = <String, dynamic>{'page': page, 'page_size': pageSize};
     final trimmed = search?.trim();
     if (trimmed != null && trimmed.isNotEmpty) {
       params['search'] = trimmed;
@@ -29,28 +27,57 @@ class PurchaseOrderApiService {
     if (supplierId != null && supplierId > 0) {
       params['supplier'] = supplierId;
     }
+    final trimmedOrdering = ordering?.trim();
+    if (trimmedOrdering != null && trimmedOrdering.isNotEmpty) {
+      params['ordering'] = trimmedOrdering;
+    }
 
-    final response = await _client.get('/purchase-orders/', queryParameters: params);
+    final response = await _client.get(
+      '/purchase-orders/',
+      queryParameters: params,
+    );
     final payload = response.data;
     if (payload is Map<String, dynamic>) {
       final results = payload['results'];
       final list = results is List
           ? results
-              .whereType<Map>()
-              .map((item) => PurchaseOrderDto.fromJson(Map<String, dynamic>.from(item)))
-              .toList()
+                .whereType<Map>()
+                .map(
+                  (item) => PurchaseOrderDto.fromJson(
+                    Map<String, dynamic>.from(item),
+                  ),
+                )
+                .toList()
           : <PurchaseOrderDto>[];
       final total = toInt(payload['count']) ?? list.length;
-      return PurchaseOrderPageDto(items: list, total: total, page: page, pageSize: pageSize);
+      return PurchaseOrderPageDto(
+        items: list,
+        total: total,
+        page: page,
+        pageSize: pageSize,
+      );
     }
     if (payload is List) {
       final list = payload
           .whereType<Map>()
-          .map((item) => PurchaseOrderDto.fromJson(Map<String, dynamic>.from(item)))
+          .map(
+            (item) =>
+                PurchaseOrderDto.fromJson(Map<String, dynamic>.from(item)),
+          )
           .toList();
-      return PurchaseOrderPageDto(items: list, total: list.length, page: 1, pageSize: list.length);
+      return PurchaseOrderPageDto(
+        items: list,
+        total: list.length,
+        page: 1,
+        pageSize: list.length,
+      );
     }
-    return const PurchaseOrderPageDto(items: [], total: 0, page: 1, pageSize: 20);
+    return const PurchaseOrderPageDto(
+      items: [],
+      total: 0,
+      page: 1,
+      pageSize: 20,
+    );
   }
 
   Future<PurchaseOrderDetail> fetchDetail(int id) async {
@@ -60,12 +87,17 @@ class PurchaseOrderApiService {
     return PurchaseOrderDetail.fromJson(map);
   }
 
-  Future<PurchaseOrderDetail> createPurchaseOrder(Map<String, dynamic> payload) async {
+  Future<PurchaseOrderDetail> createPurchaseOrder(
+    Map<String, dynamic> payload,
+  ) async {
     final response = await _client.post('/purchase-orders/', data: payload);
     return PurchaseOrderDetail.fromJson(_unwrapDetail(response.data));
   }
 
-  Future<PurchaseOrderDetail> updatePurchaseOrder(int id, Map<String, dynamic> payload) async {
+  Future<PurchaseOrderDetail> updatePurchaseOrder(
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
     final response = await _client.put('/purchase-orders/$id/', data: payload);
     return PurchaseOrderDetail.fromJson(_unwrapDetail(response.data));
   }
@@ -90,18 +122,36 @@ class PurchaseOrderApiService {
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> reject(int id, Map<String, dynamic> payload) async {
-    final response = await _client.post('/purchase-orders/$id/reject/', data: payload);
+  Future<Map<String, dynamic>> reject(
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
+    final response = await _client.post(
+      '/purchase-orders/$id/reject/',
+      data: payload,
+    );
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> placeOrder(int id, Map<String, dynamic> payload) async {
-    final response = await _client.post('/purchase-orders/$id/place_order/', data: payload);
+  Future<Map<String, dynamic>> placeOrder(
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
+    final response = await _client.post(
+      '/purchase-orders/$id/place_order/',
+      data: payload,
+    );
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> receive(int id, Map<String, dynamic> payload) async {
-    final response = await _client.post('/purchase-orders/$id/receive/', data: payload);
+  Future<Map<String, dynamic>> receive(
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
+    final response = await _client.post(
+      '/purchase-orders/$id/receive/',
+      data: payload,
+    );
     return _mapFromResponse(response.data);
   }
 
@@ -111,7 +161,9 @@ class PurchaseOrderApiService {
   }
 
   Future<Map<String, dynamic>> getPendingInspections(int id) async {
-    final response = await _client.get('/purchase-orders/$id/pending_inspections/');
+    final response = await _client.get(
+      '/purchase-orders/$id/pending_inspections/',
+    );
     return _mapFromResponse(response.data);
   }
 
@@ -133,7 +185,9 @@ class PurchaseOrderApiService {
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> getProcurementSummary({String? workOrderStatus}) async {
+  Future<Map<String, dynamic>> getProcurementSummary({
+    String? workOrderStatus,
+  }) async {
     final params = <String, dynamic>{};
     if (workOrderStatus != null) params['work_order_status'] = workOrderStatus;
     final response = await _client.get(

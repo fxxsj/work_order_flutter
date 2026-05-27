@@ -8,23 +8,44 @@ class PurchaseOrderViewModel extends PaginatedViewModel<PurchaseOrder> {
   final PurchaseOrderRepository _repository;
   String _statusFilter = '';
   int _supplierId = 0;
+  String _ordering = '-created_at';
 
   List<PurchaseOrder> get purchaseOrders => items;
   String get statusFilter => _statusFilter;
   int get supplierId => _supplierId;
+  String get ordering => _ordering;
 
   Future<void> initialize() => loadItems(resetPage: true);
 
-  Future<void> loadPurchaseOrders({bool resetPage = false}) => loadItems(resetPage: resetPage);
+  Future<void> loadPurchaseOrders({bool resetPage = false}) =>
+      loadItems(resetPage: resetPage);
 
-  Future<void> setStatusFilter(String value) async {
-    _statusFilter = value;
-    await loadPurchaseOrders(resetPage: true);
+  void setSearchTextAndReload(String value) {
+    setSearchText(value);
+    loadPurchaseOrders(resetPage: true);
   }
 
-  Future<void> setSupplierId(int value) async {
+  void setStatusFilter(String value) {
+    _statusFilter = value;
+    loadPurchaseOrders(resetPage: true);
+  }
+
+  void setSupplierId(int value) {
     _supplierId = value;
-    await loadPurchaseOrders(resetPage: true);
+    loadPurchaseOrders(resetPage: true);
+  }
+
+  void setOrdering(String value) {
+    _ordering = value;
+    loadPurchaseOrders(resetPage: true);
+  }
+
+  void resetFilters() {
+    setSearchText('');
+    _statusFilter = '';
+    _supplierId = 0;
+    _ordering = '-created_at';
+    loadPurchaseOrders(resetPage: true);
   }
 
   @override
@@ -39,6 +60,7 @@ class PurchaseOrderViewModel extends PaginatedViewModel<PurchaseOrder> {
       search: search,
       status: _statusFilter.isEmpty ? null : _statusFilter,
       supplierId: _supplierId > 0 ? _supplierId : null,
+      ordering: _ordering,
     );
     return PageData(
       items: result.items.map((dto) => dto.toEntity()).toList(),
