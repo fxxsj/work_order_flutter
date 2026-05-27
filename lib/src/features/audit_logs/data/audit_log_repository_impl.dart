@@ -13,11 +13,29 @@ class AuditLogRepositoryImpl implements AuditLogRepository {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String? actionType,
+    String? model,
+    String? username,
+    String? objectId,
+    String? ipAddress,
+    String? requestMethod,
+    String? startDate,
+    String? endDate,
+    String? ordering,
   }) async {
     final result = await _apiService.fetchAuditLogs(
       page: page,
       pageSize: pageSize,
       search: search,
+      actionType: actionType,
+      model: model,
+      username: username,
+      objectId: objectId,
+      ipAddress: ipAddress,
+      requestMethod: requestMethod,
+      startDate: startDate,
+      endDate: endDate,
+      ordering: ordering,
     );
     return PageData(
       items: result.items.map((dto) => dto.toEntity()).toList(),
@@ -33,7 +51,7 @@ class AuditLogRepositoryImpl implements AuditLogRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> getDiff(int id) {
+  Future<Map<String, dynamic>> getDiff(String id) {
     return _apiService.fetchDiff(id);
   }
 

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AuditLog {
 
-@JsonKey(fromJson: _intFromJson) int get id;@JsonKey(name: 'action_type', fromJson: _stringOrNullFromJson) String? get actionType;@JsonKey(fromJson: _stringOrNullFromJson) String? get username;@JsonKey(name: 'content_type_name', fromJson: _stringOrNullFromJson) String? get contentTypeName;@JsonKey(name: 'object_repr', fromJson: _stringOrNullFromJson) String? get objectRepr;@JsonKey(name: 'changed_fields', fromJson: _stringOrNullFromJson) String? get changedFields;@JsonKey(name: 'ip_address', fromJson: _stringOrNullFromJson) String? get ipAddress;@JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson) DateTime? get createdAt;
+@JsonKey(fromJson: _stringFromJson) String get id;@JsonKey(name: 'action_type', fromJson: _stringOrNullFromJson) String? get actionType;@JsonKey(fromJson: _stringOrNullFromJson) String? get username;@JsonKey(name: 'content_type_name', fromJson: _stringOrNullFromJson) String? get contentTypeName;@JsonKey(name: 'object_id', fromJson: _stringOrNullFromJson) String? get objectId;@JsonKey(name: 'object_repr', fromJson: _stringOrNullFromJson) String? get objectRepr;@JsonKey(name: 'changed_fields', fromJson: _stringListFromJson) List<String> get changedFields;@JsonKey(name: 'ip_address', fromJson: _stringOrNullFromJson) String? get ipAddress;@JsonKey(name: 'request_method', fromJson: _stringOrNullFromJson) String? get requestMethod;@JsonKey(name: 'request_path', fromJson: _stringOrNullFromJson) String? get requestPath;@JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson) DateTime? get createdAt;
 /// Create a copy of AuditLog
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $AuditLogCopyWith<AuditLog> get copyWith => _$AuditLogCopyWithImpl<AuditLog>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuditLog&&(identical(other.id, id) || other.id == id)&&(identical(other.actionType, actionType) || other.actionType == actionType)&&(identical(other.username, username) || other.username == username)&&(identical(other.contentTypeName, contentTypeName) || other.contentTypeName == contentTypeName)&&(identical(other.objectRepr, objectRepr) || other.objectRepr == objectRepr)&&(identical(other.changedFields, changedFields) || other.changedFields == changedFields)&&(identical(other.ipAddress, ipAddress) || other.ipAddress == ipAddress)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuditLog&&(identical(other.id, id) || other.id == id)&&(identical(other.actionType, actionType) || other.actionType == actionType)&&(identical(other.username, username) || other.username == username)&&(identical(other.contentTypeName, contentTypeName) || other.contentTypeName == contentTypeName)&&(identical(other.objectId, objectId) || other.objectId == objectId)&&(identical(other.objectRepr, objectRepr) || other.objectRepr == objectRepr)&&const DeepCollectionEquality().equals(other.changedFields, changedFields)&&(identical(other.ipAddress, ipAddress) || other.ipAddress == ipAddress)&&(identical(other.requestMethod, requestMethod) || other.requestMethod == requestMethod)&&(identical(other.requestPath, requestPath) || other.requestPath == requestPath)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,actionType,username,contentTypeName,objectRepr,changedFields,ipAddress,createdAt);
+int get hashCode => Object.hash(runtimeType,id,actionType,username,contentTypeName,objectId,objectRepr,const DeepCollectionEquality().hash(changedFields),ipAddress,requestMethod,requestPath,createdAt);
 
 @override
 String toString() {
-  return 'AuditLog(id: $id, actionType: $actionType, username: $username, contentTypeName: $contentTypeName, objectRepr: $objectRepr, changedFields: $changedFields, ipAddress: $ipAddress, createdAt: $createdAt)';
+  return 'AuditLog(id: $id, actionType: $actionType, username: $username, contentTypeName: $contentTypeName, objectId: $objectId, objectRepr: $objectRepr, changedFields: $changedFields, ipAddress: $ipAddress, requestMethod: $requestMethod, requestPath: $requestPath, createdAt: $createdAt)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $AuditLogCopyWith<$Res>  {
   factory $AuditLogCopyWith(AuditLog value, $Res Function(AuditLog) _then) = _$AuditLogCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(fromJson: _intFromJson) int id,@JsonKey(name: 'action_type', fromJson: _stringOrNullFromJson) String? actionType,@JsonKey(fromJson: _stringOrNullFromJson) String? username,@JsonKey(name: 'content_type_name', fromJson: _stringOrNullFromJson) String? contentTypeName,@JsonKey(name: 'object_repr', fromJson: _stringOrNullFromJson) String? objectRepr,@JsonKey(name: 'changed_fields', fromJson: _stringOrNullFromJson) String? changedFields,@JsonKey(name: 'ip_address', fromJson: _stringOrNullFromJson) String? ipAddress,@JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson) DateTime? createdAt
+@JsonKey(fromJson: _stringFromJson) String id,@JsonKey(name: 'action_type', fromJson: _stringOrNullFromJson) String? actionType,@JsonKey(fromJson: _stringOrNullFromJson) String? username,@JsonKey(name: 'content_type_name', fromJson: _stringOrNullFromJson) String? contentTypeName,@JsonKey(name: 'object_id', fromJson: _stringOrNullFromJson) String? objectId,@JsonKey(name: 'object_repr', fromJson: _stringOrNullFromJson) String? objectRepr,@JsonKey(name: 'changed_fields', fromJson: _stringListFromJson) List<String> changedFields,@JsonKey(name: 'ip_address', fromJson: _stringOrNullFromJson) String? ipAddress,@JsonKey(name: 'request_method', fromJson: _stringOrNullFromJson) String? requestMethod,@JsonKey(name: 'request_path', fromJson: _stringOrNullFromJson) String? requestPath,@JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson) DateTime? createdAt
 });
 
 
@@ -65,15 +65,18 @@ class _$AuditLogCopyWithImpl<$Res>
 
 /// Create a copy of AuditLog
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? actionType = freezed,Object? username = freezed,Object? contentTypeName = freezed,Object? objectRepr = freezed,Object? changedFields = freezed,Object? ipAddress = freezed,Object? createdAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? actionType = freezed,Object? username = freezed,Object? contentTypeName = freezed,Object? objectId = freezed,Object? objectRepr = freezed,Object? changedFields = null,Object? ipAddress = freezed,Object? requestMethod = freezed,Object? requestPath = freezed,Object? createdAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int,actionType: freezed == actionType ? _self.actionType : actionType // ignore: cast_nullable_to_non_nullable
+as String,actionType: freezed == actionType ? _self.actionType : actionType // ignore: cast_nullable_to_non_nullable
 as String?,username: freezed == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
 as String?,contentTypeName: freezed == contentTypeName ? _self.contentTypeName : contentTypeName // ignore: cast_nullable_to_non_nullable
+as String?,objectId: freezed == objectId ? _self.objectId : objectId // ignore: cast_nullable_to_non_nullable
 as String?,objectRepr: freezed == objectRepr ? _self.objectRepr : objectRepr // ignore: cast_nullable_to_non_nullable
-as String?,changedFields: freezed == changedFields ? _self.changedFields : changedFields // ignore: cast_nullable_to_non_nullable
-as String?,ipAddress: freezed == ipAddress ? _self.ipAddress : ipAddress // ignore: cast_nullable_to_non_nullable
+as String?,changedFields: null == changedFields ? _self.changedFields : changedFields // ignore: cast_nullable_to_non_nullable
+as List<String>,ipAddress: freezed == ipAddress ? _self.ipAddress : ipAddress // ignore: cast_nullable_to_non_nullable
+as String?,requestMethod: freezed == requestMethod ? _self.requestMethod : requestMethod // ignore: cast_nullable_to_non_nullable
+as String?,requestPath: freezed == requestPath ? _self.requestPath : requestPath // ignore: cast_nullable_to_non_nullable
 as String?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,
   ));
@@ -160,10 +163,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(name: 'action_type', fromJson: _stringOrNullFromJson)  String? actionType, @JsonKey(fromJson: _stringOrNullFromJson)  String? username, @JsonKey(name: 'content_type_name', fromJson: _stringOrNullFromJson)  String? contentTypeName, @JsonKey(name: 'object_repr', fromJson: _stringOrNullFromJson)  String? objectRepr, @JsonKey(name: 'changed_fields', fromJson: _stringOrNullFromJson)  String? changedFields, @JsonKey(name: 'ip_address', fromJson: _stringOrNullFromJson)  String? ipAddress, @JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson)  DateTime? createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _stringFromJson)  String id, @JsonKey(name: 'action_type', fromJson: _stringOrNullFromJson)  String? actionType, @JsonKey(fromJson: _stringOrNullFromJson)  String? username, @JsonKey(name: 'content_type_name', fromJson: _stringOrNullFromJson)  String? contentTypeName, @JsonKey(name: 'object_id', fromJson: _stringOrNullFromJson)  String? objectId, @JsonKey(name: 'object_repr', fromJson: _stringOrNullFromJson)  String? objectRepr, @JsonKey(name: 'changed_fields', fromJson: _stringListFromJson)  List<String> changedFields, @JsonKey(name: 'ip_address', fromJson: _stringOrNullFromJson)  String? ipAddress, @JsonKey(name: 'request_method', fromJson: _stringOrNullFromJson)  String? requestMethod, @JsonKey(name: 'request_path', fromJson: _stringOrNullFromJson)  String? requestPath, @JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson)  DateTime? createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AuditLog() when $default != null:
-return $default(_that.id,_that.actionType,_that.username,_that.contentTypeName,_that.objectRepr,_that.changedFields,_that.ipAddress,_that.createdAt);case _:
+return $default(_that.id,_that.actionType,_that.username,_that.contentTypeName,_that.objectId,_that.objectRepr,_that.changedFields,_that.ipAddress,_that.requestMethod,_that.requestPath,_that.createdAt);case _:
   return orElse();
 
 }
@@ -181,10 +184,10 @@ return $default(_that.id,_that.actionType,_that.username,_that.contentTypeName,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(name: 'action_type', fromJson: _stringOrNullFromJson)  String? actionType, @JsonKey(fromJson: _stringOrNullFromJson)  String? username, @JsonKey(name: 'content_type_name', fromJson: _stringOrNullFromJson)  String? contentTypeName, @JsonKey(name: 'object_repr', fromJson: _stringOrNullFromJson)  String? objectRepr, @JsonKey(name: 'changed_fields', fromJson: _stringOrNullFromJson)  String? changedFields, @JsonKey(name: 'ip_address', fromJson: _stringOrNullFromJson)  String? ipAddress, @JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson)  DateTime? createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _stringFromJson)  String id, @JsonKey(name: 'action_type', fromJson: _stringOrNullFromJson)  String? actionType, @JsonKey(fromJson: _stringOrNullFromJson)  String? username, @JsonKey(name: 'content_type_name', fromJson: _stringOrNullFromJson)  String? contentTypeName, @JsonKey(name: 'object_id', fromJson: _stringOrNullFromJson)  String? objectId, @JsonKey(name: 'object_repr', fromJson: _stringOrNullFromJson)  String? objectRepr, @JsonKey(name: 'changed_fields', fromJson: _stringListFromJson)  List<String> changedFields, @JsonKey(name: 'ip_address', fromJson: _stringOrNullFromJson)  String? ipAddress, @JsonKey(name: 'request_method', fromJson: _stringOrNullFromJson)  String? requestMethod, @JsonKey(name: 'request_path', fromJson: _stringOrNullFromJson)  String? requestPath, @JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson)  DateTime? createdAt)  $default,) {final _that = this;
 switch (_that) {
 case _AuditLog():
-return $default(_that.id,_that.actionType,_that.username,_that.contentTypeName,_that.objectRepr,_that.changedFields,_that.ipAddress,_that.createdAt);case _:
+return $default(_that.id,_that.actionType,_that.username,_that.contentTypeName,_that.objectId,_that.objectRepr,_that.changedFields,_that.ipAddress,_that.requestMethod,_that.requestPath,_that.createdAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -201,10 +204,10 @@ return $default(_that.id,_that.actionType,_that.username,_that.contentTypeName,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(name: 'action_type', fromJson: _stringOrNullFromJson)  String? actionType, @JsonKey(fromJson: _stringOrNullFromJson)  String? username, @JsonKey(name: 'content_type_name', fromJson: _stringOrNullFromJson)  String? contentTypeName, @JsonKey(name: 'object_repr', fromJson: _stringOrNullFromJson)  String? objectRepr, @JsonKey(name: 'changed_fields', fromJson: _stringOrNullFromJson)  String? changedFields, @JsonKey(name: 'ip_address', fromJson: _stringOrNullFromJson)  String? ipAddress, @JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson)  DateTime? createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(fromJson: _stringFromJson)  String id, @JsonKey(name: 'action_type', fromJson: _stringOrNullFromJson)  String? actionType, @JsonKey(fromJson: _stringOrNullFromJson)  String? username, @JsonKey(name: 'content_type_name', fromJson: _stringOrNullFromJson)  String? contentTypeName, @JsonKey(name: 'object_id', fromJson: _stringOrNullFromJson)  String? objectId, @JsonKey(name: 'object_repr', fromJson: _stringOrNullFromJson)  String? objectRepr, @JsonKey(name: 'changed_fields', fromJson: _stringListFromJson)  List<String> changedFields, @JsonKey(name: 'ip_address', fromJson: _stringOrNullFromJson)  String? ipAddress, @JsonKey(name: 'request_method', fromJson: _stringOrNullFromJson)  String? requestMethod, @JsonKey(name: 'request_path', fromJson: _stringOrNullFromJson)  String? requestPath, @JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson)  DateTime? createdAt)?  $default,) {final _that = this;
 switch (_that) {
 case _AuditLog() when $default != null:
-return $default(_that.id,_that.actionType,_that.username,_that.contentTypeName,_that.objectRepr,_that.changedFields,_that.ipAddress,_that.createdAt);case _:
+return $default(_that.id,_that.actionType,_that.username,_that.contentTypeName,_that.objectId,_that.objectRepr,_that.changedFields,_that.ipAddress,_that.requestMethod,_that.requestPath,_that.createdAt);case _:
   return null;
 
 }
@@ -216,16 +219,25 @@ return $default(_that.id,_that.actionType,_that.username,_that.contentTypeName,_
 @JsonSerializable()
 
 class _AuditLog implements AuditLog {
-  const _AuditLog({@JsonKey(fromJson: _intFromJson) required this.id, @JsonKey(name: 'action_type', fromJson: _stringOrNullFromJson) this.actionType, @JsonKey(fromJson: _stringOrNullFromJson) this.username, @JsonKey(name: 'content_type_name', fromJson: _stringOrNullFromJson) this.contentTypeName, @JsonKey(name: 'object_repr', fromJson: _stringOrNullFromJson) this.objectRepr, @JsonKey(name: 'changed_fields', fromJson: _stringOrNullFromJson) this.changedFields, @JsonKey(name: 'ip_address', fromJson: _stringOrNullFromJson) this.ipAddress, @JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson) this.createdAt});
+  const _AuditLog({@JsonKey(fromJson: _stringFromJson) required this.id, @JsonKey(name: 'action_type', fromJson: _stringOrNullFromJson) this.actionType, @JsonKey(fromJson: _stringOrNullFromJson) this.username, @JsonKey(name: 'content_type_name', fromJson: _stringOrNullFromJson) this.contentTypeName, @JsonKey(name: 'object_id', fromJson: _stringOrNullFromJson) this.objectId, @JsonKey(name: 'object_repr', fromJson: _stringOrNullFromJson) this.objectRepr, @JsonKey(name: 'changed_fields', fromJson: _stringListFromJson) final  List<String> changedFields = const <String>[], @JsonKey(name: 'ip_address', fromJson: _stringOrNullFromJson) this.ipAddress, @JsonKey(name: 'request_method', fromJson: _stringOrNullFromJson) this.requestMethod, @JsonKey(name: 'request_path', fromJson: _stringOrNullFromJson) this.requestPath, @JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson) this.createdAt}): _changedFields = changedFields;
   factory _AuditLog.fromJson(Map<String, dynamic> json) => _$AuditLogFromJson(json);
 
-@override@JsonKey(fromJson: _intFromJson) final  int id;
+@override@JsonKey(fromJson: _stringFromJson) final  String id;
 @override@JsonKey(name: 'action_type', fromJson: _stringOrNullFromJson) final  String? actionType;
 @override@JsonKey(fromJson: _stringOrNullFromJson) final  String? username;
 @override@JsonKey(name: 'content_type_name', fromJson: _stringOrNullFromJson) final  String? contentTypeName;
+@override@JsonKey(name: 'object_id', fromJson: _stringOrNullFromJson) final  String? objectId;
 @override@JsonKey(name: 'object_repr', fromJson: _stringOrNullFromJson) final  String? objectRepr;
-@override@JsonKey(name: 'changed_fields', fromJson: _stringOrNullFromJson) final  String? changedFields;
+ final  List<String> _changedFields;
+@override@JsonKey(name: 'changed_fields', fromJson: _stringListFromJson) List<String> get changedFields {
+  if (_changedFields is EqualUnmodifiableListView) return _changedFields;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_changedFields);
+}
+
 @override@JsonKey(name: 'ip_address', fromJson: _stringOrNullFromJson) final  String? ipAddress;
+@override@JsonKey(name: 'request_method', fromJson: _stringOrNullFromJson) final  String? requestMethod;
+@override@JsonKey(name: 'request_path', fromJson: _stringOrNullFromJson) final  String? requestPath;
 @override@JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson) final  DateTime? createdAt;
 
 /// Create a copy of AuditLog
@@ -241,16 +253,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuditLog&&(identical(other.id, id) || other.id == id)&&(identical(other.actionType, actionType) || other.actionType == actionType)&&(identical(other.username, username) || other.username == username)&&(identical(other.contentTypeName, contentTypeName) || other.contentTypeName == contentTypeName)&&(identical(other.objectRepr, objectRepr) || other.objectRepr == objectRepr)&&(identical(other.changedFields, changedFields) || other.changedFields == changedFields)&&(identical(other.ipAddress, ipAddress) || other.ipAddress == ipAddress)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuditLog&&(identical(other.id, id) || other.id == id)&&(identical(other.actionType, actionType) || other.actionType == actionType)&&(identical(other.username, username) || other.username == username)&&(identical(other.contentTypeName, contentTypeName) || other.contentTypeName == contentTypeName)&&(identical(other.objectId, objectId) || other.objectId == objectId)&&(identical(other.objectRepr, objectRepr) || other.objectRepr == objectRepr)&&const DeepCollectionEquality().equals(other._changedFields, _changedFields)&&(identical(other.ipAddress, ipAddress) || other.ipAddress == ipAddress)&&(identical(other.requestMethod, requestMethod) || other.requestMethod == requestMethod)&&(identical(other.requestPath, requestPath) || other.requestPath == requestPath)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,actionType,username,contentTypeName,objectRepr,changedFields,ipAddress,createdAt);
+int get hashCode => Object.hash(runtimeType,id,actionType,username,contentTypeName,objectId,objectRepr,const DeepCollectionEquality().hash(_changedFields),ipAddress,requestMethod,requestPath,createdAt);
 
 @override
 String toString() {
-  return 'AuditLog(id: $id, actionType: $actionType, username: $username, contentTypeName: $contentTypeName, objectRepr: $objectRepr, changedFields: $changedFields, ipAddress: $ipAddress, createdAt: $createdAt)';
+  return 'AuditLog(id: $id, actionType: $actionType, username: $username, contentTypeName: $contentTypeName, objectId: $objectId, objectRepr: $objectRepr, changedFields: $changedFields, ipAddress: $ipAddress, requestMethod: $requestMethod, requestPath: $requestPath, createdAt: $createdAt)';
 }
 
 
@@ -261,7 +273,7 @@ abstract mixin class _$AuditLogCopyWith<$Res> implements $AuditLogCopyWith<$Res>
   factory _$AuditLogCopyWith(_AuditLog value, $Res Function(_AuditLog) _then) = __$AuditLogCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(fromJson: _intFromJson) int id,@JsonKey(name: 'action_type', fromJson: _stringOrNullFromJson) String? actionType,@JsonKey(fromJson: _stringOrNullFromJson) String? username,@JsonKey(name: 'content_type_name', fromJson: _stringOrNullFromJson) String? contentTypeName,@JsonKey(name: 'object_repr', fromJson: _stringOrNullFromJson) String? objectRepr,@JsonKey(name: 'changed_fields', fromJson: _stringOrNullFromJson) String? changedFields,@JsonKey(name: 'ip_address', fromJson: _stringOrNullFromJson) String? ipAddress,@JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson) DateTime? createdAt
+@JsonKey(fromJson: _stringFromJson) String id,@JsonKey(name: 'action_type', fromJson: _stringOrNullFromJson) String? actionType,@JsonKey(fromJson: _stringOrNullFromJson) String? username,@JsonKey(name: 'content_type_name', fromJson: _stringOrNullFromJson) String? contentTypeName,@JsonKey(name: 'object_id', fromJson: _stringOrNullFromJson) String? objectId,@JsonKey(name: 'object_repr', fromJson: _stringOrNullFromJson) String? objectRepr,@JsonKey(name: 'changed_fields', fromJson: _stringListFromJson) List<String> changedFields,@JsonKey(name: 'ip_address', fromJson: _stringOrNullFromJson) String? ipAddress,@JsonKey(name: 'request_method', fromJson: _stringOrNullFromJson) String? requestMethod,@JsonKey(name: 'request_path', fromJson: _stringOrNullFromJson) String? requestPath,@JsonKey(name: 'created_at', fromJson: _dateTimeOrNullFromJson) DateTime? createdAt
 });
 
 
@@ -278,15 +290,18 @@ class __$AuditLogCopyWithImpl<$Res>
 
 /// Create a copy of AuditLog
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? actionType = freezed,Object? username = freezed,Object? contentTypeName = freezed,Object? objectRepr = freezed,Object? changedFields = freezed,Object? ipAddress = freezed,Object? createdAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? actionType = freezed,Object? username = freezed,Object? contentTypeName = freezed,Object? objectId = freezed,Object? objectRepr = freezed,Object? changedFields = null,Object? ipAddress = freezed,Object? requestMethod = freezed,Object? requestPath = freezed,Object? createdAt = freezed,}) {
   return _then(_AuditLog(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int,actionType: freezed == actionType ? _self.actionType : actionType // ignore: cast_nullable_to_non_nullable
+as String,actionType: freezed == actionType ? _self.actionType : actionType // ignore: cast_nullable_to_non_nullable
 as String?,username: freezed == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
 as String?,contentTypeName: freezed == contentTypeName ? _self.contentTypeName : contentTypeName // ignore: cast_nullable_to_non_nullable
+as String?,objectId: freezed == objectId ? _self.objectId : objectId // ignore: cast_nullable_to_non_nullable
 as String?,objectRepr: freezed == objectRepr ? _self.objectRepr : objectRepr // ignore: cast_nullable_to_non_nullable
-as String?,changedFields: freezed == changedFields ? _self.changedFields : changedFields // ignore: cast_nullable_to_non_nullable
-as String?,ipAddress: freezed == ipAddress ? _self.ipAddress : ipAddress // ignore: cast_nullable_to_non_nullable
+as String?,changedFields: null == changedFields ? _self._changedFields : changedFields // ignore: cast_nullable_to_non_nullable
+as List<String>,ipAddress: freezed == ipAddress ? _self.ipAddress : ipAddress // ignore: cast_nullable_to_non_nullable
+as String?,requestMethod: freezed == requestMethod ? _self.requestMethod : requestMethod // ignore: cast_nullable_to_non_nullable
+as String?,requestPath: freezed == requestPath ? _self.requestPath : requestPath // ignore: cast_nullable_to_non_nullable
 as String?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,
   ));

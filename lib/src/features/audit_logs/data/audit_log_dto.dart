@@ -6,19 +6,25 @@ class AuditLogDto {
     this.actionType,
     this.username,
     this.contentTypeName,
+    this.objectId,
     this.objectRepr,
-    this.changedFields,
+    this.changedFields = const [],
     this.ipAddress,
+    this.requestMethod,
+    this.requestPath,
     this.createdAt,
   });
 
-  final int id;
+  final String id;
   final String? actionType;
   final String? username;
   final String? contentTypeName;
+  final String? objectId;
   final String? objectRepr;
-  final String? changedFields;
+  final List<String> changedFields;
   final String? ipAddress;
+  final String? requestMethod;
+  final String? requestPath;
   final DateTime? createdAt;
 
   factory AuditLogDto.fromJson(Map<String, dynamic> json) {
@@ -31,9 +37,12 @@ class AuditLogDto {
       actionType: actionType,
       username: username,
       contentTypeName: contentTypeName,
+      objectId: objectId,
       objectRepr: objectRepr,
       changedFields: changedFields,
       ipAddress: ipAddress,
+      requestMethod: requestMethod,
+      requestPath: requestPath,
       createdAt: createdAt,
     );
   }
@@ -46,9 +55,12 @@ extension AuditLogMapper on AuditLog {
       actionType: actionType,
       username: username,
       contentTypeName: contentTypeName,
+      objectId: objectId,
       objectRepr: objectRepr,
       changedFields: changedFields,
       ipAddress: ipAddress,
+      requestMethod: requestMethod,
+      requestPath: requestPath,
       createdAt: createdAt,
     );
   }
