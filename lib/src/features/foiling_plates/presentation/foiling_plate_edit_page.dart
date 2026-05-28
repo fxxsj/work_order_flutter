@@ -11,7 +11,8 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/image_galler
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
-import 'package:work_order_app/src/core/utils/file_upload_picker.dart';
+import 'package:work_order_app/src/core/utils/image_upload_config.dart';
+import 'package:work_order_app/src/core/utils/image_upload_flow.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/foiling_plates/application/foiling_plate_view_model.dart';
@@ -50,8 +51,6 @@ class FoilingPlateEditPage extends StatefulWidget {
 }
 
 class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
-  static const int _maxImageCount = 12;
-  static const int _maxImageBytes = 10 * 1024 * 1024;
   static const String _codeLabel = '烫金版编码';
   static const String _nameLabel = '烫金版名称';
   static const String _typeLabel = '类型';
@@ -425,8 +424,8 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
       images: _images,
       canUpload: !isConfirmed,
       uploading: _uploadingImage,
-      maxCount: _maxImageCount,
-      limitHintText: '支持 JPG、PNG、WebP、GIF，单张不超过 10MB，最多 $_maxImageCount 张',
+      maxCount: ImageUploadConfig.maxCount,
+      limitHintText: ImageUploadConfig.limitHintText,
       unsavedHintText: '请先保存烫金版后再上传图片',
       emptyText: '暂无图片，点击下方按钮上传',
       imageUrlBuilder: (image) => image.imageUrl,
@@ -439,61 +438,36 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
   }
 
   Future<void> _pickAndUploadImage(FoilingPlateViewModel viewModel) async {
-    if (_plate?.confirmed == true) {
-      ToastUtil.showError('已确认的烫金版不允许修改图片');
-      return;
-    }
-    if (_images.length >= _maxImageCount) {
-      ToastUtil.showError('图片最多上传 $_maxImageCount 张');
-      return;
-    }
-    setState(() => _uploadingImage = true);
-    try {
-      final multipartFile = await pickMultipartFile(
-        allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
-        fallbackFilename: 'foiling_plate_image.jpg',
-        maxBytes: _maxImageBytes,
-      );
-      if (multipartFile == null) {
-        if (mounted) setState(() => _uploadingImage = false);
-        return;
-      }
-      final savedPlate = await _persistPlate(viewModel);
-      final image = await viewModel.uploadFoilingPlateImage(
-        savedPlate.id,
-        multipartFile,
-        sortOrder: _images.length,
-      );
-      if (mounted) {
-        setState(() => _images.add(image));
-        ToastUtil.showSuccess('图片上传成功');
-      }
-    } catch (err) {
-      if (mounted) ToastUtil.showError('上传失败: $err');
-    } finally {
-      if (mounted) setState(() => _uploadingImage = false);
-    }
+    await pickAndUploadImageForResource<FoilingPlate, FoilingPlateImage>(
+      imageCount: _images.length,
+      fallbackFilename: 'foiling_plate_image.jpg',
+      isMounted: () => mounted,
+      setUploading: (value) => setState(() => _uploadingImage = value),
+      persistResource: () => _persistPlate(viewModel),
+      resourceIdOf: (plate) => plate.id,
+      uploadImage: (plateId, imageFile, sortOrder) => viewModel
+          .uploadFoilingPlateImage(plateId, imageFile, sortOrder: sortOrder),
+      addImage: (image) => setState(() => _images.add(image)),
+      isModificationBlocked: () => _plate?.confirmed == true,
+      blockedMessage: '已确认的烫金版不允许修改图片',
+    );
   }
 
   Future<void> _removeImage(
     FoilingPlateViewModel viewModel,
     FoilingPlateImage image,
   ) async {
-    final plate = _plate;
-    if (plate == null) return;
-    if (plate.confirmed) {
-      ToastUtil.showError('已确认的烫金版不允许修改图片');
-      return;
-    }
-    try {
-      await viewModel.deleteFoilingPlateImage(plate.id, image.id);
-      if (mounted) {
-        setState(() => _images.remove(image));
-        ToastUtil.showSuccess('图片已删除');
-      }
-    } catch (err) {
-      if (mounted) ToastUtil.showError('删除失败: $err');
-    }
+    await removeImageFromResource<FoilingPlate, FoilingPlateImage>(
+      resource: _plate,
+      image: image,
+      isMounted: () => mounted,
+      resourceIdOf: (plate) => plate.id,
+      imageIdOf: (item) => item.id,
+      deleteImage: viewModel.deleteFoilingPlateImage,
+      removeImage: (item) => setState(() => _images.remove(item)),
+      isModificationBlocked: (plate) => plate.confirmed,
+      blockedMessage: '已确认的烫金版不允许修改图片',
+    );
   }
 
   @override

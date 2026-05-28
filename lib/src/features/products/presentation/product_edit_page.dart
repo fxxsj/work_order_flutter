@@ -9,7 +9,8 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawe
 import 'package:work_order_app/src/core/presentation/layout/widgets/image_gallery_upload_section.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
-import 'package:work_order_app/src/core/utils/file_upload_picker.dart';
+import 'package:work_order_app/src/core/utils/image_upload_config.dart';
+import 'package:work_order_app/src/core/utils/image_upload_flow.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/materials/data/material_api_service.dart';
@@ -37,10 +38,7 @@ Future<bool> showProductEditDrawer(
     desktopWidth: LayoutTokens.pageWidthXwide,
     child: ChangeNotifierProvider<ProductViewModel>.value(
       value: viewModel,
-      child: ProductEditPage(
-        product: product,
-        onSaved: () => saved = true,
-      ),
+      child: ProductEditPage(product: product, onSaved: () => saved = true),
     ),
   );
   return saved;
@@ -57,8 +55,6 @@ class ProductEditPage extends StatefulWidget {
 }
 
 class _ProductEditPageState extends State<ProductEditPage> {
-  static const int _maxImageCount = 12;
-  static const int _maxImageBytes = 10 * 1024 * 1024;
   static const String _codeLabel = '产品编码';
   static const String _nameLabel = '产品名称';
   static const String _specLabel = '规格';
@@ -148,14 +144,16 @@ class _ProductEditPageState extends State<ProductEditPage> {
     _minStockController = TextEditingController(
       text: product?.minStockQuantity?.toStringAsFixed(0) ?? '',
     );
-    _descriptionController =
-        TextEditingController(text: product?.description ?? '');
+    _descriptionController = TextEditingController(
+      text: product?.description ?? '',
+    );
     _productType = product?.productType ?? 'single';
     _productGroupId = product?.productGroupId;
     _processIds = List<int>.from(product?.defaultProcessIds ?? const []);
     _materialDrafts.addAll(
-      (product?.defaultMaterials ?? const [])
-          .map((item) => _MaterialDraft.fromItem(item)),
+      (product?.defaultMaterials ?? const []).map(
+        (item) => _MaterialDraft.fromItem(item),
+      ),
     );
     _images.addAll(product?.images ?? const []);
     _isActive = product?.isActive ?? true;
@@ -190,15 +188,15 @@ class _ProductEditPageState extends State<ProductEditPage> {
         isActive: true,
       );
       final processFuture = _processApi.fetchProcesses(page: 1, pageSize: 50);
-      final materialFuture =
-          _materialApi.fetchMaterials(page: 1, pageSize: 50);
+      final materialFuture = _materialApi.fetchMaterials(page: 1, pageSize: 50);
       final groupPage = await productGroupFuture;
       final processPage = await processFuture;
       final materialPage = await materialFuture;
       if (!mounted) return;
       setState(() {
-        _productGroups =
-            groupPage.items.map((item) => item.toEntity()).toList();
+        _productGroups = groupPage.items
+            .map((item) => item.toEntity())
+            .toList();
         _processes = processPage.items.map((item) => item.toEntity()).toList();
         _materials = materialPage.items.map((item) => item.toEntity()).toList();
       });
@@ -429,51 +427,32 @@ class _ProductEditPageState extends State<ProductEditPage> {
   }
 
   Future<void> _pickAndUploadImage(ProductViewModel viewModel) async {
-    if (_images.length >= _maxImageCount) {
-      ToastUtil.showError('图片最多上传 $_maxImageCount 张');
-      return;
-    }
-    setState(() => _uploadingImage = true);
-    try {
-      final multipartFile = await pickMultipartFile(
-        allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
-        fallbackFilename: 'product_image.jpg',
-        maxBytes: _maxImageBytes,
-      );
-      if (multipartFile == null) {
-        if (mounted) setState(() => _uploadingImage = false);
-        return;
-      }
-      final savedProduct = await _persistProduct(viewModel);
-      final image = await viewModel.uploadProductImage(
-        savedProduct.id,
-        multipartFile,
-        sortOrder: _images.length,
-      );
-      if (mounted) {
-        setState(() => _images.add(image));
-        ToastUtil.showSuccess('图片上传成功');
-      }
-    } catch (err) {
-      if (mounted) ToastUtil.showError('上传失败: $err');
-    } finally {
-      if (mounted) setState(() => _uploadingImage = false);
-    }
+    await pickAndUploadImageForResource<Product, ProductImage>(
+      imageCount: _images.length,
+      fallbackFilename: 'product_image.jpg',
+      isMounted: () => mounted,
+      setUploading: (value) => setState(() => _uploadingImage = value),
+      persistResource: () => _persistProduct(viewModel),
+      resourceIdOf: (product) => product.id,
+      uploadImage: (productId, imageFile, sortOrder) => viewModel
+          .uploadProductImage(productId, imageFile, sortOrder: sortOrder),
+      addImage: (image) => setState(() => _images.add(image)),
+    );
   }
 
   Future<void> _removeImage(
-      ProductViewModel viewModel, ProductImage image) async {
-    final product = _product;
-    if (product == null) return;
-    try {
-      await viewModel.deleteProductImage(product.id, image.id);
-      if (mounted) {
-        setState(() => _images.remove(image));
-        ToastUtil.showSuccess('图片已删除');
-      }
-    } catch (err) {
-      if (mounted) ToastUtil.showError('删除失败: $err');
-    }
+    ProductViewModel viewModel,
+    ProductImage image,
+  ) async {
+    await removeImageFromResource<Product, ProductImage>(
+      resource: _product,
+      image: image,
+      isMounted: () => mounted,
+      resourceIdOf: (product) => product.id,
+      imageIdOf: (item) => item.id,
+      deleteImage: viewModel.deleteProductImage,
+      removeImage: (item) => setState(() => _images.remove(item)),
+    );
   }
 
   double? _parseDouble(String raw) {
@@ -491,9 +470,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
   Widget _buildLoadingState(BuildContext context) {
     return const SizedBox(
       height: 240,
-      child: Center(
-        child: CircularProgressIndicator(),
-      ),
+      child: Center(child: CircularProgressIndicator()),
     );
   }
 
@@ -555,10 +532,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
         ),
         SizedBox(height: sectionSpacing),
         if (_processes.isEmpty)
-          Text(
-            '暂无可选工序',
-            style: theme.textTheme.bodySmall,
-          )
+          Text('暂无可选工序', style: theme.textTheme.bodySmall)
         else
           Wrap(
             spacing: 8,
@@ -635,10 +609,8 @@ class _ProductEditPageState extends State<ProductEditPage> {
             value: _productType,
             options: _productTypeLabels.entries
                 .map(
-                  (entry) => AppDropdownOption(
-                    value: entry.key,
-                    label: entry.value,
-                  ),
+                  (entry) =>
+                      AppDropdownOption(value: entry.key, label: entry.value),
                 )
                 .toList(),
             onChanged: (value) => _handleProductTypeChange(value as String?),
@@ -724,8 +696,8 @@ class _ProductEditPageState extends State<ProductEditPage> {
       images: _images,
       canUpload: true,
       uploading: _uploadingImage,
-      maxCount: _maxImageCount,
-      limitHintText: '支持 JPG、PNG、WebP、GIF，单张不超过 10MB，最多 $_maxImageCount 张',
+      maxCount: ImageUploadConfig.maxCount,
+      limitHintText: ImageUploadConfig.limitHintText,
       unsavedHintText: '请先保存产品后再上传图片',
       emptyText: '暂无图片，点击下方按钮上传',
       imageUrlBuilder: (image) => image.imageUrl,
@@ -751,11 +723,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
             return [
               CrudFormSection(
                 title: '',
-                fields: [
-                  CrudFieldConfig.custom(
-                    builder: _buildLoadingState,
-                  ),
-                ],
+                fields: [CrudFieldConfig.custom(builder: _buildLoadingState)],
               ),
             ];
           }
@@ -764,32 +732,24 @@ class _ProductEditPageState extends State<ProductEditPage> {
             CrudFormSection(
               title: _basicSectionTitle,
               column: 0,
-              fields: [
-                CrudFieldConfig.custom(builder: _buildBasicSection),
-              ],
+              fields: [CrudFieldConfig.custom(builder: _buildBasicSection)],
             ),
             CrudFormSection(
               title: _extraSectionTitle,
               column: isMobile ? 0 : 1,
-              fields: [
-                CrudFieldConfig.custom(builder: _buildExtraSection),
-              ],
+              fields: [CrudFieldConfig.custom(builder: _buildExtraSection)],
             ),
             CrudFormSection(
               title: '图片管理',
               column: isMobile ? 0 : 1,
-              fields: [
-                CrudFieldConfig.custom(builder: _buildImageSection),
-              ],
+              fields: [CrudFieldConfig.custom(builder: _buildImageSection)],
             ),
             CrudFormSection(
               title: _configSectionTitle,
               column: 0,
               fields: [
                 CrudFieldConfig.custom(builder: _buildProcessSection),
-                CrudFieldConfig.custom(
-                  builder: _buildMaterialSection,
-                ),
+                CrudFieldConfig.custom(builder: _buildMaterialSection),
               ],
             ),
           ];
@@ -807,12 +767,12 @@ class _MaterialDraft {
     String? materialUsage,
     bool? needCutting,
     String? notes,
-  })  : materialSizeController =
-            TextEditingController(text: materialSize ?? ''),
-        materialUsageController =
-            TextEditingController(text: materialUsage ?? ''),
-        notesController = TextEditingController(text: notes ?? ''),
-        needCutting = needCutting ?? false;
+  }) : materialSizeController = TextEditingController(text: materialSize ?? ''),
+       materialUsageController = TextEditingController(
+         text: materialUsage ?? '',
+       ),
+       notesController = TextEditingController(text: notes ?? ''),
+       needCutting = needCutting ?? false;
 
   factory _MaterialDraft.fromItem(ProductMaterialItem item) {
     return _MaterialDraft(

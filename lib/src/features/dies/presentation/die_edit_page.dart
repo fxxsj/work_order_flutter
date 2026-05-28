@@ -12,7 +12,8 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/image_galler
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
-import 'package:work_order_app/src/core/utils/file_upload_picker.dart';
+import 'package:work_order_app/src/core/utils/image_upload_config.dart';
+import 'package:work_order_app/src/core/utils/image_upload_flow.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/dies/application/die_view_model.dart';
@@ -51,8 +52,6 @@ class DieEditPage extends StatefulWidget {
 }
 
 class _DieEditPageState extends State<DieEditPage> {
-  static const int _maxImageCount = 12;
-  static const int _maxImageBytes = 10 * 1024 * 1024;
   static const String _codeLabel = '刀模编码';
   static const String _nameLabel = '刀模名称';
   static const String _typeLabel = '刀模类型';
@@ -503,8 +502,8 @@ class _DieEditPageState extends State<DieEditPage> {
       images: _images,
       canUpload: !isConfirmed,
       uploading: _uploadingImage,
-      maxCount: _maxImageCount,
-      limitHintText: '支持 JPG、PNG、WebP、GIF，单张不超过 10MB，最多 $_maxImageCount 张',
+      maxCount: ImageUploadConfig.maxCount,
+      limitHintText: ImageUploadConfig.limitHintText,
       unsavedHintText: '请先保存刀模后再上传图片',
       emptyText: '暂无图片，点击下方按钮上传',
       imageUrlBuilder: (image) => image.imageUrl,
@@ -515,58 +514,33 @@ class _DieEditPageState extends State<DieEditPage> {
   }
 
   Future<void> _pickAndUploadImage(DieViewModel viewModel) async {
-    if (_die?.confirmed == true) {
-      ToastUtil.showError('已确认的刀模不允许修改图片');
-      return;
-    }
-    if (_images.length >= _maxImageCount) {
-      ToastUtil.showError('图片最多上传 $_maxImageCount 张');
-      return;
-    }
-    setState(() => _uploadingImage = true);
-    try {
-      final multipartFile = await pickMultipartFile(
-        allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
-        fallbackFilename: 'die_image.jpg',
-        maxBytes: _maxImageBytes,
-      );
-      if (multipartFile == null) {
-        if (mounted) setState(() => _uploadingImage = false);
-        return;
-      }
-      final savedDie = await _persistDie(viewModel);
-      final image = await viewModel.uploadDieImage(
-        savedDie.id,
-        multipartFile,
-        sortOrder: _images.length,
-      );
-      if (mounted) {
-        setState(() => _images.add(image));
-        ToastUtil.showSuccess('图片上传成功');
-      }
-    } catch (err) {
-      if (mounted) ToastUtil.showError('上传失败: $err');
-    } finally {
-      if (mounted) setState(() => _uploadingImage = false);
-    }
+    await pickAndUploadImageForResource<Die, DieImage>(
+      imageCount: _images.length,
+      fallbackFilename: 'die_image.jpg',
+      isMounted: () => mounted,
+      setUploading: (value) => setState(() => _uploadingImage = value),
+      persistResource: () => _persistDie(viewModel),
+      resourceIdOf: (die) => die.id,
+      uploadImage: (dieId, imageFile, sortOrder) =>
+          viewModel.uploadDieImage(dieId, imageFile, sortOrder: sortOrder),
+      addImage: (image) => setState(() => _images.add(image)),
+      isModificationBlocked: () => _die?.confirmed == true,
+      blockedMessage: '已确认的刀模不允许修改图片',
+    );
   }
 
   Future<void> _removeImage(DieViewModel viewModel, DieImage image) async {
-    final die = _die;
-    if (die == null) return;
-    if (die.confirmed) {
-      ToastUtil.showError('已确认的刀模不允许修改图片');
-      return;
-    }
-    try {
-      await viewModel.deleteDieImage(die.id, image.id);
-      if (mounted) {
-        setState(() => _images.remove(image));
-        ToastUtil.showSuccess('图片已删除');
-      }
-    } catch (err) {
-      if (mounted) ToastUtil.showError('删除失败: $err');
-    }
+    await removeImageFromResource<Die, DieImage>(
+      resource: _die,
+      image: image,
+      isMounted: () => mounted,
+      resourceIdOf: (die) => die.id,
+      imageIdOf: (item) => item.id,
+      deleteImage: viewModel.deleteDieImage,
+      removeImage: (item) => setState(() => _images.remove(item)),
+      isModificationBlocked: (die) => die.confirmed,
+      blockedMessage: '已确认的刀模不允许修改图片',
+    );
   }
 
   @override

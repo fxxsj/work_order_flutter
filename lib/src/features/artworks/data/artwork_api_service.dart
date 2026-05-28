@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/common/api_exception.dart';
 import 'package:work_order_app/src/core/data/page_data.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/utils/image_upload_response.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/artworks/data/artwork_dto.dart';
 import 'package:work_order_app/src/features/artworks/domain/artwork.dart';
@@ -106,10 +107,10 @@ class ArtworkApiService {
       method: 'post',
       data: formData,
     );
-    final body = _requireMap('上传图稿图片', response.data);
-    final map = body['data'] is Map
-        ? Map<String, dynamic>.from(body['data'] as Map)
-        : body;
+    final map = requireImageUploadResponseData(
+      label: '上传图稿图片',
+      data: response.data,
+    );
     return _parseArtworkImage(map);
   }
 

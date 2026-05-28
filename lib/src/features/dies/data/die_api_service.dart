@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/utils/image_upload_response.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/dies/data/die_dto.dart';
 import 'package:work_order_app/src/features/dies/domain/die.dart';
@@ -123,12 +124,10 @@ class DieApiService {
       method: 'post',
       data: formData,
     );
-    final body = response.data;
-    final map = body is Map
-        ? (body['data'] is Map
-              ? Map<String, dynamic>.from(body['data'])
-              : Map<String, dynamic>.from(body))
-        : <String, dynamic>{};
+    final map = requireImageUploadResponseData(
+      label: '上传刀模图片',
+      data: response.data,
+    );
     return _parseDieImage(map);
   }
 

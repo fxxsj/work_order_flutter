@@ -11,7 +11,8 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/image_galler
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
-import 'package:work_order_app/src/core/utils/file_upload_picker.dart';
+import 'package:work_order_app/src/core/utils/image_upload_config.dart';
+import 'package:work_order_app/src/core/utils/image_upload_flow.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/artworks/application/artwork_view_model.dart';
@@ -56,8 +57,6 @@ class ArtworkEditPage extends StatefulWidget {
 }
 
 class _ArtworkEditPageState extends State<ArtworkEditPage> {
-  static const int _maxImageCount = 12;
-  static const int _maxImageBytes = 10 * 1024 * 1024;
   static const String _baseCodeLabel = '图稿主编码';
   static const String _versionLabel = '版本号';
   static const String _nameLabel = '图稿名称';
@@ -335,53 +334,36 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
   }
 
   Future<void> _pickAndUploadImage(ArtworkViewModel viewModel) async {
-    if (_images.length >= _maxImageCount) {
-      ToastUtil.showError('图片最多上传 $_maxImageCount 张');
-      return;
-    }
-    setState(() => _uploadingImage = true);
-    try {
-      final multipartFile = await pickMultipartFile(
-        allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
-        fallbackFilename: 'artwork_image.jpg',
-        maxBytes: _maxImageBytes,
-      );
-      if (multipartFile == null) {
-        if (mounted) setState(() => _uploadingImage = false);
-        return;
-      }
-      final savedArtwork = await _persistArtwork(viewModel);
-      final image = await viewModel.uploadArtworkImage(
-        savedArtwork.id,
-        multipartFile,
-        sortOrder: _images.length,
-      );
-      if (mounted) {
-        setState(() => _images.add(image));
-        ToastUtil.showSuccess('图片上传成功');
-      }
-    } catch (err) {
-      if (mounted) ToastUtil.showError('上传失败: $err');
-    } finally {
-      if (mounted) setState(() => _uploadingImage = false);
-    }
+    await pickAndUploadImageForResource<Artwork, ArtworkImage>(
+      imageCount: _images.length,
+      fallbackFilename: 'artwork_image.jpg',
+      isMounted: () => mounted,
+      setUploading: (value) => setState(() => _uploadingImage = value),
+      persistResource: () => _persistArtwork(viewModel),
+      resourceIdOf: (artwork) => artwork.id,
+      uploadImage: (artworkId, imageFile, sortOrder) => viewModel
+          .uploadArtworkImage(artworkId, imageFile, sortOrder: sortOrder),
+      addImage: (image) => setState(() => _images.add(image)),
+      isModificationBlocked: () => _artwork?.confirmed == true,
+      blockedMessage: '已确认的图稿不允许修改图片',
+    );
   }
 
   Future<void> _removeImage(
     ArtworkViewModel viewModel,
     ArtworkImage image,
   ) async {
-    final artwork = _artwork;
-    if (artwork == null) return;
-    try {
-      await viewModel.deleteArtworkImage(artwork.id, image.id);
-      if (mounted) {
-        setState(() => _images.remove(image));
-        ToastUtil.showSuccess('图片已删除');
-      }
-    } catch (err) {
-      if (mounted) ToastUtil.showError('删除失败: $err');
-    }
+    await removeImageFromResource<Artwork, ArtworkImage>(
+      resource: _artwork,
+      image: image,
+      isMounted: () => mounted,
+      resourceIdOf: (artwork) => artwork.id,
+      imageIdOf: (item) => item.id,
+      deleteImage: viewModel.deleteArtworkImage,
+      removeImage: (item) => setState(() => _images.remove(item)),
+      isModificationBlocked: (artwork) => artwork.confirmed,
+      blockedMessage: '已确认的图稿不允许修改图片',
+    );
   }
 
   Widget _buildVersionField(BuildContext context) {
@@ -514,8 +496,8 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
       images: _images,
       canUpload: true,
       uploading: _uploadingImage,
-      maxCount: _maxImageCount,
-      limitHintText: '支持 JPG、PNG、WebP、GIF，单张不超过 10MB，最多 $_maxImageCount 张',
+      maxCount: ImageUploadConfig.maxCount,
+      limitHintText: ImageUploadConfig.limitHintText,
       unsavedHintText: '请先保存图稿后再上传图片',
       emptyText: '暂无图片，点击下方按钮上传',
       imageUrlBuilder: (image) => image.imageUrl,

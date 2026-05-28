@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/common/api_exception.dart';
 import 'package:work_order_app/src/core/data/page_data.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/utils/image_upload_response.dart';
 import 'package:work_order_app/src/core/utils/import_export_util.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/products/data/product_dto.dart';
@@ -19,9 +20,7 @@ class ProductApiService {
     int pageSize = 100,
     bool? isActive,
   }) async {
-    final params = <String, dynamic>{
-      'page_size': pageSize,
-    };
+    final params = <String, dynamic>{'page_size': pageSize};
     if (isActive != null) {
       params['is_active'] = isActive;
     }
@@ -49,10 +48,7 @@ class ProductApiService {
     bool? isActive,
     String? ordering,
   }) async {
-    final params = <String, dynamic>{
-      'page': page,
-      'page_size': pageSize,
-    };
+    final params = <String, dynamic>{'page': page, 'page_size': pageSize};
     final trimmed = search?.trim();
     if (trimmed != null && trimmed.isNotEmpty) {
       params['search'] = trimmed;
@@ -103,8 +99,10 @@ class ProductApiService {
   }
 
   Future<ProductDto> updateProduct(ProductDto dto) async {
-    final response =
-        await _client.put('/products/${dto.id}/', data: dto.toPayload());
+    final response = await _client.put(
+      '/products/${dto.id}/',
+      data: dto.toPayload(),
+    );
     return ProductDto.fromJson(_requireMap('更新产品', response.data));
   }
 
@@ -129,10 +127,10 @@ class ProductApiService {
       method: 'post',
       data: formData,
     );
-    final body = _requireMap('上传产品图片', response.data);
-    final map = body['data'] is Map
-        ? Map<String, dynamic>.from(body['data'] as Map)
-        : body;
+    final map = requireImageUploadResponseData(
+      label: '上传产品图片',
+      data: response.data,
+    );
     return ProductImage(
       id: toInt(map['id']) ?? 0,
       imageUrl: map['image']?.toString() ?? '',
@@ -188,9 +186,6 @@ class ProductApiService {
   }
 
   ApiException _unexpectedPayload(String label, dynamic data) {
-    return ApiException(
-      message: '$label 响应格式异常',
-      data: data,
-    );
+    return ApiException(message: '$label 响应格式异常', data: data);
   }
 }

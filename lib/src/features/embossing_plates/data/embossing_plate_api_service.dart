@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/utils/image_upload_response.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/embossing_plates/data/embossing_plate_dto.dart';
 import 'package:work_order_app/src/features/embossing_plates/domain/embossing_plate.dart';
@@ -134,12 +135,10 @@ class EmbossingPlateApiService {
       method: 'post',
       data: formData,
     );
-    final body = response.data;
-    final map = body is Map
-        ? (body['data'] is Map
-              ? Map<String, dynamic>.from(body['data'])
-              : Map<String, dynamic>.from(body))
-        : <String, dynamic>{};
+    final map = requireImageUploadResponseData(
+      label: '上传压凸版图片',
+      data: response.data,
+    );
     return _parseEmbossingPlateImage(map);
   }
 

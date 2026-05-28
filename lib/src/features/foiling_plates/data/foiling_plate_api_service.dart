@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/utils/image_upload_response.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/foiling_plates/data/foiling_plate_dto.dart';
 import 'package:work_order_app/src/features/foiling_plates/domain/foiling_plate.dart';
@@ -137,12 +138,10 @@ class FoilingPlateApiService {
       method: 'post',
       data: formData,
     );
-    final body = response.data;
-    final map = body is Map
-        ? (body['data'] is Map
-              ? Map<String, dynamic>.from(body['data'])
-              : Map<String, dynamic>.from(body))
-        : <String, dynamic>{};
+    final map = requireImageUploadResponseData(
+      label: '上传烫金版图片',
+      data: response.data,
+    );
     return _parseFoilingPlateImage(map);
   }
 
