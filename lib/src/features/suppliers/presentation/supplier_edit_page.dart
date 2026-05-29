@@ -146,14 +146,17 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
                 label: _codeLabel,
                 controller: _codeController,
                 enabled: widget.supplier == null,
-                validator: FormValidators.compose<String>([
-                  FormValidators.required(_codeRequiredText),
-                  FormValidators.lengthRange(2, 50, _codeLengthText),
-                  FormValidators.pattern(
-                    RegExp(r'^[\u4e00-\u9fa5A-Za-z0-9-]+$'),
-                    _codeInvalidText,
-                  ),
-                ]),
+                hintText: '请输入编码（留空自动生成）',
+                validator: (value) {
+                  final text = value?.trim() ?? '';
+                  if (text.isEmpty) return null;
+                  if (text.length < 2 || text.length > 50) {
+                    return _codeLengthText;
+                  }
+                  final regex = RegExp(r'^[\u4e00-\u9fa5A-Za-z0-9-]+$');
+                  if (!regex.hasMatch(text)) return _codeInvalidText;
+                  return null;
+                },
               ),
               CrudFieldConfig.text(
                 label: _nameLabel,

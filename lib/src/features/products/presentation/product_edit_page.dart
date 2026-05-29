@@ -578,9 +578,10 @@ class _ProductEditPageState extends State<ProductEditPage> {
           label: _codeLabel,
           controller: _codeController,
           enabled: widget.product == null,
+          hintText: '请输入编码（留空自动生成）',
           validator: (value) {
             final text = value?.trim() ?? '';
-            if (text.isEmpty) return _codeRequiredText;
+            if (text.isEmpty) return null;
             if (text.length < 2 || text.length > 50) {
               return _codeLengthText;
             }
