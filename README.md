@@ -27,7 +27,7 @@ lib/src/
 │           └── theme/                # ColorTokens, TextTokens, OpacityTokens
 ├── features/                # 业务模块（Feature-first）
 │   ├── workorders/          # 施工单
-│   ├── sales_orders/        # 销售订单
+│   ├── sales_orders/        # 客户订单
 │   ├── tasks/               # 任务管理
 │   ├── approvals/           # 审批管理
 │   ├── customer/            # 客户
