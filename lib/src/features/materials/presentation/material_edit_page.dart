@@ -56,7 +56,6 @@ class _MaterialEditPageState extends State<MaterialEditPage> {
 
   static const String _submitText = '保存';
   static const String _submitErrorText = '操作失败: ';
-  static const String _codeRequiredText = '请输入物料编码';
   static const String _codeLengthText = '编码长度在2-50个字符之间';
   static const String _codeInvalidText = '编码只能包含字母、数字和连字符';
   static const String _nameRequiredText = '请输入物料名称';
