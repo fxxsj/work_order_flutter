@@ -334,8 +334,17 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
     PurchaseOrder? order,
     List<Map<String, dynamic>>? prefillMaterials,
   }) async {
-    final apiService = context.read<PurchaseOrderApiService>();
     final isEdit = order != null;
+    final requiredPermission = isEdit
+        ? 'workorder.change_purchaseorder'
+        : 'workorder.add_purchaseorder';
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has(requiredPermission)) {
+      ToastUtil.showError('当前账号无权执行该操作');
+      return;
+    }
+
+    final apiService = context.read<PurchaseOrderApiService>();
     PurchaseOrderDetail? detail;
     if (isEdit) {
       detail = await _fetchDetail(order.id);
@@ -386,6 +395,10 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
     final formKey = GlobalKey<FormState>();
 
     Future<void> submit(VoidCallback refresh) async {
+      if (!PermissionUtil.snapshot(context).has(requiredPermission)) {
+        ToastUtil.showError('当前账号无权执行该操作');
+        return;
+      }
       if (!(formKey.currentState?.validate() ?? false)) return;
       if (supplierId == null || supplierId == 0) {
         ToastUtil.showError('请选择供应商');
@@ -514,6 +527,11 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
     PurchaseOrderViewModel viewModel,
     PurchaseOrder order,
   ) async {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.change_purchasereceiverecord')) {
+      ToastUtil.showError('当前账号无权执行该操作');
+      return;
+    }
     final apiService = context.read<PurchaseOrderApiService>();
     final detail = await _fetchDetail(order.id);
     if (detail == null) return;
@@ -550,6 +568,11 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
   }
 
   Future<void> _openInspectionDialog(PurchaseOrder order) async {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.change_purchasereceiverecord')) {
+      ToastUtil.showError('当前账号无权执行该操作');
+      return;
+    }
     final supportService = PurchaseOrderSupportService(
       context.read<ApiClient>(),
     );
@@ -569,6 +592,11 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
     PurchaseOrder order,
     String action,
   ) async {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.change_purchaseorder')) {
+      ToastUtil.showError('当前账号无权执行该操作');
+      return;
+    }
     final apiService = context.read<PurchaseOrderApiService>();
     try {
       if (action == 'submit') {
@@ -693,6 +721,10 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
   ) {
     final theme = Theme.of(context);
     final textStyle = theme.textTheme.bodySmall;
+    final permissions = PermissionUtil.snapshot(context);
+    final canChangePurchaseOrder = permissions.has(
+      'workorder.change_purchaseorder',
+    );
     return AppDataTable(
       columns: const [
         DataColumn(label: Text('采购单号')),
@@ -794,7 +826,8 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
                 DataCell(
                   RowActionGroup(
                     actions: [
-                      if ((order.status ?? '') == 'draft')
+                      if ((order.status ?? '') == 'draft' &&
+                          canChangePurchaseOrder)
                         RowAction(
                           label: '编辑',
                           onPressed: () =>
@@ -815,6 +848,10 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
     PurchaseOrderViewModel viewModel,
     bool isMobile,
   ) {
+    final permissions = PermissionUtil.snapshot(context);
+    final canCreatePurchaseOrder = permissions.has(
+      'workorder.add_purchaseorder',
+    );
     return PageHeaderBar(
       breadcrumb: null,
       useSurface: false,
@@ -934,11 +971,12 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
               icon: const Icon(Icons.warning_amber_outlined, size: 16),
               label: _lowStockButtonText,
             ),
-            PageActionButton.filled(
-              onPressed: () => _openFormDialog(viewModel),
-              icon: const Icon(Icons.add),
-              label: _createButtonText,
-            ),
+            if (canCreatePurchaseOrder)
+              PageActionButton.filled(
+                onPressed: () => _openFormDialog(viewModel),
+                icon: const Icon(Icons.add),
+                label: _createButtonText,
+              ),
           ];
 
           return ListToolbar(
@@ -1052,17 +1090,25 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
     final approvedBy = _displayText(order.approvedByName);
     final createdAt = _formatDateTime(order.createdAt);
     final statusCode = order.status ?? '';
-    final canEdit = statusCode == 'draft';
-    final canSubmit = statusCode == 'draft';
-    final canApprove = statusCode == 'submitted';
-    final canReject = statusCode == 'submitted';
-    final canPlaceOrder = statusCode == 'approved';
-    final canReceive = statusCode == 'ordered';
-    final canInspect = statusCode == 'ordered';
+    final permissions = PermissionUtil.snapshot(context);
+    final canChangePurchaseOrder = permissions.has(
+      'workorder.change_purchaseorder',
+    );
+    final canChangeReceiveRecord = permissions.has(
+      'workorder.change_purchasereceiverecord',
+    );
+    final canEdit = statusCode == 'draft' && canChangePurchaseOrder;
+    final canSubmit = statusCode == 'draft' && canChangePurchaseOrder;
+    final canApprove = statusCode == 'submitted' && canChangePurchaseOrder;
+    final canReject = statusCode == 'submitted' && canChangePurchaseOrder;
+    final canPlaceOrder = statusCode == 'approved' && canChangePurchaseOrder;
+    final canReceive = statusCode == 'ordered' && canChangeReceiveRecord;
+    final canInspect = statusCode == 'ordered' && canChangeReceiveRecord;
     final canCancel =
-        statusCode == 'draft' ||
-        statusCode == 'submitted' ||
-        statusCode == 'approved';
+        canChangePurchaseOrder &&
+        (statusCode == 'draft' ||
+            statusCode == 'submitted' ||
+            statusCode == 'approved');
 
     return ExpandableSummaryCard(
       headerBuilder: (context, expanded) {

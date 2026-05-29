@@ -17,6 +17,14 @@ class AuthController extends ChangeNotifier {
 
   bool get isLoggedIn => _isLoggedIn;
 
+  Map<String, dynamic>? get currentUser {
+    final raw = _storage.read(Constant.KEY_CURRENT_USER_INFO);
+    if (raw is Map) {
+      return Map<String, dynamic>.from(raw);
+    }
+    return null;
+  }
+
   void initialize() {
     _isLoggedIn = _storage.isLoggedIn();
     _startSessionMonitor();

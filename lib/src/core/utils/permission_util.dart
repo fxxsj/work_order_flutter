@@ -7,12 +7,10 @@ class PermissionSnapshot {
   const PermissionSnapshot._({
     required this.permissions,
     required this.isSuperuser,
-    required this.fallbackToUnrestricted,
   });
 
   final Set<String> permissions;
   final bool isSuperuser;
-  final bool fallbackToUnrestricted;
 
   bool get isAdmin => isSuperuser || permissions.contains('*');
 
@@ -21,9 +19,6 @@ class PermissionSnapshot {
   bool hasAny(List<String> requiredPermissions) {
     if (isAdmin) {
       return true;
-    }
-    if (permissions.isEmpty) {
-      return fallbackToUnrestricted;
     }
     return requiredPermissions.any(permissions.contains);
   }
@@ -45,46 +40,24 @@ class PermissionUtil {
     return user?['is_superuser'] == true;
   }
 
-  static PermissionSnapshot snapshot(
-    BuildContext context, {
-    bool fallbackToUnrestricted = true,
-  }) {
+  static PermissionSnapshot snapshot(BuildContext context) {
     final user = currentUser(context);
     if (user == null || user.isEmpty) {
-      return PermissionSnapshot._(
-        permissions: const {},
-        isSuperuser: false,
-        fallbackToUnrestricted: fallbackToUnrestricted,
-      );
+      return PermissionSnapshot._(permissions: const {}, isSuperuser: false);
     }
 
     return PermissionSnapshot._(
       permissions: _stringSet(user['permissions']),
       isSuperuser: user['is_superuser'] == true,
-      fallbackToUnrestricted: fallbackToUnrestricted,
     );
   }
 
-  static bool hasPermission(
-    BuildContext context,
-    String permission, {
-    bool fallbackToUnrestricted = true,
-  }) {
-    return snapshot(
-      context,
-      fallbackToUnrestricted: fallbackToUnrestricted,
-    ).has(permission);
+  static bool hasPermission(BuildContext context, String permission) {
+    return snapshot(context).has(permission);
   }
 
-  static bool hasAnyPermission(
-    BuildContext context,
-    List<String> permissions, {
-    bool fallbackToUnrestricted = true,
-  }) {
-    return snapshot(
-      context,
-      fallbackToUnrestricted: fallbackToUnrestricted,
-    ).hasAny(permissions);
+  static bool hasAnyPermission(BuildContext context, List<String> permissions) {
+    return snapshot(context).hasAny(permissions);
   }
 
   static Set<String> _stringSet(Object? raw) {

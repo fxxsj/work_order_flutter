@@ -17,7 +17,8 @@ GoRouter createAppRouter(AuthController authController) {
     initialLocation: '/dashboard',
     refreshListenable: authController,
     redirect: (context, state) {
-      final goingToLogin = state.matchedLocation == '/login' ||
+      final goingToLogin =
+          state.matchedLocation == '/login' ||
           state.matchedLocation == '/register';
       final loggedIn = authController.isLoggedIn;
 
@@ -33,6 +34,15 @@ GoRouter createAppRouter(AuthController authController) {
         return '/dashboard';
       }
       if (state.matchedLocation == '/') {
+        return '/dashboard';
+      }
+      if (loggedIn &&
+          state.matchedLocation != '/dashboard' &&
+          !goingToLogin &&
+          !canAccessPath(
+            state.uri.path,
+            currentUser: authController.currentUser,
+          )) {
         return '/dashboard';
       }
       return null;
@@ -96,16 +106,16 @@ List<GoRoute> _buildBranchRoutes(NavItem item) {
       GoRoute(
         path: item.path ?? '/workorders',
         name: item.id,
-        pageBuilder: (context, state) => NoTransitionPage(
-          child: ContentPage(selectedId: item.id),
-        ),
+        pageBuilder: (context, state) =>
+            NoTransitionPage(child: ContentPage(selectedId: item.id)),
         routes: [
           GoRoute(
             path: 'create',
             name: 'workorder_create',
             pageBuilder: (context, state) {
               final salesOrderId = int.tryParse(
-                  state.uri.queryParameters['sales_order_id'] ?? '');
+                state.uri.queryParameters['sales_order_id'] ?? '',
+              );
               return NoTransitionPage(
                 child: WorkOrderFormEntry(
                   mode: WorkOrderFormMode.create,
@@ -149,9 +159,8 @@ List<GoRoute> _buildBranchRoutes(NavItem item) {
       GoRoute(
         path: item.path ?? '/sales-orders',
         name: item.id,
-        pageBuilder: (context, state) => NoTransitionPage(
-          child: ContentPage(selectedId: item.id),
-        ),
+        pageBuilder: (context, state) =>
+            NoTransitionPage(child: ContentPage(selectedId: item.id)),
         routes: [
           GoRoute(
             path: 'create',
@@ -194,9 +203,8 @@ List<GoRoute> _buildBranchRoutes(NavItem item) {
     GoRoute(
       path: item.path ?? '/',
       name: item.id,
-      pageBuilder: (context, state) => NoTransitionPage(
-        child: ContentPage(selectedId: item.id),
-      ),
+      pageBuilder: (context, state) =>
+          NoTransitionPage(child: ContentPage(selectedId: item.id)),
       routes: [
         if (_resourceEditRouteIds.contains(item.id))
           GoRoute(

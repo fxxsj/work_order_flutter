@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:work_order_app/src/core/constants/constant.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/storage/app_storage.dart';
 import 'package:work_order_app/src/core/utils/store_util.dart';
@@ -42,13 +43,23 @@ void main() {
 
     addTearDown(controller.dispose);
 
-    await controller.handleLogin(access: 'access-token', refresh: 'refresh-token');
+    await controller.handleLogin(
+      access: 'access-token',
+      refresh: 'refresh-token',
+    );
 
     expect(storage.readAccessToken(), 'access-token');
     expect(storage.readRefreshToken(), 'refresh-token');
     expect(controller.isLoggedIn, isTrue);
     expect(apiClient.updatedAccess, 'access-token');
     expect(apiClient.updatedRefresh, 'refresh-token');
+
+    await storage.write(Constant.KEY_CURRENT_USER_INFO, {
+      'permissions': ['workorder.view_workorder'],
+    });
+    expect(controller.currentUser?['permissions'], [
+      'workorder.view_workorder',
+    ]);
 
     await controller.handleLogout();
 

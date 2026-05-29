@@ -70,14 +70,12 @@ class _NavAccessContext {
     required this.roleCodes,
     required this.isSuperuser,
     required this.isStaff,
-    required this.unrestricted,
   });
 
   final Set<String> permissions;
   final Set<String> roleCodes;
   final bool isSuperuser;
   final bool isStaff;
-  final bool unrestricted;
 
   factory _NavAccessContext.fromUser(Map<String, dynamic>? user) {
     if (user == null || user.isEmpty) {
@@ -86,7 +84,6 @@ class _NavAccessContext {
         roleCodes: {},
         isSuperuser: false,
         isStaff: false,
-        unrestricted: true,
       );
     }
 
@@ -104,14 +101,11 @@ class _NavAccessContext {
 
     final isSuperuser = user['is_superuser'] == true;
     final isStaff = user['is_staff'] == true;
-    final unrestricted = permissions.isEmpty && roleCodes.isEmpty && !isSuperuser;
-
     return _NavAccessContext(
       permissions: permissions,
       roleCodes: roleCodes,
       isSuperuser: isSuperuser,
       isStaff: isStaff,
-      unrestricted: unrestricted,
     );
   }
 
@@ -119,7 +113,6 @@ class _NavAccessContext {
     if (isSuperuser || permissions.contains('*')) return true;
     if (item.superuserOnly) return false;
     if (item.staffOnly && !isStaff) return false;
-    if (unrestricted) return true;
     if (item.requiredRoles.isNotEmpty &&
         !item.requiredRoles.any(roleCodes.contains)) {
       return false;
@@ -641,6 +634,84 @@ String? matchNavIdWith(String path, Map<String, String> pathToId) {
   return null;
 }
 
+NavItem? navItemForPath(String path) {
+  final id = matchNavId(path);
+  if (id == null) {
+    return null;
+  }
+  for (final item in _flatNavItems) {
+    if (item.id == id) {
+      return item;
+    }
+  }
+  return null;
+}
+
+List<String> requiredPermissionsForPath(String path) {
+  final editPermission = _requiredMutationPermissionForPath(path);
+  if (editPermission != null) {
+    return [editPermission];
+  }
+  final item = navItemForPath(path);
+  return item?.requiredPermissions ?? const [];
+}
+
+bool canAccessPath(String path, {Map<String, dynamic>? currentUser}) {
+  final requiredPermissions = requiredPermissionsForPath(path);
+  if (requiredPermissions.isNotEmpty) {
+    final access = _NavAccessContext.fromUser(currentUser);
+    if (access.isSuperuser || access.permissions.contains('*')) {
+      return true;
+    }
+    return requiredPermissions.any(access.permissions.contains);
+  }
+  final item = navItemForPath(path);
+  if (item == null) {
+    return true;
+  }
+  return _NavAccessContext.fromUser(currentUser).canAccess(item);
+}
+
+String? _requiredMutationPermissionForPath(String path) {
+  switch (path) {
+    case '/workorders/create':
+      return 'workorder.add_workorder';
+    case '/sales-orders/create':
+      return 'workorder.add_salesorder';
+  }
+
+  if (RegExp(r'^/workorders/[^/]+/edit$').hasMatch(path)) {
+    return 'workorder.change_workorder';
+  }
+  if (RegExp(r'^/sales-orders/[^/]+/edit$').hasMatch(path)) {
+    return 'workorder.change_salesorder';
+  }
+
+  const resourcePermissions = <String, String>{
+    '/customers': 'customer',
+    '/products': 'product',
+    '/materials': 'material',
+    '/product-groups': 'productgroup',
+    '/suppliers': 'supplier',
+    '/departments': 'department',
+    '/processes': 'process',
+    '/artworks': 'artwork',
+    '/dies': 'die',
+    '/foiling-plates': 'foilingplate',
+    '/embossing-plates': 'embossingplate',
+  };
+
+  for (final entry in resourcePermissions.entries) {
+    if (path == '${entry.key}/create') {
+      return 'workorder.add_${entry.value}';
+    }
+    if (RegExp('^${RegExp.escape(entry.key)}/[^/]+/edit\$').hasMatch(path)) {
+      return 'workorder.change_${entry.value}';
+    }
+  }
+  return null;
+}
+
 List<String> buildBreadcrumb(String id) {
   for (final item in navItems) {
     if (item.id == id) {
@@ -664,7 +735,9 @@ List<String> buildBreadcrumbForPath(String path) {
 }
 
 List<String> buildBreadcrumbForPathWith(
-    String path, Map<String, String> pathToId) {
+  String path,
+  Map<String, String> pathToId,
+) {
   final id = matchNavIdWith(path, pathToId);
   if (id == null) {
     return ['首页'];
@@ -683,9 +756,13 @@ String labelFor(String id) {
 }
 
 RegExp _pathPatternToRegex(String pattern) {
-  final escaped =
-      pattern.replaceAllMapped(RegExp(r'([.+^${}()|\\])'), (m) => '\\${m[0]}');
+  final escaped = pattern.replaceAllMapped(
+    RegExp(r'([.+^${}()|\\])'),
+    (m) => '\\${m[0]}',
+  );
   final replaced = escaped.replaceAllMapped(
-      RegExp(r':([a-zA-Z_][a-zA-Z0-9_]*)'), (_) => r'[^/]+');
+    RegExp(r':([a-zA-Z_][a-zA-Z0-9_]*)'),
+    (_) => r'[^/]+',
+  );
   return RegExp('^${replaced}\$');
 }

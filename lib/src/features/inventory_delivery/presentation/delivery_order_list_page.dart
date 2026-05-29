@@ -20,6 +20,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widg
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
+import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/data/customer_dto.dart';
 import 'package:work_order_app/src/features/inventory_delivery/application/delivery_order_view_model.dart';
@@ -294,6 +295,11 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
   }
 
   void _openCreateInvoiceForDelivery(DeliveryOrder order) {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.add_invoice')) {
+      ToastUtil.showError('当前账号无权执行该操作');
+      return;
+    }
     final salesOrderId = order.salesOrderId;
     if (salesOrderId == null || salesOrderId <= 0) {
       ToastUtil.showError('当前发货单缺少客户订单，无法预填开票');
@@ -311,6 +317,11 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     DeliveryOrderViewModel viewModel,
     DeliveryOrder order,
   ) async {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.change_deliveryorder')) {
+      ToastUtil.showError('当前账号无权执行该操作');
+      return;
+    }
     if (_uploadingDeliveryId == order.id) {
       return;
     }
@@ -379,6 +390,11 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     DeliveryOrderViewModel viewModel,
     DeliveryOrder order,
   ) async {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.delete_deliveryorder')) {
+      ToastUtil.showError('当前账号无权执行该操作');
+      return;
+    }
     final apiService = context.read<DeliveryOrderApiService>();
     await confirmCrudDeletion(
       context,
@@ -396,11 +412,20 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     DeliveryOrder? order,
     int? prefillSalesOrderId,
   }) async {
+    final isEdit = order != null;
+    final requiredPermission = isEdit
+        ? 'workorder.change_deliveryorder'
+        : 'workorder.add_deliveryorder';
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has(requiredPermission)) {
+      ToastUtil.showError('当前账号无权执行该操作');
+      return;
+    }
+
     final apiService = context.read<DeliveryOrderApiService>();
     final supportService = DeliveryOrderSupportService(
       context.read<ApiClient>(),
     );
-    final isEdit = order != null;
     DeliveryOrderDetail? detail;
     if (isEdit) {
       detail = await _fetchDetail(order);
@@ -506,6 +531,10 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     }
 
     Future<void> submit(VoidCallback refresh) async {
+      if (!PermissionUtil.snapshot(context).has(requiredPermission)) {
+        ToastUtil.showError('当前账号无权执行该操作');
+        return;
+      }
       if (!(formKey.currentState?.validate() ?? false)) return;
       if (items.isEmpty) {
         ToastUtil.showError('请添加发货明细');
@@ -607,6 +636,11 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     DeliveryOrderViewModel viewModel,
     DeliveryOrder order,
   ) async {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.change_deliveryorder')) {
+      ToastUtil.showError('当前账号无权执行该操作');
+      return;
+    }
     final apiService = context.read<DeliveryOrderApiService>();
     await showDeliveryShipDialog(
       context,
@@ -641,6 +675,11 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     DeliveryOrderViewModel viewModel,
     DeliveryOrder order,
   ) async {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.change_deliveryorder')) {
+      ToastUtil.showError('当前账号无权执行该操作');
+      return;
+    }
     final apiService = context.read<DeliveryOrderApiService>();
     await showDeliveryReceiveDialog(
       context,
@@ -670,6 +709,11 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     DeliveryOrderViewModel viewModel,
     DeliveryOrder order,
   ) async {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.change_deliveryorder')) {
+      ToastUtil.showError('当前账号无权执行该操作');
+      return;
+    }
     final apiService = context.read<DeliveryOrderApiService>();
     await showDeliveryRejectDialog(
       context,
@@ -694,6 +738,11 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     DeliveryOrderViewModel viewModel,
     DeliveryOrder order,
   ) async {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.change_deliveryorder')) {
+      ToastUtil.showError('当前账号无权执行该操作');
+      return;
+    }
     final apiService = context.read<DeliveryOrderApiService>();
     final decision = await showActionDecisionDialog<String>(
       context,
@@ -750,6 +799,12 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
   void _maybeOpenPrefillDialog(DeliveryOrderViewModel viewModel) {
     if (!_pendingPrefill) return;
     if (_salesOrdersLoading || !_salesOrdersLoaded) return;
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.add_deliveryorder')) {
+      _pendingPrefill = false;
+      ToastUtil.showError('当前账号无权执行该操作');
+      return;
+    }
     final salesOrderId = _prefillSalesOrderId;
     if (salesOrderId == null) return;
     _pendingPrefill = false;
@@ -837,6 +892,14 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
   ) {
     final theme = Theme.of(context);
     final textStyle = theme.textTheme.bodySmall;
+    final permissions = PermissionUtil.snapshot(context);
+    final canAddInvoice = permissions.has('workorder.add_invoice');
+    final canChangeDeliveryOrder = permissions.has(
+      'workorder.change_deliveryorder',
+    );
+    final canDeleteDeliveryOrder = permissions.has(
+      'workorder.delete_deliveryorder',
+    );
     return AppDataTable(
       columns: const [
         DataColumn(label: Text('发货单号')),
@@ -854,12 +917,13 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       ],
       rows: orders.map((order) {
         final statusCode = order.status ?? '';
-        final canShip = statusCode == 'pending';
+        final canShip = statusCode == 'pending' && canChangeDeliveryOrder;
         final canReceive =
-            statusCode == 'shipped' || statusCode == 'in_transit';
+            canChangeDeliveryOrder &&
+            (statusCode == 'shipped' || statusCode == 'in_transit');
         final canReject = canReceive;
-        final canEdit = statusCode == 'pending';
-        final canDelete = statusCode == 'pending';
+        final canEdit = statusCode == 'pending' && canChangeDeliveryOrder;
+        final canDelete = statusCode == 'pending' && canDeleteDeliveryOrder;
 
         return DataRow(
           cells: [
@@ -911,13 +975,14 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
             DataCell(
               RowActionGroup(
                 actions: [
-                  if (_shouldPromptInvoice(order))
+                  if (_shouldPromptInvoice(order) && canAddInvoice)
                     RowAction(
                       label: '去开票',
                       icon: Icons.receipt_long_outlined,
                       onPressed: () => _openCreateInvoiceForDelivery(order),
                     ),
-                  if ((order.status ?? '') == 'rejected')
+                  if ((order.status ?? '') == 'rejected' &&
+                      canChangeDeliveryOrder)
                     RowAction(
                       label: _hasResolvedRejectedException(order)
                           ? '更新处理'
@@ -926,11 +991,13 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
                       onPressed: () =>
                           _openResolveExceptionDialog(viewModel, order),
                     ),
-                  RowAction(
-                    label: '上传签收附件',
-                    icon: Icons.upload_file_outlined,
-                    onPressed: () => _uploadReceiverSignature(viewModel, order),
-                  ),
+                  if (canChangeDeliveryOrder)
+                    RowAction(
+                      label: '上传签收附件',
+                      icon: Icons.upload_file_outlined,
+                      onPressed: () =>
+                          _uploadReceiverSignature(viewModel, order),
+                    ),
                   if (canEdit)
                     RowAction(
                       label: '编辑',
@@ -975,6 +1042,10 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     DeliveryOrderViewModel viewModel,
     bool isMobile,
   ) {
+    final permissions = PermissionUtil.snapshot(context);
+    final canCreateDeliveryOrder = permissions.has(
+      'workorder.add_deliveryorder',
+    );
     void openFilterDrawer() {
       showAdaptiveFilterDrawer(
         context,
@@ -1058,13 +1129,14 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
                 icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
                 label: '清除待办',
               ),
-            PageActionButton.filled(
-              onPressed: _salesOrdersLoading || _salesOrders.isEmpty
-                  ? null
-                  : () => _openAppFormDialog(viewModel),
-              icon: const Icon(Icons.add, size: 16),
-              label: '新建发货单',
-            ),
+            if (canCreateDeliveryOrder)
+              PageActionButton.filled(
+                onPressed: _salesOrdersLoading || _salesOrders.isEmpty
+                    ? null
+                    : () => _openAppFormDialog(viewModel),
+                icon: const Icon(Icons.add, size: 16),
+                label: '新建发货单',
+              ),
             PageActionButton.outlined(
               onPressed: openFilterDrawer,
               icon: const Icon(Icons.filter_alt_outlined, size: 16),
@@ -1308,11 +1380,21 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     final trackingNumber = _displayText(order.trackingNumber);
     final invoiceFollowUp = _invoiceFollowUpText(order);
     final statusCode = order.status ?? '';
-    final canShip = statusCode == 'pending';
-    final canReceive = statusCode == 'shipped' || statusCode == 'in_transit';
+    final permissions = PermissionUtil.snapshot(context);
+    final canAddInvoice = permissions.has('workorder.add_invoice');
+    final canChangeDeliveryOrder = permissions.has(
+      'workorder.change_deliveryorder',
+    );
+    final canDeleteDeliveryOrder = permissions.has(
+      'workorder.delete_deliveryorder',
+    );
+    final canShip = statusCode == 'pending' && canChangeDeliveryOrder;
+    final canReceive =
+        canChangeDeliveryOrder &&
+        (statusCode == 'shipped' || statusCode == 'in_transit');
     final canReject = canReceive;
-    final canEdit = statusCode == 'pending';
-    final canDelete = statusCode == 'pending';
+    final canEdit = statusCode == 'pending' && canChangeDeliveryOrder;
+    final canDelete = statusCode == 'pending' && canDeleteDeliveryOrder;
     final followUp = _deliveryFollowUpText(order);
 
     return ExpandableSummaryCard(
@@ -1405,13 +1487,13 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              if (_shouldPromptInvoice(order))
+              if (_shouldPromptInvoice(order) && canAddInvoice)
                 FilledButton.icon(
                   onPressed: () => _openCreateInvoiceForDelivery(order),
                   icon: const Icon(Icons.receipt_long_outlined, size: 16),
                   label: const Text('去开票'),
                 ),
-              if ((order.status ?? '') == 'rejected')
+              if ((order.status ?? '') == 'rejected' && canChangeDeliveryOrder)
                 OutlinedButton.icon(
                   onPressed: () =>
                       _openResolveExceptionDialog(viewModel, order),
@@ -1423,11 +1505,12 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
                     _hasResolvedRejectedException(order) ? '更新处理' : '处理拒收',
                   ),
                 ),
-              OutlinedButton.icon(
-                onPressed: () => _uploadReceiverSignature(viewModel, order),
-                icon: const Icon(Icons.upload_file_outlined, size: 16),
-                label: const Text('上传签收附件'),
-              ),
+              if (canChangeDeliveryOrder)
+                OutlinedButton.icon(
+                  onPressed: () => _uploadReceiverSignature(viewModel, order),
+                  icon: const Icon(Icons.upload_file_outlined, size: 16),
+                  label: const Text('上传签收附件'),
+                ),
               if (canEdit)
                 OutlinedButton.icon(
                   onPressed: () => _openAppFormDialog(viewModel, order: order),

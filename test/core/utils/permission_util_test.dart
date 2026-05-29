@@ -24,10 +24,7 @@ void main() {
       value: AppStorage(),
       child: MediaQuery(
         data: const MediaQueryData(),
-        child: Directionality(
-          textDirection: TextDirection.ltr,
-          child: child,
-        ),
+        child: Directionality(textDirection: TextDirection.ltr, child: child),
       ),
     );
   }
@@ -42,16 +39,18 @@ void main() {
           'permissions': <String>[],
         });
 
-        await tester.pumpWidget(buildTestApp(
-          Builder(
-            builder: (context) {
-              final snap = PermissionUtil.snapshot(context);
-              expect(snap.isAdmin, isTrue);
-              expect(snap.has('any_permission'), isTrue);
-              return const SizedBox();
-            },
+        await tester.pumpWidget(
+          buildTestApp(
+            Builder(
+              builder: (context) {
+                final snap = PermissionUtil.snapshot(context);
+                expect(snap.isAdmin, isTrue);
+                expect(snap.has('any_permission'), isTrue);
+                return const SizedBox();
+              },
+            ),
           ),
-        ));
+        );
       });
 
       testWidgets('拥有通配符 * 权限被识别为 admin', (tester) async {
@@ -62,15 +61,17 @@ void main() {
           'permissions': ['*'],
         });
 
-        await tester.pumpWidget(buildTestApp(
-          Builder(
-            builder: (context) {
-              final snap = PermissionUtil.snapshot(context);
-              expect(snap.isAdmin, isTrue);
-              return const SizedBox();
-            },
+        await tester.pumpWidget(
+          buildTestApp(
+            Builder(
+              builder: (context) {
+                final snap = PermissionUtil.snapshot(context);
+                expect(snap.isAdmin, isTrue);
+                return const SizedBox();
+              },
+            ),
           ),
-        ));
+        );
       });
 
       testWidgets('普通用户不被识别为 admin', (tester) async {
@@ -81,20 +82,22 @@ void main() {
           'permissions': ['workorder.view_workorder'],
         });
 
-        await tester.pumpWidget(buildTestApp(
-          Builder(
-            builder: (context) {
-              final snap = PermissionUtil.snapshot(context);
-              expect(snap.isAdmin, isFalse);
-              expect(snap.has('workorder.view_workorder'), isTrue);
-              expect(snap.has('workorder.delete_workorder'), isFalse);
-              return const SizedBox();
-            },
+        await tester.pumpWidget(
+          buildTestApp(
+            Builder(
+              builder: (context) {
+                final snap = PermissionUtil.snapshot(context);
+                expect(snap.isAdmin, isFalse);
+                expect(snap.has('workorder.view_workorder'), isTrue);
+                expect(snap.has('workorder.delete_workorder'), isFalse);
+                return const SizedBox();
+              },
+            ),
           ),
-        ));
+        );
       });
 
-      testWidgets('空权限用户 fallbackToUnrestricted=true 时可以访问任何权限', (tester) async {
+      testWidgets('空权限用户不能访问普通权限', (tester) async {
         final storage = AppStorage();
         await storage.init();
         await storage.write(Constant.KEY_CURRENT_USER_INFO, {
@@ -102,36 +105,18 @@ void main() {
           'permissions': <String>[],
         });
 
-        await tester.pumpWidget(buildTestApp(
-          Builder(
-            builder: (context) {
-              final snap = PermissionUtil.snapshot(context, fallbackToUnrestricted: true);
-              expect(snap.isAdmin, isFalse);
-              expect(snap.has('any_permission'), isTrue);
-              return const SizedBox();
-            },
+        await tester.pumpWidget(
+          buildTestApp(
+            Builder(
+              builder: (context) {
+                final snap = PermissionUtil.snapshot(context);
+                expect(snap.isAdmin, isFalse);
+                expect(snap.has('any_permission'), isFalse);
+                return const SizedBox();
+              },
+            ),
           ),
-        ));
-      });
-
-      testWidgets('空权限用户 fallbackToUnrestricted=false 时不能访问权限', (tester) async {
-        final storage = AppStorage();
-        await storage.init();
-        await storage.write(Constant.KEY_CURRENT_USER_INFO, {
-          'is_superuser': false,
-          'permissions': <String>[],
-        });
-
-        await tester.pumpWidget(buildTestApp(
-          Builder(
-            builder: (context) {
-              final snap = PermissionUtil.snapshot(context, fallbackToUnrestricted: false);
-              expect(snap.isAdmin, isFalse);
-              expect(snap.has('any_permission'), isFalse);
-              return const SizedBox();
-            },
-          ),
-        ));
+        );
       });
     });
 
@@ -141,19 +126,24 @@ void main() {
         await storage.init();
         await storage.write(Constant.KEY_CURRENT_USER_INFO, {
           'is_superuser': false,
-          'permissions': ['workorder.view_workorder', 'workorder.add_workorder'],
+          'permissions': [
+            'workorder.view_workorder',
+            'workorder.add_workorder',
+          ],
         });
 
-        await tester.pumpWidget(buildTestApp(
-          Builder(
-            builder: (context) {
-              final snap = PermissionUtil.snapshot(context);
-              expect(snap.has('workorder.view_workorder'), isTrue);
-              expect(snap.has('workorder.add_workorder'), isTrue);
-              return const SizedBox();
-            },
+        await tester.pumpWidget(
+          buildTestApp(
+            Builder(
+              builder: (context) {
+                final snap = PermissionUtil.snapshot(context);
+                expect(snap.has('workorder.view_workorder'), isTrue);
+                expect(snap.has('workorder.add_workorder'), isTrue);
+                return const SizedBox();
+              },
+            ),
           ),
-        ));
+        );
       });
 
       testWidgets('用户不拥有指定权限时 has 返回 false', (tester) async {
@@ -164,15 +154,17 @@ void main() {
           'permissions': ['workorder.view_workorder'],
         });
 
-        await tester.pumpWidget(buildTestApp(
-          Builder(
-            builder: (context) {
-              final snap = PermissionUtil.snapshot(context);
-              expect(snap.has('workorder.delete_workorder'), isFalse);
-              return const SizedBox();
-            },
+        await tester.pumpWidget(
+          buildTestApp(
+            Builder(
+              builder: (context) {
+                final snap = PermissionUtil.snapshot(context);
+                expect(snap.has('workorder.delete_workorder'), isFalse);
+                return const SizedBox();
+              },
+            ),
           ),
-        ));
+        );
       });
     });
 
@@ -185,18 +177,23 @@ void main() {
           'permissions': ['workorder.view_workorder'],
         });
 
-        await tester.pumpWidget(buildTestApp(
-          Builder(
-            builder: (context) {
-              final snap = PermissionUtil.snapshot(context);
-              expect(
-                snap.hasAny(['workorder.view_workorder', 'workorder.delete_workorder']),
-                isTrue,
-              );
-              return const SizedBox();
-            },
+        await tester.pumpWidget(
+          buildTestApp(
+            Builder(
+              builder: (context) {
+                final snap = PermissionUtil.snapshot(context);
+                expect(
+                  snap.hasAny([
+                    'workorder.view_workorder',
+                    'workorder.delete_workorder',
+                  ]),
+                  isTrue,
+                );
+                return const SizedBox();
+              },
+            ),
           ),
-        ));
+        );
       });
 
       testWidgets('不拥有任何指定权限时 hasAny 返回 false', (tester) async {
@@ -207,18 +204,23 @@ void main() {
           'permissions': ['workorder.view_customer'],
         });
 
-        await tester.pumpWidget(buildTestApp(
-          Builder(
-            builder: (context) {
-              final snap = PermissionUtil.snapshot(context);
-              expect(
-                snap.hasAny(['workorder.view_workorder', 'workorder.delete_workorder']),
-                isFalse,
-              );
-              return const SizedBox();
-            },
+        await tester.pumpWidget(
+          buildTestApp(
+            Builder(
+              builder: (context) {
+                final snap = PermissionUtil.snapshot(context);
+                expect(
+                  snap.hasAny([
+                    'workorder.view_workorder',
+                    'workorder.delete_workorder',
+                  ]),
+                  isFalse,
+                );
+                return const SizedBox();
+              },
+            ),
           ),
-        ));
+        );
       });
     });
 
@@ -228,17 +230,19 @@ void main() {
         await storage.init();
         await storage.write(Constant.KEY_CURRENT_USER_INFO, null);
 
-        await tester.pumpWidget(buildTestApp(
-          Builder(
-            builder: (context) {
-              final snap = PermissionUtil.snapshot(context);
-              expect(snap.permissions, isEmpty);
-              expect(snap.isSuperuser, isFalse);
-              expect(snap.fallbackToUnrestricted, isTrue);
-              return const SizedBox();
-            },
+        await tester.pumpWidget(
+          buildTestApp(
+            Builder(
+              builder: (context) {
+                final snap = PermissionUtil.snapshot(context);
+                expect(snap.permissions, isEmpty);
+                expect(snap.isSuperuser, isFalse);
+                expect(snap.has('workorder.view_workorder'), isFalse);
+                return const SizedBox();
+              },
+            ),
           ),
-        ));
+        );
       });
     });
 
@@ -251,15 +255,29 @@ void main() {
           'permissions': ['workorder.view_workorder'],
         });
 
-        await tester.pumpWidget(buildTestApp(
-          Builder(
-            builder: (context) {
-              expect(PermissionUtil.hasPermission(context, 'workorder.view_workorder'), isTrue);
-              expect(PermissionUtil.hasPermission(context, 'workorder.delete_workorder'), isFalse);
-              return const SizedBox();
-            },
+        await tester.pumpWidget(
+          buildTestApp(
+            Builder(
+              builder: (context) {
+                expect(
+                  PermissionUtil.hasPermission(
+                    context,
+                    'workorder.view_workorder',
+                  ),
+                  isTrue,
+                );
+                expect(
+                  PermissionUtil.hasPermission(
+                    context,
+                    'workorder.delete_workorder',
+                  ),
+                  isFalse,
+                );
+                return const SizedBox();
+              },
+            ),
           ),
-        ));
+        );
       });
 
       testWidgets('superuser 可以访问任何权限', (tester) async {
@@ -270,14 +288,19 @@ void main() {
           'permissions': <String>[],
         });
 
-        await tester.pumpWidget(buildTestApp(
-          Builder(
-            builder: (context) {
-              expect(PermissionUtil.hasPermission(context, 'any_permission'), isTrue);
-              return const SizedBox();
-            },
+        await tester.pumpWidget(
+          buildTestApp(
+            Builder(
+              builder: (context) {
+                expect(
+                  PermissionUtil.hasPermission(context, 'any_permission'),
+                  isTrue,
+                );
+                return const SizedBox();
+              },
+            ),
           ),
-        ));
+        );
       });
     });
 
@@ -290,17 +313,22 @@ void main() {
           'permissions': ['workorder.view_workorder'],
         });
 
-        await tester.pumpWidget(buildTestApp(
-          Builder(
-            builder: (context) {
-              expect(
-                PermissionUtil.hasAnyPermission(context, ['workorder.view_workorder', 'workorder.delete']),
-                isTrue,
-              );
-              return const SizedBox();
-            },
+        await tester.pumpWidget(
+          buildTestApp(
+            Builder(
+              builder: (context) {
+                expect(
+                  PermissionUtil.hasAnyPermission(context, [
+                    'workorder.view_workorder',
+                    'workorder.delete',
+                  ]),
+                  isTrue,
+                );
+                return const SizedBox();
+              },
+            ),
           ),
-        ));
+        );
       });
 
       testWidgets('没有任何权限时返回 false', (tester) async {
@@ -311,17 +339,22 @@ void main() {
           'permissions': ['workorder.view_customer'],
         });
 
-        await tester.pumpWidget(buildTestApp(
-          Builder(
-            builder: (context) {
-              expect(
-                PermissionUtil.hasAnyPermission(context, ['workorder.view_workorder', 'workorder.delete']),
-                isFalse,
-              );
-              return const SizedBox();
-            },
+        await tester.pumpWidget(
+          buildTestApp(
+            Builder(
+              builder: (context) {
+                expect(
+                  PermissionUtil.hasAnyPermission(context, [
+                    'workorder.view_workorder',
+                    'workorder.delete',
+                  ]),
+                  isFalse,
+                );
+                return const SizedBox();
+              },
+            ),
           ),
-        ));
+        );
       });
     });
 
@@ -333,14 +366,16 @@ void main() {
           'is_superuser': true,
         });
 
-        await tester.pumpWidget(buildTestApp(
-          Builder(
-            builder: (context) {
-              expect(PermissionUtil.isSuperuser(context), isTrue);
-              return const SizedBox();
-            },
+        await tester.pumpWidget(
+          buildTestApp(
+            Builder(
+              builder: (context) {
+                expect(PermissionUtil.isSuperuser(context), isTrue);
+                return const SizedBox();
+              },
+            ),
           ),
-        ));
+        );
       });
 
       testWidgets('非 superuser 返回 false', (tester) async {
@@ -350,14 +385,16 @@ void main() {
           'is_superuser': false,
         });
 
-        await tester.pumpWidget(buildTestApp(
-          Builder(
-            builder: (context) {
-              expect(PermissionUtil.isSuperuser(context), isFalse);
-              return const SizedBox();
-            },
+        await tester.pumpWidget(
+          buildTestApp(
+            Builder(
+              builder: (context) {
+                expect(PermissionUtil.isSuperuser(context), isFalse);
+                return const SizedBox();
+              },
+            ),
           ),
-        ));
+        );
       });
 
       testWidgets('无用户信息时返回 false', (tester) async {
@@ -365,14 +402,16 @@ void main() {
         await storage.init();
         await storage.write(Constant.KEY_CURRENT_USER_INFO, null);
 
-        await tester.pumpWidget(buildTestApp(
-          Builder(
-            builder: (context) {
-              expect(PermissionUtil.isSuperuser(context), isFalse);
-              return const SizedBox();
-            },
+        await tester.pumpWidget(
+          buildTestApp(
+            Builder(
+              builder: (context) {
+                expect(PermissionUtil.isSuperuser(context), isFalse);
+                return const SizedBox();
+              },
+            ),
           ),
-        ));
+        );
       });
     });
 
@@ -387,16 +426,18 @@ void main() {
         };
         await storage.write(Constant.KEY_CURRENT_USER_INFO, userInfo);
 
-        await tester.pumpWidget(buildTestApp(
-          Builder(
-            builder: (context) {
-              final user = PermissionUtil.currentUser(context);
-              expect(user?['username'], equals('testuser'));
-              expect(user?['is_superuser'], isFalse);
-              return const SizedBox();
-            },
+        await tester.pumpWidget(
+          buildTestApp(
+            Builder(
+              builder: (context) {
+                final user = PermissionUtil.currentUser(context);
+                expect(user?['username'], equals('testuser'));
+                expect(user?['is_superuser'], isFalse);
+                return const SizedBox();
+              },
+            ),
           ),
-        ));
+        );
       });
 
       testWidgets('无用户信息时返回 null', (tester) async {
@@ -404,14 +445,16 @@ void main() {
         await storage.init();
         await storage.write(Constant.KEY_CURRENT_USER_INFO, null);
 
-        await tester.pumpWidget(buildTestApp(
-          Builder(
-            builder: (context) {
-              expect(PermissionUtil.currentUser(context), isNull);
-              return const SizedBox();
-            },
+        await tester.pumpWidget(
+          buildTestApp(
+            Builder(
+              builder: (context) {
+                expect(PermissionUtil.currentUser(context), isNull);
+                return const SizedBox();
+              },
+            ),
           ),
-        ));
+        );
       });
     });
   });

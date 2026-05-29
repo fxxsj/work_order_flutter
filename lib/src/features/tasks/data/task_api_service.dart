@@ -234,10 +234,21 @@ class TaskApiService {
 
   Future<Map<String, dynamic>> fetchOperatorCenterData({
     Map<String, dynamic>? params,
+    int myLimit = 50,
+    int myOffset = 0,
+    int claimableLimit = 50,
+    int claimableOffset = 0,
   }) async {
+    final queryParams = <String, dynamic>{
+      if (params != null) ...params,
+      'my_limit': myLimit,
+      'my_offset': myOffset,
+      'claimable_limit': claimableLimit,
+      'claimable_offset': claimableOffset,
+    };
     final response = await _client.get(
       '/workorder-tasks/operator_center/',
-      queryParameters: params,
+      queryParameters: queryParams,
     );
     return _requireMap('操作员工作台', response.data);
   }

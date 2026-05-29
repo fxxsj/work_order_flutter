@@ -12,6 +12,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
+import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/tasks/application/task_assignment_rule_view_model.dart';
@@ -29,8 +30,11 @@ class TaskAssignmentRuleEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FeatureEntry<TaskAssignmentRuleApiService,
-        TaskAssignmentRuleRepository, TaskAssignmentRuleViewModel>(
+    return FeatureEntry<
+      TaskAssignmentRuleApiService,
+      TaskAssignmentRuleRepository,
+      TaskAssignmentRuleViewModel
+    >(
       createService: (context) =>
           TaskAssignmentRuleApiService(context.read<ApiClient>()),
       createRepository: (context) => TaskAssignmentRuleRepositoryImpl(
@@ -86,8 +90,9 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _supportService ??=
-        TaskAssignmentRuleSupportService(context.read<ApiClient>());
+    _supportService ??= TaskAssignmentRuleSupportService(
+      context.read<ApiClient>(),
+    );
     if (_setupRequested) return;
     _setupRequested = true;
     _loadLookup();
@@ -132,7 +137,8 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
       });
     } catch (err) {
       ToastUtil.showError(
-          '生成预览失败: ${err.toString().replaceFirst('Exception: ', '')}');
+        '生成预览失败: ${err.toString().replaceFirst('Exception: ', '')}',
+      );
     } finally {
       if (mounted) setState(() => _previewLoading = false);
     }
@@ -149,6 +155,11 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
   }
 
   Future<void> _toggleGlobal(bool value) async {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.change_taskassignmentrule')) {
+      ToastUtil.showError('当前账号无权执行该操作');
+      return;
+    }
     setState(() => _globalEnabled = value);
     try {
       final enabled = await _supportService!.setGlobalState(value);
@@ -158,12 +169,15 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
     } catch (err) {
       setState(() => _globalEnabled = !value);
       ToastUtil.showError(
-          '更新失败: ${err.toString().replaceFirst('Exception: ', '')}');
+        '更新失败: ${err.toString().replaceFirst('Exception: ', '')}',
+      );
     }
   }
 
-  void _scheduleSearch(TaskAssignmentRuleViewModel viewModel,
-      {bool immediate = false}) {
+  void _scheduleSearch(
+    TaskAssignmentRuleViewModel viewModel, {
+    bool immediate = false,
+  }) {
     if (immediate) {
       _debounce.cancel();
       viewModel.setSearchText(_searchController.text.trim());
@@ -249,10 +263,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
     final departmentItems = [
       const AppDropdownOption<int?>(value: null, label: '全部部门'),
       ..._departments.map(
-        (dept) => AppDropdownOption<int?>(
-          value: dept.id,
-          label: dept.name,
-        ),
+        (dept) => AppDropdownOption<int?>(value: dept.id, label: dept.name),
       ),
     ];
     final activeItems = const [
@@ -272,8 +283,9 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
               useSafeArea: true,
               showDragHandle: true,
               backgroundColor: Theme.of(context).colorScheme.surface,
-              shape:
-                  const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.zero,
+              ),
               builder: (sheetContext) {
                 return TaskAssignmentRuleFilterDrawerContent(
                   title: activeCount > 0 ? '筛选 ($activeCount)' : '筛选',
@@ -294,9 +306,9 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
             context: context,
             barrierDismissible: true,
             barrierLabel: '筛选',
-            barrierColor: Theme.of(context)
-                .shadowColor
-                .withValues(alpha: OpacityTokens.scrim),
+            barrierColor: Theme.of(
+              context,
+            ).shadowColor.withValues(alpha: OpacityTokens.scrim),
             transitionDuration: AnimationTokens.slide,
             pageBuilder: (dialogContext, animation, secondaryAnimation) {
               return Align(
@@ -304,7 +316,8 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
                 child: Material(
                   color: Theme.of(dialogContext).colorScheme.surface,
                   shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.zero),
+                    borderRadius: BorderRadius.zero,
+                  ),
                   child: SizedBox(
                     width: LayoutTokens.dialogWidthXs,
                     height: double.infinity,
@@ -325,13 +338,13 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
               );
             },
             transitionBuilder: (context, animation, secondaryAnimation, child) {
-              final offsetTween =
-                  Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero);
+              final offsetTween = Tween<Offset>(
+                begin: const Offset(1, 0),
+                end: Offset.zero,
+              );
               return SlideTransition(
                 position: animation
-                    .drive(
-                      CurveTween(curve: Curves.easeOutCubic),
-                    )
+                    .drive(CurveTween(curve: Curves.easeOutCubic))
                     .drive(offsetTween),
                 child: child,
               );
@@ -361,11 +374,14 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
               icon: const Icon(Icons.refresh, size: 16),
               label: _refreshButtonText,
             ),
-            PageActionButton.filled(
-              onPressed: () => _openRuleDialog(context, viewModel, null),
-              icon: const Icon(Icons.add),
-              label: _createButtonText,
-            ),
+            if (PermissionUtil.snapshot(
+              context,
+            ).has('workorder.add_taskassignmentrule'))
+              PageActionButton.filled(
+                onPressed: () => _openRuleDialog(context, viewModel, null),
+                icon: const Icon(Icons.add),
+                label: _createButtonText,
+              ),
             PageActionButton.outlined(
               onPressed: _previewLoading ? null : _openPreviewDialog,
               icon: _previewLoading
@@ -465,6 +481,10 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
         onRetry: () => viewModel.loadRules(resetPage: true),
       );
     }
+    final permissions = PermissionUtil.snapshot(context);
+    final canChangeRule = permissions.has(
+      'workorder.change_taskassignmentrule',
+    );
     return ListView(
       children: [
         _buildGlobalToggle(),
@@ -480,11 +500,15 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
                         padding: EdgeInsets.only(bottom: LayoutTokens.gapMd),
                         child: TaskAssignmentRuleCard(
                           rule: rule,
-                          onEdit: () =>
-                              _openRuleDialog(context, viewModel, rule),
-                          onDelete: () => _deleteRule(viewModel, rule),
-                          onToggle: (value) =>
-                              _toggleRule(viewModel, rule, value),
+                          onEdit: canChangeRule
+                              ? () => _openRuleDialog(context, viewModel, rule)
+                              : null,
+                          onDelete: canChangeRule
+                              ? () => _deleteRule(viewModel, rule)
+                              : null,
+                          onToggle: canChangeRule
+                              ? (value) => _toggleRule(viewModel, rule, value)
+                              : null,
                         ),
                       ),
                     ),
@@ -496,6 +520,9 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
   }
 
   Widget _buildGlobalToggle() {
+    final canChangeRule = PermissionUtil.snapshot(
+      context,
+    ).has('workorder.change_taskassignmentrule');
     return DetailSectionCard(
       title: '默认分派部门',
       trailing: Row(
@@ -508,7 +535,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
           ),
           Switch(
             value: _globalEnabled,
-            onChanged: _toggleGlobal,
+            onChanged: canChangeRule ? _toggleGlobal : null,
           ),
         ],
       ),
@@ -546,6 +573,9 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
     TaskAssignmentRuleViewModel viewModel,
   ) {
     final theme = Theme.of(context);
+    final canCreateRule = PermissionUtil.snapshot(
+      context,
+    ).has('workorder.add_taskassignmentrule');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -557,19 +587,17 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
             ),
             SizedBox(width: LayoutTokens.gapSm),
             Expanded(
-              child: Text(
-                _emptyText,
-                style: theme.textTheme.bodyMedium,
-              ),
+              child: Text(_emptyText, style: theme.textTheme.bodyMedium),
             ),
           ],
         ),
         SizedBox(height: LayoutTokens.gapMd),
-        PageActionButton.filled(
-          onPressed: () => _openRuleDialog(context, viewModel, null),
-          icon: const Icon(Icons.add),
-          label: _createButtonText,
-        ),
+        if (canCreateRule)
+          PageActionButton.filled(
+            onPressed: () => _openRuleDialog(context, viewModel, null),
+            icon: const Icon(Icons.add),
+            label: _createButtonText,
+          ),
       ],
     );
   }
@@ -597,7 +625,14 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
   }
 
   Future<void> _deleteRule(
-      TaskAssignmentRuleViewModel viewModel, TaskAssignmentRule rule) async {
+    TaskAssignmentRuleViewModel viewModel,
+    TaskAssignmentRule rule,
+  ) async {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.change_taskassignmentrule')) {
+      ToastUtil.showError('当前账号无权执行该操作');
+      return;
+    }
     final confirmed = await showTaskAssignmentRuleDeleteDialog(
       context,
       content:
@@ -610,7 +645,8 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
       _loadPreview();
     } catch (err) {
       ToastUtil.showError(
-          '删除失败: ${err.toString().replaceFirst('Exception: ', '')}');
+        '删除失败: ${err.toString().replaceFirst('Exception: ', '')}',
+      );
     }
   }
 
@@ -619,13 +655,19 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
     TaskAssignmentRule rule,
     bool value,
   ) async {
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has('workorder.change_taskassignmentrule')) {
+      ToastUtil.showError('当前账号无权执行该操作');
+      return;
+    }
     try {
       await viewModel.updateRule(rule.id, {'is_active': value});
       ToastUtil.showSuccess(value ? '已启用' : '已禁用');
       _loadPreview();
     } catch (err) {
       ToastUtil.showError(
-          '更新失败: ${err.toString().replaceFirst('Exception: ', '')}');
+        '更新失败: ${err.toString().replaceFirst('Exception: ', '')}',
+      );
     }
   }
 
@@ -634,6 +676,14 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
     TaskAssignmentRuleViewModel viewModel,
     TaskAssignmentRule? rule,
   ) async {
+    final requiredPermission = rule == null
+        ? 'workorder.add_taskassignmentrule'
+        : 'workorder.change_taskassignmentrule';
+    final permissions = PermissionUtil.snapshot(context);
+    if (!permissions.has(requiredPermission)) {
+      ToastUtil.showError('当前账号无权执行该操作');
+      return;
+    }
     if (_processes.isEmpty || _departments.isEmpty) {
       ToastUtil.showError('请先加载工序与部门列表');
       return;
@@ -644,6 +694,10 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
       processes: _processes,
       departments: _departments,
       onSubmit: (payload) async {
+        if (!PermissionUtil.snapshot(context).has(requiredPermission)) {
+          ToastUtil.showError('当前账号无权执行该操作');
+          return;
+        }
         try {
           if (rule == null) {
             await viewModel.createRule(payload);
@@ -655,7 +709,8 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
           _loadPreview();
         } catch (err) {
           ToastUtil.showError(
-              '保存失败: ${err.toString().replaceFirst('Exception: ', '')}');
+            '保存失败: ${err.toString().replaceFirst('Exception: ', '')}',
+          );
           rethrow;
         }
       },
