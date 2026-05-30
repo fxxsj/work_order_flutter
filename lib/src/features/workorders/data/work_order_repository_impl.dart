@@ -75,8 +75,8 @@ class WorkOrderRepositoryImpl implements WorkOrderRepository {
   }
 
   @override
-  Future<WorkOrderDetailDto> submitApproval(int id, {String? comment}) {
-    return _flowApiService.submitApproval(id, comment: comment);
+  Future<WorkOrderDetailDto> submitApproval(int id, {String? comment, Map<String, dynamic>? payload}) {
+    return _flowApiService.submitApproval(id, comment: comment, payload: payload);
   }
 
   @override

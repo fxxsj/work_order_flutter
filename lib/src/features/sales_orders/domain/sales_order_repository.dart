@@ -22,7 +22,7 @@ abstract class SalesOrderRepository {
     Map<String, dynamic> payload,
   );
 
-  Future<SalesOrderDetailDto> submit(int id);
+  Future<SalesOrderDetailDto> submit(int id, [Map<String, dynamic>? payload]);
 
   Future<SalesOrderDetailDto> approve(int id, Map<String, dynamic> payload);
 

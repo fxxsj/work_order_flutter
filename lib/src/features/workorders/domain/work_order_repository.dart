@@ -29,7 +29,7 @@ abstract class WorkOrderRepository {
 
   Future<WorkOrderDetailDto> updateStatus(int id, String status);
 
-  Future<WorkOrderDetailDto> submitApproval(int id, {String? comment});
+  Future<WorkOrderDetailDto> submitApproval(int id, {String? comment, Map<String, dynamic>? payload});
 
   Future<WorkOrderDetailDto> approveWorkOrder(int id, {String? comment});
 

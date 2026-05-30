@@ -97,7 +97,7 @@ class SalesOrderApiService {
     return _detailFromResponse(response.data, label: '更新客户订单');
   }
 
-  Future<SalesOrderDetailDto> submit(int id) async {
+  Future<SalesOrderDetailDto> submit(int id, [Map<String, dynamic>? payload]) async {
     final response = await _client.post('/sales-orders/$id/submit/');
     return _detailFromResponse(response.data, label: '提交客户订单');
   }

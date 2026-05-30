@@ -178,8 +178,12 @@ class AdaptiveFormPanel extends StatelessWidget {
     required this.formKey,
     required this.child,
     required this.onSubmit,
+    this.onSecondarySubmit,
     this.onCancel,
     this.submitText = '提交',
+    this.submitIcon,
+    this.secondarySubmitText,
+    this.secondarySubmitIcon,
     this.cancelText = '取消',
     this.submitting = false,
     this.submitEnabled = true,
@@ -200,8 +204,12 @@ class AdaptiveFormPanel extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final Widget child;
   final Future<void> Function() onSubmit;
+  final Future<void> Function()? onSecondarySubmit;
   final VoidCallback? onCancel;
   final String submitText;
+  final Widget? submitIcon;
+  final String? secondarySubmitText;
+  final Widget? secondarySubmitIcon;
   final String cancelText;
   final bool submitting;
   final bool submitEnabled;
@@ -242,15 +250,55 @@ class AdaptiveFormPanel extends StatelessWidget {
                       : (onCancel ?? () => Navigator.of(context).maybePop()),
                   child: Text(cancelText),
                 ),
+                if (secondarySubmitText != null && onSecondarySubmit != null) ...[
+                  const SizedBox(width: LayoutTokens.gapSm),
+                  if (secondarySubmitIcon != null)
+                    OutlinedButton.icon(
+                      onPressed: submitting || !submitEnabled ? null : onSecondarySubmit,
+                      icon: submitting ? _buildLoadingIndicator(context, theme.colorScheme.primary) : secondarySubmitIcon!,
+                      label: Text(submitting ? '$secondarySubmitText中...' : secondarySubmitText!),
+                    )
+                  else
+                    OutlinedButton(
+                      onPressed: submitting || !submitEnabled ? null : onSecondarySubmit,
+                      child: submitting ? _buildLoadingRow(context, '$secondarySubmitText中...', theme.colorScheme.primary) : Text(secondarySubmitText!),
+                    ),
+                ],
                 const SizedBox(width: LayoutTokens.gapSm),
-                FilledButton(
-                  onPressed: submitting || !submitEnabled ? null : onSubmit,
-                  child: Text(submitting ? '$submitText中...' : submitText),
-                ),
+                if (submitIcon != null)
+                  FilledButton.icon(
+                    onPressed: submitting || !submitEnabled ? null : onSubmit,
+                    icon: submitting ? _buildLoadingIndicator(context, theme.colorScheme.onPrimary) : submitIcon!,
+                    label: Text(submitting ? '$submitText中...' : submitText),
+                  )
+                else
+                  FilledButton(
+                    onPressed: submitting || !submitEnabled ? null : onSubmit,
+                    child: submitting ? _buildLoadingRow(context, '$submitText中...', theme.colorScheme.onPrimary) : Text(submitText),
+                  ),
               ],
             ),
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildLoadingIndicator(BuildContext context, Color color) {
+    return SizedBox(
+      width: 16,
+      height: 16,
+      child: CircularProgressIndicator(strokeWidth: 2, color: color),
+    );
+  }
+  
+  Widget _buildLoadingRow(BuildContext context, String text, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildLoadingIndicator(context, color),
+        const SizedBox(width: 8),
+        Text(text),
       ],
     );
   }

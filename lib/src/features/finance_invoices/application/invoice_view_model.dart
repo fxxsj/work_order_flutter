@@ -28,12 +28,13 @@ class InvoiceViewModel extends PaginatedViewModel<Invoice> {
     unawaited(_loadSummary());
   }
 
-  Future<void> submitInvoice(int id) {
-    return _repository.submit(id);
+  Future<void> submit(int id, [Map<String, dynamic>? payload]) {
+    return _repository.submit(id, payload);
   }
 
-  Future<void> createInvoice(Map<String, dynamic> payload) {
-    return _repository.create(payload);
+  Future<Invoice> createInvoice(Map<String, dynamic> payload) async {
+    final dto = await _repository.create(payload);
+    return dto.toEntity();
   }
 
   Future<void> uploadAttachment(int id, MultipartFile attachment) {

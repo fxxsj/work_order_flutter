@@ -434,7 +434,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
     };
   }
 
-  Future<void> _handleSubmit() async {
+  Future<void> _handleSubmit([bool autoApprove = false]) async {
     final requiredPermission = widget.mode == SalesOrderFormMode.create
         ? 'workorder.add_salesorder'
         : 'workorder.change_salesorder';
@@ -500,11 +500,21 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
     final payload = _buildPayload();
     try {
       final viewModel = context.read<SalesOrderViewModel>();
+      int? currentId = widget.orderId;
       if (widget.mode == SalesOrderFormMode.create) {
-        await viewModel.createSalesOrder(payload);
-      } else if (widget.orderId != null) {
-        await viewModel.updateSalesOrder(widget.orderId!, payload);
+        final res = await viewModel.createSalesOrder(payload);
+        currentId = res.id;
+      } else if (currentId != null) {
+        await viewModel.updateSalesOrder(currentId, payload);
       }
+
+      if (autoApprove && currentId != null) {
+        await viewModel.submit(currentId, {'auto_approve': true});
+        ToastUtil.showSuccess('发布成功');
+      } else {
+        ToastUtil.showSuccess('保存成功');
+      }
+
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } catch (err) {
@@ -1015,10 +1025,15 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               icon: const Icon(Icons.arrow_back, size: 16),
               label: '返回',
             ),
-            PageActionButton.filled(
-              onPressed: _submitting || !canSubmit ? null : _handleSubmit,
+            PageActionButton.outlined(
+              onPressed: _submitting || !canSubmit ? null : () => _handleSubmit(false),
               icon: const Icon(Icons.save, size: 16),
-              label: _submitting ? '保存中' : '保存',
+              label: _submitting ? '保存中' : (widget.mode == SalesOrderFormMode.edit ? '保存草稿' : '存为草稿'),
+            ),
+            PageActionButton.filled(
+              onPressed: _submitting || !canSubmit ? null : () => _handleSubmit(true),
+              icon: const Icon(Icons.send, size: 16),
+              label: _submitting ? '发布中' : (widget.mode == SalesOrderFormMode.edit ? '保存并发布' : '直接发布'),
             ),
           ],
         ),

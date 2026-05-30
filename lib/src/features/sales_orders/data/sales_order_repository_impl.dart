@@ -56,8 +56,8 @@ class SalesOrderRepositoryImpl implements SalesOrderRepository {
   }
 
   @override
-  Future<SalesOrderDetailDto> submit(int id) {
-    return _apiService.submit(id);
+  Future<SalesOrderDetailDto> submit(int id, [Map<String, dynamic>? payload]) {
+    return _apiService.submit(id, payload);
   }
 
   @override

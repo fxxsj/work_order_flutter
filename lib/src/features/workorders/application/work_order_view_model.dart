@@ -127,8 +127,8 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
     return detail.toEntity();
   }
 
-  Future<WorkOrderDetail> submitApproval(int id, {String? comment}) async {
-    final detail = await _repository.submitApproval(id, comment: comment);
+  Future<WorkOrderDetail> submitApproval(int id, {String? comment, Map<String, dynamic>? payload}) async {
+    final detail = await _repository.submitApproval(id, comment: comment, payload: payload);
     return detail.toEntity();
   }
 

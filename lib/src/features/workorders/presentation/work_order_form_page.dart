@@ -424,7 +424,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     });
   }
 
-  Future<void> _handleSubmit() async {
+  Future<void> _handleSubmit([bool autoApprove = false]) async {
     final requiredPermission = widget.mode == WorkOrderFormMode.create
         ? 'workorder.add_workorder'
         : 'workorder.change_workorder';
@@ -457,21 +457,30 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
         workOrderId = widget.workOrderId;
       }
       if (!mounted) return;
-      // 只对草稿/退回状态（新创建或编辑时）引导提交审核
-      final canSubmitApproval = widget.mode == WorkOrderFormMode.create ||
-          _approvalStatus == 'draft' ||
-          _approvalStatus == 'rejected';
-      if (!canSubmitApproval) {
-        ToastUtil.showSuccess('保存成功');
+      
+      if (autoApprove && workOrderId != null) {
+        await viewModel.submitApproval(workOrderId, payload: {'auto_approve': true});
         if (!mounted) return;
-        Navigator.of(context).pop(true);
-        return;
-      }
-      final shouldSubmit = await _showSubmitApprovalDialog();
-      if (shouldSubmit == true && workOrderId != null) {
-        await viewModel.submitApproval(workOrderId);
-        if (!mounted) return;
-        ToastUtil.showSuccess('已保存并提交审核');
+        ToastUtil.showSuccess('已发布成功');
+      } else {
+        // 只对草稿/退回状态（新创建或编辑时）引导提交审核
+        final canSubmitApproval = widget.mode == WorkOrderFormMode.create ||
+            _approvalStatus == 'draft' ||
+            _approvalStatus == 'rejected';
+        if (!canSubmitApproval) {
+          ToastUtil.showSuccess('保存成功');
+          if (!mounted) return;
+          Navigator.of(context).pop(true);
+          return;
+        }
+        final shouldSubmit = await _showSubmitApprovalDialog();
+        if (shouldSubmit == true && workOrderId != null) {
+          await viewModel.submitApproval(workOrderId);
+          if (!mounted) return;
+          ToastUtil.showSuccess('已保存并提交审核');
+        } else {
+          ToastUtil.showSuccess('保存成功');
+        }
       }
       if (!mounted) return;
       Navigator.of(context).pop(true);
@@ -528,10 +537,15 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
               icon: const Icon(Icons.arrow_back, size: 16),
               label: '返回',
             ),
-            PageActionButton.filled(
-              onPressed: _submitting || !canSubmit ? null : _handleSubmit,
+            PageActionButton.outlined(
+              onPressed: _submitting || !canSubmit ? null : () => _handleSubmit(false),
               icon: const Icon(Icons.save, size: 16),
-              label: _submitting ? '保存中' : '保存',
+              label: _submitting ? '保存中' : (widget.mode == WorkOrderFormMode.edit ? '保存草稿' : '存为草稿'),
+            ),
+            PageActionButton.filled(
+              onPressed: _submitting || !canSubmit ? null : () => _handleSubmit(true),
+              icon: const Icon(Icons.send, size: 16),
+              label: _submitting ? '发布中' : (widget.mode == WorkOrderFormMode.edit ? '保存并发布' : '直接发布'),
             ),
           ],
         ),

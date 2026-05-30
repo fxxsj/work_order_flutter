@@ -23,13 +23,19 @@ class WorkOrderFlowApiService {
   Future<WorkOrderDetailDto> submitApproval(
     int id, {
     String? comment,
+    Map<String, dynamic>? payload,
   }) async {
+    final data = <String, dynamic>{
+      if (comment != null && comment.trim().isNotEmpty)
+        'comment': comment.trim(),
+    };
+    if (payload != null) {
+      data.addAll(payload);
+    }
+    
     final response = await _client.post(
       '/workorders-flow/$id/submit_approval/',
-      data: {
-        if (comment != null && comment.trim().isNotEmpty)
-          'comment': comment.trim(),
-      },
+      data: data,
     );
     return _detailFromResponse(response.data);
   }

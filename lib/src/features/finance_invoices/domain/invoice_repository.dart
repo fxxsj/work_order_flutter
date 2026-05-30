@@ -12,9 +12,9 @@ abstract class InvoiceRepository {
     String? ordering,
   });
 
-  Future<Map<String, dynamic>> submit(int id);
+  Future<Map<String, dynamic>> submit(int id, [Map<String, dynamic>? payload]);
 
-  Future<Map<String, dynamic>> create(Map<String, dynamic> payload);
+  Future<InvoiceDto> create(Map<String, dynamic> payload);
 
   Future<Map<String, dynamic>> uploadAttachment(
     int id,

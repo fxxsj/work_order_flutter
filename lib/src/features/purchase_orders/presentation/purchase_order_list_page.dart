@@ -394,7 +394,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
 
     final formKey = GlobalKey<FormState>();
 
-    Future<void> submit(VoidCallback refresh) async {
+    Future<void> submit(VoidCallback refresh, [bool autoApprove = false]) async {
       if (!PermissionUtil.snapshot(context).has(requiredPermission)) {
         ToastUtil.showError('当前账号无权执行该操作');
         return;
@@ -426,11 +426,19 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
 
         if (isEdit) {
           await apiService.updatePurchaseOrder(order.id, payload);
+          if (!mounted) return;
+          ToastUtil.showSuccess('采购单已更新');
         } else {
-          await apiService.createPurchaseOrder(payload);
+          final res = await apiService.createPurchaseOrder(payload);
+          if (autoApprove) {
+            await apiService.submit(res.id, {'auto_approve': true});
+            if (!mounted) return;
+            ToastUtil.showSuccess('发布成功');
+          } else {
+            if (!mounted) return;
+            ToastUtil.showSuccess('采购单已创建');
+          }
         }
-        if (!mounted) return;
-        ToastUtil.showSuccess(isEdit ? '采购单已更新' : '采购单已创建');
         await viewModel.loadPurchaseOrders(resetPage: false);
       } catch (err) {
         if (!mounted) return;
@@ -835,34 +843,33 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
                       if (canChangePurchaseOrder && order.approvalStatus == 'draft')
                         RowAction(
                           label: '提交',
-                          onPressed: () => _handleAuditAction(viewModel, order, 'submit'),
+                          onPressed: () => _handleStatusAction(viewModel, order, 'submit'),
                         ),
                       if (canChangePurchaseOrder && order.approvalStatus == 'submitted')
                         RowAction(
                           label: '批准',
-                          onPressed: () => _handleAuditAction(viewModel, order, 'approve'),
+                          onPressed: () => _handleStatusAction(viewModel, order, 'approve'),
                         ),
                       if (canChangePurchaseOrder && order.approvalStatus == 'submitted')
                         RowAction(
                           label: '拒绝',
-                          isDanger: true,
-                          onPressed: () => _handleAuditAction(viewModel, order, 'reject'),
+                          onPressed: () => _handleStatusAction(viewModel, order, 'reject'),
                         ),
                       if (canChangePurchaseOrder &&
                           order.approvalStatus == 'approved' && order.status == 'pending')
                         RowAction(
                           label: '下单',
-                          onPressed: () => _handleAuditAction(viewModel, order, 'placeOrder'),
+                          onPressed: () => _handleStatusAction(viewModel, order, 'placeOrder'),
                         ),
-                      if (canChangeReceiveRecord && order.status == 'ordered')
+                      if (permissions.has('workorder.change_purchasereceiverecord') && order.status == 'ordered')
                         RowAction(
                           label: '收货',
                           onPressed: () => _openReceiveDialog(viewModel, order),
                         ),
-                      if (canChangeReceiveRecord && order.status == 'ordered')
+                      if (permissions.has('workorder.change_purchaseinspectionrecord') && order.status == 'ordered')
                         RowAction(
                           label: '质检',
-                          onPressed: () => _openInspectDialog(viewModel, order),
+                          onPressed: () => _openInspectionDialog(order),
                         ),
                       if (canChangePurchaseOrder &&
                           (order.approvalStatus == 'draft' ||
@@ -870,8 +877,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
                               order.approvalStatus == 'approved') && order.status != 'cancelled')
                         RowAction(
                           label: '取消',
-                          isDanger: true,
-                          onPressed: () => _handleAuditAction(viewModel, order, 'cancel'),
+                          onPressed: () => _handleStatusAction(viewModel, order, 'cancel'),
                         ),
                     ],
                   ),

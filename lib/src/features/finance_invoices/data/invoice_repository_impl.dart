@@ -30,12 +30,12 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> submit(int id) {
-    return _apiService.submit(id);
+  Future<Map<String, dynamic>> submit(int id, [Map<String, dynamic>? payload]) {
+    return _apiService.submit(id, payload);
   }
 
   @override
-  Future<Map<String, dynamic>> create(Map<String, dynamic> payload) {
+  Future<InvoiceDto> create(Map<String, dynamic> payload) {
     return _apiService.createInvoice(payload);
   }
 

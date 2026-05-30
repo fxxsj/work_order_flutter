@@ -251,7 +251,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
         context,
         item: invoice,
         onConfirm: (item) async {
-          await viewModel.submitInvoice(item.id);
+          await viewModel.submit(invoice.id);
           await viewModel.loadInvoices(resetPage: false);
         },
         config: _submitConfig,
@@ -367,6 +367,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     required TextEditingController taxRateController,
     required TextEditingController issueDateController,
     required TextEditingController notesController,
+    bool autoApprove = false,
   }) async {
     final amountText = amountController.text.trim();
     final amount = double.tryParse(amountText);
@@ -402,10 +403,17 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
       payload['work_order'] = selectedWorkOrderId;
     }
 
-    await viewModel.createInvoice(payload);
+    final res = await viewModel.createInvoice(payload);
     if (!context.mounted) return;
+    
+    if (autoApprove) {
+      await viewModel.submit(res.id, {'auto_approve': true});
+      ToastUtil.showSuccess('发布成功');
+    } else {
+      ToastUtil.showSuccess('发票已创建');
+    }
+    
     Navigator.of(context).maybePop();
-    ToastUtil.showSuccess('发票已创建');
     await viewModel.loadInvoices(resetPage: false);
   }
 
@@ -565,9 +573,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                 DataCell(Text(_formatAmount(invoice.amount), style: textStyle)),
                 DataCell(
                   Text(
-                    (invoice.approvalStatus != null && ['draft', 'submitted', 'rejected'].contains(invoice.approvalStatus))
-                        ? (invoice.approvalStatusDisplay ?? invoice.approvalStatus ?? _emptyCellText)
-                        : (invoice.statusDisplay ?? invoice.status ?? _emptyCellText),
+                    invoice.statusDisplay ?? invoice.status ?? _emptyCellText,
                     style: textStyle,
                   ),
                 ),
@@ -914,9 +920,7 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     final source = _sourceSummary(invoice);
     final invoiceType = _invoiceTypeText(invoice);
     final amount = _formatAmount(invoice.amount);
-    final status = (invoice.approvalStatus != null && ['draft', 'submitted', 'rejected'].contains(invoice.approvalStatus))
-        ? (invoice.approvalStatusDisplay ?? invoice.approvalStatus ?? _emptyCellText)
-        : (invoice.statusDisplay ?? invoice.status ?? _emptyCellText);
+    final status = invoice.statusDisplay ?? invoice.status ?? _emptyCellText;
     final followUp = _followUpText(invoice);
     final issueDate = _formatDate(invoice.issueDate);
     final attachmentStatus = _attachmentStatusText(invoice);
@@ -1343,7 +1347,7 @@ class _InvoiceCreatePanelState extends State<_InvoiceCreatePanel> {
     super.dispose();
   }
 
-  Future<void> submit() async {
+  Future<void> submit([bool autoApprove = false]) async {
     if (submitting) return;
     if (!(formKey.currentState?.validate() ?? false)) {
       return;
@@ -1362,6 +1366,7 @@ class _InvoiceCreatePanelState extends State<_InvoiceCreatePanel> {
         taxRateController: taxRateController,
         issueDateController: issueDateController,
         notesController: notesController,
+        autoApprove: autoApprove,
       );
     } catch (err) {
       if (!mounted) return;
@@ -1377,10 +1382,14 @@ class _InvoiceCreatePanelState extends State<_InvoiceCreatePanel> {
   Widget build(BuildContext context) {
     return AdaptiveFormPanel(
       formKey: formKey,
-      submitText: '创建',
+      submitText: '存为草稿',
+      submitIcon: const Icon(Icons.save, size: 16),
+      secondarySubmitText: '直接发布',
+      secondarySubmitIcon: const Icon(Icons.send, size: 16),
       cancelText: '取消',
       submitting: submitting,
-      onSubmit: submit,
+      onSubmit: () => submit(false),
+      onSecondarySubmit: () => submit(true),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

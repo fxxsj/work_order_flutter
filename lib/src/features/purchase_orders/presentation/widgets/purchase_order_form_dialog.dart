@@ -10,7 +10,7 @@ import 'package:work_order_app/src/features/materials/data/material_dto.dart';
 import 'package:work_order_app/src/features/suppliers/data/supplier_dto.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
 
-typedef PurchaseFormSubmit = Future<void> Function(VoidCallback refresh);
+typedef PurchaseFormSubmit = Future<void> Function(VoidCallback refresh, [bool autoApprove]);
 
 Future<void> showPurchaseOrderFormDialog(
   BuildContext context, {
@@ -126,10 +126,14 @@ class _PurchaseOrderFormPanelState extends State<_PurchaseOrderFormPanel> {
 
     return AdaptiveFormPanel(
       formKey: widget.formKey,
-      submitText: widget.submitText,
+      submitText: widget.submitText == '创建' ? '存为草稿' : widget.submitText,
+      submitIcon: widget.submitText == '创建' ? const Icon(Icons.save, size: 16) : const Icon(Icons.save, size: 16),
+      secondarySubmitText: widget.submitText == '创建' ? '直接发布' : null,
+      secondarySubmitIcon: widget.submitText == '创建' ? const Icon(Icons.send, size: 16) : null,
       cancelText: widget.cancelText,
       submitting: submitting,
-      onSubmit: _submit,
+      onSubmit: () => _submit(false),
+      onSecondarySubmit: () => _submit(true),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -298,10 +302,10 @@ class _PurchaseOrderFormPanelState extends State<_PurchaseOrderFormPanel> {
     if (mounted) setState(() {});
   }
 
-  Future<void> _submit() async {
+  Future<void> _submit([bool autoApprove = false]) async {
     if (submitting) return;
     setState(() => submitting = true);
-    await widget.onSubmit(_refresh);
+    await widget.onSubmit(_refresh, autoApprove);
     if (mounted) {
       setState(() => submitting = false);
     }

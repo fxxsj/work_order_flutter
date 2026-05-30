@@ -863,7 +863,7 @@ void main() {
           onSupplierChanged: (value) => supplierId = value,
           onWorkOrderChanged: (value) =>
               workOrderId = value == 0 ? null : value,
-          onSubmit: (refresh) async {
+          onSubmit: (refresh, [autoApprove = false]) async {
             submitted = true;
             expect(formKey.currentState?.validate(), isTrue);
             expect(supplierId, 3);

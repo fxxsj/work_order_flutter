@@ -75,16 +75,16 @@ class InvoiceApiService {
     return const InvoicePageDto(items: [], total: 0, page: 1, pageSize: 20);
   }
 
-  Future<Map<String, dynamic>> submit(int id) async {
-    final response = await _client.post('/invoices/$id/submit/');
+  Future<Map<String, dynamic>> submit(int id, [Map<String, dynamic>? payload]) async {
+    final response = await _client.post('/invoices/$id/submit/', data: payload);
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> createInvoice(
+  Future<InvoiceDto> createInvoice(
     Map<String, dynamic> payload,
   ) async {
     final response = await _client.post('/invoices/', data: payload);
-    return _mapFromResponse(response.data);
+    return InvoiceDto.fromJson(_mapFromResponse(response.data));
   }
 
   Future<Map<String, dynamic>> updateInvoice(
