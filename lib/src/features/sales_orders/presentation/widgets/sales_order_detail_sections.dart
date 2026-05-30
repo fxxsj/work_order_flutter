@@ -229,7 +229,7 @@ class SalesOrderTraceabilitySection extends StatelessWidget {
           onItemTap: onOpenWorkOrder,
         ),
         TraceabilitySummaryGroupData(
-          title: '关联发货单',
+          title: '关联送货单',
           items: deliveryOrderSummaries,
           actionLabel: '发货列表',
           onActionTap: onOpenDeliveryPage,

@@ -10,7 +10,7 @@ import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_o
 Future<void> showDeliveryOrderDetailDialog(
   BuildContext context, {
   required DeliveryOrderDetail detail,
-  String title = '发货单详情',
+  String title = '送货单详情',
   String closeText = '取消',
 }) {
   return showDialog<void>(
@@ -28,7 +28,7 @@ Future<void> showDeliveryOrderDetailDialog(
                 title: '该发货已进入开票阶段',
                 icon: Icons.receipt_long_outlined,
                 reasonLabel: '当前状态',
-                reason: '当前发货单尚未关联发票，请尽快补齐开票凭证。',
+                reason: '当前送货单尚未关联发票，请尽快补齐开票凭证。',
                 nextStepLabel: '建议动作',
                 nextStep: '先核对发货信息与客户订单，再进入发票列表按当前客户订单预填创建发票。',
                 primaryAction: detail.salesOrderId == null
@@ -81,7 +81,7 @@ Future<void> showDeliveryOrderDetailDialog(
               ),
               SizedBox(height: LayoutTokens.gapLg),
             ],
-            _DetailRow(label: '发货单号', value: detail.orderNumber),
+            _DetailRow(label: '送货单号', value: detail.orderNumber),
             _DetailRow(label: '客户', value: _displayText(detail.customerName)),
             _DetailRow(
                 label: '客户订单', value: _displayText(detail.salesOrderNumber)),

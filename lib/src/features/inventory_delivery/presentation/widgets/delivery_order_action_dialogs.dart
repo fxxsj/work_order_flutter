@@ -240,7 +240,7 @@ class _DeliveryRejectDialogState extends State<_DeliveryRejectDialog> {
       submitting: submitting,
       maxWidth: LayoutTokens.dialogWidthSm,
       destructive: true,
-      summary: '提交后会把发货数量回退到库存，并把发货单标记为拒收。',
+      summary: '提交后会把发货数量回退到库存，并把送货单标记为拒收。',
       impacts: const [
         '请确认拒收原因和实际收货情况一致',
         '拒收后库存与发货状态会同步回滚',

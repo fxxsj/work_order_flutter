@@ -969,7 +969,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
           ),
           SpacingTokens.vSm,
           _TraceabilityGroup(
-            label: '关联发货单',
+            label: '关联送货单',
             numbers: detail.deliveryOrderSummaries.isNotEmpty
                 ? detail.deliveryOrderSummaries
                       .map((item) => item.number)

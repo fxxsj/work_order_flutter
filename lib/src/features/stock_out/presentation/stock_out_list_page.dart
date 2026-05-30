@@ -28,7 +28,7 @@ class StockOutListEntry extends StatelessWidget {
         id: 'stock_outs',
         title: '出库单',
         endpoint: '/stock-outs/',
-        searchHintText: '搜索出库单号/发货单号/客户',
+        searchHintText: '搜索出库单号/送货单号/客户',
         emptyText: '暂无出库单',
         emptyIcon: Icons.exit_to_app_outlined,
         enableSummary: true,
@@ -37,7 +37,7 @@ class StockOutListEntry extends StatelessWidget {
           GenericColumn(label: '出库单号', value: _orderNumber),
           GenericColumn(label: '客户', value: _customerName),
           GenericColumn(label: '出库类型', value: _outType),
-          GenericColumn(label: '发货单号', value: _deliveryOrderNumber),
+          GenericColumn(label: '送货单号', value: _deliveryOrderNumber),
           GenericColumn(label: '状态', value: _status),
           GenericColumn(label: '下一步', value: _followUpText),
           GenericColumn(label: '操作员', value: _operator),
@@ -46,7 +46,7 @@ class StockOutListEntry extends StatelessWidget {
         summaryFields: const [
           GenericSummaryField(label: '客户', value: _customerName),
           GenericSummaryField(label: '出库类型', value: _outType),
-          GenericSummaryField(label: '发货单号', value: _deliveryOrderNumber),
+          GenericSummaryField(label: '送货单号', value: _deliveryOrderNumber),
           GenericSummaryField(label: '状态', value: _status),
           GenericSummaryField(label: '下一步', value: _followUpText),
           GenericSummaryField(label: '操作员', value: _operator),
@@ -90,7 +90,7 @@ class StockOutListEntry extends StatelessWidget {
           if (deliveryOrderId != null && deliveryOrderId.toInt() > 0) {
             actions.add(
               RowAction(
-                label: '查看发货单',
+                label: '查看送货单',
                 icon: Icons.local_shipping_outlined,
                 onPressed: () =>
                     _openDeliveryOrderDialog(context, deliveryOrderId.toInt()),
@@ -257,11 +257,11 @@ class StockOutListEntry extends StatelessWidget {
             AppDropdownOption<String>(value: '-order_number', label: '出库单号降序'),
             AppDropdownOption<String>(
               value: 'delivery_order__order_number',
-              label: '发货单号升序',
+              label: '送货单号升序',
             ),
             AppDropdownOption<String>(
               value: '-delivery_order__order_number',
-              label: '发货单号降序',
+              label: '送货单号降序',
             ),
             AppDropdownOption<String>(
               value: 'delivery_order__customer__name',
@@ -453,7 +453,7 @@ class StockOutListEntry extends StatelessWidget {
           enabled: !submitting,
           keyboardType: TextInputType.number,
           decoration: const InputDecoration(
-            labelText: '发货单ID（可选）',
+            labelText: '送货单ID（可选）',
             border: OutlineInputBorder(),
           ),
         ),
@@ -524,7 +524,7 @@ class StockOutListEntry extends StatelessWidget {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AppDialog(
-        title: '发货单详情',
+        title: '送货单详情',
         maxWidth: 520,
         actions: [
           TextButton(
@@ -554,7 +554,7 @@ class StockOutListEntry extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _DetailRow(label: '发货单号', value: detail.orderNumber),
+                  _DetailRow(label: '送货单号', value: detail.orderNumber),
                   _DetailRow(label: '客户', value: detail.customerName ?? '-'),
                   _DetailRow(
                     label: '状态',

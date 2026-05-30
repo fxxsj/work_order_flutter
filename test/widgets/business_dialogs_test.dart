@@ -405,7 +405,7 @@ void main() {
           context,
           cancelText: '取消',
           submitText: '确认签收',
-          title: '签收发货单',
+          title: '签收送货单',
           onSubmit: (value) async => notes = value,
         );
       },
@@ -432,7 +432,7 @@ void main() {
           context,
           cancelText: '取消',
           submitText: '确认拒收',
-          title: '拒收发货单',
+          title: '拒收送货单',
           onSubmit: (value) async => reason = value,
         );
       },
@@ -467,7 +467,7 @@ void main() {
           context,
           cancelText: '取消',
           submitText: '确认拒收',
-          title: '拒收发货单',
+          title: '拒收送货单',
           onSubmit: (value) async => reason = value,
         );
       },
@@ -477,7 +477,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
-    expect(find.text('拒收发货单'), findsOneWidget);
+    expect(find.text('拒收送货单'), findsOneWidget);
 
     await tester.tap(find.text('确认拒收'));
     await tester.pump();
@@ -535,7 +535,7 @@ void main() {
         await showDeliveryOrderFormDialog(
           context,
           isEdit: false,
-          title: '新建发货单',
+          title: '新建送货单',
           cancelText: '取消',
           submitText: '保存',
           productsLoading: false,
@@ -581,7 +581,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
-    expect(find.text('新建发货单'), findsOneWidget);
+    expect(find.text('新建送货单'), findsOneWidget);
     expect(find.text('关联单据'), findsOneWidget);
     expect(find.text('收货信息'), findsOneWidget);
 

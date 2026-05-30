@@ -37,7 +37,7 @@ import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_dto.dart';
 import 'package:work_order_app/src/core/utils/debounce_controller.dart';
 
-/// 发货单列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
+/// 送货单列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
 class DeliveryOrderListEntry extends StatelessWidget {
   const DeliveryOrderListEntry({super.key});
 
@@ -60,7 +60,7 @@ class DeliveryOrderListEntry extends StatelessWidget {
   }
 }
 
-/// 发货单列表页视图，只负责渲染。
+/// 送货单列表页视图，只负责渲染。
 class DeliveryOrderListPage extends StatelessWidget {
   const DeliveryOrderListPage({super.key});
 
@@ -83,7 +83,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
 
   static const String _searchHintText = '搜索单号/客户/物流';
   static const String _refreshButtonText = '刷新';
-  static const String _emptyText = '暂无发货单数据';
+  static const String _emptyText = '暂无送货单数据';
   static const String _errorFallbackText = '加载失败';
   static const String _retryText = '重新加载';
   static const String _shipTitle = '发货';
@@ -95,11 +95,11 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
   static const String _shipErrorText = '发货失败: ';
   static const String _receiveErrorText = '签收失败: ';
   static const String _rejectErrorText = '拒收失败: ';
-  static const String _createTitle = '新建发货单';
-  static const String _editTitle = '编辑发货单';
-  static const String _detailTitle = '发货单详情';
-  static const String _deleteTitle = '删除发货单';
-  static const String _deleteSuccessText = '发货单已删除';
+  static const String _createTitle = '新建送货单';
+  static const String _editTitle = '编辑送货单';
+  static const String _detailTitle = '送货单详情';
+  static const String _deleteTitle = '删除送货单';
+  static const String _deleteSuccessText = '送货单已删除';
   static const String _deleteErrorText = '删除失败: ';
   static const String _statusFilterLabel = '发货状态';
   static const String _customerFilterLabel = '客户';
@@ -266,7 +266,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     try {
       return await apiService.fetchDetail(order.id);
     } catch (err) {
-      ToastUtil.showError('获取发货单详情失败: $err');
+      ToastUtil.showError('获取送货单详情失败: $err');
       return null;
     }
   }
@@ -302,7 +302,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     }
     final salesOrderId = order.salesOrderId;
     if (salesOrderId == null || salesOrderId <= 0) {
-      ToastUtil.showError('当前发货单缺少客户订单，无法预填开票');
+      ToastUtil.showError('当前送货单缺少客户订单，无法预填开票');
       return;
     }
     final customerQuery = order.customerId != null && order.customerId! > 0
@@ -360,11 +360,11 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     if (number.isNotEmpty) {
       return number;
     }
-    return '发货单 #${order.id}';
+    return '送货单 #${order.id}';
   }
 
   static String _buildDeleteSummary(DeliveryOrder order) {
-    return '即将删除发货单 ${_deliveryLabel(order)}。删除后，当前发货记录及后续签收追踪将一并失效。';
+    return '即将删除送货单 ${_deliveryLabel(order)}。删除后，当前发货记录及后续签收追踪将一并失效。';
   }
 
   static List<String> _buildDeleteImpacts(DeliveryOrder order) {
@@ -379,7 +379,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
   }
 
   static String _buildDeleteAuditHint(DeliveryOrder order) {
-    return '如果该发货单已发货或已签收，建议优先保留记录并通过异常处理或作废流程纠正。';
+    return '如果该送货单已发货或已签收，建议优先保留记录并通过异常处理或作废流程纠正。';
   }
 
   static String _buildDeleteSuccessMessage(DeliveryOrder order) {
@@ -582,7 +582,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
         }
         if (!mounted) return;
         Navigator.of(context).pop();
-        ToastUtil.showSuccess(isEdit ? '发货单已更新' : '发货单已创建');
+        ToastUtil.showSuccess(isEdit ? '送货单已更新' : '送货单已创建');
         await viewModel.loadDeliveryOrders(resetPage: false);
       } catch (err) {
         if (!mounted) return;
@@ -747,10 +747,10 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     final decision = await showActionDecisionDialog<String>(
       context,
       title: _hasResolvedRejectedException(order) ? '更新拒收处理' : '登记拒收处理',
-      summary: '请登记当前发货单的拒收处理方案，处理记录会直接影响后续补发、终止交付和客户沟通跟进。',
+      summary: '请登记当前送货单的拒收处理方案，处理记录会直接影响后续补发、终止交付和客户沟通跟进。',
       impacts: [
         '客户：${CrudValueFormatter.text(order.customerName)}',
-        '发货单号：${_deliveryLabel(order)}',
+        '送货单号：${_deliveryLabel(order)}',
         if ((order.salesOrderNumber ?? '').trim().isNotEmpty)
           '客户订单：${order.salesOrderNumber!.trim()}',
       ],
@@ -902,7 +902,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     );
     return AppDataTable(
       columns: const [
-        DataColumn(label: Text('发货单号')),
+        DataColumn(label: Text('送货单号')),
         DataColumn(label: Text('客户')),
         DataColumn(label: Text('客户订单')),
         DataColumn(label: Text('状态')),
@@ -934,7 +934,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Text(
                     order.orderNumber.isEmpty
-                        ? '发货单 #${order.id}'
+                        ? '送货单 #${order.id}'
                         : order.orderNumber,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.primary,
@@ -1135,7 +1135,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
                     ? null
                     : () => _openAppFormDialog(viewModel),
                 icon: const Icon(Icons.add, size: 16),
-                label: '新建发货单',
+                label: '新建送货单',
               ),
             PageActionButton.outlined(
               onPressed: openFilterDrawer,
@@ -1243,8 +1243,8 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
           options: const [
             AppDropdownOption<String>(value: '-created_at', label: '最新创建'),
             AppDropdownOption<String>(value: 'created_at', label: '最早创建'),
-            AppDropdownOption<String>(value: 'order_number', label: '发货单号升序'),
-            AppDropdownOption<String>(value: '-order_number', label: '发货单号降序'),
+            AppDropdownOption<String>(value: 'order_number', label: '送货单号升序'),
+            AppDropdownOption<String>(value: '-order_number', label: '送货单号降序'),
             AppDropdownOption<String>(value: 'customer__name', label: '客户名称升序'),
             AppDropdownOption<String>(
               value: '-customer__name',
@@ -1368,7 +1368,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
     final colors = theme.extension<AppColors>();
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
     final number = order.orderNumber.isEmpty
-        ? '发货单 #${order.id}'
+        ? '送货单 #${order.id}'
         : order.orderNumber;
     final customer = _displayText(order.customerName);
     final salesOrder = _displayText(order.salesOrderNumber);
@@ -1619,7 +1619,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       color: colors?.subtleText ?? theme.hintColor,
     );
     final fields = <(String, String)>[
-      ('发货单号', number),
+      ('送货单号', number),
       ('客户', customer),
       ('客户订单', salesOrder),
       ('发货日期', deliveryDate),
