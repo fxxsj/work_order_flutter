@@ -6,77 +6,78 @@ part of 'sales_order_detail.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_SalesOrderDetail _$SalesOrderDetailFromJson(Map<String, dynamic> json) =>
-    _SalesOrderDetail(
-      id: _intFromJson(json['id']),
-      orderNumber: _stringFromJson(json['order_number']),
-      customerId: _intOrNullFromJson(json['customer']),
-      customerName: _stringOrNullFromJson(json['customer_name']),
-      customerContact: _stringOrNullFromJson(json['customer_contact']),
-      customerPhone: _stringOrNullFromJson(json['customer_phone']),
-      customerAddress: _stringOrNullFromJson(json['customer_address']),
-      contractNumber: _stringOrNullFromJson(json['contract_number']),
-      status: _stringOrNullFromJson(json['status']),
-      statusDisplay: _stringOrNullFromJson(json['status_display']),
-      approvalComment: _stringOrNullFromJson(json['approval_comment']),
-      rejectionReason: _stringOrNullFromJson(json['rejection_reason']),
-      paymentStatus: _stringOrNullFromJson(json['payment_status']),
-      paymentStatusDisplay: _stringOrNullFromJson(
-        json['payment_status_display'],
-      ),
-      orderDate: _dateTimeOrNullFromJson(json['order_date']),
-      deliveryDate: _dateTimeOrNullFromJson(json['delivery_date']),
-      actualDeliveryDate: _dateTimeOrNullFromJson(json['actual_delivery_date']),
-      subtotal: _doubleOrNullFromJson(json['subtotal']),
-      taxRate: _doubleOrNullFromJson(json['tax_rate']),
-      taxAmount: _doubleOrNullFromJson(json['tax_amount']),
-      discountAmount: _doubleOrNullFromJson(json['discount_amount']),
-      totalAmount: _doubleOrNullFromJson(json['total_amount']),
-      depositAmount: _doubleOrNullFromJson(json['deposit_amount']),
-      paidAmount: _doubleOrNullFromJson(json['paid_amount']),
-      paymentDate: _dateTimeOrNullFromJson(json['payment_date']),
-      contactPerson: _stringOrNullFromJson(json['contact_person']),
-      contactPhone: _stringOrNullFromJson(json['contact_phone']),
-      shippingAddress: _stringOrNullFromJson(json['shipping_address']),
-      notes: _stringOrNullFromJson(json['notes']),
-      paymentCount: _intOrNullFromJson(json['payment_count']),
-      pendingPaymentPlanCount: _intOrNullFromJson(
-        json['pending_payment_plan_count'],
-      ),
-      pendingPaymentPlanAmount: _doubleOrNullFromJson(
-        json['pending_payment_plan_amount'],
-      ),
-      unpaidAmount: _doubleOrNullFromJson(json['unpaid_amount']),
-      workOrderNumbers: json['work_order_numbers'] == null
-          ? const <String>[]
-          : _stringListFromJson(json['work_order_numbers']),
-      deliveryOrderNumbers: json['delivery_order_numbers'] == null
-          ? const <String>[]
-          : _stringListFromJson(json['delivery_order_numbers']),
-      invoiceNumbers: json['invoice_numbers'] == null
-          ? const <String>[]
-          : _stringListFromJson(json['invoice_numbers']),
-      workOrderSummaries:
-          _readWorkOrderSummaries(json, 'work_order_summaries') == null
-          ? const <TraceabilitySummaryItem>[]
-          : _traceabilitySummaryListFromJson(
-              _readWorkOrderSummaries(json, 'work_order_summaries'),
-            ),
-      deliveryOrderSummaries:
-          _readDeliveryOrderSummaries(json, 'delivery_order_summaries') == null
-          ? const <TraceabilitySummaryItem>[]
-          : _traceabilitySummaryListFromJson(
-              _readDeliveryOrderSummaries(json, 'delivery_order_summaries'),
-            ),
-      invoiceSummaries: _readInvoiceSummaries(json, 'invoice_summaries') == null
-          ? const <TraceabilitySummaryItem>[]
-          : _traceabilitySummaryListFromJson(
-              _readInvoiceSummaries(json, 'invoice_summaries'),
-            ),
-      items: json['items'] == null
-          ? const <SalesOrderItem>[]
-          : _salesOrderItemListFromJson(json['items']),
-    );
+_SalesOrderDetail _$SalesOrderDetailFromJson(
+  Map<String, dynamic> json,
+) => _SalesOrderDetail(
+  id: _intFromJson(json['id']),
+  orderNumber: _stringFromJson(json['order_number']),
+  customerId: _intOrNullFromJson(json['customer']),
+  customerName: _stringOrNullFromJson(json['customer_name']),
+  customerContact: _stringOrNullFromJson(json['customer_contact']),
+  customerPhone: _stringOrNullFromJson(json['customer_phone']),
+  customerAddress: _stringOrNullFromJson(json['customer_address']),
+  contractNumber: _stringOrNullFromJson(json['contract_number']),
+  status: _stringOrNullFromJson(json['status']),
+  statusDisplay: _stringOrNullFromJson(json['status_display']),
+  approvalStatus: _stringOrNullFromJson(json['approval_status']),
+  approvalStatusDisplay: _stringOrNullFromJson(json['approval_status_display']),
+  approvalComment: _stringOrNullFromJson(json['approval_comment']),
+  rejectionReason: _stringOrNullFromJson(json['rejection_reason']),
+  paymentStatus: _stringOrNullFromJson(json['payment_status']),
+  paymentStatusDisplay: _stringOrNullFromJson(json['payment_status_display']),
+  orderDate: _dateTimeOrNullFromJson(json['order_date']),
+  deliveryDate: _dateTimeOrNullFromJson(json['delivery_date']),
+  actualDeliveryDate: _dateTimeOrNullFromJson(json['actual_delivery_date']),
+  subtotal: _doubleOrNullFromJson(json['subtotal']),
+  taxRate: _doubleOrNullFromJson(json['tax_rate']),
+  taxAmount: _doubleOrNullFromJson(json['tax_amount']),
+  discountAmount: _doubleOrNullFromJson(json['discount_amount']),
+  totalAmount: _doubleOrNullFromJson(json['total_amount']),
+  depositAmount: _doubleOrNullFromJson(json['deposit_amount']),
+  paidAmount: _doubleOrNullFromJson(json['paid_amount']),
+  paymentDate: _dateTimeOrNullFromJson(json['payment_date']),
+  contactPerson: _stringOrNullFromJson(json['contact_person']),
+  contactPhone: _stringOrNullFromJson(json['contact_phone']),
+  shippingAddress: _stringOrNullFromJson(json['shipping_address']),
+  notes: _stringOrNullFromJson(json['notes']),
+  paymentCount: _intOrNullFromJson(json['payment_count']),
+  pendingPaymentPlanCount: _intOrNullFromJson(
+    json['pending_payment_plan_count'],
+  ),
+  pendingPaymentPlanAmount: _doubleOrNullFromJson(
+    json['pending_payment_plan_amount'],
+  ),
+  unpaidAmount: _doubleOrNullFromJson(json['unpaid_amount']),
+  workOrderNumbers: json['work_order_numbers'] == null
+      ? const <String>[]
+      : _stringListFromJson(json['work_order_numbers']),
+  deliveryOrderNumbers: json['delivery_order_numbers'] == null
+      ? const <String>[]
+      : _stringListFromJson(json['delivery_order_numbers']),
+  invoiceNumbers: json['invoice_numbers'] == null
+      ? const <String>[]
+      : _stringListFromJson(json['invoice_numbers']),
+  workOrderSummaries:
+      _readWorkOrderSummaries(json, 'work_order_summaries') == null
+      ? const <TraceabilitySummaryItem>[]
+      : _traceabilitySummaryListFromJson(
+          _readWorkOrderSummaries(json, 'work_order_summaries'),
+        ),
+  deliveryOrderSummaries:
+      _readDeliveryOrderSummaries(json, 'delivery_order_summaries') == null
+      ? const <TraceabilitySummaryItem>[]
+      : _traceabilitySummaryListFromJson(
+          _readDeliveryOrderSummaries(json, 'delivery_order_summaries'),
+        ),
+  invoiceSummaries: _readInvoiceSummaries(json, 'invoice_summaries') == null
+      ? const <TraceabilitySummaryItem>[]
+      : _traceabilitySummaryListFromJson(
+          _readInvoiceSummaries(json, 'invoice_summaries'),
+        ),
+  items: json['items'] == null
+      ? const <SalesOrderItem>[]
+      : _salesOrderItemListFromJson(json['items']),
+);
 
 Map<String, dynamic> _$SalesOrderDetailToJson(_SalesOrderDetail instance) =>
     <String, dynamic>{
@@ -90,6 +91,8 @@ Map<String, dynamic> _$SalesOrderDetailToJson(_SalesOrderDetail instance) =>
       'contract_number': instance.contractNumber,
       'status': instance.status,
       'status_display': instance.statusDisplay,
+      'approval_status': instance.approvalStatus,
+      'approval_status_display': instance.approvalStatusDisplay,
       'approval_comment': instance.approvalComment,
       'rejection_reason': instance.rejectionReason,
       'payment_status': instance.paymentStatus,

@@ -826,12 +826,52 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
                 DataCell(
                   RowActionGroup(
                     actions: [
-                      if ((order.status ?? '') == 'draft' &&
-                          canChangePurchaseOrder)
+                      if (canChangePurchaseOrder && order.approvalStatus == 'draft')
                         RowAction(
                           label: '编辑',
                           onPressed: () =>
                               _openFormDialog(viewModel, order: order),
+                        ),
+                      if (canChangePurchaseOrder && order.approvalStatus == 'draft')
+                        RowAction(
+                          label: '提交',
+                          onPressed: () => _handleAuditAction(viewModel, order, 'submit'),
+                        ),
+                      if (canChangePurchaseOrder && order.approvalStatus == 'submitted')
+                        RowAction(
+                          label: '批准',
+                          onPressed: () => _handleAuditAction(viewModel, order, 'approve'),
+                        ),
+                      if (canChangePurchaseOrder && order.approvalStatus == 'submitted')
+                        RowAction(
+                          label: '拒绝',
+                          isDanger: true,
+                          onPressed: () => _handleAuditAction(viewModel, order, 'reject'),
+                        ),
+                      if (canChangePurchaseOrder &&
+                          order.approvalStatus == 'approved' && order.status == 'pending')
+                        RowAction(
+                          label: '下单',
+                          onPressed: () => _handleAuditAction(viewModel, order, 'placeOrder'),
+                        ),
+                      if (canChangeReceiveRecord && order.status == 'ordered')
+                        RowAction(
+                          label: '收货',
+                          onPressed: () => _openReceiveDialog(viewModel, order),
+                        ),
+                      if (canChangeReceiveRecord && order.status == 'ordered')
+                        RowAction(
+                          label: '质检',
+                          onPressed: () => _openInspectDialog(viewModel, order),
+                        ),
+                      if (canChangePurchaseOrder &&
+                          (order.approvalStatus == 'draft' ||
+                              order.approvalStatus == 'submitted' ||
+                              order.approvalStatus == 'approved') && order.status != 'cancelled')
+                        RowAction(
+                          label: '取消',
+                          isDanger: true,
+                          onPressed: () => _handleAuditAction(viewModel, order, 'cancel'),
                         ),
                     ],
                   ),
@@ -1097,18 +1137,19 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
     final canChangeReceiveRecord = permissions.has(
       'workorder.change_purchasereceiverecord',
     );
-    final canEdit = statusCode == 'draft' && canChangePurchaseOrder;
-    final canSubmit = statusCode == 'draft' && canChangePurchaseOrder;
-    final canApprove = statusCode == 'submitted' && canChangePurchaseOrder;
-    final canReject = statusCode == 'submitted' && canChangePurchaseOrder;
-    final canPlaceOrder = statusCode == 'approved' && canChangePurchaseOrder;
+    final approvalCode = order.approvalStatus ?? '';
+    final canEdit = approvalCode == 'draft' && canChangePurchaseOrder;
+    final canSubmit = approvalCode == 'draft' && canChangePurchaseOrder;
+    final canApprove = approvalCode == 'submitted' && canChangePurchaseOrder;
+    final canReject = approvalCode == 'submitted' && canChangePurchaseOrder;
+    final canPlaceOrder = approvalCode == 'approved' && statusCode == 'pending' && canChangePurchaseOrder;
     final canReceive = statusCode == 'ordered' && canChangeReceiveRecord;
     final canInspect = statusCode == 'ordered' && canChangeReceiveRecord;
     final canCancel =
         canChangePurchaseOrder &&
-        (statusCode == 'draft' ||
-            statusCode == 'submitted' ||
-            statusCode == 'approved');
+        (approvalCode == 'draft' ||
+            approvalCode == 'submitted' ||
+            approvalCode == 'approved') && statusCode != 'cancelled';
 
     return ExpandableSummaryCard(
       headerBuilder: (context, expanded) {

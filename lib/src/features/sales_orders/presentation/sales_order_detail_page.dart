@@ -342,25 +342,26 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
 
   List<SalesOrderActionItem> _buildActions(SalesOrderDetail? detail) {
     final status = detail?.status ?? '';
+    final approvalStatus = detail?.approvalStatus ?? '';
     final permissions = PermissionUtil.snapshot(context);
     final canChangeSalesOrder = permissions.has('workorder.change_salesorder');
     final canCreateWorkOrder = permissions.has('workorder.add_workorder');
     final canCreateDeliveryOrder =
         permissions.has('workorder.add_deliveryorder');
     final actions = <SalesOrderActionItem>[
-      if (canChangeSalesOrder && status == 'draft')
+      if (canChangeSalesOrder && approvalStatus == 'draft')
         SalesOrderActionItem(
           label: '提交',
           icon: Icons.send_outlined,
           onTap: _showSubmitDialog,
         ),
-      if (canChangeSalesOrder && status == 'rejected')
+      if (canChangeSalesOrder && approvalStatus == 'rejected')
         SalesOrderActionItem(
           label: '重新提交',
           icon: Icons.send_outlined,
           onTap: () => _showSubmitDialog(resubmitting: true),
         ),
-      if (canChangeSalesOrder && status == 'submitted') ...[
+      if (canChangeSalesOrder && approvalStatus == 'submitted') ...[
         SalesOrderActionItem(
           label: '审核通过',
           icon: Icons.check_circle_outline,
@@ -373,16 +374,14 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
         ),
       ],
       if (canCreateWorkOrder &&
-          (status == 'approved' || status == 'in_production'))
+          (approvalStatus == 'approved' && status != 'completed' && status != 'cancelled'))
         SalesOrderActionItem(
           label: '生成施工单草稿',
           icon: Icons.assignment_outlined,
           onTap: _createWorkOrderDraft,
         ),
       if (canCreateDeliveryOrder &&
-          (status == 'approved' ||
-              status == 'in_production' ||
-              status == 'completed'))
+          (approvalStatus == 'approved'))
         SalesOrderActionItem(
           label: '生成送货单',
           icon: Icons.local_shipping_outlined,
@@ -395,7 +394,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
           onTap: _showUpdatePaymentDialog,
         ),
       if (canChangeSalesOrder &&
-          (status == 'approved' || status == 'in_production'))
+          (approvalStatus == 'approved' && status != 'completed' && status != 'cancelled'))
         SalesOrderActionItem(
           label: '完成订单',
           icon: Icons.task_alt_outlined,
@@ -425,8 +424,8 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     final permissions = PermissionUtil.snapshot(context);
     final canChangeSalesOrder = permissions.has('workorder.change_salesorder');
     final canEdit = canChangeSalesOrder &&
-        ((detail?.status ?? '') == 'draft' ||
-            (detail?.status ?? '') == 'rejected');
+        ((detail?.approvalStatus ?? '') == 'draft' ||
+            (detail?.approvalStatus ?? '') == 'rejected');
     final canViewAudit = AuditLogNavigation.canView(context);
 
     return ListPageScaffold(

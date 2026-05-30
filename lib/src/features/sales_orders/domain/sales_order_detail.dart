@@ -27,6 +27,10 @@ abstract class SalesOrderDetail with _$SalesOrderDetail {
     @JsonKey(fromJson: _stringOrNullFromJson) String? status,
     @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
     String? statusDisplay,
+    @JsonKey(name: 'approval_status', fromJson: _stringOrNullFromJson)
+    String? approvalStatus,
+    @JsonKey(name: 'approval_status_display', fromJson: _stringOrNullFromJson)
+    String? approvalStatusDisplay,
     @JsonKey(name: 'approval_comment', fromJson: _stringOrNullFromJson)
     String? approvalComment,
     @JsonKey(name: 'rejection_reason', fromJson: _stringOrNullFromJson)

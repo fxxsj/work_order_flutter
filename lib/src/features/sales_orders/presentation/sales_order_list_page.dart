@@ -850,15 +850,16 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
   }) {
     final viewModel = context.read<SalesOrderViewModel>();
     final status = order.status ?? '';
+    final approvalStatus = order.approvalStatus ?? '';
     final actions = <RowAction>[
-      if (canChangeSalesOrder && (status == 'draft' || status == 'rejected'))
+      if (canChangeSalesOrder && (approvalStatus == 'draft' || approvalStatus == 'rejected'))
         RowAction(
           label: '编辑',
           icon: Icons.edit_outlined,
           onPressed: () => context.go('/sales-orders/${order.id}/edit'),
         ),
     ];
-    if (canChangeSalesOrder && status == 'draft') {
+    if (canChangeSalesOrder && approvalStatus == 'draft') {
       actions.add(
         RowAction(
           label: '提交',
@@ -867,7 +868,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         ),
       );
     }
-    if (canChangeSalesOrder && status == 'rejected') {
+    if (canChangeSalesOrder && approvalStatus == 'rejected') {
       actions.add(
         RowAction(
           label: '重新提交',
@@ -876,7 +877,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         ),
       );
     }
-    if (canChangeSalesOrder && status == 'submitted') {
+    if (canChangeSalesOrder && approvalStatus == 'submitted') {
       actions.add(
         RowAction(
           label: '审核通过',
@@ -894,7 +895,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
       );
     }
     if (canCreateWorkOrder &&
-        (status == 'approved' || status == 'in_production')) {
+        (approvalStatus == 'approved' && status != 'completed' && status != 'cancelled')) {
       actions.add(
         RowAction(
           label: '生成施工单草稿',
@@ -904,9 +905,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
       );
     }
     if (canCreateDeliveryOrder &&
-        (status == 'approved' ||
-            status == 'in_production' ||
-            status == 'completed')) {
+        (approvalStatus == 'approved')) {
       actions.add(
         RowAction(
           label: '生成送货单',
@@ -925,7 +924,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
       );
     }
     if (canChangeSalesOrder &&
-        (status == 'approved' || status == 'in_production')) {
+        (approvalStatus == 'approved' && status != 'completed' && status != 'cancelled')) {
       actions.add(
         RowAction(
           label: '完成订单',

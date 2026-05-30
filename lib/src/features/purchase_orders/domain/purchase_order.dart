@@ -19,6 +19,10 @@ abstract class PurchaseOrder with _$PurchaseOrder {
     @JsonKey(fromJson: _stringOrNullFromJson) String? status,
     @JsonKey(name: 'status_display', fromJson: _stringOrNullFromJson)
     String? statusDisplay,
+    @JsonKey(name: 'approval_status', fromJson: _stringOrNullFromJson)
+    String? approvalStatus,
+    @JsonKey(name: 'approval_status_display', fromJson: _stringOrNullFromJson)
+    String? approvalStatusDisplay,
     @JsonKey(name: 'total_amount', fromJson: _doubleOrNullFromJson)
     double? totalAmount,
     @JsonKey(name: 'items_count', fromJson: _intOrNullFromJson) int? itemsCount,
