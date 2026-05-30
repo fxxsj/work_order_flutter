@@ -46,7 +46,6 @@ class _ProductGroupEditPageState extends State<ProductGroupEditPage> {
 
   static const String _submitText = '保存';
   static const String _submitErrorText = '操作失败: ';
-  static const String _codeRequiredText = '请输入产品组编码';
   static const String _codeLengthText = '产品组编码不能超过50个字符';
   static const String _codeInvalidText = '编码只能包含字母、数字和连字符';
   static const String _nameRequiredText = '请输入产品组名称';
@@ -115,9 +114,10 @@ class _ProductGroupEditPageState extends State<ProductGroupEditPage> {
               CrudFieldConfig.text(
                 label: _codeLabel,
                 controller: _codeController,
+                hintText: '留空自动生成',
                 validator: (value) {
                   final text = value?.trim() ?? '';
-                  if (text.isEmpty) return _codeRequiredText;
+                  if (text.isEmpty) return null;
                   if (text.length > 50) {
                     return _codeLengthText;
                   }
