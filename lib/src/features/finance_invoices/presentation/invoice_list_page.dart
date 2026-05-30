@@ -565,7 +565,9 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
                 DataCell(Text(_formatAmount(invoice.amount), style: textStyle)),
                 DataCell(
                   Text(
-                    invoice.statusDisplay ?? invoice.status ?? _emptyCellText,
+                    (invoice.approvalStatus != null && ['draft', 'submitted', 'rejected'].contains(invoice.approvalStatus))
+                        ? (invoice.approvalStatusDisplay ?? invoice.approvalStatus ?? _emptyCellText)
+                        : (invoice.statusDisplay ?? invoice.status ?? _emptyCellText),
                     style: textStyle,
                   ),
                 ),
@@ -728,6 +730,10 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
           decoration: const InputDecoration(labelText: _statusFilterLabel),
           options: const [
             AppDropdownOption(value: '', label: '全部状态'),
+            AppDropdownOption(value: 'approval_draft', label: '草稿'),
+            AppDropdownOption(value: 'submitted', label: '待审核'),
+            AppDropdownOption(value: 'approved', label: '已审核'),
+            AppDropdownOption(value: 'rejected', label: '已拒绝'),
             AppDropdownOption(value: 'draft', label: '待开具'),
             AppDropdownOption(value: 'issued', label: '已开具'),
             AppDropdownOption(value: 'sent', label: '已发送'),
@@ -908,7 +914,9 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     final source = _sourceSummary(invoice);
     final invoiceType = _invoiceTypeText(invoice);
     final amount = _formatAmount(invoice.amount);
-    final status = invoice.statusDisplay ?? invoice.status ?? _emptyCellText;
+    final status = (invoice.approvalStatus != null && ['draft', 'submitted', 'rejected'].contains(invoice.approvalStatus))
+        ? (invoice.approvalStatusDisplay ?? invoice.approvalStatus ?? _emptyCellText)
+        : (invoice.statusDisplay ?? invoice.status ?? _emptyCellText);
     final followUp = _followUpText(invoice);
     final issueDate = _formatDate(invoice.issueDate);
     final attachmentStatus = _attachmentStatusText(invoice);

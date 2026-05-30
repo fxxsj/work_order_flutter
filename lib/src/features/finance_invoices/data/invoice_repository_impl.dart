@@ -14,6 +14,7 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
     int pageSize = 20,
     String? search,
     String? status,
+    String? approvalStatus,
     String? todo,
     String? ordering,
   }) {
@@ -22,6 +23,7 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
       pageSize: pageSize,
       search: search,
       status: status,
+      approvalStatus: approvalStatus,
       todo: todo,
       ordering: ordering,
     );

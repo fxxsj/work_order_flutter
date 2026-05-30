@@ -22,7 +22,11 @@ class PurchaseOrderApiService {
       params['search'] = trimmed;
     }
     if (status != null && status.isNotEmpty) {
-      params['status'] = status;
+      if (['draft', 'submitted', 'approved', 'rejected'].contains(status)) {
+        params['approval_status'] = status;
+      } else {
+        params['status'] = status;
+      }
     }
     if (supplierId != null && supplierId > 0) {
       params['supplier'] = supplierId;

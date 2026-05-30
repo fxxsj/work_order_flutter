@@ -117,11 +117,25 @@ class InvoiceViewModel extends PaginatedViewModel<Invoice> {
     required int pageSize,
     String? search,
   }) async {
+    String? finalStatus = _statusFilter.isEmpty ? null : _statusFilter;
+    String? finalApprovalStatus;
+    
+    if (finalStatus != null) {
+      if (finalStatus == 'approval_draft') {
+        finalApprovalStatus = 'draft';
+        finalStatus = null;
+      } else if (['submitted', 'approved', 'rejected'].contains(finalStatus)) {
+        finalApprovalStatus = finalStatus;
+        finalStatus = null;
+      }
+    }
+
     final result = await _repository.getInvoices(
       page: page,
       pageSize: pageSize,
       search: search,
-      status: _statusFilter.isEmpty ? null : _statusFilter,
+      status: finalStatus,
+      approvalStatus: finalApprovalStatus,
       todo: _todoFilter.isEmpty ? null : _todoFilter,
       ordering: _ordering,
     );

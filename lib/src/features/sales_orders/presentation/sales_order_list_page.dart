@@ -1090,6 +1090,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
                 AppDropdownOption(value: 'submitted', label: '已提交'),
                 AppDropdownOption(value: 'approved', label: '已审核'),
                 AppDropdownOption(value: 'rejected', label: '已拒绝'),
+                AppDropdownOption(value: 'pending', label: '待处理'),
                 AppDropdownOption(value: 'in_production', label: '生产中'),
                 AppDropdownOption(value: 'completed', label: '已完成'),
                 AppDropdownOption(value: 'cancelled', label: '已取消'),
@@ -1319,7 +1320,11 @@ class _SalesOrderSummaryCard extends StatelessWidget {
         ? '客户订单 #${order.id}'
         : order.orderNumber;
     final customer = order.customerName ?? _emptyCellText;
-    final status = order.statusDisplay ?? order.status ?? _emptyCellText;
+    final approvalStatus = order.approvalStatus;
+    final isApprovalState = ['draft', 'submitted', 'rejected'].contains(approvalStatus);
+    final status = isApprovalState 
+        ? (order.approvalStatusDisplay ?? approvalStatus ?? _emptyCellText)
+        : (order.statusDisplay ?? order.status ?? _emptyCellText);
     final payment =
         order.paymentStatusDisplay ?? order.paymentStatus ?? _emptyCellText;
     final amount = _formatAmount(order.totalAmount);

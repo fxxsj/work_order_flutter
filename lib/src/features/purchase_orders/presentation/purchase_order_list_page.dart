@@ -930,6 +930,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
                 AppDropdownOption(value: 'draft', label: '草稿'),
                 AppDropdownOption(value: 'submitted', label: '已提交'),
                 AppDropdownOption(value: 'approved', label: '已批准'),
+                AppDropdownOption(value: 'pending', label: '待处理'),
                 AppDropdownOption(value: 'ordered', label: '已下单'),
                 AppDropdownOption(value: 'received', label: '已收货'),
                 AppDropdownOption(value: 'cancelled', label: '已取消'),
@@ -1116,7 +1117,11 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
         ? '采购单 #${order.id}'
         : order.orderNumber;
     final supplier = _displayText(order.supplierName);
-    final status = order.statusDisplay ?? order.status ?? _emptyCellText;
+    final approvalStatus = order.approvalStatus;
+    final isApprovalState = ['draft', 'submitted', 'rejected'].contains(approvalStatus);
+    final status = isApprovalState 
+        ? (order.approvalStatusDisplay ?? approvalStatus ?? _emptyCellText)
+        : (order.statusDisplay ?? order.status ?? _emptyCellText);
     final totalAmount = _formatAmount(order.totalAmount);
     final itemsCount = order.itemsCount?.toString() ?? _emptyCellText;
     final receivedProgress = order.receivedProgress == null

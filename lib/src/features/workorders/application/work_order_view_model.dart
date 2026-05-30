@@ -164,13 +164,21 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
     required int pageSize,
     String? search,
   }) async {
+    String? finalStatus = _statusFilter;
+    String? finalApprovalStatus = _approvalStatusFilter;
+    
+    if (finalStatus != null && ['draft', 'submitted', 'approved', 'rejected'].contains(finalStatus)) {
+      finalApprovalStatus = finalStatus;
+      finalStatus = null;
+    }
+
     final result = await _repository.getWorkOrders(
       page: page,
       pageSize: pageSize,
       search: search,
-      status: _statusFilter,
+      status: finalStatus,
       priority: _priorityFilter,
-      approvalStatus: _approvalStatusFilter,
+      approvalStatus: finalApprovalStatus,
       customerId: _customerFilterId,
       productId: _productFilterId,
       processId: _processFilterId,

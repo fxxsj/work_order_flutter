@@ -13,6 +13,7 @@ class InvoiceApiService {
     int pageSize = 20,
     String? search,
     String? status,
+    String? approvalStatus,
     String? todo,
     String? ordering,
   }) async {
@@ -24,6 +25,10 @@ class InvoiceApiService {
     final statusValue = status?.trim();
     if (statusValue != null && statusValue.isNotEmpty) {
       params['status'] = statusValue;
+    }
+    final approvalStatusValue = approvalStatus?.trim();
+    if (approvalStatusValue != null && approvalStatusValue.isNotEmpty) {
+      params['approval_status'] = approvalStatusValue;
     }
     final todoValue = todo?.trim();
     if (todoValue != null && todoValue.isNotEmpty) {

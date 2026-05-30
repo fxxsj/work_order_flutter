@@ -23,7 +23,11 @@ class SalesOrderApiService {
       params['search'] = trimmed;
     }
     if (status != null && status.isNotEmpty) {
-      params['status'] = status;
+      if (['draft', 'submitted', 'approved', 'rejected'].contains(status)) {
+        params['approval_status'] = status;
+      } else {
+        params['status'] = status;
+      }
     }
     if (paymentStatus != null && paymentStatus.isNotEmpty) {
       params['payment_status'] = paymentStatus;

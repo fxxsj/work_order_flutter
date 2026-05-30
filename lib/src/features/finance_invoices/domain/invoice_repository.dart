@@ -7,6 +7,7 @@ abstract class InvoiceRepository {
     int pageSize = 20,
     String? search,
     String? status,
+    String? approvalStatus,
     String? todo,
     String? ordering,
   });

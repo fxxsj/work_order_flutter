@@ -88,7 +88,9 @@ class WorkOrderListTile extends StatelessWidget {
                     MetaChip(label: '客户', value: workOrder.customerName!),
                   if (workOrder.productName?.isNotEmpty == true)
                     MetaChip(label: '产品', value: workOrder.productName!),
-                  if (workOrder.statusDisplay?.isNotEmpty == true)
+                  if (workOrder.approvalStatus != null && ['draft', 'submitted', 'rejected'].contains(workOrder.approvalStatus))
+                    MetaChip(label: '状态', value: workOrder.approvalStatusDisplay!)
+                  else if (workOrder.statusDisplay?.isNotEmpty == true)
                     MetaChip(label: '状态', value: workOrder.statusDisplay!),
                 ],
               ),
