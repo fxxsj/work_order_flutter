@@ -136,12 +136,20 @@ class WorkOrderResourcesSection extends StatelessWidget {
               WorkOrderMultiSelectField(
                 items: dies
                     .map(
-                      (item) => WorkOrderOptionItem(
-                        item.id,
-                        item.code?.isNotEmpty == true
+                      (item) {
+                        final productNames = item.products
+                            .map((p) => p.productName)
+                            .where((n) => n.isNotEmpty)
+                            .take(3)
+                            .join(', ');
+                        final label = item.code?.isNotEmpty == true
                             ? '${item.name} (${item.code})'
-                            : item.name,
-                      ),
+                            : item.name;
+                        final fullLabel = productNames.isNotEmpty
+                            ? '$label ($productNames)'
+                            : label;
+                        return WorkOrderOptionItem(item.id, fullLabel);
+                      },
                     )
                     .toList(),
                 selected: dieIds,
@@ -160,12 +168,20 @@ class WorkOrderResourcesSection extends StatelessWidget {
               WorkOrderMultiSelectField(
                 items: foilingPlates
                     .map(
-                      (item) => WorkOrderOptionItem(
-                        item.id,
-                        item.code?.isNotEmpty == true
+                      (item) {
+                        final productNames = item.products
+                            .map((p) => p.productName)
+                            .where((n) => n.isNotEmpty)
+                            .take(3)
+                            .join(', ');
+                        final label = item.code?.isNotEmpty == true
                             ? '${item.name} (${item.code})'
-                            : item.name,
-                      ),
+                            : item.name;
+                        final fullLabel = productNames.isNotEmpty
+                            ? '$label ($productNames)'
+                            : label;
+                        return WorkOrderOptionItem(item.id, fullLabel);
+                      },
                     )
                     .toList(),
                 selected: foilingPlateIds,
@@ -184,12 +200,20 @@ class WorkOrderResourcesSection extends StatelessWidget {
               WorkOrderMultiSelectField(
                 items: embossingPlates
                     .map(
-                      (item) => WorkOrderOptionItem(
-                        item.id,
-                        item.code?.isNotEmpty == true
+                      (item) {
+                        final productNames = item.products
+                            .map((p) => p.productName)
+                            .where((n) => n.isNotEmpty)
+                            .take(3)
+                            .join(', ');
+                        final label = item.code?.isNotEmpty == true
                             ? '${item.name} (${item.code})'
-                            : item.name,
-                      ),
+                            : item.name;
+                        final fullLabel = productNames.isNotEmpty
+                            ? '$label ($productNames)'
+                            : label;
+                        return WorkOrderOptionItem(item.id, fullLabel);
+                      },
                     )
                     .toList(),
                 selected: embossingPlateIds,

@@ -390,6 +390,12 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
       // Re-sync processes/materials and cleanup when sales order changes products
       if (previousSalesOrderId != salesOrderId) {
         _draft.autoFillFromProducts(_fullProducts);
+        _draft.autoFillFromArtworks(
+          _artworks
+              .where((a) => _draft.artworkIds.contains(a.id))
+              .toList(),
+          _fullProducts,
+        );
         _draft.recalcProductQuantities();
         _cleanupPrepressSelections();
       }
@@ -868,6 +874,12 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                   setState(() {
                     _draft.autoFillFromProducts(_fullProducts);
                     _draft.autoFillUnitsFromProducts(_fullProducts);
+                    _draft.autoFillFromArtworks(
+                      _artworks
+                          .where((a) => _draft.artworkIds.contains(a.id))
+                          .toList(),
+                      _fullProducts,
+                    );
                     _draft.recalcProductQuantities();
                     _cleanupPrepressSelections();
                   });
