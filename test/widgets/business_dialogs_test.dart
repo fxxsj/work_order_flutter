@@ -1210,7 +1210,7 @@ void main() {
 
     expect(previewIds, [1]);
     expect(find.text('预览结果'), findsOneWidget);
-    expect(find.text('将删除草稿任务'), findsOneWidget);
+    expect(find.text('将删除未开始任务'), findsOneWidget);
     expect(find.text('1'), findsWidgets);
     expect(find.text('执行同步'), findsOneWidget);
 
