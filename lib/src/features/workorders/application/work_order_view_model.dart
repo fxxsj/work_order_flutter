@@ -13,6 +13,7 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
   String? _statusFilter;
   String? _priorityFilter;
   String? _approvalStatusFilter;
+  Map<String, dynamic>? _lastTaskGeneration;
   int? _customerFilterId;
   int? _productFilterId;
   int? _processFilterId;
@@ -33,6 +34,7 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
   String? get statusFilter => _statusFilter;
   String? get priorityFilter => _priorityFilter;
   String? get approvalStatusFilter => _approvalStatusFilter;
+  Map<String, dynamic>? get lastTaskGeneration => _lastTaskGeneration;
   int? get customerFilterId => _customerFilterId;
   int? get productFilterId => _productFilterId;
   int? get processFilterId => _processFilterId;
@@ -127,13 +129,23 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
     return detail.toEntity();
   }
 
-  Future<WorkOrderDetail> submitApproval(int id, {String? comment, Map<String, dynamic>? payload}) async {
-    final detail = await _repository.submitApproval(id, comment: comment, payload: payload);
+  Future<WorkOrderDetail> submitApproval(
+    int id, {
+    String? comment,
+    Map<String, dynamic>? payload,
+  }) async {
+    final detail = await _repository.submitApproval(
+      id,
+      comment: comment,
+      payload: payload,
+    );
+    _lastTaskGeneration = detail.taskGeneration;
     return detail.toEntity();
   }
 
   Future<WorkOrderDetail> approveWorkOrder(int id, {String? comment}) async {
     final detail = await _repository.approveWorkOrder(id, comment: comment);
+    _lastTaskGeneration = detail.taskGeneration;
     return detail.toEntity();
   }
 
@@ -142,6 +154,7 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
     required String reason,
   }) async {
     final detail = await _repository.rejectWorkOrder(id, reason: reason);
+    _lastTaskGeneration = null;
     return detail.toEntity();
   }
 
@@ -166,8 +179,9 @@ class WorkOrderViewModel extends PaginatedViewModel<WorkOrder> {
   }) async {
     String? finalStatus = _statusFilter;
     String? finalApprovalStatus = _approvalStatusFilter;
-    
-    if (finalStatus != null && ['draft', 'submitted', 'approved', 'rejected'].contains(finalStatus)) {
+
+    if (finalStatus != null &&
+        ['draft', 'submitted', 'approved', 'rejected'].contains(finalStatus)) {
       finalApprovalStatus = finalStatus;
       finalStatus = null;
     }

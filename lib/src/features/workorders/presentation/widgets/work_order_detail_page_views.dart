@@ -11,13 +11,7 @@ import 'package:work_order_app/src/features/workorders/presentation/widgets/work
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_procurement_view.dart';
 
 /// 详情页视图模式枚举
-enum WorkOrderDetailViewMode {
-  basic,
-  products,
-  process,
-  approval,
-  procurement,
-}
+enum WorkOrderDetailViewMode { basic, products, process, approval, procurement }
 
 /// 详情页视图切换组件
 class WorkOrderDetailPageViews extends StatelessWidget {
@@ -40,6 +34,7 @@ class WorkOrderDetailPageViews extends StatelessWidget {
     required this.onUpdateTask,
     required this.onCompleteTask,
     required this.onSyncPreview,
+    required this.canSyncTasks,
     this.onCreatePurchaseOrder,
     this.onViewPurchaseOrder,
     this.onViewPurchaseOrdersList,
@@ -70,6 +65,7 @@ class WorkOrderDetailPageViews extends StatelessWidget {
   final Future<void> Function(Task task) onUpdateTask;
   final Future<void> Function(Task task) onCompleteTask;
   final Future<void> Function(WorkOrderDetail detail) onSyncPreview;
+  final bool canSyncTasks;
   final VoidCallback? onCreatePurchaseOrder;
   final ValueChanged<int>? onViewPurchaseOrder;
   final VoidCallback? onViewPurchaseOrdersList;
@@ -132,6 +128,7 @@ class WorkOrderDetailPageViews extends StatelessWidget {
                 status != 'cancelled';
           },
           onSyncPreview: onSyncPreview,
+          canSyncTasks: canSyncTasks,
         );
 
       case WorkOrderDetailViewMode.approval:
@@ -172,27 +169,27 @@ class WorkOrderDetailPageViews extends StatelessWidget {
 
     final (icon, color, message) = switch (status) {
       'draft' => (
-          Icons.edit_note_outlined,
-          theme.colorScheme.primary,
-          '补齐资料后提交审核',
-        ),
+        Icons.edit_note_outlined,
+        theme.colorScheme.primary,
+        '补齐资料后提交审核',
+      ),
       'submitted' => (
-          Icons.hourglass_empty,
-          semantic?.warning ?? theme.colorScheme.secondary,
-          '等待审核，审核通过后将自动生成部门任务',
-        ),
+        Icons.hourglass_empty,
+        semantic?.warning ?? theme.colorScheme.secondary,
+        '等待审核，审核通过后将自动生成部门任务',
+      ),
       'rejected' => (
-          Icons.cancel_outlined,
-          semantic?.danger ?? theme.colorScheme.error,
-          rejectionReason?.isNotEmpty == true
-              ? '审核退回: $rejectionReason'
-              : '审核退回，请修改后重新提交',
-        ),
+        Icons.cancel_outlined,
+        semantic?.danger ?? theme.colorScheme.error,
+        rejectionReason?.isNotEmpty == true
+            ? '审核退回: $rejectionReason'
+            : '审核退回，请修改后重新提交',
+      ),
       'approved' => (
-          Icons.check_circle_outline,
-          semantic?.success ?? const Color(0xFF27a644),
-          '任务已分派至部门，主管可继续分派操作员',
-        ),
+        Icons.check_circle_outline,
+        semantic?.success ?? const Color(0xFF27a644),
+        '任务已分派至部门，主管可继续分派操作员',
+      ),
       _ => (null, null, null),
     };
 
@@ -219,7 +216,9 @@ class WorkOrderDetailPageViews extends StatelessWidget {
               message,
               style: TextStyle(
                 fontSize: TextTokens.fontSizeBodyMedium,
-                color: effectiveColor.withValues(alpha: OpacityTokens.textProminent),
+                color: effectiveColor.withValues(
+                  alpha: OpacityTokens.textProminent,
+                ),
                 fontWeight: TextTokens.medium,
               ),
             ),

@@ -38,8 +38,11 @@ class WorkOrderDetailEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FeatureEntry<WorkOrderApiService, WorkOrderRepository,
-        WorkOrderViewModel>(
+    return FeatureEntry<
+      WorkOrderApiService,
+      WorkOrderRepository,
+      WorkOrderViewModel
+    >(
       createService: (context) =>
           WorkOrderApiService(context.read<ApiClient>()),
       createRepository: (context) =>
@@ -80,6 +83,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   String? _errorMessage;
   bool _initialized = false;
   bool _actionLoading = false;
+  bool _syncNeeded = false;
   TaskListSupportService? _taskSupportService;
 
   String? _statusSelection;
@@ -102,17 +106,37 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     try {
       final viewModel = context.read<WorkOrderViewModel>();
       final detail = await viewModel.fetchDetail(widget.workOrderId);
+      final syncNeeded = await _loadSyncNeeded(detail);
       if (!mounted) return;
       setState(() {
         _detail = detail;
         _statusSelection = detail.status;
+        _syncNeeded = syncNeeded;
       });
     } catch (err) {
       if (!mounted) return;
       setState(
-          () => _errorMessage = err.toString().replaceFirst('Exception: ', ''));
+        () => _errorMessage = err.toString().replaceFirst('Exception: ', ''),
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<bool> _loadSyncNeeded(WorkOrderDetail detail) async {
+    if (!PermissionUtil.isSuperuser(context) ||
+        detail.approvalStatus == 'approved' ||
+        detail.approvalStatus == 'submitted') {
+      return false;
+    }
+    try {
+      final result = await context.read<WorkOrderApiService>().checkSyncNeeded(
+        detail.id,
+        processIds: detail.processes.map((item) => item.id).toList(),
+      );
+      return result['sync_needed'] == true;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -181,8 +205,10 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     setState(() => _actionLoading = true);
     try {
       final viewModel = context.read<WorkOrderViewModel>();
-      final detail =
-          await viewModel.uploadDesignFile(widget.workOrderId, designFile);
+      final detail = await viewModel.uploadDesignFile(
+        widget.workOrderId,
+        designFile,
+      );
       if (!mounted) return;
       setState(() {
         _detail = detail;
@@ -222,7 +248,11 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
         _detail = detail;
         _statusSelection = detail.status;
       });
-      ToastUtil.showSuccess(approved ? '审核已通过' : '审核已拒绝');
+      final generation = viewModel.lastTaskGeneration;
+      final generationText = approved && generation != null
+          ? '，生成 ${generation['created_count'] ?? 0} 个任务，分派 ${generation['dispatched_count'] ?? 0} 个任务'
+          : '';
+      ToastUtil.showSuccess(approved ? '审核已通过$generationText' : '审核已拒绝');
     } catch (err) {
       ToastUtil.showError('审核失败: $err');
     } finally {
@@ -396,8 +426,9 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     int processId,
   ) async {
     try {
-      final departments =
-          await _taskSupportService!.loadProcessDepartments(processId);
+      final departments = await _taskSupportService!.loadProcessDepartments(
+        processId,
+      );
       if (departments.isEmpty) {
         ToastUtil.showError('当前工序未配置负责部门');
         return null;
@@ -438,10 +469,16 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     try {
       final api = context.read<PurchaseOrderApiService>();
       final result = await api.createFromWorkOrder(_detail!.id);
-      final po = result['purchase_orders']?.first;
-      if (po != null) {
-        ToastUtil.showSuccess('已创建采购单 ${po['order_number']}');
-      }
+      final orders = result['purchase_orders'];
+      final createdCount = orders is List ? orders.length : 0;
+      final itemCount = result['created_item_count'] ?? 0;
+      final skippedCount = result['skipped_item_count'] ?? 0;
+      final skippedText = skippedCount is int && skippedCount > 0
+          ? '，跳过 $skippedCount 项'
+          : '';
+      ToastUtil.showSuccess(
+        '已创建 $createdCount 个采购单，包含 $itemCount 个物料明细$skippedText',
+      );
       await _loadDetail();
     } catch (err) {
       ToastUtil.showError('创建采购单失败: $err');
@@ -475,9 +512,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
             detail.id,
             processIds: selectedIds,
           );
-          return WorkOrderSyncPreviewResult(
-            preview: _extractPreview(result),
-          );
+          return WorkOrderSyncPreviewResult(preview: _extractPreview(result));
         } catch (err) {
           if (err is ApiException) {
             final previewData = _extractPreview(err.data);
@@ -502,7 +537,8 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
             processIds: selectedIds,
           );
           final payload = _unwrapApiData(result);
-          final message = payload['message']?.toString() ??
+          final message =
+              payload['message']?.toString() ??
               (payload['result'] is Map
                   ? payload['result']['message']?.toString()
                   : null) ??
@@ -554,8 +590,9 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     Map<int, WorkOrderProcessItem> processMap,
   ) {
     if (ids.isEmpty) return _emptyText;
-    final names =
-        ids.map((id) => processMap[id]?.processName ?? '工序#$id').toList();
+    final names = ids
+        .map((id) => processMap[id]?.processName ?? '工序#$id')
+        .toList();
     return names.join(', ');
   }
 
@@ -588,8 +625,10 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     final currentStatus = _detail?.status ?? 'pending';
     final allowedTargets = _statusTransitions[currentStatus] ?? [];
     final statusOptions = _allStatusOptions
-        .where((opt) =>
-            opt.value == currentStatus || allowedTargets.contains(opt.value))
+        .where(
+          (opt) =>
+              opt.value == currentStatus || allowedTargets.contains(opt.value),
+        )
         .toList();
 
     return ListPageScaffold(
@@ -655,9 +694,9 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                 onPressed: detail == null
                     ? null
                     : () => showWorkOrderPrintPreviewDialog(
-                          context,
-                          detail: detail,
-                        ),
+                        context,
+                        detail: detail,
+                      ),
                 icon: const Icon(Icons.print_outlined, size: 16),
                 label: '打印预览',
               ),
@@ -682,71 +721,69 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
               child: Center(child: CircularProgressIndicator()),
             )
           : _errorMessage != null
-              ? DetailSurfaceCard(
-                  child: Center(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(_errorMessage!),
-                          SpacingTokens.vMd,
-                          FilledButton(
-                            onPressed: _loadDetail,
-                            child: const Text('重试'),
-                          ),
-                        ],
+          ? DetailSurfaceCard(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(_errorMessage!),
+                      SpacingTokens.vMd,
+                      FilledButton(
+                        onPressed: _loadDetail,
+                        child: const Text('重试'),
                       ),
-                    ),
+                    ],
                   ),
-                )
-              : detail == null
-                  ? const DetailSurfaceCard(
-                      child: Center(child: Text('未找到施工单信息')),
-                    )
-                  : WorkOrderDetailPageViews(
-                      viewMode: _viewMode,
-                      detail: detail,
-                      statusOptions: statusOptions,
-                      statusSelection: _statusSelection,
-                      actionLoading: _actionLoading,
-                      onUploadDesignFile:
-                          canChangeWorkOrder ? _handleUploadDesignFile : null,
-                      onStatusChanged: canChangeWorkOrder
-                          ? (value) => setState(() => _statusSelection = value)
-                          : null,
-                      onUpdateStatus:
-                          canChangeWorkOrder ? _handleUpdateStatus : null,
-                      onSubmitApproval: _handleSubmitApproval,
-                      onApprove: canChangeWorkOrder
-                          ? () => _showApproveDialog(approved: true)
-                          : null,
-                      onReject: canChangeWorkOrder
-                          ? () => _showApproveDialog(approved: false)
-                          : null,
-                      onResubmit: canChangeWorkOrder ? _handleResubmit : null,
-                      onMarkUrgent: _markUrgent,
-                      onAssignTask: _handleAssignTask,
-                      onUpdateTask: _handleUpdateTask,
-                      onCompleteTask: _handleCompleteTask,
-                      onSyncPreview: _detail != null
-                          ? _showSyncPreviewDialog
-                          : (_) async {},
-                      onCreatePurchaseOrder: _handleCreatePurchaseOrder,
-                      onViewPurchaseOrder: (id) => _openPurchaseOrderDetail(id),
-                      onViewPurchaseOrdersList: _openPurchaseOrdersList,
-                      emptyText: _emptyText,
-                      formatDate: _formatDate,
-                      formatAmount: _formatAmount,
-                      formatDateTime: _formatDateTime,
-                      rejectionReason: _workOrderRejectionReason,
-                      rejectionComment: _workOrderRejectionComment,
-                      onEditPressed: canChangeWorkOrder
-                          ? () => context
-                              .go('/workorders/${widget.workOrderId}/edit')
-                          : null,
-                      buildSection: _buildSection,
-                    ),
+                ),
+              ),
+            )
+          : detail == null
+          ? const DetailSurfaceCard(child: Center(child: Text('未找到施工单信息')))
+          : WorkOrderDetailPageViews(
+              viewMode: _viewMode,
+              detail: detail,
+              statusOptions: statusOptions,
+              statusSelection: _statusSelection,
+              actionLoading: _actionLoading,
+              onUploadDesignFile: canChangeWorkOrder
+                  ? _handleUploadDesignFile
+                  : null,
+              onStatusChanged: canChangeWorkOrder
+                  ? (value) => setState(() => _statusSelection = value)
+                  : null,
+              onUpdateStatus: canChangeWorkOrder ? _handleUpdateStatus : null,
+              onSubmitApproval: _handleSubmitApproval,
+              onApprove: canChangeWorkOrder
+                  ? () => _showApproveDialog(approved: true)
+                  : null,
+              onReject: canChangeWorkOrder
+                  ? () => _showApproveDialog(approved: false)
+                  : null,
+              onResubmit: canChangeWorkOrder ? _handleResubmit : null,
+              onMarkUrgent: _markUrgent,
+              onAssignTask: _handleAssignTask,
+              onUpdateTask: _handleUpdateTask,
+              onCompleteTask: _handleCompleteTask,
+              onSyncPreview: _detail != null
+                  ? _showSyncPreviewDialog
+                  : (_) async {},
+              canSyncTasks: _syncNeeded,
+              onCreatePurchaseOrder: _handleCreatePurchaseOrder,
+              onViewPurchaseOrder: (id) => _openPurchaseOrderDetail(id),
+              onViewPurchaseOrdersList: _openPurchaseOrdersList,
+              emptyText: _emptyText,
+              formatDate: _formatDate,
+              formatAmount: _formatAmount,
+              formatDateTime: _formatDateTime,
+              rejectionReason: _workOrderRejectionReason,
+              rejectionComment: _workOrderRejectionComment,
+              onEditPressed: canChangeWorkOrder
+                  ? () => context.go('/workorders/${widget.workOrderId}/edit')
+                  : null,
+              buildSection: _buildSection,
+            ),
     );
   }
 }

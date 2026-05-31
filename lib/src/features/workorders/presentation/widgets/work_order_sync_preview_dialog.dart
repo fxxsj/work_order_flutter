@@ -20,12 +20,13 @@ Future<void> showWorkOrderSyncPreviewDialog(
   required List<WorkOrderProcessItem> processes,
   required String emptyText,
   required Future<WorkOrderSyncPreviewResult> Function(List<int> selectedIds)
-      loadPreview,
+  loadPreview,
   required Future<void> Function(List<int> selectedIds) executeSync,
   required String Function(
     List<int> ids,
     Map<int, WorkOrderProcessItem> processMap,
-  ) formatProcessNames,
+  )
+  formatProcessNames,
 }) async {
   await showDialog<void>(
     context: context,
@@ -54,12 +55,13 @@ class _WorkOrderSyncPreviewDialog extends StatefulWidget {
   final List<WorkOrderProcessItem> processes;
   final String emptyText;
   final Future<WorkOrderSyncPreviewResult> Function(List<int> selectedIds)
-      loadPreview;
+  loadPreview;
   final Future<void> Function(List<int> selectedIds) executeSync;
   final String Function(
     List<int> ids,
     Map<int, WorkOrderProcessItem> processMap,
-  ) formatProcessNames;
+  )
+  formatProcessNames;
 
   @override
   State<_WorkOrderSyncPreviewDialog> createState() =>
@@ -71,8 +73,9 @@ class _WorkOrderSyncPreviewDialogState
   late final Map<int, WorkOrderProcessItem> processMap = {
     for (final item in widget.processes) item.id: item,
   };
-  late final Set<int> selectedIds =
-      widget.processes.map((item) => item.id).toSet();
+  late final Set<int> selectedIds = widget.processes
+      .map((item) => item.id)
+      .toSet();
   Map<String, dynamic>? preview;
   String? warningMessage;
   bool loading = false;
@@ -120,8 +123,12 @@ class _WorkOrderSyncPreviewDialogState
     final previewData = preview;
     final removedIds = _readIdList(previewData?['removed_process_ids']);
     final addedIds = _readIdList(previewData?['added_process_ids']);
+    final missingIds = _readIdList(previewData?['missing_process_ids']);
+    final blockedIds = _readIdList(previewData?['blocked_task_ids']);
+    final orphanTaskIds = _readIdList(previewData?['orphan_task_ids']);
     final tasksToRemove = _readInt(previewData?['tasks_to_remove']);
     final tasksToAdd = _readInt(previewData?['tasks_to_add']);
+    final tasksBlocked = _readInt(previewData?['tasks_blocked']);
     final affected = previewData?['affected'] == true;
 
     return AppDialog(
@@ -221,8 +228,12 @@ class _WorkOrderSyncPreviewDialogState
                 ),
               ),
               SizedBox(height: LayoutTokens.gapSm),
-              _InfoRow(label: '将删除草稿任务', value: '$tasksToRemove'),
-              _InfoRow(label: '预计新增草稿任务', value: '$tasksToAdd'),
+              _InfoRow(label: '将删除未开始任务', value: '$tasksToRemove'),
+              _InfoRow(label: '预计新增任务', value: '$tasksToAdd'),
+              _InfoRow(
+                label: '阻断任务',
+                value: '${tasksBlocked > 0 ? tasksBlocked : blockedIds.length}',
+              ),
               _InfoRow(
                 label: '移除工序',
                 value: widget.formatProcessNames(removedIds, processMap),
@@ -230,6 +241,18 @@ class _WorkOrderSyncPreviewDialogState
               _InfoRow(
                 label: '新增工序',
                 value: widget.formatProcessNames(addedIds, processMap),
+              ),
+              _InfoRow(
+                label: '缺失任务工序',
+                value: widget.formatProcessNames(missingIds, processMap),
+              ),
+              _InfoRow(
+                label: '多余任务',
+                value: orphanTaskIds.isEmpty ? '无' : orphanTaskIds.join(', '),
+              ),
+              _InfoRow(
+                label: '阻断任务ID',
+                value: blockedIds.isEmpty ? '无' : blockedIds.join(', '),
               ),
               _InfoRow(label: '是否有变更', value: affected ? '是' : '否'),
             ],
@@ -246,11 +269,13 @@ class _WorkOrderSyncPreviewDialogState
           child: const Text('预览变更'),
         ),
         FilledButton(
-          onPressed: (!widget.canSync ||
+          onPressed:
+              (!widget.canSync ||
                   loading ||
                   executing ||
                   preview == null ||
-                  previewData?['affected'] != true)
+                  previewData?['affected'] != true ||
+                  tasksBlocked > 0)
               ? null
               : handleExecute,
           child: Text(executing ? '同步中' : '执行同步'),

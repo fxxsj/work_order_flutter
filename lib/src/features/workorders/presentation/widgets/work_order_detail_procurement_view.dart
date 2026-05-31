@@ -25,8 +25,9 @@ class WorkOrderDetailProcurementView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasPendingMaterials = detail.materials
-        .any((m) => m.purchaseStatus == 'pending' || m.purchaseStatus == null);
+    final hasPendingMaterials = detail.materials.any(
+      (m) => m.purchaseStatus == 'pending' || m.purchaseStatus == null,
+    );
 
     return SingleChildScrollView(
       padding: LayoutTokens.pagePadding(context),
@@ -40,7 +41,7 @@ class WorkOrderDetailProcurementView extends StatelessWidget {
               child: FilledButton.icon(
                 onPressed: onCreatePurchaseOrder,
                 icon: const Icon(Icons.add_shopping_cart),
-                label: const Text('创建采购单'),
+                label: const Text('创建待处理采购单'),
               ),
             ),
 
@@ -92,10 +93,10 @@ class WorkOrderDetailProcurementView extends StatelessWidget {
         TraceabilitySummaryGroupData(
           title: '采购单',
           items: detail.purchaseOrderSummaries,
-          actionLabel:
-              detail.purchaseOrderSummaries.isEmpty ? null : '查看全部',
-          onActionTap:
-              detail.purchaseOrderSummaries.isEmpty ? null : onViewPurchaseOrdersList,
+          actionLabel: detail.purchaseOrderSummaries.isEmpty ? null : '查看全部',
+          onActionTap: detail.purchaseOrderSummaries.isEmpty
+              ? null
+              : onViewPurchaseOrdersList,
           onItemTap: (item) {
             if (item.id != null) {
               onViewPurchaseOrder?.call(item.id!);
@@ -161,7 +162,9 @@ class _MaterialStatusCard extends StatelessWidget {
                 Text(
                   '$materialCode · $usage $unit',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                    color: theme.textTheme.bodySmall?.color?.withValues(
+                      alpha: 0.7,
+                    ),
                   ),
                 ),
               ],

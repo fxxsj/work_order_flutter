@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
-import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_data_sections.dart';
@@ -19,6 +18,7 @@ class WorkOrderDetailProcessView extends StatelessWidget {
     required this.onCompleteTask,
     required this.canManageTask,
     required this.onSyncPreview,
+    required this.canSyncTasks,
   });
 
   final WorkOrderDetail detail;
@@ -30,12 +30,10 @@ class WorkOrderDetailProcessView extends StatelessWidget {
   final Future<void> Function(Task task) onCompleteTask;
   final bool Function(Task task) canManageTask;
   final Future<void> Function(WorkOrderDetail detail) onSyncPreview;
+  final bool canSyncTasks;
 
   @override
   Widget build(BuildContext context) {
-    final canSyncTasks = PermissionUtil.isSuperuser(context) &&
-        detail.approvalStatus != 'approved' &&
-        detail.approvalStatus != 'submitted';
     return SingleChildScrollView(
       padding: EdgeInsets.all(LayoutTokens.sectionSpacing(context)),
       child: Column(
