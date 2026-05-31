@@ -445,7 +445,10 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     }
 
     setState(() => _submitting = true);
-    final payload = WorkOrderFormSubmission.buildPayload(submissionInput);
+    final payload = WorkOrderFormSubmission.buildPayload(
+      submissionInput,
+      isCreate: widget.mode == WorkOrderFormMode.create,
+    );
     int? workOrderId;
     try {
       final viewModel = context.read<WorkOrderViewModel>();

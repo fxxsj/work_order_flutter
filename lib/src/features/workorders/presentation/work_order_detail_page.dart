@@ -570,13 +570,27 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
-    final statusOptions = const [
+    // 生产状态转换规则（与后端 WorkOrderService.ALLOWED_STATUS_TRANSITIONS 对齐）
+    const _allStatusOptions = [
       AppDropdownOption<String>(value: 'pending', label: '待开始'),
       AppDropdownOption<String>(value: 'in_progress', label: '进行中'),
       AppDropdownOption<String>(value: 'paused', label: '已暂停'),
       AppDropdownOption<String>(value: 'completed', label: '已完成'),
       AppDropdownOption<String>(value: 'cancelled', label: '已取消'),
     ];
+    const _statusTransitions = <String, List<String>>{
+      'pending': ['in_progress'],
+      'in_progress': ['paused', 'cancelled'],
+      'paused': ['in_progress', 'cancelled'],
+      'completed': [],
+      'cancelled': [],
+    };
+    final currentStatus = _detail?.status ?? 'pending';
+    final allowedTargets = _statusTransitions[currentStatus] ?? [];
+    final statusOptions = _allStatusOptions
+        .where((opt) =>
+            opt.value == currentStatus || allowedTargets.contains(opt.value))
+        .toList();
 
     return ListPageScaffold(
       spacing: sectionSpacing,

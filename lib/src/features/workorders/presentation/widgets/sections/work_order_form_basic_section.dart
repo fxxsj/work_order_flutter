@@ -97,21 +97,22 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
                       onSearch: onSearchCustomer,
                     ),
                   ),
-                  SizedBox(
-                    width: fieldWidth,
-                    child: AppSelect<String>(
-                      value: status,
-                      options: const [
-                        AppDropdownOption(value: 'pending', label: '待开始'),
-                        AppDropdownOption(value: 'in_progress', label: '进行中'),
-                        AppDropdownOption(value: 'paused', label: '已暂停'),
-                        AppDropdownOption(value: 'completed', label: '已完成'),
-                        AppDropdownOption(value: 'cancelled', label: '已取消'),
-                      ],
-                      decoration: const InputDecoration(labelText: '状态'),
-                      onChanged: (value) => onStatusChanged(value),
+                  if (mode == WorkOrderFormMode.edit)
+                    SizedBox(
+                      width: fieldWidth,
+                      child: AppSelect<String>(
+                        value: status,
+                        options: const [
+                          AppDropdownOption(value: 'pending', label: '待开始'),
+                          AppDropdownOption(value: 'in_progress', label: '进行中'),
+                          AppDropdownOption(value: 'paused', label: '已暂停'),
+                          AppDropdownOption(value: 'completed', label: '已完成'),
+                          AppDropdownOption(value: 'cancelled', label: '已取消'),
+                        ],
+                        decoration: const InputDecoration(labelText: '状态'),
+                        onChanged: (value) => onStatusChanged(value),
+                      ),
                     ),
-                  ),
                   SizedBox(
                     width: fieldWidth,
                     child: AppSelect<String>(

@@ -94,7 +94,11 @@ class WorkOrderFormSubmission {
     return null;
   }
 
-  static Map<String, dynamic> buildPayload(WorkOrderFormSubmissionInput input) {
+  /// 新建时强制 status 为 pending，忽略前端传入值
+  static Map<String, dynamic> buildPayload(
+    WorkOrderFormSubmissionInput input, {
+    bool isCreate = false,
+  }) {
     final products = input.productDrafts
         .where((draft) => draft.productId != null)
         .map(
@@ -140,7 +144,7 @@ class WorkOrderFormSubmission {
     return {
       'customer': input.customerId,
       'sales_order': input.salesOrderId,
-      'status': input.status,
+      'status': isCreate ? 'pending' : input.status,
       'priority': input.priority,
       'order_date': orderDate.isEmpty ? null : orderDate,
       'delivery_date': deliveryDate.isEmpty ? null : deliveryDate,

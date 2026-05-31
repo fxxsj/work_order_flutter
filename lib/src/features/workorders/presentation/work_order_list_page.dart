@@ -636,10 +636,6 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     final permissions = PermissionUtil.snapshot(context);
     final canCreateWorkOrder = permissions.has('workorder.add_workorder');
     final statusItems = const [
-      AppDropdownOption(value: 'draft', label: '草稿'),
-      AppDropdownOption(value: 'submitted', label: '待审核'),
-      AppDropdownOption(value: 'approved', label: '已审核'),
-      AppDropdownOption(value: 'rejected', label: '已拒绝'),
       AppDropdownOption(value: 'pending', label: '待开始'),
       AppDropdownOption(value: 'in_progress', label: '进行中'),
       AppDropdownOption(value: 'paused', label: '已暂停'),
@@ -829,10 +825,19 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
         if (_loadingOptions) const LinearProgressIndicator(minHeight: 2),
         AppSelect<String>(
           value: _statusFilter,
-          decoration: const InputDecoration(labelText: '状态'),
+          decoration: const InputDecoration(labelText: '生产状态'),
           options: statusItems,
           onChanged: (value) {
             setState(() => _statusFilter = value);
+            _applyFilters(viewModel);
+          },
+        ),
+        AppSelect<String>(
+          value: _approvalStatusFilter,
+          decoration: const InputDecoration(labelText: '审核状态'),
+          options: approvalItems,
+          onChanged: (value) {
+            setState(() => _approvalStatusFilter = value);
             _applyFilters(viewModel);
           },
         ),
