@@ -387,6 +387,12 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
           }
         }
       }
+      // Re-sync processes/materials and cleanup when sales order changes products
+      if (previousSalesOrderId != salesOrderId) {
+        _draft.autoFillFromProducts(_fullProducts);
+        _draft.recalcProductQuantities();
+        _cleanupPrepressSelections();
+      }
     });
   }
 
@@ -412,6 +418,134 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
         );
   }
 
+  /// Compute which prepress resources are required based on selected processes.
+  Set<String> get _requiredResources {
+    final required = <String>{};
+    for (final processId in _draft.processIds) {
+      final process = _processes.cast<Process?>().firstWhere(
+            (p) => p?.id == processId,
+            orElse: () => null,
+          );
+      if (process != null) {
+        if (process.requiresDie) required.add('die');
+        if (process.requiresFoilingPlate) required.add('foiling');
+        if (process.requiresEmbossingPlate) required.add('embossing');
+      }
+    }
+    return required;
+  }
+
+  /// Get selected product IDs from product drafts.
+  Set<int> get _selectedProductIds {
+    return _draft.productDrafts
+        .map((d) => d.productId)
+        .whereType<int>()
+        .toSet();
+  }
+
+  /// Filter artworks by selected products.
+  /// If no products selected, return all artworks.
+  List<Artwork> get _filteredArtworks {
+    final productIds = _selectedProductIds;
+    if (productIds.isEmpty) return _artworks;
+    return _artworks.where((artwork) {
+      if (artwork.products.isEmpty) return true; // Show artworks without product linkage
+      return artwork.products.any((ap) => productIds.contains(ap.productId));
+    }).toList();
+  }
+
+  /// Filter dies by selected products.
+  List<Die> get _filteredDies {
+    final productIds = _selectedProductIds;
+    if (productIds.isEmpty) return _dies;
+    return _dies.where((die) {
+      if (die.products.isEmpty) return true;
+      return die.products.any((dp) => productIds.contains(dp.productId));
+    }).toList();
+  }
+
+  /// Filter foiling plates by selected products.
+  List<FoilingPlate> get _filteredFoilingPlates {
+    final productIds = _selectedProductIds;
+    if (productIds.isEmpty) return _foilingPlates;
+    return _foilingPlates.where((plate) {
+      if (plate.products.isEmpty) return true;
+      return plate.products.any((pp) => productIds.contains(pp.productId));
+    }).toList();
+  }
+
+  /// Filter embossing plates by selected products.
+  List<EmbossingPlate> get _filteredEmbossingPlates {
+    final productIds = _selectedProductIds;
+    if (productIds.isEmpty) return _embossingPlates;
+    return _embossingPlates.where((plate) {
+      if (plate.products.isEmpty) return true;
+      return plate.products.any((ep) => productIds.contains(ep.productId));
+    }).toList();
+  }
+
+  /// Filter sales orders by selected customer.
+  /// If no customer selected, return all sales orders.
+  List<WorkOrderSalesOrderCandidate> get _filteredSalesOrders {
+    final customerId = _draft.customerId;
+    if (customerId == null) return _salesOrders;
+    return _salesOrders
+        .where((so) => so.customerId == customerId)
+        .toList();
+  }
+
+  /// Clean up prepress selections (artwork, die, foiling plate, embossing plate)
+  /// that no longer match any selected product.
+  void _cleanupPrepressSelections() {
+    final productIds = _selectedProductIds;
+    if (productIds.isEmpty) return;
+
+    // Clean up artwork IDs - only keep artworks that match selected products
+    _draft.artworkIds.removeWhere((artworkId) {
+      final artwork = _artworks.cast<Artwork?>().firstWhere(
+            (a) => a?.id == artworkId,
+            orElse: () => null,
+          );
+      if (artwork == null) return true;
+      if (artwork.products.isEmpty) return false;
+      return !artwork.products
+          .any((ap) => productIds.contains(ap.productId));
+    });
+
+    // Clean up die IDs
+    _draft.dieIds.removeWhere((dieId) {
+      final die = _dies.cast<Die?>().firstWhere(
+            (d) => d?.id == dieId,
+            orElse: () => null,
+          );
+      if (die == null) return true;
+      if (die.products.isEmpty) return false;
+      return !die.products.any((dp) => productIds.contains(dp.productId));
+    });
+
+    // Clean up foiling plate IDs
+    _draft.foilingPlateIds.removeWhere((plateId) {
+      final plate = _foilingPlates.cast<FoilingPlate?>().firstWhere(
+            (p) => p?.id == plateId,
+            orElse: () => null,
+          );
+      if (plate == null) return true;
+      if (plate.products.isEmpty) return false;
+      return !plate.products.any((pp) => productIds.contains(pp.productId));
+    });
+
+    // Clean up embossing plate IDs
+    _draft.embossingPlateIds.removeWhere((plateId) {
+      final plate = _embossingPlates.cast<EmbossingPlate?>().firstWhere(
+            (p) => p?.id == plateId,
+            orElse: () => null,
+          );
+      if (plate == null) return true;
+      if (plate.products.isEmpty) return false;
+      return !plate.products.any((ep) => productIds.contains(ep.productId));
+    });
+  }
+
   void _handleAddProduct() {
     setState(() {
       _draft.addProductDraft();
@@ -433,6 +567,27 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
       ToastUtil.showError('当前账号无权执行该操作');
       return;
     }
+
+    // Check if selected processes differ from product defaults
+    final selectedProductIds = _selectedProductIds;
+    final defaultProcessIds = <int>{};
+    for (final pid in selectedProductIds) {
+      final product = _fullProducts.cast<Product?>().firstWhere(
+            (p) => p?.id == pid,
+            orElse: () => null,
+          );
+      if (product != null) {
+        defaultProcessIds.addAll(product.defaultProcessIds);
+      }
+    }
+    final selectedProcessIds = _draft.processIds;
+    final diff = selectedProcessIds.difference(defaultProcessIds);
+    final missing = defaultProcessIds.difference(selectedProcessIds);
+    if (diff.isNotEmpty || missing.isNotEmpty) {
+      final confirmed = await _showProcessDiffDialog(diff, missing);
+      if (confirmed != true) return;
+    }
+
     final form = _formKey.currentState;
     if (form == null || !form.validate()) {
       return;
@@ -516,6 +671,66 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     );
   }
 
+  /// Show dialog when selected processes differ from product defaults.
+  Future<bool?> _showProcessDiffDialog(Set<int> extra, Set<int> missing) async {
+    // Get process names for display
+    final extraNames = extra.map((id) {
+      final process = _processes.cast<Process?>().firstWhere(
+            (p) => p?.id == id,
+            orElse: () => null,
+          );
+      return process?.name ?? 'ID:$id';
+    }).join(', ');
+    final missingNames = missing.map((id) {
+      final process = _processes.cast<Process?>().firstWhere(
+            (p) => p?.id == id,
+            orElse: () => null,
+          );
+      return process?.name ?? 'ID:$id';
+    }).join(', ');
+
+    final messages = <String>[];
+    if (extra.isNotEmpty) {
+      messages.add('已选但不在产品默认工序中：$extraNames');
+    }
+    if (missing.isNotEmpty) {
+      messages.add('产品默认工序但未选择：$missingNames');
+    }
+
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AppDialog(
+        title: '工序确认',
+        maxWidth: LayoutTokens.dialogWidthMd,
+        scrollable: true,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('当前选择的工序与产品默认工序不一致：'),
+            const SizedBox(height: 8),
+            ...messages.map((m) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(m, style: const TextStyle(fontSize: 13)),
+                )),
+            const SizedBox(height: 8),
+            const Text('是否确认继续？'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('确认'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final permissions = PermissionUtil.snapshot(context);
@@ -565,7 +780,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
               child: WorkOrderFormContent(
                 mode: widget.mode,
                 salesOrderId: _draft.salesOrderId,
-                salesOrders: _salesOrders,
+                salesOrders: _filteredSalesOrders,
                 customerId: _draft.customerId,
                 customers: _customers,
                 status: _draft.status,
@@ -588,14 +803,15 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                 printingCmyk: _draft.printingCmyk,
                 printingOtherColorsController:
                     _draft.printingOtherColorsController,
-                artworks: _artworks,
+                artworks: _filteredArtworks,
                 artworkIds: _draft.artworkIds,
-                dies: _dies,
+                dies: _filteredDies,
                 dieIds: _draft.dieIds,
-                foilingPlates: _foilingPlates,
+                foilingPlates: _filteredFoilingPlates,
                 foilingPlateIds: _draft.foilingPlateIds,
-                embossingPlates: _embossingPlates,
+                embossingPlates: _filteredEmbossingPlates,
                 embossingPlateIds: _draft.embossingPlateIds,
+                requiredResources: _requiredResources,
                 onSalesOrderChanged: _handleSalesOrderChanged,
                 onCustomerChanged: _handleCustomerChanged,
                 onCreateCustomer: _handleCreateCustomer,
@@ -608,8 +824,13 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                 onPickDeliveryDate: () => _pickDate(isOrderDate: false),
                 onPickActualDeliveryDate: _pickActualDeliveryDate,
                 onAddProduct: _handleAddProduct,
-                onRemoveProduct: (index) =>
-                    setState(() => _draft.removeProductDraftAt(index)),
+                onRemoveProduct: (index) {
+                  setState(() {
+                    _draft.removeProductDraftAt(index);
+                    _cleanupPrepressSelections();
+                    _draft.recalcProductQuantities();
+                  });
+                },
                 onProcessSelectionChanged: (processId) {
                   setState(() {
                     if (_draft.processIds.contains(processId)) {
@@ -646,6 +867,9 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                 onProductSelectionChanged: () {
                   setState(() {
                     _draft.autoFillFromProducts(_fullProducts);
+                    _draft.autoFillUnitsFromProducts(_fullProducts);
+                    _draft.recalcProductQuantities();
+                    _cleanupPrepressSelections();
                   });
                 },
                 onCreateProduct: _handleCreateProduct,

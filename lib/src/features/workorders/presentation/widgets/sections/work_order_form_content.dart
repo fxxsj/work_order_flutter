@@ -52,6 +52,7 @@ class WorkOrderFormContent extends StatelessWidget {
     required this.foilingPlateIds,
     required this.embossingPlates,
     required this.embossingPlateIds,
+    required this.requiredResources,
     required this.onSalesOrderChanged,
     required this.onCustomerChanged,
     this.onCreateCustomer,
@@ -105,6 +106,8 @@ class WorkOrderFormContent extends StatelessWidget {
   final Set<int> foilingPlateIds;
   final List<EmbossingPlate> embossingPlates;
   final Set<int> embossingPlateIds;
+  /// Which prepress resources are required based on selected processes.
+  final Set<String> requiredResources;
   final ValueChanged<int?> onSalesOrderChanged;
   final ValueChanged<int?> onCustomerChanged;
   final VoidCallback? onCreateCustomer;
@@ -194,6 +197,7 @@ class WorkOrderFormContent extends StatelessWidget {
           foilingPlateIds: foilingPlateIds,
           embossingPlates: embossingPlates,
           embossingPlateIds: embossingPlateIds,
+          requiredResources: requiredResources,
           onPrintingTypeChanged: onPrintingTypeChanged,
           onToggleCmyk: onToggleCmyk,
           onSelectionChanged: onResourceSelectionChanged,

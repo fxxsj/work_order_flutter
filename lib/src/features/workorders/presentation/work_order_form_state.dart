@@ -10,7 +10,11 @@ class WorkOrderFormDraftState {
     orderDate = DateTime.now();
     orderDateController.text = formatDate(orderDate);
     addProductDraft();
+    _setupQuantityListeners();
   }
+
+  // Flag to prevent manual edit tracking during programmatic updates
+  bool _ignoreManualEditTracking = false;
 
   final TextEditingController notesController = TextEditingController();
   final TextEditingController printingOtherColorsController =
@@ -99,11 +103,14 @@ class WorkOrderFormDraftState {
   }
 
   void addProductDraft() {
-    productDrafts.add(WorkOrderProductDraft());
+    final draft = WorkOrderProductDraft();
+    productDrafts.add(draft);
+    _attachQuantityListeners(draft);
   }
 
   void removeProductDraftAt(int index) {
     final draft = productDrafts.removeAt(index);
+    _detachQuantityListeners(draft);
     draft.dispose();
   }
 
@@ -197,25 +204,124 @@ class WorkOrderFormDraftState {
       embossingPlateIds.addAll(artwork.embossingPlateIds);
     }
 
-    // 6. Auto-add products from artworks
-    final existingProductIds =
-        productDrafts.map((d) => d.productId).whereType<int>().toSet();
-    for (final artwork in selectedArtworks) {
-      for (final ap in artwork.products) {
-        if (!existingProductIds.contains(ap.productId)) {
-          final draft = WorkOrderProductDraft()..productId = ap.productId;
-          productDrafts.add(draft);
-          existingProductIds.add(ap.productId);
+    // 6. Sync imposition_quantity from ArtworkProduct
+    _syncImpositionFromArtworks(selectedArtworks);
+
+    // 7. Auto-add products from artworks (if no products yet)
+    if (productDrafts.isEmpty ||
+        productDrafts.every((d) => d.productId == null)) {
+      final existingProductIds =
+          productDrafts.map((d) => d.productId).whereType<int>().toSet();
+      for (final artwork in selectedArtworks) {
+        for (final ap in artwork.products) {
+          if (!existingProductIds.contains(ap.productId)) {
+            final draft = WorkOrderProductDraft()..productId = ap.productId;
+            productDrafts.add(draft);
+            existingProductIds.add(ap.productId);
+          }
         }
       }
     }
 
-    // 7. Auto-fill processes & materials from all current products
+    // 8. Auto-fill processes & materials from all current products
     _autoFillProcessesAndMaterials(fullProducts);
   }
 
   void autoFillFromProducts(List<Product> fullProducts) {
     _autoFillProcessesAndMaterials(fullProducts);
+  }
+
+  /// Auto-fill unit for all product drafts that have a product selected.
+  /// Looks up the product's unit from fullProducts and sets it if not manually edited.
+  void autoFillUnitsFromProducts(List<Product> fullProducts) {
+    final productMap = <int, Product>{};
+    for (final p in fullProducts) {
+      productMap[p.id] = p;
+    }
+    for (final draft in productDrafts) {
+      if (draft.productId == null) continue;
+      final product = productMap[draft.productId];
+      if (product != null && product.unit != null && product.unit!.isNotEmpty) {
+        draft.unitController.text = product.unit!;
+      }
+    }
+  }
+
+  /// Recalculate all product quantities based on production_quantity × imposition_quantity.
+  /// Respects manualQuantity flag - won't overwrite manually edited quantities.
+  void recalcProductQuantities() {
+    final productionQty =
+        int.tryParse(productionQuantityController.text.trim()) ?? 0;
+    _ignoreManualEditTracking = true;
+    for (final draft in productDrafts) {
+      if (draft.productId == null) continue;
+      if (!draft.manualQuantity) {
+        final imposition = draft.impositionQuantityValue;
+        draft.quantityController.text = (productionQty * imposition).toString();
+      }
+    }
+    _ignoreManualEditTracking = false;
+  }
+
+  void _setupQuantityListeners() {
+    // Listen to production quantity changes
+    productionQuantityController.addListener(_onProductionQuantityChanged);
+
+    // Listen to each product's quantity and imposition changes
+    for (final draft in productDrafts) {
+      _attachQuantityListeners(draft);
+    }
+  }
+
+  void _onProductionQuantityChanged() {
+    // Only recalc if production quantity actually changed from a valid number
+    final qty = int.tryParse(productionQuantityController.text.trim());
+    if (qty != null && qty > 0) {
+      recalcProductQuantities();
+    }
+  }
+
+  void _attachQuantityListeners(WorkOrderProductDraft draft) {
+    draft.quantityController.addListener(() {
+      if (!_ignoreManualEditTracking) {
+        draft.manualQuantity = true;
+      }
+    });
+    draft.impositionQuantityController.addListener(() {
+      if (!_ignoreManualEditTracking) {
+        recalcProductQuantities();
+      }
+    });
+  }
+
+  void _detachQuantityListeners(WorkOrderProductDraft draft) {
+    draft.quantityController.removeListener(() {});
+    draft.impositionQuantityController.removeListener(() {});
+  }
+
+  void _syncImpositionFromArtworks(List<Artwork> selectedArtworks) {
+    if (selectedArtworks.isEmpty || productDrafts.isEmpty) return;
+
+    for (final draft in productDrafts) {
+      if (draft.productId == null) continue;
+      for (final artwork in selectedArtworks) {
+        for (final ap in artwork.products) {
+          if (ap.productId == draft.productId) {
+            final impQty = ap.impositionQuantity;
+            if (impQty != null && impQty > 0) {
+              draft.impositionQuantityController.text = impQty.toString();
+              if (!draft.manualQuantity) {
+                final productionQty =
+                    int.tryParse(productionQuantityController.text.trim()) ?? 0;
+                draft.quantityController.text =
+                    (productionQty * impQty).toString();
+              }
+              break;
+            }
+          }
+        }
+      }
+    }
   }
 
   void _autoFillProcessesAndMaterials(List<Product> fullProducts) {
@@ -273,6 +379,10 @@ class WorkOrderFormDraftState {
     productDrafts
       ..clear()
       ..addAll(drafts);
+    // Re-attach listeners to all drafts
+    for (final draft in productDrafts) {
+      _attachQuantityListeners(draft);
+    }
     if (productDrafts.isEmpty) {
       addProductDraft();
     }
@@ -287,6 +397,7 @@ class WorkOrderFormDraftState {
 
   void _disposeProductDrafts() {
     for (final draft in productDrafts) {
+      _detachQuantityListeners(draft);
       draft.dispose();
     }
   }

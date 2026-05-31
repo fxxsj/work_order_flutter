@@ -293,6 +293,13 @@ class _WorkOrderProductRowState extends State<WorkOrderProductRow> {
                 SizedBox(
                   width: smallWidth,
                   child: CrudFieldConfig.number(
+                    label: '拼板数',
+                    controller: widget.draft.impositionQuantityController,
+                  ).build(context),
+                ),
+                SizedBox(
+                  width: smallWidth,
+                  child: CrudFieldConfig.number(
                     label: '数量',
                     controller: widget.draft.quantityController,
                   ).build(context),

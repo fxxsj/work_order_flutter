@@ -64,6 +64,38 @@ class FoilingPlate {
   final DateTime? updatedAt;
 
   factory FoilingPlate.fromJson(Map<String, dynamic> json) {
+    // Parse foiling plate products
+    final plateProducts = <FoilingPlateProduct>[];
+    final rawProducts = json['products'];
+    if (rawProducts is List) {
+      for (final item in rawProducts) {
+        if (item is Map) {
+          plateProducts.add(FoilingPlateProduct(
+            productId: toInt(item['product']) ?? toInt(item['id']) ?? 0,
+            productName: item['product_name']?.toString() ?? item['name']?.toString() ?? '',
+            quantity: toInt(item['quantity']),
+          ));
+        }
+      }
+    }
+
+    // Parse foiling plate images
+    final plateImages = <FoilingPlateImage>[];
+    final rawImages = json['images'];
+    if (rawImages is List) {
+      for (final item in rawImages) {
+        if (item is Map) {
+          plateImages.add(FoilingPlateImage(
+            id: toInt(item['id']) ?? 0,
+            imageUrl: toStringOrNull(item['image']) ?? '',
+            sortOrder: toInt(item['sort_order']) ?? 0,
+            description: toStringOrNull(item['description']),
+            createdAt: toDateTime(item['created_at']),
+          ));
+        }
+      }
+    }
+
     return FoilingPlate(
       id: toInt(json['id']) ?? 0,
       code: toStringOrNull(json['code']),
@@ -75,8 +107,8 @@ class FoilingPlate {
       confirmed: json['confirmed'] == true,
       confirmedByName: toStringOrNull(json['confirmed_by_name']),
       confirmedAt: toDateTime(json['confirmed_at']),
-      products: const [],
-      images: const [],
+      products: plateProducts,
+      images: plateImages,
       notes: toStringOrNull(json['notes']),
       createdAt: toDateTime(json['created_at']),
       updatedAt: toDateTime(json['updated_at']),

@@ -26,6 +26,7 @@ class WorkOrderResourcesSection extends StatelessWidget {
     required this.foilingPlateIds,
     required this.embossingPlates,
     required this.embossingPlateIds,
+    required this.requiredResources,
     required this.onPrintingTypeChanged,
     required this.onToggleCmyk,
     required this.onSelectionChanged,
@@ -42,6 +43,9 @@ class WorkOrderResourcesSection extends StatelessWidget {
   final Set<int> foilingPlateIds;
   final List<EmbossingPlate> embossingPlates;
   final Set<int> embossingPlateIds;
+  /// Which prepress resources are required based on selected processes.
+  /// Contains 'die', 'foiling', 'embossing'.
+  final Set<String> requiredResources;
   final ValueChanged<String?> onPrintingTypeChanged;
   final ValueChanged<String> onToggleCmyk;
   final VoidCallback onSelectionChanged;
@@ -78,10 +82,20 @@ class WorkOrderResourcesSection extends StatelessWidget {
                 WorkOrderMultiSelectField(
                   items: artworks
                       .map(
-                        (item) => WorkOrderOptionItem(
-                          item.id,
-                          item.fullCode.isNotEmpty ? item.fullCode : item.name,
-                        ),
+                        (item) {
+                          final productNames = item.products
+                              .map((p) => p.productName)
+                              .where((n) => n.isNotEmpty)
+                              .take(3)
+                              .join(', ');
+                          final label = item.fullCode.isNotEmpty
+                              ? item.fullCode
+                              : item.name;
+                          final fullLabel = productNames.isNotEmpty
+                              ? '$label ($productNames)'
+                              : label;
+                          return WorkOrderOptionItem(item.id, fullLabel);
+                        },
                       )
                       .toList(),
                   selected: artworkIds,
@@ -113,9 +127,10 @@ class WorkOrderResourcesSection extends StatelessWidget {
             ],
           );
 
-          final rightColumn = Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+          final rightColumnChildren = <Widget>[];
+
+          if (requiredResources.contains('die')) {
+            rightColumnChildren.addAll([
               const WorkOrderFormSubsectionTitle(title: '刀模'),
               SizedBox(height: LayoutTokens.gapSm),
               WorkOrderMultiSelectField(
@@ -135,6 +150,11 @@ class WorkOrderResourcesSection extends StatelessWidget {
                 onChanged: onSelectionChanged,
               ),
               SizedBox(height: LayoutTokens.gapMd),
+            ]);
+          }
+
+          if (requiredResources.contains('foiling')) {
+            rightColumnChildren.addAll([
               const WorkOrderFormSubsectionTitle(title: '烫金版'),
               SizedBox(height: LayoutTokens.gapSm),
               WorkOrderMultiSelectField(
@@ -154,6 +174,11 @@ class WorkOrderResourcesSection extends StatelessWidget {
                 onChanged: onSelectionChanged,
               ),
               SizedBox(height: LayoutTokens.gapMd),
+            ]);
+          }
+
+          if (requiredResources.contains('embossing')) {
+            rightColumnChildren.addAll([
               const WorkOrderFormSubsectionTitle(title: '压凸版'),
               SizedBox(height: LayoutTokens.gapSm),
               WorkOrderMultiSelectField(
@@ -172,8 +197,15 @@ class WorkOrderResourcesSection extends StatelessWidget {
                 placeholder: '请选择（可多选）',
                 onChanged: onSelectionChanged,
               ),
-            ],
-          );
+            ]);
+          }
+
+          final rightColumn = rightColumnChildren.isEmpty
+              ? const SizedBox.shrink()
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: rightColumnChildren,
+                );
 
           if (isNarrow) {
             return Column(

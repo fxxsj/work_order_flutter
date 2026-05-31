@@ -68,6 +68,39 @@ class Die {
   final DateTime? updatedAt;
 
   factory Die.fromJson(Map<String, dynamic> json) {
+    // Parse die products
+    final dieProducts = <DieProduct>[];
+    final rawProducts = json['products'];
+    if (rawProducts is List) {
+      for (final item in rawProducts) {
+        if (item is Map) {
+          dieProducts.add(DieProduct(
+            productId: toInt(item['product']) ?? toInt(item['id']) ?? 0,
+            productName: item['product_name']?.toString() ?? item['name']?.toString() ?? '',
+            quantity: toInt(item['quantity']),
+            relationType: toStringOrNull(item['relation_type']),
+          ));
+        }
+      }
+    }
+
+    // Parse die images
+    final dieImages = <DieImage>[];
+    final rawImages = json['images'];
+    if (rawImages is List) {
+      for (final item in rawImages) {
+        if (item is Map) {
+          dieImages.add(DieImage(
+            id: toInt(item['id']) ?? 0,
+            imageUrl: toStringOrNull(item['image']) ?? '',
+            sortOrder: toInt(item['sort_order']) ?? 0,
+            description: toStringOrNull(item['description']),
+            createdAt: toDateTime(item['created_at']),
+          ));
+        }
+      }
+    }
+
     return Die(
       id: toInt(json['id']) ?? 0,
       code: toStringOrNull(json['code']),
@@ -80,8 +113,8 @@ class Die {
       confirmed: json['confirmed'] == true,
       confirmedByName: toStringOrNull(json['confirmed_by_name']),
       confirmedAt: toDateTime(json['confirmed_at']),
-      products: const [],
-      images: const [],
+      products: dieProducts,
+      images: dieImages,
       notes: toStringOrNull(json['notes']),
       createdAt: toDateTime(json['created_at']),
       updatedAt: toDateTime(json['updated_at']),

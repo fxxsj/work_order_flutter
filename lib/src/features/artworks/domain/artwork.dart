@@ -99,6 +99,42 @@ class Artwork {
   factory Artwork.fromJson(Map<String, dynamic> json) {
     final cmyk = json['cmykColors'];
     final other = json['otherColors'];
+
+    // Parse artwork products
+    final artworkProducts = <ArtworkProduct>[];
+    final rawProducts = json['products'];
+    if (rawProducts is List) {
+      for (final item in rawProducts) {
+        if (item is Map) {
+          final productId = toInt(item['product']) ?? toInt(item['id']) ?? 0;
+          final productName = item['product_name']?.toString() ?? item['name']?.toString() ?? '';
+          artworkProducts.add(ArtworkProduct(
+            productId: productId,
+            productName: productName,
+            impositionQuantity: toInt(item['imposition_quantity']),
+          ));
+        }
+      }
+    }
+
+    // Parse ID lists (supports both int arrays and object arrays)
+    List<int> parseIdList(dynamic value) {
+      if (value is! List) return const [];
+      final ids = <int>[];
+      for (final item in value) {
+        int? id;
+        if (item is Map) {
+          id = toInt(item['id']) ?? toInt(item['pk']) ?? toInt(item['value']);
+        } else {
+          id = toInt(item);
+        }
+        if (id != null && id > 0) {
+          ids.add(id);
+        }
+      }
+      return ids;
+    }
+
     return Artwork(
       id: toInt(json['id']) ?? 0,
       code: toStringOrNull(json['code']),
@@ -134,13 +170,13 @@ class Artwork {
       embossingPlateNames: (json['embossingPlateNames'] is List)
           ? List<String>.from(json['embossingPlateNames'].whereType<String>())
           : const [],
-      products: const [],
+      products: artworkProducts,
       notes: toStringOrNull(json['notes']),
       createdAt: toDateTime(json['createdAt']),
       updatedAt: toDateTime(json['updatedAt']),
-      dieIds: const [],
-      foilingPlateIds: const [],
-      embossingPlateIds: const [],
+      dieIds: parseIdList(json['dies']),
+      foilingPlateIds: parseIdList(json['foiling_plates']),
+      embossingPlateIds: parseIdList(json['embossing_plates']),
     );
   }
 }

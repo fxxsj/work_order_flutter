@@ -13,12 +13,15 @@ class WorkOrderOptionItem {
 class WorkOrderProductDraft {
   WorkOrderProductDraft()
       : quantityController = TextEditingController(text: '1'),
+        impositionQuantityController = TextEditingController(text: '1'),
         unitController = TextEditingController(text: '件'),
         specController = TextEditingController(),
         sortOrderController = TextEditingController(text: '0');
 
   WorkOrderProductDraft.fromDetail(WorkOrderProductItem item)
       : productId = item.productId,
+        impositionQuantityController =
+            TextEditingController(text: item.impositionQuantity?.toString() ?? '1'),
         sourceType = item.sourceType ?? 'stock',
         sourceSalesOrderId = item.sourceSalesOrderId,
         salesOrderItemId = item.salesOrderItemId,
@@ -34,11 +37,15 @@ class WorkOrderProductDraft {
   int? sourceSalesOrderId;
   int? salesOrderItemId;
   final TextEditingController quantityController;
+  final TextEditingController impositionQuantityController;
   final TextEditingController unitController;
   final TextEditingController specController;
   final TextEditingController sortOrderController;
+  bool manualQuantity = false;
 
   int get quantityValue => int.tryParse(quantityController.text.trim()) ?? 1;
+  int get impositionQuantityValue =>
+      int.tryParse(impositionQuantityController.text.trim()) ?? 1;
   String get unitValue =>
       unitController.text.trim().isEmpty ? '件' : unitController.text.trim();
   String get specificationValue => specController.text.trim();
@@ -46,6 +53,7 @@ class WorkOrderProductDraft {
 
   void dispose() {
     quantityController.dispose();
+    impositionQuantityController.dispose();
     unitController.dispose();
     specController.dispose();
     sortOrderController.dispose();
