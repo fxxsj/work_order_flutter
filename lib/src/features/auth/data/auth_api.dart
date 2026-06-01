@@ -96,10 +96,4 @@ class AuthApi {
     }
     return ApiResult(data: const [], message: response.message);
   }
-
-  Future<ApiResult<List<Map<String, dynamic>>>> getUserList({
-    int? departmentId,
-  }) {
-    return getUsersByDepartment(departmentId: departmentId);
-  }
 }

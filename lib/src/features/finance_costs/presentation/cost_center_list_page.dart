@@ -404,7 +404,7 @@ class CostCenterListEntry extends StatelessWidget {
     }
 
     try {
-      final usersResult = await context.read<AuthApi>().getUserList();
+      final usersResult = await context.read<AuthApi>().getUsersByDepartment();
       for (final user in usersResult.data ?? const <Map<String, dynamic>>[]) {
         final id = _intFrom(user['id']);
         if (id == null) continue;

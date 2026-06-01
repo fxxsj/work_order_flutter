@@ -19,7 +19,7 @@ class CustomerViewModel extends PaginatedViewModel<Customer> {
   String? _salespersonsError;
   String? _ordering;
 
-  /// 当前客户列表（[items] 的别名，兼容现有 UI）。
+  /// 当前客户列表。
   List<Customer> get customers => items;
 
   /// 当前业务员列表。
@@ -38,7 +38,7 @@ class CustomerViewModel extends PaginatedViewModel<Customer> {
     await Future.wait([loadSalespersons(), loadItems(resetPage: true)]);
   }
 
-  /// 加载客户列表（[loadItems] 的别名，兼容现有调用点）。
+  /// 加载客户列表。
   Future<void> loadCustomers({bool resetPage = false}) =>
       loadItems(resetPage: resetPage);
 
