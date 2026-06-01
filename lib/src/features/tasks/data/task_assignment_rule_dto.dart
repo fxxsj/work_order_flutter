@@ -2,10 +2,7 @@ import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_assignment_rule.dart';
 
 /// 分派规则默认常量
-const kTaskAssignmentRuleDefaults = (
-  priority: 50,
-  strategy: 'least_tasks',
-);
+const kTaskAssignmentRuleDefaults = (priority: 50, strategy: 'least_tasks');
 
 class TaskAssignmentRuleDto {
   TaskAssignmentRuleDto({
@@ -53,8 +50,9 @@ class TaskAssignmentRuleDto {
       processCode: toStringOrNull(json['process_code']),
       departmentName: toStringOrNull(json['department_name']),
       departmentCode: toStringOrNull(json['department_code']),
-      operatorSelectionStrategyDisplay:
-          toStringOrNull(json['operator_selection_strategy_display']),
+      operatorSelectionStrategyDisplay: toStringOrNull(
+        json['operator_selection_strategy_display'],
+      ),
       notes: toStringOrNull(json['notes']),
       createdAt: toDateTime(json['created_at']),
       updatedAt: toDateTime(json['updated_at']),

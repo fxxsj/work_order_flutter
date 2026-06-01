@@ -13,7 +13,10 @@ abstract class TaskAssignmentRuleRepository {
 
   Future<TaskAssignmentRuleDto> createRule(TaskAssignmentRuleDto dto);
 
-  Future<TaskAssignmentRuleDto> updateRule(int id, Map<String, dynamic> payload);
+  Future<TaskAssignmentRuleDto> updateRule(
+    int id,
+    Map<String, dynamic> payload,
+  );
 
   Future<void> deleteRule(int id);
 

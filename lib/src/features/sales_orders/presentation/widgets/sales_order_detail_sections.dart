@@ -39,8 +39,9 @@ class SalesOrderActionMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final available =
-        actions.where((action) => action.label.trim().isNotEmpty).toList();
+    final available = actions
+        .where((action) => action.label.trim().isNotEmpty)
+        .toList();
     if (available.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -153,7 +154,9 @@ class SalesOrderItemsSection extends StatelessWidget {
                         itemWidth: 220,
                         items: [
                           SalesOrderInfoItem(
-                              '编码', item.productCode ?? emptyText),
+                            '编码',
+                            item.productCode ?? emptyText,
+                          ),
                           SalesOrderInfoItem(
                             '数量',
                             item.quantity?.toString() ?? emptyText,

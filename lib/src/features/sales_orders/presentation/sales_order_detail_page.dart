@@ -30,8 +30,11 @@ class SalesOrderDetailEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FeatureEntry<SalesOrderApiService, SalesOrderRepository,
-        SalesOrderViewModel>(
+    return FeatureEntry<
+      SalesOrderApiService,
+      SalesOrderRepository,
+      SalesOrderViewModel
+    >(
       createService: (context) =>
           SalesOrderApiService(context.read<ApiClient>()),
       createRepository: (context) => SalesOrderRepositoryImpl(
@@ -96,7 +99,8 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     } catch (err) {
       if (!mounted) return;
       setState(
-          () => _errorMessage = err.toString().replaceFirst('Exception: ', ''));
+        () => _errorMessage = err.toString().replaceFirst('Exception: ', ''),
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -182,10 +186,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
           children: [
             const RiskActionHintPanel(
               summary: '退回后，业务需要先补充订单资料或重新确认交期，再重新提交审核。',
-              impacts: [
-                '请明确写清需要补什么、改什么',
-                '模糊退回会让业务、生产和客户重复确认',
-              ],
+              impacts: ['请明确写清需要补什么、改什么', '模糊退回会让业务、生产和客户重复确认'],
               auditHint: '退回原因会直接进入审批和审计记录。',
               destructive: true,
             ),
@@ -229,7 +230,8 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
       final result = await viewModel.createWorkOrderFromSalesOrder({
         'sales_order_id': widget.orderId,
       });
-      final workOrderId = int.tryParse(result['id']?.toString() ?? '') ??
+      final workOrderId =
+          int.tryParse(result['id']?.toString() ?? '') ??
           int.tryParse(result['work_order_id']?.toString() ?? '');
       if (!mounted) return;
       ToastUtil.showSuccess('已生成施工单草稿');
@@ -272,10 +274,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
       context,
       title: '取消订单',
       summary: '取消客户订单会中断后续施工、发货和财务闭环，相关部门需要同步停单。',
-      impacts: const [
-        '如果已排产或已出货，请先确认是否应走变更、退货或异常流程',
-        '建议填写取消原因，便于业务和财务后续对账追踪',
-      ],
+      impacts: const ['如果已排产或已出货，请先确认是否应走变更、退货或异常流程', '建议填写取消原因，便于业务和财务后续对账追踪'],
       auditHint: '订单取消原因会影响后续争议处理和经营复盘。',
       destructive: true,
       notesLabel: '取消原因（可选）',
@@ -285,10 +284,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     if (result == null) return;
     final viewModel = context.read<SalesOrderViewModel>();
     await _runDetailAction(
-      () => viewModel.cancel(
-        widget.orderId,
-        {'reason': result.notes.trim()},
-      ),
+      () => viewModel.cancel(widget.orderId, {'reason': result.notes.trim()}),
       successMessage: '已取消',
     );
   }
@@ -346,8 +342,9 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     final permissions = PermissionUtil.snapshot(context);
     final canChangeSalesOrder = permissions.has('workorder.change_salesorder');
     final canCreateWorkOrder = permissions.has('workorder.add_workorder');
-    final canCreateDeliveryOrder =
-        permissions.has('workorder.add_deliveryorder');
+    final canCreateDeliveryOrder = permissions.has(
+      'workorder.add_deliveryorder',
+    );
     final actions = <SalesOrderActionItem>[
       if (canChangeSalesOrder && approvalStatus == 'draft')
         SalesOrderActionItem(
@@ -374,14 +371,15 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
         ),
       ],
       if (canCreateWorkOrder &&
-          (approvalStatus == 'approved' && status != 'completed' && status != 'cancelled'))
+          (approvalStatus == 'approved' &&
+              status != 'completed' &&
+              status != 'cancelled'))
         SalesOrderActionItem(
           label: '生成施工单草稿',
           icon: Icons.assignment_outlined,
           onTap: _createWorkOrderDraft,
         ),
-      if (canCreateDeliveryOrder &&
-          (approvalStatus == 'approved'))
+      if (canCreateDeliveryOrder && (approvalStatus == 'approved'))
         SalesOrderActionItem(
           label: '生成送货单',
           icon: Icons.local_shipping_outlined,
@@ -394,7 +392,9 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
           onTap: _showUpdatePaymentDialog,
         ),
       if (canChangeSalesOrder &&
-          (approvalStatus == 'approved' && status != 'completed' && status != 'cancelled'))
+          (approvalStatus == 'approved' &&
+              status != 'completed' &&
+              status != 'cancelled'))
         SalesOrderActionItem(
           label: '完成订单',
           icon: Icons.task_alt_outlined,
@@ -423,7 +423,8 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
     final permissions = PermissionUtil.snapshot(context);
     final canChangeSalesOrder = permissions.has('workorder.change_salesorder');
-    final canEdit = canChangeSalesOrder &&
+    final canEdit =
+        canChangeSalesOrder &&
         ((detail?.approvalStatus ?? '') == 'draft' ||
             (detail?.approvalStatus ?? '') == 'rejected');
     final canViewAudit = AuditLogNavigation.canView(context);
@@ -473,184 +474,161 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
               child: Center(child: CircularProgressIndicator()),
             )
           : _errorMessage != null
-              ? DetailSurfaceCard(
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(_errorMessage!),
-                        SpacingTokens.vMd,
-                        FilledButton(
-                          onPressed: _loadDetail,
-                          child: const Text('重试'),
-                        ),
-                      ],
+          ? DetailSurfaceCard(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(_errorMessage!),
+                    SpacingTokens.vMd,
+                    FilledButton(
+                      onPressed: _loadDetail,
+                      child: const Text('重试'),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : detail == null
+          ? const DetailSurfaceCard(child: Center(child: Text('未找到客户订单信息')))
+          : ListView(
+              children: [
+                _buildOverviewSection(detail, title),
+                if ((detail.status ?? '') == 'rejected' &&
+                    ((detail.rejectionReason ?? '').trim().isNotEmpty ||
+                        (detail.approvalComment ?? '').trim().isNotEmpty)) ...[
+                  SizedBox(height: sectionSpacing),
+                  ApprovalRejectionNoticeCard(
+                    reason: (detail.rejectionReason ?? '').trim().isEmpty
+                        ? '请先查看审批说明'
+                        : detail.rejectionReason!.trim(),
+                    comment: detail.approvalComment,
+                    nextStep: '根据退回原因补充订单信息后，直接重新提交审核。',
+                    primaryAction: FilledButton.icon(
+                      onPressed: canChangeSalesOrder && !_actionLoading
+                          ? () => _showSubmitDialog(resubmitting: true)
+                          : null,
+                      icon: const Icon(Icons.send_outlined, size: 18),
+                      label: const Text('重新提交'),
+                    ),
+                    secondaryAction: OutlinedButton.icon(
+                      onPressed: canChangeSalesOrder
+                          ? () => context.go(
+                              '/sales-orders/${widget.orderId}/edit',
+                            )
+                          : null,
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                      label: const Text('先去修改'),
                     ),
                   ),
-                )
-              : detail == null
-                  ? const DetailSurfaceCard(
-                      child: Center(child: Text('未找到客户订单信息')),
-                    )
-                  : ListView(
-                      children: [
-                        _buildOverviewSection(detail, title),
-                        if ((detail.status ?? '') == 'rejected' &&
-                            ((detail.rejectionReason ?? '').trim().isNotEmpty ||
-                                (detail.approvalComment ?? '')
-                                    .trim()
-                                    .isNotEmpty)) ...[
-                          SizedBox(height: sectionSpacing),
-                          ApprovalRejectionNoticeCard(
-                            reason:
-                                (detail.rejectionReason ?? '').trim().isEmpty
-                                    ? '请先查看审批说明'
-                                    : detail.rejectionReason!.trim(),
-                            comment: detail.approvalComment,
-                            nextStep: '根据退回原因补充订单信息后，直接重新提交审核。',
-                            primaryAction: FilledButton.icon(
-                              onPressed: canChangeSalesOrder && !_actionLoading
-                                  ? () => _showSubmitDialog(resubmitting: true)
-                                  : null,
-                              icon: const Icon(Icons.send_outlined, size: 18),
-                              label: const Text('重新提交'),
-                            ),
-                            secondaryAction: OutlinedButton.icon(
-                              onPressed: canChangeSalesOrder
-                                  ? () => context.go(
-                                      '/sales-orders/${widget.orderId}/edit')
-                                  : null,
-                              icon: const Icon(Icons.edit_outlined, size: 18),
-                              label: const Text('先去修改'),
-                            ),
-                          ),
-                        ],
-                        SizedBox(height: sectionSpacing),
-                        SalesOrderInfoSection(
-                          title: '客户信息',
-                          items: [
-                            SalesOrderInfoItem(
-                              '联系人',
-                              detail.customerContact ??
-                                  detail.contactPerson ??
-                                  _emptyText,
-                            ),
-                            SalesOrderInfoItem(
-                              '电话',
-                              detail.customerPhone ??
-                                  detail.contactPhone ??
-                                  _emptyText,
-                            ),
-                            SalesOrderInfoItem(
-                              '地址',
-                              detail.customerAddress ??
-                                  detail.shippingAddress ??
-                                  _emptyText,
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: sectionSpacing),
-                        SalesOrderItemsSection(
-                          items: detail.items,
-                          emptyText: _emptyText,
-                        ),
-                        SizedBox(height: sectionSpacing),
-                        SalesOrderInfoSection(
-                          title: '付款信息',
-                          items: [
-                            SalesOrderInfoItem(
-                              '小计',
-                              _formatAmount(detail.subtotal),
-                            ),
-                            SalesOrderInfoItem(
-                              '税额',
-                              _formatAmount(detail.taxAmount),
-                            ),
-                            SalesOrderInfoItem(
-                              '折扣',
-                              _formatAmount(detail.discountAmount),
-                            ),
-                            SalesOrderInfoItem(
-                              '定金',
-                              _formatAmount(detail.depositAmount),
-                            ),
-                            SalesOrderInfoItem(
-                              '已付金额',
-                              _formatAmount(detail.paidAmount),
-                            ),
-                            SalesOrderInfoItem(
-                              '付款日期',
-                              _formatDate(detail.paymentDate),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: sectionSpacing),
-                        SalesOrderFinanceSummarySection(
-                          items: [
-                            SalesOrderInfoItem(
-                              '订单金额',
-                              _formatAmount(detail.totalAmount),
-                            ),
-                            SalesOrderInfoItem(
-                              '已回款',
-                              _formatAmount(detail.paidAmount),
-                            ),
-                            SalesOrderInfoItem(
-                              '未回款',
-                              _formatAmount(detail.unpaidAmount),
-                            ),
-                            SalesOrderInfoItem(
-                              '付款状态',
-                              detail.paymentStatusDisplay ??
-                                  detail.paymentStatus ??
-                                  _emptyText,
-                            ),
-                            SalesOrderInfoItem(
-                              '关联发票',
-                              detail.invoiceSummaries.length.toString(),
-                            ),
-                            SalesOrderInfoItem(
-                              '收款记录',
-                              detail.paymentCount?.toString() ?? _emptyText,
-                            ),
-                            SalesOrderInfoItem(
-                              '待收款计划',
-                              detail.pendingPaymentPlanCount == null
-                                  ? _emptyText
-                                  : '${detail.pendingPaymentPlanCount} 笔',
-                            ),
-                            SalesOrderInfoItem(
-                              '待收金额',
-                              _formatAmount(detail.pendingPaymentPlanAmount),
-                            ),
-                          ],
-                          onOpenInvoicePage: () =>
-                              context.go('/finance/invoices'),
-                          onOpenPaymentPage: () =>
-                              context.go('/finance/payments'),
-                          onOpenStatementPage: () =>
-                              context.go('/finance/statements'),
-                        ),
-                        SizedBox(height: sectionSpacing),
-                        SalesOrderTraceabilitySection(
-                          workOrderSummaries: detail.workOrderSummaries,
-                          deliveryOrderSummaries: detail.deliveryOrderSummaries,
-                          invoiceSummaries: detail.invoiceSummaries,
-                          onOpenWorkOrder: (item) {
-                            final id = item.id;
-                            if (id != null && id > 0) {
-                              context.go('/workorders/$id');
-                            }
-                          },
-                          onOpenWorkOrderPage: () => context.go('/workorders'),
-                          onOpenDeliveryPage: () =>
-                              context.go('/inventory/delivery'),
-                          onOpenInvoicePage: () =>
-                              context.go('/finance/invoices'),
-                          emptyText: _emptyText,
-                        ),
-                      ],
+                ],
+                SizedBox(height: sectionSpacing),
+                SalesOrderInfoSection(
+                  title: '客户信息',
+                  items: [
+                    SalesOrderInfoItem(
+                      '联系人',
+                      detail.customerContact ??
+                          detail.contactPerson ??
+                          _emptyText,
                     ),
+                    SalesOrderInfoItem(
+                      '电话',
+                      detail.customerPhone ?? detail.contactPhone ?? _emptyText,
+                    ),
+                    SalesOrderInfoItem(
+                      '地址',
+                      detail.customerAddress ??
+                          detail.shippingAddress ??
+                          _emptyText,
+                    ),
+                  ],
+                ),
+                SizedBox(height: sectionSpacing),
+                SalesOrderItemsSection(
+                  items: detail.items,
+                  emptyText: _emptyText,
+                ),
+                SizedBox(height: sectionSpacing),
+                SalesOrderInfoSection(
+                  title: '付款信息',
+                  items: [
+                    SalesOrderInfoItem('小计', _formatAmount(detail.subtotal)),
+                    SalesOrderInfoItem('税额', _formatAmount(detail.taxAmount)),
+                    SalesOrderInfoItem(
+                      '折扣',
+                      _formatAmount(detail.discountAmount),
+                    ),
+                    SalesOrderInfoItem(
+                      '定金',
+                      _formatAmount(detail.depositAmount),
+                    ),
+                    SalesOrderInfoItem(
+                      '已付金额',
+                      _formatAmount(detail.paidAmount),
+                    ),
+                    SalesOrderInfoItem('付款日期', _formatDate(detail.paymentDate)),
+                  ],
+                ),
+                SizedBox(height: sectionSpacing),
+                SalesOrderFinanceSummarySection(
+                  items: [
+                    SalesOrderInfoItem(
+                      '订单金额',
+                      _formatAmount(detail.totalAmount),
+                    ),
+                    SalesOrderInfoItem('已回款', _formatAmount(detail.paidAmount)),
+                    SalesOrderInfoItem(
+                      '未回款',
+                      _formatAmount(detail.unpaidAmount),
+                    ),
+                    SalesOrderInfoItem(
+                      '付款状态',
+                      detail.paymentStatusDisplay ??
+                          detail.paymentStatus ??
+                          _emptyText,
+                    ),
+                    SalesOrderInfoItem(
+                      '关联发票',
+                      detail.invoiceSummaries.length.toString(),
+                    ),
+                    SalesOrderInfoItem(
+                      '收款记录',
+                      detail.paymentCount?.toString() ?? _emptyText,
+                    ),
+                    SalesOrderInfoItem(
+                      '待收款计划',
+                      detail.pendingPaymentPlanCount == null
+                          ? _emptyText
+                          : '${detail.pendingPaymentPlanCount} 笔',
+                    ),
+                    SalesOrderInfoItem(
+                      '待收金额',
+                      _formatAmount(detail.pendingPaymentPlanAmount),
+                    ),
+                  ],
+                  onOpenInvoicePage: () => context.go('/finance/invoices'),
+                  onOpenPaymentPage: () => context.go('/finance/payments'),
+                  onOpenStatementPage: () => context.go('/finance/statements'),
+                ),
+                SizedBox(height: sectionSpacing),
+                SalesOrderTraceabilitySection(
+                  workOrderSummaries: detail.workOrderSummaries,
+                  deliveryOrderSummaries: detail.deliveryOrderSummaries,
+                  invoiceSummaries: detail.invoiceSummaries,
+                  onOpenWorkOrder: (item) {
+                    final id = item.id;
+                    if (id != null && id > 0) {
+                      context.go('/workorders/$id');
+                    }
+                  },
+                  onOpenWorkOrderPage: () => context.go('/workorders'),
+                  onOpenDeliveryPage: () => context.go('/inventory/delivery'),
+                  onOpenInvoicePage: () => context.go('/finance/invoices'),
+                  emptyText: _emptyText,
+                ),
+              ],
+            ),
     );
   }
 

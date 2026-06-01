@@ -19,10 +19,7 @@ class TaskListFilterOptions {
 }
 
 class TaskExportResult {
-  const TaskExportResult({
-    required this.bytes,
-    required this.filename,
-  });
+  const TaskExportResult({required this.bytes, required this.filename});
 
   final Uint8List bytes;
   final String filename;
@@ -34,10 +31,12 @@ class TaskListSupportService {
   final ApiClient _client;
 
   Future<TaskListFilterOptions> loadFilterOptions() async {
-    final departmentFuture =
-        DepartmentApiService(_client).fetchDepartments(page: 1, pageSize: 50);
-    final processFuture =
-        ProcessApiService(_client).fetchProcesses(page: 1, pageSize: 50);
+    final departmentFuture = DepartmentApiService(
+      _client,
+    ).fetchDepartments(page: 1, pageSize: 50);
+    final processFuture = ProcessApiService(
+      _client,
+    ).fetchProcesses(page: 1, pageSize: 50);
 
     final departmentPage = await departmentFuture;
     final processPage = await processFuture;
@@ -62,8 +61,8 @@ class TaskListSupportService {
     final bytes = data is Uint8List
         ? data
         : data is List<int>
-            ? Uint8List.fromList(data)
-            : null;
+        ? Uint8List.fromList(data)
+        : null;
     if (bytes == null) {
       throw const FormatException('返回格式不支持');
     }
@@ -78,13 +77,17 @@ class TaskListSupportService {
   }
 
   Future<List<TaskDepartmentOption>> loadProcessDepartments(
-      int processId) async {
-    final departments =
-        await TaskApiService(_client).fetchProcessDepartments(processId);
+    int processId,
+  ) async {
+    final departments = await TaskApiService(
+      _client,
+    ).fetchProcessDepartments(processId);
     return departments
         .map((item) {
-          final processIds =
-              _parseProcessIds(item, fallbackProcessId: processId);
+          final processIds = _parseProcessIds(
+            item,
+            fallbackProcessId: processId,
+          );
           return TaskDepartmentOption(
             id: toInt(item['id']) ?? 0,
             name: item['name']?.toString() ?? '',
@@ -108,26 +111,26 @@ class TaskListSupportService {
     required int operatorId,
     required String notes,
   }) {
-    return TaskApiService(_client).assignToOperator(
-      taskId,
-      operatorId: operatorId,
-      notes: notes,
-    );
+    return TaskApiService(
+      _client,
+    ).assignToOperator(taskId, operatorId: operatorId, notes: notes);
   }
 
-  String _resolveExportFilename(
-    dynamic response, {
-    required String fallback,
-  }) {
-    final timestamp =
-        DateTime.now().toIso8601String().replaceAll(':', '').split('.').first;
+  String _resolveExportFilename(dynamic response, {required String fallback}) {
+    final timestamp = DateTime.now()
+        .toIso8601String()
+        .replaceAll(':', '')
+        .split('.')
+        .first;
     try {
       final headers = response.headers;
-      final contentDisposition = headers.value('content-disposition') ??
+      final contentDisposition =
+          headers.value('content-disposition') ??
           headers.value('Content-Disposition');
       if (contentDisposition != null) {
-        final match =
-            RegExp('filename=\"?([^\";]+)\"?').firstMatch(contentDisposition);
+        final match = RegExp(
+          'filename=\"?([^\";]+)\"?',
+        ).firstMatch(contentDisposition);
         if (match != null) {
           return match.group(1) ?? '${fallback}_$timestamp.xlsx';
         }

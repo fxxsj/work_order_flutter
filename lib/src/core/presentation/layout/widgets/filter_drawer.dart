@@ -18,10 +18,7 @@ Future<void> showAdaptiveFilterDrawer(
       backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       builder: (sheetContext) {
-        return FilterDrawerShell(
-          title: title,
-          child: child,
-        );
+        return FilterDrawerShell(title: title, child: child);
       },
     );
   }
@@ -30,9 +27,9 @@ Future<void> showAdaptiveFilterDrawer(
     context: context,
     barrierDismissible: true,
     barrierLabel: title,
-    barrierColor: Theme.of(context).shadowColor.withValues(
-          alpha: LayoutTokens.barrierOpacity,
-        ),
+    barrierColor: Theme.of(
+      context,
+    ).shadowColor.withValues(alpha: LayoutTokens.barrierOpacity),
     transitionDuration: AnimationTokens.slide,
     pageBuilder: (dialogContext, animation, secondaryAnimation) {
       return Align(
@@ -44,18 +41,17 @@ Future<void> showAdaptiveFilterDrawer(
             width: desktopWidth,
             height: double.infinity,
             child: SafeArea(
-              child: FilterDrawerShell(
-                title: title,
-                child: child,
-              ),
+              child: FilterDrawerShell(title: title, child: child),
             ),
           ),
         ),
       );
     },
     transitionBuilder: (context, animation, secondaryAnimation, child) {
-      final offsetTween =
-          Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero);
+      final offsetTween = Tween<Offset>(
+        begin: const Offset(1, 0),
+        end: Offset.zero,
+      );
       return SlideTransition(
         position: animation
             .drive(CurveTween(curve: Curves.easeOutCubic))
@@ -84,10 +80,10 @@ class FilterDrawerShell extends StatelessWidget {
       children: [
         Padding(
           padding: EdgeInsets.fromLTRB(
-            LayoutTokens.gapLg,
-            LayoutTokens.gapMd,
-            LayoutTokens.gapSm,
-            LayoutTokens.gapSm,
+            SpacingTokens.lg,
+            SpacingTokens.md,
+            SpacingTokens.sm,
+            SpacingTokens.sm,
           ),
           child: Row(
             children: [
@@ -123,10 +119,10 @@ class FilterPanelBody extends StatelessWidget {
     this.resetLabel = '重置筛选',
     this.doneLabel = '完成',
     this.padding = const EdgeInsets.fromLTRB(
-      LayoutTokens.gapLg,
-      LayoutTokens.gapMd,
-      LayoutTokens.gapLg,
-      LayoutTokens.gapLg + LayoutTokens.gapXs,
+      SpacingTokens.lg,
+      SpacingTokens.md,
+      SpacingTokens.lg,
+      SpacingTokens.lg + SpacingTokens.xs,
     ),
   });
 
@@ -188,16 +184,16 @@ class AdaptiveFormPanel extends StatelessWidget {
     this.submitting = false,
     this.submitEnabled = true,
     this.padding = const EdgeInsets.fromLTRB(
-      LayoutTokens.gapLg,
-      LayoutTokens.gapLg,
-      LayoutTokens.gapLg,
-      LayoutTokens.gapLg + LayoutTokens.gapXs,
+      SpacingTokens.lg,
+      SpacingTokens.lg,
+      SpacingTokens.lg,
+      SpacingTokens.lg + SpacingTokens.xs,
     ),
     this.footerPadding = const EdgeInsets.fromLTRB(
-      LayoutTokens.gapLg,
-      LayoutTokens.gapMd,
-      LayoutTokens.gapLg,
-      LayoutTokens.gapLg,
+      SpacingTokens.lg,
+      SpacingTokens.md,
+      SpacingTokens.lg,
+      SpacingTokens.lg,
     ),
   });
 
@@ -228,10 +224,7 @@ class AdaptiveFormPanel extends StatelessWidget {
         Expanded(
           child: Form(
             key: formKey,
-            child: SingleChildScrollView(
-              padding: padding,
-              child: child,
-            ),
+            child: SingleChildScrollView(padding: padding, child: child),
           ),
         ),
         DecoratedBox(
@@ -250,31 +243,62 @@ class AdaptiveFormPanel extends StatelessWidget {
                       : (onCancel ?? () => Navigator.of(context).maybePop()),
                   child: Text(cancelText),
                 ),
-                if (secondarySubmitText != null && onSecondarySubmit != null) ...[
-                  const SizedBox(width: LayoutTokens.gapSm),
+                if (secondarySubmitText != null &&
+                    onSecondarySubmit != null) ...[
+                  const SizedBox(width: SpacingTokens.sm),
                   if (secondarySubmitIcon != null)
                     OutlinedButton.icon(
-                      onPressed: submitting || !submitEnabled ? null : onSecondarySubmit,
-                      icon: submitting ? _buildLoadingIndicator(context, theme.colorScheme.primary) : secondarySubmitIcon!,
-                      label: Text(submitting ? '$secondarySubmitText中...' : secondarySubmitText!),
+                      onPressed: submitting || !submitEnabled
+                          ? null
+                          : onSecondarySubmit,
+                      icon: submitting
+                          ? _buildLoadingIndicator(
+                              context,
+                              theme.colorScheme.primary,
+                            )
+                          : secondarySubmitIcon!,
+                      label: Text(
+                        submitting
+                            ? '$secondarySubmitText中...'
+                            : secondarySubmitText!,
+                      ),
                     )
                   else
                     OutlinedButton(
-                      onPressed: submitting || !submitEnabled ? null : onSecondarySubmit,
-                      child: submitting ? _buildLoadingRow(context, '$secondarySubmitText中...', theme.colorScheme.primary) : Text(secondarySubmitText!),
+                      onPressed: submitting || !submitEnabled
+                          ? null
+                          : onSecondarySubmit,
+                      child: submitting
+                          ? _buildLoadingRow(
+                              context,
+                              '$secondarySubmitText中...',
+                              theme.colorScheme.primary,
+                            )
+                          : Text(secondarySubmitText!),
                     ),
                 ],
-                const SizedBox(width: LayoutTokens.gapSm),
+                const SizedBox(width: SpacingTokens.sm),
                 if (submitIcon != null)
                   FilledButton.icon(
                     onPressed: submitting || !submitEnabled ? null : onSubmit,
-                    icon: submitting ? _buildLoadingIndicator(context, theme.colorScheme.onPrimary) : submitIcon!,
+                    icon: submitting
+                        ? _buildLoadingIndicator(
+                            context,
+                            theme.colorScheme.onPrimary,
+                          )
+                        : submitIcon!,
                     label: Text(submitting ? '$submitText中...' : submitText),
                   )
                 else
                   FilledButton(
                     onPressed: submitting || !submitEnabled ? null : onSubmit,
-                    child: submitting ? _buildLoadingRow(context, '$submitText中...', theme.colorScheme.onPrimary) : Text(submitText),
+                    child: submitting
+                        ? _buildLoadingRow(
+                            context,
+                            '$submitText中...',
+                            theme.colorScheme.onPrimary,
+                          )
+                        : Text(submitText),
                   ),
               ],
             ),
@@ -291,7 +315,7 @@ class AdaptiveFormPanel extends StatelessWidget {
       child: CircularProgressIndicator(strokeWidth: 2, color: color),
     );
   }
-  
+
   Widget _buildLoadingRow(BuildContext context, String text, Color color) {
     return Row(
       mainAxisSize: MainAxisSize.min,

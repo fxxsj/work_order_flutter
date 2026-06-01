@@ -9,10 +9,7 @@ class AuditLogNavigation {
     return PermissionUtil.snapshot(context).has('workorder.view_auditlog');
   }
 
-  static void open(
-    BuildContext context, {
-    String? keyword,
-  }) {
+  static void open(BuildContext context, {String? keyword}) {
     final trimmed = keyword?.trim() ?? '';
     if (trimmed.isEmpty) {
       context.go('/audit-logs');

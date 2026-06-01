@@ -44,11 +44,13 @@ final class DropdownFieldConfig extends CrudFieldConfig {
   @override
   Widget build(BuildContext context) {
     final dropdownOptions = options
-        .map((opt) => AppDropdownOption<dynamic>(
-              value: opt.value,
-              label: opt.label,
-              enabled: opt.enabled,
-            ))
+        .map(
+          (opt) => AppDropdownOption<dynamic>(
+            value: opt.value,
+            label: opt.label,
+            enabled: opt.enabled,
+          ),
+        )
         .toList();
     return AppSelect<dynamic>(
       key: fieldKey,
@@ -111,11 +113,13 @@ final class MultiSelectFieldConfig extends CrudFieldConfig {
   @override
   Widget build(BuildContext context) {
     final multiOptions = options
-        .map((opt) => AppDropdownOption<dynamic>(
-              value: opt.value,
-              label: opt.label,
-              enabled: opt.enabled,
-            ))
+        .map(
+          (opt) => AppDropdownOption<dynamic>(
+            value: opt.value,
+            label: opt.label,
+            enabled: opt.enabled,
+          ),
+        )
         .toList();
     return AppSelect<dynamic>(
       key: fieldKey,
@@ -123,8 +127,9 @@ final class MultiSelectFieldConfig extends CrudFieldConfig {
       value: values,
       decoration: const InputDecoration(),
       onChanged: enabled ? (v) => onChanged?.call(v ?? <dynamic>{}) : null,
-      validator:
-          validator != null ? (v) => validator?.call(v ?? <dynamic>{}) : null,
+      validator: validator != null
+          ? (v) => validator?.call(v ?? <dynamic>{})
+          : null,
       enabled: enabled,
       isMultiSelect: true,
       emptyText: emptyText,
@@ -159,16 +164,16 @@ final class TagsFieldConfig extends CrudFieldConfig {
 
   @override
   Widget build(BuildContext context) => TagsField(
-        key: fieldKey,
-        label: label,
-        values: values,
-        onChanged: enabled ? onChanged : null,
-        validator: validator,
-        enabled: enabled,
-        hintText: hintText,
-        helperText: helperText,
-        emptyText: emptyText,
-      );
+    key: fieldKey,
+    label: label,
+    values: values,
+    onChanged: enabled ? onChanged : null,
+    validator: validator,
+    enabled: enabled,
+    hintText: hintText,
+    helperText: helperText,
+    emptyText: emptyText,
+  );
 }
 
 final class CheckboxGroupFieldConfig extends CrudFieldConfig {
@@ -198,23 +203,25 @@ final class CheckboxGroupFieldConfig extends CrudFieldConfig {
 
   @override
   Widget build(BuildContext context) => CheckboxGroupField<dynamic>(
-        key: fieldKey,
-        label: label,
-        options: options
-            .map((opt) => CheckboxGroupFieldOption<dynamic>(
-                  value: opt.value,
-                  label: opt.label,
-                  enabled: opt.enabled,
-                ))
-            .toList(),
-        values: values.cast<dynamic>(),
-        onChanged: enabled ? onChanged : null,
-        validator: validator,
-        enabled: enabled,
-        hintText: hintText,
-        helperText: helperText,
-        emptyText: emptyText,
-      );
+    key: fieldKey,
+    label: label,
+    options: options
+        .map(
+          (opt) => CheckboxGroupFieldOption<dynamic>(
+            value: opt.value,
+            label: opt.label,
+            enabled: opt.enabled,
+          ),
+        )
+        .toList(),
+    values: values.cast<dynamic>(),
+    onChanged: enabled ? onChanged : null,
+    validator: validator,
+    enabled: enabled,
+    hintText: hintText,
+    helperText: helperText,
+    emptyText: emptyText,
+  );
 }
 
 final class RadioGroupFieldConfig extends CrudFieldConfig {
@@ -242,22 +249,24 @@ final class RadioGroupFieldConfig extends CrudFieldConfig {
 
   @override
   Widget build(BuildContext context) => RadioGroupField<dynamic>(
-        key: fieldKey,
-        label: label,
-        options: options
-            .map((opt) => RadioGroupFieldOption<dynamic>(
-                  value: opt.value,
-                  label: opt.label,
-                  enabled: opt.enabled,
-                ))
-            .toList(),
-        value: value,
-        onChanged: enabled ? onChanged : null,
-        validator: validator,
-        enabled: enabled,
-        hintText: hintText,
-        helperText: helperText,
-      );
+    key: fieldKey,
+    label: label,
+    options: options
+        .map(
+          (opt) => RadioGroupFieldOption<dynamic>(
+            value: opt.value,
+            label: opt.label,
+            enabled: opt.enabled,
+          ),
+        )
+        .toList(),
+    value: value,
+    onChanged: enabled ? onChanged : null,
+    validator: validator,
+    enabled: enabled,
+    hintText: hintText,
+    helperText: helperText,
+  );
 }
 
 final class ToggleFieldConfig extends CrudFieldConfig {
@@ -279,12 +288,12 @@ final class ToggleFieldConfig extends CrudFieldConfig {
 
   @override
   Widget build(BuildContext context) => ToggleField(
-        key: fieldKey,
-        label: label,
-        value: value,
-        onChanged: onChanged,
-        validator: null,
-        enabled: enabled,
-        helperText: helperText,
-      );
+    key: fieldKey,
+    label: label,
+    value: value,
+    onChanged: onChanged,
+    validator: null,
+    enabled: enabled,
+    helperText: helperText,
+  );
 }

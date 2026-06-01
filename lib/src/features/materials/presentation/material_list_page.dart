@@ -23,26 +23,26 @@ class MaterialListPage extends StatelessWidget {
 
   static const CrudListConfig<MaterialItem, MaterialViewModel> _config =
       CrudListConfig(
-    searchHintText: '搜索物料名称/编码',
-    emptyText: '暂无物料数据',
-    emptyIcon: Icons.category_outlined,
-    loadItems: _loadMaterials,
-    titleBuilder: _titleText,
-    subtitleBuilder: _subtitleText,
-    summaryChipsBuilder: _summaryChips,
-    summaryFieldsBuilder: _summaryFields,
-    headerActionsBuilder: _headerActions,
-    rowActionsBuilder: _rowActions,
-    columns: [
-      CrudTableColumn(label: '物料', cellBuilder: _buildNameCell),
-      CrudTableColumn(label: '编码', cellBuilder: _buildCodeCell),
-      CrudTableColumn(label: '单位', cellBuilder: _buildUnitCell),
-      CrudTableColumn(label: '单价', cellBuilder: _buildPriceCell),
-      CrudTableColumn(label: '库存', cellBuilder: _buildStockCell),
-      CrudTableColumn(label: '安全库存', cellBuilder: _buildMinStockCell),
-      CrudTableColumn(label: '状态', cellBuilder: _buildStatusCell),
-    ],
-  );
+        searchHintText: '搜索物料名称/编码',
+        emptyText: '暂无物料数据',
+        emptyIcon: Icons.category_outlined,
+        loadItems: _loadMaterials,
+        titleBuilder: _titleText,
+        subtitleBuilder: _subtitleText,
+        summaryChipsBuilder: _summaryChips,
+        summaryFieldsBuilder: _summaryFields,
+        headerActionsBuilder: _headerActions,
+        rowActionsBuilder: _rowActions,
+        columns: [
+          CrudTableColumn(label: '物料', cellBuilder: _buildNameCell),
+          CrudTableColumn(label: '编码', cellBuilder: _buildCodeCell),
+          CrudTableColumn(label: '单位', cellBuilder: _buildUnitCell),
+          CrudTableColumn(label: '单价', cellBuilder: _buildPriceCell),
+          CrudTableColumn(label: '库存', cellBuilder: _buildStockCell),
+          CrudTableColumn(label: '安全库存', cellBuilder: _buildMinStockCell),
+          CrudTableColumn(label: '状态', cellBuilder: _buildStatusCell),
+        ],
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -164,24 +164,24 @@ class MaterialListPage extends StatelessWidget {
   }
 
   static Widget _buildCodeCell(BuildContext context, MaterialItem material) {
-    return _buildBodyText(context, CrudValueFormatter.text(material.code));
+    return _buildBodyText(context, AppValueFormatter.text(material.code));
   }
 
   static Widget _buildUnitCell(BuildContext context, MaterialItem material) {
-    return _buildBodyText(context, CrudValueFormatter.text(material.unit));
+    return _buildBodyText(context, AppValueFormatter.text(material.unit));
   }
 
   static Widget _buildPriceCell(BuildContext context, MaterialItem material) {
     return _buildBodyText(
       context,
-      CrudValueFormatter.amount(material.unitPrice),
+      AppValueFormatter.amount(material.unitPrice),
     );
   }
 
   static Widget _buildStockCell(BuildContext context, MaterialItem material) {
     return _buildBodyText(
       context,
-      CrudValueFormatter.amount(material.stockQuantity),
+      AppValueFormatter.amount(material.stockQuantity),
     );
   }
 
@@ -191,7 +191,7 @@ class MaterialListPage extends StatelessWidget {
   ) {
     return _buildBodyText(
       context,
-      CrudValueFormatter.amount(material.minStockQuantity),
+      AppValueFormatter.amount(material.minStockQuantity),
     );
   }
 
@@ -200,25 +200,22 @@ class MaterialListPage extends StatelessWidget {
   }
 
   static Widget _buildBodyText(BuildContext context, String value) {
-    return Text(
-      value,
-      style: Theme.of(context).textTheme.bodySmall,
-    );
+    return Text(value, style: Theme.of(context).textTheme.bodySmall);
   }
 
   static String _titleText(MaterialItem material) {
-    return CrudValueFormatter.text(material.name);
+    return AppValueFormatter.text(material.name);
   }
 
   static String _subtitleText(MaterialItem material) {
-    return '${CrudValueFormatter.text(material.code)} · '
-        '${CrudValueFormatter.text(material.unit)}';
+    return '${AppValueFormatter.text(material.code)} · '
+        '${AppValueFormatter.text(material.unit)}';
   }
 
   static String _statusText(MaterialItem material) {
     final isActive = material.isActive;
     if (isActive == null) {
-      return CrudValueFormatter.empty;
+      return AppValueFormatter.empty;
     }
     return isActive ? '启用' : '停用';
   }
@@ -228,11 +225,11 @@ class MaterialListPage extends StatelessWidget {
       CrudSummaryChipData(label: '状态', value: _statusText(material)),
       CrudSummaryChipData(
         label: '库存',
-        value: CrudValueFormatter.amount(material.stockQuantity),
+        value: AppValueFormatter.amount(material.stockQuantity),
       ),
       CrudSummaryChipData(
         label: '安全库存',
-        value: CrudValueFormatter.amount(material.minStockQuantity),
+        value: AppValueFormatter.amount(material.minStockQuantity),
       ),
     ];
   }
@@ -241,28 +238,25 @@ class MaterialListPage extends StatelessWidget {
     return [
       CrudSummaryFieldData(
         label: '物料编码',
-        value: CrudValueFormatter.text(material.code),
+        value: AppValueFormatter.text(material.code),
       ),
       CrudSummaryFieldData(
         label: '单位',
-        value: CrudValueFormatter.text(material.unit),
+        value: AppValueFormatter.text(material.unit),
       ),
       CrudSummaryFieldData(
         label: '单价',
-        value: CrudValueFormatter.amount(material.unitPrice),
+        value: AppValueFormatter.amount(material.unitPrice),
       ),
       CrudSummaryFieldData(
         label: '库存',
-        value: CrudValueFormatter.amount(material.stockQuantity),
+        value: AppValueFormatter.amount(material.stockQuantity),
       ),
       CrudSummaryFieldData(
         label: '安全库存',
-        value: CrudValueFormatter.amount(material.minStockQuantity),
+        value: AppValueFormatter.amount(material.minStockQuantity),
       ),
-      CrudSummaryFieldData(
-        label: '状态',
-        value: _statusText(material),
-      ),
+      CrudSummaryFieldData(label: '状态', value: _statusText(material)),
     ];
   }
 
@@ -272,9 +266,9 @@ class MaterialListPage extends StatelessWidget {
 
   static List<String> _buildDeleteImpacts(MaterialItem material) {
     return [
-      '物料编码：${CrudValueFormatter.text(material.code)}',
-      '单位：${CrudValueFormatter.text(material.unit)}',
-      '当前库存：${CrudValueFormatter.amount(material.stockQuantity)}',
+      '物料编码：${AppValueFormatter.text(material.code)}',
+      '单位：${AppValueFormatter.text(material.unit)}',
+      '当前库存：${AppValueFormatter.amount(material.stockQuantity)}',
       '若已有采购记录、库存流水或产品用料引用，删除可能失败或需要先解除关联',
     ];
   }

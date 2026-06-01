@@ -175,7 +175,7 @@ class ProductGroupListPage extends StatelessWidget {
   }
 
   static Widget _buildCodeCell(BuildContext context, ProductGroup group) {
-    return _buildBodyText(context, CrudValueFormatter.text(group.code));
+    return _buildBodyText(context, AppValueFormatter.text(group.code));
   }
 
   static Widget _buildStatusCell(BuildContext context, ProductGroup group) {
@@ -183,14 +183,14 @@ class ProductGroupListPage extends StatelessWidget {
   }
 
   static Widget _buildItemsCountCell(BuildContext context, ProductGroup group) {
-    return _buildBodyText(context, CrudValueFormatter.number(group.itemsCount));
+    return _buildBodyText(context, AppValueFormatter.number(group.itemsCount));
   }
 
   static Widget _buildDescriptionCell(
     BuildContext context,
     ProductGroup group,
   ) {
-    return _buildBodyText(context, CrudValueFormatter.text(group.description));
+    return _buildBodyText(context, AppValueFormatter.text(group.description));
   }
 
   static Widget _buildBodyText(BuildContext context, String value) {
@@ -198,17 +198,17 @@ class ProductGroupListPage extends StatelessWidget {
   }
 
   static String _titleText(ProductGroup group) {
-    return CrudValueFormatter.text(group.name);
+    return AppValueFormatter.text(group.name);
   }
 
   static String _subtitleText(ProductGroup group) {
-    return CrudValueFormatter.text(group.code);
+    return AppValueFormatter.text(group.code);
   }
 
   static String _statusText(ProductGroup group) {
     final isActive = group.isActive;
     if (isActive == null) {
-      return CrudValueFormatter.empty;
+      return AppValueFormatter.empty;
     }
     return isActive ? '启用' : '停用';
   }
@@ -218,7 +218,7 @@ class ProductGroupListPage extends StatelessWidget {
       CrudSummaryChipData(label: '状态', value: _statusText(group)),
       CrudSummaryChipData(
         label: '明细数',
-        value: CrudValueFormatter.number(group.itemsCount),
+        value: AppValueFormatter.number(group.itemsCount),
       ),
     ];
   }
@@ -227,24 +227,24 @@ class ProductGroupListPage extends StatelessWidget {
     return [
       CrudSummaryFieldData(
         label: '编码',
-        value: CrudValueFormatter.text(group.code),
+        value: AppValueFormatter.text(group.code),
       ),
       CrudSummaryFieldData(label: '状态', value: _statusText(group)),
       CrudSummaryFieldData(
         label: '明细数',
-        value: CrudValueFormatter.number(group.itemsCount),
+        value: AppValueFormatter.number(group.itemsCount),
       ),
       CrudSummaryFieldData(
         label: '描述',
-        value: CrudValueFormatter.text(group.description),
+        value: AppValueFormatter.text(group.description),
       ),
       CrudSummaryFieldData(
         label: '创建时间',
-        value: CrudValueFormatter.dateTime(group.createdAt),
+        value: AppValueFormatter.dateTime(group.createdAt),
       ),
       CrudSummaryFieldData(
         label: '更新时间',
-        value: CrudValueFormatter.dateTime(group.updatedAt),
+        value: AppValueFormatter.dateTime(group.updatedAt),
       ),
     ];
   }
@@ -255,7 +255,7 @@ class ProductGroupListPage extends StatelessWidget {
 
   static List<String> _buildDeleteImpacts(ProductGroup group) {
     return [
-      '产品组编码：${CrudValueFormatter.text(group.code)}',
+      '产品组编码：${AppValueFormatter.text(group.code)}',
       if ((group.itemsCount ?? 0) > 0)
         '当前组内有 ${group.itemsCount} 个产品明细，删除前建议先处理归类关系',
     ];

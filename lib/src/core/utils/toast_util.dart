@@ -17,8 +17,12 @@ class ToastUtil {
     _ensureEntry(context);
 
     final id = _nextId++;
-    final item =
-        _ToastItem(id: id, message: message, isError: isError, closing: false);
+    final item = _ToastItem(
+      id: id,
+      message: message,
+      isError: isError,
+      closing: false,
+    );
     _items.value = [..._items.value, item];
 
     Timer(const Duration(seconds: 3), () {
@@ -42,9 +46,7 @@ class ToastUtil {
     if (overlayState == null) {
       return;
     }
-    _entry = OverlayEntry(
-      builder: (_) => _ToastHost(items: _items),
-    );
+    _entry = OverlayEntry(builder: (_) => _ToastHost(items: _items));
     overlayState.insert(_entry!);
   }
 
@@ -61,10 +63,12 @@ class ToastUtil {
     updated[index] = updated[index].copyWith(closing: true);
     _items.value = updated;
 
-    Timer(AnimationTokens.expandDuration + const Duration(milliseconds: 20),
-        () {
-      _remove(id);
-    });
+    Timer(
+      AnimationTokens.expandDuration + const Duration(milliseconds: 20),
+      () {
+        _remove(id);
+      },
+    );
   }
 
   static void _remove(int id) {
@@ -119,8 +123,8 @@ class _ToastHost extends StatelessWidget {
             alignment: Alignment.bottomRight,
             child: Padding(
               padding: EdgeInsets.only(
-                right: LayoutTokens.gapLg + LayoutTokens.gapXs,
-                bottom: LayoutTokens.gapXl,
+                right: SpacingTokens.lg + SpacingTokens.xs,
+                bottom: SpacingTokens.xl,
               ),
               child: ValueListenableBuilder<List<_ToastItem>>(
                 valueListenable: items,
@@ -129,10 +133,7 @@ class _ToastHost extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: list.map((item) {
-                      return _ToastCard(
-                        key: ValueKey(item.id),
-                        item: item,
-                      );
+                      return _ToastCard(key: ValueKey(item.id), item: item);
                     }).toList(),
                   );
                 },
@@ -209,16 +210,17 @@ class _ToastCardState extends State<_ToastCard>
           constraints: const BoxConstraints(maxWidth: LayoutTokens.searchWidth),
           margin: EdgeInsets.only(top: LayoutTokens.cardPaddingSm),
           padding: EdgeInsets.symmetric(
-            horizontal: LayoutTokens.gapMd + (LayoutTokens.gapXs / 2),
+            horizontal: SpacingTokens.md + (SpacingTokens.xs / 2),
             vertical: LayoutTokens.cardPaddingSm,
           ),
           decoration: BoxDecoration(
             color: background,
-            borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+            borderRadius: BorderRadius.circular(RadiusTokens.sm),
             boxShadow: [
               BoxShadow(
-                color:
-                    theme.shadowColor.withValues(alpha: OpacityTokens.distinct),
+                color: theme.shadowColor.withValues(
+                  alpha: OpacityTokens.distinct,
+                ),
                 blurRadius: 14,
                 offset: const Offset(0, 6),
               ),
@@ -234,7 +236,7 @@ class _ToastCardState extends State<_ToastCard>
                 color: foreground,
                 size: 22,
               ),
-              SizedBox(width: LayoutTokens.gapSm),
+              SizedBox(width: SpacingTokens.sm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -246,10 +248,9 @@ class _ToastCardState extends State<_ToastCard>
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    SizedBox(height: LayoutTokens.gapSm),
+                    SizedBox(height: SpacingTokens.sm),
                     ClipRRect(
-                      borderRadius:
-                          BorderRadius.circular(LayoutTokens.radiusPill),
+                      borderRadius: BorderRadius.circular(RadiusTokens.pill),
                       child: AnimatedBuilder(
                         animation: _progressController,
                         builder: (context, _) {
@@ -259,8 +260,9 @@ class _ToastCardState extends State<_ToastCard>
                             backgroundColor: foreground.withValues(
                               alpha: OpacityTokens.distinct,
                             ),
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(foreground),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              foreground,
+                            ),
                           );
                         },
                       ),

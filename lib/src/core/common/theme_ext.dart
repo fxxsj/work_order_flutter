@@ -73,8 +73,11 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
       danger: Color.lerp(danger, other.danger, t) ?? danger,
       info: Color.lerp(info, other.info, t) ?? info,
       surfaceAlt: Color.lerp(surfaceAlt, other.surfaceAlt, t) ?? surfaceAlt,
-      shadowStrong: Color.lerp(shadowStrong, other.shadowStrong, t) ?? shadowStrong,
-      unreadBackground: Color.lerp(unreadBackground, other.unreadBackground, t) ?? unreadBackground,
+      shadowStrong:
+          Color.lerp(shadowStrong, other.shadowStrong, t) ?? shadowStrong,
+      unreadBackground:
+          Color.lerp(unreadBackground, other.unreadBackground, t) ??
+          unreadBackground,
       successBg: Color.lerp(successBg, other.successBg, t) ?? successBg,
       warningBg: Color.lerp(warningBg, other.warningBg, t) ?? warningBg,
       dangerBg: Color.lerp(dangerBg, other.dangerBg, t) ?? dangerBg,
@@ -83,9 +86,12 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
   }
 
   /// 获取语义色对应的浅色背景
-  Color getSuccessBg() => successBg ?? success.withValues(alpha: OpacityTokens.subtle);
-  Color getWarningBg() => warningBg ?? warning.withValues(alpha: OpacityTokens.subtle);
-  Color getDangerBg() => dangerBg ?? danger.withValues(alpha: OpacityTokens.subtle);
+  Color getSuccessBg() =>
+      successBg ?? success.withValues(alpha: OpacityTokens.subtle);
+  Color getWarningBg() =>
+      warningBg ?? warning.withValues(alpha: OpacityTokens.subtle);
+  Color getDangerBg() =>
+      dangerBg ?? danger.withValues(alpha: OpacityTokens.subtle);
   Color getInfoBg() => infoBg ?? info.withValues(alpha: OpacityTokens.subtle);
 }
 

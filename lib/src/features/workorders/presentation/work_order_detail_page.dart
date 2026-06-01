@@ -65,7 +65,7 @@ class WorkOrderDetailPage extends StatefulWidget {
 
 class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   static const String _emptyText = '-';
-  static const double _spacingSm = LayoutTokens.gapSm;
+  static const double _spacingSm = SpacingTokens.sm;
   static const String _deleteDialogTitle = '确认删除';
   static const List<String> _designFileExtensions = [
     'pdf',

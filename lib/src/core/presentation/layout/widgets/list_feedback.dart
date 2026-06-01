@@ -41,18 +41,19 @@ class ResponsivePaginationBar extends StatelessWidget {
       width: double.infinity,
       child: AppCard(
         padding: resolvedPadding,
-        radius: compact ? LayoutTokens.radiusMd : LayoutTokens.radiusLg,
+        radius: compact ? RadiusTokens.md : RadiusTokens.lg,
         child: LayoutBuilder(
           builder: (context, constraints) {
             final compact = constraints.maxWidth < Breakpoints.sm;
-            final infoStyle =
-                theme.textTheme.bodySmall?.copyWith(color: colors.subtleText);
+            final infoStyle = theme.textTheme.bodySmall?.copyWith(
+              color: colors.subtleText,
+            );
             final effectivePageSize = pageSizeOptions.contains(pageSize)
                 ? pageSize
                 : (pageSizeOptions.isNotEmpty ? pageSizeOptions.first : null);
             final pagerControls = Wrap(
-              spacing: LayoutTokens.gapXs,
-              runSpacing: LayoutTokens.gapXs,
+              spacing: SpacingTokens.xs,
+              runSpacing: SpacingTokens.xs,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 if (effectivePageSize != null)
@@ -86,16 +87,20 @@ class ResponsivePaginationBar extends StatelessWidget {
                   onPressed: hasPrev ? onPrev : null,
                   icon: const Icon(Icons.chevron_left, size: 18),
                   padding: EdgeInsets.zero,
-                  constraints:
-                      const BoxConstraints(minWidth: 28, minHeight: 28),
+                  constraints: const BoxConstraints(
+                    minWidth: 28,
+                    minHeight: 28,
+                  ),
                 ),
                 Text('$page', style: infoStyle),
                 IconButton(
                   onPressed: hasNext ? onNext : null,
                   icon: const Icon(Icons.chevron_right, size: 18),
                   padding: EdgeInsets.zero,
-                  constraints:
-                      const BoxConstraints(minWidth: 28, minHeight: 28),
+                  constraints: const BoxConstraints(
+                    minWidth: 28,
+                    minHeight: 28,
+                  ),
                 ),
               ],
             );
@@ -112,10 +117,7 @@ class ResponsivePaginationBar extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   IconTheme(
-                    data: IconThemeData(
-                      size: 18,
-                      color: colors.subtleText,
-                    ),
+                    data: IconThemeData(size: 18, color: colors.subtleText),
                     child: DefaultTextStyle.merge(
                       style: infoStyle,
                       child: pagerControls,
@@ -128,18 +130,10 @@ class ResponsivePaginationBar extends StatelessWidget {
             return Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: Text(
-                    infoText,
-                    style: infoStyle,
-                  ),
-                ),
+                Expanded(child: Text(infoText, style: infoStyle)),
                 const SizedBox(width: 12),
                 IconTheme(
-                  data: IconThemeData(
-                    size: 18,
-                    color: colors.subtleText,
-                  ),
+                  data: IconThemeData(size: 18, color: colors.subtleText),
                   child: DefaultTextStyle.merge(
                     style: infoStyle,
                     child: pagerControls,
@@ -174,17 +168,19 @@ class EmptyStateCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final semantic = theme.extension<AppSemanticColors>();
-    final background = (semantic?.info ?? theme.colorScheme.primary)
-        .withValues(alpha: OpacityTokens.faint);
-    final border = (semantic?.info ?? theme.colorScheme.primary)
-        .withValues(alpha: OpacityTokens.medium);
+    final background = (semantic?.info ?? theme.colorScheme.primary).withValues(
+      alpha: OpacityTokens.faint,
+    );
+    final border = (semantic?.info ?? theme.colorScheme.primary).withValues(
+      alpha: OpacityTokens.medium,
+    );
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final hasBoundedHeight = constraints.maxHeight.isFinite;
         final card = AppCard(
           padding: const EdgeInsets.symmetric(vertical: 32),
-          radius: LayoutTokens.radiusMd,
+          radius: RadiusTokens.md,
           background: background,
           borderColor: border,
           borderAlpha: 1,
@@ -192,10 +188,12 @@ class EmptyStateCard extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon,
-                    color: semantic?.info ?? theme.colorScheme.primary,
-                    size: LayoutTokens.iconXxxl),
-                const SizedBox(height: LayoutTokens.gapSm),
+                Icon(
+                  icon,
+                  color: semantic?.info ?? theme.colorScheme.primary,
+                  size: LayoutTokens.iconXxxl,
+                ),
+                const SizedBox(height: SpacingTokens.sm),
                 Text(
                   text,
                   style: theme.textTheme.bodyMedium?.copyWith(
@@ -203,7 +201,7 @@ class EmptyStateCard extends StatelessWidget {
                   ),
                 ),
                 if (subtitle != null) ...[
-                  const SizedBox(height: LayoutTokens.gapXs),
+                  const SizedBox(height: SpacingTokens.xs),
                   Text(
                     subtitle!,
                     style: theme.textTheme.bodySmall?.copyWith(
@@ -212,7 +210,7 @@ class EmptyStateCard extends StatelessWidget {
                   ),
                 ],
                 if (actionLabel != null && onAction != null) ...[
-                  const SizedBox(height: LayoutTokens.gapMd),
+                  const SizedBox(height: SpacingTokens.md),
                   OutlinedButton.icon(
                     onPressed: onAction,
                     icon: const Icon(Icons.add, size: LayoutTokens.iconSm),
@@ -260,16 +258,19 @@ class ErrorStateCard extends StatelessWidget {
       width: double.infinity,
       child: AppCard(
         padding: const EdgeInsets.symmetric(vertical: 32),
-        radius: LayoutTokens.radiusMd,
+        radius: RadiusTokens.md,
         background: background,
         borderColor: border,
         borderAlpha: 1,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline,
-                color: danger, size: LayoutTokens.iconXxl),
-            const SizedBox(height: LayoutTokens.gapSm),
+            Icon(
+              Icons.error_outline,
+              color: danger,
+              size: LayoutTokens.iconXxl,
+            ),
+            const SizedBox(height: SpacingTokens.sm),
             Text(
               message,
               style: theme.textTheme.bodyMedium?.copyWith(
@@ -277,7 +278,7 @@ class ErrorStateCard extends StatelessWidget {
               ),
             ),
             if (subtitle != null) ...[
-              const SizedBox(height: LayoutTokens.gapXs),
+              const SizedBox(height: SpacingTokens.xs),
               Text(
                 subtitle!,
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -285,7 +286,7 @@ class ErrorStateCard extends StatelessWidget {
                 ),
               ),
             ],
-            const SizedBox(height: LayoutTokens.gapSm),
+            const SizedBox(height: SpacingTokens.sm),
             OutlinedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh, size: LayoutTokens.iconSm),
@@ -340,13 +341,17 @@ class ListSearchField extends StatelessWidget {
                     ? null
                     : IconButton(
                         tooltip: '清空',
-                        icon:
-                            const Icon(Icons.close, size: LayoutTokens.iconMd),
+                        icon: const Icon(
+                          Icons.close,
+                          size: LayoutTokens.iconMd,
+                        ),
                         onPressed: onClear,
                       ),
                 isDense: true,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 0,
+                ),
               ),
             );
           },
@@ -363,7 +368,7 @@ class ListDensityToggle extends StatelessWidget {
     required this.onChanged,
     required this.height,
     this.minWidth = 52,
-    this.radius = LayoutTokens.radiusSm,
+    this.radius = RadiusTokens.sm,
     this.comfortLabel = '舒适',
     this.compactLabel = '紧凑',
   });
@@ -423,8 +428,10 @@ class ListToolbarButton extends StatelessWidget {
         label: Text(label),
         style: compact
             ? OutlinedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 0,
+                ),
                 visualDensity: VisualDensity.compact,
               )
             : null,

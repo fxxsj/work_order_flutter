@@ -43,10 +43,7 @@ class FeatureEntry<TService, TRepository, TViewModel extends ChangeNotifier>
 
 class _FeatureInitializer<TViewModel extends ChangeNotifier>
     extends StatefulWidget {
-  const _FeatureInitializer({
-    required this.initialize,
-    required this.child,
-  });
+  const _FeatureInitializer({required this.initialize, required this.child});
 
   final FutureOr<void> Function(TViewModel viewModel) initialize;
   final Widget child;

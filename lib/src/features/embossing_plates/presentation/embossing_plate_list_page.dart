@@ -254,22 +254,22 @@ class EmbossingPlateListPage extends StatelessWidget {
   }
 
   static Widget _buildCodeCell(BuildContext context, EmbossingPlate plate) {
-    return _buildBodyText(context, CrudValueFormatter.text(plate.code));
+    return _buildBodyText(context, AppValueFormatter.text(plate.code));
   }
 
   static Widget _buildSizeCell(BuildContext context, EmbossingPlate plate) {
-    return _buildBodyText(context, CrudValueFormatter.text(plate.size));
+    return _buildBodyText(context, AppValueFormatter.text(plate.size));
   }
 
   static Widget _buildMaterialCell(BuildContext context, EmbossingPlate plate) {
-    return _buildBodyText(context, CrudValueFormatter.text(plate.material));
+    return _buildBodyText(context, AppValueFormatter.text(plate.material));
   }
 
   static Widget _buildThicknessCell(
     BuildContext context,
     EmbossingPlate plate,
   ) {
-    return _buildBodyText(context, CrudValueFormatter.text(plate.thickness));
+    return _buildBodyText(context, AppValueFormatter.text(plate.thickness));
   }
 
   static Widget _buildConfirmedCell(
@@ -287,10 +287,7 @@ class EmbossingPlateListPage extends StatelessWidget {
     BuildContext context,
     EmbossingPlate plate,
   ) {
-    return _buildBodyText(
-      context,
-      CrudValueFormatter.dateTime(plate.createdAt),
-    );
+    return _buildBodyText(context, AppValueFormatter.dateTime(plate.createdAt));
   }
 
   static Widget _buildBodyText(BuildContext context, String value) {
@@ -298,12 +295,12 @@ class EmbossingPlateListPage extends StatelessWidget {
   }
 
   static String _titleText(EmbossingPlate plate) {
-    return CrudValueFormatter.text(plate.name);
+    return AppValueFormatter.text(plate.name);
   }
 
   static String _subtitleText(EmbossingPlate plate) {
-    return '${CrudValueFormatter.text(plate.code)} · '
-        '${CrudValueFormatter.text(plate.size)}';
+    return '${AppValueFormatter.text(plate.code)} · '
+        '${AppValueFormatter.text(plate.size)}';
   }
 
   static String _confirmedText(EmbossingPlate plate) {
@@ -312,7 +309,7 @@ class EmbossingPlateListPage extends StatelessWidget {
 
   static String _productSummary(List<EmbossingPlateProduct> products) {
     if (products.isEmpty) {
-      return CrudValueFormatter.empty;
+      return AppValueFormatter.empty;
     }
     return products
         .map((item) => '${item.productName}(${item.quantity ?? 1}个)')
@@ -324,7 +321,7 @@ class EmbossingPlateListPage extends StatelessWidget {
       CrudSummaryChipData(label: '状态', value: _confirmedText(plate)),
       CrudSummaryChipData(
         label: '材质',
-        value: CrudValueFormatter.text(plate.material),
+        value: AppValueFormatter.text(plate.material),
       ),
     ];
   }
@@ -333,28 +330,28 @@ class EmbossingPlateListPage extends StatelessWidget {
     return [
       CrudSummaryFieldData(
         label: '编码',
-        value: CrudValueFormatter.text(plate.code),
+        value: AppValueFormatter.text(plate.code),
       ),
       CrudSummaryFieldData(
         label: '尺寸',
-        value: CrudValueFormatter.text(plate.size),
+        value: AppValueFormatter.text(plate.size),
       ),
       CrudSummaryFieldData(
         label: '材质',
-        value: CrudValueFormatter.text(plate.material),
+        value: AppValueFormatter.text(plate.material),
       ),
       CrudSummaryFieldData(
         label: '厚度',
-        value: CrudValueFormatter.text(plate.thickness),
+        value: AppValueFormatter.text(plate.thickness),
       ),
       CrudSummaryFieldData(label: '确认状态', value: _confirmedText(plate)),
       CrudSummaryFieldData(
         label: '确认人',
-        value: CrudValueFormatter.text(plate.confirmedByName),
+        value: AppValueFormatter.text(plate.confirmedByName),
       ),
       CrudSummaryFieldData(
         label: '确认时间',
-        value: CrudValueFormatter.dateTime(plate.confirmedAt),
+        value: AppValueFormatter.dateTime(plate.confirmedAt),
       ),
       CrudSummaryFieldData(
         label: '包含产品',
@@ -362,15 +359,15 @@ class EmbossingPlateListPage extends StatelessWidget {
       ),
       CrudSummaryFieldData(
         label: '备注',
-        value: CrudValueFormatter.text(plate.notes),
+        value: AppValueFormatter.text(plate.notes),
       ),
       CrudSummaryFieldData(
         label: '创建时间',
-        value: CrudValueFormatter.dateTime(plate.createdAt),
+        value: AppValueFormatter.dateTime(plate.createdAt),
       ),
       CrudSummaryFieldData(
         label: '更新时间',
-        value: CrudValueFormatter.dateTime(plate.updatedAt),
+        value: AppValueFormatter.dateTime(plate.updatedAt),
       ),
     ];
   }
@@ -381,8 +378,8 @@ class EmbossingPlateListPage extends StatelessWidget {
 
   static List<String> _buildDeleteImpacts(EmbossingPlate plate) {
     return [
-      '版材编码：${CrudValueFormatter.text(plate.code)}',
-      '尺寸：${CrudValueFormatter.text(plate.size)}',
+      '版材编码：${AppValueFormatter.text(plate.code)}',
+      '尺寸：${AppValueFormatter.text(plate.size)}',
       if (plate.products.isNotEmpty) '包含产品：${_productSummary(plate.products)}',
     ];
   }
@@ -398,7 +395,7 @@ class EmbossingPlateListPage extends StatelessWidget {
   static List<String> _buildConfirmImpacts(EmbossingPlate plate) {
     return [
       '确认后如需改动，建议新建或复制新的版材记录',
-      '当前编码：${CrudValueFormatter.text(plate.code)}',
+      '当前编码：${AppValueFormatter.text(plate.code)}',
     ];
   }
 

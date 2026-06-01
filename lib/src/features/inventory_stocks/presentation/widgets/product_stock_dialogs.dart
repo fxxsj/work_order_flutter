@@ -50,10 +50,7 @@ Future<void> showProductStockDetailDialog(
     builder: (dialogContext) => AppDialog(
       title: title,
       maxWidth: LayoutTokens.dialogWidthLg,
-      content: SizedBox(
-        width: LayoutTokens.dialogWidthLg,
-        child: child,
-      ),
+      content: SizedBox(width: LayoutTokens.dialogWidthLg, child: child),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(dialogContext).pop(),
@@ -120,10 +117,7 @@ class _ProductStockAdjustDialogState extends State<_ProductStockAdjustDialog> {
       submitting: submitting,
       maxWidth: LayoutTokens.dialogWidthSm,
       summary: '库存调整会直接影响当前产品可用库存，请确认数量和原因准确。',
-      impacts: const [
-        '增加/减少会按本次数量调整库存',
-        '设定库存会以填写数量覆盖当前库存',
-      ],
+      impacts: const ['增加/减少会按本次数量调整库存', '设定库存会以填写数量覆盖当前库存'],
       auditHint: '调整原因会保留在库存流水中，建议写清盘点或业务依据。',
       onSubmit: _submit,
       content: Column(
@@ -145,7 +139,7 @@ class _ProductStockAdjustDialogState extends State<_ProductStockAdjustDialog> {
                     setState(() => adjustType = value);
                   },
           ),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           CrudFieldConfig.number(
             label: '调整数量',
             controller: quantityController,
@@ -163,7 +157,7 @@ class _ProductStockAdjustDialogState extends State<_ProductStockAdjustDialog> {
               return null;
             },
           ).build(context),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           CrudFieldConfig.textarea(
             label: '调整原因',
             controller: reasonController,
@@ -208,7 +202,7 @@ class ProductStockDetailRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(bottom: LayoutTokens.gapSm),
+      padding: EdgeInsets.only(bottom: SpacingTokens.sm),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -217,15 +211,12 @@ class ProductStockDetailRow extends StatelessWidget {
             child: Text(
               label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).hintColor,
-                  ),
+                color: Theme.of(context).hintColor,
+              ),
             ),
           ),
           Expanded(
-            child: Text(
-              value,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            child: Text(value, style: Theme.of(context).textTheme.bodyMedium),
           ),
         ],
       ),

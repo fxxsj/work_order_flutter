@@ -65,7 +65,7 @@ class _TaskAssignmentRuleView extends StatefulWidget {
 }
 
 class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
-  static const double _spacingSm = LayoutTokens.gapSm;
+  static const double _spacingSm = SpacingTokens.sm;
   static const double _controlHeight = PageActionStyle.height;
   static const String _refreshButtonText = '刷新';
   static const String _resetButtonText = '重置筛选';
@@ -488,7 +488,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
     return ListView(
       children: [
         _buildGlobalToggle(),
-        SizedBox(height: LayoutTokens.gapMd),
+        SizedBox(height: SpacingTokens.md),
         DetailSectionCard(
           title: '工序默认部门',
           child: rules.isEmpty
@@ -497,7 +497,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
                   children: [
                     ...rules.map(
                       (rule) => Padding(
-                        padding: EdgeInsets.only(bottom: LayoutTokens.gapMd),
+                        padding: EdgeInsets.only(bottom: SpacingTokens.md),
                         child: TaskAssignmentRuleCard(
                           rule: rule,
                           onEdit: canChangeRule
@@ -548,12 +548,12 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
                 : '默认分派已禁用，任务生成后需由主管手动分派部门。',
           ),
           if (_lookupError != null) ...[
-            SizedBox(height: LayoutTokens.gapSm),
+            SizedBox(height: SpacingTokens.sm),
             Text(
               '工序或部门加载失败：$_lookupError',
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
-            SizedBox(height: LayoutTokens.gapSm),
+            SizedBox(height: SpacingTokens.sm),
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
@@ -585,13 +585,13 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
               Icons.rule_outlined,
               color: theme.colorScheme.onSurfaceVariant,
             ),
-            SizedBox(width: LayoutTokens.gapSm),
+            SizedBox(width: SpacingTokens.sm),
             Expanded(
               child: Text(_emptyText, style: theme.textTheme.bodyMedium),
             ),
           ],
         ),
-        SizedBox(height: LayoutTokens.gapMd),
+        SizedBox(height: SpacingTokens.md),
         if (canCreateRule)
           PageActionButton.filled(
             onPressed: () => _openRuleDialog(context, viewModel, null),

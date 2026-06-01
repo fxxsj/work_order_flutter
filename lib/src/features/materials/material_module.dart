@@ -13,8 +13,11 @@ class MaterialListEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FeatureEntry<MaterialApiService, MaterialRepository,
-        MaterialViewModel>(
+    return FeatureEntry<
+      MaterialApiService,
+      MaterialRepository,
+      MaterialViewModel
+    >(
       createService: (context) => MaterialApiService(context.read<ApiClient>()),
       createRepository: (context) =>
           MaterialRepositoryImpl(context.read<MaterialApiService>()),

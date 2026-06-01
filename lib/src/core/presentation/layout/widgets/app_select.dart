@@ -28,7 +28,8 @@ class AppDropdownOption<T> {
 }
 
 /// 异步搜索加载器类型定义
-typedef AppDropdownAsyncLoader = Future<List<AppDropdownOption<dynamic>>> Function(String query);
+typedef AppDropdownAsyncLoader =
+    Future<List<AppDropdownOption<dynamic>>> Function(String query);
 
 /// 搜索配置
 class AppDropdownSearchConfig {
@@ -44,6 +45,7 @@ class AppDropdownSearchConfig {
   final String? hintText;
   final bool Function(String query, AppDropdownOption<dynamic> option)? matcher;
   final bool highlightMatches;
+
   /// 如果提供，搜索将转为远程异步加载，忽略本地 [matcher]。
   final AppDropdownAsyncLoader? asyncLoader;
 }
@@ -70,46 +72,46 @@ class AppSelect<T> extends FormField<T> {
     this.selectAllText = '全选',
     this.minOptionsForSearch = 1,
   }) : super(
-          initialValue: value,
-          validator: validator,
-          autovalidateMode: autovalidateMode,
-          builder: (state) {
-            if (isMultiSelect) {
-              return _MultiSelectDropdownField<T>(
-                state: state,
-                value: value,
-                options: options,
-                onChanged: onChanged,
-                decoration: decoration,
-                enabled: enabled,
-                searchConfig: searchConfig,
-                emptyText: emptyText,
-                noResultsText: noResultsText,
-                selectHintText: selectHintText,
-                confirmText: confirmText,
-                cancelText: cancelText,
-                clearText: clearText,
-                selectAllText: selectAllText,
-                minOptionsForSearch: minOptionsForSearch,
-              );
-            }
+         initialValue: value,
+         validator: validator,
+         autovalidateMode: autovalidateMode,
+         builder: (state) {
+           if (isMultiSelect) {
+             return _MultiSelectDropdownField<T>(
+               state: state,
+               value: value,
+               options: options,
+               onChanged: onChanged,
+               decoration: decoration,
+               enabled: enabled,
+               searchConfig: searchConfig,
+               emptyText: emptyText,
+               noResultsText: noResultsText,
+               selectHintText: selectHintText,
+               confirmText: confirmText,
+               cancelText: cancelText,
+               clearText: clearText,
+               selectAllText: selectAllText,
+               minOptionsForSearch: minOptionsForSearch,
+             );
+           }
 
-            return _SingleSelectDropdownField<T>(
-              state: state,
-              value: value,
-              options: options,
-              onChanged: onChanged,
-              decoration: decoration,
-              enabled: enabled,
-              searchConfig: searchConfig,
-              emptyText: emptyText,
-              noResultsText: noResultsText,
-              selectHintText: selectHintText,
-              minOptionsForSearch: minOptionsForSearch,
-              menuHeight: menuHeight,
-            );
-          },
-        );
+           return _SingleSelectDropdownField<T>(
+             state: state,
+             value: value,
+             options: options,
+             onChanged: onChanged,
+             decoration: decoration,
+             enabled: enabled,
+             searchConfig: searchConfig,
+             emptyText: emptyText,
+             noResultsText: noResultsText,
+             selectHintText: selectHintText,
+             minOptionsForSearch: minOptionsForSearch,
+             menuHeight: menuHeight,
+           );
+         },
+       );
 
   final List<AppDropdownOption<T>> options;
   final ValueChanged<T?>? onChanged;
@@ -210,8 +212,9 @@ class _SingleSelectDropdownFieldState<T>
             useSafeArea: true,
             showDragHandle: true,
             backgroundColor: Theme.of(context).colorScheme.surface,
-            shape:
-                const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.zero,
+            ),
             builder: (_) => SizedBox(
               height: maxHeight,
               child: _SingleSelectPicker<T>(
@@ -229,7 +232,7 @@ class _SingleSelectDropdownFieldState<T>
         : await showDialog<T>(
             context: context,
             builder: (_) => Dialog(
-              insetPadding: const EdgeInsets.all(LayoutTokens.gapLg),
+              insetPadding: const EdgeInsets.all(SpacingTokens.lg),
               clipBehavior: Clip.antiAlias,
               child: SizedBox(
                 width: 400,
@@ -261,10 +264,7 @@ class _SingleSelectDropdownFieldState<T>
       return InputDecorator(
         decoration: widget.decoration
             .applyDefaults(theme.inputDecorationTheme)
-            .copyWith(
-              enabled: false,
-              errorText: widget.state.errorText,
-            ),
+            .copyWith(enabled: false, errorText: widget.state.errorText),
         isEmpty: true,
         child: Text(
           widget.emptyText,
@@ -275,9 +275,7 @@ class _SingleSelectDropdownFieldState<T>
 
     final selected = _selectedOption;
     final effectiveDecoration = widget.decoration
-        .copyWith(
-          hintText: widget.decoration.hintText ?? widget.selectHintText,
-        )
+        .copyWith(hintText: widget.decoration.hintText ?? widget.selectHintText)
         .applyDefaults(theme.inputDecorationTheme)
         .copyWith(
           enabled: widget.enabled,
@@ -292,12 +290,13 @@ class _SingleSelectDropdownFieldState<T>
       child: InkWell(
         focusNode: _focusNode,
         onTap: () => _openPicker(context),
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+        borderRadius: BorderRadius.circular(RadiusTokens.sm),
         child: InputDecorator(
           decoration: effectiveDecoration,
           isEmpty: selected == null,
-          child:
-              selected == null ? const SizedBox.shrink() : Text(selected.label),
+          child: selected == null
+              ? const SizedBox.shrink()
+              : Text(selected.label),
         ),
       ),
     );
@@ -429,10 +428,10 @@ class _SingleSelectPickerState<T> extends State<_SingleSelectPicker<T>> {
           if (_showSearch) ...[
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                LayoutTokens.gapLg,
-                LayoutTokens.gapMd,
-                LayoutTokens.gapLg,
-                LayoutTokens.gapSm,
+                SpacingTokens.lg,
+                SpacingTokens.md,
+                SpacingTokens.lg,
+                SpacingTokens.sm,
               ),
               child: TextField(
                 controller: _searchController,
@@ -452,7 +451,7 @@ class _SingleSelectPickerState<T> extends State<_SingleSelectPicker<T>> {
             child: _isSearching
                 ? Center(
                     child: Padding(
-                      padding: const EdgeInsets.all(LayoutTokens.gapLg),
+                      padding: const EdgeInsets.all(SpacingTokens.lg),
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         color: theme.colorScheme.primary,
@@ -460,41 +459,41 @@ class _SingleSelectPickerState<T> extends State<_SingleSelectPicker<T>> {
                     ),
                   )
                 : hasResults
-                    ? ListView.separated(
-                        padding: EdgeInsets.zero,
-                        itemCount: filtered.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1),
-                        itemBuilder: (context, index) {
-                          final option = filtered[index];
-                          final selected = option.value == widget.initialValue;
+                ? ListView.separated(
+                    padding: EdgeInsets.zero,
+                    itemCount: filtered.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final option = filtered[index];
+                      final selected = option.value == widget.initialValue;
 
-                          return ListTile(
-                            title: _buildOptionLabel(theme, option),
-                            dense: true,
-                            enabled: option.enabled,
-                            selected: selected,
-                            trailing: selected
-                                ? const Icon(Icons.check,
-                                    size: LayoutTokens.iconLg)
-                                : null,
-                            onTap: option.enabled
-                                ? () => Navigator.of(context).pop(option.value)
-                                : null,
-                          );
-                        },
-                      )
-                    : Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(LayoutTokens.gapLg),
-                          child: Text(
-                            widget.options.isEmpty
-                                ? widget.emptyText
-                                : widget.noResultsText,
-                            style: theme.textTheme.bodyMedium
-                                ?.copyWith(color: theme.hintColor),
-                          ),
+                      return ListTile(
+                        title: _buildOptionLabel(theme, option),
+                        dense: true,
+                        enabled: option.enabled,
+                        selected: selected,
+                        trailing: selected
+                            ? const Icon(Icons.check, size: LayoutTokens.iconLg)
+                            : null,
+                        onTap: option.enabled
+                            ? () => Navigator.of(context).pop(option.value)
+                            : null,
+                      );
+                    },
+                  )
+                : Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(SpacingTokens.lg),
+                      child: Text(
+                        widget.options.isEmpty
+                            ? widget.emptyText
+                            : widget.noResultsText,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.hintColor,
                         ),
                       ),
+                    ),
+                  ),
           ),
         ],
       ),
@@ -518,7 +517,7 @@ class _SingleSelectPickerState<T> extends State<_SingleSelectPicker<T>> {
       children: [
         if (option.icon != null) ...[
           Icon(option.icon, size: 16),
-          const SizedBox(width: LayoutTokens.gapSm),
+          const SizedBox(width: SpacingTokens.sm),
         ],
         Expanded(
           child: Column(
@@ -529,8 +528,9 @@ class _SingleSelectPickerState<T> extends State<_SingleSelectPicker<T>> {
               if (option.secondaryLabel != null)
                 Text(
                   option.secondaryLabel!,
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: theme.hintColor),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.hintColor,
+                  ),
                 ),
             ],
           ),
@@ -634,8 +634,9 @@ class _MultiSelectDropdownFieldState<T>
             useSafeArea: true,
             showDragHandle: true,
             backgroundColor: Theme.of(context).colorScheme.surface,
-            shape:
-                const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.zero,
+            ),
             builder: (sheetContext) => SizedBox(
               height: MediaQuery.sizeOf(sheetContext).height * 0.88,
               child: _MultiSelectPicker(
@@ -656,7 +657,7 @@ class _MultiSelectDropdownFieldState<T>
         : await showDialog<Set<dynamic>>(
             context: context,
             builder: (dialogContext) => Dialog(
-              insetPadding: const EdgeInsets.all(LayoutTokens.gapLg),
+              insetPadding: const EdgeInsets.all(SpacingTokens.lg),
               clipBehavior: Clip.antiAlias,
               child: SizedBox(
                 width: 520,
@@ -693,9 +694,7 @@ class _MultiSelectDropdownFieldState<T>
         .where((option) => _selectedValues.contains(option.value))
         .toList();
     final effectiveDecoration = widget.decoration
-        .copyWith(
-          hintText: widget.decoration.hintText ?? widget.selectHintText,
-        )
+        .copyWith(hintText: widget.decoration.hintText ?? widget.selectHintText)
         .applyDefaults(theme.inputDecorationTheme)
         .copyWith(
           enabled: widget.enabled,
@@ -710,24 +709,24 @@ class _MultiSelectDropdownFieldState<T>
       child: InkWell(
         focusNode: _focusNode,
         onTap: () => _openPicker(context),
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+        borderRadius: BorderRadius.circular(RadiusTokens.sm),
         child: InputDecorator(
           decoration: effectiveDecoration,
           isEmpty: selectedOptions.isEmpty,
           child: selectedOptions.isEmpty
               ? const SizedBox.shrink()
               : Wrap(
-                  spacing: LayoutTokens.gapXs,
-                  runSpacing: LayoutTokens.gapXs,
+                  spacing: SpacingTokens.xs,
+                  runSpacing: SpacingTokens.xs,
                   children: selectedOptions
                       .map(
                         (option) => InputChip(
                           label: Text(option.label),
                           onDeleted: widget.enabled
                               ? () {
-                                  final nextValues =
-                                      Set<dynamic>.from(_selectedValues)
-                                        ..remove(option.value);
+                                  final nextValues = Set<dynamic>.from(
+                                    _selectedValues,
+                                  )..remove(option.value);
                                   widget.state.didChange(nextValues as T?);
                                   widget.onChanged?.call(nextValues as T?);
                                 }
@@ -792,11 +791,7 @@ class _MultiSelectPickerState extends State<_MultiSelectPicker> {
   }
 
   List<AppDropdownOption<dynamic>> get _filteredOptions {
-    return _filterOptions(
-      widget.options,
-      _query,
-      widget.searchConfig,
-    );
+    return _filterOptions(widget.options, _query, widget.searchConfig);
   }
 
   @override
@@ -820,7 +815,8 @@ class _MultiSelectPickerState extends State<_MultiSelectPicker> {
     final selectableFiltered = filtered
         .where((option) => option.enabled)
         .map((option) => option.value);
-    final allFilteredSelected = hasResults &&
+    final allFilteredSelected =
+        hasResults &&
         selectableFiltered.every((value) => _currentSelection.contains(value));
 
     return AppModalScaffold(
@@ -850,10 +846,10 @@ class _MultiSelectPickerState extends State<_MultiSelectPicker> {
           if (_showSearch)
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                LayoutTokens.gapLg,
-                LayoutTokens.gapMd,
-                LayoutTokens.gapLg,
-                LayoutTokens.gapSm,
+                SpacingTokens.lg,
+                SpacingTokens.md,
+                SpacingTokens.lg,
+                SpacingTokens.sm,
               ),
               child: TextField(
                 controller: _searchController,
@@ -869,10 +865,10 @@ class _MultiSelectPickerState extends State<_MultiSelectPicker> {
             ),
           Padding(
             padding: EdgeInsets.fromLTRB(
-              LayoutTokens.gapLg,
-              _showSearch ? 0 : LayoutTokens.gapMd,
-              LayoutTokens.gapLg,
-              LayoutTokens.gapSm,
+              SpacingTokens.lg,
+              _showSearch ? 0 : SpacingTokens.md,
+              SpacingTokens.lg,
+              SpacingTokens.sm,
             ),
             child: Row(
               children: [
@@ -937,13 +933,14 @@ class _MultiSelectPickerState extends State<_MultiSelectPicker> {
                   )
                 : Center(
                     child: Padding(
-                      padding: const EdgeInsets.all(LayoutTokens.gapLg),
+                      padding: const EdgeInsets.all(SpacingTokens.lg),
                       child: Text(
                         widget.options.isEmpty
                             ? widget.emptyText
                             : widget.noResultsText,
-                        style: theme.textTheme.bodyMedium
-                            ?.copyWith(color: theme.hintColor),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.hintColor,
+                        ),
                       ),
                     ),
                   ),
@@ -970,7 +967,7 @@ class _MultiSelectPickerState extends State<_MultiSelectPicker> {
       children: [
         if (option.icon != null) ...[
           Icon(option.icon, size: 16),
-          const SizedBox(width: LayoutTokens.gapSm),
+          const SizedBox(width: SpacingTokens.sm),
         ],
         Expanded(
           child: Column(
@@ -981,8 +978,9 @@ class _MultiSelectPickerState extends State<_MultiSelectPicker> {
               if (option.secondaryLabel != null)
                 Text(
                   option.secondaryLabel!,
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: theme.hintColor),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.hintColor,
+                  ),
                 ),
             ],
           ),
@@ -1071,8 +1069,9 @@ Widget _buildHighlightedText({
         style: TextStyle(
           color: theme.colorScheme.primary,
           fontWeight: FontWeight.w700,
-          backgroundColor:
-              theme.colorScheme.primary.withValues(alpha: OpacityTokens.mild),
+          backgroundColor: theme.colorScheme.primary.withValues(
+            alpha: OpacityTokens.mild,
+          ),
         ),
       ),
     );

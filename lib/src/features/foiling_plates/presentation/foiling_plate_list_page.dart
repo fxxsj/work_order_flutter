@@ -272,7 +272,7 @@ class FoilingPlateListPage extends StatelessWidget {
   }
 
   static Widget _buildCodeCell(BuildContext context, FoilingPlate plate) {
-    return _buildBodyText(context, CrudValueFormatter.text(plate.code));
+    return _buildBodyText(context, AppValueFormatter.text(plate.code));
   }
 
   static Widget _buildTypeCell(BuildContext context, FoilingPlate plate) {
@@ -280,15 +280,15 @@ class FoilingPlateListPage extends StatelessWidget {
   }
 
   static Widget _buildSizeCell(BuildContext context, FoilingPlate plate) {
-    return _buildBodyText(context, CrudValueFormatter.text(plate.size));
+    return _buildBodyText(context, AppValueFormatter.text(plate.size));
   }
 
   static Widget _buildMaterialCell(BuildContext context, FoilingPlate plate) {
-    return _buildBodyText(context, CrudValueFormatter.text(plate.material));
+    return _buildBodyText(context, AppValueFormatter.text(plate.material));
   }
 
   static Widget _buildThicknessCell(BuildContext context, FoilingPlate plate) {
-    return _buildBodyText(context, CrudValueFormatter.text(plate.thickness));
+    return _buildBodyText(context, AppValueFormatter.text(plate.thickness));
   }
 
   static Widget _buildConfirmedCell(BuildContext context, FoilingPlate plate) {
@@ -300,10 +300,7 @@ class FoilingPlateListPage extends StatelessWidget {
   }
 
   static Widget _buildCreatedAtCell(BuildContext context, FoilingPlate plate) {
-    return _buildBodyText(
-      context,
-      CrudValueFormatter.dateTime(plate.createdAt),
-    );
+    return _buildBodyText(context, AppValueFormatter.dateTime(plate.createdAt));
   }
 
   static Widget _buildBodyText(BuildContext context, String value) {
@@ -311,11 +308,11 @@ class FoilingPlateListPage extends StatelessWidget {
   }
 
   static String _titleText(FoilingPlate plate) {
-    return CrudValueFormatter.text(plate.name);
+    return AppValueFormatter.text(plate.name);
   }
 
   static String _subtitleText(FoilingPlate plate) {
-    return '${CrudValueFormatter.text(plate.code)} · ${_typeText(plate)}';
+    return '${AppValueFormatter.text(plate.code)} · ${_typeText(plate)}';
   }
 
   static String _typeText(FoilingPlate plate) {
@@ -325,7 +322,7 @@ class FoilingPlateListPage extends StatelessWidget {
       case 'silver':
         return '烫银';
       default:
-        return CrudValueFormatter.empty;
+        return AppValueFormatter.empty;
     }
   }
 
@@ -335,7 +332,7 @@ class FoilingPlateListPage extends StatelessWidget {
 
   static String _productSummary(List<FoilingPlateProduct> products) {
     if (products.isEmpty) {
-      return CrudValueFormatter.empty;
+      return AppValueFormatter.empty;
     }
     return products
         .map((item) => '${item.productName}(${item.quantity ?? 1}个)')
@@ -347,7 +344,7 @@ class FoilingPlateListPage extends StatelessWidget {
       CrudSummaryChipData(label: '状态', value: _confirmedText(plate)),
       CrudSummaryChipData(
         label: '尺寸',
-        value: CrudValueFormatter.text(plate.size),
+        value: AppValueFormatter.text(plate.size),
       ),
     ];
   }
@@ -356,29 +353,29 @@ class FoilingPlateListPage extends StatelessWidget {
     return [
       CrudSummaryFieldData(
         label: '编码',
-        value: CrudValueFormatter.text(plate.code),
+        value: AppValueFormatter.text(plate.code),
       ),
       CrudSummaryFieldData(label: '类型', value: _typeText(plate)),
       CrudSummaryFieldData(
         label: '尺寸',
-        value: CrudValueFormatter.text(plate.size),
+        value: AppValueFormatter.text(plate.size),
       ),
       CrudSummaryFieldData(
         label: '材质',
-        value: CrudValueFormatter.text(plate.material),
+        value: AppValueFormatter.text(plate.material),
       ),
       CrudSummaryFieldData(
         label: '厚度',
-        value: CrudValueFormatter.text(plate.thickness),
+        value: AppValueFormatter.text(plate.thickness),
       ),
       CrudSummaryFieldData(label: '确认状态', value: _confirmedText(plate)),
       CrudSummaryFieldData(
         label: '确认人',
-        value: CrudValueFormatter.text(plate.confirmedByName),
+        value: AppValueFormatter.text(plate.confirmedByName),
       ),
       CrudSummaryFieldData(
         label: '确认时间',
-        value: CrudValueFormatter.dateTime(plate.confirmedAt),
+        value: AppValueFormatter.dateTime(plate.confirmedAt),
       ),
       CrudSummaryFieldData(
         label: '包含产品',
@@ -386,15 +383,15 @@ class FoilingPlateListPage extends StatelessWidget {
       ),
       CrudSummaryFieldData(
         label: '备注',
-        value: CrudValueFormatter.text(plate.notes),
+        value: AppValueFormatter.text(plate.notes),
       ),
       CrudSummaryFieldData(
         label: '创建时间',
-        value: CrudValueFormatter.dateTime(plate.createdAt),
+        value: AppValueFormatter.dateTime(plate.createdAt),
       ),
       CrudSummaryFieldData(
         label: '更新时间',
-        value: CrudValueFormatter.dateTime(plate.updatedAt),
+        value: AppValueFormatter.dateTime(plate.updatedAt),
       ),
     ];
   }
@@ -405,7 +402,7 @@ class FoilingPlateListPage extends StatelessWidget {
 
   static List<String> _buildDeleteImpacts(FoilingPlate plate) {
     return [
-      '版材编码：${CrudValueFormatter.text(plate.code)}',
+      '版材编码：${AppValueFormatter.text(plate.code)}',
       '版材类型：${_typeText(plate)}',
       if (plate.products.isNotEmpty) '包含产品：${_productSummary(plate.products)}',
     ];
@@ -422,7 +419,7 @@ class FoilingPlateListPage extends StatelessWidget {
   static List<String> _buildConfirmImpacts(FoilingPlate plate) {
     return [
       '确认后如需改动，建议新建或复制新的版材记录',
-      '当前编码：${CrudValueFormatter.text(plate.code)}',
+      '当前编码：${AppValueFormatter.text(plate.code)}',
     ];
   }
 

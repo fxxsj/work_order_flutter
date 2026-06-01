@@ -29,23 +29,23 @@ class AuthInputDecoration {
       enabled: enabled,
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+        borderRadius: BorderRadius.circular(RadiusTokens.sm),
         borderSide: BorderSide(color: colors.outline, width: 1),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+        borderRadius: BorderRadius.circular(RadiusTokens.sm),
         borderSide: BorderSide(color: colors.outline, width: 1),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+        borderRadius: BorderRadius.circular(RadiusTokens.sm),
         borderSide: BorderSide(color: colors.primary, width: 2),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+        borderRadius: BorderRadius.circular(RadiusTokens.sm),
         borderSide: BorderSide(color: colors.error, width: 1),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+        borderRadius: BorderRadius.circular(RadiusTokens.sm),
         borderSide: BorderSide(color: colors.error, width: 2),
       ),
     );

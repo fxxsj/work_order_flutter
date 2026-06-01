@@ -563,7 +563,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(child: first),
-        const SizedBox(width: LayoutTokens.gapMd),
+        const SizedBox(width: SpacingTokens.md),
         Expanded(child: second),
       ],
     );
@@ -590,7 +590,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
             return null;
           },
         ).build(context),
-        const SizedBox(height: LayoutTokens.gapMd),
+        const SizedBox(height: SpacingTokens.md),
         _buildFieldPair(
           context,
           first: CrudFieldConfig.text(
@@ -617,7 +617,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
           ).build(context),
         ),
         if (_productType != 'single') ...[
-          const SizedBox(height: LayoutTokens.gapMd),
+          const SizedBox(height: SpacingTokens.md),
           CrudFieldConfig.dropdown(
             fieldKey: ValueKey('${_productType}_${_productGroupId ?? ''}'),
             label: _productGroupLabel,
@@ -636,7 +636,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
                 _productType != 'single' && value == null ? '请选择产品组' : null,
           ).build(context),
         ],
-        const SizedBox(height: LayoutTokens.gapMd),
+        const SizedBox(height: SpacingTokens.md),
         CrudFieldConfig.text(
           label: _specLabel,
           controller: _specController,
@@ -661,7 +661,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
             decimal: true,
           ).build(context),
         ),
-        const SizedBox(height: LayoutTokens.gapMd),
+        const SizedBox(height: SpacingTokens.md),
         _buildFieldPair(
           context,
           first: CrudFieldConfig.number(
@@ -675,13 +675,13 @@ class _ProductEditPageState extends State<ProductEditPage> {
             decimal: true,
           ).build(context),
         ),
-        const SizedBox(height: LayoutTokens.gapMd),
+        const SizedBox(height: SpacingTokens.md),
         CrudFieldConfig.textarea(
           label: _descriptionLabel,
           controller: _descriptionController,
           maxLines: 3,
         ).build(context),
-        const SizedBox(height: LayoutTokens.gapMd),
+        const SizedBox(height: SpacingTokens.md),
         CrudFieldConfig.toggle(
           label: _statusLabel,
           value: _isActive,
@@ -873,14 +873,14 @@ class _MaterialCardState extends State<_MaterialCard> {
                 ),
                 if (widget.materials.isEmpty)
                   Padding(
-                    padding: EdgeInsets.only(left: LayoutTokens.gapSm),
+                    padding: EdgeInsets.only(left: SpacingTokens.sm),
                     child: TextButton.icon(
                       onPressed: _handleCreateMaterial,
                       icon: const Icon(Icons.add, size: 18),
                       label: const Text('新增物料'),
                     ),
                   ),
-                SizedBox(width: LayoutTokens.gapSm),
+                SizedBox(width: SpacingTokens.sm),
                 IconButton(
                   onPressed: widget.onRemove,
                   icon: const Icon(Icons.delete_outline),
@@ -898,7 +898,7 @@ class _MaterialCardState extends State<_MaterialCard> {
                     controller: draft.materialSizeController,
                   ).build(context),
                 ),
-                SizedBox(width: LayoutTokens.gapMd),
+                SizedBox(width: SpacingTokens.md),
                 Expanded(
                   child: CrudFieldConfig.text(
                     label: '用量',

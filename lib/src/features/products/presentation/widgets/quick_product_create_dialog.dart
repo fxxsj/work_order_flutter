@@ -13,10 +13,7 @@ Future<Product?> showQuickProductCreateDialog({
   await viewModel.initialize();
   final beforeIds = viewModel.products.map((item) => item.id).toSet();
 
-  final saved = await showProductEditDrawer(
-    context,
-    viewModel: viewModel,
-  );
+  final saved = await showProductEditDrawer(context, viewModel: viewModel);
   if (!saved) {
     return null;
   }

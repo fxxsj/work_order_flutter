@@ -15,18 +15,18 @@ class AppModalShell extends StatelessWidget {
     this.scrollable = true,
     this.showCloseButton = false,
     this.bodyPadding = const EdgeInsets.fromLTRB(
-      LayoutTokens.gapLg,
-      LayoutTokens.gapMd,
-      LayoutTokens.gapLg,
-      LayoutTokens.gapLg,
+      SpacingTokens.lg,
+      SpacingTokens.md,
+      SpacingTokens.lg,
+      SpacingTokens.lg,
     ),
     this.footerPadding = const EdgeInsets.fromLTRB(
-      LayoutTokens.gapLg,
-      LayoutTokens.gapMd,
-      LayoutTokens.gapLg,
-      LayoutTokens.gapLg,
+      SpacingTokens.lg,
+      SpacingTokens.md,
+      SpacingTokens.lg,
+      SpacingTokens.lg,
     ),
-    this.insetPadding = const EdgeInsets.all(LayoutTokens.gapLg),
+    this.insetPadding = const EdgeInsets.all(SpacingTokens.lg),
   });
 
   final String title;
@@ -47,14 +47,15 @@ class AppModalShell extends StatelessWidget {
     final mediaSize = MediaQuery.sizeOf(context);
     final effectiveMaxHeight =
         maxHeight ?? (mediaSize.height - insetPadding.vertical);
-    final effectiveMaxWidth =
-        maxWidth.clamp(0, mediaSize.width - insetPadding.horizontal).toDouble();
+    final effectiveMaxWidth = maxWidth
+        .clamp(0, mediaSize.width - insetPadding.horizontal)
+        .toDouble();
 
     return Dialog(
       insetPadding: insetPadding,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+        borderRadius: BorderRadius.circular(RadiusTokens.sm),
       ),
       child: ConstrainedBox(
         constraints: BoxConstraints(
@@ -89,16 +90,16 @@ class AppModalScaffold extends StatelessWidget {
     this.scrollable = true,
     this.showCloseButton = false,
     this.bodyPadding = const EdgeInsets.fromLTRB(
-      LayoutTokens.gapLg,
-      LayoutTokens.gapMd,
-      LayoutTokens.gapLg,
-      LayoutTokens.gapLg,
+      SpacingTokens.lg,
+      SpacingTokens.md,
+      SpacingTokens.lg,
+      SpacingTokens.lg,
     ),
     this.footerPadding = const EdgeInsets.fromLTRB(
-      LayoutTokens.gapLg,
-      LayoutTokens.gapMd,
-      LayoutTokens.gapLg,
-      LayoutTokens.gapLg,
+      SpacingTokens.lg,
+      SpacingTokens.md,
+      SpacingTokens.lg,
+      SpacingTokens.lg,
     ),
   });
 
@@ -114,9 +115,9 @@ class AppModalScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final titleStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w700,
-        );
+    final titleStyle = Theme.of(
+      context,
+    ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700);
     final hasFooter = leadingActions.isNotEmpty || actions.isNotEmpty;
 
     return Column(
@@ -125,10 +126,10 @@ class AppModalScaffold extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(
-            LayoutTokens.gapLg,
-            LayoutTokens.gapMd,
-            LayoutTokens.gapSm,
-            LayoutTokens.gapSm,
+            SpacingTokens.lg,
+            SpacingTokens.md,
+            SpacingTokens.sm,
+            SpacingTokens.sm,
           ),
           child: Row(
             children: [
@@ -166,8 +167,9 @@ class AppModalScaffold extends StatelessWidget {
               builder: (context, constraints) {
                 final compactFooter = constraints.maxWidth < 360;
                 final leadingGroup = _ModalActionGroup(
-                  alignment:
-                      compactFooter ? WrapAlignment.end : WrapAlignment.start,
+                  alignment: compactFooter
+                      ? WrapAlignment.end
+                      : WrapAlignment.start,
                   children: leadingActions,
                 );
                 final trailingGroup = _ModalActionGroup(
@@ -185,7 +187,7 @@ class AppModalScaffold extends StatelessWidget {
                           child: leadingGroup,
                         ),
                       if (leadingActions.isNotEmpty && actions.isNotEmpty)
-                        SizedBox(height: LayoutTokens.gapSm),
+                        SizedBox(height: SpacingTokens.sm),
                       if (actions.isNotEmpty)
                         Align(
                           alignment: Alignment.centerRight,
@@ -206,7 +208,7 @@ class AppModalScaffold extends StatelessWidget {
                         ),
                       ),
                     if (leadingActions.isNotEmpty && actions.isNotEmpty)
-                      SizedBox(width: LayoutTokens.gapSm),
+                      SizedBox(width: SpacingTokens.sm),
                     if (actions.isNotEmpty)
                       Expanded(
                         child: Align(
@@ -226,10 +228,7 @@ class AppModalScaffold extends StatelessWidget {
 }
 
 class _ModalActionGroup extends StatelessWidget {
-  const _ModalActionGroup({
-    required this.children,
-    required this.alignment,
-  });
+  const _ModalActionGroup({required this.children, required this.alignment});
 
   final List<Widget> children;
   final WrapAlignment alignment;
@@ -237,8 +236,8 @@ class _ModalActionGroup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Wrap(
-      spacing: LayoutTokens.gapSm,
-      runSpacing: LayoutTokens.gapSm,
+      spacing: SpacingTokens.sm,
+      runSpacing: SpacingTokens.sm,
       alignment: alignment,
       children: children,
     );
@@ -310,10 +309,7 @@ class AppFormDialog extends StatelessWidget {
     return AppDialog(
       title: title,
       maxWidth: maxWidth,
-      content: Form(
-        key: formKey,
-        child: content,
-      ),
+      content: Form(key: formKey, child: content),
       actions: [
         TextButton(
           onPressed: submitting

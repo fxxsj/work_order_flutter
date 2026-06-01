@@ -18,14 +18,16 @@ class SalesOrderDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final options = salesOrders
-        .map((item) => AppDropdownOption<int>(
-              value: item.id,
-              label: item.orderNumber,
-              secondaryLabel: [
-                if (item.customerName?.isNotEmpty == true) item.customerName!,
-                if (item.statusDisplay?.isNotEmpty == true) item.statusDisplay!,
-              ].join(' · '),
-            ))
+        .map(
+          (item) => AppDropdownOption<int>(
+            value: item.id,
+            label: item.orderNumber,
+            secondaryLabel: [
+              if (item.customerName?.isNotEmpty == true) item.customerName!,
+              if (item.statusDisplay?.isNotEmpty == true) item.statusDisplay!,
+            ].join(' · '),
+          ),
+        )
         .toList();
 
     return AppSelect<int>(
@@ -53,16 +55,14 @@ class CustomerDropdown extends StatelessWidget {
   final List<Customer> customers;
   final ValueChanged<int?> onChanged;
   final VoidCallback? onCreateCustomer;
+
   /// 远程搜索回调，提供后将启用异步搜索。
   final Future<List<AppDropdownOption<int>>> Function(String query)? onSearch;
 
   @override
   Widget build(BuildContext context) {
     final options = customers
-        .map((item) => AppDropdownOption<int>(
-              value: item.id,
-              label: item.name,
-            ))
+        .map((item) => AppDropdownOption<int>(value: item.id, label: item.name))
         .toList();
     if (onCreateCustomer != null) {
       options.add(
@@ -83,9 +83,7 @@ class CustomerDropdown extends StatelessWidget {
       minOptionsForSearch: 1,
       onChanged: onChanged,
       searchConfig: AppDropdownSearchConfig(
-        asyncLoader: onSearch == null
-            ? null
-            : (query) => onSearch!(query),
+        asyncLoader: onSearch == null ? null : (query) => onSearch!(query),
       ),
     );
   }

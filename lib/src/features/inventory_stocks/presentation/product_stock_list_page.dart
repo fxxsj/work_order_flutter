@@ -67,7 +67,7 @@ class _ProductStockListView extends StatefulWidget {
 
 class _ProductStockListViewState extends State<_ProductStockListView> {
   static const double _searchWidth = 320;
-  static const double _spacingSm = LayoutTokens.gapSm;
+  static const double _spacingSm = SpacingTokens.sm;
   static const double _controlHeight = PageActionStyle.height;
   static const String _emptyCellText = '-';
 

@@ -36,7 +36,7 @@ class DateRangeFilterField extends StatelessWidget {
 
     return InkWell(
       onTap: () => _pickRange(context),
-      borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+      borderRadius: BorderRadius.circular(RadiusTokens.sm),
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: label,
@@ -52,7 +52,7 @@ class DateRangeFilterField extends StatelessWidget {
                   icon: const Icon(Icons.close, size: 16),
                 ),
               const Icon(Icons.keyboard_arrow_down_rounded),
-              SizedBox(width: LayoutTokens.gapMd),
+              SizedBox(width: SpacingTokens.md),
             ],
           ),
         ).applyDefaults(theme.inputDecorationTheme),
@@ -88,8 +88,11 @@ class DateRangeFilterField extends StatelessWidget {
     }
     onChanged(
       DateTimeRange(
-        start:
-            DateTime(picked.start.year, picked.start.month, picked.start.day),
+        start: DateTime(
+          picked.start.year,
+          picked.start.month,
+          picked.start.day,
+        ),
         end: DateTime(picked.end.year, picked.end.month, picked.end.day),
       ),
     );

@@ -25,8 +25,9 @@ Future<MultipartFile?> pickMultipartFile({
   }
 
   final picked = result.files.single;
-  final fileName =
-      picked.name.trim().isEmpty ? fallbackFilename : picked.name.trim();
+  final fileName = picked.name.trim().isEmpty
+      ? fallbackFilename
+      : picked.name.trim();
   final bytes = picked.bytes;
   final fileSize = picked.size;
 

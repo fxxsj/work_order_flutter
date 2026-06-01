@@ -17,21 +17,21 @@ class ColorField extends FormField<Color?> {
     String clearText = '清空',
     String confirmText = '确定',
     String cancelText = '取消',
-  })  : _label = label,
-        _value = value,
-        _onChanged = onChanged,
-        _enabled = enabled,
-        _hintText = hintText,
-        _helperText = helperText,
-        _palette = palette,
-        _clearText = clearText,
-        _confirmText = confirmText,
-        _cancelText = cancelText,
-        super(
-          initialValue: value,
-          validator: validator,
-          builder: (state) => _ColorFieldBody(state: state),
-        );
+  }) : _label = label,
+       _value = value,
+       _onChanged = onChanged,
+       _enabled = enabled,
+       _hintText = hintText,
+       _helperText = helperText,
+       _palette = palette,
+       _clearText = clearText,
+       _confirmText = confirmText,
+       _cancelText = cancelText,
+       super(
+         initialValue: value,
+         validator: validator,
+         builder: (state) => _ColorFieldBody(state: state),
+       );
 
   final String _label;
   final Color? _value;
@@ -59,15 +59,18 @@ class _ColorFieldBody extends StatelessWidget {
 
     return InkWell(
       onTap: _field._enabled ? () => _openPicker(context, currentValue) : null,
-      borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+      borderRadius: BorderRadius.circular(RadiusTokens.sm),
       child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: _field._label,
-          hintText: _field._hintText,
-          helperText: _field._helperText,
-          errorText: state.errorText,
-          suffixIcon: const Icon(Icons.color_lens_outlined),
-        ).applyDefaults(theme.inputDecorationTheme).copyWith(enabled: _field._enabled),
+        decoration:
+            InputDecoration(
+                  labelText: _field._label,
+                  hintText: _field._hintText,
+                  helperText: _field._helperText,
+                  errorText: state.errorText,
+                  suffixIcon: const Icon(Icons.color_lens_outlined),
+                )
+                .applyDefaults(theme.inputDecorationTheme)
+                .copyWith(enabled: _field._enabled),
         child: Row(
           children: [
             Container(
@@ -75,11 +78,11 @@ class _ColorFieldBody extends StatelessWidget {
               height: 20,
               decoration: BoxDecoration(
                 color: currentValue ?? Colors.transparent,
-                borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
+                borderRadius: BorderRadius.circular(RadiusTokens.pill),
                 border: Border.all(color: theme.dividerColor),
               ),
             ),
-            SizedBox(width: LayoutTokens.gapMd),
+            SizedBox(width: SpacingTokens.md),
             Expanded(
               child: Text(
                 currentValue == null
@@ -142,8 +145,23 @@ class _ColorFieldBody extends StatelessWidget {
 }
 
 const List<Color> _defaultColorPalette = [
-  Colors.red, Colors.pink, Colors.purple, Colors.deepPurple, Colors.indigo,
-  Colors.blue, Colors.lightBlue, Colors.cyan, Colors.teal, Colors.green,
-  Colors.lightGreen, Colors.lime, Colors.yellow, Colors.amber, Colors.orange,
-  Colors.deepOrange, Colors.brown, Colors.grey, Colors.blueGrey,
+  Colors.red,
+  Colors.pink,
+  Colors.purple,
+  Colors.deepPurple,
+  Colors.indigo,
+  Colors.blue,
+  Colors.lightBlue,
+  Colors.cyan,
+  Colors.teal,
+  Colors.green,
+  Colors.lightGreen,
+  Colors.lime,
+  Colors.yellow,
+  Colors.amber,
+  Colors.orange,
+  Colors.deepOrange,
+  Colors.brown,
+  Colors.grey,
+  Colors.blueGrey,
 ];

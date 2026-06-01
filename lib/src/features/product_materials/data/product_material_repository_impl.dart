@@ -13,7 +13,11 @@ class ProductMaterialRepositoryImpl implements ProductMaterialRepository {
     int pageSize = 20,
     Map<String, dynamic>? params,
   }) {
-    return _apiService.fetchProductMaterials(page: page, pageSize: pageSize, params: params);
+    return _apiService.fetchProductMaterials(
+      page: page,
+      pageSize: pageSize,
+      params: params,
+    );
   }
 
   @override
@@ -22,12 +26,17 @@ class ProductMaterialRepositoryImpl implements ProductMaterialRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> createProductMaterial(Map<String, dynamic> payload) {
+  Future<Map<String, dynamic>> createProductMaterial(
+    Map<String, dynamic> payload,
+  ) {
     return _apiService.createProductMaterial(payload);
   }
 
   @override
-  Future<Map<String, dynamic>> updateProductMaterial(int id, Map<String, dynamic> payload) {
+  Future<Map<String, dynamic>> updateProductMaterial(
+    int id,
+    Map<String, dynamic> payload,
+  ) {
     return _apiService.updateProductMaterial(id, payload);
   }
 

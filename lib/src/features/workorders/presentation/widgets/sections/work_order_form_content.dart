@@ -73,7 +73,7 @@ class WorkOrderFormContent extends StatelessWidget {
     this.onProductSelectionChanged,
     this.onCreateProduct,
     this.onCreateMaterial,
-    this.sectionSpacing = LayoutTokens.gapLg,
+    this.sectionSpacing = SpacingTokens.lg,
   });
 
   final WorkOrderFormMode mode;
@@ -106,13 +106,16 @@ class WorkOrderFormContent extends StatelessWidget {
   final Set<int> foilingPlateIds;
   final List<EmbossingPlate> embossingPlates;
   final Set<int> embossingPlateIds;
+
   /// Which prepress resources are required based on selected processes.
   final Set<String> requiredResources;
   final ValueChanged<int?> onSalesOrderChanged;
   final ValueChanged<int?> onCustomerChanged;
   final VoidCallback? onCreateCustomer;
+
   /// 客户远程搜索回调
-  final Future<List<AppDropdownOption<int>>> Function(String query)? onSearchCustomer;
+  final Future<List<AppDropdownOption<int>>> Function(String query)?
+  onSearchCustomer;
   final ValueChanged<String?> onStatusChanged;
   final ValueChanged<String?> onPriorityChanged;
   final VoidCallback onPickOrderDate;

@@ -36,8 +36,10 @@ class _WorkOrderPrintPreviewDialogState
   Widget build(BuildContext context) {
     final mediaSize = MediaQuery.sizeOf(context);
     final dialogWidth = math.max(320.0, math.min(1080.0, mediaSize.width - 32));
-    final dialogHeight =
-        math.max(360.0, math.min(780.0, mediaSize.height - 32));
+    final dialogHeight = math.max(
+      360.0,
+      math.min(780.0, mediaSize.height - 32),
+    );
     final sheetWidth = math.min(900.0, dialogWidth - 48);
 
     return AppModalShell(
@@ -60,13 +62,13 @@ class _WorkOrderPrintPreviewDialogState
               : const Icon(Icons.print_outlined, size: LayoutTokens.iconMd),
           label: const Text('打印'),
         ),
-        const SizedBox(width: LayoutTokens.gapSm),
+        const SizedBox(width: SpacingTokens.sm),
       ],
       body: SizedBox.expand(
         child: ColoredBox(
           color: const Color(0xfff0f2f5),
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(LayoutTokens.gapXl),
+            padding: const EdgeInsets.all(SpacingTokens.xl),
             child: SizedBox(
               width: dialogWidth - 48,
               child: WorkOrderPrintSheet(
@@ -89,7 +91,8 @@ class _WorkOrderPrintPreviewDialogState
       );
     } catch (err) {
       ToastUtil.showError(
-          err.toString().replaceFirst('UnsupportedError: ', ''));
+        err.toString().replaceFirst('UnsupportedError: ', ''),
+      );
     } finally {
       if (mounted) setState(() => _printing = false);
     }
@@ -272,10 +275,7 @@ class _Section extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.w700),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: child,
-          ),
+          Padding(padding: const EdgeInsets.all(12), child: child),
         ],
       ),
     );
@@ -356,11 +356,7 @@ class _SimpleTable extends StatelessWidget {
           children: headers.map(_tableHeader).toList(),
         ),
         for (final row in rows)
-          TableRow(
-            children: [
-              for (final cell in row) _tableCell(cell),
-            ],
-          ),
+          TableRow(children: [for (final cell in row) _tableCell(cell)]),
       ],
     );
   }
@@ -373,10 +369,7 @@ class _SimpleTable extends StatelessWidget {
   }
 
   Widget _tableCell(String value) {
-    return Padding(
-      padding: const EdgeInsets.all(7),
-      child: Text(value),
-    );
+    return Padding(padding: const EdgeInsets.all(7), child: Text(value));
   }
 }
 
@@ -500,24 +493,23 @@ class _PrintData {
   String get printedAt => _dateTime(DateTime.now());
 
   List<_InfoItem> get basicItems => [
-        _InfoItem('客户', _text(detail.customerName)),
-        _InfoItem('来源销售单', _join(detail.salesOrderNumbers)),
-        _InfoItem('业务员', _text(detail.salespersonName)),
-        _InfoItem('负责人', _text(detail.managerName)),
-        _InfoItem('创建人', _text(detail.createdByName)),
-        _InfoItem('审核人', _text(detail.approvedByName)),
-        _InfoItem('下单日期', _date(detail.orderDate)),
-        _InfoItem('交货日期', _date(detail.deliveryDate)),
-        _InfoItem('实际交货', _date(detail.actualDeliveryDate)),
-        _InfoItem('生产数量', _text(detail.productionQuantity?.toString())),
-        _InfoItem('不良数量', _text(detail.defectiveQuantity?.toString())),
-        _InfoItem('任务数', _text(detail.totalTaskCount?.toString())),
-        _InfoItem('总金额', _amount(detail.totalAmount)),
-        _InfoItem(
-            '印刷形式', _text(detail.printingTypeDisplay ?? detail.printingType)),
-        _InfoItem('印刷色数', _text(detail.printingColorsDisplay)),
-        _InfoItem('其他色', _join(detail.printingOtherColors)),
-      ];
+    _InfoItem('客户', _text(detail.customerName)),
+    _InfoItem('来源销售单', _join(detail.salesOrderNumbers)),
+    _InfoItem('业务员', _text(detail.salespersonName)),
+    _InfoItem('负责人', _text(detail.managerName)),
+    _InfoItem('创建人', _text(detail.createdByName)),
+    _InfoItem('审核人', _text(detail.approvedByName)),
+    _InfoItem('下单日期', _date(detail.orderDate)),
+    _InfoItem('交货日期', _date(detail.deliveryDate)),
+    _InfoItem('实际交货', _date(detail.actualDeliveryDate)),
+    _InfoItem('生产数量', _text(detail.productionQuantity?.toString())),
+    _InfoItem('不良数量', _text(detail.defectiveQuantity?.toString())),
+    _InfoItem('任务数', _text(detail.totalTaskCount?.toString())),
+    _InfoItem('总金额', _amount(detail.totalAmount)),
+    _InfoItem('印刷形式', _text(detail.printingTypeDisplay ?? detail.printingType)),
+    _InfoItem('印刷色数', _text(detail.printingColorsDisplay)),
+    _InfoItem('其他色', _join(detail.printingOtherColors)),
+  ];
 
   List<List<String>> get productRows {
     return detail.products
@@ -550,21 +542,23 @@ class _PrintData {
   }
 
   List<_InfoItem> get resourceItems => [
-        _InfoItem('图稿', _joinPair(detail.artworkCodes, detail.artworkNames)),
-        _InfoItem('刀模', _joinPair(detail.dieCodes, detail.dieNames)),
-        _InfoItem('烫金版',
-            _joinPair(detail.foilingPlateCodes, detail.foilingPlateNames)),
-        _InfoItem(
-          '压凸版',
-          _joinPair(detail.embossingPlateCodes, detail.embossingPlateNames),
-        ),
-      ];
+    _InfoItem('图稿', _joinPair(detail.artworkCodes, detail.artworkNames)),
+    _InfoItem('刀模', _joinPair(detail.dieCodes, detail.dieNames)),
+    _InfoItem(
+      '烫金版',
+      _joinPair(detail.foilingPlateCodes, detail.foilingPlateNames),
+    ),
+    _InfoItem(
+      '压凸版',
+      _joinPair(detail.embossingPlateCodes, detail.embossingPlateNames),
+    ),
+  ];
 
   List<_InfoItem> get noteItems => [
-        _InfoItem('备注', _text(detail.notes), fullWidth: true),
-        _InfoItem('审批说明', _text(detail.approvalComment), fullWidth: true),
-        _InfoItem('驳回原因', _text(detail.rejectionReason), fullWidth: true),
-      ];
+    _InfoItem('备注', _text(detail.notes), fullWidth: true),
+    _InfoItem('审批说明', _text(detail.approvalComment), fullWidth: true),
+    _InfoItem('驳回原因', _text(detail.rejectionReason), fullWidth: true),
+  ];
 }
 
 String buildWorkOrderPrintHtml(WorkOrderDetail detail) {
@@ -605,22 +599,8 @@ th { background: #f7f9fc; text-align: left; }
     <span class="badge">进度：${_e(data.progress)}</span>
   </div>
   ${_infoGridHtml(data.basicItems)}
-  ${_sectionHtml('产品清单', _tableHtml(const [
-                '产品',
-                '编码',
-                '数量',
-                '单位',
-                '规格',
-                '拼版数'
-              ], data.productRows, '暂无产品信息'))}
-  ${_sectionHtml('物料需求', _tableHtml(const [
-                '物料',
-                '编码',
-                '尺寸',
-                '用量',
-                '需开料',
-                '采购状态'
-              ], data.materialRows, '暂无物料需求'))}
+  ${_sectionHtml('产品清单', _tableHtml(const ['产品', '编码', '数量', '单位', '规格', '拼版数'], data.productRows, '暂无产品信息'))}
+  ${_sectionHtml('物料需求', _tableHtml(const ['物料', '编码', '尺寸', '用量', '需开料', '采购状态'], data.materialRows, '暂无物料需求'))}
   ${_sectionHtml('工序与任务', processHtml)}
   ${_sectionHtml('图稿与版材', _infoGridHtml(data.resourceItems))}
   ${_sectionHtml('备注与审批', _infoGridHtml(data.noteItems))}
@@ -651,8 +631,9 @@ String _processHtml(WorkOrderProcessItem process) {
 String _taskHtmlRow(Task task) {
   final total = task.productionQuantity;
   final done = task.quantityCompleted;
-  final progress =
-      total == null ? _text(done?.toString()) : '${_num(done)}/${_num(total)}';
+  final progress = total == null
+      ? _text(done?.toString())
+      : '${_num(done)}/${_num(total)}';
   final cells = [
     task.workContent,
     task.taskTypeDisplay ?? task.taskType,
@@ -676,12 +657,16 @@ String _infoGridHtml(List<_InfoItem> items) {
 }
 
 String _tableHtml(
-    List<String> headers, List<List<String>> rows, String emptyText) {
+  List<String> headers,
+  List<List<String>> rows,
+  String emptyText,
+) {
   if (rows.isEmpty) return '<p>${_e(emptyText)}</p>';
   final head = headers.map((item) => '<th>${_e(item)}</th>').join();
   final body = rows
-      .map((row) =>
-          '<tr>${row.map((cell) => '<td>${_e(cell)}</td>').join()}</tr>')
+      .map(
+        (row) => '<tr>${row.map((cell) => '<td>${_e(cell)}</td>').join()}</tr>',
+      )
       .join();
   return '<table><tr>$head</tr>$body</table>';
 }
@@ -711,8 +696,9 @@ String _text(String? value) {
 }
 
 String _join(List<String> values) {
-  final cleaned =
-      values.map((item) => item.trim()).where((item) => item.isNotEmpty);
+  final cleaned = values
+      .map((item) => item.trim())
+      .where((item) => item.isNotEmpty);
   return cleaned.isEmpty ? '-' : cleaned.join('、');
 }
 

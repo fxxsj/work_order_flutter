@@ -7,11 +7,7 @@ import 'package:work_order_app/src/core/utils/extensions/datetime_extensions.dar
 import 'package:work_order_app/src/features/workorders/domain/work_order.dart';
 
 class WorkOrderListTile extends StatelessWidget {
-  const WorkOrderListTile({
-    super.key,
-    required this.workOrder,
-    this.onTap,
-  });
+  const WorkOrderListTile({super.key, required this.workOrder, this.onTap});
 
   final WorkOrder workOrder;
   final VoidCallback? onTap;
@@ -31,16 +27,14 @@ class WorkOrderListTile extends StatelessWidget {
         onTap: onTap,
         child: Container(
           padding: EdgeInsets.fromLTRB(
-            LayoutTokens.gapLg,
-            LayoutTokens.gapSm + LayoutTokens.gapXxs,
-            LayoutTokens.gapLg,
-            LayoutTokens.gapSm + LayoutTokens.gapXxs,
+            SpacingTokens.lg,
+            SpacingTokens.sm + SpacingTokens.xxs,
+            SpacingTokens.lg,
+            SpacingTokens.sm + SpacingTokens.xxs,
           ),
           decoration: BoxDecoration(
             color: colors.surface,
-            border: Border(
-              bottom: BorderSide(color: colors.borderColor),
-            ),
+            border: Border(bottom: BorderSide(color: colors.borderColor)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,8 +54,7 @@ class WorkOrderListTile extends StatelessWidget {
                     ),
                   ),
                   if (workOrder.deliveryDate != null) ...[
-                    SizedBox(
-                        width: isXs ? LayoutTokens.gapSm : LayoutTokens.gapMd),
+                    SizedBox(width: isXs ? SpacingTokens.sm : SpacingTokens.md),
                     Flexible(
                       child: Text(
                         workOrder.deliveryDate.toYMD,
@@ -77,10 +70,10 @@ class WorkOrderListTile extends StatelessWidget {
                   ],
                 ],
               ),
-              SizedBox(height: LayoutTokens.gapMd),
+              SizedBox(height: SpacingTokens.md),
               Wrap(
-                spacing: LayoutTokens.gapSm,
-                runSpacing: LayoutTokens.gapSm,
+                spacing: SpacingTokens.sm,
+                runSpacing: SpacingTokens.sm,
                 children: [
                   if (workOrder.salesOrderNumber?.isNotEmpty == true)
                     MetaChip(label: '订单号', value: workOrder.salesOrderNumber!),
@@ -88,8 +81,16 @@ class WorkOrderListTile extends StatelessWidget {
                     MetaChip(label: '客户', value: workOrder.customerName!),
                   if (workOrder.productName?.isNotEmpty == true)
                     MetaChip(label: '产品', value: workOrder.productName!),
-                  if (workOrder.approvalStatus != null && ['draft', 'submitted', 'rejected'].contains(workOrder.approvalStatus))
-                    MetaChip(label: '状态', value: workOrder.approvalStatusDisplay!)
+                  if (workOrder.approvalStatus != null &&
+                      [
+                        'draft',
+                        'submitted',
+                        'rejected',
+                      ].contains(workOrder.approvalStatus))
+                    MetaChip(
+                      label: '状态',
+                      value: workOrder.approvalStatusDisplay!,
+                    )
                   else if (workOrder.statusDisplay?.isNotEmpty == true)
                     MetaChip(label: '状态', value: workOrder.statusDisplay!),
                 ],

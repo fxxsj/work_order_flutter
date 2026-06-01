@@ -36,14 +36,7 @@ enum ScreenSize {
 /// | [lg] | 1024px - 1280px | desktop |
 /// | [xl] | 1280px - 1536px | desktop |
 /// | [twoXl] | >= 1536px | desktop |
-enum BreakpointRange {
-  xs,
-  sm,
-  md,
-  lg,
-  xl,
-  twoXl,
-}
+enum BreakpointRange { xs, sm, md, lg, xl, twoXl }
 
 /// A responsive layout widget that adapts content based on screen size.
 ///
@@ -78,9 +71,9 @@ class ResponsiveLayout extends StatelessWidget {
     this.tablet,
     this.desktop,
   }) : assert(
-          builder != null || mobile != null || tablet != null || desktop != null,
-          'At least one of builder, mobile, tablet, or desktop must be provided',
-        );
+         builder != null || mobile != null || tablet != null || desktop != null,
+         'At least one of builder, mobile, tablet, or desktop must be provided',
+       );
 
   /// Builder function that receives the current screen size and returns a widget.
   /// Use this for complex responsive layouts with custom logic.
@@ -115,13 +108,16 @@ class ResponsiveLayout extends StatelessWidget {
   }
 
   /// Returns true if the current screen is mobile (< 768px).
-  static bool isMobile(BuildContext context) => isSize(context, ScreenSize.mobile);
+  static bool isMobile(BuildContext context) =>
+      isSize(context, ScreenSize.mobile);
 
   /// Returns true if the current screen is tablet (768px - 1024px).
-  static bool isTablet(BuildContext context) => isSize(context, ScreenSize.tablet);
+  static bool isTablet(BuildContext context) =>
+      isSize(context, ScreenSize.tablet);
 
   /// Returns true if the current screen is desktop (>= 1024px).
-  static bool isDesktop(BuildContext context) => isSize(context, ScreenSize.desktop);
+  static bool isDesktop(BuildContext context) =>
+      isSize(context, ScreenSize.desktop);
 
   // ─── BreakpointRange (6-tier) ───────────────────────────────────────────
 
@@ -148,22 +144,28 @@ class ResponsiveLayout extends StatelessWidget {
   // ─── 6-tier static helpers ─────────────────────────────────────────────
 
   /// True when width < 640px
-  static bool isXs(BuildContext context) => isBreakpoint(context, BreakpointRange.xs);
+  static bool isXs(BuildContext context) =>
+      isBreakpoint(context, BreakpointRange.xs);
 
   /// True when 640px <= width < 768px
-  static bool isSm(BuildContext context) => isBreakpoint(context, BreakpointRange.sm);
+  static bool isSm(BuildContext context) =>
+      isBreakpoint(context, BreakpointRange.sm);
 
   /// True when 768px <= width < 1024px
-  static bool isMd(BuildContext context) => isBreakpoint(context, BreakpointRange.md);
+  static bool isMd(BuildContext context) =>
+      isBreakpoint(context, BreakpointRange.md);
 
   /// True when 1024px <= width < 1280px
-  static bool isLg(BuildContext context) => isBreakpoint(context, BreakpointRange.lg);
+  static bool isLg(BuildContext context) =>
+      isBreakpoint(context, BreakpointRange.lg);
 
   /// True when 1280px <= width < 1536px
-  static bool isXl(BuildContext context) => isBreakpoint(context, BreakpointRange.xl);
+  static bool isXl(BuildContext context) =>
+      isBreakpoint(context, BreakpointRange.xl);
 
   /// True when width >= 1536px
-  static bool is2xl(BuildContext context) => isBreakpoint(context, BreakpointRange.twoXl);
+  static bool is2xl(BuildContext context) =>
+      isBreakpoint(context, BreakpointRange.twoXl);
 
   // ─── Compound helpers ───────────────────────────────────────────────────
 
@@ -171,7 +173,8 @@ class ResponsiveLayout extends StatelessWidget {
   static bool isNarrow(BuildContext context) => width(context) < Breakpoints.md;
 
   /// True when screen is compact (xs or sm): width < 768px
-  static bool isCompact(BuildContext context) => width(context) < Breakpoints.md;
+  static bool isCompact(BuildContext context) =>
+      width(context) < Breakpoints.md;
 
   /// True when screen is medium (md): 768px <= width < 1024px
   static bool isMedium(BuildContext context) {

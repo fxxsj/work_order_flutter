@@ -281,14 +281,14 @@ class ArtworkListPage extends StatelessWidget {
   static Widget _buildColorCell(BuildContext context, Artwork artwork) {
     return _buildBodyText(
       context,
-      CrudValueFormatter.text(artwork.colorDisplay),
+      AppValueFormatter.text(artwork.colorDisplay),
     );
   }
 
   static Widget _buildSizeCell(BuildContext context, Artwork artwork) {
     return _buildBodyText(
       context,
-      CrudValueFormatter.text(artwork.impositionSize),
+      AppValueFormatter.text(artwork.impositionSize),
     );
   }
 
@@ -327,7 +327,7 @@ class ArtworkListPage extends StatelessWidget {
   static Widget _buildCreatedAtCell(BuildContext context, Artwork artwork) {
     return _buildBodyText(
       context,
-      CrudValueFormatter.dateTime(artwork.createdAt),
+      AppValueFormatter.dateTime(artwork.createdAt),
     );
   }
 
@@ -336,18 +336,18 @@ class ArtworkListPage extends StatelessWidget {
   }
 
   static String _titleText(Artwork artwork) {
-    return CrudValueFormatter.text(artwork.name);
+    return AppValueFormatter.text(artwork.name);
   }
 
   static String _codeText(Artwork artwork) {
-    return CrudValueFormatter.text(
+    return AppValueFormatter.text(
       artwork.fullCode.isNotEmpty ? artwork.fullCode : artwork.code,
     );
   }
 
   static String _subtitleText(Artwork artwork) {
     return '${_codeText(artwork)} · '
-        '${CrudValueFormatter.text(artwork.colorDisplay)}';
+        '${AppValueFormatter.text(artwork.colorDisplay)}';
   }
 
   static String _statusText(Artwork artwork) {
@@ -356,7 +356,7 @@ class ArtworkListPage extends StatelessWidget {
 
   static String _compactListText(List<String> codes, List<String> names) {
     if (codes.isEmpty) {
-      return CrudValueFormatter.empty;
+      return AppValueFormatter.empty;
     }
     final display = <String>[];
     for (var i = 0; i < codes.length; i++) {
@@ -369,7 +369,7 @@ class ArtworkListPage extends StatelessWidget {
 
   static String _productSummary(List<ArtworkProduct> products) {
     if (products.isEmpty) {
-      return CrudValueFormatter.empty;
+      return AppValueFormatter.empty;
     }
     return products
         .map((item) => '${item.productName}(${item.impositionQuantity ?? 1}拼)')
@@ -381,7 +381,7 @@ class ArtworkListPage extends StatelessWidget {
       CrudSummaryChipData(label: '状态', value: _statusText(artwork)),
       CrudSummaryChipData(
         label: '拼版',
-        value: CrudValueFormatter.text(artwork.impositionSize),
+        value: AppValueFormatter.text(artwork.impositionSize),
       ),
     ];
   }
@@ -391,11 +391,11 @@ class ArtworkListPage extends StatelessWidget {
       CrudSummaryFieldData(label: '编码', value: _codeText(artwork)),
       CrudSummaryFieldData(
         label: '色数',
-        value: CrudValueFormatter.text(artwork.colorDisplay),
+        value: AppValueFormatter.text(artwork.colorDisplay),
       ),
       CrudSummaryFieldData(
         label: '拼版尺寸',
-        value: CrudValueFormatter.text(artwork.impositionSize),
+        value: AppValueFormatter.text(artwork.impositionSize),
       ),
       CrudSummaryFieldData(label: '确认状态', value: _statusText(artwork)),
       CrudSummaryFieldData(
@@ -422,11 +422,11 @@ class ArtworkListPage extends StatelessWidget {
       ),
       CrudSummaryFieldData(
         label: '备注',
-        value: CrudValueFormatter.text(artwork.notes),
+        value: AppValueFormatter.text(artwork.notes),
       ),
       CrudSummaryFieldData(
         label: '创建时间',
-        value: CrudValueFormatter.dateTime(artwork.createdAt),
+        value: AppValueFormatter.dateTime(artwork.createdAt),
       ),
     ];
   }

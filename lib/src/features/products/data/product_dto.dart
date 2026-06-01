@@ -54,10 +54,13 @@ class ProductDto {
     final materials = json['default_materials'];
     final materialItems = materials is List
         ? materials
-            .whereType<Map>()
-            .map((item) =>
-                ProductMaterialItem.fromJson(Map<String, dynamic>.from(item)))
-            .toList()
+              .whereType<Map>()
+              .map(
+                (item) => ProductMaterialItem.fromJson(
+                  Map<String, dynamic>.from(item),
+                ),
+              )
+              .toList()
         : const <ProductMaterialItem>[];
     final images = json['images'];
     final imageItems = images is List
@@ -75,9 +78,11 @@ class ProductDto {
     final groupItems = json['group_items'];
     final groupItemList = groupItems is List
         ? groupItems
-            .whereType<Map>()
-            .map((item) => GroupItem.fromJson(Map<String, dynamic>.from(item)))
-            .toList()
+              .whereType<Map>()
+              .map(
+                (item) => GroupItem.fromJson(Map<String, dynamic>.from(item)),
+              )
+              .toList()
         : const <GroupItem>[];
     return ProductDto(
       id: toInt(json['id']) ?? 0,

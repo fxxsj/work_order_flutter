@@ -14,10 +14,7 @@ Future<void> showTaskQuantityDialog(
 }) {
   return showDialog<void>(
     context: context,
-    builder: (_) => _TaskQuantityDialog(
-      task: task,
-      onSubmit: onSubmit,
-    ),
+    builder: (_) => _TaskQuantityDialog(task: task, onSubmit: onSubmit),
   );
 }
 
@@ -28,10 +25,7 @@ Future<void> showTaskCompleteDialog(
 }) {
   return showDialog<void>(
     context: context,
-    builder: (_) => _TaskCompleteDialog(
-      task: task,
-      onSubmit: onSubmit,
-    ),
+    builder: (_) => _TaskCompleteDialog(task: task, onSubmit: onSubmit),
   );
 }
 
@@ -40,7 +34,7 @@ Future<void> showTaskAssignDialog(
   required Task task,
   required List<TaskDepartmentOption> departments,
   required Future<List<Map<String, dynamic>>> Function(int departmentId)
-      loadOperators,
+  loadOperators,
   required Future<void> Function(int operatorId, String notes) onSubmit,
 }) {
   return showDialog<void>(
@@ -55,10 +49,7 @@ Future<void> showTaskAssignDialog(
 }
 
 class _TaskQuantityDialog extends StatefulWidget {
-  const _TaskQuantityDialog({
-    required this.task,
-    required this.onSubmit,
-  });
+  const _TaskQuantityDialog({required this.task, required this.onSubmit});
 
   final Task task;
   final Future<void> Function(Map<String, dynamic> payload) onSubmit;
@@ -92,9 +83,9 @@ class _TaskQuantityDialogState extends State<_TaskQuantityDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(task.workContent ?? '任务 #${task.id}'),
-          SizedBox(height: LayoutTokens.gapSm),
+          SizedBox(height: SpacingTokens.sm),
           Text('已完成 $completed / $total · 剩余 $remaining'),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           CrudFieldConfig.number(
             label: '本次完成数量',
             initialValue: _quantityIncrement.toString(),
@@ -109,7 +100,7 @@ class _TaskQuantityDialogState extends State<_TaskQuantityDialog> {
               _quantityIncrement = int.tryParse(value) ?? 0;
             },
           ).build(context),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           CrudFieldConfig.number(
             label: '不良品数量',
             initialValue: _quantityDefective.toString(),
@@ -117,7 +108,7 @@ class _TaskQuantityDialogState extends State<_TaskQuantityDialog> {
               _quantityDefective = int.tryParse(value) ?? 0;
             },
           ).build(context),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           CrudFieldConfig.text(
             label: '备注（可选）',
             onChanged: (value) => _notes = value,
@@ -144,10 +135,7 @@ class _TaskQuantityDialogState extends State<_TaskQuantityDialog> {
 }
 
 class _TaskCompleteDialog extends StatefulWidget {
-  const _TaskCompleteDialog({
-    required this.task,
-    required this.onSubmit,
-  });
+  const _TaskCompleteDialog({required this.task, required this.onSubmit});
 
   final Task task;
   final Future<void> Function(Map<String, dynamic> payload) onSubmit;
@@ -173,17 +161,14 @@ class _TaskCompleteDialogState extends State<_TaskCompleteDialog> {
       submitting: _submitting,
       maxWidth: LayoutTokens.dialogWidthSm,
       summary: '确认将该生产任务标记为完成，并记录本次完成结果。',
-      impacts: const [
-        '任务完成后会进入后续质检、入库或交接流程',
-        '不良品数量和完成说明会影响后续质量追踪',
-      ],
+      impacts: const ['任务完成后会进入后续质检、入库或交接流程', '不良品数量和完成说明会影响后续质量追踪'],
       auditHint: '完成理由和备注会进入任务流转记录。',
       onSubmit: _submit,
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(task.workContent ?? '任务 #${task.id}'),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           CrudFieldConfig.number(
             label: '不良品数量',
             initialValue: _quantityDefective.toString(),
@@ -191,12 +176,12 @@ class _TaskCompleteDialogState extends State<_TaskCompleteDialog> {
               _quantityDefective = int.tryParse(value) ?? 0;
             },
           ).build(context),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           CrudFieldConfig.text(
             label: '完成理由（可选）',
             onChanged: (value) => _completionReason = value,
           ).build(context),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           CrudFieldConfig.text(
             label: '备注（可选）',
             onChanged: (value) => _notes = value,
@@ -232,7 +217,7 @@ class _TaskAssignDialog extends StatefulWidget {
   final Task task;
   final List<TaskDepartmentOption> departments;
   final Future<List<Map<String, dynamic>>> Function(int departmentId)
-      loadOperators;
+  loadOperators;
   final Future<void> Function(int operatorId, String notes) onSubmit;
 
   @override
@@ -295,7 +280,7 @@ class _TaskAssignDialogState extends State<_TaskAssignDialog> {
           children: [
             if (processName != null)
               Padding(
-                padding: EdgeInsets.only(bottom: LayoutTokens.gapSm),
+                padding: EdgeInsets.only(bottom: SpacingTokens.sm),
                 child: Text(
                   '工序：$processName',
                   style: TextStyle(
@@ -322,10 +307,10 @@ class _TaskAssignDialogState extends State<_TaskAssignDialog> {
               },
               validator: (value) => value == null ? '请选择部门' : null,
             ),
-            SizedBox(height: LayoutTokens.gapMd),
+            SizedBox(height: SpacingTokens.md),
             if (_loadingOperators) ...[
               const LinearProgressIndicator(minHeight: 2),
-              SizedBox(height: LayoutTokens.gapMd),
+              SizedBox(height: SpacingTokens.md),
             ],
             AppSelect<int?>(
               value: _operatorId,
@@ -339,14 +324,14 @@ class _TaskAssignDialogState extends State<_TaskAssignDialog> {
               onChanged: (value) => setState(() => _operatorId = value),
               validator: (value) => value == null ? '请选择操作员' : null,
             ),
-            SizedBox(height: LayoutTokens.gapMd),
+            SizedBox(height: SpacingTokens.md),
             CrudFieldConfig.text(
               label: '备注（可选）',
               onChanged: (value) => _notes = value,
             ).build(context),
             if (_operators.isEmpty && !_loadingOperators)
               Padding(
-                padding: EdgeInsets.only(top: LayoutTokens.gapSm),
+                padding: EdgeInsets.only(top: SpacingTokens.sm),
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text('当前部门暂无可分派操作员'),

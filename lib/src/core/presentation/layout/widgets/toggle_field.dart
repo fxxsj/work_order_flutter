@@ -12,59 +12,61 @@ class ToggleField extends FormField<bool> {
     bool enabled = true,
     String? helperText,
   }) : super(
-          initialValue: value,
-          validator: validator,
-          onSaved: (v) => onChanged?.call(v ?? false),
-          builder: (state) {
-            return InputDecorator(
-              decoration: InputDecoration(
-                labelText: label,
-                helperText: helperText,
-                errorText: state.errorText,
-                filled: true,
-                fillColor: Theme.of(state.context).colorScheme.surfaceContainerLowest,
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-                  borderSide: BorderSide(
-                    color: Theme.of(state.context).colorScheme.outline,
-                    width: 1,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-                  borderSide: BorderSide(
-                    color: Theme.of(state.context).colorScheme.primary,
-                    width: 2,
-                  ),
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-                  borderSide: BorderSide(
-                    color: Theme.of(state.context).colorScheme.error,
-                    width: 1,
-                  ),
-                ),
-                focusedErrorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-                  borderSide: BorderSide(
-                    color: Theme.of(state.context).colorScheme.error,
-                    width: 2,
-                  ),
-                ),
-              ),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Switch(
-                  value: state.value ?? false,
-                  onChanged: enabled
-                      ? (nextValue) {
-                          state.didChange(nextValue);
-                          onChanged?.call(nextValue);
-                        }
-                      : null,
-                ),
-              ),
-            );
-          },
-        );
+         initialValue: value,
+         validator: validator,
+         onSaved: (v) => onChanged?.call(v ?? false),
+         builder: (state) {
+           return InputDecorator(
+             decoration: InputDecoration(
+               labelText: label,
+               helperText: helperText,
+               errorText: state.errorText,
+               filled: true,
+               fillColor: Theme.of(
+                 state.context,
+               ).colorScheme.surfaceContainerLowest,
+               enabledBorder: OutlineInputBorder(
+                 borderRadius: BorderRadius.circular(RadiusTokens.sm),
+                 borderSide: BorderSide(
+                   color: Theme.of(state.context).colorScheme.outline,
+                   width: 1,
+                 ),
+               ),
+               focusedBorder: OutlineInputBorder(
+                 borderRadius: BorderRadius.circular(RadiusTokens.sm),
+                 borderSide: BorderSide(
+                   color: Theme.of(state.context).colorScheme.primary,
+                   width: 2,
+                 ),
+               ),
+               errorBorder: OutlineInputBorder(
+                 borderRadius: BorderRadius.circular(RadiusTokens.sm),
+                 borderSide: BorderSide(
+                   color: Theme.of(state.context).colorScheme.error,
+                   width: 1,
+                 ),
+               ),
+               focusedErrorBorder: OutlineInputBorder(
+                 borderRadius: BorderRadius.circular(RadiusTokens.sm),
+                 borderSide: BorderSide(
+                   color: Theme.of(state.context).colorScheme.error,
+                   width: 2,
+                 ),
+               ),
+             ),
+             child: Align(
+               alignment: Alignment.centerLeft,
+               child: Switch(
+                 value: state.value ?? false,
+                 onChanged: enabled
+                     ? (nextValue) {
+                         state.didChange(nextValue);
+                         onChanged?.call(nextValue);
+                       }
+                     : null,
+               ),
+             ),
+           );
+         },
+       );
 }

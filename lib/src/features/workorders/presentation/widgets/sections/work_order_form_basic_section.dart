@@ -53,8 +53,10 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
   final ValueChanged<int?> onSalesOrderChanged;
   final ValueChanged<int?> onCustomerChanged;
   final VoidCallback? onCreateCustomer;
+
   /// 客户远程搜索回调
-  final Future<List<AppDropdownOption<int>>> Function(String query)? onSearchCustomer;
+  final Future<List<AppDropdownOption<int>>> Function(String query)?
+  onSearchCustomer;
   final ValueChanged<String?> onStatusChanged;
   final ValueChanged<String?> onPriorityChanged;
   final VoidCallback onPickOrderDate;
@@ -71,13 +73,13 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
           LayoutBuilder(
             builder: (context, constraints) {
               final maxWidth = constraints.maxWidth;
-              final fieldSpacing = LayoutTokens.gapLg;
+              final fieldSpacing = SpacingTokens.lg;
               final fieldWidth = maxWidth < Breakpoints.sm
                   ? maxWidth
                   : (maxWidth - fieldSpacing) / 2;
               return Wrap(
                 spacing: fieldSpacing,
-                runSpacing: LayoutTokens.gapMd,
+                runSpacing: SpacingTokens.md,
                 children: [
                   SizedBox(
                     width: fieldWidth,
@@ -193,7 +195,7 @@ class WorkOrderBasicInfoSection extends StatelessWidget {
               );
             },
           ),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           CrudFieldConfig.textarea(
             label: '备注',
             controller: notesController,

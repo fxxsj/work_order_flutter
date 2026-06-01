@@ -10,7 +10,8 @@ import 'package:work_order_app/src/features/materials/data/material_dto.dart';
 import 'package:work_order_app/src/features/suppliers/data/supplier_dto.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
 
-typedef PurchaseFormSubmit = Future<void> Function(VoidCallback refresh, [bool autoApprove]);
+typedef PurchaseFormSubmit =
+    Future<void> Function(VoidCallback refresh, [bool autoApprove]);
 
 Future<void> showPurchaseOrderFormDialog(
   BuildContext context, {
@@ -127,9 +128,13 @@ class _PurchaseOrderFormPanelState extends State<_PurchaseOrderFormPanel> {
     return AdaptiveFormPanel(
       formKey: widget.formKey,
       submitText: widget.submitText == '创建' ? '存为草稿' : widget.submitText,
-      submitIcon: widget.submitText == '创建' ? const Icon(Icons.save, size: 16) : const Icon(Icons.save, size: 16),
+      submitIcon: widget.submitText == '创建'
+          ? const Icon(Icons.save, size: 16)
+          : const Icon(Icons.save, size: 16),
       secondarySubmitText: widget.submitText == '创建' ? '直接发布' : null,
-      secondarySubmitIcon: widget.submitText == '创建' ? const Icon(Icons.send, size: 16) : null,
+      secondarySubmitIcon: widget.submitText == '创建'
+          ? const Icon(Icons.send, size: 16)
+          : null,
       cancelText: widget.cancelText,
       submitting: submitting,
       onSubmit: () => _submit(false),
@@ -142,7 +147,7 @@ class _PurchaseOrderFormPanelState extends State<_PurchaseOrderFormPanel> {
             child: Column(
               children: [
                 _buildSupplierSelect(),
-                const SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: SpacingTokens.md),
                 AppSelect<int>(
                   key: ValueKey<String>(
                     'purchase_workorder_${widget.selectedWorkOrderId ?? 'none'}',
@@ -163,7 +168,7 @@ class _PurchaseOrderFormPanelState extends State<_PurchaseOrderFormPanel> {
                   ],
                   onChanged: submitting ? null : widget.onWorkOrderChanged,
                 ),
-                const SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: SpacingTokens.md),
                 CrudFieldConfig.textarea(
                   label: '备注',
                   controller: widget.notesController,
@@ -173,7 +178,7 @@ class _PurchaseOrderFormPanelState extends State<_PurchaseOrderFormPanel> {
               ],
             ),
           ),
-          const SizedBox(height: LayoutTokens.gapLg),
+          const SizedBox(height: SpacingTokens.lg),
           _PurchaseFormSection(
             title: '采购明细',
             subtitle: '支持逐行选择物料、调整数量和单价。',
@@ -246,22 +251,23 @@ class _PurchaseOrderFormPanelState extends State<_PurchaseOrderFormPanel> {
       _refresh();
     }
 
-    final supplierOptions = widget.suppliers
-        .map(
-          (supplier) => AppDropdownOption<int>(
-            value: supplier.id,
-            label: supplier.name,
-          ),
-        )
-        .toList()
-      ..add(
-        AppDropdownOption<int>(
-          value: -1,
-          label: '新增供应商',
-          icon: Icons.add,
-          onSelected: handleCreateSupplier,
-        ),
-      );
+    final supplierOptions =
+        widget.suppliers
+            .map(
+              (supplier) => AppDropdownOption<int>(
+                value: supplier.id,
+                label: supplier.name,
+              ),
+            )
+            .toList()
+          ..add(
+            AppDropdownOption<int>(
+              value: -1,
+              label: '新增供应商',
+              icon: Icons.add,
+              onSelected: handleCreateSupplier,
+            ),
+          );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -284,7 +290,7 @@ class _PurchaseOrderFormPanelState extends State<_PurchaseOrderFormPanel> {
           },
         ),
         if (widget.suppliers.isEmpty) ...[
-          const SizedBox(height: LayoutTokens.gapSm),
+          const SizedBox(height: SpacingTokens.sm),
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
@@ -337,12 +343,9 @@ class _PurchaseFormSection extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
+                    Text(title, style: Theme.of(context).textTheme.titleSmall),
                     if (subtitle != null) ...[
-                      const SizedBox(height: LayoutTokens.gapXxxs),
+                      const SizedBox(height: SpacingTokens.xxxs),
                       Text(
                         subtitle!,
                         style: Theme.of(context).textTheme.bodySmall,
@@ -354,7 +357,7 @@ class _PurchaseFormSection extends StatelessWidget {
               if (trailing != null) trailing!,
             ],
           ),
-          const SizedBox(height: LayoutTokens.gapMd),
+          const SizedBox(height: SpacingTokens.md),
           child,
         ],
       ),
@@ -370,11 +373,13 @@ class PurchaseItemDraft {
     required double quantity,
     required double unitPrice,
     String unit = '',
-  })  : quantityController =
-            TextEditingController(text: quantity.toStringAsFixed(2)),
-        unitController = TextEditingController(text: unit),
-        unitPriceController =
-            TextEditingController(text: unitPrice.toStringAsFixed(2));
+  }) : quantityController = TextEditingController(
+         text: quantity.toStringAsFixed(2),
+       ),
+       unitController = TextEditingController(text: unit),
+       unitPriceController = TextEditingController(
+         text: unitPrice.toStringAsFixed(2),
+       );
 
   int materialId;
   String materialName;
@@ -430,29 +435,30 @@ class PurchaseItemRow extends StatelessWidget {
       onMaterialChanged(created);
     }
 
-    final materialOptions = materials
-        .map(
-          (material) => AppDropdownOption<int>(
-            value: material.id,
-            label:
-                '${material.code.isEmpty ? '-' : material.code} ${material.name}',
-          ),
-        )
-        .toList()
-      ..add(
-        AppDropdownOption<int>(
-          value: -1,
-          label: '新增物料',
-          icon: Icons.add,
-          onSelected: handleCreateMaterial,
-        ),
-      );
+    final materialOptions =
+        materials
+            .map(
+              (material) => AppDropdownOption<int>(
+                value: material.id,
+                label:
+                    '${material.code.isEmpty ? '-' : material.code} ${material.name}',
+              ),
+            )
+            .toList()
+          ..add(
+            AppDropdownOption<int>(
+              value: -1,
+              label: '新增物料',
+              icon: Icons.add,
+              onSelected: handleCreateMaterial,
+            ),
+          );
     final isCompact =
         ResponsiveLayout.isXs(context) || ResponsiveLayout.isSm(context);
     return Padding(
-      padding: const EdgeInsets.only(bottom: LayoutTokens.gapSm),
+      padding: const EdgeInsets.only(bottom: SpacingTokens.sm),
       child: AppCard(
-        padding: const EdgeInsets.all(LayoutTokens.gapMd),
+        padding: const EdgeInsets.all(SpacingTokens.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -473,8 +479,9 @@ class PurchaseItemRow extends StatelessWidget {
                     onChanged: enabled
                         ? (value) {
                             if (value == null || value == 0) return;
-                            final selected =
-                                materials.firstWhere((m) => m.id == value);
+                            final selected = materials.firstWhere(
+                              (m) => m.id == value,
+                            );
                             onMaterialChanged(selected);
                           }
                         : null,
@@ -486,21 +493,21 @@ class PurchaseItemRow extends StatelessWidget {
                 ),
                 if (materials.isEmpty)
                   Padding(
-                    padding: const EdgeInsets.only(left: LayoutTokens.gapSm),
+                    padding: const EdgeInsets.only(left: SpacingTokens.sm),
                     child: TextButton.icon(
                       onPressed: enabled ? handleCreateMaterial : null,
                       icon: const Icon(Icons.add, size: 18),
                       label: const Text('新增物料'),
                     ),
                   ),
-                const SizedBox(width: LayoutTokens.gapSm),
+                const SizedBox(width: SpacingTokens.sm),
                 IconButton(
                   onPressed: enabled ? onRemove : null,
                   icon: const Icon(Icons.delete_outline),
                 ),
               ],
             ),
-            const SizedBox(height: LayoutTokens.gapSm),
+            const SizedBox(height: SpacingTokens.sm),
             if (isCompact) ...[
               Row(
                 children: [
@@ -520,7 +527,7 @@ class PurchaseItemRow extends StatelessWidget {
                       },
                     ),
                   ),
-                  const SizedBox(width: LayoutTokens.gapSm),
+                  const SizedBox(width: SpacingTokens.sm),
                   Expanded(
                     child: _PurchaseDenseField(
                       controller: item.unitController,
@@ -530,7 +537,7 @@ class PurchaseItemRow extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: LayoutTokens.gapSm),
+              const SizedBox(height: SpacingTokens.sm),
               _PurchaseDenseField(
                 controller: item.unitPriceController,
                 enabled: enabled,
@@ -565,7 +572,7 @@ class PurchaseItemRow extends StatelessWidget {
                       },
                     ),
                   ),
-                  const SizedBox(width: LayoutTokens.gapSm),
+                  const SizedBox(width: SpacingTokens.sm),
                   SizedBox(
                     width: 90,
                     child: _PurchaseDenseField(
@@ -574,7 +581,7 @@ class PurchaseItemRow extends StatelessWidget {
                       label: '单位',
                     ),
                   ),
-                  const SizedBox(width: LayoutTokens.gapSm),
+                  const SizedBox(width: SpacingTokens.sm),
                   SizedBox(
                     width: 110,
                     child: _PurchaseDenseField(

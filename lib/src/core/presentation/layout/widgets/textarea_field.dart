@@ -116,28 +116,28 @@ class _TextareaFieldState extends State<TextareaField> {
         filled: true,
         fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+          borderRadius: BorderRadius.circular(RadiusTokens.sm),
           borderSide: BorderSide(
             color: Theme.of(context).colorScheme.outline,
             width: 1,
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+          borderRadius: BorderRadius.circular(RadiusTokens.sm),
           borderSide: BorderSide(
             color: Theme.of(context).colorScheme.primary,
             width: 2,
           ),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+          borderRadius: BorderRadius.circular(RadiusTokens.sm),
           borderSide: BorderSide(
             color: Theme.of(context).colorScheme.error,
             width: 1,
           ),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+          borderRadius: BorderRadius.circular(RadiusTokens.sm),
           borderSide: BorderSide(
             color: Theme.of(context).colorScheme.error,
             width: 2,

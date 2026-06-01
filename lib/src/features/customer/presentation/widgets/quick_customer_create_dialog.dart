@@ -13,10 +13,7 @@ Future<Customer?> showQuickCustomerCreateDialog({
   await viewModel.initialize();
   final beforeIds = viewModel.customers.map((item) => item.id).toSet();
 
-  final saved = await showCustomerEditDrawer(
-    context,
-    viewModel: viewModel,
-  );
+  final saved = await showCustomerEditDrawer(context, viewModel: viewModel);
   if (!saved) {
     return null;
   }

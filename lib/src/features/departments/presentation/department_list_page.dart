@@ -206,13 +206,13 @@ class DepartmentListPage extends StatelessWidget {
   }
 
   static Widget _buildCodeCell(BuildContext context, Department department) {
-    return _buildBodyText(context, CrudValueFormatter.text(department.code));
+    return _buildBodyText(context, AppValueFormatter.text(department.code));
   }
 
   static Widget _buildParentCell(BuildContext context, Department department) {
     return _buildBodyText(
       context,
-      CrudValueFormatter.text(department.parentName),
+      AppValueFormatter.text(department.parentName),
     );
   }
 
@@ -222,7 +222,7 @@ class DepartmentListPage extends StatelessWidget {
   ) {
     return _buildBodyText(
       context,
-      CrudValueFormatter.number(department.childrenCount),
+      AppValueFormatter.number(department.childrenCount),
     );
   }
 
@@ -239,7 +239,7 @@ class DepartmentListPage extends StatelessWidget {
   ) {
     return _buildBodyText(
       context,
-      CrudValueFormatter.number(department.sortOrder),
+      AppValueFormatter.number(department.sortOrder),
     );
   }
 
@@ -253,7 +253,7 @@ class DepartmentListPage extends StatelessWidget {
   ) {
     return _buildBodyText(
       context,
-      CrudValueFormatter.dateTime(department.createdAt),
+      AppValueFormatter.dateTime(department.createdAt),
     );
   }
 
@@ -262,12 +262,12 @@ class DepartmentListPage extends StatelessWidget {
   }
 
   static String _titleText(Department department) {
-    return CrudValueFormatter.text(department.name);
+    return AppValueFormatter.text(department.name);
   }
 
   static String _subtitleText(Department department) {
-    return '${CrudValueFormatter.text(department.code)} · '
-        '${CrudValueFormatter.text(department.parentName)}';
+    return '${AppValueFormatter.text(department.code)} · '
+        '${AppValueFormatter.text(department.parentName)}';
   }
 
   static String _statusText(Department department) {
@@ -276,7 +276,7 @@ class DepartmentListPage extends StatelessWidget {
 
   static String _processesText(Department department) {
     if (department.processNames.isEmpty) {
-      return CrudValueFormatter.empty;
+      return AppValueFormatter.empty;
     }
     return department.processNames.join('、');
   }
@@ -286,7 +286,7 @@ class DepartmentListPage extends StatelessWidget {
       CrudSummaryChipData(label: '状态', value: _statusText(department)),
       CrudSummaryChipData(
         label: '子部门',
-        value: CrudValueFormatter.number(department.childrenCount),
+        value: AppValueFormatter.number(department.childrenCount),
       ),
     ];
   }
@@ -295,25 +295,25 @@ class DepartmentListPage extends StatelessWidget {
     return [
       CrudSummaryFieldData(
         label: '编码',
-        value: CrudValueFormatter.text(department.code),
+        value: AppValueFormatter.text(department.code),
       ),
       CrudSummaryFieldData(
         label: '上级部门',
-        value: CrudValueFormatter.text(department.parentName),
+        value: AppValueFormatter.text(department.parentName),
       ),
       CrudSummaryFieldData(
         label: '子部门',
-        value: CrudValueFormatter.number(department.childrenCount),
+        value: AppValueFormatter.number(department.childrenCount),
       ),
       CrudSummaryFieldData(label: '工序', value: _processesText(department)),
       CrudSummaryFieldData(
         label: '排序',
-        value: CrudValueFormatter.number(department.sortOrder),
+        value: AppValueFormatter.number(department.sortOrder),
       ),
       CrudSummaryFieldData(label: '状态', value: _statusText(department)),
       CrudSummaryFieldData(
         label: '创建时间',
-        value: CrudValueFormatter.dateTime(department.createdAt),
+        value: AppValueFormatter.dateTime(department.createdAt),
       ),
     ];
   }
@@ -324,7 +324,7 @@ class DepartmentListPage extends StatelessWidget {
 
   static List<String> _buildDeleteImpacts(Department department) {
     return [
-      '部门编码：${CrudValueFormatter.text(department.code)}',
+      '部门编码：${AppValueFormatter.text(department.code)}',
       if ((department.childrenCount ?? 0) > 0)
         '当前存在 ${department.childrenCount} 个子部门，删除前需要先调整层级关系',
       if (department.processNames.isNotEmpty)
@@ -359,7 +359,7 @@ class _DepartmentProcessesCellState extends State<_DepartmentProcessesCell> {
       final theme = Theme.of(context);
       final colors = theme.extension<AppColors>();
       return Text(
-        CrudValueFormatter.empty,
+        AppValueFormatter.empty,
         style: theme.textTheme.bodySmall?.copyWith(
           color: colors?.subtleText ?? theme.hintColor,
         ),
@@ -378,7 +378,7 @@ class _DepartmentProcessesCellState extends State<_DepartmentProcessesCell> {
         children: [
           for (final processName in visibleProcesses) ...[
             _ProcessTag(label: processName),
-            const SizedBox(width: LayoutTokens.gapXxs),
+            const SizedBox(width: SpacingTokens.xxs),
           ],
           if (processNames.length > _collapsedVisibleCount)
             _ProcessToggleTag(
@@ -407,13 +407,13 @@ class _ProcessTag extends StatelessWidget {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 140),
         padding: const EdgeInsets.symmetric(
-          horizontal: LayoutTokens.gapSm,
-          vertical: LayoutTokens.gapXxs,
+          horizontal: SpacingTokens.sm,
+          vertical: SpacingTokens.xxs,
         ),
         decoration: BoxDecoration(
           color:
               semantic?.surfaceAlt ?? theme.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusXs),
+          borderRadius: BorderRadius.circular(RadiusTokens.xs),
           border: Border.all(color: colors?.borderColor ?? theme.dividerColor),
         ),
         child: Text(
@@ -447,17 +447,17 @@ class _ProcessToggleTag extends StatelessWidget {
     final colors = theme.extension<AppColors>();
     return InkWell(
       onTap: onPressed,
-      borderRadius: BorderRadius.circular(LayoutTokens.radiusXs),
+      borderRadius: BorderRadius.circular(RadiusTokens.xs),
       child: Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: LayoutTokens.gapSm,
-          vertical: LayoutTokens.gapXxs,
+          horizontal: SpacingTokens.sm,
+          vertical: SpacingTokens.xxs,
         ),
         decoration: BoxDecoration(
           color: theme.colorScheme.primary.withValues(
             alpha: OpacityTokens.faint,
           ),
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusXs),
+          borderRadius: BorderRadius.circular(RadiusTokens.xs),
           border: Border.all(color: colors?.borderColor ?? theme.dividerColor),
         ),
         child: Text(

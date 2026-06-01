@@ -28,9 +28,7 @@ class SalesOrderBatchCreateWorkOrderResult {
 }
 
 class SalesOrderCompleteResult {
-  const SalesOrderCompleteResult({
-    required this.completionReason,
-  });
+  const SalesOrderCompleteResult({required this.completionReason});
 
   final String completionReason;
 }
@@ -60,7 +58,7 @@ Future<SalesOrderCompleteResult?> showSalesOrderCompleteDialog(
 }
 
 Future<SalesOrderBatchCreateWorkOrderResult?>
-    showSalesOrderBatchCreateWorkOrdersDialog(
+showSalesOrderBatchCreateWorkOrdersDialog(
   BuildContext context, {
   required int selectedCount,
 }) async {
@@ -87,10 +85,12 @@ class _SalesOrderPaymentDialog extends StatefulWidget {
 
 class _SalesOrderPaymentDialogState extends State<_SalesOrderPaymentDialog> {
   final formKey = GlobalKey<FormState>();
-  late final TextEditingController amountController =
-      TextEditingController(text: widget.initialAmountText);
-  late final TextEditingController dateController =
-      TextEditingController(text: widget.initialDateText);
+  late final TextEditingController amountController = TextEditingController(
+    text: widget.initialAmountText,
+  );
+  late final TextEditingController dateController = TextEditingController(
+    text: widget.initialDateText,
+  );
 
   @override
   void dispose() {
@@ -115,7 +115,7 @@ class _SalesOrderPaymentDialogState extends State<_SalesOrderPaymentDialog> {
             controller: amountController,
             decimal: true,
           ).build(context),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           CrudFieldConfig.text(
             label: '付款日期（YYYY-MM-DD）',
             controller: dateController,
@@ -166,14 +166,8 @@ class _SalesOrderCompleteDialogState extends State<_SalesOrderCompleteDialog> {
           ? '当前订单尚未全部发货。若业务决定先关闭订单，请填写人工完结原因。'
           : '确认标记该订单为已完成吗？',
       impacts: widget.requireReason
-          ? const [
-              '订单会被视为业务已完结',
-              '未发货差额需要已有客户或业务确认依据',
-            ]
-          : const [
-              '订单会进入完成状态',
-              '后续变更建议通过备注或异常流程补充记录',
-            ],
+          ? const ['订单会被视为业务已完结', '未发货差额需要已有客户或业务确认依据']
+          : const ['订单会进入完成状态', '后续变更建议通过备注或异常流程补充记录'],
       auditHint: widget.requireReason ? '人工完结原因会进入订单流转和审计记录。' : null,
       onSubmit: _submit,
       content: widget.requireReason
@@ -194,9 +188,7 @@ class _SalesOrderCompleteDialogState extends State<_SalesOrderCompleteDialog> {
   Future<void> _submit() async {
     if (!(formKey.currentState?.validate() ?? false)) return;
     Navigator.of(context).pop(
-      SalesOrderCompleteResult(
-        completionReason: reasonController.text.trim(),
-      ),
+      SalesOrderCompleteResult(completionReason: reasonController.text.trim()),
     );
   }
 }
@@ -238,12 +230,12 @@ class _SalesOrderBatchCreateWorkOrdersDialogState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('将为已选择的 ${widget.selectedCount} 张客户订单批量生成施工单草稿。'),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           CrudFieldConfig.text(
             label: '统一交货日期（YYYY-MM-DD，可选）',
             controller: deliveryController,
           ).build(context),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           AppSelect<String>(
             decoration: const InputDecoration(labelText: '统一优先级'),
             value: priority,
@@ -255,7 +247,7 @@ class _SalesOrderBatchCreateWorkOrdersDialogState
             ],
             onChanged: (value) => setState(() => priority = value ?? 'normal'),
           ),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           CrudFieldConfig.textarea(
             label: '备注（可选）',
             controller: notesController,

@@ -17,7 +17,10 @@ class WorkOrderProcessApiService {
       'page_size': pageSize,
       ...?params,
     };
-    final response = await _client.get('/workorder-processes/', queryParameters: query);
+    final response = await _client.get(
+      '/workorder-processes/',
+      queryParameters: query,
+    );
     return _pageFromResponse(response.data, page: page, pageSize: pageSize);
   }
 
@@ -26,13 +29,21 @@ class WorkOrderProcessApiService {
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> createProcess(Map<String, dynamic> payload) async {
+  Future<Map<String, dynamic>> createProcess(
+    Map<String, dynamic> payload,
+  ) async {
     final response = await _client.post('/workorder-processes/', data: payload);
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> updateProcess(int id, Map<String, dynamic> payload) async {
-    final response = await _client.patch('/workorder-processes/$id/', data: payload);
+  Future<Map<String, dynamic>> updateProcess(
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
+    final response = await _client.patch(
+      '/workorder-processes/$id/',
+      data: payload,
+    );
     return _mapFromResponse(response.data);
   }
 
@@ -40,23 +51,44 @@ class WorkOrderProcessApiService {
     await _client.delete('/workorder-processes/$id/');
   }
 
-  Future<Map<String, dynamic>> start(int id, {Map<String, dynamic>? payload}) async {
-    final response = await _client.post('/workorder-processes/$id/start/', data: payload ?? {});
+  Future<Map<String, dynamic>> start(
+    int id, {
+    Map<String, dynamic>? payload,
+  }) async {
+    final response = await _client.post(
+      '/workorder-processes/$id/start/',
+      data: payload ?? {},
+    );
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> complete(int id, Map<String, dynamic> payload) async {
-    final response = await _client.post('/workorder-processes/$id/complete/', data: payload);
+  Future<Map<String, dynamic>> complete(
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
+    final response = await _client.post(
+      '/workorder-processes/$id/complete/',
+      data: payload,
+    );
     return _mapFromResponse(response.data);
   }
 
   Future<Map<String, dynamic>> addLog(int id, String content) async {
-    final response = await _client.post('/workorder-processes/$id/add_log/', data: {'content': content});
+    final response = await _client.post(
+      '/workorder-processes/$id/add_log/',
+      data: {'content': content},
+    );
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> reassignTasks(int id, Map<String, dynamic> payload) async {
-    final response = await _client.post('/workorder-processes/$id/reassign_tasks/', data: payload);
+  Future<Map<String, dynamic>> reassignTasks(
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
+    final response = await _client.post(
+      '/workorder-processes/$id/reassign_tasks/',
+      data: payload,
+    );
     return _mapFromResponse(response.data);
   }
 
@@ -68,14 +100,30 @@ class WorkOrderProcessApiService {
     if (data is Map<String, dynamic>) {
       final results = data['results'];
       final list = results is List
-          ? results.whereType<Map>().map((item) => Map<String, dynamic>.from(item)).toList()
+          ? results
+                .whereType<Map>()
+                .map((item) => Map<String, dynamic>.from(item))
+                .toList()
           : <Map<String, dynamic>>[];
       final total = toInt(data['count']) ?? list.length;
-      return PageData(items: list, total: total, page: page, pageSize: pageSize);
+      return PageData(
+        items: list,
+        total: total,
+        page: page,
+        pageSize: pageSize,
+      );
     }
     if (data is List) {
-      final list = data.whereType<Map>().map((item) => Map<String, dynamic>.from(item)).toList();
-      return PageData(items: list, total: list.length, page: 1, pageSize: list.length);
+      final list = data
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList();
+      return PageData(
+        items: list,
+        total: list.length,
+        page: 1,
+        pageSize: list.length,
+      );
     }
     return const PageData(items: [], total: 0, page: 1, pageSize: 20);
   }

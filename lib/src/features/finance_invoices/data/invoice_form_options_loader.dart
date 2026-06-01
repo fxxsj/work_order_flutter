@@ -29,10 +29,11 @@ class InvoiceFormOptionsLoader {
     final workOrderApi = WorkOrderApiService(_client);
 
     final customerFuture = customerApi.fetchCustomers(page: 1, pageSize: 50);
-    final salesOrderFuture =
-        salesOrderApi.fetchSalesOrders(page: 1, pageSize: 50);
-    final workOrderFuture =
-        workOrderApi.fetchWorkOrders(page: 1, pageSize: 50);
+    final salesOrderFuture = salesOrderApi.fetchSalesOrders(
+      page: 1,
+      pageSize: 50,
+    );
+    final workOrderFuture = workOrderApi.fetchWorkOrders(page: 1, pageSize: 50);
 
     final customerPage = await customerFuture;
     final salesOrderPage = await salesOrderFuture;

@@ -11,9 +11,9 @@ class SalesOrderActionService {
   }
 
   Future<void> approve(int orderId, {required String comment}) {
-    return SalesOrderApiService(_client).approve(orderId, {
-      'approval_comment': comment,
-    });
+    return SalesOrderApiService(
+      _client,
+    ).approve(orderId, {'approval_comment': comment});
   }
 
   Future<void> reject(
@@ -21,30 +21,23 @@ class SalesOrderActionService {
     required String reason,
     required String comment,
   }) {
-    return SalesOrderApiService(_client).reject(orderId, {
-      'reason': reason,
-      'approval_comment': comment,
-    });
+    return SalesOrderApiService(
+      _client,
+    ).reject(orderId, {'reason': reason, 'approval_comment': comment});
   }
 
-  Future<void> complete(
-    int orderId, {
-    String completionReason = '',
-  }) {
+  Future<void> complete(int orderId, {String completionReason = ''}) {
     final payload = <String, dynamic>{};
     if (completionReason.trim().isNotEmpty) {
       payload['completion_reason'] = completionReason.trim();
     }
-    return SalesOrderApiService(_client).complete(
-      orderId,
-      payload.isEmpty ? null : payload,
-    );
+    return SalesOrderApiService(
+      _client,
+    ).complete(orderId, payload.isEmpty ? null : payload);
   }
 
   Future<void> cancel(int orderId, {required String reason}) {
-    return SalesOrderApiService(_client).cancel(orderId, {
-      'reason': reason,
-    });
+    return SalesOrderApiService(_client).cancel(orderId, {'reason': reason});
   }
 
   Future<void> updatePayment(int orderId, Map<String, dynamic> payload) {

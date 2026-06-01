@@ -30,8 +30,9 @@ class TraceabilitySummaryItem {
     final items = <TraceabilitySummaryItem>[];
     for (final item in value) {
       if (item is Map) {
-        final summary =
-            TraceabilitySummaryItem.fromJson(Map<String, dynamic>.from(item));
+        final summary = TraceabilitySummaryItem.fromJson(
+          Map<String, dynamic>.from(item),
+        );
         if (summary.number.trim().isNotEmpty) {
           items.add(summary);
         }

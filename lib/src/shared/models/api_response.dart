@@ -26,10 +26,7 @@ class ApiResponse {
         message: payload['message']?.toString(),
       );
     }
-    return ApiResponse(
-      success: true,
-      data: payload,
-    );
+    return ApiResponse(success: true, data: payload);
   }
 
   ApiResponse copyWith({

@@ -70,11 +70,16 @@ class FoilingPlate {
     if (rawProducts is List) {
       for (final item in rawProducts) {
         if (item is Map) {
-          plateProducts.add(FoilingPlateProduct(
-            productId: toInt(item['product']) ?? toInt(item['id']) ?? 0,
-            productName: item['product_name']?.toString() ?? item['name']?.toString() ?? '',
-            quantity: toInt(item['quantity']),
-          ));
+          plateProducts.add(
+            FoilingPlateProduct(
+              productId: toInt(item['product']) ?? toInt(item['id']) ?? 0,
+              productName:
+                  item['product_name']?.toString() ??
+                  item['name']?.toString() ??
+                  '',
+              quantity: toInt(item['quantity']),
+            ),
+          );
         }
       }
     }
@@ -85,13 +90,15 @@ class FoilingPlate {
     if (rawImages is List) {
       for (final item in rawImages) {
         if (item is Map) {
-          plateImages.add(FoilingPlateImage(
-            id: toInt(item['id']) ?? 0,
-            imageUrl: toStringOrNull(item['image']) ?? '',
-            sortOrder: toInt(item['sort_order']) ?? 0,
-            description: toStringOrNull(item['description']),
-            createdAt: toDateTime(item['created_at']),
-          ));
+          plateImages.add(
+            FoilingPlateImage(
+              id: toInt(item['id']) ?? 0,
+              imageUrl: toStringOrNull(item['image']) ?? '',
+              sortOrder: toInt(item['sort_order']) ?? 0,
+              description: toStringOrNull(item['description']),
+              createdAt: toDateTime(item['created_at']),
+            ),
+          );
         }
       }
     }

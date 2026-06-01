@@ -4,10 +4,7 @@ import 'package:work_order_app/src/core/utils/extensions/datetime_extensions.dar
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 
 class CustomerDetailPage extends StatelessWidget {
-  const CustomerDetailPage({
-    super.key,
-    required this.customer,
-  });
+  const CustomerDetailPage({super.key, required this.customer});
 
   final Customer customer;
 
@@ -40,9 +37,7 @@ class CustomerDetailPage extends StatelessWidget {
           CrudDetailSection(
             title: '补充信息',
             column: isMobile ? 0 : 1,
-            items: [
-              CrudDetailItem(label: '备注', value: item.notes),
-            ],
+            items: [CrudDetailItem(label: '备注', value: item.notes)],
           ),
           CrudDetailSection(
             title: '系统信息',

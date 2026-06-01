@@ -61,7 +61,7 @@ class _AuditLogListView extends StatefulWidget {
 
 class _AuditLogListViewState extends State<_AuditLogListView> {
   static const double _searchWidth = 320;
-  static const double _spacingSm = LayoutTokens.gapSm;
+  static const double _spacingSm = SpacingTokens.sm;
   static const double _controlHeight = PageActionStyle.height;
   static const String _emptyCellText = '-';
 

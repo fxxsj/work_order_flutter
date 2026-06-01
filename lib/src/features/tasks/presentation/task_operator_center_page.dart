@@ -101,8 +101,8 @@ class _TaskContextRow extends StatelessWidget {
     };
     if (items.isEmpty) return const SizedBox.shrink();
     return Wrap(
-      spacing: LayoutTokens.gapXs,
-      runSpacing: LayoutTokens.gapXs,
+      spacing: SpacingTokens.xs,
+      runSpacing: SpacingTokens.xs,
       children: items.entries.map((e) {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -137,9 +137,7 @@ class _TaskLogRow extends StatelessWidget {
         padding: const EdgeInsets.only(top: 8),
         child: Text(
           '暂无操作记录',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: colors.subtleText,
-          ),
+          style: theme.textTheme.bodySmall?.copyWith(color: colors.subtleText),
         ),
       );
     }
@@ -148,7 +146,7 @@ class _TaskLogRow extends StatelessWidget {
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+        borderRadius: BorderRadius.circular(RadiusTokens.sm),
         border: Border.all(color: colors.borderColor),
       ),
       child: Column(
@@ -233,7 +231,7 @@ class _TaskOperatorCenterView extends StatefulWidget {
 }
 
 class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
-  static const double _spacingSm = LayoutTokens.gapSm;
+  static const double _spacingSm = SpacingTokens.sm;
   static const double _searchWidth = LayoutTokens.searchWidth;
   static const double _controlHeight = PageActionStyle.height;
   static const String _refreshButtonText = '刷新';
@@ -314,14 +312,19 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
       );
       final myTasksPayload = payload['my_tasks'];
       final claimablePayload = payload['claimable_tasks'];
-      final summaryPayload =
-          payload['summary'] as Map<String, dynamic>?;
+      final summaryPayload = payload['summary'] as Map<String, dynamic>?;
       final metaPayload = payload['meta'] as Map<String, dynamic>?;
       final myTasksRaw = (myTasksPayload is List)
-          ? myTasksPayload.whereType<Map>().toList().cast<Map<String, dynamic>>()
+          ? myTasksPayload
+                .whereType<Map>()
+                .toList()
+                .cast<Map<String, dynamic>>()
           : <Map<String, dynamic>>[];
       final claimableTasksRaw = (claimablePayload is List)
-          ? claimablePayload.whereType<Map>().toList().cast<Map<String, dynamic>>()
+          ? claimablePayload
+                .whereType<Map>()
+                .toList()
+                .cast<Map<String, dynamic>>()
           : <Map<String, dynamic>>[];
       setState(() {
         _myTasks = _mapTasks(myTasksPayload);
@@ -363,22 +366,27 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
       final myTasksPayload = payload['my_tasks'] as List?;
       final metaPayload = payload['meta'] as Map<String, dynamic>?;
       final myTasksRaw = (myTasksPayload is List)
-          ? myTasksPayload.whereType<Map>().toList().cast<Map<String, dynamic>>()
+          ? myTasksPayload
+                .whereType<Map>()
+                .toList()
+                .cast<Map<String, dynamic>>()
           : <Map<String, dynamic>>[];
       setState(() {
         if (myTasksPayload != null) {
           _myTasks = [
             ..._myTasks,
-            ...myTasksPayload
-                .whereType<Map>()
-                .map((item) => Task.fromJson(Map<String, dynamic>.from(item))),
+            ...myTasksPayload.whereType<Map>().map(
+              (item) => Task.fromJson(Map<String, dynamic>.from(item)),
+            ),
           ];
           _myTasksRaw.addAll(myTasksRaw);
         }
         _meta = PaginationMeta.fromJson(metaPayload);
       });
     } catch (err) {
-      ToastUtil.showError('加载更多失败: ${err.toString().replaceFirst('Exception: ', '')}');
+      ToastUtil.showError(
+        '加载更多失败: ${err.toString().replaceFirst('Exception: ', '')}',
+      );
     } finally {
       if (mounted) setState(() => _loadingMoreMy = false);
     }
@@ -401,22 +409,27 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
       final claimablePayload = payload['claimable_tasks'] as List?;
       final metaPayload = payload['meta'] as Map<String, dynamic>?;
       final claimableTasksRaw = (claimablePayload is List)
-          ? claimablePayload.whereType<Map>().toList().cast<Map<String, dynamic>>()
+          ? claimablePayload
+                .whereType<Map>()
+                .toList()
+                .cast<Map<String, dynamic>>()
           : <Map<String, dynamic>>[];
       setState(() {
         if (claimablePayload != null) {
           _claimableTasks = [
             ..._claimableTasks,
-            ...claimablePayload
-                .whereType<Map>()
-                .map((item) => Task.fromJson(Map<String, dynamic>.from(item))),
+            ...claimablePayload.whereType<Map>().map(
+              (item) => Task.fromJson(Map<String, dynamic>.from(item)),
+            ),
           ];
           _claimableTasksRaw.addAll(claimableTasksRaw);
         }
         _meta = PaginationMeta.fromJson(metaPayload);
       });
     } catch (err) {
-      ToastUtil.showError('加载更多失败: ${err.toString().replaceFirst('Exception: ', '')}');
+      ToastUtil.showError(
+        '加载更多失败: ${err.toString().replaceFirst('Exception: ', '')}',
+      );
     } finally {
       if (mounted) setState(() => _loadingMoreClaimable = false);
     }
@@ -539,9 +552,9 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildStatCards(context),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           _buildFilterBar(context, isMobile),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           _buildTabAndList(context, isMobile),
         ],
       ),
@@ -552,7 +565,7 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final cards = [
-        (
+      (
         label: '可认领',
         value: _summary.claimableCount,
         icon: Icons.assignment_turned_in_outlined,
@@ -579,15 +592,15 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
     ];
 
     return Wrap(
-      spacing: LayoutTokens.gapSm,
-      runSpacing: LayoutTokens.gapSm,
+      spacing: SpacingTokens.sm,
+      runSpacing: SpacingTokens.sm,
       children: cards.map((card) {
         return Container(
           width: 140,
           padding: LayoutTokens.cardPadding(context),
           decoration: BoxDecoration(
             color: colors?.surface ?? theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+            borderRadius: BorderRadius.circular(RadiusTokens.md),
             border: Border.all(
               color: colors?.borderColor ?? theme.dividerColor,
             ),
@@ -603,7 +616,8 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
                     child: Text(
                       card.label,
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: colors?.subtleText ??
+                        color:
+                            colors?.subtleText ??
                             theme.colorScheme.onSurfaceVariant,
                       ),
                       overflow: TextOverflow.ellipsis,
@@ -655,7 +669,7 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
       padding: LayoutTokens.cardPadding(context),
       decoration: BoxDecoration(
         color: colors?.surface ?? Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+        borderRadius: BorderRadius.circular(RadiusTokens.md),
         border: Border.all(
           color: colors?.borderColor ?? Theme.of(context).dividerColor,
         ),
@@ -664,8 +678,8 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Wrap(
-            spacing: LayoutTokens.gapSm,
-            runSpacing: LayoutTokens.gapSm,
+            spacing: SpacingTokens.sm,
+            runSpacing: SpacingTokens.sm,
             children: [
               SizedBox(
                 width: isMobile ? double.infinity : _searchWidth,
@@ -695,8 +709,10 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
                   },
                   decoration: const InputDecoration(
                     hintText: '任务状态',
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     isDense: true,
                   ),
                 ),
@@ -713,8 +729,10 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
                   },
                   decoration: const InputDecoration(
                     hintText: '任务类型',
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     isDense: true,
                   ),
                 ),
@@ -731,8 +749,10 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
                   },
                   decoration: const InputDecoration(
                     hintText: '优先级',
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     isDense: true,
                   ),
                 ),
@@ -740,7 +760,7 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
             ],
           ),
           if (_hasActiveFilters) ...[
-            SizedBox(height: LayoutTokens.gapSm),
+            SizedBox(height: SpacingTokens.sm),
             Align(
               alignment: Alignment.centerRight,
               child: OutlinedButton.icon(
@@ -750,7 +770,9 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
                 style: OutlinedButton.styleFrom(
                   textStyle: theme.textTheme.labelSmall,
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 4),
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
                 ),
               ),
             ),
@@ -762,10 +784,16 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
 
   Widget _buildTabAndList(BuildContext context, bool isMobile) {
     final tasks = _activeTab == 'mine' ? _myTasks : _claimableTasks;
-    final hasMore = _activeTab == 'mine' ? _meta.myHasMore : _meta.claimableHasMore;
+    final hasMore = _activeTab == 'mine'
+        ? _meta.myHasMore
+        : _meta.claimableHasMore;
     final total = _activeTab == 'mine' ? _meta.myTotal : _meta.claimableTotal;
-    final loadingMore = _activeTab == 'mine' ? _loadingMoreMy : _loadingMoreClaimable;
-    final onLoadMore = _activeTab == 'mine' ? _loadMoreMyTasks : _loadMoreClaimableTasks;
+    final loadingMore = _activeTab == 'mine'
+        ? _loadingMoreMy
+        : _loadingMoreClaimable;
+    final onLoadMore = _activeTab == 'mine'
+        ? _loadMoreMyTasks
+        : _loadMoreClaimableTasks;
 
     final filteredTasks = _filterTasksByStatus(tasks);
 
@@ -781,7 +809,7 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
       children: [
         // Tab bar
         Wrap(
-          spacing: LayoutTokens.gapSm,
+          spacing: SpacingTokens.sm,
           children: [
             _TabChip(
               label: '我的任务',
@@ -797,12 +825,26 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
             ),
           ],
         ),
-        SizedBox(height: LayoutTokens.gapMd),
+        SizedBox(height: SpacingTokens.md),
         // Task list
         if (!isMobile)
-          _buildTaskTable(context, filteredTasks, hasMore: hasMore, total: total, loadingMore: loadingMore, onLoadMore: onLoadMore)
+          _buildTaskTable(
+            context,
+            filteredTasks,
+            hasMore: hasMore,
+            total: total,
+            loadingMore: loadingMore,
+            onLoadMore: onLoadMore,
+          )
         else
-          _buildTaskListMobile(context, filteredTasks, hasMore: hasMore, total: total, loadingMore: loadingMore, onLoadMore: onLoadMore),
+          _buildTaskListMobile(
+            context,
+            filteredTasks,
+            hasMore: hasMore,
+            total: total,
+            loadingMore: loadingMore,
+            onLoadMore: onLoadMore,
+          ),
       ],
     );
   }
@@ -854,71 +896,90 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
                 .map(
                   (task) => DataRow(
                     cells: [
-                      DataCell(Text(
-                        _displayText(TaskUiHelper.title(task)),
-                        style: theme.textTheme.bodyMedium,
-                      )),
-                      DataCell(Text(
-                        _displayText(TaskUiHelper.sourceSummary(task)),
-                        style: theme.textTheme.bodySmall,
-                      )),
-                      DataCell(Text(
+                      DataCell(
+                        Text(
+                          _displayText(TaskUiHelper.title(task)),
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                      ),
+                      DataCell(
+                        Text(
+                          _displayText(TaskUiHelper.sourceSummary(task)),
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ),
+                      DataCell(
+                        Text(
                           _displayText(task.processName),
-                          style: theme.textTheme.bodySmall)),
-                      DataCell(Text(
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ),
+                      DataCell(
+                        Text(
                           TaskUiHelper.quantitySummary(task),
-                          style: theme.textTheme.bodySmall)),
-                      DataCell(Text(
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ),
+                      DataCell(
+                        Text(
                           TaskUiHelper.progressText(task),
-                          style: theme.textTheme.bodySmall)),
-                      DataCell(Text(
-                        TaskUiHelper.deadlineRiskText(task) == null
-                            ? _formatDate(task.deliveryDate)
-                            : '${_formatDate(task.deliveryDate)} · ${TaskUiHelper.deadlineRiskText(task)!}',
-                        style: theme.textTheme.bodySmall,
-                      )),
-                      DataCell(Text(
-                        task.statusDisplay ?? task.status ?? '-',
-                        style: theme.textTheme.bodySmall,
-                      )),
-                      DataCell(Wrap(
-                        spacing: LayoutTokens.gapSm,
-                        runSpacing: LayoutTokens.gapXs,
-                        children: [
-                          if (!isClaimable) ...[
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ),
+                      DataCell(
+                        Text(
+                          TaskUiHelper.deadlineRiskText(task) == null
+                              ? _formatDate(task.deliveryDate)
+                              : '${_formatDate(task.deliveryDate)} · ${TaskUiHelper.deadlineRiskText(task)!}',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ),
+                      DataCell(
+                        Text(
+                          task.statusDisplay ?? task.status ?? '-',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ),
+                      DataCell(
+                        Wrap(
+                          spacing: SpacingTokens.sm,
+                          runSpacing: SpacingTokens.xs,
+                          children: [
+                            if (!isClaimable) ...[
+                              RowActionGroup(
+                                actions: [
+                                  RowAction(
+                                    label: '更新进度',
+                                    onPressed: () => _openUpdateDialog(
+                                      context,
+                                      task,
+                                      completeMode: false,
+                                    ),
+                                  ),
+                                  RowAction(
+                                    label: '完成任务',
+                                    onPressed: () => _openUpdateDialog(
+                                      context,
+                                      task,
+                                      completeMode: true,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                            if (isClaimable) _buildClaimButton(task),
                             RowActionGroup(
                               actions: [
                                 RowAction(
-                                  label: '更新进度',
-                                  onPressed: () => _openUpdateDialog(
-                                    context,
-                                    task,
-                                    completeMode: false,
-                                  ),
-                                ),
-                                RowAction(
-                                  label: '完成任务',
-                                  onPressed: () => _openUpdateDialog(
-                                    context,
-                                    task,
-                                    completeMode: true,
-                                  ),
+                                  label: '查看施工单',
+                                  onPressed: () =>
+                                      _openTaskDetail(context, task),
                                 ),
                               ],
                             ),
                           ],
-                          if (isClaimable)
-                            _buildClaimButton(task),
-                          RowActionGroup(
-                            actions: [
-                              RowAction(
-                                label: '查看施工单',
-                                onPressed: () => _openTaskDetail(context, task),
-                              ),
-                            ],
-                          ),
-                        ],
-                      )),
+                        ),
+                      ),
                     ],
                   ),
                 )
@@ -972,10 +1033,12 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: tasks.length,
-            separatorBuilder: (_, __) => SizedBox(height: LayoutTokens.gapSm),
+            separatorBuilder: (_, __) => SizedBox(height: SpacingTokens.sm),
             itemBuilder: (context, index) {
               final task = tasks[index];
-              final rawTasks = _activeTab == 'mine' ? _myTasksRaw : _claimableTasksRaw;
+              final rawTasks = _activeTab == 'mine'
+                  ? _myTasksRaw
+                  : _claimableTasksRaw;
               return _TaskCard(
                 task: task,
                 rawTaskData: index < rawTasks.length ? rawTasks[index] : {},
@@ -990,8 +1053,9 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
                     _openUpdateDialog(context, task, completeMode: true),
                 onToggleLogs: () {
                   setState(() {
-                    _expandedLogTaskId =
-                        _expandedLogTaskId == task.id ? null : task.id;
+                    _expandedLogTaskId = _expandedLogTaskId == task.id
+                        ? null
+                        : task.id;
                   });
                 },
               );
@@ -1093,14 +1157,14 @@ class _TabChip extends StatelessWidget {
     final colors = theme.extension<AppColors>();
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+      borderRadius: BorderRadius.circular(RadiusTokens.md),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: active
               ? colorScheme.primaryContainer
               : colors?.surface ?? colorScheme.surface,
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+          borderRadius: BorderRadius.circular(RadiusTokens.md),
           border: Border.all(
             color: active
                 ? colorScheme.primary
@@ -1198,13 +1262,13 @@ class _TaskCard extends StatelessWidget {
       padding: LayoutTokens.cardPadding(context),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+        borderRadius: BorderRadius.circular(RadiusTokens.md),
         border: Border.all(
           color: isOverdue
               ? colorScheme.error
               : isDueSoon
-                  ? Colors.orange
-                  : colors.borderColor,
+              ? Colors.orange
+              : colors.borderColor,
           width: isOverdue || isDueSoon ? 2 : 1,
         ),
       ),
@@ -1214,7 +1278,7 @@ class _TaskCard extends StatelessWidget {
           // 头部：施工单号 + 客户名
           if (task.workOrderNumber != null || task.customerName != null)
             Padding(
-              padding: const EdgeInsets.only(bottom: LayoutTokens.gapSm),
+              padding: const EdgeInsets.only(bottom: SpacingTokens.sm),
               child: Row(
                 children: [
                   if (task.workOrderNumber != null) ...[
@@ -1242,15 +1306,14 @@ class _TaskCard extends StatelessWidget {
                   if (deadlineRisk != null)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: LayoutTokens.gapSm,
-                        vertical: LayoutTokens.gapXs,
+                        horizontal: SpacingTokens.sm,
+                        vertical: SpacingTokens.xs,
                       ),
                       decoration: BoxDecoration(
                         color: isOverdue
                             ? colorScheme.error.withValues(alpha: 0.1)
                             : Colors.orange.withValues(alpha: 0.1),
-                        borderRadius:
-                            BorderRadius.circular(LayoutTokens.radiusSm),
+                        borderRadius: BorderRadius.circular(RadiusTokens.sm),
                       ),
                       child: Text(
                         deadlineRisk,
@@ -1271,15 +1334,11 @@ class _TaskCard extends StatelessWidget {
               ),
             ),
           // 任务内容
-          TaskListTile(
-            task: task,
-            onTap: onTap,
-            showDivider: false,
-          ),
-          SizedBox(height: LayoutTokens.gapSm),
+          TaskListTile(task: task, onTap: onTap, showDivider: false),
+          SizedBox(height: SpacingTokens.sm),
           // 关联对象
           _TaskContextRow(task: task),
-          SizedBox(height: LayoutTokens.gapSm),
+          SizedBox(height: SpacingTokens.sm),
           // 操作按钮
           if (isClaimable)
             claiming
@@ -1287,20 +1346,21 @@ class _TaskCard extends StatelessWidget {
                     width: 24,
                     height: 24,
                     child: Center(
-                      child:
-                          CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     ),
                   )
                 : OutlinedButton.icon(
                     onPressed: onClaim,
-                    icon: const Icon(Icons.assignment_turned_in_outlined,
-                        size: 16),
+                    icon: const Icon(
+                      Icons.assignment_turned_in_outlined,
+                      size: 16,
+                    ),
                     label: const Text('认领'),
                   )
           else
             Wrap(
-              spacing: LayoutTokens.gapSm,
-              runSpacing: LayoutTokens.gapSm,
+              spacing: SpacingTokens.sm,
+              runSpacing: SpacingTokens.sm,
               children: [
                 OutlinedButton.icon(
                   onPressed: isCompleted ? null : onUpdate,
@@ -1343,8 +1403,7 @@ class _TaskCard extends StatelessWidget {
                 ],
               ),
             ),
-          if (expandedLogTaskId == task.id)
-            _TaskLogRow(logs: _logs),
+          if (expandedLogTaskId == task.id) _TaskLogRow(logs: _logs),
         ],
       ),
     );
@@ -1379,12 +1438,14 @@ class _TaskUpdateDialogState extends State<_TaskUpdateDialog> {
   void initState() {
     super.initState();
     _completeMode = widget.completeMode;
-    final remaining = ((widget.task.productionQuantity ?? 0) -
-            (widget.task.quantityCompleted ?? 0))
-        .clamp(0, double.infinity)
-        .toInt();
-    _quantityIncrement =
-        remaining == 0 ? 1 : remaining.clamp(1, remaining).toInt();
+    final remaining =
+        ((widget.task.productionQuantity ?? 0) -
+                (widget.task.quantityCompleted ?? 0))
+            .clamp(0, double.infinity)
+            .toInt();
+    _quantityIncrement = remaining == 0
+        ? 1
+        : remaining.clamp(1, remaining).toInt();
   }
 
   @override
@@ -1404,40 +1465,28 @@ class _TaskUpdateDialogState extends State<_TaskUpdateDialog> {
           ? '确认将该任务标记为完成，并记录本次完成结果。'
           : '记录本次生产进度，系统会累加完成数量并保留不良品信息。',
       impacts: _completeMode
-          ? const [
-              '任务完成后会进入后续质检、入库或交接流程',
-              '不良品数量和完成说明会影响后续质量追踪',
-            ]
-          : const [
-              '完成数量会计入任务进度',
-              '不良品数量会用于后续质量统计',
-            ],
+          ? const ['任务完成后会进入后续质检、入库或交接流程', '不良品数量和完成说明会影响后续质量追踪']
+          : const ['完成数量会计入任务进度', '不良品数量会用于后续质量统计'],
       auditHint: _completeMode ? '完成理由和备注会进入任务流转记录。' : null,
       onSubmit: _submit,
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(task.workContent ?? '任务 #${task.id}'),
-          SizedBox(height: LayoutTokens.gapSm),
+          SizedBox(height: SpacingTokens.sm),
           LinearProgressIndicator(value: total > 0 ? completed / total : 0),
-          SizedBox(height: LayoutTokens.gapSm),
+          SizedBox(height: SpacingTokens.sm),
           Text('$completed / $total · $progress%'),
-          SizedBox(height: LayoutTokens.gapLg),
+          SizedBox(height: SpacingTokens.lg),
           PageModeToggle<bool>(
             value: _completeMode,
             options: const [
-              PageModeOption(
-                value: false,
-                label: '增量更新',
-              ),
-              PageModeOption(
-                value: true,
-                label: '直接完成',
-              ),
+              PageModeOption(value: false, label: '增量更新'),
+              PageModeOption(value: true, label: '直接完成'),
             ],
             onChanged: (value) => setState(() => _completeMode = value),
           ),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           if (!_completeMode) ...[
             CrudFieldConfig.number(
               label: '本次完成数量',
@@ -1453,7 +1502,7 @@ class _TaskUpdateDialogState extends State<_TaskUpdateDialog> {
                 _quantityIncrement = int.tryParse(value) ?? 0;
               },
             ).build(context),
-            SizedBox(height: LayoutTokens.gapMd),
+            SizedBox(height: SpacingTokens.md),
           ],
           CrudFieldConfig.number(
             label: '不良品数量',
@@ -1463,13 +1512,13 @@ class _TaskUpdateDialogState extends State<_TaskUpdateDialog> {
             },
           ).build(context),
           if (_completeMode) ...[
-            SizedBox(height: LayoutTokens.gapMd),
+            SizedBox(height: SpacingTokens.md),
             CrudFieldConfig.text(
               label: '完成理由（可选）',
               onChanged: (value) => _completionReason = value,
             ).build(context),
           ],
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           CrudFieldConfig.text(
             label: '备注（可选）',
             onChanged: (value) => _notes = value,

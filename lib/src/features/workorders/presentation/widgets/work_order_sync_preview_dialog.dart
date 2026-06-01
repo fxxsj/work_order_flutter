@@ -146,7 +146,7 @@ class _WorkOrderSyncPreviewDialogState
               ),
             ),
             if (!widget.canSync) ...[
-              SizedBox(height: LayoutTokens.gapSm),
+              SizedBox(height: SpacingTokens.sm),
               Text(
                 '已审核的施工单不能同步任务。',
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -154,7 +154,7 @@ class _WorkOrderSyncPreviewDialogState
                 ),
               ),
             ],
-            SizedBox(height: LayoutTokens.gapMd),
+            SizedBox(height: SpacingTokens.md),
             Row(
               children: [
                 TextButton(
@@ -172,7 +172,7 @@ class _WorkOrderSyncPreviewDialogState
               ],
             ),
             const Divider(height: 1),
-            SizedBox(height: LayoutTokens.gapSm),
+            SizedBox(height: SpacingTokens.sm),
             if (widget.processes.isEmpty)
               Text('暂无工序可同步', style: theme.textTheme.bodyMedium)
             else
@@ -206,11 +206,11 @@ class _WorkOrderSyncPreviewDialogState
                 ],
               ),
             if (loading) ...[
-              SizedBox(height: LayoutTokens.gapMd),
+              SizedBox(height: SpacingTokens.md),
               const LinearProgressIndicator(minHeight: 2),
             ],
             if (warningMessage != null) ...[
-              SizedBox(height: LayoutTokens.gapMd),
+              SizedBox(height: SpacingTokens.md),
               Text(
                 warningMessage!,
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -219,7 +219,7 @@ class _WorkOrderSyncPreviewDialogState
               ),
             ],
             if (previewData != null) ...[
-              SizedBox(height: LayoutTokens.gapLg),
+              SizedBox(height: SpacingTokens.lg),
               Text(
                 '预览结果',
                 style: theme.textTheme.titleSmall?.copyWith(
@@ -227,7 +227,7 @@ class _WorkOrderSyncPreviewDialogState
                   color: colors?.sidebarText,
                 ),
               ),
-              SizedBox(height: LayoutTokens.gapSm),
+              SizedBox(height: SpacingTokens.sm),
               _InfoRow(label: '将删除未开始任务', value: '$tasksToRemove'),
               _InfoRow(label: '预计新增任务', value: '$tasksToAdd'),
               _InfoRow(

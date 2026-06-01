@@ -74,7 +74,7 @@ class _SalesOrderListView extends StatefulWidget {
 
 class _SalesOrderListViewState extends State<_SalesOrderListView> {
   static const double _searchWidth = 320;
-  static const double _spacingSm = LayoutTokens.gapSm;
+  static const double _spacingSm = SpacingTokens.sm;
   static const double _controlHeight = PageActionStyle.height;
   static const String _searchHintText = '搜索订单号/客户';
   static const String _statusFilterLabel = '状态';
@@ -852,7 +852,8 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     final status = order.status ?? '';
     final approvalStatus = order.approvalStatus ?? '';
     final actions = <RowAction>[
-      if (canChangeSalesOrder && (approvalStatus == 'draft' || approvalStatus == 'rejected'))
+      if (canChangeSalesOrder &&
+          (approvalStatus == 'draft' || approvalStatus == 'rejected'))
         RowAction(
           label: '编辑',
           icon: Icons.edit_outlined,
@@ -895,7 +896,9 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
       );
     }
     if (canCreateWorkOrder &&
-        (approvalStatus == 'approved' && status != 'completed' && status != 'cancelled')) {
+        (approvalStatus == 'approved' &&
+            status != 'completed' &&
+            status != 'cancelled')) {
       actions.add(
         RowAction(
           label: '生成施工单草稿',
@@ -904,8 +907,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         ),
       );
     }
-    if (canCreateDeliveryOrder &&
-        (approvalStatus == 'approved')) {
+    if (canCreateDeliveryOrder && (approvalStatus == 'approved')) {
       actions.add(
         RowAction(
           label: '生成送货单',
@@ -924,7 +926,9 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
       );
     }
     if (canChangeSalesOrder &&
-        (approvalStatus == 'approved' && status != 'completed' && status != 'cancelled')) {
+        (approvalStatus == 'approved' &&
+            status != 'completed' &&
+            status != 'cancelled')) {
       actions.add(
         RowAction(
           label: '完成订单',
@@ -1321,8 +1325,12 @@ class _SalesOrderSummaryCard extends StatelessWidget {
         : order.orderNumber;
     final customer = order.customerName ?? _emptyCellText;
     final approvalStatus = order.approvalStatus;
-    final isApprovalState = ['draft', 'submitted', 'rejected'].contains(approvalStatus);
-    final status = isApprovalState 
+    final isApprovalState = [
+      'draft',
+      'submitted',
+      'rejected',
+    ].contains(approvalStatus);
+    final status = isApprovalState
         ? (order.approvalStatusDisplay ?? approvalStatus ?? _emptyCellText)
         : (order.statusDisplay ?? order.status ?? _emptyCellText);
     final payment =
@@ -1342,7 +1350,7 @@ class _SalesOrderSummaryCard extends StatelessWidget {
           children: [
             if (selectionMode) ...[
               Padding(
-                padding: const EdgeInsets.only(right: LayoutTokens.gapMd),
+                padding: const EdgeInsets.only(right: SpacingTokens.md),
                 child: Checkbox(
                   value: selected,
                   onChanged: selectable ? onSelectedChanged : null,

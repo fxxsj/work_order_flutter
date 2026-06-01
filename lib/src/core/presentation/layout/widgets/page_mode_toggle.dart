@@ -3,10 +3,7 @@ import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 
 class PageModeOption<T> {
-  const PageModeOption({
-    required this.value,
-    required this.label,
-  });
+  const PageModeOption({required this.value, required this.label});
 
   final T value;
   final String label;
@@ -38,9 +35,7 @@ class PageModeToggle<T> extends StatelessWidget {
       children: options
           .map(
             (option) => Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: LayoutTokens.gapMd,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.md),
               child: Text(option.label),
             ),
           )

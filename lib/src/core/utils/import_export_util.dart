@@ -49,11 +49,7 @@ class ImportExportService {
   /// 返回 [ImportResult]
   Future<ImportResult> import(String endpoint, PlatformFile file) async {
     if (file.bytes == null) {
-      return ImportResult(
-        successCount: 0,
-        errorCount: 1,
-        errors: ['无法读取文件'],
-      );
+      return ImportResult(successCount: 0, errorCount: 1, errors: ['无法读取文件']);
     }
 
     try {
@@ -89,11 +85,7 @@ class ImportExportService {
         }
         return ImportResult.fromJson(payload);
       }
-      return ImportResult(
-        successCount: 0,
-        errorCount: 1,
-        errors: ['未知响应格式'],
-      );
+      return ImportResult(successCount: 0, errorCount: 1, errors: ['未知响应格式']);
     } on ApiException catch (err) {
       throw Exception(err.message.isNotEmpty ? err.message : '导入失败');
     } catch (err) {
@@ -124,8 +116,9 @@ class ImportResult {
       errorCount: json['error_count'] as int? ?? 0,
       createdCount: json['created_count'] as int?,
       updatedCount: json['updated_count'] as int?,
-      errors:
-          (json['errors'] as List<dynamic>?)?.map((e) => e.toString()).toList(),
+      errors: (json['errors'] as List<dynamic>?)
+          ?.map((e) => e.toString())
+          .toList(),
     );
   }
 }

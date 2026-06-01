@@ -72,8 +72,9 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     final background = colors.background;
     final primary = theme.primaryColor;
     final headerForeground = theme.colorScheme.onPrimary;
-    final headerMuted =
-        headerForeground.withValues(alpha: OpacityTokens.textMuted);
+    final headerMuted = headerForeground.withValues(
+      alpha: OpacityTokens.textMuted,
+    );
     final sidebar = colors.sidebar;
     final sidebarText = colors.sidebarText;
     final sidebarItems = sidebarNavItems(currentUser: currentUser);
@@ -95,9 +96,10 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
         setState(() {
           _sidebarCollapsed = !_sidebarCollapsed;
         });
-        context
-            .read<AppStorage>()
-            .write(Constant.KEY_SIDEBAR_COLLAPSED, _sidebarCollapsed);
+        context.read<AppStorage>().write(
+          Constant.KEY_SIDEBAR_COLLAPSED,
+          _sidebarCollapsed,
+        );
       },
       appTitle: _appTitle,
       sectionTitle: labelFor(currentId),
@@ -151,7 +153,8 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
                 border: Border(
                   right: BorderSide(
                     color: borderColor.withValues(
-                        alpha: OpacityTokens.borderStrong),
+                      alpha: OpacityTokens.borderStrong,
+                    ),
                   ),
                 ),
               ),
@@ -239,9 +242,10 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
         _expandedIds.remove(id);
       }
     });
-    context
-        .read<AppStorage>()
-        .write(Constant.KEY_SIDEBAR_EXPANDED, _expandedIds.toList());
+    context.read<AppStorage>().write(
+      Constant.KEY_SIDEBAR_EXPANDED,
+      _expandedIds.toList(),
+    );
   }
 
   ScreenSize _getScreenSize(double width) {

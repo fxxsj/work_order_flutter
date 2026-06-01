@@ -1,6 +1,5 @@
 /// 共享值格式化工具类
 ///
-/// 整合 [GenericValueFormatter] 和 [CrudValueFormatter] 的公共逻辑，
 /// 避免在多个文件中重复定义格式化方法。
 class AppValueFormatter {
   const AppValueFormatter._();

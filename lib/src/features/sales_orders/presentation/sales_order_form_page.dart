@@ -1026,14 +1026,22 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               label: '返回',
             ),
             PageActionButton.outlined(
-              onPressed: _submitting || !canSubmit ? null : () => _handleSubmit(false),
+              onPressed: _submitting || !canSubmit
+                  ? null
+                  : () => _handleSubmit(false),
               icon: const Icon(Icons.save, size: 16),
-              label: _submitting ? '保存中' : (widget.mode == SalesOrderFormMode.edit ? '保存草稿' : '存为草稿'),
+              label: _submitting
+                  ? '保存中'
+                  : (widget.mode == SalesOrderFormMode.edit ? '保存草稿' : '存为草稿'),
             ),
             PageActionButton.filled(
-              onPressed: _submitting || !canSubmit ? null : () => _handleSubmit(true),
+              onPressed: _submitting || !canSubmit
+                  ? null
+                  : () => _handleSubmit(true),
               icon: const Icon(Icons.send, size: 16),
-              label: _submitting ? '发布中' : (widget.mode == SalesOrderFormMode.edit ? '保存并发布' : '直接发布'),
+              label: _submitting
+                  ? '发布中'
+                  : (widget.mode == SalesOrderFormMode.edit ? '保存并发布' : '直接发布'),
             ),
           ],
         ),
@@ -1412,7 +1420,7 @@ class _InlineBadge extends StatelessWidget {
         color: theme.colorScheme.surfaceContainerHighest.withValues(
           alpha: OpacityTokens.heavy,
         ),
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+        borderRadius: BorderRadius.circular(RadiusTokens.md),
       ),
       child: Text(
         '$label：$value',
@@ -1452,9 +1460,7 @@ class _TraceabilityGroup extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: theme.colorScheme.surfaceContainerHighest
                           .withValues(alpha: OpacityTokens.heavy),
-                      borderRadius: BorderRadius.circular(
-                        LayoutTokens.radiusPill,
-                      ),
+                      borderRadius: BorderRadius.circular(RadiusTokens.pill),
                     ),
                     child: Text(number, style: theme.textTheme.bodySmall),
                   ),

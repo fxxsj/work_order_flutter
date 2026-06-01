@@ -17,7 +17,10 @@ class WorkOrderMaterialApiService {
       'page_size': pageSize,
       ...?params,
     };
-    final response = await _client.get('/workorder-materials/', queryParameters: query);
+    final response = await _client.get(
+      '/workorder-materials/',
+      queryParameters: query,
+    );
     return _pageFromResponse(response.data, page: page, pageSize: pageSize);
   }
 
@@ -26,13 +29,21 @@ class WorkOrderMaterialApiService {
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> createMaterial(Map<String, dynamic> payload) async {
+  Future<Map<String, dynamic>> createMaterial(
+    Map<String, dynamic> payload,
+  ) async {
     final response = await _client.post('/workorder-materials/', data: payload);
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> updateMaterial(int id, Map<String, dynamic> payload) async {
-    final response = await _client.patch('/workorder-materials/$id/', data: payload);
+  Future<Map<String, dynamic>> updateMaterial(
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
+    final response = await _client.patch(
+      '/workorder-materials/$id/',
+      data: payload,
+    );
     return _mapFromResponse(response.data);
   }
 
@@ -40,19 +51,23 @@ class WorkOrderMaterialApiService {
     await _client.delete('/workorder-materials/$id/');
   }
 
-  Future<Map<String, dynamic>> batchCheckout(Map<String, dynamic> payload) async {
-    final response = await _client.post('/workorder-materials/batch_action/', data: {
-      'action': 'checkout',
-      ...payload,
-    });
+  Future<Map<String, dynamic>> batchCheckout(
+    Map<String, dynamic> payload,
+  ) async {
+    final response = await _client.post(
+      '/workorder-materials/batch_action/',
+      data: {'action': 'checkout', ...payload},
+    );
     return _mapFromResponse(response.data);
   }
 
-  Future<Map<String, dynamic>> batchCheckin(Map<String, dynamic> payload) async {
-    final response = await _client.post('/workorder-materials/batch_action/', data: {
-      'action': 'checkin',
-      ...payload,
-    });
+  Future<Map<String, dynamic>> batchCheckin(
+    Map<String, dynamic> payload,
+  ) async {
+    final response = await _client.post(
+      '/workorder-materials/batch_action/',
+      data: {'action': 'checkin', ...payload},
+    );
     return _mapFromResponse(response.data);
   }
 
@@ -64,14 +79,30 @@ class WorkOrderMaterialApiService {
     if (data is Map<String, dynamic>) {
       final results = data['results'];
       final list = results is List
-          ? results.whereType<Map>().map((item) => Map<String, dynamic>.from(item)).toList()
+          ? results
+                .whereType<Map>()
+                .map((item) => Map<String, dynamic>.from(item))
+                .toList()
           : <Map<String, dynamic>>[];
       final total = toInt(data['count']) ?? list.length;
-      return PageData(items: list, total: total, page: page, pageSize: pageSize);
+      return PageData(
+        items: list,
+        total: total,
+        page: page,
+        pageSize: pageSize,
+      );
     }
     if (data is List) {
-      final list = data.whereType<Map>().map((item) => Map<String, dynamic>.from(item)).toList();
-      return PageData(items: list, total: list.length, page: 1, pageSize: list.length);
+      final list = data
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList();
+      return PageData(
+        items: list,
+        total: list.length,
+        page: 1,
+        pageSize: list.length,
+      );
     }
     return const PageData(items: [], total: 0, page: 1, pageSize: 20);
   }

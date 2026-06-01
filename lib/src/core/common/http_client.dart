@@ -31,7 +31,9 @@ class HttpClient {
   }
 
   static void enqueueRetry(
-      RequestOptions requestOptions, ErrorInterceptorHandler handler) {
+    RequestOptions requestOptions,
+    ErrorInterceptorHandler handler,
+  ) {
     _requestQueue.add(_RetryRequest(requestOptions, handler));
   }
 
@@ -173,8 +175,10 @@ class HttpClient {
     if (exp is! int) {
       return false;
     }
-    final expTime =
-        DateTime.fromMillisecondsSinceEpoch(exp * 1000, isUtc: true);
+    final expTime = DateTime.fromMillisecondsSinceEpoch(
+      exp * 1000,
+      isUtc: true,
+    );
     final now = DateTime.now().toUtc();
     return now.isAfter(expTime.subtract(Duration(seconds: leewaySeconds)));
   }
@@ -215,7 +219,9 @@ class HttpClient {
   }) async {
     try {
       // 调试日志：打印完整的请求信息
-      debugPrint('[HttpClient.requestRaw] ${method.toUpperCase()} ${_dio.options.baseUrl}$path');
+      debugPrint(
+        '[HttpClient.requestRaw] ${method.toUpperCase()} ${_dio.options.baseUrl}$path',
+      );
       debugPrint('[HttpClient.requestRaw] data type: ${data.runtimeType}');
       final options = Options(
         method: method.toUpperCase(),
@@ -232,16 +238,22 @@ class HttpClient {
       );
       return response;
     } on DioException catch (err) {
-      debugPrint('[HttpClient.requestRaw] ERROR: statusCode=${err.response?.statusCode}, '
-          'type=${err.type}, realUri=${err.response?.realUri}, '
-          'requestUri=${err.requestOptions.uri}');
-      debugPrint('[HttpClient.requestRaw] ERROR responseData=${err.response?.data}');
+      debugPrint(
+        '[HttpClient.requestRaw] ERROR: statusCode=${err.response?.statusCode}, '
+        'type=${err.type}, realUri=${err.response?.realUri}, '
+        'requestUri=${err.requestOptions.uri}',
+      );
+      debugPrint(
+        '[HttpClient.requestRaw] ERROR responseData=${err.response?.data}',
+      );
       throw ApiException.fromDio(err);
     }
   }
 
-  static Future<ApiResponse> get(String path,
-      {Map<String, dynamic>? queryParameters}) async {
+  static Future<ApiResponse> get(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
     try {
       final response = await _dio.get(path, queryParameters: queryParameters);
       final apiResponse = ApiResponse.fromJson(response.data);
@@ -259,11 +271,17 @@ class HttpClient {
     }
   }
 
-  static Future<ApiResponse> post(String path,
-      {dynamic data, Map<String, dynamic>? queryParameters}) async {
+  static Future<ApiResponse> post(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+  }) async {
     try {
-      final response =
-          await _dio.post(path, data: data, queryParameters: queryParameters);
+      final response = await _dio.post(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+      );
       final apiResponse = ApiResponse.fromJson(response.data);
       if (!apiResponse.success) {
         throw ApiException(
@@ -279,11 +297,17 @@ class HttpClient {
     }
   }
 
-  static Future<ApiResponse> put(String path,
-      {dynamic data, Map<String, dynamic>? queryParameters}) async {
+  static Future<ApiResponse> put(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+  }) async {
     try {
-      final response =
-          await _dio.put(path, data: data, queryParameters: queryParameters);
+      final response = await _dio.put(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+      );
       final apiResponse = ApiResponse.fromJson(response.data);
       if (!apiResponse.success) {
         throw ApiException(
@@ -299,11 +323,17 @@ class HttpClient {
     }
   }
 
-  static Future<ApiResponse> patch(String path,
-      {dynamic data, Map<String, dynamic>? queryParameters}) async {
+  static Future<ApiResponse> patch(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+  }) async {
     try {
-      final response =
-          await _dio.patch(path, data: data, queryParameters: queryParameters);
+      final response = await _dio.patch(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+      );
       final apiResponse = ApiResponse.fromJson(response.data);
       if (!apiResponse.success) {
         throw ApiException(
@@ -319,11 +349,17 @@ class HttpClient {
     }
   }
 
-  static Future<ApiResponse> delete(String path,
-      {dynamic data, Map<String, dynamic>? queryParameters}) async {
+  static Future<ApiResponse> delete(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+  }) async {
     try {
-      final response =
-          await _dio.delete(path, data: data, queryParameters: queryParameters);
+      final response = await _dio.delete(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+      );
       final apiResponse = ApiResponse.fromJson(response.data);
       if (!apiResponse.success) {
         throw ApiException(

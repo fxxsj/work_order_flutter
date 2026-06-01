@@ -39,11 +39,13 @@ class WorkOrderSalesOrderCandidate {
       deliveryDate: _toNullableDateTime(json['delivery_date']),
       availableProducts: products is List
           ? products
-              .whereType<Map>()
-              .map((item) => WorkOrderSalesOrderCandidateProduct.fromJson(
+                .whereType<Map>()
+                .map(
+                  (item) => WorkOrderSalesOrderCandidateProduct.fromJson(
                     Map<String, dynamic>.from(item),
-                  ))
-              .toList(growable: false)
+                  ),
+                )
+                .toList(growable: false)
           : const [],
     );
   }

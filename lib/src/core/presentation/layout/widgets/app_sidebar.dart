@@ -53,7 +53,8 @@ class AppSidebarDrawer extends StatelessWidget {
           ),
         );
       } else {
-        final isExpanded = expandedIds.contains(item.id) ||
+        final isExpanded =
+            expandedIds.contains(item.id) ||
             item.children.any((c) => c.id == currentId);
         tiles.add(
           Theme(
@@ -63,15 +64,12 @@ class AppSidebarDrawer extends StatelessWidget {
               initiallyExpanded: isExpanded,
               onExpansionChanged: (value) => onToggleExpand(item.id, value),
               tilePadding: EdgeInsets.symmetric(
-                horizontal: LayoutTokens.gapMd,
-                vertical: LayoutTokens.gapXxxs,
+                horizontal: SpacingTokens.md,
+                vertical: SpacingTokens.xxxs,
               ),
               childrenPadding: EdgeInsets.zero,
               leading: Icon(item.icon, color: sidebarText, size: 18),
-              title: Text(
-                item.label,
-                style: parentStyle,
-              ),
+              title: Text(item.label, style: parentStyle),
               children: [
                 for (final child in item.children)
                   DrawerTile(
@@ -96,7 +94,7 @@ class AppSidebarDrawer extends StatelessWidget {
           width: double.infinity,
           height: headerHeight,
           color: primary,
-          padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapLg),
+          padding: EdgeInsets.symmetric(horizontal: SpacingTokens.lg),
           alignment: Alignment.centerLeft,
           child: SidebarBrand(
             compact: false,
@@ -107,12 +105,10 @@ class AppSidebarDrawer extends StatelessWidget {
         ),
         Expanded(
           child: ScrollConfiguration(
-            behavior:
-                ScrollConfiguration.of(context).copyWith(scrollbars: false),
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: tiles,
-            ),
+            behavior: ScrollConfiguration.of(
+              context,
+            ).copyWith(scrollbars: false),
+            child: ListView(padding: EdgeInsets.zero, children: tiles),
           ),
         ),
       ],
@@ -169,15 +165,16 @@ class AppSidebarRail extends StatelessWidget {
         ),
         Expanded(
           child: ScrollConfiguration(
-            behavior:
-                ScrollConfiguration.of(context).copyWith(scrollbars: false),
+            behavior: ScrollConfiguration.of(
+              context,
+            ).copyWith(scrollbars: false),
             child: ListView(
               controller: controller,
               padding: EdgeInsets.fromLTRB(
                 LayoutTokens.cardPaddingSm,
-                LayoutTokens.gapXxs,
+                SpacingTokens.xxs,
                 LayoutTokens.cardPaddingSm,
-                LayoutTokens.gapLg,
+                SpacingTokens.lg,
               ),
               children: _buildRailItems(context),
             ),
@@ -200,7 +197,8 @@ class AppSidebarRail extends StatelessWidget {
           ),
         );
       } else {
-        final isExpanded = expandedIds.contains(item.id) ||
+        final isExpanded =
+            expandedIds.contains(item.id) ||
             item.children.any((c) => c.id == currentId);
         items.add(
           _buildRailTile(
@@ -240,8 +238,9 @@ class AppSidebarRail extends StatelessWidget {
     double indent = 0,
   }) {
     final theme = Theme.of(context);
-    final background =
-        isSelected ? primary.withValues(alpha: OpacityTokens.subtle) : Colors.transparent;
+    final background = isSelected
+        ? primary.withValues(alpha: OpacityTokens.subtle)
+        : Colors.transparent;
     final iconColor = isSelected ? primary : sidebarText;
     final textColor = isSelected ? primary : sidebarText;
     final labelStyle = theme.textTheme.bodySmall?.copyWith(
@@ -251,7 +250,7 @@ class AppSidebarRail extends StatelessWidget {
 
     final tile = InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+      borderRadius: BorderRadius.circular(RadiusTokens.sm),
       child: Container(
         height: LayoutTokens.navItemHeight,
         padding: EdgeInsets.symmetric(
@@ -259,7 +258,7 @@ class AppSidebarRail extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: background,
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+          borderRadius: BorderRadius.circular(RadiusTokens.sm),
           border: Border.all(
             color: isSelected
                 ? primary.withValues(alpha: OpacityTokens.mild)
@@ -267,12 +266,13 @@ class AppSidebarRail extends StatelessWidget {
           ),
         ),
         child: Row(
-          mainAxisAlignment:
-              railExtended ? MainAxisAlignment.start : MainAxisAlignment.center,
+          mainAxisAlignment: railExtended
+              ? MainAxisAlignment.start
+              : MainAxisAlignment.center,
           children: [
             if (railExtended && indent > 0) SizedBox(width: indent),
             Icon(item.icon, color: iconColor, size: 20),
-            if (railExtended) SizedBox(width: LayoutTokens.gapMd),
+            if (railExtended) SizedBox(width: SpacingTokens.md),
             if (railExtended)
               Expanded(
                 child: Text(
@@ -288,18 +288,16 @@ class AppSidebarRail extends StatelessWidget {
                 size: 18,
               ),
             if (railExtended && !isParent)
-              RailBadge(
-                badgeText: badgeTextForItem(item),
-                primary: primary,
-              ),
+              RailBadge(badgeText: badgeTextForItem(item), primary: primary),
           ],
         ),
       ),
     );
-    final content =
-        railExtended ? tile : Tooltip(message: item.label, child: tile);
+    final content = railExtended
+        ? tile
+        : Tooltip(message: item.label, child: tile);
     return Padding(
-      padding: EdgeInsets.only(bottom: LayoutTokens.gapXs),
+      padding: EdgeInsets.only(bottom: SpacingTokens.xs),
       child: content,
     );
   }

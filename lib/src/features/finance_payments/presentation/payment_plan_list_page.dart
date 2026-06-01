@@ -76,52 +76,52 @@ class PaymentPlanListEntry extends StatelessWidget {
   }
 
   static String _salesOrderNumber(GenericRecord record) {
-    return GenericValueFormatter.text(record.getString('sales_order_number'));
+    return AppValueFormatter.text(record.getString('sales_order_number'));
   }
 
   static String _customerName(GenericRecord record) {
-    return GenericValueFormatter.text(record.getString('customer_name'));
+    return AppValueFormatter.text(record.getString('customer_name'));
   }
 
   static String _title(GenericRecord record) {
     final orderNumber = _salesOrderNumber(record);
     final customer = _customerName(record);
-    if (customer == GenericValueFormatter.empty) {
+    if (customer == AppValueFormatter.empty) {
       return orderNumber;
     }
     return '$orderNumber · $customer';
   }
 
   static String _planAmount(GenericRecord record) {
-    return GenericValueFormatter.text(record.getNumber('plan_amount'));
+    return AppValueFormatter.text(record.getNumber('plan_amount'));
   }
 
   static String _planDate(GenericRecord record) {
-    return GenericValueFormatter.date(record.getString('plan_date'));
+    return AppValueFormatter.date(record.getString('plan_date'));
   }
 
   static String _status(GenericRecord record) {
-    return GenericValueFormatter.text(record.getString('status_display'));
+    return AppValueFormatter.text(record.getString('status_display'));
   }
 
   static String _paidAmount(GenericRecord record) {
-    return GenericValueFormatter.text(record.getNumber('paid_amount'));
+    return AppValueFormatter.text(record.getNumber('paid_amount'));
   }
 
   static String _remainingAmount(GenericRecord record) {
-    return GenericValueFormatter.text(record.getNumber('remaining_amount'));
+    return AppValueFormatter.text(record.getNumber('remaining_amount'));
   }
 
   static String _followUp(GenericRecord record) {
     final text = record.getString('follow_up_text');
     if ((text ?? '').trim().isNotEmpty) {
-      return GenericValueFormatter.text(text);
+      return AppValueFormatter.text(text);
     }
     if (record.getBool('is_overdue') == true) {
       final days = record.getNumber('overdue_days')?.toInt() ?? 0;
       return '推进收款，已逾期 $days 天';
     }
-    return GenericValueFormatter.empty;
+    return AppValueFormatter.empty;
   }
 
   static List<Widget> _buildHeaderActions(

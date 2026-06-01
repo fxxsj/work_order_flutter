@@ -31,10 +31,10 @@ class TaskAssignmentRuleFilterDrawerContent extends StatelessWidget {
       children: [
         Padding(
           padding: EdgeInsets.fromLTRB(
-            LayoutTokens.gapLg,
-            LayoutTokens.gapMd,
-            LayoutTokens.gapSm,
-            LayoutTokens.gapSm,
+            SpacingTokens.lg,
+            SpacingTokens.md,
+            SpacingTokens.sm,
+            SpacingTokens.sm,
           ),
           child: Row(
             children: [
@@ -149,7 +149,7 @@ class _TaskAssignmentRuleEditPanelState
     final rule = widget.rule;
     final defaults = kTaskAssignmentRuleDefaults;
     _processId = rule?.processId ?? widget.processes.first.id;
-    _departmentId = rule?. departmentId ?? widget.departments.first.id;
+    _departmentId = rule?.departmentId ?? widget.departments.first.id;
     _priority = rule?.priority ?? defaults.priority;
     _isActive = rule?.isActive ?? true;
     _strategy = rule?.operatorSelectionStrategy ?? defaults.strategy;
@@ -186,8 +186,9 @@ class _TaskAssignmentRuleEditPanelState
                   )
                 else
                   AppSelect<int>(
-                    key:
-                        ValueKey<String>('assignment-rule-process-$_processId'),
+                    key: ValueKey<String>(
+                      'assignment-rule-process-$_processId',
+                    ),
                     value: _processId,
                     decoration: const InputDecoration(labelText: '工序'),
                     options: widget.processes
@@ -209,7 +210,8 @@ class _TaskAssignmentRuleEditPanelState
                 else
                   AppSelect<int>(
                     key: ValueKey<String>(
-                        'assignment-rule-department-$_departmentId'),
+                      'assignment-rule-department-$_departmentId',
+                    ),
                     value: _departmentId,
                     decoration: const InputDecoration(labelText: '默认部门'),
                     options: widget.departments
@@ -229,7 +231,7 @@ class _TaskAssignmentRuleEditPanelState
               ],
             ),
           ),
-          const SizedBox(height: LayoutTokens.gapLg),
+          const SizedBox(height: SpacingTokens.lg),
           CrudFieldConfig.textarea(
             label: '备注（可选）',
             controller: _notesController,
@@ -284,10 +286,7 @@ class _TaskAssignmentRuleEditPanelState
 }
 
 class _RuleFormSection extends StatelessWidget {
-  const _RuleFormSection({
-    required this.title,
-    required this.child,
-  });
+  const _RuleFormSection({required this.title, required this.child});
 
   final String title;
   final Widget child;
@@ -299,7 +298,7 @@ class _RuleFormSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title, style: Theme.of(context).textTheme.titleSmall),
-          const SizedBox(height: LayoutTokens.gapMd),
+          const SizedBox(height: SpacingTokens.md),
           child,
         ],
       ),
@@ -318,7 +317,7 @@ class _RuleFieldList extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (var index = 0; index < children.length; index++) ...[
-          if (index > 0) const SizedBox(height: LayoutTokens.gapMd),
+          if (index > 0) const SizedBox(height: SpacingTokens.md),
           children[index],
         ],
       ],
@@ -327,10 +326,7 @@ class _RuleFieldList extends StatelessWidget {
 }
 
 class _ReadOnlyRuleField extends StatelessWidget {
-  const _ReadOnlyRuleField({
-    required this.label,
-    required this.value,
-  });
+  const _ReadOnlyRuleField({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -339,13 +335,10 @@ class _ReadOnlyRuleField extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return InputDecorator(
-      decoration: InputDecoration(labelText: label)
-          .applyDefaults(theme.inputDecorationTheme)
-          .copyWith(enabled: false),
-      child: Text(
-        value,
-        style: theme.textTheme.bodyMedium,
-      ),
+      decoration: InputDecoration(
+        labelText: label,
+      ).applyDefaults(theme.inputDecorationTheme).copyWith(enabled: false),
+      child: Text(value, style: theme.textTheme.bodyMedium),
     );
   }
 }
@@ -376,19 +369,21 @@ class TaskAssignmentRuleCard extends StatelessWidget {
         children: [
           if (dragHandle != null) ...[
             dragHandle!,
-            const SizedBox(width: LayoutTokens.gapXs),
+            const SizedBox(width: SpacingTokens.xs),
           ],
           Switch(value: rule.isActive, onChanged: onToggle),
           IconButton(onPressed: onEdit, icon: const Icon(Icons.edit)),
           IconButton(
-              onPressed: onDelete, icon: const Icon(Icons.delete_outline)),
+            onPressed: onDelete,
+            icon: const Icon(Icons.delete_outline),
+          ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(subtitle),
-          SizedBox(height: LayoutTokens.gapSm),
+          SizedBox(height: SpacingTokens.sm),
           SummaryFieldWrap(
             isMobile: ResponsiveLayout.isMobile(context),
             children: [
@@ -406,10 +401,7 @@ class TaskAssignmentRuleCard extends StatelessWidget {
 }
 
 class TaskAssignmentRulePreviewContent extends StatelessWidget {
-  const TaskAssignmentRulePreviewContent({
-    super.key,
-    required this.items,
-  });
+  const TaskAssignmentRulePreviewContent({super.key, required this.items});
 
   final List<Map<String, dynamic>> items;
 
@@ -423,7 +415,7 @@ class TaskAssignmentRulePreviewContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (var index = 0; index < items.length; index++) ...[
-          if (index > 0) const SizedBox(height: LayoutTokens.gapMd),
+          if (index > 0) const SizedBox(height: SpacingTokens.md),
           _TaskAssignmentRulePreviewCard(item: items[index]),
         ],
       ],

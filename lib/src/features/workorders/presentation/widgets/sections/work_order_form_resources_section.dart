@@ -43,6 +43,7 @@ class WorkOrderResourcesSection extends StatelessWidget {
   final Set<int> foilingPlateIds;
   final List<EmbossingPlate> embossingPlates;
   final Set<int> embossingPlateIds;
+
   /// Which prepress resources are required based on selected processes.
   /// Contains 'die', 'foiling', 'embossing'.
   final Set<String> requiredResources;
@@ -58,7 +59,7 @@ class WorkOrderResourcesSection extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final isNarrow = constraints.maxWidth < Breakpoints.lg;
-          final columnSpacing = LayoutTokens.gapLg;
+          final columnSpacing = SpacingTokens.lg;
           final leftColumn = Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -76,36 +77,32 @@ class WorkOrderResourcesSection extends StatelessWidget {
                 onChanged: (value) => onPrintingTypeChanged(value),
               ),
               if (showPrintingDetails) ...[
-                SizedBox(height: LayoutTokens.gapMd),
+                SizedBox(height: SpacingTokens.md),
                 const WorkOrderFormSubsectionTitle(title: '图稿'),
-                SizedBox(height: LayoutTokens.gapSm),
+                SizedBox(height: SpacingTokens.sm),
                 WorkOrderMultiSelectField(
-                  items: artworks
-                      .map(
-                        (item) {
-                          final productNames = item.products
-                              .map((p) => p.productName)
-                              .where((n) => n.isNotEmpty)
-                              .take(3)
-                              .join(', ');
-                          final label = item.fullCode.isNotEmpty
-                              ? item.fullCode
-                              : item.name;
-                          final fullLabel = productNames.isNotEmpty
-                              ? '$label ($productNames)'
-                              : label;
-                          return WorkOrderOptionItem(item.id, fullLabel);
-                        },
-                      )
-                      .toList(),
+                  items: artworks.map((item) {
+                    final productNames = item.products
+                        .map((p) => p.productName)
+                        .where((n) => n.isNotEmpty)
+                        .take(3)
+                        .join(', ');
+                    final label = item.fullCode.isNotEmpty
+                        ? item.fullCode
+                        : item.name;
+                    final fullLabel = productNames.isNotEmpty
+                        ? '$label ($productNames)'
+                        : label;
+                    return WorkOrderOptionItem(item.id, fullLabel);
+                  }).toList(),
                   selected: artworkIds,
                   emptyText: '暂无图稿数据',
                   placeholder: '请选择（可多选）',
                   onChanged: onSelectionChanged,
                 ),
-                SizedBox(height: LayoutTokens.gapMd),
+                SizedBox(height: SpacingTokens.md),
                 const WorkOrderFormSubsectionTitle(title: 'CMYK 颜色'),
-                SizedBox(height: LayoutTokens.gapSm),
+                SizedBox(height: SpacingTokens.sm),
                 Wrap(
                   spacing: 8,
                   children: ['C', 'M', 'Y', 'K']
@@ -118,7 +115,7 @@ class WorkOrderResourcesSection extends StatelessWidget {
                       )
                       .toList(),
                 ),
-                SizedBox(height: LayoutTokens.gapMd),
+                SizedBox(height: SpacingTokens.md),
                 CrudFieldConfig.text(
                   label: '其他颜色（逗号分隔）',
                   controller: printingOtherColorsController,
@@ -132,90 +129,78 @@ class WorkOrderResourcesSection extends StatelessWidget {
           if (requiredResources.contains('die')) {
             rightColumnChildren.addAll([
               const WorkOrderFormSubsectionTitle(title: '刀模'),
-              SizedBox(height: LayoutTokens.gapSm),
+              SizedBox(height: SpacingTokens.sm),
               WorkOrderMultiSelectField(
-                items: dies
-                    .map(
-                      (item) {
-                        final productNames = item.products
-                            .map((p) => p.productName)
-                            .where((n) => n.isNotEmpty)
-                            .take(3)
-                            .join(', ');
-                        final label = item.code?.isNotEmpty == true
-                            ? '${item.name} (${item.code})'
-                            : item.name;
-                        final fullLabel = productNames.isNotEmpty
-                            ? '$label ($productNames)'
-                            : label;
-                        return WorkOrderOptionItem(item.id, fullLabel);
-                      },
-                    )
-                    .toList(),
+                items: dies.map((item) {
+                  final productNames = item.products
+                      .map((p) => p.productName)
+                      .where((n) => n.isNotEmpty)
+                      .take(3)
+                      .join(', ');
+                  final label = item.code?.isNotEmpty == true
+                      ? '${item.name} (${item.code})'
+                      : item.name;
+                  final fullLabel = productNames.isNotEmpty
+                      ? '$label ($productNames)'
+                      : label;
+                  return WorkOrderOptionItem(item.id, fullLabel);
+                }).toList(),
                 selected: dieIds,
                 emptyText: '暂无刀模数据',
                 placeholder: '请选择（可多选）',
                 onChanged: onSelectionChanged,
               ),
-              SizedBox(height: LayoutTokens.gapMd),
+              SizedBox(height: SpacingTokens.md),
             ]);
           }
 
           if (requiredResources.contains('foiling')) {
             rightColumnChildren.addAll([
               const WorkOrderFormSubsectionTitle(title: '烫金版'),
-              SizedBox(height: LayoutTokens.gapSm),
+              SizedBox(height: SpacingTokens.sm),
               WorkOrderMultiSelectField(
-                items: foilingPlates
-                    .map(
-                      (item) {
-                        final productNames = item.products
-                            .map((p) => p.productName)
-                            .where((n) => n.isNotEmpty)
-                            .take(3)
-                            .join(', ');
-                        final label = item.code?.isNotEmpty == true
-                            ? '${item.name} (${item.code})'
-                            : item.name;
-                        final fullLabel = productNames.isNotEmpty
-                            ? '$label ($productNames)'
-                            : label;
-                        return WorkOrderOptionItem(item.id, fullLabel);
-                      },
-                    )
-                    .toList(),
+                items: foilingPlates.map((item) {
+                  final productNames = item.products
+                      .map((p) => p.productName)
+                      .where((n) => n.isNotEmpty)
+                      .take(3)
+                      .join(', ');
+                  final label = item.code?.isNotEmpty == true
+                      ? '${item.name} (${item.code})'
+                      : item.name;
+                  final fullLabel = productNames.isNotEmpty
+                      ? '$label ($productNames)'
+                      : label;
+                  return WorkOrderOptionItem(item.id, fullLabel);
+                }).toList(),
                 selected: foilingPlateIds,
                 emptyText: '暂无烫金版数据',
                 placeholder: '请选择（可多选）',
                 onChanged: onSelectionChanged,
               ),
-              SizedBox(height: LayoutTokens.gapMd),
+              SizedBox(height: SpacingTokens.md),
             ]);
           }
 
           if (requiredResources.contains('embossing')) {
             rightColumnChildren.addAll([
               const WorkOrderFormSubsectionTitle(title: '压凸版'),
-              SizedBox(height: LayoutTokens.gapSm),
+              SizedBox(height: SpacingTokens.sm),
               WorkOrderMultiSelectField(
-                items: embossingPlates
-                    .map(
-                      (item) {
-                        final productNames = item.products
-                            .map((p) => p.productName)
-                            .where((n) => n.isNotEmpty)
-                            .take(3)
-                            .join(', ');
-                        final label = item.code?.isNotEmpty == true
-                            ? '${item.name} (${item.code})'
-                            : item.name;
-                        final fullLabel = productNames.isNotEmpty
-                            ? '$label ($productNames)'
-                            : label;
-                        return WorkOrderOptionItem(item.id, fullLabel);
-                      },
-                    )
-                    .toList(),
+                items: embossingPlates.map((item) {
+                  final productNames = item.products
+                      .map((p) => p.productName)
+                      .where((n) => n.isNotEmpty)
+                      .take(3)
+                      .join(', ');
+                  final label = item.code?.isNotEmpty == true
+                      ? '${item.name} (${item.code})'
+                      : item.name;
+                  final fullLabel = productNames.isNotEmpty
+                      ? '$label ($productNames)'
+                      : label;
+                  return WorkOrderOptionItem(item.id, fullLabel);
+                }).toList(),
                 selected: embossingPlateIds,
                 emptyText: '暂无压凸版数据',
                 placeholder: '请选择（可多选）',

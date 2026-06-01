@@ -25,12 +25,15 @@ class PaymentSupportService {
   final ApiClient _client;
 
   Future<PaymentOptionsData> loadOptions() async {
-    final customerFuture =
-        CustomerApiService(_client).fetchCustomers(page: 1, pageSize: 50);
-    final salesOrderFuture =
-        SalesOrderApiService(_client).fetchSalesOrders(page: 1, pageSize: 50);
-    final invoiceFuture =
-        InvoiceApiService(_client).fetchInvoices(page: 1, pageSize: 50);
+    final customerFuture = CustomerApiService(
+      _client,
+    ).fetchCustomers(page: 1, pageSize: 50);
+    final salesOrderFuture = SalesOrderApiService(
+      _client,
+    ).fetchSalesOrders(page: 1, pageSize: 50);
+    final invoiceFuture = InvoiceApiService(
+      _client,
+    ).fetchInvoices(page: 1, pageSize: 50);
 
     final customerPage = await customerFuture;
     final salesPage = await salesOrderFuture;

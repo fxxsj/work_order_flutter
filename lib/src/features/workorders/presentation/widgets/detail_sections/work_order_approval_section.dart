@@ -71,7 +71,7 @@ class SingleApprovalContent extends StatelessWidget {
         detail.approvalStatusDisplay ?? detail.approvalStatus ?? emptyText;
     final comment = (detail.approvalComment ?? '').trim();
     final status = detail.approvalStatus ?? '';
-    final spacing = LayoutTokens.gapSm;
+    final spacing = SpacingTokens.sm;
     final useColumnButtons = ResponsiveLayout.isMobile(context);
 
     final actions = <Widget>[];
@@ -144,8 +144,8 @@ class SingleApprovalContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Wrap(
-          spacing: LayoutTokens.gapLg,
-          runSpacing: LayoutTokens.gapSm,
+          spacing: SpacingTokens.lg,
+          runSpacing: SpacingTokens.sm,
           children: [
             InfoRow(label: '审批状态', value: statusText),
             InfoRow(
@@ -157,17 +157,14 @@ class SingleApprovalContent extends StatelessWidget {
           ],
         ),
         if (comment.isNotEmpty) ...[
-          SizedBox(height: LayoutTokens.gapMd),
-          Text(
-            comment,
-            style: theme.textTheme.bodyMedium,
-          ),
+          SizedBox(height: SpacingTokens.md),
+          Text(comment, style: theme.textTheme.bodyMedium),
         ],
         if (actions.isNotEmpty) ...[
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           Wrap(
-            spacing: LayoutTokens.gapSm,
-            runSpacing: LayoutTokens.gapSm,
+            spacing: SpacingTokens.sm,
+            runSpacing: SpacingTokens.sm,
             children: actions,
           ),
         ],

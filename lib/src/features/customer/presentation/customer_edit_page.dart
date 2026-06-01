@@ -27,10 +27,7 @@ Future<bool> showCustomerEditDrawer(
     desktopWidth: LayoutTokens.pageWidthXwide,
     child: ChangeNotifierProvider<CustomerViewModel>.value(
       value: viewModel,
-      child: CustomerEditPage(
-        customer: customer,
-        onSaved: () => saved = true,
-      ),
+      child: CustomerEditPage(customer: customer, onSaved: () => saved = true),
     ),
   );
   return saved;
@@ -38,11 +35,7 @@ Future<bool> showCustomerEditDrawer(
 
 /// 客户编辑页，支持新增与编辑。
 class CustomerEditPage extends StatefulWidget {
-  const CustomerEditPage({
-    super.key,
-    this.customer,
-    this.onSaved,
-  });
+  const CustomerEditPage({super.key, this.customer, this.onSaved});
 
   final Customer? customer;
   final VoidCallback? onSaved;
@@ -77,8 +70,9 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
     super.initState();
     final customer = widget.customer;
     _nameController = TextEditingController(text: customer?.name ?? '');
-    _contactController =
-        TextEditingController(text: customer?.contactPerson ?? '');
+    _contactController = TextEditingController(
+      text: customer?.contactPerson ?? '',
+    );
     _phoneController = TextEditingController(text: customer?.phone ?? '');
     _emailController = TextEditingController(text: customer?.email ?? '');
     _addressController = TextEditingController(text: customer?.address ?? '');
@@ -238,7 +232,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
           label,
           style: theme.textTheme.bodySmall?.copyWith(color: subtleText),
         ),
-        const SizedBox(height: LayoutTokens.gapSm),
+        const SizedBox(height: SpacingTokens.sm),
         Text(value, style: theme.textTheme.bodyMedium),
       ],
     );
@@ -348,18 +342,20 @@ class _CustomerFormBody extends StatelessWidget {
   final TextEditingController addressController;
   final TextEditingController notesController;
   final Widget Function(ThemeData theme, String label, String value)
-      readonlyField;
+  readonlyField;
   final Widget Function(
     BuildContext context,
     CustomerViewModel viewModel,
     ThemeData theme,
-  ) salespersonStateField;
+  )
+  salespersonStateField;
   final ValueChanged<dynamic> onSalespersonChanged;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final showSalespersonState = viewModel.loadingSalespersons ||
+    final showSalespersonState =
+        viewModel.loadingSalespersons ||
         (viewModel.salespersonsError?.isNotEmpty ?? false);
     final sections = <Widget>[
       _CustomerFormSection(
@@ -396,7 +392,7 @@ class _CustomerFormBody extends StatelessWidget {
           ],
         ),
       ),
-      const SizedBox(height: LayoutTokens.gapLg),
+      const SizedBox(height: SpacingTokens.lg),
       _CustomerFormSection(
         title: _CustomerEditLabels.contactSection,
         child: _CustomerFieldList(
@@ -421,7 +417,7 @@ class _CustomerFormBody extends StatelessWidget {
           ],
         ),
       ),
-      const SizedBox(height: LayoutTokens.gapLg),
+      const SizedBox(height: SpacingTokens.lg),
       _CustomerFormSection(
         title: _CustomerEditLabels.extraSection,
         child: _CustomerFieldList(
@@ -441,7 +437,7 @@ class _CustomerFormBody extends StatelessWidget {
         ),
       ),
       if (customer != null) ...[
-        const SizedBox(height: LayoutTokens.gapLg),
+        const SizedBox(height: SpacingTokens.lg),
         _CustomerFormSection(
           title: _CustomerEditLabels.systemSection,
           child: _CustomerFieldList(
@@ -470,10 +466,7 @@ class _CustomerFormBody extends StatelessWidget {
 }
 
 class _CustomerFormSection extends StatelessWidget {
-  const _CustomerFormSection({
-    required this.title,
-    required this.child,
-  });
+  const _CustomerFormSection({required this.title, required this.child});
 
   final String title;
   final Widget child;
@@ -485,7 +478,7 @@ class _CustomerFormSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title, style: Theme.of(context).textTheme.titleSmall),
-          const SizedBox(height: LayoutTokens.gapMd),
+          const SizedBox(height: SpacingTokens.md),
           child,
         ],
       ),
@@ -504,7 +497,7 @@ class _CustomerFieldList extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (var index = 0; index < children.length; index++) ...[
-          if (index > 0) const SizedBox(height: LayoutTokens.gapMd),
+          if (index > 0) const SizedBox(height: SpacingTokens.md),
           children[index],
         ],
       ],

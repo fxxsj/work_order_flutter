@@ -42,11 +42,15 @@ class ContentContainer extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors?.surface ?? theme.colorScheme.surface,
         borderRadius: canvasRadius,
-        border: Border.all(color: borderColor.withValues(alpha: OpacityTokens.intense)),
+        border: Border.all(
+          color: borderColor.withValues(alpha: OpacityTokens.intense),
+        ),
         boxShadow: [
           if (semantic != null)
             BoxShadow(
-              color: semantic.shadowStrong.withValues(alpha: isTablet ? OpacityTokens.weak : OpacityTokens.subtle),
+              color: semantic.shadowStrong.withValues(
+                alpha: isTablet ? OpacityTokens.weak : OpacityTokens.subtle,
+              ),
               blurRadius: 18,
               offset: const Offset(0, 8),
             ),
@@ -54,10 +58,7 @@ class ContentContainer extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: canvasRadius,
-        child: Padding(
-          padding: innerPadding,
-          child: child,
-        ),
+        child: Padding(padding: innerPadding, child: child),
       ),
     );
 

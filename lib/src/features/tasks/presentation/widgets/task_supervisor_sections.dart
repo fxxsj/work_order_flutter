@@ -26,10 +26,10 @@ class TaskSupervisorFilterDrawerContent extends StatelessWidget {
       children: [
         Padding(
           padding: EdgeInsets.fromLTRB(
-            LayoutTokens.gapLg,
-            LayoutTokens.gapMd,
-            LayoutTokens.gapSm,
-            LayoutTokens.gapSm,
+            SpacingTokens.lg,
+            SpacingTokens.md,
+            SpacingTokens.sm,
+            SpacingTokens.sm,
           ),
           child: Row(
             children: [
@@ -136,8 +136,10 @@ class TaskSupervisorFocusCard extends StatelessWidget {
       padding: LayoutTokens.cardPadding(context),
       decoration: BoxDecoration(
         color: color.withValues(alpha: OpacityTokens.subtle),
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
-        border: Border.all(color: color.withValues(alpha: OpacityTokens.medium)),
+        borderRadius: BorderRadius.circular(RadiusTokens.md),
+        border: Border.all(
+          color: color.withValues(alpha: OpacityTokens.medium),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -149,11 +151,11 @@ class TaskSupervisorFocusCard extends StatelessWidget {
                 height: 34,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: OpacityTokens.mild),
-                  borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+                  borderRadius: BorderRadius.circular(RadiusTokens.sm),
                 ),
                 child: Icon(icon, size: 18, color: color),
               ),
-              SizedBox(width: LayoutTokens.gapMd),
+              SizedBox(width: SpacingTokens.md),
               Expanded(
                 child: Text(
                   label,
@@ -171,7 +173,7 @@ class TaskSupervisorFocusCard extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           Text(
             hint,
             style: theme.textTheme.bodySmall?.copyWith(
@@ -179,7 +181,7 @@ class TaskSupervisorFocusCard extends StatelessWidget {
             ),
           ),
           if (onPressed != null && actionLabel != null) ...[
-            SizedBox(height: LayoutTokens.gapMd),
+            SizedBox(height: SpacingTokens.md),
             OutlinedButton.icon(
               onPressed: onPressed,
               icon: const Icon(Icons.arrow_forward_outlined, size: 16),
@@ -193,10 +195,7 @@ class TaskSupervisorFocusCard extends StatelessWidget {
 }
 
 class TaskSupervisorOperatorCard extends StatelessWidget {
-  const TaskSupervisorOperatorCard({
-    super.key,
-    required this.item,
-  });
+  const TaskSupervisorOperatorCard({super.key, required this.item});
 
   final Map<String, dynamic> item;
 
@@ -212,11 +211,11 @@ class TaskSupervisorOperatorCard extends StatelessWidget {
     final completionRate = _toNum(item['completion_rate']);
 
     return Container(
-      margin: EdgeInsets.only(bottom: LayoutTokens.gapMd),
+      margin: EdgeInsets.only(bottom: SpacingTokens.md),
       padding: LayoutTokens.cardPadding(context),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+        borderRadius: BorderRadius.circular(RadiusTokens.md),
         border: Border.all(color: colors.borderColor),
       ),
       child: Column(
@@ -226,11 +225,12 @@ class TaskSupervisorOperatorCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 18,
-                backgroundColor:
-                    theme.colorScheme.primary.withValues(alpha: OpacityTokens.mild),
+                backgroundColor: theme.colorScheme.primary.withValues(
+                  alpha: OpacityTokens.mild,
+                ),
                 child: Icon(Icons.person, color: theme.colorScheme.primary),
               ),
-              SizedBox(width: LayoutTokens.gapMd),
+              SizedBox(width: SpacingTokens.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -258,7 +258,7 @@ class TaskSupervisorOperatorCard extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           Wrap(
             spacing: 12,
             runSpacing: 8,
@@ -303,7 +303,7 @@ class TaskSupervisorTaskCard extends StatelessWidget {
       padding: LayoutTokens.cardPadding(context),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+        borderRadius: BorderRadius.circular(RadiusTokens.md),
         border: Border.all(color: colors.borderColor),
       ),
       child: Column(
@@ -315,7 +315,7 @@ class TaskSupervisorTaskCard extends StatelessWidget {
             showDivider: false,
             showAssignee: true,
           ),
-          SizedBox(height: LayoutTokens.gapSm),
+          SizedBox(height: SpacingTokens.sm),
           OutlinedButton.icon(
             onPressed: onAssign,
             icon: const Icon(Icons.person_add_alt_1, size: 16),
@@ -328,9 +328,7 @@ class TaskSupervisorTaskCard extends StatelessWidget {
 }
 
 class TaskSupervisorDragData {
-  const TaskSupervisorDragData({
-    required this.task,
-  });
+  const TaskSupervisorDragData({required this.task});
 
   final Task task;
 }
@@ -352,14 +350,10 @@ class TaskSupervisorDraggableTaskCard extends StatelessWidget {
       padding: LayoutTokens.cardPadding(context),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+        borderRadius: BorderRadius.circular(RadiusTokens.md),
         border: Border.all(color: colors.borderColor),
       ),
-      child: TaskListTile(
-        task: task,
-        onTap: null,
-        showDivider: false,
-      ),
+      child: TaskListTile(task: task, onTap: null, showDivider: false),
     );
 
     return LongPressDraggable<TaskSupervisorDragData>(
@@ -427,12 +421,12 @@ class TaskSupervisorDragColumn extends StatelessWidget {
             color: colors.sidebarText,
           ),
         ),
-        const SizedBox(height: LayoutTokens.gapXs),
+        const SizedBox(height: SpacingTokens.xs),
         Text(
           subtitle,
           style: theme.textTheme.bodySmall?.copyWith(color: colors.subtleText),
         ),
-        SizedBox(height: LayoutTokens.gapMd),
+        SizedBox(height: SpacingTokens.md),
         Expanded(
           child: tasks.isEmpty
               ? Center(
@@ -446,7 +440,7 @@ class TaskSupervisorDragColumn extends StatelessWidget {
               : ListView.separated(
                   itemCount: tasks.length,
                   separatorBuilder: (_, __) =>
-                      SizedBox(height: LayoutTokens.gapSm),
+                      SizedBox(height: SpacingTokens.sm),
                   itemBuilder: (context, index) {
                     final task = tasks[index];
                     return TaskSupervisorDraggableTaskCard(
@@ -506,7 +500,7 @@ class _TaskSupervisorColumnShell extends StatelessWidget {
       padding: LayoutTokens.cardPadding(context),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
+        borderRadius: BorderRadius.circular(RadiusTokens.lg),
         border: Border.all(
           color: highlight
               ? Theme.of(context).colorScheme.primary
@@ -596,14 +590,12 @@ class _TaskSupervisorAssignDialogState
             value: _operatorId,
             decoration: const InputDecoration(labelText: '操作员'),
             options: widget.operators
-                .map(
-                  (op) => AppDropdownOption(value: op.id, label: op.name),
-                )
+                .map((op) => AppDropdownOption(value: op.id, label: op.name))
                 .toList(),
             onChanged: (value) =>
                 setState(() => _operatorId = value ?? _operatorId),
           ),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           CrudFieldConfig.text(
             label: '备注（可选）',
             onChanged: (value) => _notes = value,

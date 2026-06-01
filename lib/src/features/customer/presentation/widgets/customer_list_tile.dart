@@ -28,8 +28,9 @@ class CustomerListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
-    final subtleText =
-        theme.textTheme.bodySmall?.copyWith(color: theme.hintColor);
+    final subtleText = theme.textTheme.bodySmall?.copyWith(
+      color: theme.hintColor,
+    );
     final subtitleLines = <String>[];
 
     if (customer.contactPerson != null &&
@@ -52,12 +53,14 @@ class CustomerListTile extends StatelessWidget {
         backgroundColor: primary.withAlpha(31),
         foregroundColor: primary,
         child: Text(
-            customer.name.isNotEmpty ? customer.name[0].toUpperCase() : '?'),
+          customer.name.isNotEmpty ? customer.name[0].toUpperCase() : '?',
+        ),
       ),
       title: Text(
         customer.name,
-        style:
-            theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+        style: theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
       ),
       subtitle: subtitleLines.isEmpty
           ? Text(_emptySubtitle, style: subtleText)
@@ -79,13 +82,10 @@ class CustomerListTile extends StatelessWidget {
               }
             },
             itemBuilder: (context) => const [
-              PopupMenuItem(
-                value: 'delete',
-                child: Text('删除'),
-              ),
+              PopupMenuItem(value: 'delete', child: Text('删除')),
             ],
             icon: const Icon(Icons.more_horiz),
-          )
+          ),
         ],
       ),
       onTap: onTap,

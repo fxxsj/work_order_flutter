@@ -52,7 +52,7 @@ class _TaskSupervisorDashboardView extends StatefulWidget {
 
 class _TaskSupervisorDashboardViewState
     extends State<_TaskSupervisorDashboardView> {
-  static const double _spacingSm = LayoutTokens.gapSm;
+  static const double _spacingSm = SpacingTokens.sm;
   static const String _refreshButtonText = '刷新';
   static const String _emptyText = '暂无数据';
   static const String _errorFallbackText = '加载失败';
@@ -148,7 +148,8 @@ class _TaskSupervisorDashboardViewState
   Widget _buildActions(bool isMobile) {
     final deptItems = _departments
         .map(
-            (dept) => AppDropdownOption<int?>(value: dept.id, label: dept.name))
+          (dept) => AppDropdownOption<int?>(value: dept.id, label: dept.name),
+        )
         .toList();
 
     return LayoutBuilder(
@@ -161,8 +162,9 @@ class _TaskSupervisorDashboardViewState
               useSafeArea: true,
               showDragHandle: true,
               backgroundColor: Theme.of(context).colorScheme.surface,
-              shape:
-                  const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.zero,
+              ),
               builder: (sheetContext) {
                 return TaskSupervisorFilterDrawerContent(
                   title: '筛选',
@@ -177,9 +179,9 @@ class _TaskSupervisorDashboardViewState
             context: context,
             barrierDismissible: true,
             barrierLabel: '筛选',
-            barrierColor: Theme.of(context).shadowColor.withValues(
-                  alpha: LayoutTokens.barrierOpacity,
-                ),
+            barrierColor: Theme.of(
+              context,
+            ).shadowColor.withValues(alpha: LayoutTokens.barrierOpacity),
             transitionDuration: AnimationTokens.slide,
             pageBuilder: (dialogContext, animation, secondaryAnimation) {
               return Align(
@@ -187,15 +189,18 @@ class _TaskSupervisorDashboardViewState
                 child: Material(
                   color: Theme.of(dialogContext).colorScheme.surface,
                   shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.zero),
+                    borderRadius: BorderRadius.zero,
+                  ),
                   child: SizedBox(
                     width: LayoutTokens.searchWidth,
                     height: double.infinity,
                     child: SafeArea(
                       child: TaskSupervisorFilterDrawerContent(
                         title: '筛选',
-                        child: _buildFilterPanel(dialogContext,
-                            deptItems: deptItems),
+                        child: _buildFilterPanel(
+                          dialogContext,
+                          deptItems: deptItems,
+                        ),
                       ),
                     ),
                   ),
@@ -203,13 +208,13 @@ class _TaskSupervisorDashboardViewState
               );
             },
             transitionBuilder: (context, animation, secondaryAnimation, child) {
-              final offsetTween =
-                  Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero);
+              final offsetTween = Tween<Offset>(
+                begin: const Offset(1, 0),
+                end: Offset.zero,
+              );
               return SlideTransition(
                 position: animation
-                    .drive(
-                      CurveTween(curve: Curves.easeOutCubic),
-                    )
+                    .drive(CurveTween(curve: Curves.easeOutCubic))
                     .drive(offsetTween),
                 child: child,
               );
@@ -312,7 +317,7 @@ class _TaskSupervisorDashboardViewState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildTaskStatusFilters(_departmentTasks),
-        SizedBox(height: LayoutTokens.gapMd),
+        SizedBox(height: SpacingTokens.md),
         Expanded(
           child: filteredTasks.isEmpty
               ? const EmptyStateCard(
@@ -320,26 +325,26 @@ class _TaskSupervisorDashboardViewState
                   text: '暂无符合条件的任务',
                 )
               : isMobile
-                  ? ListView.separated(
-                      itemCount: filteredTasks.length,
-                      separatorBuilder: (_, __) =>
-                          SizedBox(height: LayoutTokens.gapSm),
-                      itemBuilder: (context, index) {
-                        final task = filteredTasks[index];
-                        return TaskSupervisorTaskCard(
-                          task: task,
-                          onTap: () {
-                            if (task.workOrderId != null) {
-                              context.go('/workorders/${task.workOrderId}');
-                            } else {
-                              ToastUtil.showError('该任务暂无施工单详情');
-                            }
-                          },
-                          onAssign: () => _openAssignDialog(task),
-                        );
+              ? ListView.separated(
+                  itemCount: filteredTasks.length,
+                  separatorBuilder: (_, __) =>
+                      SizedBox(height: SpacingTokens.sm),
+                  itemBuilder: (context, index) {
+                    final task = filteredTasks[index];
+                    return TaskSupervisorTaskCard(
+                      task: task,
+                      onTap: () {
+                        if (task.workOrderId != null) {
+                          context.go('/workorders/${task.workOrderId}');
+                        } else {
+                          ToastUtil.showError('该任务暂无施工单详情');
+                        }
                       },
-                    )
-                  : _buildTaskTable(filteredTasks),
+                      onAssign: () => _openAssignDialog(task),
+                    );
+                  },
+                )
+              : _buildTaskTable(filteredTasks),
         ),
       ],
     );
@@ -365,49 +370,70 @@ class _TaskSupervisorDashboardViewState
           .map(
             (task) => DataRow(
               cells: [
-                DataCell(Text(
-                  _displayText(
-                    task.workContent?.trim().isNotEmpty == true
-                        ? task.workContent
-                        : (task.processName ?? '任务 #${task.id}'),
+                DataCell(
+                  Text(
+                    _displayText(
+                      task.workContent?.trim().isNotEmpty == true
+                          ? task.workContent
+                          : (task.processName ?? '任务 #${task.id}'),
+                    ),
+                    style: theme.textTheme.bodyMedium,
                   ),
-                  style: theme.textTheme.bodyMedium,
-                )),
+                ),
                 DataCell(
-                    Text(_displayText(task.workOrderNumber), style: textStyle)),
+                  Text(_displayText(task.workOrderNumber), style: textStyle),
+                ),
                 DataCell(
-                    Text(_displayText(task.processName), style: textStyle)),
-                DataCell(Text(_displayText(task.assignedDepartmentName),
-                    style: textStyle)),
-                DataCell(Text(_displayText(task.assignedOperatorName),
-                    style: textStyle)),
-                DataCell(Text(_formatNumber(task.productionQuantity),
-                    style: textStyle)),
-                DataCell(Text(_formatNumber(task.quantityCompleted),
-                    style: textStyle)),
+                  Text(_displayText(task.processName), style: textStyle),
+                ),
+                DataCell(
+                  Text(
+                    _displayText(task.assignedDepartmentName),
+                    style: textStyle,
+                  ),
+                ),
+                DataCell(
+                  Text(
+                    _displayText(task.assignedOperatorName),
+                    style: textStyle,
+                  ),
+                ),
+                DataCell(
+                  Text(
+                    _formatNumber(task.productionQuantity),
+                    style: textStyle,
+                  ),
+                ),
+                DataCell(
+                  Text(_formatNumber(task.quantityCompleted), style: textStyle),
+                ),
                 DataCell(Text(_formatProgress(task), style: textStyle)),
-                DataCell(Text(
-                  task.statusDisplay ?? task.status ?? '-',
-                  style: textStyle,
-                )),
-                DataCell(RowActionGroup(
-                  actions: [
-                    RowAction(
-                      label: '查看施工单',
-                      onPressed: () {
-                        if (task.workOrderId != null) {
-                          context.go('/workorders/${task.workOrderId}');
-                        } else {
-                          ToastUtil.showError('该任务暂无施工单详情');
-                        }
-                      },
-                    ),
-                    RowAction(
-                      label: '分派操作员',
-                      onPressed: () => _openAssignDialog(task),
-                    ),
-                  ],
-                )),
+                DataCell(
+                  Text(
+                    task.statusDisplay ?? task.status ?? '-',
+                    style: textStyle,
+                  ),
+                ),
+                DataCell(
+                  RowActionGroup(
+                    actions: [
+                      RowAction(
+                        label: '查看施工单',
+                        onPressed: () {
+                          if (task.workOrderId != null) {
+                            context.go('/workorders/${task.workOrderId}');
+                          } else {
+                            ToastUtil.showError('该任务暂无施工单详情');
+                          }
+                        },
+                      ),
+                      RowAction(
+                        label: '分派操作员',
+                        onPressed: () => _openAssignDialog(task),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           )
@@ -429,8 +455,9 @@ class _TaskSupervisorDashboardViewState
     final total = task.productionQuantity ?? 0;
     final completed = task.quantityCompleted ?? 0;
     if (total <= 0) return '-';
-    final percentage =
-        (completed / total * 100).clamp(0, 100).toStringAsFixed(0);
+    final percentage = (completed / total * 100)
+        .clamp(0, 100)
+        .toStringAsFixed(0);
     return '$percentage%';
   }
 
@@ -439,7 +466,7 @@ class _TaskSupervisorDashboardViewState
     final summary = _workload?['summary'] as Map<String, dynamic>? ?? const {};
     final priority =
         _workload?['priority_distribution'] as Map<String, dynamic>? ??
-            const {};
+        const {};
     final operators = _workload?['operators'] as List? ?? const [];
     final overdueCount = _toInt(summary['overdue_tasks']);
     final dueSoonCount = _toInt(summary['due_soon_tasks']);
@@ -456,18 +483,25 @@ class _TaskSupervisorDashboardViewState
               isMobile: ResponsiveLayout.isMobile(context),
               children: [
                 SummaryField(
-                    label: '总任务', value: '${_toInt(summary['total_tasks'])}'),
+                  label: '总任务',
+                  value: '${_toInt(summary['total_tasks'])}',
+                ),
                 SummaryField(
-                    label: '待处理', value: '${_toInt(summary['pending_tasks'])}'),
+                  label: '待处理',
+                  value: '${_toInt(summary['pending_tasks'])}',
+                ),
                 SummaryField(
-                    label: '进行中',
-                    value: '${_toInt(summary['in_progress_tasks'])}'),
+                  label: '进行中',
+                  value: '${_toInt(summary['in_progress_tasks'])}',
+                ),
                 SummaryField(
-                    label: '已完成',
-                    value: '${_toInt(summary['completed_tasks'])}'),
+                  label: '已完成',
+                  value: '${_toInt(summary['completed_tasks'])}',
+                ),
                 SummaryField(
-                    label: '已取消',
-                    value: '${_toInt(summary['cancelled_tasks'])}'),
+                  label: '已取消',
+                  value: '${_toInt(summary['cancelled_tasks'])}',
+                ),
                 SummaryField(
                   label: '完成率',
                   value:
@@ -476,19 +510,21 @@ class _TaskSupervisorDashboardViewState
               ],
             ),
           ),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           DetailSectionCard(
             title: '主管待办',
             child: Wrap(
-              spacing: LayoutTokens.gapMd,
-              runSpacing: LayoutTokens.gapMd,
+              spacing: SpacingTokens.md,
+              runSpacing: SpacingTokens.md,
               children: [
                 TaskSupervisorFocusCard(
                   label: '逾期任务',
                   value: overdueCount,
                   hint: overdueCount > 0 ? '优先排查超期工序与堵点' : '当前部门暂无逾期任务',
                   icon: Icons.warning_amber_rounded,
-                  color: theme.extension<AppSemanticColors>()?.danger ?? theme.colorScheme.error,
+                  color:
+                      theme.extension<AppSemanticColors>()?.danger ??
+                      theme.colorScheme.error,
                   actionLabel: '查看任务',
                   onPressed: () => _openTaskFocus('overdue'),
                 ),
@@ -497,7 +533,9 @@ class _TaskSupervisorDashboardViewState
                   value: dueSoonCount,
                   hint: dueSoonCount > 0 ? '2 天内到期，建议主管提前协调' : '当前没有临近交期任务',
                   icon: Icons.schedule_outlined,
-                  color: theme.extension<AppSemanticColors>()?.warning ?? theme.colorScheme.secondary,
+                  color:
+                      theme.extension<AppSemanticColors>()?.warning ??
+                      theme.colorScheme.secondary,
                   actionLabel: '查看任务',
                   onPressed: () => _openTaskFocus('due_soon'),
                 ),
@@ -515,19 +553,21 @@ class _TaskSupervisorDashboardViewState
                   value: handoffCount,
                   hint: handoffCount > 0 ? '已完工，建议尽快推进质检或入库' : '暂无待交接下游任务',
                   icon: Icons.compare_arrows_outlined,
-                  color: theme.extension<AppSemanticColors>()?.success ?? const Color(0xFF27a644),
+                  color:
+                      theme.extension<AppSemanticColors>()?.success ??
+                      const Color(0xFF27a644),
                   actionLabel: '看已完工',
                   onPressed: () => _openTaskFocus('completed'),
                 ),
               ],
             ),
           ),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           DetailSectionCard(
             title: '跨环节提醒',
             child: Wrap(
-              spacing: LayoutTokens.gapMd,
-              runSpacing: LayoutTokens.gapMd,
+              spacing: SpacingTokens.md,
+              runSpacing: SpacingTokens.md,
               children: [
                 TaskSupervisorFocusCard(
                   label: '待完成检验',
@@ -549,7 +589,9 @@ class _TaskSupervisorDashboardViewState
                       ? '包含不合格与条件接收，需尽快决定返工或放行'
                       : '当前没有质检异常待跟进',
                   icon: Icons.report_problem_outlined,
-                  color: theme.extension<AppSemanticColors>()?.warning ?? theme.colorScheme.secondary,
+                  color:
+                      theme.extension<AppSemanticColors>()?.warning ??
+                      theme.colorScheme.secondary,
                   actionLabel: '查看质检',
                   onPressed: () => context.go(
                     '/inventory/quality?department_id=${_departmentId ?? 0}',
@@ -575,7 +617,9 @@ class _TaskSupervisorDashboardViewState
                       ? '已发生拒收，建议尽快确认补发或终止交付'
                       : '当前没有拒收单待处理',
                   icon: Icons.assignment_late_outlined,
-                  color: theme.extension<AppSemanticColors>()?.danger ?? theme.colorScheme.error,
+                  color:
+                      theme.extension<AppSemanticColors>()?.danger ??
+                      theme.colorScheme.error,
                   actionLabel: '查看拒收',
                   onPressed: () => context.go(
                     '/inventory/delivery?status=rejected&department_id=${_departmentId ?? 0}',
@@ -584,33 +628,41 @@ class _TaskSupervisorDashboardViewState
               ],
             ),
           ),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           DetailSectionCard(
             title: '优先级分布',
             child: Wrap(
-              spacing: LayoutTokens.gapSm,
-              runSpacing: LayoutTokens.gapSm,
+              spacing: SpacingTokens.sm,
+              runSpacing: SpacingTokens.sm,
               children: [
                 TaskSupervisorPriorityChip(
-                    label: '紧急',
-                    value: _toInt(priority['urgent']),
-                    color: theme.extension<AppSemanticColors>()?.danger ?? theme.colorScheme.error),
+                  label: '紧急',
+                  value: _toInt(priority['urgent']),
+                  color:
+                      theme.extension<AppSemanticColors>()?.danger ??
+                      theme.colorScheme.error,
+                ),
                 TaskSupervisorPriorityChip(
-                    label: '高',
-                    value: _toInt(priority['high']),
-                    color: theme.extension<AppSemanticColors>()?.warning ?? theme.colorScheme.secondary),
+                  label: '高',
+                  value: _toInt(priority['high']),
+                  color:
+                      theme.extension<AppSemanticColors>()?.warning ??
+                      theme.colorScheme.secondary,
+                ),
                 TaskSupervisorPriorityChip(
-                    label: '普通',
-                    value: _toInt(priority['normal']),
-                    color: theme.colorScheme.primary),
+                  label: '普通',
+                  value: _toInt(priority['normal']),
+                  color: theme.colorScheme.primary,
+                ),
                 TaskSupervisorPriorityChip(
-                    label: '低',
-                    value: _toInt(priority['low']),
-                    color: Colors.grey),
+                  label: '低',
+                  value: _toInt(priority['low']),
+                  color: Colors.grey,
+                ),
               ],
             ),
           ),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           DetailSectionCard(
             title: '操作员工作负载',
             child: operators.isEmpty
@@ -618,8 +670,11 @@ class _TaskSupervisorDashboardViewState
                 : Column(
                     children: operators
                         .whereType<Map>()
-                        .map((item) => TaskSupervisorOperatorCard(
-                            item: Map<String, dynamic>.from(item)))
+                        .map(
+                          (item) => TaskSupervisorOperatorCard(
+                            item: Map<String, dynamic>.from(item),
+                          ),
+                        )
                         .toList(),
                   ),
           ),
@@ -630,10 +685,7 @@ class _TaskSupervisorDashboardViewState
 
   Widget _buildDragDropView() {
     if (_operators.isEmpty) {
-      return const EmptyStateCard(
-        icon: Icons.groups_outlined,
-        text: '暂无可用操作员',
-      );
+      return const EmptyStateCard(icon: Icons.groups_outlined, text: '暂无可用操作员');
     }
     if (_departmentTasks.isEmpty) {
       return const EmptyStateCard(
@@ -663,7 +715,7 @@ class _TaskSupervisorDashboardViewState
                 onDrop: null,
                 assigningTaskId: _assigningTaskId,
               ),
-              SizedBox(width: LayoutTokens.gapLg),
+              SizedBox(width: SpacingTokens.lg),
               for (final operator in _operators) ...[
                 TaskSupervisorDragColumn(
                   title: operator.name,
@@ -676,7 +728,7 @@ class _TaskSupervisorDashboardViewState
                   onDrop: (task) => _assignToOperator(task, operator),
                   assigningTaskId: _assigningTaskId,
                 ),
-                SizedBox(width: LayoutTokens.gapLg),
+                SizedBox(width: SpacingTokens.lg),
               ],
             ],
           ),
@@ -706,7 +758,8 @@ class _TaskSupervisorDashboardViewState
             await _loadWorkload();
           } catch (err) {
             ToastUtil.showError(
-                '分派失败: ${err.toString().replaceFirst('Exception: ', '')}');
+              '分派失败: ${err.toString().replaceFirst('Exception: ', '')}',
+            );
             rethrow;
           }
         },
@@ -730,7 +783,8 @@ class _TaskSupervisorDashboardViewState
       await _loadWorkload();
     } catch (err) {
       ToastUtil.showError(
-          '分派失败: ${err.toString().replaceFirst('Exception: ', '')}');
+        '分派失败: ${err.toString().replaceFirst('Exception: ', '')}',
+      );
     } finally {
       if (mounted) setState(() => _assigningTaskId = null);
     }
@@ -740,25 +794,49 @@ class _TaskSupervisorDashboardViewState
     final counts = _buildStatusCounts(tasks);
     final items = [
       TaskSupervisorStatusFilterItem(
-          key: 'all', label: '全部', count: tasks.length),
+        key: 'all',
+        label: '全部',
+        count: tasks.length,
+      ),
       if ((counts['overdue'] ?? 0) > 0)
         TaskSupervisorStatusFilterItem(
-            key: 'overdue', label: '已逾期', count: counts['overdue'] ?? 0),
+          key: 'overdue',
+          label: '已逾期',
+          count: counts['overdue'] ?? 0,
+        ),
       if ((counts['due_soon'] ?? 0) > 0)
         TaskSupervisorStatusFilterItem(
-            key: 'due_soon', label: '临近交期', count: counts['due_soon'] ?? 0),
+          key: 'due_soon',
+          label: '临近交期',
+          count: counts['due_soon'] ?? 0,
+        ),
       if ((counts['unassigned'] ?? 0) > 0)
         TaskSupervisorStatusFilterItem(
-            key: 'unassigned', label: '待分派', count: counts['unassigned'] ?? 0),
+          key: 'unassigned',
+          label: '待分派',
+          count: counts['unassigned'] ?? 0,
+        ),
       TaskSupervisorStatusFilterItem(
-          key: 'pending', label: '待处理', count: counts['pending'] ?? 0),
+        key: 'pending',
+        label: '待处理',
+        count: counts['pending'] ?? 0,
+      ),
       TaskSupervisorStatusFilterItem(
-          key: 'in_progress', label: '进行中', count: counts['in_progress'] ?? 0),
+        key: 'in_progress',
+        label: '进行中',
+        count: counts['in_progress'] ?? 0,
+      ),
       TaskSupervisorStatusFilterItem(
-          key: 'completed', label: '已完成', count: counts['completed'] ?? 0),
+        key: 'completed',
+        label: '已完成',
+        count: counts['completed'] ?? 0,
+      ),
       if ((counts['other'] ?? 0) > 0)
         TaskSupervisorStatusFilterItem(
-            key: 'other', label: '其他', count: counts['other'] ?? 0),
+          key: 'other',
+          label: '其他',
+          count: counts['other'] ?? 0,
+        ),
     ];
 
     return TaskSupervisorStatusFilters(
@@ -781,10 +859,12 @@ class _TaskSupervisorDashboardViewState
     }
     if (_taskStatusFilter == 'other') {
       return tasks
-          .where((task) =>
-              task.status != 'pending' &&
-              task.status != 'in_progress' &&
-              task.status != 'completed')
+          .where(
+            (task) =>
+                task.status != 'pending' &&
+                task.status != 'in_progress' &&
+                task.status != 'completed',
+          )
           .toList();
     }
     return tasks.where((task) => task.status == _taskStatusFilter).toList();

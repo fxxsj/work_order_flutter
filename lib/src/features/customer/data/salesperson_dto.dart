@@ -3,10 +3,7 @@ import 'package:work_order_app/src/features/customer/domain/salesperson.dart';
 
 /// 业务员数据传输对象。
 class SalespersonDto {
-  SalespersonDto({
-    required this.id,
-    required this.name,
-  });
+  SalespersonDto({required this.id, required this.name});
 
   final int id;
   final String name;
@@ -17,8 +14,11 @@ class SalespersonDto {
     final username = json['username']?.toString() ?? '';
     final firstName = json['first_name']?.toString() ?? '';
     final lastName = json['last_name']?.toString() ?? '';
-    final name = _firstNonEmpty(
-        [json['name']?.toString() ?? '', username, '$lastName$firstName']);
+    final name = _firstNonEmpty([
+      json['name']?.toString() ?? '',
+      username,
+      '$lastName$firstName',
+    ]);
     return SalespersonDto(id: id, name: name.isEmpty ? '用户$id' : name);
   }
 

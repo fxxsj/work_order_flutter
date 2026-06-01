@@ -35,14 +35,15 @@ class WorkOrderDetailOverviewSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
     final summary = buildSection(
-        '施工单信息',
-        SummaryContent(
-          detail: detail,
-          sectionSpacing: sectionSpacing,
-          emptyText: emptyText,
-          actionLoading: actionLoading,
-          onUploadDesignFile: onUploadDesignFile,
-        ));
+      '施工单信息',
+      SummaryContent(
+        detail: detail,
+        sectionSpacing: sectionSpacing,
+        emptyText: emptyText,
+        actionLoading: actionLoading,
+        onUploadDesignFile: onUploadDesignFile,
+      ),
+    );
     final actions = buildSection(
       '流程操作',
       WorkOrderActionPanel(

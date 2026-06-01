@@ -98,30 +98,30 @@ class StockInListEntry extends StatelessWidget {
   }
 
   static String _orderNumber(GenericRecord record) {
-    return GenericValueFormatter.text(record.getString('order_number'));
+    return AppValueFormatter.text(record.getString('order_number'));
   }
 
   static String _title(GenericRecord record) {
     final order = _orderNumber(record);
     final customer = _customerName(record);
-    if (customer == GenericValueFormatter.empty) return order;
+    if (customer == AppValueFormatter.empty) return order;
     return '$order · $customer';
   }
 
   static String _customerName(GenericRecord record) {
-    return GenericValueFormatter.text(record.getString('customer_name'));
+    return AppValueFormatter.text(record.getString('customer_name'));
   }
 
   static String _workOrderNumber(GenericRecord record) {
-    return GenericValueFormatter.text(record.getString('work_order_number'));
+    return AppValueFormatter.text(record.getString('work_order_number'));
   }
 
   static String _stockInDate(GenericRecord record) {
-    return GenericValueFormatter.date(record.getString('stock_in_date'));
+    return AppValueFormatter.date(record.getString('stock_in_date'));
   }
 
   static String _status(GenericRecord record) {
-    return GenericValueFormatter.text(record.getString('status_display'));
+    return AppValueFormatter.text(record.getString('status_display'));
   }
 
   static String _followUpText(GenericRecord record) {
@@ -134,16 +134,16 @@ class StockInListEntry extends StatelessWidget {
       case 'completed':
         return '已入库，可继续备货/发货';
       default:
-        return GenericValueFormatter.empty;
+        return AppValueFormatter.empty;
     }
   }
 
   static String _operator(GenericRecord record) {
-    return GenericValueFormatter.text(record.getString('operator_name'));
+    return AppValueFormatter.text(record.getString('operator_name'));
   }
 
   static String _createdAt(GenericRecord record) {
-    return GenericValueFormatter.date(record.getString('created_at'));
+    return AppValueFormatter.date(record.getString('created_at'));
   }
 
   static int _submittedCount(GenericListViewModel viewModel) {

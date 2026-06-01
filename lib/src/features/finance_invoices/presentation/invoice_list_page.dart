@@ -73,7 +73,7 @@ class _InvoiceListView extends StatefulWidget {
 
 class _InvoiceListViewState extends State<_InvoiceListView> {
   static const double _searchWidth = 320;
-  static const double _spacingSm = LayoutTokens.gapSm;
+  static const double _spacingSm = SpacingTokens.sm;
   static const double _controlHeight = PageActionStyle.height;
   static const String _emptyCellText = '-';
   static const List<String> _attachmentExtensions = [
@@ -405,14 +405,14 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
 
     final res = await viewModel.createInvoice(payload);
     if (!context.mounted) return;
-    
+
     if (autoApprove) {
       await viewModel.submit(res.id, {'auto_approve': true});
       ToastUtil.showSuccess('发布成功');
     } else {
       ToastUtil.showSuccess('发票已创建');
     }
-    
+
     Navigator.of(context).maybePop();
     await viewModel.loadInvoices(resetPage: false);
   }
@@ -438,9 +438,9 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
 
   static List<String> _buildSubmitImpacts(Invoice invoice) {
     return [
-      '客户：${CrudValueFormatter.text(invoice.customerName)}',
+      '客户：${AppValueFormatter.text(invoice.customerName)}',
       '类型：${_invoiceTypeStaticText(invoice)}',
-      '金额：${CrudValueFormatter.amount(invoice.amount)}',
+      '金额：${AppValueFormatter.amount(invoice.amount)}',
       if ((invoice.salesOrderNumber ?? '').trim().isNotEmpty)
         '关联客户订单：${invoice.salesOrderNumber!.trim()}',
       if ((invoice.workOrderNumber ?? '').trim().isNotEmpty)
@@ -1398,7 +1398,7 @@ class _InvoiceCreatePanelState extends State<_InvoiceCreatePanel> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('单据信息', style: Theme.of(context).textTheme.titleSmall),
-                const SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: SpacingTokens.md),
                 AppSelect<String>(
                   value: invoiceType,
                   decoration: const InputDecoration(
@@ -1415,7 +1415,7 @@ class _InvoiceCreatePanelState extends State<_InvoiceCreatePanel> {
                       : (value) =>
                             setState(() => invoiceType = value ?? 'vat_normal'),
                 ),
-                const SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: SpacingTokens.md),
                 AppSelect<int?>(
                   value: selectedCustomerId,
                   decoration: const InputDecoration(
@@ -1436,7 +1436,7 @@ class _InvoiceCreatePanelState extends State<_InvoiceCreatePanel> {
                       : (value) => setState(() => selectedCustomerId = value),
                   validator: (value) => value == null ? '请选择客户' : null,
                 ),
-                const SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: SpacingTokens.md),
                 AppSelect<int?>(
                   value: selectedSalesOrderId,
                   decoration: const InputDecoration(
@@ -1459,7 +1459,7 @@ class _InvoiceCreatePanelState extends State<_InvoiceCreatePanel> {
                       ? null
                       : (value) => setState(() => selectedSalesOrderId = value),
                 ),
-                const SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: SpacingTokens.md),
                 AppSelect<int?>(
                   value: selectedWorkOrderId,
                   decoration: const InputDecoration(
@@ -1482,13 +1482,13 @@ class _InvoiceCreatePanelState extends State<_InvoiceCreatePanel> {
               ],
             ),
           ),
-          const SizedBox(height: LayoutTokens.gapLg),
+          const SizedBox(height: SpacingTokens.lg),
           AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('开票金额', style: Theme.of(context).textTheme.titleSmall),
-                const SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: SpacingTokens.md),
                 CrudFieldConfig.number(
                   label: '金额（不含税）',
                   controller: amountController,
@@ -1496,18 +1496,18 @@ class _InvoiceCreatePanelState extends State<_InvoiceCreatePanel> {
                   validator: (value) =>
                       (value == null || value.trim().isEmpty) ? '请输入金额' : null,
                 ).build(context),
-                const SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: SpacingTokens.md),
                 CrudFieldConfig.number(
                   label: '税率(%)',
                   controller: taxRateController,
                   decimal: true,
                 ).build(context),
-                const SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: SpacingTokens.md),
                 CrudFieldConfig.text(
                   label: '开票日期（YYYY-MM-DD，可选）',
                   controller: issueDateController,
                 ).build(context),
-                const SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: SpacingTokens.md),
                 CrudFieldConfig.textarea(
                   label: '备注（可选）',
                   controller: notesController,

@@ -21,10 +21,7 @@ class WorkOrderFormSectionCard extends StatelessWidget {
 
 /// Subsection title within a form section.
 class WorkOrderFormSubsectionTitle extends StatelessWidget {
-  const WorkOrderFormSubsectionTitle({
-    super.key,
-    required this.title,
-  });
+  const WorkOrderFormSubsectionTitle({super.key, required this.title});
 
   final String title;
 
@@ -34,9 +31,7 @@ class WorkOrderFormSubsectionTitle extends StatelessWidget {
     final colors = theme.extension<AppColors>();
     return Text(
       title,
-      style: theme.textTheme.titleSmall?.copyWith(
-        color: colors?.sidebarText,
-      ),
+      style: theme.textTheme.titleSmall?.copyWith(color: colors?.sidebarText),
     );
   }
 }

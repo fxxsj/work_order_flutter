@@ -16,22 +16,26 @@ class AppConfig {
     activeProfile = profileOverride.trim().isNotEmpty
         ? profileOverride.trim()
         : (_readString(baseConfig, ['app', 'profiles', 'active']) ?? 'dev');
-    final profileConfig =
-        await _loadYamlAsset('config/application-$activeProfile.yaml');
+    final profileConfig = await _loadYamlAsset(
+      'config/application-$activeProfile.yaml',
+    );
 
     apiBaseUrl = baseUrlOverride.trim().isNotEmpty
         ? baseUrlOverride.trim()
         : (_readString(profileConfig, ['app', 'api', 'baseUrl']) ??
-            _readString(baseConfig, ['app', 'api', 'baseUrl']) ??
-            '');
-    connectTimeoutMs = _readInt(baseConfig, ['app', 'api', 'connectTimeout']) ??
+              _readString(baseConfig, ['app', 'api', 'baseUrl']) ??
+              '');
+    connectTimeoutMs =
+        _readInt(baseConfig, ['app', 'api', 'connectTimeout']) ??
         connectTimeoutMs;
-    receiveTimeoutMs = _readInt(baseConfig, ['app', 'api', 'receiveTimeout']) ??
+    receiveTimeoutMs =
+        _readInt(baseConfig, ['app', 'api', 'receiveTimeout']) ??
         receiveTimeoutMs;
 
     if (apiBaseUrl.trim().isEmpty) {
       throw StateError(
-          '未配置接口地址，请检查 APP_API_BASE_URL 或 config/application-*.yaml');
+        '未配置接口地址，请检查 APP_API_BASE_URL 或 config/application-*.yaml',
+      );
     }
 
     if (activeProfile == 'prod') {

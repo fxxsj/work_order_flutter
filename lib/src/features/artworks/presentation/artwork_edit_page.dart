@@ -430,7 +430,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                     ),
                     if (_productOptions.isEmpty)
                       Padding(
-                        padding: EdgeInsets.only(left: LayoutTokens.gapSm),
+                        padding: EdgeInsets.only(left: SpacingTokens.sm),
                         child: TextButton.icon(
                           onPressed: () async {
                             final created = await _handleCreateProduct();
@@ -441,14 +441,14 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                           label: const Text('新增产品'),
                         ),
                       ),
-                    SizedBox(width: LayoutTokens.gapMd),
+                    SizedBox(width: SpacingTokens.md),
                     Expanded(
                       child: CrudFieldConfig.number(
                         label: _quantityLabel,
                         controller: item.quantityController,
                       ).build(context),
                     ),
-                    SizedBox(width: LayoutTokens.gapSm),
+                    SizedBox(width: SpacingTokens.sm),
                     IconButton(
                       tooltip: '移除',
                       icon: Icon(
@@ -552,9 +552,7 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
                       labelText: _cmykLabel,
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
-                      contentPadding: EdgeInsets.only(
-                        bottom: LayoutTokens.gapSm,
-                      ),
+                      contentPadding: EdgeInsets.only(bottom: SpacingTokens.sm),
                     ),
                     child: Wrap(
                       spacing: 8,

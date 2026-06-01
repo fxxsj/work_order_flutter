@@ -120,7 +120,7 @@ class InvoiceViewModel extends PaginatedViewModel<Invoice> {
   }) async {
     String? finalStatus = _statusFilter.isEmpty ? null : _statusFilter;
     String? finalApprovalStatus;
-    
+
     if (finalStatus != null) {
       if (finalStatus == 'approval_draft') {
         finalApprovalStatus = 'draft';

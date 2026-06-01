@@ -157,8 +157,9 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
       final data = _asMap(response.data);
       setState(() {
         _settingsResult = data;
-        _settingsJsonController.text =
-            const JsonEncoder.withIndent('  ').convert(data);
+        _settingsJsonController.text = const JsonEncoder.withIndent(
+          '  ',
+        ).convert(data);
       });
     } catch (err) {
       _showRequestError('获取设置失败', err);
@@ -272,10 +273,12 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
 
   Widget _buildSendNotificationCard() {
     final isUrgent = _notificationType == 'urgent';
-    final titleController =
-        isUrgent ? _alertTitleController : _announcementTitleController;
-    final contentController =
-        isUrgent ? _alertContentController : _announcementContentController;
+    final titleController = isUrgent
+        ? _alertTitleController
+        : _announcementTitleController;
+    final contentController = isUrgent
+        ? _alertContentController
+        : _announcementContentController;
     final recipientsController = isUrgent
         ? _alertRecipientsController
         : _announcementRecipientsController;
@@ -332,9 +335,11 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
             ),
           SwitchListTile(
             value: isUrgent ? _alertOnlyStaff : _announcementOnlyStaff,
-            onChanged: (value) => setState(() => isUrgent
-                ? _alertOnlyStaff = value
-                : _announcementOnlyStaff = value),
+            onChanged: (value) => setState(
+              () => isUrgent
+                  ? _alertOnlyStaff = value
+                  : _announcementOnlyStaff = value,
+            ),
             title: const Text('仅发送给员工'),
             contentPadding: EdgeInsets.zero,
           ),
@@ -372,7 +377,7 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildSettingsCard(),
-                const SizedBox(height: LayoutTokens.gapLg),
+                const SizedBox(height: SpacingTokens.lg),
                 _buildStatusCard(),
               ],
             )
@@ -397,10 +402,10 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
               prefixIcon: Icon(Icons.tune_outlined),
             ),
           ),
-          const SizedBox(height: LayoutTokens.gapSm),
+          const SizedBox(height: SpacingTokens.sm),
           Wrap(
-            spacing: LayoutTokens.gapSm,
-            runSpacing: LayoutTokens.gapSm,
+            spacing: SpacingTokens.sm,
+            runSpacing: SpacingTokens.sm,
             children: [
               OutlinedButton.icon(
                 onPressed: _loadingSettings ? null : _loadSettings,
@@ -421,7 +426,7 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
             ],
           ),
           if (_settingsResult != null) ...[
-            const SizedBox(height: LayoutTokens.gapSm),
+            const SizedBox(height: SpacingTokens.sm),
             NotificationResultPanel(result: _settingsResult!),
           ],
         ],
@@ -447,7 +452,7 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
             ),
           ),
           if (_statusResult != null) ...[
-            const SizedBox(height: LayoutTokens.gapSm),
+            const SizedBox(height: SpacingTokens.sm),
             NotificationResultPanel(result: _statusResult!),
           ],
         ],

@@ -12,4 +12,3 @@ Future<String?> saveBytesImpl(
   await file.writeAsBytes(bytes, flush: true);
   return file.path;
 }
-

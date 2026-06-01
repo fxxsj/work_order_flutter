@@ -210,8 +210,10 @@ class WorkOrderFormDraftState {
     // 7. Auto-add products from artworks (if no products yet)
     if (productDrafts.isEmpty ||
         productDrafts.every((d) => d.productId == null)) {
-      final existingProductIds =
-          productDrafts.map((d) => d.productId).whereType<int>().toSet();
+      final existingProductIds = productDrafts
+          .map((d) => d.productId)
+          .whereType<int>()
+          .toSet();
       for (final artwork in selectedArtworks) {
         for (final ap in artwork.products) {
           if (!existingProductIds.contains(ap.productId)) {
@@ -313,8 +315,8 @@ class WorkOrderFormDraftState {
               if (!draft.manualQuantity) {
                 final productionQty =
                     int.tryParse(productionQuantityController.text.trim()) ?? 0;
-                draft.quantityController.text =
-                    (productionQty * impQty).toString();
+                draft.quantityController.text = (productionQty * impQty)
+                    .toString();
               }
               break;
             }
@@ -325,8 +327,10 @@ class WorkOrderFormDraftState {
   }
 
   void _autoFillProcessesAndMaterials(List<Product> fullProducts) {
-    final selectedProductIds =
-        productDrafts.map((d) => d.productId).whereType<int>().toSet();
+    final selectedProductIds = productDrafts
+        .map((d) => d.productId)
+        .whereType<int>()
+        .toSet();
 
     final productMap = <int, Product>{};
     for (final p in fullProducts) {
@@ -342,8 +346,10 @@ class WorkOrderFormDraftState {
     }
 
     // Merge material drafts
-    final existingMaterialIds =
-        materialDrafts.map((d) => d.materialId).whereType<int>().toSet();
+    final existingMaterialIds = materialDrafts
+        .map((d) => d.materialId)
+        .whereType<int>()
+        .toSet();
     for (final pid in selectedProductIds) {
       final product = productMap[pid];
       if (product != null) {

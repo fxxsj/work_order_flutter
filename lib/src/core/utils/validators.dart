@@ -79,10 +79,7 @@ class FormValidators {
     };
   }
 
-  static FormFieldValidator<String> pattern(
-    RegExp pattern, [
-    String? message,
-  ]) {
+  static FormFieldValidator<String> pattern(RegExp pattern, [String? message]) {
     return (value) {
       final text = value?.trim() ?? '';
       if (text.isEmpty) {

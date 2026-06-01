@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-typedef ContentBodyBuilder = Widget Function(BuildContext context, ContentAreaStyle style);
+typedef ContentBodyBuilder =
+    Widget Function(BuildContext context, ContentAreaStyle style);
 
 class ContentAreaStyle {
   const ContentAreaStyle({

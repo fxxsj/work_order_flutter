@@ -238,27 +238,27 @@ class CustomerListPage extends StatelessWidget {
   static Widget _buildContactCell(BuildContext context, Customer customer) {
     return _buildBodyText(
       context,
-      CrudValueFormatter.text(customer.contactPerson),
+      AppValueFormatter.text(customer.contactPerson),
     );
   }
 
   static Widget _buildPhoneCell(BuildContext context, Customer customer) {
-    return _buildBodyText(context, CrudValueFormatter.text(customer.phone));
+    return _buildBodyText(context, AppValueFormatter.text(customer.phone));
   }
 
   static Widget _buildSalespersonCell(BuildContext context, Customer customer) {
     return _buildBodyText(
       context,
-      CrudValueFormatter.text(customer.salespersonName),
+      AppValueFormatter.text(customer.salespersonName),
     );
   }
 
   static Widget _buildUpdatedAtCell(BuildContext context, Customer customer) {
-    return _buildBodyText(context, CrudValueFormatter.date(customer.updatedAt));
+    return _buildBodyText(context, AppValueFormatter.date(customer.updatedAt));
   }
 
   static Widget _buildAddressCell(BuildContext context, Customer customer) {
-    return _buildBodyText(context, CrudValueFormatter.text(customer.address));
+    return _buildBodyText(context, AppValueFormatter.text(customer.address));
   }
 
   static Widget _buildBodyText(BuildContext context, String value) {
@@ -266,7 +266,7 @@ class CustomerListPage extends StatelessWidget {
   }
 
   static String _titleText(Customer customer) {
-    return CrudValueFormatter.text(customer.name);
+    return AppValueFormatter.text(customer.name);
   }
 
   static String _subtitleText(Customer customer) {
@@ -277,7 +277,7 @@ class CustomerListPage extends StatelessWidget {
       if (phone != null && phone.isNotEmpty) phone,
     ];
     if (parts.isEmpty) {
-      return CrudValueFormatter.empty;
+      return AppValueFormatter.empty;
     }
     return parts.join(' · ');
   }
@@ -291,7 +291,7 @@ class CustomerListPage extends StatelessWidget {
     chips.add(
       CrudSummaryChipData(
         label: '更新',
-        value: CrudValueFormatter.date(customer.updatedAt),
+        value: AppValueFormatter.date(customer.updatedAt),
       ),
     );
     return chips;
@@ -301,31 +301,31 @@ class CustomerListPage extends StatelessWidget {
     return [
       CrudSummaryFieldData(
         label: '联系人',
-        value: CrudValueFormatter.text(customer.contactPerson),
+        value: AppValueFormatter.text(customer.contactPerson),
       ),
       CrudSummaryFieldData(
         label: '电话',
-        value: CrudValueFormatter.text(customer.phone),
+        value: AppValueFormatter.text(customer.phone),
       ),
       CrudSummaryFieldData(
         label: '邮箱',
-        value: CrudValueFormatter.text(customer.email),
+        value: AppValueFormatter.text(customer.email),
       ),
       CrudSummaryFieldData(
         label: '业务员',
-        value: CrudValueFormatter.text(customer.salespersonName),
+        value: AppValueFormatter.text(customer.salespersonName),
       ),
       CrudSummaryFieldData(
         label: '更新日期',
-        value: CrudValueFormatter.date(customer.updatedAt),
+        value: AppValueFormatter.date(customer.updatedAt),
       ),
       CrudSummaryFieldData(
         label: '地址',
-        value: CrudValueFormatter.text(customer.address),
+        value: AppValueFormatter.text(customer.address),
       ),
       CrudSummaryFieldData(
         label: '备注',
-        value: CrudValueFormatter.text(customer.notes),
+        value: AppValueFormatter.text(customer.notes),
       ),
     ];
   }

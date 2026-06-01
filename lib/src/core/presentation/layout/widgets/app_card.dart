@@ -31,7 +31,7 @@ class AppCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final resolvedPadding = padding ?? LayoutTokens.cardPadding(context);
-    final resolvedRadius = radius ?? LayoutTokens.radiusMd;
+    final resolvedRadius = radius ?? RadiusTokens.md;
     final resolvedBackground =
         background ?? colors?.surface ?? theme.colorScheme.surface;
     final resolvedBorder =
@@ -45,7 +45,8 @@ class AppCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(resolvedRadius),
         border: showBorder
             ? Border.all(
-                color: resolvedBorder.withValues(alpha: resolvedBorderAlpha))
+                color: resolvedBorder.withValues(alpha: resolvedBorderAlpha),
+              )
             : null,
         boxShadow: showShadow ? _getShadow(context, shadowLevel) : null,
       ),
@@ -70,10 +71,4 @@ class AppCard extends StatelessWidget {
 }
 
 /// 阴影等级
-enum ShadowLevel {
-  xs,
-  sm,
-  md,
-  lg,
-  xl,
-}
+enum ShadowLevel { xs, sm, md, lg, xl }

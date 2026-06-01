@@ -11,7 +11,10 @@ abstract class WorkOrderProcessRepository {
 
   Future<Map<String, dynamic>> createProcess(Map<String, dynamic> payload);
 
-  Future<Map<String, dynamic>> updateProcess(int id, Map<String, dynamic> payload);
+  Future<Map<String, dynamic>> updateProcess(
+    int id,
+    Map<String, dynamic> payload,
+  );
 
   Future<void> deleteProcess(int id);
 
@@ -21,5 +24,8 @@ abstract class WorkOrderProcessRepository {
 
   Future<Map<String, dynamic>> addLog(int id, String content);
 
-  Future<Map<String, dynamic>> reassignTasks(int id, Map<String, dynamic> payload);
+  Future<Map<String, dynamic>> reassignTasks(
+    int id,
+    Map<String, dynamic> payload,
+  );
 }

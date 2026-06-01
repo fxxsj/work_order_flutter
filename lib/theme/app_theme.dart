@@ -30,15 +30,16 @@ class AppTheme {
     const linearSuccess = Color(0xFF27a644);
 
     // ── ColorScheme (seed → primary family) ──────────────
-    final scheme = ColorScheme.fromSeed(
-      seedColor: primary,
-      brightness: brightness,
-    ).copyWith(
-      primary: primary,
-      onPrimary: Colors.white,
-      surface: isDark ? linearSurface1 : Colors.white,
-      surfaceTint: Colors.transparent,
-    );
+    final scheme =
+        ColorScheme.fromSeed(
+          seedColor: primary,
+          brightness: brightness,
+        ).copyWith(
+          primary: primary,
+          onPrimary: Colors.white,
+          surface: isDark ? linearSurface1 : Colors.white,
+          surfaceTint: Colors.transparent,
+        );
 
     // ── Semantic colors ──────────────────────────────────
     final semantic = AppSemanticColors(
@@ -48,8 +49,9 @@ class AppTheme {
       info: primary,
       surfaceAlt: isDark ? const Color(0xFF141516) : const Color(0xFFF8FAFC),
       shadowStrong: const Color(0xFF000000),
-      unreadBackground:
-          isDark ? const Color(0xFF1a1a1a) : const Color(0xFFEDF2F7),
+      unreadBackground: isDark
+          ? const Color(0xFF1a1a1a)
+          : const Color(0xFFEDF2F7),
       successBg: linearSuccess.withValues(alpha: 0.12),
       warningBg: (isDark ? linearInkSubtle : const Color(0xFF8a8f98))
           .withValues(alpha: 0.12),
@@ -66,10 +68,12 @@ class AppTheme {
       sidebarText: isDark ? linearInkMuted : const Color(0xFF475569),
       borderColor: isDark ? linearHairline : const Color(0xFFE2E8F0),
     );
-    final pickerSurface =
-        isDark ? const Color(0xFF141516) : const Color(0xFFFFFFFF);
-    final pickerHeader =
-        isDark ? const Color(0xFF18191A) : const Color(0xFFF8FAFC);
+    final pickerSurface = isDark
+        ? const Color(0xFF141516)
+        : const Color(0xFFFFFFFF);
+    final pickerHeader = isDark
+        ? const Color(0xFF18191A)
+        : const Color(0xFFF8FAFC);
     final pickerDayOverlay = WidgetStateProperty.resolveWith<Color?>((states) {
       if (states.contains(WidgetState.selected)) {
         return scheme.primary;
@@ -80,8 +84,9 @@ class AppTheme {
       }
       return null;
     });
-    final pickerDayForeground =
-        WidgetStateProperty.resolveWith<Color?>((states) {
+    final pickerDayForeground = WidgetStateProperty.resolveWith<Color?>((
+      states,
+    ) {
       if (states.contains(WidgetState.selected)) {
         return scheme.onPrimary;
       }
@@ -90,8 +95,9 @@ class AppTheme {
       }
       return isDark ? linearInk : const Color(0xFF0F172A);
     });
-    final pickerDayShape =
-        WidgetStateProperty.resolveWith<OutlinedBorder?>((states) {
+    final pickerDayShape = WidgetStateProperty.resolveWith<OutlinedBorder?>((
+      states,
+    ) {
       if (states.contains(WidgetState.selected)) {
         return const RoundedRectangleBorder(borderRadius: RadiusTokens.bMd);
       }
@@ -188,15 +194,17 @@ class AppTheme {
         border: OutlineInputBorder(
           borderRadius: RadiusTokens.bMd,
           borderSide: BorderSide(
-            color:
-                appColors.borderColor.withValues(alpha: OpacityTokens.intense),
+            color: appColors.borderColor.withValues(
+              alpha: OpacityTokens.intense,
+            ),
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: RadiusTokens.bMd,
           borderSide: BorderSide(
-            color:
-                appColors.borderColor.withValues(alpha: OpacityTokens.intense),
+            color: appColors.borderColor.withValues(
+              alpha: OpacityTokens.intense,
+            ),
           ),
         ),
         focusedBorder: OutlineInputBorder(
@@ -223,12 +231,8 @@ class AppTheme {
           fontSize: TextTokens.fontSizeBodyMedium,
           color: appColors.subtleText,
         ),
-        labelStyle: TextStyle(
-          fontSize: TextTokens.fontSizeBodyMedium,
-        ),
-        floatingLabelStyle: TextStyle(
-          fontSize: TextTokens.fontSizeLabelMedium,
-        ),
+        labelStyle: TextStyle(fontSize: TextTokens.fontSizeBodyMedium),
+        floatingLabelStyle: TextStyle(fontSize: TextTokens.fontSizeLabelMedium),
         floatingLabelBehavior: FloatingLabelBehavior.auto,
       ),
       appBarTheme: AppBarTheme(
@@ -251,14 +255,17 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: appColors.surface,
         elevation: 0,
-        shadowColor:
-            semantic.shadowStrong.withValues(alpha: OpacityTokens.subtle),
+        shadowColor: semantic.shadowStrong.withValues(
+          alpha: OpacityTokens.subtle,
+        ),
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: RadiusTokens.bLg,
           side: BorderSide(
-              color: appColors.borderColor
-                  .withValues(alpha: OpacityTokens.strong)),
+            color: appColors.borderColor.withValues(
+              alpha: OpacityTokens.strong,
+            ),
+          ),
         ),
       ),
       dialogTheme: DialogThemeData(
@@ -269,8 +276,9 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: RadiusTokens.bXl,
           side: BorderSide(
-            color:
-                appColors.borderColor.withValues(alpha: OpacityTokens.strong),
+            color: appColors.borderColor.withValues(
+              alpha: OpacityTokens.strong,
+            ),
           ),
         ),
       ),
@@ -282,8 +290,9 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: RadiusTokens.bXl,
           side: BorderSide(
-            color:
-                appColors.borderColor.withValues(alpha: OpacityTokens.strong),
+            color: appColors.borderColor.withValues(
+              alpha: OpacityTokens.strong,
+            ),
           ),
         ),
         headerBackgroundColor: pickerHeader,
@@ -317,13 +326,15 @@ class AppTheme {
         rangePickerShape: RoundedRectangleBorder(
           borderRadius: RadiusTokens.bXl,
           side: BorderSide(
-            color:
-                appColors.borderColor.withValues(alpha: OpacityTokens.strong),
+            color: appColors.borderColor.withValues(
+              alpha: OpacityTokens.strong,
+            ),
           ),
         ),
         rangePickerHeaderBackgroundColor: pickerHeader,
-        rangePickerHeaderForegroundColor:
-            isDark ? linearInk : const Color(0xFF0F172A),
+        rangePickerHeaderForegroundColor: isDark
+            ? linearInk
+            : const Color(0xFF0F172A),
         rangePickerHeaderHeadlineStyle: textTheme.titleMedium?.copyWith(
           fontFamily: bodyFont,
           fontSize: 18,
@@ -338,13 +349,16 @@ class AppTheme {
           fontWeight: FontWeight.w600,
           letterSpacing: 0,
         ),
-        dividerColor:
-            appColors.borderColor.withValues(alpha: OpacityTokens.strong),
+        dividerColor: appColors.borderColor.withValues(
+          alpha: OpacityTokens.strong,
+        ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: isDark ? const Color(0xFF18191A) : const Color(0xFFF8FAFC),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 10,
+          ),
           border: OutlineInputBorder(
             borderRadius: RadiusTokens.bMd,
             borderSide: BorderSide(color: appColors.borderColor),
@@ -376,8 +390,9 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: RadiusTokens.bXl,
           side: BorderSide(
-            color:
-                appColors.borderColor.withValues(alpha: OpacityTokens.strong),
+            color: appColors.borderColor.withValues(
+              alpha: OpacityTokens.strong,
+            ),
           ),
         ),
         hourMinuteShape: RoundedRectangleBorder(borderRadius: RadiusTokens.bLg),
@@ -391,8 +406,9 @@ class AppTheme {
           if (states.contains(WidgetState.selected)) return scheme.primary;
           return isDark ? linearInk : const Color(0xFF0F172A);
         }),
-        dialBackgroundColor:
-            isDark ? const Color(0xFF18191A) : const Color(0xFFF8FAFC),
+        dialBackgroundColor: isDark
+            ? const Color(0xFF18191A)
+            : const Color(0xFFF8FAFC),
         dialHandColor: scheme.primary,
         dialTextColor: WidgetStateColor.resolveWith((states) {
           if (states.contains(WidgetState.selected)) return scheme.onPrimary;
@@ -440,7 +456,8 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: ButtonStyle(
           side: WidgetStateProperty.all(
-              BorderSide(color: scheme.primary.withAlpha(128))),
+            BorderSide(color: scheme.primary.withAlpha(128)),
+          ),
           foregroundColor: WidgetStateProperty.all(scheme.primary),
           mouseCursor: WidgetStateProperty.all(SystemMouseCursors.click),
           textStyle: WidgetStateProperty.all(
@@ -459,8 +476,9 @@ class AppTheme {
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: isDark ? linearSurface1 : const Color(0xFF0F172A),
-        contentTextStyle:
-            TextStyle(color: isDark ? linearInk : const Color(0xFFF1F5F9)),
+        contentTextStyle: TextStyle(
+          color: isDark ? linearInk : const Color(0xFFF1F5F9),
+        ),
       ),
       extensions: [semantic, appColors],
     );

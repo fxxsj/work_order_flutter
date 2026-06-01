@@ -10,10 +10,8 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_l
 import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_dto.dart';
 
-typedef DeliverySalesOrderChanged = Future<void> Function(
-  int id, {
-  VoidCallback? refresh,
-});
+typedef DeliverySalesOrderChanged =
+    Future<void> Function(int id, {VoidCallback? refresh});
 
 typedef DeliveryFormSubmit = Future<void> Function(VoidCallback refresh);
 
@@ -176,7 +174,7 @@ class _DeliveryOrderFormPanelState extends State<_DeliveryOrderFormPanel> {
                 },
               ),
             ),
-            const SizedBox(height: LayoutTokens.gapLg),
+            const SizedBox(height: SpacingTokens.lg),
           ],
           _DeliveryFormSection(
             title: '收货信息',
@@ -189,7 +187,7 @@ class _DeliveryOrderFormPanelState extends State<_DeliveryOrderFormPanel> {
                   validator: (value) =>
                       (value?.trim().isEmpty ?? true) ? '请输入收货人' : null,
                 ).build(context),
-                const SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: SpacingTokens.md),
                 CrudFieldConfig.text(
                   label: '联系电话',
                   controller: widget.receiverPhoneController,
@@ -197,7 +195,7 @@ class _DeliveryOrderFormPanelState extends State<_DeliveryOrderFormPanel> {
                   validator: (value) =>
                       (value?.trim().isEmpty ?? true) ? '请输入联系电话' : null,
                 ).build(context),
-                const SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: SpacingTokens.md),
                 CrudFieldConfig.text(
                   label: '送货地址',
                   controller: widget.addressController,
@@ -205,7 +203,7 @@ class _DeliveryOrderFormPanelState extends State<_DeliveryOrderFormPanel> {
                   validator: (value) =>
                       (value?.trim().isEmpty ?? true) ? '请输入送货地址' : null,
                 ).build(context),
-                const SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: SpacingTokens.md),
                 DeliveryDateField(
                   label: '发货日期',
                   value: widget.deliveryDate,
@@ -214,7 +212,7 @@ class _DeliveryOrderFormPanelState extends State<_DeliveryOrderFormPanel> {
               ],
             ),
           ),
-          const SizedBox(height: LayoutTokens.gapLg),
+          const SizedBox(height: SpacingTokens.lg),
           _DeliveryFormSection(
             title: '物流与备注',
             child: Column(
@@ -224,15 +222,15 @@ class _DeliveryOrderFormPanelState extends State<_DeliveryOrderFormPanel> {
                   controller: widget.logisticsController,
                   enabled: !submitting,
                 ).build(context),
-                const SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: SpacingTokens.md),
                 CrudFieldConfig.text(
                   label: '物流单号',
                   controller: widget.trackingController,
                   enabled: !submitting,
                 ).build(context),
-                const SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: SpacingTokens.md),
                 _buildMetricsFields(),
-                const SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: SpacingTokens.md),
                 CrudFieldConfig.textarea(
                   label: '备注',
                   controller: widget.notesController,
@@ -242,7 +240,7 @@ class _DeliveryOrderFormPanelState extends State<_DeliveryOrderFormPanel> {
               ],
             ),
           ),
-          const SizedBox(height: LayoutTokens.gapLg),
+          const SizedBox(height: SpacingTokens.lg),
           _DeliveryFormSection(
             title: '发货明细',
             subtitle: '支持逐行调整数量、单位、单价和批次。',
@@ -310,13 +308,13 @@ class _DeliveryOrderFormPanelState extends State<_DeliveryOrderFormPanel> {
             enabled: !submitting,
             decimal: true,
           ).build(context),
-          const SizedBox(height: LayoutTokens.gapMd),
+          const SizedBox(height: SpacingTokens.md),
           CrudFieldConfig.number(
             label: '包裹数',
             controller: widget.packageCountController,
             enabled: !submitting,
           ).build(context),
-          const SizedBox(height: LayoutTokens.gapMd),
+          const SizedBox(height: SpacingTokens.md),
           CrudFieldConfig.number(
             label: '总重量(kg)',
             controller: widget.packageWeightController,
@@ -337,7 +335,7 @@ class _DeliveryOrderFormPanelState extends State<_DeliveryOrderFormPanel> {
             decimal: true,
           ).build(context),
         ),
-        const SizedBox(width: LayoutTokens.gapMd),
+        const SizedBox(width: SpacingTokens.md),
         Expanded(
           child: CrudFieldConfig.number(
             label: '包裹数',
@@ -345,7 +343,7 @@ class _DeliveryOrderFormPanelState extends State<_DeliveryOrderFormPanel> {
             enabled: !submitting,
           ).build(context),
         ),
-        const SizedBox(width: LayoutTokens.gapMd),
+        const SizedBox(width: SpacingTokens.md),
         Expanded(
           child: CrudFieldConfig.number(
             label: '总重量(kg)',
@@ -397,12 +395,9 @@ class _DeliveryFormSection extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
+                    Text(title, style: Theme.of(context).textTheme.titleSmall),
                     if (subtitle != null) ...[
-                      const SizedBox(height: LayoutTokens.gapXxxs),
+                      const SizedBox(height: SpacingTokens.xxxs),
                       Text(
                         subtitle!,
                         style: Theme.of(context).textTheme.bodySmall,
@@ -414,7 +409,7 @@ class _DeliveryFormSection extends StatelessWidget {
               if (trailing != null) trailing!,
             ],
           ),
-          const SizedBox(height: LayoutTokens.gapMd),
+          const SizedBox(height: SpacingTokens.md),
           child,
         ],
       ),
@@ -431,12 +426,14 @@ class DeliveryItemDraft {
     double unitPrice = 0,
     String unit = '',
     String stockBatch = '',
-  })  : quantityController =
-            TextEditingController(text: initialQuantity.toStringAsFixed(2)),
-        unitPriceController =
-            TextEditingController(text: unitPrice.toStringAsFixed(2)),
-        unitController = TextEditingController(text: unit),
-        stockBatchController = TextEditingController(text: stockBatch);
+  }) : quantityController = TextEditingController(
+         text: initialQuantity.toStringAsFixed(2),
+       ),
+       unitPriceController = TextEditingController(
+         text: unitPrice.toStringAsFixed(2),
+       ),
+       unitController = TextEditingController(text: unit),
+       stockBatchController = TextEditingController(text: stockBatch);
 
   int productId;
   String productName;
@@ -480,9 +477,9 @@ class DeliveryItemRow extends StatelessWidget {
     final isCompact =
         ResponsiveLayout.isXs(context) || ResponsiveLayout.isSm(context);
     return Padding(
-      padding: const EdgeInsets.only(bottom: LayoutTokens.gapSm),
+      padding: const EdgeInsets.only(bottom: SpacingTokens.sm),
       child: AppCard(
-        padding: const EdgeInsets.all(LayoutTokens.gapMd),
+        padding: const EdgeInsets.all(SpacingTokens.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -509,8 +506,9 @@ class DeliveryItemRow extends StatelessWidget {
                     onChanged: enabled
                         ? (value) {
                             if (value == null) return;
-                            final selected =
-                                products.firstWhere((p) => p.id == value);
+                            final selected = products.firstWhere(
+                              (p) => p.id == value,
+                            );
                             onProductChanged(selected);
                           }
                         : null,
@@ -520,14 +518,14 @@ class DeliveryItemRow extends StatelessWidget {
                     },
                   ),
                 ),
-                const SizedBox(width: LayoutTokens.gapSm),
+                const SizedBox(width: SpacingTokens.sm),
                 IconButton(
                   onPressed: enabled ? onRemove : null,
                   icon: const Icon(Icons.delete_outline),
                 ),
               ],
             ),
-            const SizedBox(height: LayoutTokens.gapSm),
+            const SizedBox(height: SpacingTokens.sm),
             if (isCompact) ...[
               Row(
                 children: [
@@ -551,7 +549,7 @@ class DeliveryItemRow extends StatelessWidget {
                       },
                     ),
                   ),
-                  const SizedBox(width: LayoutTokens.gapSm),
+                  const SizedBox(width: SpacingTokens.sm),
                   Expanded(
                     child: _DeliveryDenseField(
                       controller: item.unitController,
@@ -561,7 +559,7 @@ class DeliveryItemRow extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: LayoutTokens.gapSm),
+              const SizedBox(height: SpacingTokens.sm),
               Row(
                 children: [
                   Expanded(
@@ -574,7 +572,7 @@ class DeliveryItemRow extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: LayoutTokens.gapSm),
+                  const SizedBox(width: SpacingTokens.sm),
                   Expanded(
                     child: _DeliveryDenseField(
                       controller: item.stockBatchController,
@@ -608,7 +606,7 @@ class DeliveryItemRow extends StatelessWidget {
                       },
                     ),
                   ),
-                  const SizedBox(width: LayoutTokens.gapSm),
+                  const SizedBox(width: SpacingTokens.sm),
                   SizedBox(
                     width: 90,
                     child: _DeliveryDenseField(
@@ -617,7 +615,7 @@ class DeliveryItemRow extends StatelessWidget {
                       label: '单位',
                     ),
                   ),
-                  const SizedBox(width: LayoutTokens.gapSm),
+                  const SizedBox(width: SpacingTokens.sm),
                   SizedBox(
                     width: 110,
                     child: _DeliveryDenseField(
@@ -629,7 +627,7 @@ class DeliveryItemRow extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: LayoutTokens.gapSm),
+                  const SizedBox(width: SpacingTokens.sm),
                   SizedBox(
                     width: 120,
                     child: _DeliveryDenseField(
@@ -722,9 +720,7 @@ class DeliveryDateField extends StatelessWidget {
         child: Text(
           text.isEmpty ? '请选择日期' : text,
           style: text.isEmpty
-              ? theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.hintColor,
-                )
+              ? theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor)
               : theme.textTheme.bodyMedium,
         ),
       ),

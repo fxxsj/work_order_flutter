@@ -22,10 +22,7 @@ class CrudDetailAction {
   final bool visible;
 }
 
-enum CrudDetailItemLayout {
-  vertical,
-  horizontal,
-}
+enum CrudDetailItemLayout { vertical, horizontal }
 
 class CrudDetailItem {
   const CrudDetailItem({
@@ -78,16 +75,14 @@ class CrudDetailConfig<T> {
     BuildContext context,
     bool isMobile,
     T item,
-  ) sectionsBuilder;
+  )
+  sectionsBuilder;
   final String backText;
   final List<CrudDetailAction> actions;
 }
 
 class CrudDetailPage<T> extends StatelessWidget {
-  const CrudDetailPage({
-    super.key,
-    required this.config,
-  });
+  const CrudDetailPage({super.key, required this.config});
 
   final CrudDetailConfig<T> config;
 
@@ -238,7 +233,8 @@ class _CrudDetailItemView extends StatelessWidget {
     final labelStyle = theme.textTheme.bodySmall?.copyWith(
       color: colors?.subtleText ?? theme.hintColor,
     );
-    final valueWidget = item.child ??
+    final valueWidget =
+        item.child ??
         Text(
           (item.value == null || item.value!.trim().isEmpty)
               ? item.emptyText
@@ -255,7 +251,7 @@ class _CrudDetailItemView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(item.label, style: labelStyle),
-                const SizedBox(height: LayoutTokens.gapSm),
+                const SizedBox(height: SpacingTokens.sm),
                 valueWidget,
               ],
             );
@@ -263,11 +259,8 @@ class _CrudDetailItemView extends StatelessWidget {
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                width: 128,
-                child: Text(item.label, style: labelStyle),
-              ),
-              const SizedBox(width: LayoutTokens.gapLg),
+              SizedBox(width: 128, child: Text(item.label, style: labelStyle)),
+              const SizedBox(width: SpacingTokens.lg),
               Expanded(child: valueWidget),
             ],
           );
@@ -279,7 +272,7 @@ class _CrudDetailItemView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(item.label, style: labelStyle),
-        const SizedBox(height: LayoutTokens.gapSm),
+        const SizedBox(height: SpacingTokens.sm),
         valueWidget,
       ],
     );

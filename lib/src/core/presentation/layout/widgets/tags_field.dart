@@ -12,17 +12,17 @@ class TagsField extends FormField<List<String>> {
     String? hintText,
     String? helperText,
     String emptyText = '暂无标签',
-  })  : _label = label,
-        _onChanged = onChanged,
-        _enabled = enabled,
-        _hintText = hintText,
-        _helperText = helperText,
-        _emptyText = emptyText,
-        super(
-          initialValue: List<String>.from(values),
-          validator: validator,
-          builder: (state) => _TagsFieldBody(state: state, values: values),
-        );
+  }) : _label = label,
+       _onChanged = onChanged,
+       _enabled = enabled,
+       _hintText = hintText,
+       _helperText = helperText,
+       _emptyText = emptyText,
+       super(
+         initialValue: List<String>.from(values),
+         validator: validator,
+         builder: (state) => _TagsFieldBody(state: state, values: values),
+       );
 
   final String _label;
   final ValueChanged<List<String>>? _onChanged;
@@ -33,10 +33,7 @@ class TagsField extends FormField<List<String>> {
 }
 
 class _TagsFieldBody extends StatefulWidget {
-  const _TagsFieldBody({
-    required this.state,
-    required this.values,
-  });
+  const _TagsFieldBody({required this.state, required this.values});
 
   final FormFieldState<List<String>> state;
   final List<String> values;
@@ -69,13 +66,14 @@ class _TagsFieldBodyState extends State<_TagsFieldBody> {
     final tags = widget.state.value ?? widget.values;
 
     return InputDecorator(
-      decoration: InputDecoration(
-        labelText: _field._label,
-        helperText: _field._helperText,
-        errorText: widget.state.errorText,
-      ).applyDefaults(theme.inputDecorationTheme).copyWith(
-            enabled: _field._enabled,
-          ),
+      decoration:
+          InputDecoration(
+                labelText: _field._label,
+                helperText: _field._helperText,
+                errorText: widget.state.errorText,
+              )
+              .applyDefaults(theme.inputDecorationTheme)
+              .copyWith(enabled: _field._enabled),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -99,7 +97,7 @@ class _TagsFieldBodyState extends State<_TagsFieldBody> {
                 color: theme.hintColor,
               ),
             ),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           if (_field._enabled)
             TextField(
               controller: _inputController,

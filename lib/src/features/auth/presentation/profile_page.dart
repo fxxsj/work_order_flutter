@@ -120,10 +120,10 @@ class _ProfilePageState extends State<ProfilePage> {
     });
     try {
       final merged = await context.read<AuthViewModel>().updateProfile(
-            email: _emailController.text.trim(),
-            firstName: _firstNameController.text.trim(),
-            lastName: _lastNameController.text.trim(),
-          );
+        email: _emailController.text.trim(),
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
+      );
       _setUser(merged);
       final message = '个人信息更新成功';
       ToastUtil.showSuccess(message);
@@ -148,10 +148,10 @@ class _ProfilePageState extends State<ProfilePage> {
     });
     try {
       await context.read<AuthViewModel>().changePassword(
-            oldPassword: _oldPasswordController.text,
-            newPassword: _newPasswordController.text,
-            confirmPassword: _confirmPasswordController.text,
-          );
+        oldPassword: _oldPasswordController.text,
+        newPassword: _newPasswordController.text,
+        confirmPassword: _confirmPasswordController.text,
+      );
       final message = '密码修改成功，请重新登录';
       ToastUtil.showSuccess(message);
       _resetPasswordForm();
@@ -193,18 +193,21 @@ class _ProfilePageState extends State<ProfilePage> {
       elevation: 0,
       color: surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+        borderRadius: BorderRadius.circular(RadiusTokens.md),
         side: BorderSide(color: borderColor),
       ),
       child: Padding(
-        padding: EdgeInsets.all(LayoutTokens.gapLg + LayoutTokens.gapXs),
+        padding: EdgeInsets.all(SpacingTokens.lg + SpacingTokens.xs),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('个人信息',
-                style: theme.textTheme.titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w700)),
-            SizedBox(height: LayoutTokens.gapLg),
+            Text(
+              '个人信息',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            SizedBox(height: SpacingTokens.lg),
             PageModeToggle<int>(
               value: _activeTab,
               options: const [
@@ -213,7 +216,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ],
               onChanged: (value) => setState(() => _activeTab = value),
             ),
-            SizedBox(height: LayoutTokens.gapLg),
+            SizedBox(height: SpacingTokens.lg),
             IndexedStack(
               index: _activeTab,
               children: [
@@ -238,7 +241,7 @@ class _ProfilePageState extends State<ProfilePage> {
             initialValue: _username(),
             enabled: false,
           ).build(context),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           CrudFieldConfig.email(
             label: '邮箱',
             controller: _emailController,
@@ -251,31 +254,37 @@ class _ProfilePageState extends State<ProfilePage> {
               return null;
             },
           ).build(context),
-          SizedBox(height: LayoutTokens.gapMd),
-          CrudFieldConfig.text(label: '姓', controller: _lastNameController)
-              .build(context),
-          SizedBox(height: LayoutTokens.gapMd),
-          CrudFieldConfig.text(label: '名', controller: _firstNameController)
-              .build(context),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
+          CrudFieldConfig.text(
+            label: '姓',
+            controller: _lastNameController,
+          ).build(context),
+          SizedBox(height: SpacingTokens.md),
+          CrudFieldConfig.text(
+            label: '名',
+            controller: _firstNameController,
+          ).build(context),
+          SizedBox(height: SpacingTokens.md),
           Wrap(
             spacing: 8,
             children: [
-              ..._roleCodes().map((code) => Chip(label: Text(RoleLabels.label(code)))),
+              ..._roleCodes().map(
+                (code) => Chip(label: Text(RoleLabels.label(code))),
+              ),
               if (_isSuperUser()) const Chip(label: Text('超级管理员')),
             ],
           ),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           Text(
             '所属部门：${_departments().isEmpty ? '未配置' : _departments().join('、')}',
           ),
-          SizedBox(height: LayoutTokens.gapSm),
+          SizedBox(height: SpacingTokens.sm),
           Text(
             _isSuperUser()
                 ? '权限范围：超级管理员，默认可见全部菜单'
                 : '权限范围：已同步 ${_permissionCount()} 项权限，侧边栏会按当前账号能力收敛显示',
           ),
-          SizedBox(height: LayoutTokens.gapLg),
+          SizedBox(height: SpacingTokens.lg),
           Row(
             children: [
               AnimatedButton(
@@ -283,7 +292,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 loading: _updatingProfile,
                 child: const Text('保存修改'),
               ),
-              SizedBox(width: LayoutTokens.gapMd),
+              SizedBox(width: SpacingTokens.md),
               TextButton(onPressed: _resetProfileForm, child: const Text('重置')),
             ],
           ),
@@ -305,7 +314,7 @@ class _ProfilePageState extends State<ProfilePage> {
             validator: (value) =>
                 value == null || value.isEmpty ? '请输入旧密码' : null,
           ).build(context),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           CrudFieldConfig.text(
             label: '新密码',
             controller: _newPasswordController,
@@ -316,7 +325,7 @@ class _ProfilePageState extends State<ProfilePage> {
               return null;
             },
           ).build(context),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           CrudFieldConfig.text(
             label: '确认密码',
             controller: _confirmPasswordController,
@@ -327,7 +336,7 @@ class _ProfilePageState extends State<ProfilePage> {
               return null;
             },
           ).build(context),
-          SizedBox(height: LayoutTokens.gapLg),
+          SizedBox(height: SpacingTokens.lg),
           AnimatedButton(
             onPressed: _handleChangePassword,
             loading: _changingPassword,

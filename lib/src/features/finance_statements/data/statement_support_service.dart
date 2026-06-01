@@ -21,10 +21,12 @@ class StatementSupportService {
   final ApiClient _client;
 
   Future<StatementOptionsData> loadOptions() async {
-    final customerFuture =
-        CustomerApiService(_client).fetchCustomers(page: 1, pageSize: 50);
-    final supplierFuture =
-        SupplierApiService(_client).fetchSuppliers(page: 1, pageSize: 50);
+    final customerFuture = CustomerApiService(
+      _client,
+    ).fetchCustomers(page: 1, pageSize: 50);
+    final supplierFuture = SupplierApiService(
+      _client,
+    ).fetchSuppliers(page: 1, pageSize: 50);
 
     final customerPage = await customerFuture;
     final supplierPage = await supplierFuture;

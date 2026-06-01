@@ -36,10 +36,7 @@ class TaskPlaceholderPage extends StatelessWidget {
         children: [
           _SectionCard(title: title, subtitle: description),
           const SizedBox(height: _sectionSpacing),
-          const _SectionCard(
-            title: '说明',
-            subtitle: '入口已接入统一布局，业务能力会继续补齐。',
-          ),
+          const _SectionCard(title: '说明', subtitle: '入口已接入统一布局，业务能力会继续补齐。'),
         ],
       ),
     );

@@ -21,7 +21,7 @@ class WorkOrderActionPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final spacing = LayoutTokens.gapSm;
+    final spacing = SpacingTokens.sm;
 
     return LayoutBuilder(
       builder: (context, constraints) {

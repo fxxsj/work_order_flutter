@@ -13,8 +13,11 @@ class ProductGroupListEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FeatureEntry<ProductGroupApiService, ProductGroupRepository,
-        ProductGroupViewModel>(
+    return FeatureEntry<
+      ProductGroupApiService,
+      ProductGroupRepository,
+      ProductGroupViewModel
+    >(
       createService: (context) =>
           ProductGroupApiService(context.read<ApiClient>()),
       createRepository: (context) =>

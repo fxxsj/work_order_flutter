@@ -22,10 +22,7 @@ Future<bool> showMaterialEditDrawer(
     desktopWidth: LayoutTokens.pageWidthXwide,
     child: ChangeNotifierProvider<MaterialViewModel>.value(
       value: viewModel,
-      child: MaterialEditPage(
-        material: material,
-        onSaved: () => saved = true,
-      ),
+      child: MaterialEditPage(material: material, onSaved: () => saved = true),
     ),
   );
   return saved;
@@ -87,8 +84,9 @@ class _MaterialEditPageState extends State<MaterialEditPage> {
     final material = widget.material;
     _codeController = TextEditingController(text: material?.code ?? '');
     _nameController = TextEditingController(text: material?.name ?? '');
-    _specificationController =
-        TextEditingController(text: material?.specification ?? '');
+    _specificationController = TextEditingController(
+      text: material?.specification ?? '',
+    );
     _unitController = TextEditingController(text: material?.unit ?? '个');
     _unitPriceController = TextEditingController(
       text: material?.unitPrice?.toStringAsFixed(2) ?? '',
@@ -171,9 +169,9 @@ class _MaterialEditPageState extends State<MaterialEditPage> {
     final stock = _parseDouble(_stockController.text);
     final minStock = _parseDouble(_minStockController.text);
     if (stock != null && minStock != null && minStock > stock) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(_minStockTooLargeText)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text(_minStockTooLargeText)));
       return false;
     }
     return true;
@@ -281,16 +279,13 @@ class _MaterialEditPageState extends State<MaterialEditPage> {
                 label: _supplierLabel,
                 value: _defaultSupplier,
                 options: [
-                  const AppDropdownOption<dynamic>(
-                    value: null,
-                    label: '无',
-                  ),
+                  const AppDropdownOption<dynamic>(value: null, label: '无'),
                   ...context.read<MaterialViewModel>().supplierOptions.map(
-                        (supplier) => AppDropdownOption<dynamic>(
-                          value: supplier.id,
-                          label: supplier.label,
-                        ),
-                      ),
+                    (supplier) => AppDropdownOption<dynamic>(
+                      value: supplier.id,
+                      label: supplier.label,
+                    ),
+                  ),
                 ],
                 onChanged: (value) {
                   setState(() => _defaultSupplier = value as int?);

@@ -205,18 +205,18 @@ class SupplierListPage extends StatelessWidget {
   }
 
   static Widget _buildCodeCell(BuildContext context, Supplier supplier) {
-    return _buildBodyText(context, CrudValueFormatter.text(supplier.code));
+    return _buildBodyText(context, AppValueFormatter.text(supplier.code));
   }
 
   static Widget _buildContactCell(BuildContext context, Supplier supplier) {
     return _buildBodyText(
       context,
-      CrudValueFormatter.text(supplier.contactPerson),
+      AppValueFormatter.text(supplier.contactPerson),
     );
   }
 
   static Widget _buildPhoneCell(BuildContext context, Supplier supplier) {
-    return _buildBodyText(context, CrudValueFormatter.text(supplier.phone));
+    return _buildBodyText(context, AppValueFormatter.text(supplier.phone));
   }
 
   static Widget _buildStatusCell(BuildContext context, Supplier supplier) {
@@ -229,7 +229,7 @@ class SupplierListPage extends StatelessWidget {
   ) {
     return _buildBodyText(
       context,
-      CrudValueFormatter.number(supplier.materialCount),
+      AppValueFormatter.number(supplier.materialCount),
     );
   }
 
@@ -238,12 +238,12 @@ class SupplierListPage extends StatelessWidget {
   }
 
   static String _titleText(Supplier supplier) {
-    return CrudValueFormatter.text(supplier.name);
+    return AppValueFormatter.text(supplier.name);
   }
 
   static String _subtitleText(Supplier supplier) {
-    return '${CrudValueFormatter.text(supplier.code)} · '
-        '${CrudValueFormatter.text(supplier.contactPerson)}';
+    return '${AppValueFormatter.text(supplier.code)} · '
+        '${AppValueFormatter.text(supplier.contactPerson)}';
   }
 
   static List<CrudSummaryChipData> _summaryChips(Supplier supplier) {
@@ -251,7 +251,7 @@ class SupplierListPage extends StatelessWidget {
       CrudSummaryChipData(label: '状态', value: _statusText(supplier)),
       CrudSummaryChipData(
         label: '物料数',
-        value: CrudValueFormatter.number(supplier.materialCount),
+        value: AppValueFormatter.number(supplier.materialCount),
       ),
     ];
   }
@@ -260,34 +260,34 @@ class SupplierListPage extends StatelessWidget {
     return [
       CrudSummaryFieldData(
         label: '编码',
-        value: CrudValueFormatter.text(supplier.code),
+        value: AppValueFormatter.text(supplier.code),
       ),
       CrudSummaryFieldData(
         label: '联系人',
-        value: CrudValueFormatter.text(supplier.contactPerson),
+        value: AppValueFormatter.text(supplier.contactPerson),
       ),
       CrudSummaryFieldData(
         label: '电话',
-        value: CrudValueFormatter.text(supplier.phone),
+        value: AppValueFormatter.text(supplier.phone),
       ),
       CrudSummaryFieldData(
         label: '邮箱',
-        value: CrudValueFormatter.text(supplier.email),
+        value: AppValueFormatter.text(supplier.email),
       ),
       CrudSummaryFieldData(label: '状态', value: _statusText(supplier)),
       CrudSummaryFieldData(
         label: '供应物料数',
-        value: CrudValueFormatter.number(supplier.materialCount),
+        value: AppValueFormatter.number(supplier.materialCount),
       ),
       CrudSummaryFieldData(
         label: '备注',
-        value: CrudValueFormatter.text(supplier.notes),
+        value: AppValueFormatter.text(supplier.notes),
       ),
     ];
   }
 
   static String _statusText(Supplier supplier) {
-    return CrudValueFormatter.text(supplier.statusDisplay ?? supplier.status);
+    return AppValueFormatter.text(supplier.statusDisplay ?? supplier.status);
   }
 
   static String _buildDeleteSummary(Supplier supplier) {
@@ -296,7 +296,7 @@ class SupplierListPage extends StatelessWidget {
 
   static List<String> _buildDeleteImpacts(Supplier supplier) {
     return [
-      '供应商编码：${CrudValueFormatter.text(supplier.code)}',
+      '供应商编码：${AppValueFormatter.text(supplier.code)}',
       '如已有采购单、送货单或物料引用，删除可能失败或需要先解除关联',
       '删除后不能直接恢复，建议先确认该供应商已停止使用且不再参与历史追溯',
     ];

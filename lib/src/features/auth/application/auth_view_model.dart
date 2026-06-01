@@ -45,12 +45,15 @@ class AuthViewModel extends ChangeNotifier {
     required String password,
     required bool rememberUsername,
   }) async {
-    final responseMap =
-        await _repository.login(username: username, password: password);
+    final responseMap = await _repository.login(
+      username: username,
+      password: password,
+    );
 
     String? accessToken;
     String? refreshToken;
-    final directAccess = responseMap['access'] ??
+    final directAccess =
+        responseMap['access'] ??
         responseMap['access_token'] ??
         responseMap['auth_token'];
     if (directAccess != null) {
@@ -75,7 +78,9 @@ class AuthViewModel extends ChangeNotifier {
     responseMap['refresh'] = refreshToken;
 
     await _authController.handleLogin(
-        access: accessToken, refresh: refreshToken);
+      access: accessToken,
+      refresh: refreshToken,
+    );
     if (rememberUsername) {
       await _storage.write(Constant.KEY_REMEMBER_USERNAME, username);
     }

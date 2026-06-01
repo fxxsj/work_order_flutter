@@ -7,11 +7,7 @@ import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 /// 用于列表项中展示键值对形式的元信息，如"客户: xxx"、"状态: xxx"。
 /// 从 TaskListTile 和 WorkOrderListTile 中提取的共享组件。
 class MetaChip extends StatelessWidget {
-  const MetaChip({
-    super.key,
-    required this.label,
-    required this.value,
-  });
+  const MetaChip({super.key, required this.label, required this.value});
 
   final String label;
   final String value;
@@ -30,12 +26,12 @@ class MetaChip extends StatelessWidget {
 
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: LayoutTokens.gapMd,
-        vertical: LayoutTokens.gapXs,
+        horizontal: SpacingTokens.md,
+        vertical: SpacingTokens.xs,
       ),
       decoration: BoxDecoration(
         color: theme.colorScheme.primary.withValues(alpha: OpacityTokens.faint),
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
+        borderRadius: BorderRadius.circular(RadiusTokens.pill),
         border: Border.all(color: colors.borderColor),
       ),
       child: RichText(
@@ -43,10 +39,7 @@ class MetaChip extends StatelessWidget {
           style: labelStyle,
           children: [
             TextSpan(text: '$label '),
-            TextSpan(
-              text: value,
-              style: valueStyle,
-            ),
+            TextSpan(text: value, style: valueStyle),
           ],
         ),
       ),

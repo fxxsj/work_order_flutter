@@ -96,10 +96,9 @@ class _DashboardPageState extends State<_DashboardPage> {
         .map((id) => leaves.where((item) => item.id == id).firstOrNull)
         .whereType<NavItem>()
         .toList();
-    final groups = sidebarNavItems(currentUser: currentUser)
-        .where((item) => item.children.isNotEmpty)
-        .take(4)
-        .toList();
+    final groups = sidebarNavItems(
+      currentUser: currentUser,
+    ).where((item) => item.children.isNotEmpty).take(4).toList();
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -108,63 +107,46 @@ class _DashboardPageState extends State<_DashboardPage> {
 
         return SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(
-            narrow ? LayoutTokens.gapLg : LayoutTokens.gapXl,
-            narrow
-                ? LayoutTokens.gapLg
-                : LayoutTokens.gapLg + LayoutTokens.gapXs,
-            narrow ? LayoutTokens.gapLg : LayoutTokens.gapXl,
-            LayoutTokens.gapXl + LayoutTokens.gapSm,
+            narrow ? SpacingTokens.lg : SpacingTokens.xl,
+            narrow ? SpacingTokens.lg : SpacingTokens.lg + SpacingTokens.xs,
+            narrow ? SpacingTokens.lg : SpacingTokens.xl,
+            SpacingTokens.xl + SpacingTokens.sm,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _DashboardHero(
-                title: '工作台',
-                subtitle: _todayLabel(),
-              ),
-              SizedBox(height: LayoutTokens.gapMd),
+              _DashboardHero(title: '工作台', subtitle: _todayLabel()),
+              SizedBox(height: SpacingTokens.md),
               _DashboardStatsSection(
                 stats: stats,
                 loading: dashboard.loading,
                 errorMessage: dashboard.errorMessage,
                 onRetry: dashboard.loadStats,
               ),
-              SizedBox(height: LayoutTokens.gapLg),
-              _DashboardChartsSection(
-                stats: stats,
-              ),
-              SizedBox(height: LayoutTokens.gapLg),
+              SizedBox(height: SpacingTokens.lg),
+              _DashboardChartsSection(stats: stats),
+              SizedBox(height: SpacingTokens.lg),
               if (compact) ...[
-                _QuickEntrySection(
-                  entries: quickEntries,
-                ),
-                SizedBox(height: LayoutTokens.gapLg),
-                _SimpleModuleSection(
-                  entries: spotlightEntries,
-                ),
+                _QuickEntrySection(entries: quickEntries),
+                SizedBox(height: SpacingTokens.lg),
+                _SimpleModuleSection(entries: spotlightEntries),
               ] else
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       flex: 13,
-                      child: _QuickEntrySection(
-                        entries: quickEntries,
-                      ),
+                      child: _QuickEntrySection(entries: quickEntries),
                     ),
-                    SizedBox(width: LayoutTokens.gapLg),
+                    SizedBox(width: SpacingTokens.lg),
                     Expanded(
                       flex: 7,
-                      child: _SimpleModuleSection(
-                        entries: spotlightEntries,
-                      ),
+                      child: _SimpleModuleSection(entries: spotlightEntries),
                     ),
                   ],
                 ),
-              SizedBox(height: LayoutTokens.gapLg),
-              _GroupPanel(
-                groups: groups,
-              ),
+              SizedBox(height: SpacingTokens.lg),
+              _GroupPanel(groups: groups),
             ],
           ),
         );
@@ -223,11 +205,11 @@ class _DashboardStatsSection extends StatelessWidget {
         final columns = width < 640
             ? 1
             : width < 980
-                ? 2
-                : width < 1280
-                    ? 3
-                    : 4;
-        final spacing = LayoutTokens.gapMd;
+            ? 2
+            : width < 1280
+            ? 3
+            : 4;
+        final spacing = SpacingTokens.md;
         final cardWidth =
             (width - spacing * (columns - 1)) / columns.clamp(1, 6);
 
@@ -256,14 +238,18 @@ class _DashboardStatsSection extends StatelessWidget {
     final upcoming = _asInt(stats['upcoming_deadline_count']);
     final pendingApproval = _asInt(stats['pending_approval_count']);
     final inProgress = _statusCount(stats, 'in_progress');
-    final taskTotal =
-        _asInt(_readNested(stats, ['task_statistics', 'total_count']));
-    final taskCompletion =
-        _asDouble(_readNested(stats, ['task_statistics', 'completion_rate']));
+    final taskTotal = _asInt(
+      _readNested(stats, ['task_statistics', 'total_count']),
+    );
+    final taskCompletion = _asDouble(
+      _readNested(stats, ['task_statistics', 'completion_rate']),
+    );
     final processCompletion = _asDouble(
-        _readNested(stats, ['efficiency_analysis', 'process_completion_rate']));
+      _readNested(stats, ['efficiency_analysis', 'process_completion_rate']),
+    );
     final defectiveRate = _asDouble(
-        _readNested(stats, ['efficiency_analysis', 'defective_rate']));
+      _readNested(stats, ['efficiency_analysis', 'defective_rate']),
+    );
 
     return [
       _StatMetric(title: '施工单总数', value: _formatInt(totalCount)),
@@ -275,14 +261,8 @@ class _DashboardStatsSection extends StatelessWidget {
         value: _formatPercent(taskCompletion),
         subtitle: taskTotal > 0 ? '任务总数 $taskTotal' : null,
       ),
-      _StatMetric(
-        title: '工序完成率',
-        value: _formatPercent(processCompletion),
-      ),
-      _StatMetric(
-        title: '不良品率',
-        value: _formatPercent(defectiveRate),
-      ),
+      _StatMetric(title: '工序完成率', value: _formatPercent(processCompletion)),
+      _StatMetric(title: '不良品率', value: _formatPercent(defectiveRate)),
     ];
   }
 
@@ -333,9 +313,7 @@ class _DashboardStatsSection extends StatelessWidget {
 }
 
 class _DashboardChartsSection extends StatelessWidget {
-  const _DashboardChartsSection({
-    required this.stats,
-  });
+  const _DashboardChartsSection({required this.stats});
 
   final Map<String, dynamic>? stats;
 
@@ -349,13 +327,18 @@ class _DashboardChartsSection extends StatelessWidget {
     final cards = <_ChartCardData>[
       _ChartCardData(
         title: '施工单状态分布',
-        items:
-            _buildStatusItems(data['status_statistics'], _workOrderStatusLabel),
+        items: _buildStatusItems(
+          data['status_statistics'],
+          _workOrderStatusLabel,
+        ),
       ),
       _ChartCardData(
         title: '优先级分布',
-        items: _buildStatusItems(data['priority_statistics'], _priorityLabel,
-            keyName: 'priority'),
+        items: _buildStatusItems(
+          data['priority_statistics'],
+          _priorityLabel,
+          keyName: 'priority',
+        ),
       ),
       _ChartCardData(
         title: '任务状态分布',
@@ -393,8 +376,9 @@ class _DashboardChartsSection extends StatelessWidget {
       ),
     ];
 
-    final availableCards =
-        cards.where((card) => card.items.isNotEmpty).toList();
+    final availableCards = cards
+        .where((card) => card.items.isNotEmpty)
+        .toList();
     if (availableCards.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -405,9 +389,9 @@ class _DashboardChartsSection extends StatelessWidget {
         final columns = width < 700
             ? 1
             : width < 1080
-                ? 2
-                : 3;
-        final spacing = LayoutTokens.gapMd;
+            ? 2
+            : 3;
+        final spacing = SpacingTokens.md;
         final cardWidth =
             (width - spacing * (columns - 1)) / columns.clamp(1, 6);
 
@@ -464,8 +448,9 @@ class _DashboardChartsSection extends StatelessWidget {
     return list
         .map((item) {
           final value = _asDouble(item[valueKey]) ?? 0;
-          final subtitleRaw =
-              subtitleKey == null ? null : _asDouble(item[subtitleKey]);
+          final subtitleRaw = subtitleKey == null
+              ? null
+              : _asDouble(item[subtitleKey]);
           final subtitle = subtitleRaw == null
               ? null
               : subtitleRaw.toStringAsFixed(1) + subtitleSuffix;
@@ -483,11 +468,14 @@ class _DashboardChartsSection extends StatelessWidget {
 
   List<_ChartBarItem> _buildEfficiencyItems(Map<String, dynamic> stats) {
     final processCompletion = _asDouble(
-        _readNested(stats, ['efficiency_analysis', 'process_completion_rate']));
+      _readNested(stats, ['efficiency_analysis', 'process_completion_rate']),
+    );
     final taskCompletion = _asDouble(
-        _readNested(stats, ['efficiency_analysis', 'task_completion_rate']));
+      _readNested(stats, ['efficiency_analysis', 'task_completion_rate']),
+    );
     final defectiveRate = _asDouble(
-        _readNested(stats, ['efficiency_analysis', 'defective_rate']));
+      _readNested(stats, ['efficiency_analysis', 'defective_rate']),
+    );
 
     final items = <_ChartBarItem>[
       if (processCompletion != null)
@@ -625,15 +613,16 @@ class _ChartCard extends StatelessWidget {
 
     return Container(
       padding: EdgeInsets.fromLTRB(
-        LayoutTokens.gapMd,
-        LayoutTokens.gapMd,
-        LayoutTokens.gapMd,
-        LayoutTokens.gapMd,
+        SpacingTokens.md,
+        SpacingTokens.md,
+        SpacingTokens.md,
+        SpacingTokens.md,
       ),
       decoration: BoxDecoration(
         color: surface,
         border: Border.all(
-            color: borderColor.withValues(alpha: OpacityTokens.heavy)),
+          color: borderColor.withValues(alpha: OpacityTokens.heavy),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -641,11 +630,11 @@ class _ChartCard extends StatelessWidget {
           Text(
             title,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: accent,
-                ),
+              fontWeight: FontWeight.w700,
+              color: accent,
+            ),
           ),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           _ChartBarList(
             items: items,
             totalOverride: totalOverride,
@@ -695,7 +684,7 @@ class _ChartBarList extends StatelessWidget {
         for (final item in items)
           Padding(
             padding: EdgeInsets.only(
-              bottom: LayoutTokens.gapSm + LayoutTokens.gapXs,
+              bottom: SpacingTokens.sm + SpacingTokens.xs,
             ),
             child: _ChartBarRow(
               item: item,
@@ -728,8 +717,9 @@ class _ChartBarRow extends StatelessWidget {
     final accent = colors.sidebarText;
     final borderColor = colors.borderColor;
 
-    final percent =
-        total > 0 ? (item.value / total).clamp(0.0, 1.0).toDouble() : 0.0;
+    final percent = total > 0
+        ? (item.value / total).clamp(0.0, 1.0).toDouble()
+        : 0.0;
     final percentText = '${(percent * 100).toStringAsFixed(1)}%';
     final textTheme = Theme.of(context).textTheme;
 
@@ -749,7 +739,7 @@ class _ChartBarRow extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(width: LayoutTokens.gapSm),
+            SizedBox(width: SpacingTokens.sm),
             Text(
               item.valueText,
               style: textTheme.bodySmall?.copyWith(
@@ -758,31 +748,27 @@ class _ChartBarRow extends StatelessWidget {
               ),
             ),
             if (showPercent) ...[
-              SizedBox(width: LayoutTokens.gapSm),
+              SizedBox(width: SpacingTokens.sm),
               Text(
                 percentText,
-                style: textTheme.bodySmall?.copyWith(
-                  color: subtleText,
-                ),
+                style: textTheme.bodySmall?.copyWith(color: subtleText),
               ),
             ],
           ],
         ),
         if (item.subtitle != null) ...[
-          SizedBox(height: LayoutTokens.gapXs / 2),
+          SizedBox(height: SpacingTokens.xs / 2),
           Text(
             item.subtitle!,
-            style: textTheme.labelSmall?.copyWith(
-              color: subtleText,
-            ),
+            style: textTheme.labelSmall?.copyWith(color: subtleText),
           ),
         ],
-        SizedBox(height: LayoutTokens.gapSm),
+        SizedBox(height: SpacingTokens.sm),
         Container(
-          height: LayoutTokens.gapSm,
+          height: SpacingTokens.sm,
           decoration: BoxDecoration(
             color: borderColor.withValues(alpha: OpacityTokens.medium),
-            borderRadius: BorderRadius.circular(LayoutTokens.radiusXs),
+            borderRadius: BorderRadius.circular(RadiusTokens.xs),
           ),
           child: FractionallySizedBox(
             alignment: Alignment.centerLeft,
@@ -790,7 +776,7 @@ class _ChartBarRow extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 color: primary.withValues(alpha: OpacityTokens.heavy),
-                borderRadius: BorderRadius.circular(LayoutTokens.radiusXs),
+                borderRadius: BorderRadius.circular(RadiusTokens.xs),
               ),
             ),
           ),
@@ -801,10 +787,7 @@ class _ChartBarRow extends StatelessWidget {
 }
 
 class _DashboardErrorCard extends StatelessWidget {
-  const _DashboardErrorCard({
-    required this.message,
-    required this.onRetry,
-  });
+  const _DashboardErrorCard({required this.message, required this.onRetry});
 
   final String message;
   final VoidCallback onRetry;
@@ -812,7 +795,7 @@ class _DashboardErrorCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(LayoutTokens.gapLg),
+      padding: EdgeInsets.all(SpacingTokens.lg),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         border: Border.all(color: Theme.of(context).dividerColor),
@@ -820,11 +803,8 @@ class _DashboardErrorCard extends StatelessWidget {
       child: Row(
         children: [
           Expanded(child: Text(message)),
-          SizedBox(width: LayoutTokens.gapMd),
-          FilledButton(
-            onPressed: onRetry,
-            child: const Text('重试'),
-          ),
+          SizedBox(width: SpacingTokens.md),
+          FilledButton(onPressed: onRetry, child: const Text('重试')),
         ],
       ),
     );
@@ -832,11 +812,7 @@ class _DashboardErrorCard extends StatelessWidget {
 }
 
 class _StatMetric {
-  const _StatMetric({
-    required this.title,
-    required this.value,
-    this.subtitle,
-  });
+  const _StatMetric({required this.title, required this.value, this.subtitle});
 
   final String title;
   final String value;
@@ -844,11 +820,7 @@ class _StatMetric {
 }
 
 class _StatCard extends StatelessWidget {
-  const _StatCard({
-    required this.title,
-    required this.value,
-    this.subtitle,
-  });
+  const _StatCard({required this.title, required this.value, this.subtitle});
 
   final String title;
   final String value;
@@ -864,15 +836,16 @@ class _StatCard extends StatelessWidget {
 
     return Container(
       padding: EdgeInsets.fromLTRB(
-        LayoutTokens.gapMd,
-        LayoutTokens.gapMd,
-        LayoutTokens.gapMd,
-        LayoutTokens.gapMd,
+        SpacingTokens.md,
+        SpacingTokens.md,
+        SpacingTokens.md,
+        SpacingTokens.md,
       ),
       decoration: BoxDecoration(
         color: surface,
         border: Border.all(
-            color: borderColor.withValues(alpha: OpacityTokens.heavy)),
+          color: borderColor.withValues(alpha: OpacityTokens.heavy),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -880,25 +853,25 @@ class _StatCard extends StatelessWidget {
           Text(
             title,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: subtleText,
-                  fontWeight: FontWeight.w600,
-                ),
+              color: subtleText,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-          SizedBox(height: LayoutTokens.gapSm),
+          SizedBox(height: SpacingTokens.sm),
           Text(
             value,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: accent,
-                  fontWeight: FontWeight.w700,
-                ),
+              color: accent,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           if (subtitle != null) ...[
-            SizedBox(height: LayoutTokens.gapXs),
+            SizedBox(height: SpacingTokens.xs),
             Text(
               subtitle!,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: subtleText,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: subtleText),
             ),
           ],
         ],
@@ -908,10 +881,7 @@ class _StatCard extends StatelessWidget {
 }
 
 class _DashboardHero extends StatelessWidget {
-  const _DashboardHero({
-    required this.title,
-    required this.subtitle,
-  });
+  const _DashboardHero({required this.title, required this.subtitle});
 
   final String title;
   final String subtitle;
@@ -929,22 +899,22 @@ class _DashboardHero extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(
-        LayoutTokens.gapLg + LayoutTokens.gapXs,
-        LayoutTokens.gapLg,
-        LayoutTokens.gapLg + LayoutTokens.gapXs,
-        LayoutTokens.gapLg,
+        SpacingTokens.lg + SpacingTokens.xs,
+        SpacingTokens.lg,
+        SpacingTokens.lg + SpacingTokens.xs,
+        SpacingTokens.lg,
       ),
       decoration: BoxDecoration(
         color: surface,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusXl),
+        borderRadius: BorderRadius.circular(RadiusTokens.xl),
         border: Border.all(color: borderColor),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final compact = constraints.maxWidth < 720;
           final badgeWrap = Wrap(
-            spacing: LayoutTokens.gapSm + LayoutTokens.gapXs,
-            runSpacing: LayoutTokens.gapSm + LayoutTokens.gapXs,
+            spacing: SpacingTokens.sm + SpacingTokens.xs,
+            runSpacing: SpacingTokens.sm + SpacingTokens.xs,
             children: [
               _TinyBadge(
                 label: subtitle,
@@ -976,7 +946,7 @@ class _DashboardHero extends StatelessWidget {
                   height: LayoutTokens.navItemHeight,
                   decoration: BoxDecoration(
                     color: primary.withValues(alpha: OpacityTokens.subtle),
-                    borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+                    borderRadius: BorderRadius.circular(RadiusTokens.sm),
                   ),
                   child: Icon(
                     Icons.dashboard_outlined,
@@ -984,9 +954,9 @@ class _DashboardHero extends StatelessWidget {
                     size: LayoutTokens.iconMd,
                   ),
                 ),
-                SizedBox(height: LayoutTokens.gapMd),
+                SizedBox(height: SpacingTokens.md),
                 titleBlock,
-                SizedBox(height: LayoutTokens.gapMd),
+                SizedBox(height: SpacingTokens.md),
                 badgeWrap,
               ],
             );
@@ -1000,7 +970,7 @@ class _DashboardHero extends StatelessWidget {
                 height: LayoutTokens.navItemHeight,
                 decoration: BoxDecoration(
                   color: primary.withValues(alpha: OpacityTokens.subtle),
-                  borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+                  borderRadius: BorderRadius.circular(RadiusTokens.sm),
                 ),
                 child: Icon(
                   Icons.dashboard_outlined,
@@ -1008,9 +978,9 @@ class _DashboardHero extends StatelessWidget {
                   size: LayoutTokens.iconMd,
                 ),
               ),
-              SizedBox(width: LayoutTokens.gapMd),
+              SizedBox(width: SpacingTokens.md),
               Expanded(child: titleBlock),
-              SizedBox(width: LayoutTokens.gapSm + LayoutTokens.gapXs),
+              SizedBox(width: SpacingTokens.sm + SpacingTokens.xs),
               badgeWrap,
             ],
           );
@@ -1021,9 +991,7 @@ class _DashboardHero extends StatelessWidget {
 }
 
 class _QuickEntrySection extends StatelessWidget {
-  const _QuickEntrySection({
-    required this.entries,
-  });
+  const _QuickEntrySection({required this.entries});
 
   final List<NavItem> entries;
 
@@ -1046,15 +1014,15 @@ class _QuickEntrySection extends StatelessWidget {
         builder: (context, constraints) {
           final compact = constraints.maxWidth < 560;
           return Wrap(
-            spacing: LayoutTokens.gapMd,
-            runSpacing: LayoutTokens.gapMd,
+            spacing: SpacingTokens.md,
+            runSpacing: SpacingTokens.md,
             children: [
               for (final item in entries)
                 _QuickEntryCard(
                   item: item,
                   width: compact
                       ? constraints.maxWidth
-                      : (constraints.maxWidth - LayoutTokens.gapMd) / 2,
+                      : (constraints.maxWidth - SpacingTokens.md) / 2,
                   accent: accent,
                   subtleText: subtleText,
                   primary: primary,
@@ -1070,9 +1038,7 @@ class _QuickEntrySection extends StatelessWidget {
 }
 
 class _SimpleModuleSection extends StatelessWidget {
-  const _SimpleModuleSection({
-    required this.entries,
-  });
+  const _SimpleModuleSection({required this.entries});
 
   final List<NavItem> entries;
 
@@ -1110,9 +1076,7 @@ class _SimpleModuleSection extends StatelessWidget {
 }
 
 class _GroupPanel extends StatelessWidget {
-  const _GroupPanel({
-    required this.groups,
-  });
+  const _GroupPanel({required this.groups});
 
   final List<NavItem> groups;
 
@@ -1170,10 +1134,7 @@ class _ContentArea extends StatelessWidget {
           if (bodyBuilder != null)
             bodyBuilder!(context, style)
           else
-            _ModulePlaceholder(
-              title: labelFor(selectedId),
-              style: style,
-            ),
+            _ModulePlaceholder(title: labelFor(selectedId), style: style),
         ],
       ),
     );
@@ -1181,10 +1142,7 @@ class _ContentArea extends StatelessWidget {
 }
 
 class _ModulePlaceholder extends StatelessWidget {
-  const _ModulePlaceholder({
-    required this.title,
-    required this.style,
-  });
+  const _ModulePlaceholder({required this.title, required this.style});
 
   final String title;
   final ContentAreaStyle style;
@@ -1198,7 +1156,7 @@ class _ModulePlaceholder extends StatelessWidget {
       padding: padding,
       decoration: BoxDecoration(
         color: style.surface,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+        borderRadius: BorderRadius.circular(RadiusTokens.md),
         border: Border.all(color: style.borderColor),
       ),
       child: Column(
@@ -1211,7 +1169,7 @@ class _ModulePlaceholder extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          SizedBox(height: LayoutTokens.gapXxs),
+          SizedBox(height: SpacingTokens.xxs),
           Text(
             '当前模块入口已接入统一布局。',
             style: theme.textTheme.bodySmall?.copyWith(color: style.subtleText),
@@ -1248,7 +1206,7 @@ class _PanelShell extends StatelessWidget {
       padding: padding,
       decoration: BoxDecoration(
         color: surface,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+        borderRadius: BorderRadius.circular(RadiusTokens.md),
         border: Border.all(color: borderColor),
       ),
       child: Column(
@@ -1262,7 +1220,7 @@ class _PanelShell extends StatelessWidget {
             ),
           ),
           if (subtitle.trim().isNotEmpty) ...[
-            SizedBox(height: LayoutTokens.gapXs / 2 + 1),
+            SizedBox(height: SpacingTokens.xs / 2 + 1),
             Text(
               subtitle,
               style: theme.textTheme.bodySmall?.copyWith(
@@ -1270,9 +1228,9 @@ class _PanelShell extends StatelessWidget {
                 height: 1.35,
               ),
             ),
-            SizedBox(height: LayoutTokens.gapMd + LayoutTokens.gapXs / 2),
+            SizedBox(height: SpacingTokens.md + SpacingTokens.xs / 2),
           ] else
-            SizedBox(height: LayoutTokens.gapMd),
+            SizedBox(height: SpacingTokens.md),
           child,
         ],
       ),
@@ -1303,12 +1261,12 @@ class _QuickEntryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: item.path == null ? null : () => context.go(item.path!),
-      borderRadius: BorderRadius.circular(LayoutTokens.radiusXl),
+      borderRadius: BorderRadius.circular(RadiusTokens.xl),
       child: Container(
         width: width,
-        padding: EdgeInsets.all(LayoutTokens.gapLg),
+        padding: EdgeInsets.all(SpacingTokens.lg),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+          borderRadius: BorderRadius.circular(RadiusTokens.md),
           border: Border.all(color: borderColor),
           color: surface,
         ),
@@ -1319,11 +1277,11 @@ class _QuickEntryCard extends StatelessWidget {
               height: 38,
               decoration: BoxDecoration(
                 color: primary.withValues(alpha: OpacityTokens.subtle),
-                borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+                borderRadius: BorderRadius.circular(RadiusTokens.sm),
               ),
               child: Icon(item.icon, color: primary, size: LayoutTokens.iconMd),
             ),
-            SizedBox(width: LayoutTokens.gapMd),
+            SizedBox(width: SpacingTokens.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1339,8 +1297,9 @@ class _QuickEntryCard extends StatelessWidget {
                   Text(
                     '进入处理',
                     style: TextStyle(
-                        color: subtleText,
-                        fontSize: TextTokens.fontSizeLabelMedium),
+                      color: subtleText,
+                      fontSize: TextTokens.fontSizeLabelMedium,
+                    ),
                   ),
                 ],
               ),
@@ -1374,26 +1333,20 @@ class _SimpleNavRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: item.path == null ? null : () => context.go(item.path!),
-      borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+      borderRadius: BorderRadius.circular(RadiusTokens.md),
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: LayoutTokens.gapXs),
+        padding: EdgeInsets.symmetric(vertical: SpacingTokens.xs),
         child: Row(
           children: [
             Icon(item.icon, size: LayoutTokens.iconMd, color: primary),
-            SizedBox(width: LayoutTokens.gapSm + LayoutTokens.gapXs),
+            SizedBox(width: SpacingTokens.sm + SpacingTokens.xs),
             Expanded(
               child: Text(
                 item.label,
-                style: TextStyle(
-                  color: accent,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(color: accent, fontWeight: FontWeight.w600),
               ),
             ),
-            Text(
-              '进入',
-              style: TextStyle(color: subtleText, fontSize: 12.5),
-            ),
+            Text('进入', style: TextStyle(color: subtleText, fontSize: 12.5)),
           ],
         ),
       ),
@@ -1422,27 +1375,20 @@ class _GroupRow extends StatelessWidget {
         Row(
           children: [
             Icon(group.icon, size: LayoutTokens.iconMd, color: primary),
-            SizedBox(width: LayoutTokens.gapSm + LayoutTokens.gapXs),
+            SizedBox(width: SpacingTokens.sm + SpacingTokens.xs),
             Text(
               group.label,
-              style: TextStyle(
-                color: accent,
-                fontWeight: FontWeight.w700,
-              ),
+              style: TextStyle(color: accent, fontWeight: FontWeight.w700),
             ),
           ],
         ),
-        SizedBox(height: LayoutTokens.gapMd),
+        SizedBox(height: SpacingTokens.md),
         Wrap(
-          spacing: LayoutTokens.gapSm + LayoutTokens.gapXs,
-          runSpacing: LayoutTokens.gapSm + LayoutTokens.gapXs,
+          spacing: SpacingTokens.sm + SpacingTokens.xs,
+          runSpacing: SpacingTokens.sm + SpacingTokens.xs,
           children: [
             for (final child in group.children)
-              _RoutePill(
-                item: child,
-                primary: primary,
-                subtleText: subtleText,
-              ),
+              _RoutePill(item: child, primary: primary, subtleText: subtleText),
           ],
         ),
       ],
@@ -1466,15 +1412,15 @@ class _RoutePill extends StatelessWidget {
     final theme = Theme.of(context);
     return InkWell(
       onTap: item.path == null ? null : () => context.go(item.path!),
-      borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
+      borderRadius: BorderRadius.circular(RadiusTokens.pill),
       child: Container(
         padding: EdgeInsets.symmetric(
-          horizontal: LayoutTokens.gapMd,
-          vertical: LayoutTokens.gapSm,
+          horizontal: SpacingTokens.md,
+          vertical: SpacingTokens.sm,
         ),
         decoration: BoxDecoration(
           color: primary.withValues(alpha: OpacityTokens.weak),
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
+          borderRadius: BorderRadius.circular(RadiusTokens.pill),
         ),
         child: Text(
           item.label,
@@ -1504,12 +1450,12 @@ class _TinyBadge extends StatelessWidget {
     final theme = Theme.of(context);
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: LayoutTokens.gapMd,
-        vertical: LayoutTokens.gapSm,
+        horizontal: SpacingTokens.md,
+        vertical: SpacingTokens.sm,
       ),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
+        borderRadius: BorderRadius.circular(RadiusTokens.pill),
       ),
       child: Text(
         label,

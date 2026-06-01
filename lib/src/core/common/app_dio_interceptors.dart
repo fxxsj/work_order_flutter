@@ -9,9 +9,12 @@ import 'package:work_order_app/src/core/models/api_response.dart';
 class AppDioInterceptors extends InterceptorsWrapper {
   @override
   void onRequest(
-      RequestOptions options, RequestInterceptorHandler handler) async {
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
     final path = options.path;
-    final skipRefresh = options.extra['skipAuthRefresh'] == true ||
+    final skipRefresh =
+        options.extra['skipAuthRefresh'] == true ||
         path.contains('/auth/login') ||
         path.contains('/auth/register') ||
         path.contains('/auth/refresh') ||

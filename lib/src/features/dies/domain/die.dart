@@ -74,12 +74,17 @@ class Die {
     if (rawProducts is List) {
       for (final item in rawProducts) {
         if (item is Map) {
-          dieProducts.add(DieProduct(
-            productId: toInt(item['product']) ?? toInt(item['id']) ?? 0,
-            productName: item['product_name']?.toString() ?? item['name']?.toString() ?? '',
-            quantity: toInt(item['quantity']),
-            relationType: toStringOrNull(item['relation_type']),
-          ));
+          dieProducts.add(
+            DieProduct(
+              productId: toInt(item['product']) ?? toInt(item['id']) ?? 0,
+              productName:
+                  item['product_name']?.toString() ??
+                  item['name']?.toString() ??
+                  '',
+              quantity: toInt(item['quantity']),
+              relationType: toStringOrNull(item['relation_type']),
+            ),
+          );
         }
       }
     }
@@ -90,13 +95,15 @@ class Die {
     if (rawImages is List) {
       for (final item in rawImages) {
         if (item is Map) {
-          dieImages.add(DieImage(
-            id: toInt(item['id']) ?? 0,
-            imageUrl: toStringOrNull(item['image']) ?? '',
-            sortOrder: toInt(item['sort_order']) ?? 0,
-            description: toStringOrNull(item['description']),
-            createdAt: toDateTime(item['created_at']),
-          ));
+          dieImages.add(
+            DieImage(
+              id: toInt(item['id']) ?? 0,
+              imageUrl: toStringOrNull(item['image']) ?? '',
+              sortOrder: toInt(item['sort_order']) ?? 0,
+              description: toStringOrNull(item['description']),
+              createdAt: toDateTime(item['created_at']),
+            ),
+          );
         }
       }
     }

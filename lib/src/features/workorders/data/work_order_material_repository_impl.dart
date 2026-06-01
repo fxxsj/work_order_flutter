@@ -13,7 +13,11 @@ class WorkOrderMaterialRepositoryImpl implements WorkOrderMaterialRepository {
     int pageSize = 20,
     Map<String, dynamic>? params,
   }) {
-    return _apiService.fetchMaterials(page: page, pageSize: pageSize, params: params);
+    return _apiService.fetchMaterials(
+      page: page,
+      pageSize: pageSize,
+      params: params,
+    );
   }
 
   @override
@@ -27,7 +31,10 @@ class WorkOrderMaterialRepositoryImpl implements WorkOrderMaterialRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> updateMaterial(int id, Map<String, dynamic> payload) {
+  Future<Map<String, dynamic>> updateMaterial(
+    int id,
+    Map<String, dynamic> payload,
+  ) {
     return _apiService.updateMaterial(id, payload);
   }
 

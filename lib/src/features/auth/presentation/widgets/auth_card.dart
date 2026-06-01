@@ -38,7 +38,9 @@ class AuthCard extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: semantic.shadowStrong.withValues(alpha: OpacityTokens.mild),
+              color: semantic.shadowStrong.withValues(
+                alpha: OpacityTokens.mild,
+              ),
               blurRadius: 48,
               offset: const Offset(0, 22),
             ),
@@ -46,17 +48,17 @@ class AuthCard extends StatelessWidget {
         ),
         child: Padding(
           padding: EdgeInsets.fromLTRB(
-            LayoutTokens.gapXl + LayoutTokens.gapXs,
-            LayoutTokens.gapXl + LayoutTokens.gapXxs,
-            LayoutTokens.gapXl + LayoutTokens.gapXs,
-            LayoutTokens.gapXl + LayoutTokens.gapXs,
+            SpacingTokens.xl + SpacingTokens.xs,
+            SpacingTokens.xl + SpacingTokens.xxs,
+            SpacingTokens.xl + SpacingTokens.xs,
+            SpacingTokens.xl + SpacingTokens.xs,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               _BrandHeader(theme: theme, colors: colors),
-              SizedBox(height: LayoutTokens.gapLg),
+              SizedBox(height: SpacingTokens.lg),
               Text(
                 title,
                 style: theme.textTheme.titleLarge?.copyWith(
@@ -64,18 +66,15 @@ class AuthCard extends StatelessWidget {
                   color: theme.colorScheme.onSurface,
                 ),
               ),
-              SizedBox(height: LayoutTokens.gapMd + LayoutTokens.gapXxs),
+              SizedBox(height: SpacingTokens.md + SpacingTokens.xxs),
               if (formKey != null)
-                Form(
-                  key: formKey,
-                  child: children,
-                )
+                Form(key: formKey, child: children)
               else
                 children,
               if (footer != null) ...[
-                SizedBox(height: LayoutTokens.gapLg),
+                SizedBox(height: SpacingTokens.lg),
                 const Divider(height: 1),
-                SizedBox(height: LayoutTokens.gapLg),
+                SizedBox(height: SpacingTokens.lg),
                 footer!,
               ],
             ],

@@ -47,8 +47,9 @@ class _LoginPageState extends State<LoginPage>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final savedUsername =
-          context.read<AuthViewModel>().readRememberedUsername();
+      final savedUsername = context
+          .read<AuthViewModel>()
+          .readRememberedUsername();
       _usernameController.text = savedUsername ?? '';
       if (_usernameController.text.isNotEmpty) {
         _passwordFocus.requestFocus();
@@ -79,8 +80,8 @@ class _LoginPageState extends State<LoginPage>
             child: Center(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: LayoutTokens.gapLg,
-                  vertical: LayoutTokens.gapXl,
+                  horizontal: SpacingTokens.lg,
+                  vertical: SpacingTokens.xl,
                 ),
                 child: FadeTransition(
                   opacity: _fadeAnimation,
@@ -98,17 +99,19 @@ class _LoginPageState extends State<LoginPage>
                           focusNode: _usernameFocus,
                           onSubmitted: () => _passwordFocus.requestFocus(),
                         ),
-                        SizedBox(height: LayoutTokens.gapLg),
+                        SizedBox(height: SpacingTokens.lg),
                         _LoginPasswordField(
                           controller: _passwordController,
                           focusNode: _passwordFocus,
                           obscureText: _obscurePassword,
                           onVisibilityToggle: () {
-                            setState(() => _obscurePassword = !_obscurePassword);
+                            setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            );
                           },
                           onSubmitted: _login,
                         ),
-                        SizedBox(height: LayoutTokens.gapLg + LayoutTokens.gapXs),
+                        SizedBox(height: SpacingTokens.lg + SpacingTokens.xs),
                         _LoginSubmitButton(
                           isLoading: _isLoading,
                           onPressed: _login,
@@ -209,7 +212,9 @@ class _LoginPasswordField extends StatelessWidget {
         suffixIcon: IconButton(
           onPressed: onVisibilityToggle,
           icon: Icon(
-            obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+            obscureText
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
           ),
         ),
       ),
@@ -220,10 +225,7 @@ class _LoginPasswordField extends StatelessWidget {
 }
 
 class _LoginSubmitButton extends StatelessWidget {
-  const _LoginSubmitButton({
-    required this.isLoading,
-    required this.onPressed,
-  });
+  const _LoginSubmitButton({required this.isLoading, required this.onPressed});
 
   final bool isLoading;
   final VoidCallback onPressed;
@@ -268,10 +270,7 @@ class _LoginFooterLinks extends StatelessWidget {
                 color: colors.subtleText,
               ),
             ),
-            TextButton(
-              onPressed: onRegister,
-              child: const Text('注册'),
-            ),
+            TextButton(onPressed: onRegister, child: const Text('注册')),
           ],
         ),
         TextButton.icon(

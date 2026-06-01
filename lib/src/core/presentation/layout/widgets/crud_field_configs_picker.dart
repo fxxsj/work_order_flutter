@@ -25,16 +25,16 @@ final class DateFieldConfig extends CrudFieldConfig {
 
   @override
   Widget build(BuildContext context) => DateField(
-        key: fieldKey,
-        label: label,
-        controller: controller!,
-        validator: validator,
-        enabled: enabled,
-        hintText: hintText,
-        helperText: helperText,
-        readOnly: readOnly,
-        onTap: onTap,
-      );
+    key: fieldKey,
+    label: label,
+    controller: controller!,
+    validator: validator,
+    enabled: enabled,
+    hintText: hintText,
+    helperText: helperText,
+    readOnly: readOnly,
+    onTap: onTap,
+  );
 }
 
 final class DateRangeFieldConfig extends CrudFieldConfig {
@@ -70,20 +70,20 @@ final class DateRangeFieldConfig extends CrudFieldConfig {
 
   @override
   Widget build(BuildContext context) => DateRangeField(
-        key: fieldKey,
-        label: label,
-        startController: startController,
-        endController: endController,
-        enabled: enabled,
-        hintText: hintText,
-        helperText: helperText,
-        clearText: clearText,
-        confirmText: confirmText,
-        cancelText: cancelText,
-        firstDate: firstDate,
-        lastDate: lastDate,
-        validator: validator,
-      );
+    key: fieldKey,
+    label: label,
+    startController: startController,
+    endController: endController,
+    enabled: enabled,
+    hintText: hintText,
+    helperText: helperText,
+    clearText: clearText,
+    confirmText: confirmText,
+    cancelText: cancelText,
+    firstDate: firstDate,
+    lastDate: lastDate,
+    validator: validator,
+  );
 }
 
 final class FileUploadFieldConfig extends CrudFieldConfig {
@@ -115,18 +115,18 @@ final class FileUploadFieldConfig extends CrudFieldConfig {
 
   @override
   Widget build(BuildContext context) => FileUploadField(
-        key: fieldKey,
-        label: label,
-        value: value,
-        onChanged: enabled ? onChanged : null,
-        validator: validator,
-        enabled: enabled,
-        hintText: hintText,
-        helperText: helperText,
-        allowedExtensions: allowedExtensions,
-        fallbackFilename: fallbackFilename,
-        picker: picker,
-      );
+    key: fieldKey,
+    label: label,
+    value: value,
+    onChanged: enabled ? onChanged : null,
+    validator: validator,
+    enabled: enabled,
+    hintText: hintText,
+    helperText: helperText,
+    allowedExtensions: allowedExtensions,
+    fallbackFilename: fallbackFilename,
+    picker: picker,
+  );
 }
 
 final class ColorFieldConfig extends CrudFieldConfig {
@@ -143,15 +143,15 @@ final class ColorFieldConfig extends CrudFieldConfig {
     String clearText = '清空',
     String confirmText = '确定',
     String cancelText = '取消',
-  })  : _onChanged = onChanged,
-        _validator = validator,
-        _enabled = enabled,
-        _hintText = hintText,
-        _helperText = helperText,
-        _palette = palette,
-        _clearText = clearText,
-        _confirmText = confirmText,
-        _cancelText = cancelText;
+  }) : _onChanged = onChanged,
+       _validator = validator,
+       _enabled = enabled,
+       _hintText = hintText,
+       _helperText = helperText,
+       _palette = palette,
+       _clearText = clearText,
+       _confirmText = confirmText,
+       _cancelText = cancelText;
 
   final String label;
   final Key? fieldKey;
@@ -168,17 +168,17 @@ final class ColorFieldConfig extends CrudFieldConfig {
 
   @override
   Widget build(BuildContext context) => ColorField(
-        key: fieldKey,
-        label: label,
-        value: value,
-        onChanged: _enabled ? _onChanged : null,
-        validator: _validator,
-        enabled: _enabled,
-        hintText: _hintText,
-        helperText: _helperText,
-        palette: _palette,
-        clearText: _clearText,
-        confirmText: _confirmText,
-        cancelText: _cancelText,
-      );
+    key: fieldKey,
+    label: label,
+    value: value,
+    onChanged: _enabled ? _onChanged : null,
+    validator: _validator,
+    enabled: _enabled,
+    hintText: _hintText,
+    helperText: _helperText,
+    palette: _palette,
+    clearText: _clearText,
+    confirmText: _confirmText,
+    cancelText: _cancelText,
+  );
 }

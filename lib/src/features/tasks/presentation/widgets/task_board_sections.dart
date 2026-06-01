@@ -22,10 +22,10 @@ class TaskBoardFilterDrawerContent extends StatelessWidget {
       children: [
         Padding(
           padding: EdgeInsets.fromLTRB(
-            LayoutTokens.gapLg,
-            LayoutTokens.gapMd,
-            LayoutTokens.gapSm,
-            LayoutTokens.gapSm,
+            SpacingTokens.lg,
+            SpacingTokens.md,
+            SpacingTokens.sm,
+            SpacingTokens.sm,
           ),
           child: Row(
             children: [
@@ -93,10 +93,7 @@ class TaskBoardColumnData {
 }
 
 class TaskDragData {
-  const TaskDragData({
-    required this.task,
-    required this.fromStatus,
-  });
+  const TaskDragData({required this.task, required this.fromStatus});
 
   final Task task;
   final String fromStatus;
@@ -155,7 +152,7 @@ class TaskBoardColumn extends StatelessWidget {
           padding: LayoutTokens.cardPadding(context),
           decoration: BoxDecoration(
             color: colors.surface,
-            borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
+            borderRadius: BorderRadius.circular(RadiusTokens.lg),
             border: Border.all(
               color: highlight ? theme.colorScheme.primary : colors.borderColor,
               width: highlight ? 1.4 : 1,
@@ -167,7 +164,7 @@ class TaskBoardColumn extends StatelessWidget {
               Row(
                 children: [
                   Icon(data.icon, size: 18, color: colors.subtleText),
-                  SizedBox(width: LayoutTokens.gapSm),
+                  SizedBox(width: SpacingTokens.sm),
                   Expanded(
                     child: Text(
                       data.title,
@@ -186,10 +183,10 @@ class TaskBoardColumn extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(height: LayoutTokens.gapMd),
+              SizedBox(height: SpacingTokens.md),
               if (data.tasks.isEmpty)
                 Padding(
-                  padding: EdgeInsets.symmetric(vertical: LayoutTokens.gapMd),
+                  padding: EdgeInsets.symmetric(vertical: SpacingTokens.md),
                   child: Text(
                     '暂无任务',
                     style: theme.textTheme.bodySmall?.copyWith(
@@ -212,7 +209,7 @@ class TaskBoardColumn extends StatelessWidget {
                         feedbackWidth: resolvedFeedbackWidth,
                       ),
                       if (i != data.tasks.length - 1)
-                        SizedBox(height: LayoutTokens.gapSm),
+                        SizedBox(height: SpacingTokens.sm),
                     ],
                   ],
                 ),
@@ -248,7 +245,8 @@ class TaskTimelineList extends StatelessWidget {
       separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
       itemBuilder: (context, index) {
         final group = groups[index];
-        final overdue = group.date != null &&
+        final overdue =
+            group.date != null &&
             isOverdue(group.date!) &&
             group.tasks.any((task) => task.status != 'completed');
 
@@ -263,13 +261,15 @@ class TaskTimelineList extends StatelessWidget {
             children: [
               Container(
                 padding: EdgeInsets.fromLTRB(
-                  LayoutTokens.gapMd,
-                  LayoutTokens.gapSm,
-                  LayoutTokens.gapMd,
-                  LayoutTokens.gapSm,
+                  SpacingTokens.md,
+                  SpacingTokens.sm,
+                  SpacingTokens.md,
+                  SpacingTokens.sm,
                 ),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: OpacityTokens.faint),
+                  color: theme.colorScheme.primary.withValues(
+                    alpha: OpacityTokens.faint,
+                  ),
                   border: Border(bottom: BorderSide(color: colors.borderColor)),
                 ),
                 child: Row(
@@ -286,17 +286,20 @@ class TaskTimelineList extends StatelessWidget {
                     if (overdue)
                       Container(
                         padding: EdgeInsets.symmetric(
-                          horizontal: LayoutTokens.gapSm,
-                          vertical: LayoutTokens.gapXs,
+                          horizontal: SpacingTokens.sm,
+                          vertical: SpacingTokens.xs,
                         ),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.error.withValues(alpha: OpacityTokens.weak),
+                          color: theme.colorScheme.error.withValues(
+                            alpha: OpacityTokens.weak,
+                          ),
                           borderRadius: BorderRadius.circular(
-                            LayoutTokens.radiusPill,
+                            RadiusTokens.pill,
                           ),
                           border: Border.all(
-                            color:
-                                theme.colorScheme.error.withValues(alpha: OpacityTokens.strong),
+                            color: theme.colorScheme.error.withValues(
+                              alpha: OpacityTokens.strong,
+                            ),
                           ),
                         ),
                         child: Text(
@@ -307,7 +310,7 @@ class TaskTimelineList extends StatelessWidget {
                           ),
                         ),
                       ),
-                    SizedBox(width: LayoutTokens.gapSm),
+                    SizedBox(width: SpacingTokens.sm),
                     Text(
                       '${group.tasks.length} 项',
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -405,17 +408,13 @@ class _DraggableTaskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
     final card = Container(
-      padding: const EdgeInsets.all(LayoutTokens.gapXxxs),
+      padding: const EdgeInsets.all(SpacingTokens.xxxs),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+        borderRadius: BorderRadius.circular(RadiusTokens.md),
         border: Border.all(color: colors.borderColor),
       ),
-      child: TaskListTile(
-        task: task,
-        onTap: onTap,
-        showDivider: false,
-      ),
+      child: TaskListTile(task: task, onTap: onTap, showDivider: false),
     );
 
     if (useLongPress) {

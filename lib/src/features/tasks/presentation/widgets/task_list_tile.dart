@@ -38,17 +38,15 @@ class TaskListTile extends StatelessWidget {
         onTap: onTap,
         child: Container(
           padding: EdgeInsets.fromLTRB(
-            LayoutTokens.gapLg,
-            isXs ? LayoutTokens.gapMd : LayoutTokens.gapSm + LayoutTokens.gapXs,
-            LayoutTokens.gapLg,
-            isXs ? LayoutTokens.gapMd : LayoutTokens.gapSm + LayoutTokens.gapXs,
+            SpacingTokens.lg,
+            isXs ? SpacingTokens.md : SpacingTokens.sm + SpacingTokens.xs,
+            SpacingTokens.lg,
+            isXs ? SpacingTokens.md : SpacingTokens.sm + SpacingTokens.xs,
           ),
           decoration: BoxDecoration(
             color: colors.surface,
             border: showDivider
-                ? Border(
-                    bottom: BorderSide(color: colors.borderColor),
-                  )
+                ? Border(bottom: BorderSide(color: colors.borderColor))
                 : null,
           ),
           child: Column(
@@ -69,9 +67,7 @@ class TaskListTile extends StatelessWidget {
                     ),
                   ),
                   if (progressText != '-') ...[
-                    SizedBox(
-                      width: isXs ? LayoutTokens.gapSm : LayoutTokens.gapMd,
-                    ),
+                    SizedBox(width: isXs ? SpacingTokens.sm : SpacingTokens.md),
                     Flexible(
                       child: Text(
                         progressText,
@@ -89,12 +85,12 @@ class TaskListTile extends StatelessWidget {
               ),
               SizedBox(
                 height: isXs
-                    ? LayoutTokens.gapSm
-                    : LayoutTokens.gapSm + LayoutTokens.gapXs,
+                    ? SpacingTokens.sm
+                    : SpacingTokens.sm + SpacingTokens.xs,
               ),
               Wrap(
-                spacing: isXs ? LayoutTokens.gapSm : LayoutTokens.gapSm,
-                runSpacing: isXs ? LayoutTokens.gapSm : LayoutTokens.gapSm,
+                spacing: isXs ? SpacingTokens.sm : SpacingTokens.sm,
+                runSpacing: isXs ? SpacingTokens.sm : SpacingTokens.sm,
                 children: [
                   if (task.customerName?.isNotEmpty == true)
                     MetaChip(label: '客户', value: task.customerName!),
@@ -123,5 +119,4 @@ class TaskListTile extends StatelessWidget {
       ),
     );
   }
-
 }

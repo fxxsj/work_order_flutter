@@ -61,32 +61,46 @@ class SpacingTokens {
   static const EdgeInsets allXl = EdgeInsets.all(xl);
 
   /// 8 水平 + 12 垂直
-  static const EdgeInsets h8v12 =
-      EdgeInsets.symmetric(horizontal: xs, vertical: sm);
+  static const EdgeInsets h8v12 = EdgeInsets.symmetric(
+    horizontal: xs,
+    vertical: sm,
+  );
 
   /// 12 水平 + 12 垂直
-  static const EdgeInsets h12v12 =
-      EdgeInsets.symmetric(horizontal: sm, vertical: sm);
+  static const EdgeInsets h12v12 = EdgeInsets.symmetric(
+    horizontal: sm,
+    vertical: sm,
+  );
 
   /// 12 水平 + 16 垂直
-  static const EdgeInsets h12v16 =
-      EdgeInsets.symmetric(horizontal: sm, vertical: md);
+  static const EdgeInsets h12v16 = EdgeInsets.symmetric(
+    horizontal: sm,
+    vertical: md,
+  );
 
   /// 16 水平 + 12 垂直
-  static const EdgeInsets h16v12 =
-      EdgeInsets.symmetric(horizontal: md, vertical: sm);
+  static const EdgeInsets h16v12 = EdgeInsets.symmetric(
+    horizontal: md,
+    vertical: sm,
+  );
 
   /// 16 水平 + 16 垂直
-  static const EdgeInsets h16v16 =
-      EdgeInsets.symmetric(horizontal: md, vertical: md);
+  static const EdgeInsets h16v16 = EdgeInsets.symmetric(
+    horizontal: md,
+    vertical: md,
+  );
 
   /// 24 水平 + 12 垂直
-  static const EdgeInsets h24v12 =
-      EdgeInsets.symmetric(horizontal: lg, vertical: sm);
+  static const EdgeInsets h24v12 = EdgeInsets.symmetric(
+    horizontal: lg,
+    vertical: sm,
+  );
 
   /// 24 水平 + 16 垂直
-  static const EdgeInsets h24v16 =
-      EdgeInsets.symmetric(horizontal: lg, vertical: md);
+  static const EdgeInsets h24v16 = EdgeInsets.symmetric(
+    horizontal: lg,
+    vertical: md,
+  );
 
   // ── 响应式间距方法 ─────────────────────────────────────
 

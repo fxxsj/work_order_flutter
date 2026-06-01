@@ -10,9 +10,7 @@ import 'package:work_order_app/src/features/finance_invoices/domain/invoice.dart
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order.dart';
 
 class PaymentCreateResult {
-  const PaymentCreateResult({
-    required this.payload,
-  });
+  const PaymentCreateResult({required this.payload});
 
   final Map<String, dynamic> payload;
 }
@@ -93,11 +91,8 @@ class _PaymentCreatePanelState extends State<_PaymentCreatePanel> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '关联信息',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-                const SizedBox(height: LayoutTokens.gapMd),
+                Text('关联信息', style: Theme.of(context).textTheme.titleSmall),
+                const SizedBox(height: SpacingTokens.md),
                 AppSelect<int?>(
                   value: selectedCustomerId,
                   decoration: const InputDecoration(
@@ -105,10 +100,7 @@ class _PaymentCreatePanelState extends State<_PaymentCreatePanel> {
                     border: OutlineInputBorder(),
                   ),
                   options: [
-                    const AppDropdownOption<int?>(
-                      value: null,
-                      label: '请选择客户',
-                    ),
+                    const AppDropdownOption<int?>(value: null, label: '请选择客户'),
                     ...widget.customers.map(
                       (customer) => AppDropdownOption<int?>(
                         value: customer.id,
@@ -120,7 +112,7 @@ class _PaymentCreatePanelState extends State<_PaymentCreatePanel> {
                       setState(() => selectedCustomerId = value),
                   validator: (value) => value == null ? '请选择客户' : null,
                 ),
-                const SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: SpacingTokens.md),
                 AppSelect<int?>(
                   value: selectedSalesOrderId,
                   decoration: const InputDecoration(
@@ -142,7 +134,7 @@ class _PaymentCreatePanelState extends State<_PaymentCreatePanel> {
                   onChanged: (value) =>
                       setState(() => selectedSalesOrderId = value),
                 ),
-                const SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: SpacingTokens.md),
                 AppSelect<int?>(
                   value: selectedInvoiceId,
                   decoration: const InputDecoration(
@@ -150,10 +142,7 @@ class _PaymentCreatePanelState extends State<_PaymentCreatePanel> {
                     border: OutlineInputBorder(),
                   ),
                   options: [
-                    const AppDropdownOption<int?>(
-                      value: null,
-                      label: '不关联发票',
-                    ),
+                    const AppDropdownOption<int?>(value: null, label: '不关联发票'),
                     ...widget.invoices.map(
                       (invoice) => AppDropdownOption<int?>(
                         value: invoice.id,
@@ -167,16 +156,13 @@ class _PaymentCreatePanelState extends State<_PaymentCreatePanel> {
               ],
             ),
           ),
-          const SizedBox(height: LayoutTokens.gapLg),
+          const SizedBox(height: SpacingTokens.lg),
           AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '收款信息',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-                const SizedBox(height: LayoutTokens.gapMd),
+                Text('收款信息', style: Theme.of(context).textTheme.titleSmall),
+                const SizedBox(height: SpacingTokens.md),
                 CrudFieldConfig.radioGroup(
                   label: '收款方式',
                   value: paymentMethod,
@@ -192,7 +178,7 @@ class _PaymentCreatePanelState extends State<_PaymentCreatePanel> {
                   onChanged: (value) =>
                       setState(() => paymentMethod = value as String),
                 ).build(context),
-                const SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: SpacingTokens.md),
                 CrudFieldConfig.number(
                   label: '收款金额',
                   controller: amountController,
@@ -200,22 +186,22 @@ class _PaymentCreatePanelState extends State<_PaymentCreatePanel> {
                   validator: (value) =>
                       (value == null || value.trim().isEmpty) ? '请输入金额' : null,
                 ).build(context),
-                const SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: SpacingTokens.md),
                 CrudFieldConfig.text(
                   label: '收款日期（YYYY-MM-DD）',
                   controller: paymentDateController,
                 ).build(context),
-                const SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: SpacingTokens.md),
                 CrudFieldConfig.text(
                   label: '收款账户（可选）',
                   controller: bankController,
                 ).build(context),
-                const SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: SpacingTokens.md),
                 CrudFieldConfig.text(
                   label: '交易流水号（可选）',
                   controller: transactionController,
                 ).build(context),
-                const SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: SpacingTokens.md),
                 CrudFieldConfig.textarea(
                   label: '备注（可选）',
                   controller: notesController,

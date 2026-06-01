@@ -34,7 +34,10 @@ class TaskAssignmentRuleRepositoryImpl implements TaskAssignmentRuleRepository {
   }
 
   @override
-  Future<TaskAssignmentRuleDto> updateRule(int id, Map<String, dynamic> payload) {
+  Future<TaskAssignmentRuleDto> updateRule(
+    int id,
+    Map<String, dynamic> payload,
+  ) {
     return _apiService.updateRule(id, payload);
   }
 

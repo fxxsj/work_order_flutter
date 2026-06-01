@@ -355,7 +355,7 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
                     ),
                     if (_productOptions.isEmpty && !isConfirmed)
                       Padding(
-                        padding: EdgeInsets.only(left: LayoutTokens.gapSm),
+                        padding: EdgeInsets.only(left: SpacingTokens.sm),
                         child: TextButton.icon(
                           onPressed: () async {
                             final created = await _handleCreateProduct();
@@ -366,7 +366,7 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
                           label: const Text('新增产品'),
                         ),
                       ),
-                    SizedBox(width: LayoutTokens.gapMd),
+                    SizedBox(width: SpacingTokens.md),
                     Expanded(
                       child: CrudFieldConfig.number(
                         label: _quantityLabel,
@@ -381,7 +381,7 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
                         },
                       ).build(context),
                     ),
-                    SizedBox(width: LayoutTokens.gapSm),
+                    SizedBox(width: SpacingTokens.sm),
                     IconButton(
                       tooltip: '移除',
                       icon: Icon(

@@ -1,8 +1,5 @@
 class GenericRecord {
-  const GenericRecord({
-    required this.id,
-    required this.data,
-  });
+  const GenericRecord({required this.id, required this.data});
 
   final int id;
   final Map<String, dynamic> data;

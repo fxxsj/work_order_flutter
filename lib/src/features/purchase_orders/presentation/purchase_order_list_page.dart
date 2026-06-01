@@ -82,7 +82,7 @@ class _PurchaseOrderListView extends StatefulWidget {
 
 class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
   static const double _searchWidth = 320;
-  static const double _spacingSm = LayoutTokens.gapSm;
+  static const double _spacingSm = SpacingTokens.sm;
   static const String _emptyCellText = '-';
 
   static const String _searchHintText = '搜索采购单号/供应商';
@@ -231,9 +231,9 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
 
   static List<String> _buildCancelImpacts(PurchaseOrder order) {
     return [
-      '供应商：${CrudValueFormatter.text(order.supplierName)}',
-      '状态：${CrudValueFormatter.text(order.statusDisplay ?? order.status)}',
-      '金额：${CrudValueFormatter.amount(order.totalAmount)}',
+      '供应商：${AppValueFormatter.text(order.supplierName)}',
+      '状态：${AppValueFormatter.text(order.statusDisplay ?? order.status)}',
+      '金额：${AppValueFormatter.amount(order.totalAmount)}',
       if ((order.workOrderNumber ?? '').trim().isNotEmpty)
         '关联施工单：${order.workOrderNumber!.trim()}',
     ];

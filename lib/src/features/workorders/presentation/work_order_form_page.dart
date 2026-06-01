@@ -52,8 +52,11 @@ class WorkOrderFormEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FeatureEntry<WorkOrderApiService, WorkOrderRepository,
-        WorkOrderViewModel>(
+    return FeatureEntry<
+      WorkOrderApiService,
+      WorkOrderRepository,
+      WorkOrderViewModel
+    >(
       createService: (context) =>
           WorkOrderApiService(context.read<ApiClient>()),
       createRepository: (context) =>
@@ -214,8 +217,9 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     if (customerId == null) return;
     final exists = _customers.any((c) => c.id == customerId);
     if (exists) return;
-    final dto = await CustomerApiService(context.read<ApiClient>())
-        .fetchCustomerById(customerId);
+    final dto = await CustomerApiService(
+      context.read<ApiClient>(),
+    ).fetchCustomerById(customerId);
     if (dto == null || !mounted) return;
     setState(() {
       _customers = [..._customers, dto.toEntity()];
@@ -247,9 +251,12 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     ToastUtil.showSuccess('客户已新增');
   }
 
-  Future<List<AppDropdownOption<int>>> _handleSearchCustomer(String query) async {
-    final page = await CustomerApiService(context.read<ApiClient>())
-        .fetchCustomers(search: query, pageSize: 50);
+  Future<List<AppDropdownOption<int>>> _handleSearchCustomer(
+    String query,
+  ) async {
+    final page = await CustomerApiService(
+      context.read<ApiClient>(),
+    ).fetchCustomers(search: query, pageSize: 50);
     return page.items
         .map((dto) => AppDropdownOption<int>(value: dto.id, label: dto.name))
         .toList();
@@ -280,7 +287,8 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
         ..removeWhere((item) => item.id == option.id)
         ..add(option)
         ..sort(
-            (left, right) => left.displayLabel.compareTo(right.displayLabel));
+          (left, right) => left.displayLabel.compareTo(right.displayLabel),
+        );
       _fullProducts = List<Product>.from(_fullProducts)
         ..removeWhere((item) => item.id == created.id)
         ..add(created);
@@ -358,9 +366,9 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     final selected = salesOrderId == null
         ? null
         : _salesOrders.cast<WorkOrderSalesOrderCandidate?>().firstWhere(
-              (item) => item?.id == salesOrderId,
-              orElse: () => null,
-            );
+            (item) => item?.id == salesOrderId,
+            orElse: () => null,
+          );
 
     setState(() {
       _draft.salesOrderId = salesOrderId;
@@ -377,7 +385,8 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
         if (draft.sourceType != 'sales_order') {
           continue;
         }
-        final followsHeaderOrder = draft.sourceSalesOrderId == null ||
+        final followsHeaderOrder =
+            draft.sourceSalesOrderId == null ||
             draft.sourceSalesOrderId == previousSalesOrderId;
         if (followsHeaderOrder) {
           draft.sourceSalesOrderId = salesOrderId;
@@ -391,9 +400,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
       if (previousSalesOrderId != salesOrderId) {
         _draft.autoFillFromProducts(_fullProducts);
         _draft.autoFillFromArtworks(
-          _artworks
-              .where((a) => _draft.artworkIds.contains(a.id))
-              .toList(),
+          _artworks.where((a) => _draft.artworkIds.contains(a.id)).toList(),
           _fullProducts,
         );
         _draft.recalcProductQuantities();
@@ -419,9 +426,9 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
       return null;
     }
     return _salesOrders.cast<WorkOrderSalesOrderCandidate?>().firstWhere(
-          (item) => item?.id == salesOrderId,
-          orElse: () => null,
-        );
+      (item) => item?.id == salesOrderId,
+      orElse: () => null,
+    );
   }
 
   /// Compute which prepress resources are required based on selected processes.
@@ -429,9 +436,9 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     final required = <String>{};
     for (final processId in _draft.processIds) {
       final process = _processes.cast<Process?>().firstWhere(
-            (p) => p?.id == processId,
-            orElse: () => null,
-          );
+        (p) => p?.id == processId,
+        orElse: () => null,
+      );
       if (process != null) {
         if (process.requiresDie) required.add('die');
         if (process.requiresFoilingPlate) required.add('foiling');
@@ -455,7 +462,8 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     final productIds = _selectedProductIds;
     if (productIds.isEmpty) return _artworks;
     return _artworks.where((artwork) {
-      if (artwork.products.isEmpty) return true; // Show artworks without product linkage
+      if (artwork.products.isEmpty)
+        return true; // Show artworks without product linkage
       return artwork.products.any((ap) => productIds.contains(ap.productId));
     }).toList();
   }
@@ -495,9 +503,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
   List<WorkOrderSalesOrderCandidate> get _filteredSalesOrders {
     final customerId = _draft.customerId;
     if (customerId == null) return _salesOrders;
-    return _salesOrders
-        .where((so) => so.customerId == customerId)
-        .toList();
+    return _salesOrders.where((so) => so.customerId == customerId).toList();
   }
 
   /// Clean up prepress selections (artwork, die, foiling plate, embossing plate)
@@ -509,21 +515,20 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     // Clean up artwork IDs - only keep artworks that match selected products
     _draft.artworkIds.removeWhere((artworkId) {
       final artwork = _artworks.cast<Artwork?>().firstWhere(
-            (a) => a?.id == artworkId,
-            orElse: () => null,
-          );
+        (a) => a?.id == artworkId,
+        orElse: () => null,
+      );
       if (artwork == null) return true;
       if (artwork.products.isEmpty) return false;
-      return !artwork.products
-          .any((ap) => productIds.contains(ap.productId));
+      return !artwork.products.any((ap) => productIds.contains(ap.productId));
     });
 
     // Clean up die IDs
     _draft.dieIds.removeWhere((dieId) {
       final die = _dies.cast<Die?>().firstWhere(
-            (d) => d?.id == dieId,
-            orElse: () => null,
-          );
+        (d) => d?.id == dieId,
+        orElse: () => null,
+      );
       if (die == null) return true;
       if (die.products.isEmpty) return false;
       return !die.products.any((dp) => productIds.contains(dp.productId));
@@ -532,9 +537,9 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     // Clean up foiling plate IDs
     _draft.foilingPlateIds.removeWhere((plateId) {
       final plate = _foilingPlates.cast<FoilingPlate?>().firstWhere(
-            (p) => p?.id == plateId,
-            orElse: () => null,
-          );
+        (p) => p?.id == plateId,
+        orElse: () => null,
+      );
       if (plate == null) return true;
       if (plate.products.isEmpty) return false;
       return !plate.products.any((pp) => productIds.contains(pp.productId));
@@ -543,9 +548,9 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     // Clean up embossing plate IDs
     _draft.embossingPlateIds.removeWhere((plateId) {
       final plate = _embossingPlates.cast<EmbossingPlate?>().firstWhere(
-            (p) => p?.id == plateId,
-            orElse: () => null,
-          );
+        (p) => p?.id == plateId,
+        orElse: () => null,
+      );
       if (plate == null) return true;
       if (plate.products.isEmpty) return false;
       return !plate.products.any((ep) => productIds.contains(ep.productId));
@@ -555,8 +560,9 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
   void _handleAddProduct() {
     setState(() {
       _draft.addProductDraft();
-      final lastDraft =
-          _draft.productDrafts.isNotEmpty ? _draft.productDrafts.last : null;
+      final lastDraft = _draft.productDrafts.isNotEmpty
+          ? _draft.productDrafts.last
+          : null;
       if (lastDraft != null && _draft.salesOrderId != null) {
         lastDraft.sourceType = 'sales_order';
         lastDraft.sourceSalesOrderId = _draft.salesOrderId;
@@ -579,9 +585,9 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     final defaultProcessIds = <int>{};
     for (final pid in selectedProductIds) {
       final product = _fullProducts.cast<Product?>().firstWhere(
-            (p) => p?.id == pid,
-            orElse: () => null,
-          );
+        (p) => p?.id == pid,
+        orElse: () => null,
+      );
       if (product != null) {
         defaultProcessIds.addAll(product.defaultProcessIds);
       }
@@ -621,14 +627,18 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
         workOrderId = widget.workOrderId;
       }
       if (!mounted) return;
-      
+
       if (autoApprove && workOrderId != null) {
-        await viewModel.submitApproval(workOrderId, payload: {'auto_approve': true});
+        await viewModel.submitApproval(
+          workOrderId,
+          payload: {'auto_approve': true},
+        );
         if (!mounted) return;
         ToastUtil.showSuccess('已发布成功');
       } else {
         // 只对草稿/退回状态（新创建或编辑时）引导提交审核
-        final canSubmitApproval = widget.mode == WorkOrderFormMode.create ||
+        final canSubmitApproval =
+            widget.mode == WorkOrderFormMode.create ||
             _approvalStatus == 'draft' ||
             _approvalStatus == 'rejected';
         if (!canSubmitApproval) {
@@ -680,20 +690,24 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
   /// Show dialog when selected processes differ from product defaults.
   Future<bool?> _showProcessDiffDialog(Set<int> extra, Set<int> missing) async {
     // Get process names for display
-    final extraNames = extra.map((id) {
-      final process = _processes.cast<Process?>().firstWhere(
+    final extraNames = extra
+        .map((id) {
+          final process = _processes.cast<Process?>().firstWhere(
             (p) => p?.id == id,
             orElse: () => null,
           );
-      return process?.name ?? 'ID:$id';
-    }).join(', ');
-    final missingNames = missing.map((id) {
-      final process = _processes.cast<Process?>().firstWhere(
+          return process?.name ?? 'ID:$id';
+        })
+        .join(', ');
+    final missingNames = missing
+        .map((id) {
+          final process = _processes.cast<Process?>().firstWhere(
             (p) => p?.id == id,
             orElse: () => null,
           );
-      return process?.name ?? 'ID:$id';
-    }).join(', ');
+          return process?.name ?? 'ID:$id';
+        })
+        .join(', ');
 
     final messages = <String>[];
     if (extra.isNotEmpty) {
@@ -715,10 +729,12 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
           children: [
             const Text('当前选择的工序与产品默认工序不一致：'),
             const SizedBox(height: 8),
-            ...messages.map((m) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(m, style: const TextStyle(fontSize: 13)),
-                )),
+            ...messages.map(
+              (m) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(m, style: const TextStyle(fontSize: 13)),
+              ),
+            ),
             const SizedBox(height: 8),
             const Text('是否确认继续？'),
           ],
@@ -762,14 +778,22 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
               label: '返回',
             ),
             PageActionButton.outlined(
-              onPressed: _submitting || !canSubmit ? null : () => _handleSubmit(false),
+              onPressed: _submitting || !canSubmit
+                  ? null
+                  : () => _handleSubmit(false),
               icon: const Icon(Icons.save, size: 16),
-              label: _submitting ? '保存中' : (widget.mode == WorkOrderFormMode.edit ? '保存草稿' : '存为草稿'),
+              label: _submitting
+                  ? '保存中'
+                  : (widget.mode == WorkOrderFormMode.edit ? '保存草稿' : '存为草稿'),
             ),
             PageActionButton.filled(
-              onPressed: _submitting || !canSubmit ? null : () => _handleSubmit(true),
+              onPressed: _submitting || !canSubmit
+                  ? null
+                  : () => _handleSubmit(true),
               icon: const Icon(Icons.send, size: 16),
-              label: _submitting ? '发布中' : (widget.mode == WorkOrderFormMode.edit ? '保存并发布' : '直接发布'),
+              label: _submitting
+                  ? '发布中'
+                  : (widget.mode == WorkOrderFormMode.edit ? '保存并发布' : '直接发布'),
             ),
           ],
         ),

@@ -15,10 +15,7 @@ class MaterialApiService {
     bool? isActive,
     String? ordering,
   }) async {
-    final params = <String, dynamic>{
-      'page': page,
-      'page_size': pageSize,
-    };
+    final params = <String, dynamic>{'page': page, 'page_size': pageSize};
     final trimmed = search?.trim();
     if (trimmed != null && trimmed.isNotEmpty) {
       params['search'] = trimmed;
@@ -37,10 +34,12 @@ class MaterialApiService {
       final results = payload['results'];
       final list = results is List
           ? results
-              .whereType<Map>()
-              .map((item) =>
-                  MaterialDto.fromJson(Map<String, dynamic>.from(item)))
-              .toList()
+                .whereType<Map>()
+                .map(
+                  (item) =>
+                      MaterialDto.fromJson(Map<String, dynamic>.from(item)),
+                )
+                .toList()
           : <MaterialDto>[];
       return PageData.fromPayload(
         payload: payload,
@@ -61,12 +60,7 @@ class MaterialApiService {
         pageSize: list.length,
       );
     }
-    return PageData(
-      items: const [],
-      total: 0,
-      page: page,
-      pageSize: pageSize,
-    );
+    return PageData(items: const [], total: 0, page: page, pageSize: pageSize);
   }
 
   Future<MaterialDto> createMaterial(MaterialDto dto) async {
@@ -79,8 +73,10 @@ class MaterialApiService {
   }
 
   Future<MaterialDto> updateMaterial(MaterialDto dto) async {
-    final response =
-        await _client.put('/materials/${dto.id}/', data: dto.toPayload());
+    final response = await _client.put(
+      '/materials/${dto.id}/',
+      data: dto.toPayload(),
+    );
     final payload = response.data;
     final map = payload is Map
         ? Map<String, dynamic>.from(payload)
@@ -102,14 +98,16 @@ class MaterialApiService {
       },
     );
     final payload = response.data;
-    final source =
-        payload is Map<String, dynamic> ? payload['results'] : payload;
+    final source = payload is Map<String, dynamic>
+        ? payload['results']
+        : payload;
     if (source is! List) return const [];
     return source
         .whereType<Map>()
-        .map((item) => MaterialSupplierOption.fromJson(
-              Map<String, dynamic>.from(item),
-            ))
+        .map(
+          (item) =>
+              MaterialSupplierOption.fromJson(Map<String, dynamic>.from(item)),
+        )
         .where((item) => item.id > 0)
         .toList();
   }

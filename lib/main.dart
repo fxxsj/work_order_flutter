@@ -21,11 +21,7 @@ void main() async {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({
-    super.key,
-    required this.storage,
-    required this.apiClient,
-  });
+  const MyApp({super.key, required this.storage, required this.apiClient});
 
   final AppStorage storage;
   final ApiClient apiClient;
@@ -93,19 +89,20 @@ class _MyAppState extends State<MyApp> {
             debugShowCheckedModeBanner: false,
             title: AppMetadata.displayName,
             locale: const Locale('zh', 'CN'),
-            supportedLocales: const [
-              Locale('zh', 'CN'),
-              Locale('en', 'US'),
-            ],
+            supportedLocales: const [Locale('zh', 'CN'), Locale('en', 'US')],
             localizationsDelegates: const [
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
             theme: AppTheme.build(
-                brightness: Brightness.light, seedColor: theme.seedColor),
+              brightness: Brightness.light,
+              seedColor: theme.seedColor,
+            ),
             darkTheme: AppTheme.build(
-                brightness: Brightness.dark, seedColor: theme.seedColor),
+              brightness: Brightness.dark,
+              seedColor: theme.seedColor,
+            ),
             themeMode: theme.themeMode,
             builder: (context, child) {
               final media = MediaQuery.of(context);

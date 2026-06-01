@@ -66,7 +66,7 @@ class _TaskListView extends StatefulWidget {
 
 class _TaskListViewState extends State<_TaskListView> {
   static const double _searchWidth = LayoutTokens.searchWidth;
-  static const double _spacingSm = LayoutTokens.gapSm;
+  static const double _spacingSm = SpacingTokens.sm;
   static const double _controlHeight = PageActionStyle.height;
   static const String _emptyCellText = '-';
 

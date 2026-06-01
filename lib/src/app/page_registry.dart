@@ -78,12 +78,12 @@ Widget? buildFullPage(String id) => _pages[id]?.call();
 ContentBodyBuilder? buildContentBody(String id) {
   if (id == 'notifications') {
     return (context, style) => NotificationCenterView(
-          primary: style.primary,
-          surface: style.surface,
-          accent: style.accent,
-          subtleText: style.subtleText,
-          borderColor: style.borderColor,
-        );
+      primary: style.primary,
+      surface: style.surface,
+      accent: style.accent,
+      subtleText: style.subtleText,
+      borderColor: style.borderColor,
+    );
   }
   return null;
 }

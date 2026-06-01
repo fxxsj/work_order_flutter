@@ -7,11 +7,7 @@ import 'package:work_order_app/src/features/notification_admin/presentation/noti
 import 'package:work_order_app/src/features/notification_admin/presentation/system_notification_page.dart';
 import 'package:work_order_app/src/features/notification_admin/presentation/user_notification_settings_page.dart';
 
-enum NotificationManagementTab {
-  send,
-  settings,
-  templates,
-}
+enum NotificationManagementTab { send, settings, templates }
 
 class NotificationManagementPage extends StatefulWidget {
   const NotificationManagementPage({
@@ -39,7 +35,7 @@ class _NotificationManagementPageState
   @override
   Widget build(BuildContext context) {
     return ListPageScaffold(
-      spacing: LayoutTokens.gapSm,
+      spacing: SpacingTokens.sm,
       header: PageHeaderBar(
         breadcrumb: null,
         useSurface: false,

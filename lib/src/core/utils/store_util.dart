@@ -88,12 +88,18 @@ class StoreUtil {
     if (exp is! int) {
       return true;
     }
-    final expTime = DateTime.fromMillisecondsSinceEpoch(exp * 1000, isUtc: true);
+    final expTime = DateTime.fromMillisecondsSinceEpoch(
+      exp * 1000,
+      isUtc: true,
+    );
     final now = DateTime.now().toUtc();
     return now.isAfter(expTime.add(const Duration(seconds: 30)));
   }
 
-  static Future<void> writeTokens({required String access, String? refresh}) async {
+  static Future<void> writeTokens({
+    required String access,
+    String? refresh,
+  }) async {
     await write(Constant.KEY_ACCESS_TOKEN, access);
     if (refresh != null) {
       await write(Constant.KEY_REFRESH_TOKEN, refresh);

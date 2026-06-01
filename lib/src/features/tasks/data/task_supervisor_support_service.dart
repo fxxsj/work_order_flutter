@@ -35,10 +35,7 @@ class TaskSupervisorDashboardData {
 }
 
 class TaskSupervisorOperatorOption {
-  const TaskSupervisorOperatorOption({
-    required this.id,
-    required this.name,
-  });
+  const TaskSupervisorOperatorOption({required this.id, required this.name});
 
   final int id;
   final String name;
@@ -71,12 +68,7 @@ class TaskSupervisorSupportService {
       _client,
     ).fetchDepartments(page: 1, pageSize: 50);
     return page.items
-        .map(
-          (dto) => TaskDepartmentOption(
-            id: dto.id,
-            name: dto.name,
-          ),
-        )
+        .map((dto) => TaskDepartmentOption(id: dto.id, name: dto.name))
         .toList();
   }
 
@@ -84,9 +76,9 @@ class TaskSupervisorSupportService {
     int departmentId,
   ) async {
     final api = TaskApiService(_client);
-    final workloadFuture = api.fetchDepartmentWorkload(params: {
-      'department_id': departmentId,
-    });
+    final workloadFuture = api.fetchDepartmentWorkload(
+      params: {'department_id': departmentId},
+    );
     final operatorsFuture = api.fetchDepartmentOperators(departmentId);
     final flowSummaryFuture = _loadFlowSummary(departmentId: departmentId);
 
@@ -118,22 +110,23 @@ class TaskSupervisorSupportService {
     required int operatorId,
     required String notes,
   }) {
-    return TaskApiService(_client).assignToOperator(
-      taskId,
-      operatorId: operatorId,
-      notes: notes,
-    );
+    return TaskApiService(
+      _client,
+    ).assignToOperator(taskId, operatorId: operatorId, notes: notes);
   }
 
-  Future<TaskSupervisorFlowSummary> _loadFlowSummary(
-      {int? departmentId}) async {
+  Future<TaskSupervisorFlowSummary> _loadFlowSummary({
+    int? departmentId,
+  }) async {
     try {
       final qualityApi = QualityInspectionApiService(_client);
       final deliveryApi = DeliveryOrderApiService(_client);
-      final qualitySummaryFuture =
-          qualityApi.fetchSummary(departmentId: departmentId);
-      final deliverySummaryFuture =
-          deliveryApi.fetchSummary(departmentId: departmentId);
+      final qualitySummaryFuture = qualityApi.fetchSummary(
+        departmentId: departmentId,
+      );
+      final deliverySummaryFuture = deliveryApi.fetchSummary(
+        departmentId: departmentId,
+      );
 
       final qualitySummary = await qualitySummaryFuture;
       final deliverySummary = await deliverySummaryFuture;
@@ -147,7 +140,8 @@ class TaskSupervisorSupportService {
           keyName: 'result',
           keyValue: 'pending',
         ),
-        exceptionInspections: _countByKey(
+        exceptionInspections:
+            _countByKey(
               qualityByResult,
               keyName: 'result',
               keyValue: 'failed',
@@ -157,7 +151,8 @@ class TaskSupervisorSupportService {
               keyName: 'result',
               keyValue: 'conditional',
             ),
-        pendingReceipts: _countByKey(
+        pendingReceipts:
+            _countByKey(
               deliveryByStatus,
               keyName: 'status',
               keyValue: 'shipped',

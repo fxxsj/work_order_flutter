@@ -13,10 +13,7 @@ Future<Supplier?> showQuickSupplierCreateDialog({
   await viewModel.initialize();
   final beforeIds = viewModel.suppliers.map((item) => item.id).toSet();
 
-  final saved = await showSupplierEditDrawer(
-    context,
-    viewModel: viewModel,
-  );
+  final saved = await showSupplierEditDrawer(context, viewModel: viewModel);
   if (!saved) {
     return null;
   }

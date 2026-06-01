@@ -11,7 +11,10 @@ abstract class WorkOrderMaterialRepository {
 
   Future<Map<String, dynamic>> createMaterial(Map<String, dynamic> payload);
 
-  Future<Map<String, dynamic>> updateMaterial(int id, Map<String, dynamic> payload);
+  Future<Map<String, dynamic>> updateMaterial(
+    int id,
+    Map<String, dynamic> payload,
+  );
 
   Future<void> deleteMaterial(int id);
 

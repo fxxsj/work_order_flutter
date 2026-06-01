@@ -28,7 +28,7 @@ Future<void> showPurchaseLowStockDialog(
                 child: ListView.separated(
                   itemCount: materials.length,
                   separatorBuilder: (_, __) =>
-                      SizedBox(height: LayoutTokens.gapSm),
+                      SizedBox(height: SpacingTokens.sm),
                   itemBuilder: (context, index) {
                     final item = materials[index];
                     final name = item['name']?.toString() ?? '-';
@@ -50,10 +50,10 @@ Future<void> showPurchaseLowStockDialog(
                               '$code $name',
                               style: Theme.of(context).textTheme.titleSmall,
                             ),
-                            SizedBox(height: LayoutTokens.gapXxs),
+                            SizedBox(height: SpacingTokens.xxs),
                             Wrap(
-                              spacing: LayoutTokens.gapMd,
-                              runSpacing: LayoutTokens.gapXs,
+                              spacing: SpacingTokens.md,
+                              runSpacing: SpacingTokens.xs,
                               children: [
                                 _InlineMeta(label: '当前库存', value: stock),
                                 _InlineMeta(label: '最小库存', value: minStock),

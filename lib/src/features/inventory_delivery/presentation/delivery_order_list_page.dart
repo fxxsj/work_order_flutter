@@ -77,7 +77,7 @@ class _DeliveryOrderListView extends StatefulWidget {
 
 class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
   static const double _searchWidth = 320;
-  static const double _spacingSm = LayoutTokens.gapSm;
+  static const double _spacingSm = SpacingTokens.sm;
   static const double _controlHeight = PageActionStyle.height;
   static const String _emptyCellText = '-';
 
@@ -369,8 +369,8 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
 
   static List<String> _buildDeleteImpacts(DeliveryOrder order) {
     return [
-      '客户：${CrudValueFormatter.text(order.customerName)}',
-      '状态：${CrudValueFormatter.text(order.statusDisplay ?? order.status)}',
+      '客户：${AppValueFormatter.text(order.customerName)}',
+      '状态：${AppValueFormatter.text(order.statusDisplay ?? order.status)}',
       if ((order.salesOrderNumber ?? '').trim().isNotEmpty)
         '客户订单：${order.salesOrderNumber!.trim()}',
       if ((order.logisticsCompany ?? '').trim().isNotEmpty)
@@ -749,7 +749,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       title: _hasResolvedRejectedException(order) ? '更新拒收处理' : '登记拒收处理',
       summary: '请登记当前送货单的拒收处理方案，处理记录会直接影响后续补发、终止交付和客户沟通跟进。',
       impacts: [
-        '客户：${CrudValueFormatter.text(order.customerName)}',
+        '客户：${AppValueFormatter.text(order.customerName)}',
         '送货单号：${_deliveryLabel(order)}',
         if ((order.salesOrderNumber ?? '').trim().isNotEmpty)
           '客户订单：${order.salesOrderNumber!.trim()}',

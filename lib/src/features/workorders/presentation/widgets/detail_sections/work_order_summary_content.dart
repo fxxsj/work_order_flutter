@@ -28,8 +28,9 @@ class SummaryContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
-    final dividerColor =
-        colors?.borderColor.withValues(alpha: OpacityTokens.heavy);
+    final dividerColor = colors?.borderColor.withValues(
+      alpha: OpacityTokens.heavy,
+    );
     final showPrinting =
         detail.printingType != null && detail.printingType != 'none';
 
@@ -73,34 +74,21 @@ class SummaryContent extends StatelessWidget {
           DescItem('下单日期', _formatDate(detail.orderDate)),
           DescItem('交货日期', _formatDate(detail.deliveryDate)),
           DescItem('实际交货', _formatDate(detail.actualDeliveryDate)),
-          DescItem(
-            '生产数量',
-            detail.productionQuantity?.toString() ?? emptyText,
-          ),
-          DescItem(
-            '不良数量',
-            detail.defectiveQuantity?.toString() ?? emptyText,
-          ),
+          DescItem('生产数量', detail.productionQuantity?.toString() ?? emptyText),
+          DescItem('不良数量', detail.defectiveQuantity?.toString() ?? emptyText),
           DescItem(
             '总金额',
             detail.totalAmount == null
                 ? emptyText
                 : '¥${detail.totalAmount!.toStringAsFixed(2)}',
           ),
-          DescItem(
-            '任务数',
-            detail.totalTaskCount?.toString() ?? emptyText,
-          ),
+          DescItem('任务数', detail.totalTaskCount?.toString() ?? emptyText),
           DescItem(
             '印刷形式',
             detail.printingTypeDisplay ?? detail.printingType ?? emptyText,
           ),
           DescItem('印刷色数', detail.printingColorsDisplay ?? emptyText),
-          DescItem(
-            '审批说明',
-            detail.approvalComment ?? emptyText,
-            spanFull: true,
-          ),
+          DescItem('审批说明', detail.approvalComment ?? emptyText, spanFull: true),
         ]),
         SizedBox(height: sectionSpacing),
         Divider(height: sectionSpacing, color: dividerColor),
@@ -113,7 +101,7 @@ class SummaryContent extends StatelessWidget {
             color: colors?.sidebarText,
           ),
         ),
-        SizedBox(height: LayoutTokens.gapSm),
+        SizedBox(height: SpacingTokens.sm),
         _buildDescriptionGrid(context, [
           DescItem(
             '图稿（CTP版）',
@@ -127,17 +115,20 @@ class SummaryContent extends StatelessWidget {
                 detail.printingTypeDisplay ?? detail.printingType,
               ].where((s) => s != null && s.isNotEmpty).join(' '),
             ),
-          DescItem(
-            '刀模',
-            _joinResourceItems(detail.dieCodes, detail.dieNames),
-          ),
+          DescItem('刀模', _joinResourceItems(detail.dieCodes, detail.dieNames)),
           DescItem(
             '烫金版',
-            _joinResourceItems(detail.foilingPlateCodes, detail.foilingPlateNames),
+            _joinResourceItems(
+              detail.foilingPlateCodes,
+              detail.foilingPlateNames,
+            ),
           ),
           DescItem(
             '压凸版',
-            _joinResourceItems(detail.embossingPlateCodes, detail.embossingPlateNames),
+            _joinResourceItems(
+              detail.embossingPlateCodes,
+              detail.embossingPlateNames,
+            ),
           ),
         ]),
         SizedBox(height: sectionSpacing),
@@ -147,8 +138,8 @@ class SummaryContent extends StatelessWidget {
         // 设计文件
         if (_hasDesignFile) ...[
           Wrap(
-            spacing: LayoutTokens.gapSm,
-            runSpacing: LayoutTokens.gapSm,
+            spacing: SpacingTokens.sm,
+            runSpacing: SpacingTokens.sm,
             children: [
               AttachmentOpenButton(
                 fileUrl: detail.designFileUrl,
@@ -188,8 +179,8 @@ class SummaryContent extends StatelessWidget {
         final columns = maxWidth < Breakpoints.sm
             ? 1
             : maxWidth < Breakpoints.lg
-                ? 2
-                : 3;
+            ? 2
+            : 3;
         final rows = <Widget>[];
         for (var i = 0; i < items.length;) {
           final rowItems = <DescItem>[];
@@ -201,24 +192,26 @@ class SummaryContent extends StatelessWidget {
             rowSpan += item.spanFull ? columns : 1;
             i++;
           }
-          rows.add(Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: rowItems.map((item) {
-              final flex = item.spanFull ? columns : 1;
-              return Expanded(
-                flex: flex,
-                child: DescriptionCell(
-                  label: item.label,
-                  value: item.value,
-                  isStatus: item.isStatus,
-                  statusType: item.statusType,
-                  statusValue: item.statusValue,
-                  isProgress: item.isProgress,
-                  progressValue: item.progressValue,
-                ),
-              );
-            }).toList(),
-          ));
+          rows.add(
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: rowItems.map((item) {
+                final flex = item.spanFull ? columns : 1;
+                return Expanded(
+                  flex: flex,
+                  child: DescriptionCell(
+                    label: item.label,
+                    value: item.value,
+                    isStatus: item.isStatus,
+                    statusType: item.statusType,
+                    statusValue: item.statusValue,
+                    isProgress: item.isProgress,
+                    progressValue: item.progressValue,
+                  ),
+                );
+              }).toList(),
+            ),
+          );
         }
         return Column(children: rows);
       },

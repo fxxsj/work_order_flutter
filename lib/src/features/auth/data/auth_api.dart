@@ -6,17 +6,25 @@ class AuthApi {
 
   final ApiClient _client;
 
-  Future<ApiResult<Map<String, dynamic>>> login(Map<String, dynamic> data) async {
+  Future<ApiResult<Map<String, dynamic>>> login(
+    Map<String, dynamic> data,
+  ) async {
     final response = await _client.post('/auth/login/', data: data);
     final payload = response.data;
-    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    final map = payload is Map
+        ? Map<String, dynamic>.from(payload)
+        : <String, dynamic>{};
     return ApiResult(data: map, message: response.message);
   }
 
-  Future<ApiResult<Map<String, dynamic>>> register(Map<String, dynamic> data) async {
+  Future<ApiResult<Map<String, dynamic>>> register(
+    Map<String, dynamic> data,
+  ) async {
     final response = await _client.post('/auth/register/', data: data);
     final payload = response.data;
-    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    final map = payload is Map
+        ? Map<String, dynamic>.from(payload)
+        : <String, dynamic>{};
     return ApiResult(data: map, message: response.message);
   }
 
@@ -28,14 +36,20 @@ class AuthApi {
   Future<ApiResult<Map<String, dynamic>>> getCurrentUser() async {
     final response = await _client.get('/auth/user/');
     final payload = response.data;
-    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    final map = payload is Map
+        ? Map<String, dynamic>.from(payload)
+        : <String, dynamic>{};
     return ApiResult(data: map, message: response.message);
   }
 
-  Future<ApiResult<Map<String, dynamic>>> updateProfile(Map<String, dynamic> data) async {
+  Future<ApiResult<Map<String, dynamic>>> updateProfile(
+    Map<String, dynamic> data,
+  ) async {
     final response = await _client.put('/auth/update-profile/', data: data);
     final payload = response.data;
-    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    final map = payload is Map
+        ? Map<String, dynamic>.from(payload)
+        : <String, dynamic>{};
     return ApiResult(data: map, message: response.message);
   }
 
@@ -59,7 +73,9 @@ class AuthApi {
     return ApiResult(data: const [], message: response.message);
   }
 
-  Future<ApiResult<List<Map<String, dynamic>>>> getUsersByDepartment({int? departmentId}) async {
+  Future<ApiResult<List<Map<String, dynamic>>>> getUsersByDepartment({
+    int? departmentId,
+  }) async {
     final params = <String, dynamic>{};
     if (departmentId != null) {
       params['department_id'] = departmentId;
@@ -81,7 +97,9 @@ class AuthApi {
     return ApiResult(data: const [], message: response.message);
   }
 
-  Future<ApiResult<List<Map<String, dynamic>>>> getUserList({int? departmentId}) {
+  Future<ApiResult<List<Map<String, dynamic>>>> getUserList({
+    int? departmentId,
+  }) {
     return getUsersByDepartment(departmentId: departmentId);
   }
 }

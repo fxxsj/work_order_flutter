@@ -42,10 +42,7 @@ class ApiResponse {
         timestamp: payload['timestamp']?.toString(),
       );
     }
-    return ApiResponse(
-      success: true,
-      data: payload,
-    );
+    return ApiResponse(success: true, data: payload);
   }
 
   ApiResponse copyWith({

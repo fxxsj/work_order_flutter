@@ -5,11 +5,12 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_fi
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 
-typedef InventoryDocumentFieldsBuilder = List<Widget> Function(
-  BuildContext context,
-  VoidCallback refresh,
-  bool submitting,
-);
+typedef InventoryDocumentFieldsBuilder =
+    List<Widget> Function(
+      BuildContext context,
+      VoidCallback refresh,
+      bool submitting,
+    );
 
 typedef InventoryDocumentSubmit = Future<void> Function();
 
@@ -85,7 +86,7 @@ class _InventoryDocumentFormPanelState
         mainAxisSize: MainAxisSize.min,
         children: [
           ..._withSpacing(fields),
-          if (fields.isNotEmpty) const SizedBox(height: LayoutTokens.gapMd),
+          if (fields.isNotEmpty) const SizedBox(height: SpacingTokens.md),
           CrudFieldConfig.text(
             label: widget.dateLabel,
             controller: widget.dateController,
@@ -93,7 +94,7 @@ class _InventoryDocumentFormPanelState
             readOnly: true,
             onTap: _pickDate,
           ).build(context),
-          const SizedBox(height: LayoutTokens.gapMd),
+          const SizedBox(height: SpacingTokens.md),
           CrudFieldConfig.textarea(
             label: '备注',
             controller: widget.notesController,
@@ -136,7 +137,7 @@ List<Widget> _withSpacing(List<Widget> children) {
   final result = <Widget>[];
   for (var i = 0; i < children.length; i++) {
     if (i > 0) {
-      result.add(const SizedBox(height: LayoutTokens.gapMd));
+      result.add(const SizedBox(height: SpacingTokens.md));
     }
     result.add(children[i]);
   }

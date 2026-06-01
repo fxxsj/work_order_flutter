@@ -47,12 +47,13 @@ class NotificationListItem extends StatelessWidget {
         Container(
           width: double.infinity,
           padding: EdgeInsets.symmetric(
-            horizontal: LayoutTokens.gapMd,
-            vertical: LayoutTokens.gapSm,
+            horizontal: SpacingTokens.md,
+            vertical: SpacingTokens.sm,
           ),
           decoration: BoxDecoration(
-            color:
-                item.isRead ? Colors.transparent : semantic?.unreadBackground,
+            color: item.isRead
+                ? Colors.transparent
+                : semantic?.unreadBackground,
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -69,7 +70,7 @@ class NotificationListItem extends StatelessWidget {
                         ),
                       ),
               ),
-              SizedBox(width: LayoutTokens.gapMd),
+              SizedBox(width: SpacingTokens.md),
 
               // Content and Time
               Expanded(
@@ -83,15 +84,12 @@ class NotificationListItem extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    SizedBox(height: LayoutTokens.gapXs),
-                    Text(
-                      timeLabel,
-                      style: timeStyle,
-                    ),
+                    SizedBox(height: SpacingTokens.xs),
+                    Text(timeLabel, style: timeStyle),
                   ],
                 ),
               ),
-              SizedBox(width: LayoutTokens.gapSm),
+              SizedBox(width: SpacingTokens.sm),
 
               // Mark as read button
               IconButton(

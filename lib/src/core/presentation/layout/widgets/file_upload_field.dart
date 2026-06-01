@@ -6,19 +6,17 @@ import 'package:work_order_app/src/core/utils/toast_util.dart';
 
 /// 文件选择结果，持有文件名和 MultipartFile，供 FormField 使用。
 class CrudPickedFile {
-  const CrudPickedFile({
-    required this.filename,
-    required this.file,
-  });
+  const CrudPickedFile({required this.filename, required this.file});
 
   final String filename;
   final MultipartFile file;
 }
 
-typedef FileUploadPicker = Future<MultipartFile?> Function({
-  required List<String> allowedExtensions,
-  required String fallbackFilename,
-});
+typedef FileUploadPicker =
+    Future<MultipartFile?> Function({
+      required List<String> allowedExtensions,
+      required String fallbackFilename,
+    });
 
 class FileUploadField extends FormField<CrudPickedFile?> {
   FileUploadField({
@@ -33,19 +31,19 @@ class FileUploadField extends FormField<CrudPickedFile?> {
     required List<String> allowedExtensions,
     String fallbackFilename = 'upload.bin',
     FileUploadPicker? picker,
-  })  : _label = label,
-        _onChanged = onChanged,
-        _enabled = enabled,
-        _hintText = hintText,
-        _helperText = helperText,
-        _allowedExtensions = allowedExtensions,
-        _fallbackFilename = fallbackFilename,
-        _picker = picker ?? pickMultipartFile,
-        super(
-          initialValue: value,
-          validator: validator,
-          builder: (state) => _FileUploadFieldBody(state: state),
-        );
+  }) : _label = label,
+       _onChanged = onChanged,
+       _enabled = enabled,
+       _hintText = hintText,
+       _helperText = helperText,
+       _allowedExtensions = allowedExtensions,
+       _fallbackFilename = fallbackFilename,
+       _picker = picker ?? pickMultipartFile,
+       super(
+         initialValue: value,
+         validator: validator,
+         builder: (state) => _FileUploadFieldBody(state: state),
+       );
 
   final String _label;
   final ValueChanged<CrudPickedFile?>? _onChanged;
@@ -72,14 +70,16 @@ class _FileUploadFieldBody extends StatelessWidget {
     final supportedTypes = _field._allowedExtensions.join(', ').toUpperCase();
 
     return InputDecorator(
-      decoration: InputDecoration(
-        labelText: _field._label,
-        helperText: _field._helperText ??
-            (supportedTypes.isEmpty ? null : '支持格式: $supportedTypes'),
-        errorText: state.errorText,
-      )
-          .applyDefaults(theme.inputDecorationTheme)
-          .copyWith(enabled: _field._enabled),
+      decoration:
+          InputDecoration(
+                labelText: _field._label,
+                helperText:
+                    _field._helperText ??
+                    (supportedTypes.isEmpty ? null : '支持格式: $supportedTypes'),
+                errorText: state.errorText,
+              )
+              .applyDefaults(theme.inputDecorationTheme)
+              .copyWith(enabled: _field._enabled),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -89,7 +89,7 @@ class _FileUploadFieldBody extends StatelessWidget {
               color: hasValue ? null : theme.hintColor,
             ),
           ),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           Wrap(
             spacing: 8,
             runSpacing: 8,

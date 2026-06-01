@@ -21,7 +21,9 @@ abstract class WorkOrderRepository {
   Future<WorkOrderDetailDto> createWorkOrder(Map<String, dynamic> payload);
 
   Future<WorkOrderDetailDto> updateWorkOrder(
-      int id, Map<String, dynamic> payload);
+    int id,
+    Map<String, dynamic> payload,
+  );
 
   Future<WorkOrderDetailDto> uploadDesignFile(int id, MultipartFile designFile);
 
@@ -29,7 +31,11 @@ abstract class WorkOrderRepository {
 
   Future<WorkOrderDetailDto> updateStatus(int id, String status);
 
-  Future<WorkOrderDetailDto> submitApproval(int id, {String? comment, Map<String, dynamic>? payload});
+  Future<WorkOrderDetailDto> submitApproval(
+    int id, {
+    String? comment,
+    Map<String, dynamic>? payload,
+  });
 
   Future<WorkOrderDetailDto> approveWorkOrder(int id, {String? comment});
 
@@ -53,9 +59,13 @@ abstract class WorkOrderRepository {
 
   Future<Map<String, dynamic>> checkSyncNeeded(int id, {List<int>? processIds});
 
-  Future<Map<String, dynamic>> syncTasksPreview(int id,
-      {List<int>? processIds});
+  Future<Map<String, dynamic>> syncTasksPreview(
+    int id, {
+    List<int>? processIds,
+  });
 
-  Future<Map<String, dynamic>> syncTasksExecute(int id,
-      {List<int>? processIds});
+  Future<Map<String, dynamic>> syncTasksExecute(
+    int id, {
+    List<int>? processIds,
+  });
 }

@@ -61,10 +61,7 @@ class _PurchaseReasonDialogState extends State<_PurchaseReasonDialog> {
       maxWidth: LayoutTokens.dialogWidthSm,
       destructive: true,
       summary: '请填写本次操作原因，提交后会进入采购单流转记录。',
-      impacts: const [
-        '原因会作为后续审批、退回或取消处理依据',
-        '建议写清具体差异、责任方或下一步处理方式',
-      ],
+      impacts: const ['原因会作为后续审批、退回或取消处理依据', '建议写清具体差异、责任方或下一步处理方式'],
       onSubmit: _submit,
       content: CrudFieldConfig.textarea(
         label: widget.fieldLabel,

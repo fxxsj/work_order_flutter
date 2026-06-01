@@ -51,36 +51,36 @@ class ProcessLogListEntry extends StatelessWidget {
   }
 
   static String _workOrder(GenericRecord record) {
-    return GenericValueFormatter.text(
+    return AppValueFormatter.text(
       record.getString('work_order_number') ??
           record.getString('work_order_process_label'),
     );
   }
 
   static String _process(GenericRecord record) {
-    return GenericValueFormatter.text(
+    return AppValueFormatter.text(
       record.getString('process_name') ??
           record.getString('work_order_process_label'),
     );
   }
 
   static String _logType(GenericRecord record) {
-    return GenericValueFormatter.text(
+    return AppValueFormatter.text(
       record.getString('log_type_display') ??
           _logTypeLabel(record.getString('log_type')),
     );
   }
 
   static String _operator(GenericRecord record) {
-    return GenericValueFormatter.text(record.getString('operator_name'));
+    return AppValueFormatter.text(record.getString('operator_name'));
   }
 
   static String _createdAt(GenericRecord record) {
-    return GenericValueFormatter.date(record.getString('created_at'));
+    return AppValueFormatter.date(record.getString('created_at'));
   }
 
   static String _content(GenericRecord record) {
-    return GenericValueFormatter.text(record.getString('content'));
+    return AppValueFormatter.text(record.getString('content'));
   }
 
   static Map<String, dynamic> _extraParamsBuilder(Uri uri) {

@@ -13,7 +13,7 @@ class PageHeaderBar extends StatelessWidget {
     this.padding,
     this.useSurface = true,
     this.showDivider = true,
-    this.breadcrumbBottomSpacing = LayoutTokens.gapXs,
+    this.breadcrumbBottomSpacing = SpacingTokens.xs,
     this.breadcrumbStyle,
   });
 
@@ -36,9 +36,11 @@ class PageHeaderBar extends StatelessWidget {
         if (breadcrumb != null && breadcrumb!.trim().isNotEmpty) ...[
           Text(
             breadcrumb!,
-            style: breadcrumbStyle ??
-                theme.textTheme.bodySmall
-                    ?.copyWith(color: colors?.subtleText ?? theme.hintColor),
+            style:
+                breadcrumbStyle ??
+                theme.textTheme.bodySmall?.copyWith(
+                  color: colors?.subtleText ?? theme.hintColor,
+                ),
           ),
           SizedBox(height: breadcrumbBottomSpacing),
         ],
@@ -80,8 +82,9 @@ class PageHeaderBar extends StatelessWidget {
         border: showDivider
             ? Border(
                 bottom: BorderSide(
-                  color: theme.dividerColor
-                      .withValues(alpha: OpacityTokens.intense),
+                  color: theme.dividerColor.withValues(
+                    alpha: OpacityTokens.intense,
+                  ),
                 ),
               )
             : null,
@@ -95,7 +98,7 @@ class PageActionStyle {
   const PageActionStyle._();
 
   static const double height = 36;
-  static const double radius = LayoutTokens.radiusSm;
+  static const double radius = RadiusTokens.sm;
   static const double minWidth = 88;
   static const double iconButtonSize = 36;
 }
@@ -138,23 +141,27 @@ class PageActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasLabel = label != null && label!.trim().isNotEmpty;
     final isSquare = square || (!hasLabel && icon != null);
-    final effectivePadding = padding ??
+    final effectivePadding =
+        padding ??
         EdgeInsets.symmetric(
           horizontal: hasLabel
               ? (variant == PageActionVariant.filled
-                  ? LayoutTokens.gapMd
-                  : LayoutTokens.cardPaddingSm)
+                    ? SpacingTokens.md
+                    : LayoutTokens.cardPaddingSm)
               : 0,
         );
 
     final style = variant == PageActionVariant.filled
         ? FilledButton.styleFrom(
             minimumSize: Size(
-                isSquare ? PageActionStyle.iconButtonSize : (minWidth ?? 0),
-                PageActionStyle.height),
+              isSquare ? PageActionStyle.iconButtonSize : (minWidth ?? 0),
+              PageActionStyle.height,
+            ),
             fixedSize: isSquare
                 ? const Size(
-                    PageActionStyle.iconButtonSize, PageActionStyle.height)
+                    PageActionStyle.iconButtonSize,
+                    PageActionStyle.height,
+                  )
                 : null,
             padding: effectivePadding,
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -172,7 +179,9 @@ class PageActionButton extends StatelessWidget {
             ),
             fixedSize: isSquare
                 ? const Size(
-                    PageActionStyle.iconButtonSize, PageActionStyle.height)
+                    PageActionStyle.iconButtonSize,
+                    PageActionStyle.height,
+                  )
                 : null,
             padding: effectivePadding,
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -241,10 +250,7 @@ class PageActionButton extends StatelessWidget {
 }
 
 class WorkbenchStatItem {
-  const WorkbenchStatItem({
-    required this.label,
-    required this.value,
-  });
+  const WorkbenchStatItem({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -294,7 +300,7 @@ class WorkbenchHeaderBar extends StatelessWidget {
 
     return AppCard(
       padding: EdgeInsets.all(cardPadding),
-      radius: isXs ? LayoutTokens.radiusMd : LayoutTokens.radiusLg,
+      radius: isXs ? RadiusTokens.md : RadiusTokens.lg,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -305,8 +311,9 @@ class WorkbenchHeaderBar extends StatelessWidget {
               breadcrumb!,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style:
-                  theme.textTheme.bodySmall?.copyWith(color: colors.subtleText),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colors.subtleText,
+              ),
             ),
             SizedBox(height: breadcrumbSpacing),
           ],
@@ -325,13 +332,14 @@ class WorkbenchHeaderBar extends StatelessWidget {
                             title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: (isXs
-                                    ? theme.textTheme.titleMedium
-                                    : theme.textTheme.titleLarge)
-                                ?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: colors.sidebarText,
-                            ),
+                            style:
+                                (isXs
+                                        ? theme.textTheme.titleMedium
+                                        : theme.textTheme.titleLarge)
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: colors.sidebarText,
+                                    ),
                           ),
                           if (subtitle.trim().isNotEmpty &&
                               !(isMobile && hideSubtitleOnMobile)) ...[
@@ -419,10 +427,7 @@ class WorkbenchHeaderBar extends StatelessWidget {
 }
 
 class WorkbenchStatChip extends StatelessWidget {
-  const WorkbenchStatChip({
-    super.key,
-    required this.item,
-  });
+  const WorkbenchStatChip({super.key, required this.item});
 
   final WorkbenchStatItem item;
 
@@ -434,13 +439,16 @@ class WorkbenchStatChip extends StatelessWidget {
 
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: isXs ? LayoutTokens.cardPaddingSm : LayoutTokens.gapMd,
-        vertical: isXs ? LayoutTokens.gapSm : LayoutTokens.cardPaddingSm,
+        horizontal: isXs ? LayoutTokens.cardPaddingSm : SpacingTokens.md,
+        vertical: isXs ? SpacingTokens.sm : LayoutTokens.cardPaddingSm,
       ),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLowest.withValues(alpha: OpacityTokens.surfaceOverlay),
+        color: theme.colorScheme.surfaceContainerLowest.withValues(
+          alpha: OpacityTokens.surfaceOverlay,
+        ),
         borderRadius: BorderRadius.circular(
-            isXs ? LayoutTokens.radiusMd : LayoutTokens.radiusLg),
+          isXs ? RadiusTokens.md : RadiusTokens.lg,
+        ),
         border: Border.all(color: colors.borderColor),
       ),
       child: Column(
@@ -449,18 +457,19 @@ class WorkbenchStatChip extends StatelessWidget {
         children: [
           Text(
             item.label,
-            style:
-                theme.textTheme.bodySmall?.copyWith(color: colors.subtleText),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colors.subtleText,
+            ),
           ),
-          SizedBox(height: LayoutTokens.gapXs),
+          SizedBox(height: SpacingTokens.xs),
           Text(
             item.value,
             style:
                 (isXs ? theme.textTheme.titleSmall : theme.textTheme.titleSmall)
                     ?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: colors.sidebarText,
-            ),
+                      fontWeight: FontWeight.w700,
+                      color: colors.sidebarText,
+                    ),
           ),
         ],
       ),

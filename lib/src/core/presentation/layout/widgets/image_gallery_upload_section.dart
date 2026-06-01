@@ -62,8 +62,8 @@ class ImageGalleryUploadSection<T> extends StatelessWidget {
           )
         else
           Wrap(
-            spacing: LayoutTokens.gapSm,
-            runSpacing: LayoutTokens.gapSm,
+            spacing: SpacingTokens.sm,
+            runSpacing: SpacingTokens.sm,
             children: images.asMap().entries.map((entry) {
               final image = entry.value;
               final description = descriptionBuilder?.call(image)?.trim() ?? '';
@@ -170,7 +170,7 @@ class _ImageGalleryTile extends StatelessWidget {
         children: [
           Positioned.fill(
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+              borderRadius: BorderRadius.circular(RadiusTokens.sm),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
@@ -232,7 +232,7 @@ class _ImageGalleryTile extends StatelessWidget {
       height: 100,
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+        borderRadius: BorderRadius.circular(RadiusTokens.sm),
       ),
       child: Icon(Icons.broken_image, color: subtleText),
     );
@@ -282,10 +282,10 @@ class _ImagePreviewDialogState extends State<_ImagePreviewDialog> {
         : currentImage.description;
 
     return Dialog(
-      insetPadding: const EdgeInsets.all(LayoutTokens.gapLg),
+      insetPadding: const EdgeInsets.all(SpacingTokens.lg),
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+        borderRadius: BorderRadius.circular(RadiusTokens.sm),
       ),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 960, maxHeight: 720),
@@ -295,10 +295,10 @@ class _ImagePreviewDialogState extends State<_ImagePreviewDialog> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                LayoutTokens.gapMd,
-                LayoutTokens.gapSm,
-                LayoutTokens.gapSm,
-                LayoutTokens.gapSm,
+                SpacingTokens.md,
+                SpacingTokens.sm,
+                SpacingTokens.sm,
+                SpacingTokens.sm,
               ),
               child: Row(
                 children: [
@@ -363,7 +363,7 @@ class _ImagePreviewDialogState extends State<_ImagePreviewDialog> {
             ),
             if (widget.images.length > 1)
               Padding(
-                padding: const EdgeInsets.all(LayoutTokens.gapSm),
+                padding: const EdgeInsets.all(SpacingTokens.sm),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -374,7 +374,7 @@ class _ImagePreviewDialogState extends State<_ImagePreviewDialog> {
                       icon: const Icon(Icons.chevron_left),
                       label: const Text('上一张'),
                     ),
-                    SizedBox(width: LayoutTokens.gapSm),
+                    SizedBox(width: SpacingTokens.sm),
                     TextButton.icon(
                       onPressed: _currentIndex == widget.images.length - 1
                           ? null

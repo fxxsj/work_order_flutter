@@ -18,10 +18,7 @@ class MaterialViewModel extends PaginatedViewModel<MaterialItem> {
   bool get loadingSupplierOptions => _loadingSupplierOptions;
 
   Future<void> initialize() async {
-    await Future.wait([
-      loadSupplierOptions(),
-      loadItems(resetPage: true),
-    ]);
+    await Future.wait([loadSupplierOptions(), loadItems(resetPage: true)]);
   }
 
   Future<void> loadMaterials({bool resetPage = false}) =>

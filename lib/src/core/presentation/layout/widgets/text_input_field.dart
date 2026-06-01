@@ -148,32 +148,20 @@ class _TextInputFieldState extends State<TextInputField> {
         filled: true,
         fillColor: theme.colorScheme.surfaceContainerLowest,
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-          borderSide: BorderSide(
-            color: theme.colorScheme.outline,
-            width: 1,
-          ),
+          borderRadius: BorderRadius.circular(RadiusTokens.sm),
+          borderSide: BorderSide(color: theme.colorScheme.outline, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-          borderSide: BorderSide(
-            color: theme.colorScheme.primary,
-            width: 2,
-          ),
+          borderRadius: BorderRadius.circular(RadiusTokens.sm),
+          borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-          borderSide: BorderSide(
-            color: theme.colorScheme.error,
-            width: 1,
-          ),
+          borderRadius: BorderRadius.circular(RadiusTokens.sm),
+          borderSide: BorderSide(color: theme.colorScheme.error, width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
-          borderSide: BorderSide(
-            color: theme.colorScheme.error,
-            width: 2,
-          ),
+          borderRadius: BorderRadius.circular(RadiusTokens.sm),
+          borderSide: BorderSide(color: theme.colorScheme.error, width: 2),
         ),
       ),
     );

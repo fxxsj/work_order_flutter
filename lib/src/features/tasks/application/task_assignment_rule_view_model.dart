@@ -3,7 +3,8 @@ import 'package:work_order_app/src/features/tasks/data/task_assignment_rule_dto.
 import 'package:work_order_app/src/features/tasks/domain/task_assignment_rule.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_assignment_rule_repository.dart';
 
-class TaskAssignmentRuleViewModel extends PaginatedViewModel<TaskAssignmentRule> {
+class TaskAssignmentRuleViewModel
+    extends PaginatedViewModel<TaskAssignmentRule> {
   TaskAssignmentRuleViewModel(this._repository);
 
   final TaskAssignmentRuleRepository _repository;
@@ -19,7 +20,8 @@ class TaskAssignmentRuleViewModel extends PaginatedViewModel<TaskAssignmentRule>
 
   Future<void> initialize() => loadItems(resetPage: true);
 
-  Future<void> loadRules({bool resetPage = false}) => loadItems(resetPage: resetPage);
+  Future<void> loadRules({bool resetPage = false}) =>
+      loadItems(resetPage: resetPage);
 
   void setProcessId(int? value) {
     _processId = value;

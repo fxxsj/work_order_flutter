@@ -13,10 +13,7 @@ Future<MaterialItem?> showQuickMaterialCreateDialog({
   await viewModel.initialize();
   final beforeIds = viewModel.materials.map((item) => item.id).toSet();
 
-  final saved = await showMaterialEditDrawer(
-    context,
-    viewModel: viewModel,
-  );
+  final saved = await showMaterialEditDrawer(context, viewModel: viewModel);
   if (!saved) {
     return null;
   }

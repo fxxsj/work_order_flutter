@@ -29,31 +29,31 @@ class ProductListPage extends StatelessWidget {
 
   static const CrudListConfig<Product, ProductViewModel> _config =
       CrudListConfig(
-    searchHintText: '搜索产品名称/编码',
-    emptyText: '暂无产品数据',
-    emptyIcon: Icons.inventory_2_outlined,
-    loadItems: _loadProducts,
-    titleBuilder: _titleText,
-    subtitleBuilder: _subtitleText,
-    summaryChipsBuilder: _summaryChips,
-    summaryFieldsBuilder: _summaryFields,
-    headerActionsBuilder: _headerActions,
-    rowActionsBuilder: _rowActions,
-    onItemTap: _onItemTap,
-    mobileFieldsBuilder: _buildMobileFields,
-    columns: [
-      CrudTableColumn(label: '产品', cellBuilder: _buildNameCell),
-      CrudTableColumn(label: '编码', cellBuilder: _buildCodeCell),
-      CrudTableColumn(label: '类型', cellBuilder: _buildTypeCell),
-      CrudTableColumn(label: '产品组', cellBuilder: _buildGroupCell),
-      CrudTableColumn(label: '规格', cellBuilder: _buildSpecificationCell),
-      CrudTableColumn(label: '单位', cellBuilder: _buildUnitCell),
-      CrudTableColumn(label: '单价', cellBuilder: _buildPriceCell),
-      CrudTableColumn(label: '库存', cellBuilder: _buildStockCell),
-      CrudTableColumn(label: '最小库存', cellBuilder: _buildMinStockCell),
-      CrudTableColumn(label: '状态', cellBuilder: _buildStatusCell),
-    ],
-  );
+        searchHintText: '搜索产品名称/编码',
+        emptyText: '暂无产品数据',
+        emptyIcon: Icons.inventory_2_outlined,
+        loadItems: _loadProducts,
+        titleBuilder: _titleText,
+        subtitleBuilder: _subtitleText,
+        summaryChipsBuilder: _summaryChips,
+        summaryFieldsBuilder: _summaryFields,
+        headerActionsBuilder: _headerActions,
+        rowActionsBuilder: _rowActions,
+        onItemTap: _onItemTap,
+        mobileFieldsBuilder: _buildMobileFields,
+        columns: [
+          CrudTableColumn(label: '产品', cellBuilder: _buildNameCell),
+          CrudTableColumn(label: '编码', cellBuilder: _buildCodeCell),
+          CrudTableColumn(label: '类型', cellBuilder: _buildTypeCell),
+          CrudTableColumn(label: '产品组', cellBuilder: _buildGroupCell),
+          CrudTableColumn(label: '规格', cellBuilder: _buildSpecificationCell),
+          CrudTableColumn(label: '单位', cellBuilder: _buildUnitCell),
+          CrudTableColumn(label: '单价', cellBuilder: _buildPriceCell),
+          CrudTableColumn(label: '库存', cellBuilder: _buildStockCell),
+          CrudTableColumn(label: '最小库存', cellBuilder: _buildMinStockCell),
+          CrudTableColumn(label: '状态', cellBuilder: _buildStatusCell),
+        ],
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -82,10 +82,7 @@ class ProductListPage extends StatelessWidget {
     }
   }
 
-  static Future<void> _openDetailPage(
-    BuildContext context,
-    Product product,
-  ) {
+  static Future<void> _openDetailPage(BuildContext context, Product product) {
     return context.pushNamed<void>(
       'products_detail',
       pathParameters: {'id': product.id.toString()},
@@ -297,13 +294,10 @@ class ProductListPage extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 72,
-            child: Text(label, style: labelStyle),
-          ),
+          SizedBox(width: 72, child: Text(label, style: labelStyle)),
           Expanded(
             child: Text(
-              value.isEmpty ? CrudValueFormatter.empty : value,
+              value.isEmpty ? AppValueFormatter.empty : value,
               style: theme.textTheme.bodyMedium,
             ),
           ),
@@ -312,22 +306,22 @@ class ProductListPage extends StatelessWidget {
     );
   }
 
-  static String _productCode(Product p) => CrudValueFormatter.text(p.code);
+  static String _productCode(Product p) => AppValueFormatter.text(p.code);
   static String _productType(Product p) => _productTypeText(p);
   static String _productGroup(Product p) =>
-      CrudValueFormatter.text(p.productGroupName);
+      AppValueFormatter.text(p.productGroupName);
   static String _productSpec(Product p) =>
-      CrudValueFormatter.text(p.specification);
-  static String _productUnit(Product p) => CrudValueFormatter.text(p.unit);
+      AppValueFormatter.text(p.specification);
+  static String _productUnit(Product p) => AppValueFormatter.text(p.unit);
   static String _productPrice(Product p) =>
-      CrudValueFormatter.amount(p.unitPrice);
+      AppValueFormatter.amount(p.unitPrice);
   static String _productStock(Product p) =>
-      CrudValueFormatter.amount(p.stockQuantity);
+      AppValueFormatter.amount(p.stockQuantity);
   static String _productMinStock(Product p) =>
-      CrudValueFormatter.amount(p.minStockQuantity);
+      AppValueFormatter.amount(p.minStockQuantity);
   static String _productStatus(Product p) => _statusText(p);
   static String _productDesc(Product p) =>
-      CrudValueFormatter.text(p.description);
+      AppValueFormatter.text(p.description);
 
   static Widget _buildNameCell(BuildContext context, Product product) {
     final theme = Theme.of(context);
@@ -347,7 +341,7 @@ class ProductListPage extends StatelessWidget {
   }
 
   static Widget _buildCodeCell(BuildContext context, Product product) {
-    return _buildBodyText(context, CrudValueFormatter.text(product.code));
+    return _buildBodyText(context, AppValueFormatter.text(product.code));
   }
 
   static Widget _buildTypeCell(BuildContext context, Product product) {
@@ -357,37 +351,36 @@ class ProductListPage extends StatelessWidget {
   static Widget _buildGroupCell(BuildContext context, Product product) {
     return _buildBodyText(
       context,
-      CrudValueFormatter.text(product.productGroupName),
+      AppValueFormatter.text(product.productGroupName),
     );
   }
 
   static Widget _buildSpecificationCell(BuildContext context, Product product) {
     return _buildBodyText(
       context,
-      CrudValueFormatter.text(product.specification),
+      AppValueFormatter.text(product.specification),
     );
   }
 
   static Widget _buildUnitCell(BuildContext context, Product product) {
-    return _buildBodyText(context, CrudValueFormatter.text(product.unit));
+    return _buildBodyText(context, AppValueFormatter.text(product.unit));
   }
 
   static Widget _buildPriceCell(BuildContext context, Product product) {
-    return _buildBodyText(
-        context, CrudValueFormatter.amount(product.unitPrice));
+    return _buildBodyText(context, AppValueFormatter.amount(product.unitPrice));
   }
 
   static Widget _buildStockCell(BuildContext context, Product product) {
     return _buildBodyText(
       context,
-      CrudValueFormatter.amount(product.stockQuantity),
+      AppValueFormatter.amount(product.stockQuantity),
     );
   }
 
   static Widget _buildMinStockCell(BuildContext context, Product product) {
     return _buildBodyText(
       context,
-      CrudValueFormatter.amount(product.minStockQuantity),
+      AppValueFormatter.amount(product.minStockQuantity),
     );
   }
 
@@ -396,18 +389,15 @@ class ProductListPage extends StatelessWidget {
   }
 
   static Widget _buildBodyText(BuildContext context, String value) {
-    return Text(
-      value,
-      style: Theme.of(context).textTheme.bodySmall,
-    );
+    return Text(value, style: Theme.of(context).textTheme.bodySmall);
   }
 
   static String _titleText(Product product) {
-    return CrudValueFormatter.text(product.name);
+    return AppValueFormatter.text(product.name);
   }
 
   static String _subtitleText(Product product) {
-    return '${CrudValueFormatter.text(product.code)} · ${_productTypeText(product)}';
+    return '${AppValueFormatter.text(product.code)} · ${_productTypeText(product)}';
   }
 
   static String _productTypeText(Product product) {
@@ -423,14 +413,14 @@ class ProductListPage extends StatelessWidget {
       case 'single':
         return '单品';
       default:
-        return CrudValueFormatter.empty;
+        return AppValueFormatter.empty;
     }
   }
 
   static String _statusText(Product product) {
     final isActive = product.isActive;
     if (isActive == null) {
-      return CrudValueFormatter.empty;
+      return AppValueFormatter.empty;
     }
     return isActive ? '启用' : '停用';
   }
@@ -440,15 +430,15 @@ class ProductListPage extends StatelessWidget {
       CrudSummaryChipData(label: '状态', value: _statusText(product)),
       CrudSummaryChipData(
         label: '单价',
-        value: CrudValueFormatter.amount(product.unitPrice),
+        value: AppValueFormatter.amount(product.unitPrice),
       ),
       CrudSummaryChipData(
         label: '库存',
-        value: CrudValueFormatter.amount(product.stockQuantity),
+        value: AppValueFormatter.amount(product.stockQuantity),
       ),
       CrudSummaryChipData(
         label: '最小库存',
-        value: CrudValueFormatter.amount(product.minStockQuantity),
+        value: AppValueFormatter.amount(product.minStockQuantity),
       ),
     ];
   }
@@ -457,43 +447,37 @@ class ProductListPage extends StatelessWidget {
     return [
       CrudSummaryFieldData(
         label: '产品编码',
-        value: CrudValueFormatter.text(product.code),
+        value: AppValueFormatter.text(product.code),
       ),
-      CrudSummaryFieldData(
-        label: '产品类型',
-        value: _productTypeText(product),
-      ),
+      CrudSummaryFieldData(label: '产品类型', value: _productTypeText(product)),
       CrudSummaryFieldData(
         label: '产品组',
-        value: CrudValueFormatter.text(product.productGroupName),
+        value: AppValueFormatter.text(product.productGroupName),
       ),
       CrudSummaryFieldData(
         label: '规格',
-        value: CrudValueFormatter.text(product.specification),
+        value: AppValueFormatter.text(product.specification),
       ),
       CrudSummaryFieldData(
         label: '单位',
-        value: CrudValueFormatter.text(product.unit),
+        value: AppValueFormatter.text(product.unit),
       ),
       CrudSummaryFieldData(
         label: '单价',
-        value: CrudValueFormatter.amount(product.unitPrice),
+        value: AppValueFormatter.amount(product.unitPrice),
       ),
       CrudSummaryFieldData(
         label: '库存',
-        value: CrudValueFormatter.amount(product.stockQuantity),
+        value: AppValueFormatter.amount(product.stockQuantity),
       ),
       CrudSummaryFieldData(
         label: '最小库存',
-        value: CrudValueFormatter.amount(product.minStockQuantity),
+        value: AppValueFormatter.amount(product.minStockQuantity),
       ),
-      CrudSummaryFieldData(
-        label: '状态',
-        value: _statusText(product),
-      ),
+      CrudSummaryFieldData(label: '状态', value: _statusText(product)),
       CrudSummaryFieldData(
         label: '描述',
-        value: CrudValueFormatter.text(product.description),
+        value: AppValueFormatter.text(product.description),
       ),
     ];
   }
@@ -504,7 +488,7 @@ class ProductListPage extends StatelessWidget {
 
   static List<String> _buildDeleteImpacts(Product product) {
     return [
-      '产品编码：${CrudValueFormatter.text(product.code)}',
+      '产品编码：${AppValueFormatter.text(product.code)}',
       '产品类型：${_productTypeText(product)}',
       if ((product.productGroupName ?? '').trim().isNotEmpty)
         '所属产品组：${product.productGroupName!.trim()}',

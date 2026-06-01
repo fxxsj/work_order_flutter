@@ -11,7 +11,10 @@ abstract class WorkOrderProductRepository {
 
   Future<Map<String, dynamic>> createProduct(Map<String, dynamic> payload);
 
-  Future<Map<String, dynamic>> updateProduct(int id, Map<String, dynamic> payload);
+  Future<Map<String, dynamic>> updateProduct(
+    int id,
+    Map<String, dynamic> payload,
+  );
 
   Future<void> deleteProduct(int id);
 }

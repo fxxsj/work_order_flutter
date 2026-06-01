@@ -12,7 +12,7 @@ Future<void> showDeliveryShipDialog(
   required String initialLogisticsCompany,
   required String initialTrackingNumber,
   required Future<void> Function(String logisticsCompany, String trackingNumber)
-      onSubmit,
+  onSubmit,
 }) async {
   await showDialog<void>(
     context: context,
@@ -79,7 +79,7 @@ class _DeliveryShipDialog extends StatefulWidget {
   final String initialLogisticsCompany;
   final String initialTrackingNumber;
   final Future<void> Function(String logisticsCompany, String trackingNumber)
-      onSubmit;
+  onSubmit;
 
   @override
   State<_DeliveryShipDialog> createState() => _DeliveryShipDialogState();
@@ -87,10 +87,12 @@ class _DeliveryShipDialog extends StatefulWidget {
 
 class _DeliveryShipDialogState extends State<_DeliveryShipDialog> {
   final formKey = GlobalKey<FormState>();
-  late final TextEditingController logisticsController =
-      TextEditingController(text: widget.initialLogisticsCompany);
-  late final TextEditingController trackingController =
-      TextEditingController(text: widget.initialTrackingNumber);
+  late final TextEditingController logisticsController = TextEditingController(
+    text: widget.initialLogisticsCompany,
+  );
+  late final TextEditingController trackingController = TextEditingController(
+    text: widget.initialTrackingNumber,
+  );
   bool submitting = false;
 
   @override
@@ -117,7 +119,7 @@ class _DeliveryShipDialogState extends State<_DeliveryShipDialog> {
             label: '物流公司',
             controller: logisticsController,
           ).build(context),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           CrudFieldConfig.text(
             label: '运单号',
             controller: trackingController,
@@ -241,10 +243,7 @@ class _DeliveryRejectDialogState extends State<_DeliveryRejectDialog> {
       maxWidth: LayoutTokens.dialogWidthSm,
       destructive: true,
       summary: '提交后会把发货数量回退到库存，并把送货单标记为拒收。',
-      impacts: const [
-        '请确认拒收原因和实际收货情况一致',
-        '拒收后库存与发货状态会同步回滚',
-      ],
+      impacts: const ['请确认拒收原因和实际收货情况一致', '拒收后库存与发货状态会同步回滚'],
       auditHint: '拒收原因会进入发货与库存流转记录。',
       onSubmit: _submit,
       content: CrudFieldConfig.textarea(

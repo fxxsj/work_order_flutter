@@ -46,17 +46,21 @@ class _ExpandableSummaryCardState extends State<ExpandableSummaryCard>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
-    final resolvedRadius = widget.radius ?? LayoutTokens.radiusLg;
-    final resolvedBorderColor = widget.borderColor ??
+    final resolvedRadius = widget.radius ?? RadiusTokens.lg;
+    final resolvedBorderColor =
+        widget.borderColor ??
         (colors?.borderColor ??
             theme.dividerColor.withValues(alpha: OpacityTokens.intense));
-    final resolvedBackground = widget.backgroundColor ??
+    final resolvedBackground =
+        widget.backgroundColor ??
         (colors?.surface ?? theme.colorScheme.surface);
     final resolvedHeaderPadding =
-        (widget.headerPadding ?? LayoutTokens.cardPadding(context))
-            .resolve(Directionality.of(context));
+        (widget.headerPadding ?? LayoutTokens.cardPadding(context)).resolve(
+          Directionality.of(context),
+        );
     final expandedSpacing = LayoutTokens.sectionSpacing(context);
-    final resolvedExpandedPadding = widget.expandedPadding ??
+    final resolvedExpandedPadding =
+        widget.expandedPadding ??
         EdgeInsets.fromLTRB(
           resolvedHeaderPadding.left,
           expandedSpacing,

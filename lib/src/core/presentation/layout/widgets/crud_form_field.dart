@@ -58,27 +58,26 @@ sealed class CrudFieldConfig {
     bool isDense = false,
     bool readOnly = false,
     VoidCallback? onTap,
-  }) =>
-      TextFieldConfig(
-        label: label,
-        fieldKey: fieldKey,
-        controller: controller,
-        validator: validator,
-        enabled: enabled,
-        hintText: hintText,
-        helperText: helperText,
-        keyboardType: keyboardType,
-        initialValue: initialValue,
-        prefixIcon: prefixIcon,
-        suffixIcon: suffixIcon,
-        textInputAction: textInputAction,
-        obscureText: obscureText,
-        onChanged: onChanged,
-        onFieldSubmitted: onFieldSubmitted,
-        isDense: isDense,
-        readOnly: readOnly,
-        onTap: onTap,
-      );
+  }) => TextFieldConfig(
+    label: label,
+    fieldKey: fieldKey,
+    controller: controller,
+    validator: validator,
+    enabled: enabled,
+    hintText: hintText,
+    helperText: helperText,
+    keyboardType: keyboardType,
+    initialValue: initialValue,
+    prefixIcon: prefixIcon,
+    suffixIcon: suffixIcon,
+    textInputAction: textInputAction,
+    obscureText: obscureText,
+    onChanged: onChanged,
+    onFieldSubmitted: onFieldSubmitted,
+    isDense: isDense,
+    readOnly: readOnly,
+    onTap: onTap,
+  );
 
   static CrudFieldConfig number({
     required String label,
@@ -96,24 +95,23 @@ sealed class CrudFieldConfig {
     ValueChanged<String>? onChanged,
     ValueChanged<String>? onFieldSubmitted,
     bool isDense = false,
-  }) =>
-      NumberFieldConfig(
-        label: label,
-        fieldKey: fieldKey,
-        controller: controller,
-        validator: validator,
-        enabled: enabled,
-        hintText: hintText,
-        helperText: helperText,
-        decimal: decimal,
-        initialValue: initialValue,
-        prefixIcon: prefixIcon,
-        suffixIcon: suffixIcon,
-        textInputAction: textInputAction,
-        onChanged: onChanged,
-        onFieldSubmitted: onFieldSubmitted,
-        isDense: isDense,
-      );
+  }) => NumberFieldConfig(
+    label: label,
+    fieldKey: fieldKey,
+    controller: controller,
+    validator: validator,
+    enabled: enabled,
+    hintText: hintText,
+    helperText: helperText,
+    decimal: decimal,
+    initialValue: initialValue,
+    prefixIcon: prefixIcon,
+    suffixIcon: suffixIcon,
+    textInputAction: textInputAction,
+    onChanged: onChanged,
+    onFieldSubmitted: onFieldSubmitted,
+    isDense: isDense,
+  );
 
   static CrudFieldConfig email({
     required String label,
@@ -128,21 +126,20 @@ sealed class CrudFieldConfig {
     TextInputAction? textInputAction,
     ValueChanged<String>? onChanged,
     ValueChanged<String>? onFieldSubmitted,
-  }) =>
-      EmailFieldConfig(
-        label: label,
-        fieldKey: fieldKey,
-        controller: controller,
-        validator: validator,
-        enabled: enabled,
-        hintText: hintText,
-        helperText: helperText,
-        prefixIcon: prefixIcon,
-        suffixIcon: suffixIcon,
-        textInputAction: textInputAction,
-        onChanged: onChanged,
-        onFieldSubmitted: onFieldSubmitted,
-      );
+  }) => EmailFieldConfig(
+    label: label,
+    fieldKey: fieldKey,
+    controller: controller,
+    validator: validator,
+    enabled: enabled,
+    hintText: hintText,
+    helperText: helperText,
+    prefixIcon: prefixIcon,
+    suffixIcon: suffixIcon,
+    textInputAction: textInputAction,
+    onChanged: onChanged,
+    onFieldSubmitted: onFieldSubmitted,
+  );
 
   static CrudFieldConfig phone({
     required String label,
@@ -157,21 +154,20 @@ sealed class CrudFieldConfig {
     TextInputAction? textInputAction,
     ValueChanged<String>? onChanged,
     ValueChanged<String>? onFieldSubmitted,
-  }) =>
-      PhoneFieldConfig(
-        label: label,
-        fieldKey: fieldKey,
-        controller: controller,
-        validator: validator,
-        enabled: enabled,
-        hintText: hintText,
-        helperText: helperText,
-        prefixIcon: prefixIcon,
-        suffixIcon: suffixIcon,
-        textInputAction: textInputAction,
-        onChanged: onChanged,
-        onFieldSubmitted: onFieldSubmitted,
-      );
+  }) => PhoneFieldConfig(
+    label: label,
+    fieldKey: fieldKey,
+    controller: controller,
+    validator: validator,
+    enabled: enabled,
+    hintText: hintText,
+    helperText: helperText,
+    prefixIcon: prefixIcon,
+    suffixIcon: suffixIcon,
+    textInputAction: textInputAction,
+    onChanged: onChanged,
+    onFieldSubmitted: onFieldSubmitted,
+  );
 
   static CrudFieldConfig dropdown({
     required String label,
@@ -192,27 +188,26 @@ sealed class CrudFieldConfig {
     String clearText = '清空',
     String confirmText = '确定',
     String cancelText = '取消',
-  }) =>
-      DropdownFieldConfig(
-        label: label,
-        fieldKey: fieldKey,
-        options: options,
-        value: value,
-        onChanged: onChanged,
-        validator: validator,
-        enabled: enabled,
-        hintText: hintText,
-        helperText: helperText,
-        isMultiSelect: isMultiSelect,
-        minOptionsForSearch: minOptionsForSearch,
-        searchHintText: searchHintText,
-        emptyText: emptyText,
-        noResultsText: noResultsText,
-        selectHintText: selectHintText,
-        clearText: clearText,
-        confirmText: confirmText,
-        cancelText: cancelText,
-      );
+  }) => DropdownFieldConfig(
+    label: label,
+    fieldKey: fieldKey,
+    options: options,
+    value: value,
+    onChanged: onChanged,
+    validator: validator,
+    enabled: enabled,
+    hintText: hintText,
+    helperText: helperText,
+    isMultiSelect: isMultiSelect,
+    minOptionsForSearch: minOptionsForSearch,
+    searchHintText: searchHintText,
+    emptyText: emptyText,
+    noResultsText: noResultsText,
+    selectHintText: selectHintText,
+    clearText: clearText,
+    confirmText: confirmText,
+    cancelText: cancelText,
+  );
 
   static CrudFieldConfig date({
     required String label,
@@ -224,18 +219,17 @@ sealed class CrudFieldConfig {
     String? helperText,
     bool readOnly = true,
     VoidCallback? onTap,
-  }) =>
-      DateFieldConfig(
-        label: label,
-        fieldKey: fieldKey,
-        controller: controller,
-        validator: validator,
-        enabled: enabled,
-        hintText: hintText,
-        helperText: helperText,
-        readOnly: readOnly,
-        onTap: onTap,
-      );
+  }) => DateFieldConfig(
+    label: label,
+    fieldKey: fieldKey,
+    controller: controller,
+    validator: validator,
+    enabled: enabled,
+    hintText: hintText,
+    helperText: helperText,
+    readOnly: readOnly,
+    onTap: onTap,
+  );
 
   static CrudFieldConfig dateRange({
     required String label,
@@ -251,22 +245,21 @@ sealed class CrudFieldConfig {
     String clearText = '清空',
     String confirmText = '确定',
     String cancelText = '取消',
-  }) =>
-      DateRangeFieldConfig(
-        label: label,
-        fieldKey: fieldKey,
-        startController: startController,
-        endController: endController,
-        validator: validator,
-        enabled: enabled,
-        hintText: hintText,
-        helperText: helperText,
-        firstDate: firstDate,
-        lastDate: lastDate,
-        clearText: clearText,
-        confirmText: confirmText,
-        cancelText: cancelText,
-      );
+  }) => DateRangeFieldConfig(
+    label: label,
+    fieldKey: fieldKey,
+    startController: startController,
+    endController: endController,
+    validator: validator,
+    enabled: enabled,
+    hintText: hintText,
+    helperText: helperText,
+    firstDate: firstDate,
+    lastDate: lastDate,
+    clearText: clearText,
+    confirmText: confirmText,
+    cancelText: cancelText,
+  );
 
   static CrudFieldConfig textarea({
     required String label,
@@ -282,22 +275,21 @@ sealed class CrudFieldConfig {
     Widget? suffixIcon,
     ValueChanged<String>? onChanged,
     bool isDense = false,
-  }) =>
-      TextareaFieldConfig(
-        label: label,
-        fieldKey: fieldKey,
-        controller: controller,
-        validator: validator,
-        enabled: enabled,
-        hintText: hintText,
-        helperText: helperText,
-        minLines: minLines,
-        maxLines: maxLines,
-        prefixIcon: prefixIcon,
-        suffixIcon: suffixIcon,
-        onChanged: onChanged,
-        isDense: isDense,
-      );
+  }) => TextareaFieldConfig(
+    label: label,
+    fieldKey: fieldKey,
+    controller: controller,
+    validator: validator,
+    enabled: enabled,
+    hintText: hintText,
+    helperText: helperText,
+    minLines: minLines,
+    maxLines: maxLines,
+    prefixIcon: prefixIcon,
+    suffixIcon: suffixIcon,
+    onChanged: onChanged,
+    isDense: isDense,
+  );
 
   static CrudFieldConfig toggle({
     required String label,
@@ -306,15 +298,14 @@ sealed class CrudFieldConfig {
     ValueChanged<bool>? onChanged,
     bool enabled = true,
     String? helperText,
-  }) =>
-      ToggleFieldConfig(
-        label: label,
-        fieldKey: fieldKey,
-        value: value,
-        onChanged: onChanged,
-        enabled: enabled,
-        helperText: helperText,
-      );
+  }) => ToggleFieldConfig(
+    label: label,
+    fieldKey: fieldKey,
+    value: value,
+    onChanged: onChanged,
+    enabled: enabled,
+    helperText: helperText,
+  );
 
   static CrudFieldConfig fileUpload({
     required String label,
@@ -328,20 +319,19 @@ sealed class CrudFieldConfig {
     required List<String> allowedExtensions,
     String fallbackFilename = 'upload.bin',
     FileUploadPicker? picker,
-  }) =>
-      FileUploadFieldConfig(
-        label: label,
-        fieldKey: fieldKey,
-        value: value,
-        onChanged: onChanged,
-        validator: validator,
-        enabled: enabled,
-        hintText: hintText,
-        helperText: helperText,
-        allowedExtensions: allowedExtensions,
-        fallbackFilename: fallbackFilename,
-        picker: picker,
-      );
+  }) => FileUploadFieldConfig(
+    label: label,
+    fieldKey: fieldKey,
+    value: value,
+    onChanged: onChanged,
+    validator: validator,
+    enabled: enabled,
+    hintText: hintText,
+    helperText: helperText,
+    allowedExtensions: allowedExtensions,
+    fallbackFilename: fallbackFilename,
+    picker: picker,
+  );
 
   static CrudFieldConfig multiSelect({
     required String label,
@@ -359,24 +349,23 @@ sealed class CrudFieldConfig {
     String clearText = '清空',
     String confirmText = '确定',
     String cancelText = '取消',
-  }) =>
-      MultiSelectFieldConfig(
-        label: label,
-        fieldKey: fieldKey,
-        options: options,
-        values: values,
-        onChanged: onChanged,
-        validator: validator,
-        enabled: enabled,
-        hintText: hintText,
-        helperText: helperText,
-        emptyText: emptyText,
-        searchHintText: searchHintText,
-        noResultsText: noResultsText,
-        clearText: clearText,
-        confirmText: confirmText,
-        cancelText: cancelText,
-      );
+  }) => MultiSelectFieldConfig(
+    label: label,
+    fieldKey: fieldKey,
+    options: options,
+    values: values,
+    onChanged: onChanged,
+    validator: validator,
+    enabled: enabled,
+    hintText: hintText,
+    helperText: helperText,
+    emptyText: emptyText,
+    searchHintText: searchHintText,
+    noResultsText: noResultsText,
+    clearText: clearText,
+    confirmText: confirmText,
+    cancelText: cancelText,
+  );
 
   static CrudFieldConfig tags({
     required String label,
@@ -388,18 +377,17 @@ sealed class CrudFieldConfig {
     String? hintText,
     String? helperText,
     String emptyText = '暂无标签',
-  }) =>
-      TagsFieldConfig(
-        label: label,
-        fieldKey: fieldKey,
-        values: values,
-        onChanged: onChanged,
-        validator: validator,
-        enabled: enabled,
-        hintText: hintText,
-        helperText: helperText,
-        emptyText: emptyText,
-      );
+  }) => TagsFieldConfig(
+    label: label,
+    fieldKey: fieldKey,
+    values: values,
+    onChanged: onChanged,
+    validator: validator,
+    enabled: enabled,
+    hintText: hintText,
+    helperText: helperText,
+    emptyText: emptyText,
+  );
 
   static CrudFieldConfig checkboxGroup({
     required String label,
@@ -412,19 +400,18 @@ sealed class CrudFieldConfig {
     String? hintText,
     String? helperText,
     String emptyText = '暂无可选项',
-  }) =>
-      CheckboxGroupFieldConfig(
-        label: label,
-        fieldKey: fieldKey,
-        options: options,
-        values: values,
-        onChanged: onChanged,
-        validator: validator,
-        enabled: enabled,
-        hintText: hintText,
-        helperText: helperText,
-        emptyText: emptyText,
-      );
+  }) => CheckboxGroupFieldConfig(
+    label: label,
+    fieldKey: fieldKey,
+    options: options,
+    values: values,
+    onChanged: onChanged,
+    validator: validator,
+    enabled: enabled,
+    hintText: hintText,
+    helperText: helperText,
+    emptyText: emptyText,
+  );
 
   static CrudFieldConfig radioGroup({
     required String label,
@@ -436,18 +423,17 @@ sealed class CrudFieldConfig {
     bool enabled = true,
     String? hintText,
     String? helperText,
-  }) =>
-      RadioGroupFieldConfig(
-        label: label,
-        fieldKey: fieldKey,
-        options: options,
-        value: value,
-        onChanged: onChanged,
-        validator: validator,
-        enabled: enabled,
-        hintText: hintText,
-        helperText: helperText,
-      );
+  }) => RadioGroupFieldConfig(
+    label: label,
+    fieldKey: fieldKey,
+    options: options,
+    value: value,
+    onChanged: onChanged,
+    validator: validator,
+    enabled: enabled,
+    hintText: hintText,
+    helperText: helperText,
+  );
 
   static CrudFieldConfig color({
     required String label,
@@ -462,28 +448,23 @@ sealed class CrudFieldConfig {
     String clearText = '清空',
     String confirmText = '确定',
     String cancelText = '取消',
-  }) =>
-      ColorFieldConfig(
-        label: label,
-        fieldKey: fieldKey,
-        value: value,
-        onChanged: onChanged,
-        validator: validator,
-        enabled: enabled,
-        hintText: hintText,
-        helperText: helperText,
-        palette: palette,
-        clearText: clearText,
-        confirmText: confirmText,
-        cancelText: cancelText,
-      );
+  }) => ColorFieldConfig(
+    label: label,
+    fieldKey: fieldKey,
+    value: value,
+    onChanged: onChanged,
+    validator: validator,
+    enabled: enabled,
+    hintText: hintText,
+    helperText: helperText,
+    palette: palette,
+    clearText: clearText,
+    confirmText: confirmText,
+    cancelText: cancelText,
+  );
 
   static CrudFieldConfig custom({
     Key? fieldKey,
     required Widget Function(BuildContext context) builder,
-  }) =>
-      CustomFieldConfig(
-        fieldKey: fieldKey,
-        builder: builder,
-      );
+  }) => CustomFieldConfig(fieldKey: fieldKey, builder: builder);
 }

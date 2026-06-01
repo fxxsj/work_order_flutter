@@ -13,7 +13,11 @@ class WorkOrderProductRepositoryImpl implements WorkOrderProductRepository {
     int pageSize = 20,
     Map<String, dynamic>? params,
   }) {
-    return _apiService.fetchProducts(page: page, pageSize: pageSize, params: params);
+    return _apiService.fetchProducts(
+      page: page,
+      pageSize: pageSize,
+      params: params,
+    );
   }
 
   @override
@@ -27,7 +31,10 @@ class WorkOrderProductRepositoryImpl implements WorkOrderProductRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> updateProduct(int id, Map<String, dynamic> payload) {
+  Future<Map<String, dynamic>> updateProduct(
+    int id,
+    Map<String, dynamic> payload,
+  ) {
     return _apiService.updateProduct(id, payload);
   }
 

@@ -164,8 +164,9 @@ class WorkOrderDetail {
       progressPercentage: toInt(json['progress_percentage']),
       totalTaskCount: toInt(json['total_task_count']),
       salesOrderNumbers: _parseStringList(json['sales_order_numbers']),
-      qualityInspectionNumbers:
-          _parseStringList(json['quality_inspection_numbers']),
+      qualityInspectionNumbers: _parseStringList(
+        json['quality_inspection_numbers'],
+      ),
       invoiceNumbers: _parseStringList(json['invoice_numbers']),
       salesOrderTotalAmount: _toDouble(json['sales_order_total_amount']),
       salesOrderPaidAmount: _toDouble(json['sales_order_paid_amount']),
@@ -239,9 +240,9 @@ class WorkOrderDetail {
   }) {
     final items = TraceabilitySummaryItem.parseList(value);
     if (items.isNotEmpty) return items;
-    return _parseStringList(fallbackNumbers)
-        .map((number) => TraceabilitySummaryItem(number: number))
-        .toList();
+    return _parseStringList(
+      fallbackNumbers,
+    ).map((number) => TraceabilitySummaryItem(number: number)).toList();
   }
 
   static List<WorkOrderProductItem> _parseProducts(dynamic value) {
@@ -250,7 +251,8 @@ class WorkOrderDetail {
     for (final item in value) {
       if (item is Map) {
         items.add(
-            WorkOrderProductItem.fromJson(Map<String, dynamic>.from(item)));
+          WorkOrderProductItem.fromJson(Map<String, dynamic>.from(item)),
+        );
       }
     }
     return items;
@@ -262,7 +264,8 @@ class WorkOrderDetail {
     for (final item in value) {
       if (item is Map) {
         items.add(
-            WorkOrderMaterialItem.fromJson(Map<String, dynamic>.from(item)));
+          WorkOrderMaterialItem.fromJson(Map<String, dynamic>.from(item)),
+        );
       }
     }
     return items;
@@ -274,7 +277,8 @@ class WorkOrderDetail {
     for (final item in value) {
       if (item is Map) {
         items.add(
-            WorkOrderProcessItem.fromJson(Map<String, dynamic>.from(item)));
+          WorkOrderProcessItem.fromJson(Map<String, dynamic>.from(item)),
+        );
       }
     }
     return items;
@@ -286,7 +290,8 @@ class WorkOrderDetail {
     for (final item in value) {
       if (item is Map) {
         items.add(
-            WorkOrderApprovalLog.fromJson(Map<String, dynamic>.from(item)));
+          WorkOrderApprovalLog.fromJson(Map<String, dynamic>.from(item)),
+        );
       }
     }
     return items;
@@ -388,8 +393,9 @@ class WorkOrderMaterialItem {
       materialUnit: toStringOrNull(json['material_unit']),
       materialSize: toStringOrNull(json['material_size']),
       materialUsage: toStringOrNull(json['material_usage']),
-      needCutting:
-          json['need_cutting'] == null ? null : json['need_cutting'] == true,
+      needCutting: json['need_cutting'] == null
+          ? null
+          : json['need_cutting'] == true,
       notes: toStringOrNull(json['notes']),
       purchaseStatus: toStringOrNull(json['purchase_status']),
       purchaseStatusDisplay: toStringOrNull(json['purchase_status_display']),

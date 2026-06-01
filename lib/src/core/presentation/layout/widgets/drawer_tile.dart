@@ -39,20 +39,20 @@ class DrawerTile extends StatelessWidget {
     );
     return Padding(
       padding: EdgeInsets.symmetric(
-        horizontal: dense ? 18 : LayoutTokens.gapMd,
+        horizontal: dense ? 18 : SpacingTokens.md,
         vertical: dense ? 1 : 3,
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+        borderRadius: BorderRadius.circular(RadiusTokens.sm),
         child: Container(
           padding: EdgeInsets.symmetric(
-            horizontal: LayoutTokens.gapMd,
+            horizontal: SpacingTokens.md,
             vertical: dense ? 7 : 9,
           ),
           decoration: BoxDecoration(
             color: background,
-            borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+            borderRadius: BorderRadius.circular(RadiusTokens.sm),
             border: Border.all(
               color: isSelected
                   ? primary.withValues(alpha: OpacityTokens.mild)
@@ -61,8 +61,11 @@ class DrawerTile extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(item.icon,
-                  color: isSelected ? primary : sidebarText, size: 18),
+              Icon(
+                item.icon,
+                color: isSelected ? primary : sidebarText,
+                size: 18,
+              ),
               SizedBox(width: LayoutTokens.cardPaddingSm),
               Expanded(
                 child: Text(
@@ -74,18 +77,14 @@ class DrawerTile extends StatelessWidget {
               if (badgeText != null)
                 Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: LayoutTokens.gapSm,
+                    horizontal: SpacingTokens.sm,
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
                     color: primary.withValues(alpha: OpacityTokens.splash),
-                    borderRadius:
-                        BorderRadius.circular(LayoutTokens.radiusPill),
+                    borderRadius: BorderRadius.circular(RadiusTokens.pill),
                   ),
-                  child: Text(
-                    badgeText!,
-                    style: badgeStyle,
-                  ),
+                  child: Text(badgeText!, style: badgeStyle),
                 ),
             ],
           ),

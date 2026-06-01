@@ -135,7 +135,7 @@ class _MaterialStatusCard extends StatelessWidget {
       padding: LayoutTokens.cardPadding(context),
       decoration: BoxDecoration(
         border: Border.all(color: theme.dividerColor),
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+        borderRadius: BorderRadius.circular(RadiusTokens.md),
       ),
       child: Row(
         children: [
@@ -177,7 +177,7 @@ class _MaterialStatusCard extends StatelessWidget {
             ),
             decoration: BoxDecoration(
               color: statusColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+              borderRadius: BorderRadius.circular(RadiusTokens.md),
             ),
             child: Text(
               purchaseStatusDisplay,

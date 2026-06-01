@@ -7,8 +7,8 @@ class ListToolbar extends StatelessWidget {
     required this.isMobile,
     required this.actions,
     this.searchField,
-    this.spacing = LayoutTokens.gapSm,
-    this.runSpacing = LayoutTokens.gapSm,
+    this.spacing = SpacingTokens.sm,
+    this.runSpacing = SpacingTokens.sm,
     this.mobileActionAlignment = WrapAlignment.end,
   });
 
@@ -56,10 +56,7 @@ class ListToolbar extends StatelessWidget {
       spacing: spacing,
       runSpacing: runSpacing,
       crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        if (hasSearch) searchField!,
-        ...actions,
-      ],
+      children: [if (hasSearch) searchField!, ...actions],
     );
   }
 }

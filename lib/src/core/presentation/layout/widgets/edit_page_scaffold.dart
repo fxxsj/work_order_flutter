@@ -29,26 +29,16 @@ class EditPageScaffold extends StatelessWidget {
         header,
         SizedBox(height: resolvedSpacing),
         Expanded(
-          child: SingleChildScrollView(
-            padding: resolvedPadding,
-            child: body,
-          ),
+          child: SingleChildScrollView(padding: resolvedPadding, child: body),
         ),
-        if (footer != null) ...[
-          SizedBox(height: resolvedSpacing),
-          footer!,
-        ],
+        if (footer != null) ...[SizedBox(height: resolvedSpacing), footer!],
       ],
     );
   }
 }
 
 class EditPageFooterBar extends StatelessWidget {
-  const EditPageFooterBar({
-    super.key,
-    required this.child,
-    this.padding,
-  });
+  const EditPageFooterBar({super.key, required this.child, this.padding});
 
   final Widget child;
   final EdgeInsetsGeometry? padding;
@@ -58,7 +48,8 @@ class EditPageFooterBar extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final basePadding = LayoutTokens.pagePadding(context);
-    final resolvedPadding = padding ??
+    final resolvedPadding =
+        padding ??
         EdgeInsets.fromLTRB(
           basePadding.left,
           8,
@@ -72,8 +63,9 @@ class EditPageFooterBar extends StatelessWidget {
         color: theme.colorScheme.surface,
         border: Border(
           top: BorderSide(
-            color:
-                (colors?.borderColor ?? theme.dividerColor).withValues(alpha: OpacityTokens.heavy),
+            color: (colors?.borderColor ?? theme.dividerColor).withValues(
+              alpha: OpacityTokens.heavy,
+            ),
           ),
         ),
       ),

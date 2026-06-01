@@ -17,23 +17,19 @@ import 'package:work_order_app/src/core/utils/debounce_controller.dart';
 import 'package:work_order_app/src/core/utils/value_formatter.dart';
 import 'package:work_order_app/src/core/viewmodels/paginated_view_model.dart';
 
-typedef CrudLoadItems<VM> = Future<void> Function(
-  VM viewModel, {
-  bool resetPage,
-});
-typedef CrudHeaderActionsBuilder<VM> = List<Widget> Function(
-  BuildContext context,
-  VM viewModel,
-);
-typedef CrudRowActionsBuilder<T, VM> = List<RowAction> Function(
-  BuildContext context,
-  VM viewModel,
-  T item,
-);
+export 'package:work_order_app/src/core/utils/value_formatter.dart'
+    show AppValueFormatter;
+
+typedef CrudLoadItems<VM> =
+    Future<void> Function(VM viewModel, {bool resetPage});
+typedef CrudHeaderActionsBuilder<VM> =
+    List<Widget> Function(BuildContext context, VM viewModel);
+typedef CrudRowActionsBuilder<T, VM> =
+    List<RowAction> Function(BuildContext context, VM viewModel, T item);
 typedef CrudItemTextBuilder<T> = String Function(T item);
 typedef CrudItemTextListBuilder<T> = List<String> Function(T item);
-typedef CrudSummaryFieldsBuilder<T> = List<CrudSummaryFieldData> Function(
-    T item);
+typedef CrudSummaryFieldsBuilder<T> =
+    List<CrudSummaryFieldData> Function(T item);
 typedef CrudSummaryChipsBuilder<T> = List<CrudSummaryChipData> Function(T item);
 
 class CrudListConfig<T, VM extends PaginatedViewModel<T>> {
@@ -53,8 +49,8 @@ class CrudListConfig<T, VM extends PaginatedViewModel<T>> {
     this.mobileFieldsBuilder,
     this.enableSearch = true,
     this.searchWidth = 300,
-    this.spacing = LayoutTokens.gapSm,
-    this.emptyCellText = CrudValueFormatter.empty,
+    this.spacing = SpacingTokens.sm,
+    this.emptyCellText = AppValueFormatter.empty,
     this.refreshButtonText = '刷新',
     this.retryText = '重新加载',
     this.errorFallbackText = '加载失败',
@@ -75,6 +71,7 @@ class CrudListConfig<T, VM extends PaginatedViewModel<T>> {
   final CrudHeaderActionsBuilder<VM>? headerActionsBuilder;
   final CrudRowActionsBuilder<T, VM>? rowActionsBuilder;
   final void Function(BuildContext context, T item)? onItemTap;
+
   /// 自定义移动端展开区域的字段渲染，优先于 summaryFieldsBuilder。
   final Widget Function(BuildContext context, T item)? mobileFieldsBuilder;
   final bool enableSearch;
@@ -102,20 +99,14 @@ class CrudTableColumn<T> {
 }
 
 class CrudSummaryFieldData {
-  const CrudSummaryFieldData({
-    required this.label,
-    required this.value,
-  });
+  const CrudSummaryFieldData({required this.label, required this.value});
 
   final String label;
   final String value;
 }
 
 class CrudSummaryChipData {
-  const CrudSummaryChipData({
-    required this.label,
-    required this.value,
-  });
+  const CrudSummaryChipData({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -165,10 +156,7 @@ class CrudActionConfig<T> {
 
 /// Generic paginated list page for CRUD modules with shared search and actions.
 class CrudListPage<T, VM extends PaginatedViewModel<T>> extends StatefulWidget {
-  const CrudListPage({
-    super.key,
-    required this.config,
-  });
+  const CrudListPage({super.key, required this.config});
 
   final CrudListConfig<T, VM> config;
 
@@ -232,11 +220,8 @@ class _CrudListPageState<T, VM extends PaginatedViewModel<T>>
                   onNext: () => viewModel.setPage(viewModel.page + 1),
                   hasPrev: viewModel.hasPrev,
                   hasNext: viewModel.hasNext,
-                  pageSizeLabelBuilder: (size) =>
-                      _config.pageSizeLabel.replaceFirst(
-                    '{size}',
-                    size.toString(),
-                  ),
+                  pageSizeLabelBuilder: (size) => _config.pageSizeLabel
+                      .replaceFirst('{size}', size.toString()),
                 )
               : null,
         );
@@ -262,10 +247,7 @@ class _CrudListPageState<T, VM extends PaginatedViewModel<T>>
       );
     }
     if (!viewModel.loading && items.isEmpty) {
-      return EmptyStateCard(
-        icon: _config.emptyIcon,
-        text: _config.emptyText,
-      );
+      return EmptyStateCard(icon: _config.emptyIcon, text: _config.emptyText);
     }
 
     if (!isMobile) {
@@ -275,26 +257,16 @@ class _CrudListPageState<T, VM extends PaginatedViewModel<T>>
     return ListView.separated(
       itemCount: items.length,
       separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
-      itemBuilder: (context, index) => _buildSummaryCard(
-        context,
-        viewModel,
-        items[index],
-        isMobile,
-      ),
+      itemBuilder: (context, index) =>
+          _buildSummaryCard(context, viewModel, items[index], isMobile),
     );
   }
 
-  Widget _buildDesktopTable(
-    BuildContext context,
-    VM viewModel,
-    List<T> items,
-  ) {
+  Widget _buildDesktopTable(BuildContext context, VM viewModel, List<T> items) {
     final columns = [
       ..._config.columns.map(
-        (column) => DataColumn(
-          label: Text(column.label),
-          numeric: column.numeric,
-        ),
+        (column) =>
+            DataColumn(label: Text(column.label), numeric: column.numeric),
       ),
       if (_config.rowActionsBuilder != null)
         DataColumn(label: Text(_config.desktopActionsColumnLabel)),
@@ -338,7 +310,8 @@ class _CrudListPageState<T, VM extends PaginatedViewModel<T>>
     final subtitle = _config.subtitleBuilder?.call(item).trim() ?? '';
     final chips = _config.summaryChipsBuilder?.call(item) ?? const [];
     final fields = _config.summaryFieldsBuilder(item);
-    final actions = _config.rowActionsBuilder?.call(context, viewModel, item) ??
+    final actions =
+        _config.rowActionsBuilder?.call(context, viewModel, item) ??
         const <RowAction>[];
     final hasExpandedContent = fields.isNotEmpty || actions.isNotEmpty;
 
@@ -457,11 +430,7 @@ class _CrudListPageState<T, VM extends PaginatedViewModel<T>>
     );
   }
 
-  Widget _buildPageHeader(
-    BuildContext context,
-    VM viewModel,
-    bool isMobile,
-  ) {
+  Widget _buildPageHeader(BuildContext context, VM viewModel, bool isMobile) {
     return PageHeaderBar(
       breadcrumb: null,
       useSurface: false,
@@ -559,33 +528,4 @@ Future<void> confirmCrudAction<T>(
         config.errorMessagePrefix ?? (config.destructive ? '删除失败: ' : '操作失败: ');
     ToastUtil.showError('$prefix$message');
   }
-}
-
-/// CRUD 值格式化器 —— 委托给 [AppValueFormatter]。
-///
-/// 保留此类以维持向后兼容，所有逻辑已移至共享的 [AppValueFormatter]。
-class CrudValueFormatter {
-  CrudValueFormatter._();
-
-  static const String empty = AppValueFormatter.empty;
-
-  static String text(String? value, {String fallback = empty}) =>
-      AppValueFormatter.textOr(value, fallback: fallback);
-
-  static String number(num? value, {String fallback = empty}) =>
-      AppValueFormatter.number(value, fallback: fallback);
-
-  static String amount(
-    num? value, {
-    int fractionDigits = 2,
-    String fallback = empty,
-  }) =>
-      AppValueFormatter.amount(value,
-          fractionDigits: fractionDigits, fallback: fallback);
-
-  static String date(DateTime? value, {String fallback = empty}) =>
-      AppValueFormatter.date(value, fallback: fallback);
-
-  static String dateTime(DateTime? value, {String fallback = empty}) =>
-      AppValueFormatter.dateTime(value, fallback: fallback);
 }

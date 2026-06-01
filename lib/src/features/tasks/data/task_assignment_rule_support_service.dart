@@ -40,12 +40,7 @@ class TaskAssignmentRuleSupportService {
     return TaskAssignmentRuleLookupData(
       processes: processPage.items.map((dto) => dto.toEntity()).toList(),
       departments: departmentPage.items
-          .map(
-            (dto) => TaskDepartmentOption(
-              id: dto.id,
-              name: dto.name,
-            ),
-          )
+          .map((dto) => TaskDepartmentOption(id: dto.id, name: dto.name))
           .toList(),
     );
   }
@@ -56,9 +51,9 @@ class TaskAssignmentRuleSupportService {
     return TaskAssignmentRulePreviewData(
       previewItems: preview is List
           ? preview
-              .whereType<Map>()
-              .map((item) => Map<String, dynamic>.from(item))
-              .toList()
+                .whereType<Map>()
+                .map((item) => Map<String, dynamic>.from(item))
+                .toList()
           : const [],
       globalEnabled: payload['global_enabled'] is bool
           ? payload['global_enabled'] as bool
@@ -67,14 +62,16 @@ class TaskAssignmentRuleSupportService {
   }
 
   Future<bool> getGlobalState() async {
-    final payload =
-        await TaskAssignmentRuleApiService(_client).getGlobalState();
+    final payload = await TaskAssignmentRuleApiService(
+      _client,
+    ).getGlobalState();
     return payload['enabled'] == true;
   }
 
   Future<bool> setGlobalState(bool enabled) async {
-    final payload =
-        await TaskAssignmentRuleApiService(_client).setGlobalState(enabled);
+    final payload = await TaskAssignmentRuleApiService(
+      _client,
+    ).setGlobalState(enabled);
     return payload['enabled'] == true;
   }
 }

@@ -33,10 +33,10 @@ class RiskActionHintPanel extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(LayoutTokens.gapLg),
+      padding: const EdgeInsets.all(SpacingTokens.lg),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+        borderRadius: BorderRadius.circular(RadiusTokens.md),
         border: Border.all(color: tone.withValues(alpha: OpacityTokens.medium)),
       ),
       child: Column(
@@ -51,7 +51,7 @@ class RiskActionHintPanel extends StatelessWidget {
                 color: tone,
                 size: LayoutTokens.iconLg,
               ),
-              const SizedBox(width: LayoutTokens.gapMd),
+              const SizedBox(width: SpacingTokens.md),
               Expanded(
                 child: Text(
                   summary,
@@ -65,10 +65,10 @@ class RiskActionHintPanel extends StatelessWidget {
             ],
           ),
           if (impacts.isNotEmpty) ...[
-            const SizedBox(height: LayoutTokens.gapMd),
+            const SizedBox(height: SpacingTokens.md),
             ...impacts.map(
               (item) => Padding(
-                padding: const EdgeInsets.only(top: LayoutTokens.gapXxs),
+                padding: const EdgeInsets.only(top: SpacingTokens.xxs),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -91,7 +91,7 @@ class RiskActionHintPanel extends StatelessWidget {
             ),
           ],
           if ((auditHint ?? '').trim().isNotEmpty) ...[
-            const SizedBox(height: LayoutTokens.gapMd),
+            const SizedBox(height: SpacingTokens.md),
             Text(
               auditHint!.trim(),
               style: theme.textTheme.bodySmall?.copyWith(
@@ -146,9 +146,10 @@ Future<bool> showRiskActionConfirmDialog(
             onPressed: () => Navigator.of(context).pop(true),
             style: destructive
                 ? FilledButton.styleFrom(
-                    backgroundColor: Theme.of(context)
-                            .extension<AppSemanticColors>()
-                            ?.danger ??
+                    backgroundColor:
+                        Theme.of(
+                          context,
+                        ).extension<AppSemanticColors>()?.danger ??
                         Theme.of(context).colorScheme.error,
                     foregroundColor: Theme.of(context).colorScheme.onError,
                   )
@@ -165,10 +166,7 @@ Future<bool> showRiskActionConfirmDialog(
 // ─── Action Decision Dialog ───────────────────────────────────────────────────
 
 class ActionDecisionOption<T> {
-  const ActionDecisionOption({
-    required this.value,
-    required this.label,
-  });
+  const ActionDecisionOption({required this.value, required this.label});
 
   final T value;
   final String label;
@@ -245,7 +243,7 @@ class AppActionFormDialog extends StatelessWidget {
               auditHint: auditHint,
               destructive: destructive,
             ),
-            SizedBox(height: LayoutTokens.gapMd),
+            SizedBox(height: SpacingTokens.md),
           ],
           content,
         ],
@@ -378,10 +376,12 @@ class _ActionDecisionDialog<T> extends StatefulWidget {
 class _ActionDecisionDialogState<T> extends State<_ActionDecisionDialog<T>> {
   final formKey = GlobalKey<FormState>();
   late T? selection = widget.initialSelection;
-  late final TextEditingController notesController =
-      TextEditingController(text: widget.initialNotes);
-  late final TextEditingController extraNotesController =
-      TextEditingController(text: widget.initialExtraNotes);
+  late final TextEditingController notesController = TextEditingController(
+    text: widget.initialNotes,
+  );
+  late final TextEditingController extraNotesController = TextEditingController(
+    text: widget.initialExtraNotes,
+  );
   bool submitting = false;
 
   bool get showSelection =>
@@ -433,7 +433,7 @@ class _ActionDecisionDialogState<T> extends State<_ActionDecisionDialog<T>> {
                   ? (value) => value == null ? widget.selectionErrorText : null
                   : null,
             ),
-            if (showNotes) SizedBox(height: LayoutTokens.gapMd),
+            if (showNotes) SizedBox(height: SpacingTokens.md),
           ],
           if (showNotes)
             CrudFieldConfig.textarea(
@@ -444,12 +444,12 @@ class _ActionDecisionDialogState<T> extends State<_ActionDecisionDialog<T>> {
               hintText: widget.notesHint,
               validator: widget.requireNotes
                   ? (value) => (value?.trim().isEmpty ?? true)
-                      ? widget.notesErrorText
-                      : null
+                        ? widget.notesErrorText
+                        : null
                   : null,
             ).build(context),
           if (showExtraNotes) ...[
-            if (showNotes) SizedBox(height: LayoutTokens.gapMd),
+            if (showNotes) SizedBox(height: SpacingTokens.md),
             CrudFieldConfig.textarea(
               label: widget.extraNotesLabel!,
               controller: extraNotesController,
@@ -458,8 +458,8 @@ class _ActionDecisionDialogState<T> extends State<_ActionDecisionDialog<T>> {
               hintText: widget.extraNotesHint,
               validator: widget.requireExtraNotes
                   ? (value) => (value?.trim().isEmpty ?? true)
-                      ? widget.extraNotesErrorText
-                      : null
+                        ? widget.extraNotesErrorText
+                        : null
                   : null,
             ).build(context),
           ],

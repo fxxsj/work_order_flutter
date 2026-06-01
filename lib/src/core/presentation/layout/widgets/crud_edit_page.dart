@@ -7,8 +7,8 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 
-typedef CrudSaveHandler<T, VM extends ChangeNotifier> = Future<void> Function(
-    BuildContext context, VM viewModel, T? item);
+typedef CrudSaveHandler<T, VM extends ChangeNotifier> =
+    Future<void> Function(BuildContext context, VM viewModel, T? item);
 
 /// Section definition used by [CrudEditPage] to organize form content.
 class CrudFormSection {
@@ -38,7 +38,7 @@ class CrudEditConfig<T, VM extends ChangeNotifier> {
   });
 
   final List<CrudFormSection> Function(BuildContext context, bool isMobile)
-      sectionsBuilder;
+  sectionsBuilder;
   final CrudSaveHandler<T, VM> onSave;
   final String submitText;
   final String cancelText;
@@ -49,11 +49,7 @@ class CrudEditConfig<T, VM extends ChangeNotifier> {
 
 /// Generic edit page that renders [CrudFieldConfig] sections and save actions.
 class CrudEditPage<T, VM extends ChangeNotifier> extends StatefulWidget {
-  const CrudEditPage({
-    super.key,
-    required this.config,
-    this.item,
-  });
+  const CrudEditPage({super.key, required this.config, this.item});
 
   final CrudEditConfig<T, VM> config;
   final T? item;
@@ -99,7 +95,8 @@ class _CrudEditPageState<T, VM extends ChangeNotifier>
 
     return Consumer<VM>(
       builder: (context, viewModel, _) {
-        final canSubmit = !_submitting &&
+        final canSubmit =
+            !_submitting &&
             (_config.canSave?.call(context, viewModel, widget.item) ?? true);
 
         return SafeArea(
@@ -125,8 +122,9 @@ class _CrudEditPageState<T, VM extends ChangeNotifier>
                       label: _config.cancelText,
                     ),
                     PageActionButton.filled(
-                      onPressed:
-                          canSubmit ? () => _handleSubmit(viewModel) : null,
+                      onPressed: canSubmit
+                          ? () => _handleSubmit(viewModel)
+                          : null,
                       icon: const Icon(Icons.save, size: 16),
                       label: _submitting
                           ? _config.submittingText
@@ -210,9 +208,11 @@ class _CrudEditPageState<T, VM extends ChangeNotifier>
         );
         widgets.add(SizedBox(height: sectionSpacing));
       }
-      for (var fieldIndex = 0;
-          fieldIndex < section.fields.length;
-          fieldIndex++) {
+      for (
+        var fieldIndex = 0;
+        fieldIndex < section.fields.length;
+        fieldIndex++
+      ) {
         if (fieldIndex > 0) {
           widgets.add(SizedBox(height: sectionSpacing));
         }

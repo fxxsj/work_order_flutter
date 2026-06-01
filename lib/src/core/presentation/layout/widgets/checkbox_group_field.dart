@@ -24,21 +24,19 @@ class CheckboxGroupField<T> extends FormField<Set<T>> {
     String? hintText,
     String? helperText,
     String emptyText = '暂无可选项',
-  })  : _label = label,
-        _options = options,
-        _onChanged = onChanged,
-        _enabled = enabled,
-        _hintText = hintText,
-        _helperText = helperText,
-        _emptyText = emptyText,
-        super(
-          initialValue: Set<T>.from(values),
-          validator: validator,
-          builder: (state) => _CheckboxGroupFieldBody<T>(
-            state: state,
-            values: values,
-          ),
-        );
+  }) : _label = label,
+       _options = options,
+       _onChanged = onChanged,
+       _enabled = enabled,
+       _hintText = hintText,
+       _helperText = helperText,
+       _emptyText = emptyText,
+       super(
+         initialValue: Set<T>.from(values),
+         validator: validator,
+         builder: (state) =>
+             _CheckboxGroupFieldBody<T>(state: state, values: values),
+       );
 
   final String _label;
   final List<CheckboxGroupFieldOption<T>> _options;
@@ -50,10 +48,7 @@ class CheckboxGroupField<T> extends FormField<Set<T>> {
 }
 
 class _CheckboxGroupFieldBody<T> extends StatelessWidget {
-  const _CheckboxGroupFieldBody({
-    required this.state,
-    required this.values,
-  });
+  const _CheckboxGroupFieldBody({required this.state, required this.values});
 
   final FormFieldState<Set<T>> state;
   final Set<T> values;
@@ -65,11 +60,14 @@ class _CheckboxGroupFieldBody<T> extends StatelessWidget {
     final currentValues = state.value ?? Set<T>.from(values);
 
     return InputDecorator(
-      decoration: InputDecoration(
-        labelText: widget._label,
-        helperText: widget._helperText ?? widget._hintText,
-        errorText: state.errorText,
-      ).applyDefaults(theme.inputDecorationTheme).copyWith(enabled: widget._enabled),
+      decoration:
+          InputDecoration(
+                labelText: widget._label,
+                helperText: widget._helperText ?? widget._hintText,
+                errorText: state.errorText,
+              )
+              .applyDefaults(theme.inputDecorationTheme)
+              .copyWith(enabled: widget._enabled),
       child: widget._options.isEmpty
           ? Text(
               widget._emptyText,

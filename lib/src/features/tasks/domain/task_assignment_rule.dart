@@ -46,8 +46,9 @@ class TaskAssignmentRule {
       processCode: toStringOrNull(json['process_code']),
       departmentName: toStringOrNull(json['department_name']),
       departmentCode: toStringOrNull(json['department_code']),
-      operatorSelectionStrategyDisplay:
-          toStringOrNull(json['operator_selection_strategy_display']),
+      operatorSelectionStrategyDisplay: toStringOrNull(
+        json['operator_selection_strategy_display'],
+      ),
       notes: toStringOrNull(json['notes']),
       createdAt: toDateTime(json['created_at']),
       updatedAt: toDateTime(json['updated_at']),

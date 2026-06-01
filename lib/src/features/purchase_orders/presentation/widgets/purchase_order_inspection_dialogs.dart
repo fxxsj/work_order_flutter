@@ -13,7 +13,7 @@ Future<void> showPurchaseInspectionDialog(
   BuildContext context, {
   required Future<List<Map<String, dynamic>>> Function() loadRecords,
   required Future<void> Function(int recordId, Map<String, dynamic> payload)
-      confirmInspection,
+  confirmInspection,
   required Future<void> Function(int recordId) stockIn,
   String title = '质检确认',
   String cancelText = '取消',
@@ -42,7 +42,7 @@ class _PurchaseInspectionPanel extends StatefulWidget {
 
   final Future<List<Map<String, dynamic>>> Function() loadRecords;
   final Future<void> Function(int recordId, Map<String, dynamic> payload)
-      confirmInspection;
+  confirmInspection;
   final Future<void> Function(int recordId) stockIn;
   final String cancelText;
 
@@ -121,58 +121,58 @@ class _PurchaseInspectionPanelState extends State<_PurchaseInspectionPanel> {
           child: _loading
               ? const AppLoadingIndicator()
               : _records.isEmpty
-                  ? const Padding(
-                      padding: EdgeInsets.all(LayoutTokens.gapLg),
-                      child: EmptyStateCard(
-                        icon: Icons.verified_outlined,
-                        text: '暂无收货记录',
-                      ),
-                    )
-                  : ListView(
-                      padding: const EdgeInsets.all(LayoutTokens.gapLg),
-                      children: [
-                        AppCard(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+              ? const Padding(
+                  padding: EdgeInsets.all(SpacingTokens.lg),
+                  child: EmptyStateCard(
+                    icon: Icons.verified_outlined,
+                    text: '暂无收货记录',
+                  ),
+                )
+              : ListView(
+                  padding: const EdgeInsets.all(SpacingTokens.lg),
+                  children: [
+                    AppCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '收货记录质检',
+                            style: Theme.of(context).textTheme.titleSmall,
+                          ),
+                          const SizedBox(height: SpacingTokens.xxs),
+                          Text(
+                            '在当前上下文里完成质检确认，避免弹窗叠弹窗。',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          const SizedBox(height: SpacingTokens.md),
+                          Wrap(
+                            spacing: SpacingTokens.md,
+                            runSpacing: SpacingTokens.sm,
                             children: [
-                              Text(
-                                '收货记录质检',
-                                style: Theme.of(context).textTheme.titleSmall,
+                              _InspectionSummaryItem(
+                                label: '收货记录',
+                                value: _records.length.toString(),
                               ),
-                              const SizedBox(height: LayoutTokens.gapXxs),
-                              Text(
-                                '在当前上下文里完成质检确认，避免弹窗叠弹窗。',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                              const SizedBox(height: LayoutTokens.gapMd),
-                              Wrap(
-                                spacing: LayoutTokens.gapMd,
-                                runSpacing: LayoutTokens.gapSm,
-                                children: [
-                                  _InspectionSummaryItem(
-                                    label: '收货记录',
-                                    value: _records.length.toString(),
-                                  ),
-                                  _InspectionSummaryItem(
-                                    label: '待质检',
-                                    value: pendingCount.toString(),
-                                  ),
-                                ],
+                              _InspectionSummaryItem(
+                                label: '待质检',
+                                value: pendingCount.toString(),
                               ),
                             ],
                           ),
-                        ),
-                        const SizedBox(height: LayoutTokens.gapLg),
-                        ..._records.map(_buildRecordCard),
-                      ],
+                        ],
+                      ),
                     ),
+                    const SizedBox(height: SpacingTokens.lg),
+                    ..._records.map(_buildRecordCard),
+                  ],
+                ),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(
-            LayoutTokens.gapLg,
-            LayoutTokens.gapMd,
-            LayoutTokens.gapLg,
-            LayoutTokens.gapLg,
+            SpacingTokens.lg,
+            SpacingTokens.md,
+            SpacingTokens.lg,
+            SpacingTokens.lg,
           ),
           child: Row(
             children: [
@@ -197,11 +197,11 @@ class _PurchaseInspectionPanelState extends State<_PurchaseInspectionPanel> {
     final canInspect = status == 'pending';
     final canStockIn =
         (status == 'qualified' || status == 'partial_qualified') &&
-            !isStocked &&
-            qualified > 0;
+        !isStocked &&
+        qualified > 0;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: LayoutTokens.gapSm),
+      padding: const EdgeInsets.only(bottom: SpacingTokens.sm),
       child: AppCard(
         padding: const EdgeInsets.all(LayoutTokens.cardPaddingSm),
         child: Column(
@@ -211,10 +211,10 @@ class _PurchaseInspectionPanelState extends State<_PurchaseInspectionPanel> {
               '${record['material_code'] ?? '-'} ${record['material_name'] ?? '-'}',
               style: Theme.of(context).textTheme.titleSmall,
             ),
-            const SizedBox(height: LayoutTokens.gapXxs),
+            const SizedBox(height: SpacingTokens.xxs),
             Wrap(
-              spacing: LayoutTokens.gapMd,
-              runSpacing: LayoutTokens.gapXs,
+              spacing: SpacingTokens.md,
+              runSpacing: SpacingTokens.xs,
               children: [
                 _InlineMeta(
                   label: '收货数量',
@@ -227,9 +227,9 @@ class _PurchaseInspectionPanelState extends State<_PurchaseInspectionPanel> {
                 ),
               ],
             ),
-            const SizedBox(height: LayoutTokens.gapSm),
+            const SizedBox(height: SpacingTokens.sm),
             Wrap(
-              spacing: LayoutTokens.gapSm,
+              spacing: SpacingTokens.sm,
               children: [
                 if (canInspect)
                   OutlinedButton(
@@ -259,10 +259,7 @@ class _PurchaseInspectionPanelState extends State<_PurchaseInspectionPanel> {
 }
 
 class _InspectionSummaryItem extends StatelessWidget {
-  const _InspectionSummaryItem({
-    required this.label,
-    required this.value,
-  });
+  const _InspectionSummaryItem({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -275,7 +272,7 @@ class _InspectionSummaryItem extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(label, style: theme.textTheme.bodySmall),
-        const SizedBox(height: LayoutTokens.gapXxxs),
+        const SizedBox(height: SpacingTokens.xxxs),
         Text(
           value,
           style: theme.textTheme.titleSmall?.copyWith(
@@ -291,7 +288,7 @@ Future<void> showPurchaseInspectionAppFormDialog(
   BuildContext context, {
   required Map<String, dynamic> record,
   required Future<void> Function(int recordId, Map<String, dynamic> payload)
-      confirmInspection,
+  confirmInspection,
 }) async {
   await showDialog<void>(
     context: context,
@@ -310,7 +307,7 @@ class _PurchaseInspectionFormDialog extends StatefulWidget {
 
   final Map<String, dynamic> record;
   final Future<void> Function(int recordId, Map<String, dynamic> payload)
-      confirmInspection;
+  confirmInspection;
 
   @override
   State<_PurchaseInspectionFormDialog> createState() =>
@@ -330,8 +327,9 @@ class _PurchaseInspectionFormDialogState
   void initState() {
     super.initState();
     _received = _toDouble(widget.record['received_quantity']) ?? 0;
-    _qualifiedController =
-        TextEditingController(text: _received.toStringAsFixed(2));
+    _qualifiedController = TextEditingController(
+      text: _received.toStringAsFixed(2),
+    );
     _unqualifiedController = TextEditingController(text: '0');
     _reasonController = TextEditingController();
   }
@@ -357,14 +355,11 @@ class _PurchaseInspectionFormDialogState
 
     setState(() => _submitting = true);
     try {
-      await widget.confirmInspection(
-        widget.record['id'] as int,
-        {
-          'qualified_quantity': qualified,
-          'unqualified_quantity': unqualified,
-          'unqualified_reason': _reasonController.text.trim(),
-        },
-      );
+      await widget.confirmInspection(widget.record['id'] as int, {
+        'qualified_quantity': qualified,
+        'unqualified_quantity': unqualified,
+        'unqualified_reason': _reasonController.text.trim(),
+      });
       if (!mounted) return;
       Navigator.of(context).pop();
       ToastUtil.showSuccess('质检确认成功');
@@ -387,10 +382,7 @@ class _PurchaseInspectionFormDialogState
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _DetailRow(
-            label: '收货数量',
-            value: _received.toStringAsFixed(2),
-          ),
+          _DetailRow(label: '收货数量', value: _received.toStringAsFixed(2)),
           CrudFieldConfig.number(
             label: '合格数量',
             controller: _qualifiedController,
@@ -401,7 +393,7 @@ class _PurchaseInspectionFormDialogState
               return null;
             },
           ).build(context),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           CrudFieldConfig.number(
             label: '不合格数量',
             controller: _unqualifiedController,
@@ -412,16 +404,14 @@ class _PurchaseInspectionFormDialogState
               return null;
             },
           ).build(context),
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           CrudFieldConfig.textarea(
             label: '不合格原因',
             controller: _reasonController,
             maxLines: 3,
             validator: (value) {
-              final unqualified = double.tryParse(
-                    _unqualifiedController.text.trim(),
-                  ) ??
-                  0;
+              final unqualified =
+                  double.tryParse(_unqualifiedController.text.trim()) ?? 0;
               if (unqualified > 0 && (value?.trim().isEmpty ?? true)) {
                 return '请填写不合格原因';
               }

@@ -24,12 +24,7 @@ class WorkOrderCustomerSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final options = customers
-        .map(
-          (item) => AppDropdownOption<int>(
-            value: item.id,
-            label: item.name,
-          ),
-        )
+        .map((item) => AppDropdownOption<int>(value: item.id, label: item.name))
         .toList();
     if (onCreateCustomer != null) {
       options.add(
@@ -58,7 +53,7 @@ class WorkOrderCustomerSection extends StatelessWidget {
                 requiredSelection && value == null ? '请选择客户' : null,
           ),
           if (customers.isEmpty && onCreateCustomer != null) ...[
-            const SizedBox(height: LayoutTokens.gapSm),
+            const SizedBox(height: SpacingTokens.sm),
             TextButton.icon(
               onPressed: onCreateCustomer,
               icon: const Icon(Icons.add, size: 18),

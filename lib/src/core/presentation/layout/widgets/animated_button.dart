@@ -75,8 +75,9 @@ class _AnimatedButtonState extends State<AnimatedButton> {
                 widget.onPressed?.call();
               }
             : null,
-        onTapCancel:
-            _isEnabled ? () => setState(() => _isPressed = false) : null,
+        onTapCancel: _isEnabled
+            ? () => setState(() => _isPressed = false)
+            : null,
         child: AnimatedContainer(
           duration: AnimationTokens.buttonDuration,
           curve: AnimationTokens.buttonCurve,
@@ -97,19 +98,14 @@ class _AnimatedButtonState extends State<AnimatedButton> {
             horizontal: sizeConfig.horizontalPadding,
             vertical: sizeConfig.verticalPadding,
           ),
-          child: Center(
-            child: buttonChild,
-          ),
+          child: Center(child: buttonChild),
         ),
       ),
     );
 
     // 添加 tooltip
     if (widget.tooltip != null) {
-      return Tooltip(
-        message: widget.tooltip!,
-        child: button,
-      );
+      return Tooltip(message: widget.tooltip!, child: button);
     }
 
     return button;
@@ -180,8 +176,9 @@ class _AnimatedButtonState extends State<AnimatedButton> {
     final theme = Theme.of(context);
 
     if (!_isEnabled || widget.loading) {
-      return theme.colorScheme.onSurface
-          .withValues(alpha: OpacityTokens.disabled);
+      return theme.colorScheme.onSurface.withValues(
+        alpha: OpacityTokens.disabled,
+      );
     }
 
     switch (widget.variant) {
@@ -226,7 +223,7 @@ class _AnimatedButtonState extends State<AnimatedButton> {
           height: 32,
           horizontalPadding: 12,
           verticalPadding: 6,
-          borderRadius: LayoutTokens.radiusSm,
+          borderRadius: RadiusTokens.sm,
           fontSize: 13,
           fontWeight: FontWeight.w500,
           iconSize: 14,
@@ -237,7 +234,7 @@ class _AnimatedButtonState extends State<AnimatedButton> {
           height: 36,
           horizontalPadding: 16,
           verticalPadding: 8,
-          borderRadius: LayoutTokens.radiusSm,
+          borderRadius: RadiusTokens.sm,
           fontSize: 14,
           fontWeight: FontWeight.w500,
           iconSize: 16,
@@ -248,7 +245,7 @@ class _AnimatedButtonState extends State<AnimatedButton> {
           height: 42,
           horizontalPadding: 20,
           verticalPadding: 10,
-          borderRadius: LayoutTokens.radiusMd,
+          borderRadius: RadiusTokens.md,
           fontSize: 15,
           fontWeight: FontWeight.w600,
           iconSize: 18,
@@ -280,20 +277,9 @@ class _ButtonSizeConfig {
   final double iconTextSpacing;
 }
 
-enum AnimatedButtonVariant {
-  filled,
-  outlined,
-  text,
-  danger,
-  success,
-  warning,
-}
+enum AnimatedButtonVariant { filled, outlined, text, danger, success, warning }
 
-enum AnimatedButtonSize {
-  small,
-  medium,
-  large,
-}
+enum AnimatedButtonSize { small, medium, large }
 
 /// 常用的预设按钮
 class PresetButtons {

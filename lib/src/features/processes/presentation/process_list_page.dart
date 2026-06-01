@@ -222,7 +222,7 @@ class ProcessListPage extends StatelessWidget {
   }
 
   static Widget _buildCodeCell(BuildContext context, Process process) {
-    return _buildBodyText(context, CrudValueFormatter.text(process.code));
+    return _buildBodyText(context, AppValueFormatter.text(process.code));
   }
 
   static Widget _buildDurationCell(BuildContext context, Process process) {
@@ -238,10 +238,7 @@ class ProcessListPage extends StatelessWidget {
   }
 
   static Widget _buildSortOrderCell(BuildContext context, Process process) {
-    return _buildBodyText(
-      context,
-      CrudValueFormatter.number(process.sortOrder),
-    );
+    return _buildBodyText(context, AppValueFormatter.number(process.sortOrder));
   }
 
   static Widget _buildStatusCell(BuildContext context, Process process) {
@@ -249,10 +246,7 @@ class ProcessListPage extends StatelessWidget {
   }
 
   static Widget _buildDescriptionCell(BuildContext context, Process process) {
-    return _buildBodyText(
-      context,
-      CrudValueFormatter.text(process.description),
-    );
+    return _buildBodyText(context, AppValueFormatter.text(process.description));
   }
 
   static Widget _buildBodyText(BuildContext context, String value) {
@@ -260,17 +254,17 @@ class ProcessListPage extends StatelessWidget {
   }
 
   static String _titleText(Process process) {
-    return CrudValueFormatter.text(process.name);
+    return AppValueFormatter.text(process.name);
   }
 
   static String _subtitleText(Process process) {
-    return '${CrudValueFormatter.text(process.code)} · '
+    return '${AppValueFormatter.text(process.code)} · '
         '${_durationText(process.standardDuration)} h';
   }
 
   static String _durationText(int? value) {
     if (value == null) {
-      return CrudValueFormatter.empty;
+      return AppValueFormatter.empty;
     }
     return value.toString();
   }
@@ -288,7 +282,7 @@ class ProcessListPage extends StatelessWidget {
       case 'general':
         return '通用任务';
       default:
-        return CrudValueFormatter.text(value);
+        return AppValueFormatter.text(value);
     }
   }
 
@@ -301,7 +295,7 @@ class ProcessListPage extends StatelessWidget {
       CrudSummaryChipData(label: '状态', value: _statusText(process)),
       CrudSummaryChipData(
         label: '排序',
-        value: CrudValueFormatter.number(process.sortOrder),
+        value: AppValueFormatter.number(process.sortOrder),
       ),
     ];
   }
@@ -310,11 +304,11 @@ class ProcessListPage extends StatelessWidget {
     return [
       CrudSummaryFieldData(
         label: '编码',
-        value: CrudValueFormatter.text(process.code),
+        value: AppValueFormatter.text(process.code),
       ),
       CrudSummaryFieldData(
         label: '描述',
-        value: CrudValueFormatter.text(process.description),
+        value: AppValueFormatter.text(process.description),
       ),
       CrudSummaryFieldData(
         label: '标准工时(小时)',
@@ -330,7 +324,7 @@ class ProcessListPage extends StatelessWidget {
       ),
       CrudSummaryFieldData(
         label: '排序',
-        value: CrudValueFormatter.number(process.sortOrder),
+        value: AppValueFormatter.number(process.sortOrder),
       ),
       CrudSummaryFieldData(label: '状态', value: _statusText(process)),
     ];
@@ -342,7 +336,7 @@ class ProcessListPage extends StatelessWidget {
 
   static List<String> _buildDeleteImpacts(Process process) {
     return [
-      '工序编码：${CrudValueFormatter.text(process.code)}',
+      '工序编码：${AppValueFormatter.text(process.code)}',
       '标准工时：${_durationText(process.standardDuration)} 小时',
       '若已有部门、产品或工单使用该工序，删除可能失败或需要先解除关联',
     ];

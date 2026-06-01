@@ -2,10 +2,12 @@ import 'package:work_order_app/src/features/workorders/data/work_order_detail_dt
 
 abstract class WorkOrderFlowRepository {
   Future<Map<String, dynamic>> createFromSalesOrder(
-      Map<String, dynamic> payload);
+    Map<String, dynamic> payload,
+  );
 
   Future<Map<String, dynamic>> createFromSalesOrders(
-      Map<String, dynamic> payload);
+    Map<String, dynamic> payload,
+  );
 
   Future<WorkOrderDetailDto> submitApproval(int id, {String? comment});
 

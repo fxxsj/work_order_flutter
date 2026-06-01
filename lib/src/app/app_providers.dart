@@ -46,9 +46,8 @@ List<SingleChildWidget> buildAppProviders({
       ),
     ),
     ChangeNotifierProvider<DashboardViewModel>(
-      create: (context) => DashboardViewModel(
-        context.read<WorkOrderRepository>(),
-      ),
+      create: (context) =>
+          DashboardViewModel(context.read<WorkOrderRepository>()),
     ),
     ChangeNotifierProvider.value(value: theme),
     ChangeNotifierProvider.value(value: notification),

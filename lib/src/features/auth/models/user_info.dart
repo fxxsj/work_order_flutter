@@ -165,7 +165,8 @@ class UserInfo {
 
   String toJson() => json.encode(toMap());
 
-  factory UserInfo.fromJson(String source) => UserInfo.fromMap(json.decode(source));
+  factory UserInfo.fromJson(String source) =>
+      UserInfo.fromMap(json.decode(source));
 
   @override
   String toString() {

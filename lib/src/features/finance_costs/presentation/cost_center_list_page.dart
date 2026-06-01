@@ -66,29 +66,29 @@ class CostCenterListEntry extends StatelessWidget {
   }
 
   static String _code(GenericRecord record) {
-    return GenericValueFormatter.text(record.getString('code'));
+    return AppValueFormatter.text(record.getString('code'));
   }
 
   static String _name(GenericRecord record) {
-    return GenericValueFormatter.text(record.getString('name'));
+    return AppValueFormatter.text(record.getString('name'));
   }
 
   static String _type(GenericRecord record) {
-    return GenericValueFormatter.text(
+    return AppValueFormatter.text(
       record.getString('type_display') ?? _typeLabel(record.getString('type')),
     );
   }
 
   static String _manager(GenericRecord record) {
-    return GenericValueFormatter.text(record.getString('manager_name'));
+    return AppValueFormatter.text(record.getString('manager_name'));
   }
 
   static String _parent(GenericRecord record) {
-    return GenericValueFormatter.text(record.getString('parent_name'));
+    return AppValueFormatter.text(record.getString('parent_name'));
   }
 
   static String _active(GenericRecord record) {
-    return GenericValueFormatter.boolText(record.getBool('is_active'));
+    return AppValueFormatter.boolText(record.getBool('is_active'));
   }
 
   static Map<String, dynamic> _extraParamsBuilder(Uri uri) {

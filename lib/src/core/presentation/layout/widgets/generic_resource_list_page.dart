@@ -24,6 +24,9 @@ import 'package:work_order_app/src/core/utils/value_formatter.dart';
 import 'package:work_order_app/src/core/utils/debounce_controller.dart';
 import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
 
+export 'package:work_order_app/src/core/utils/value_formatter.dart'
+    show AppValueFormatter;
+
 class GenericResourceConfig {
   const GenericResourceConfig({
     required this.id,
@@ -73,11 +76,13 @@ class GenericResourceConfig {
     BuildContext context,
     GenericRecord record,
     VoidCallback openDetails,
-  )? rowActionsBuilder;
+  )?
+  rowActionsBuilder;
   final List<Widget> Function(
     BuildContext context,
     GenericListViewModel viewModel,
-  )? headerActionsBuilder;
+  )?
+  headerActionsBuilder;
   final Map<String, dynamic> Function(Uri uri)? extraParamsBuilder;
   final bool enableSummary;
   final bool openDetailsOnPrimaryTap;
@@ -96,38 +101,17 @@ class GenericColumn {
 }
 
 class GenericSummaryField {
-  const GenericSummaryField({
-    required this.label,
-    required this.value,
-  });
+  const GenericSummaryField({required this.label, required this.value});
 
   final String label;
   final String Function(GenericRecord record) value;
 }
 
 class GenericDetailField {
-  const GenericDetailField({
-    required this.label,
-    required this.value,
-  });
+  const GenericDetailField({required this.label, required this.value});
 
   final String label;
   final String Function(GenericRecord record) value;
-}
-
-/// 通用值格式化器 —— 委托给 [AppValueFormatter]。
-///
-/// 保留此类以维持向后兼容，所有逻辑已移至共享的 [AppValueFormatter]。
-class GenericValueFormatter {
-  GenericValueFormatter._();
-
-  static const String empty = AppValueFormatter.empty;
-
-  static String text(dynamic value) => AppValueFormatter.text(value);
-
-  static String boolText(bool? value) => AppValueFormatter.boolText(value);
-
-  static String date(dynamic value) => AppValueFormatter.date(value);
 }
 
 class GenericResourceListEntry extends StatelessWidget {
@@ -137,8 +121,11 @@ class GenericResourceListEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FeatureEntry<GenericApiService, GenericRepository,
-        GenericListViewModel>(
+    return FeatureEntry<
+      GenericApiService,
+      GenericRepository,
+      GenericListViewModel
+    >(
       createService: (context) => GenericApiService(
         context.read<ApiClient>(),
         resourcePath: config.endpoint,
@@ -167,7 +154,7 @@ class GenericResourceListPage extends StatefulWidget {
 
 class _GenericResourceListPageState extends State<GenericResourceListPage> {
   static const double _searchWidth = 320;
-  static const double _spacingSm = LayoutTokens.gapSm;
+  static const double _spacingSm = SpacingTokens.sm;
 
   final TextEditingController _searchController = TextEditingController();
   final _debounce = DebounceController();
@@ -200,9 +187,9 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<GenericListViewModel>().applyRoutePrefill(
-            search: trimmed,
-            extraParams: extraParams,
-          );
+        search: trimmed,
+        extraParams: extraParams,
+      );
     });
   }
 
@@ -213,8 +200,10 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
     super.dispose();
   }
 
-  void _scheduleSearch(GenericListViewModel viewModel,
-      {bool immediate = false}) {
+  void _scheduleSearch(
+    GenericListViewModel viewModel, {
+    bool immediate = false,
+  }) {
     _debounce.cancel();
     if (immediate) {
       viewModel.setSearchText(_searchController.text.trim());
@@ -358,10 +347,7 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
         widget.config.enableDetails || widget.config.rowActionsBuilder != null;
     final columns = [
       for (final column in widget.config.columns)
-        DataColumn(
-          label: Text(column.label),
-          numeric: column.numeric,
-        ),
+        DataColumn(label: Text(column.label), numeric: column.numeric),
       if (hasActions) const DataColumn(label: Text('操作')),
     ];
 
@@ -411,16 +397,17 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
   ) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
-    final titleBuilder = widget.config.titleBuilder ??
+    final titleBuilder =
+        widget.config.titleBuilder ??
         (GenericRecord record) =>
             record.getString('name') ??
             record.getString('title') ??
             record.id.toString();
     final summaryFields = widget.config.summaryFields
-        .map((field) => SummaryField(
-              label: field.label,
-              value: field.value(record),
-            ))
+        .map(
+          (field) =>
+              SummaryField(label: field.label, value: field.value(record)),
+        )
         .toList();
 
     final actions = _resolveRowActions(context, record);
@@ -451,7 +438,7 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
                     ),
                   ),
             if (widget.config.enableDetails) ...[
-              const SizedBox(height: LayoutTokens.gapSm),
+              const SizedBox(height: SpacingTokens.sm),
               Text(
                 '查看详情',
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -467,7 +454,7 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
         children: [
           SummaryFieldWrap(isMobile: isMobile, children: summaryFields),
           if (actions.isNotEmpty) ...[
-            const SizedBox(height: LayoutTokens.gapSm),
+            const SizedBox(height: SpacingTokens.sm),
             Align(
               alignment: Alignment.centerLeft,
               child: RowActionGroup(actions: actions),
@@ -483,13 +470,13 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
     GenericRecord record,
   ) {
     final defaultAction = widget.config.enableDetails
-        ? RowAction(
-            label: '查看',
-            onPressed: () => _openDetails(context, record),
-          )
+        ? RowAction(label: '查看', onPressed: () => _openDetails(context, record))
         : null;
-    final custom = widget.config.rowActionsBuilder
-        ?.call(context, record, () => _openDetails(context, record));
+    final custom = widget.config.rowActionsBuilder?.call(
+      context,
+      record,
+      () => _openDetails(context, record),
+    );
     if (custom != null && custom.isNotEmpty) {
       return custom;
     }
@@ -500,12 +487,15 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
     final title = widget.config.detailTitle ?? widget.config.title;
-    final detailFields = widget.config.detailFields ??
+    final detailFields =
+        widget.config.detailFields ??
         record.data.keys
-            .map((key) => GenericDetailField(
-                  label: key,
-                  value: (record) => _formatDetailValue(record.data[key]),
-                ))
+            .map(
+              (key) => GenericDetailField(
+                label: key,
+                value: (record) => _formatDetailValue(record.data[key]),
+              ),
+            )
             .toList();
 
     await showDialog<void>(
@@ -523,12 +513,9 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
                   color: colors?.subtleText ?? theme.hintColor,
                 ),
               ),
-              const SizedBox(height: LayoutTokens.gapXs),
-              Text(
-                field.value(record),
-                style: theme.textTheme.bodyMedium,
-              ),
-              const SizedBox(height: LayoutTokens.gapSm),
+              const SizedBox(height: SpacingTokens.xs),
+              Text(field.value(record), style: theme.textTheme.bodyMedium),
+              const SizedBox(height: SpacingTokens.sm),
             ],
           ],
         ),
@@ -543,20 +530,20 @@ class _GenericResourceListPageState extends State<GenericResourceListPage> {
   }
 
   String _formatDetailValue(dynamic value) {
-    if (value == null) return GenericValueFormatter.empty;
+    if (value == null) return AppValueFormatter.empty;
     if (value is Map) {
       final map = Map<String, dynamic>.from(value);
       final preferKeys = ['name', 'title', 'label', 'order_number', 'code'];
       for (final key in preferKeys) {
         final candidate = map[key];
-        if (candidate != null) return GenericValueFormatter.text(candidate);
+        if (candidate != null) return AppValueFormatter.text(candidate);
       }
-      return GenericValueFormatter.text(map);
+      return AppValueFormatter.text(map);
     }
     if (value is List) {
-      if (value.isEmpty) return GenericValueFormatter.empty;
+      if (value.isEmpty) return AppValueFormatter.empty;
       return value.map(_formatDetailValue).join(' / ');
     }
-    return GenericValueFormatter.text(value);
+    return AppValueFormatter.text(value);
   }
 }

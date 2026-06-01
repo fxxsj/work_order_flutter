@@ -19,10 +19,7 @@ class WorkOrderSalesOrderSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final options = <AppDropdownOption<int>>[
-      const AppDropdownOption<int>(
-        value: -1,
-        label: '不关联客户订单',
-      ),
+      const AppDropdownOption<int>(value: -1, label: '不关联客户订单'),
       ...salesOrders.map(
         (item) => AppDropdownOption<int>(
           value: item.id,

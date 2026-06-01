@@ -116,8 +116,14 @@ class PurchaseOrderApiService {
     return {};
   }
 
-  Future<Map<String, dynamic>> submit(int id, [Map<String, dynamic>? payload]) async {
-    final response = await _client.post('/purchase-orders/$id/submit/', data: payload);
+  Future<Map<String, dynamic>> submit(
+    int id, [
+    Map<String, dynamic>? payload,
+  ]) async {
+    final response = await _client.post(
+      '/purchase-orders/$id/submit/',
+      data: payload,
+    );
     return _mapFromResponse(response.data);
   }
 

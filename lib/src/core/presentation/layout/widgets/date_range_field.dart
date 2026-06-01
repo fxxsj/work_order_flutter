@@ -17,25 +17,27 @@ class DateRangeField extends FormField<DateTimeRange?> {
     String cancelText = '取消',
     DateTime? firstDate,
     DateTime? lastDate,
-  })  : _label = label,
-        _enabled = enabled,
-        _hintText = hintText,
-        _helperText = helperText,
-        _clearText = clearText,
-        _confirmText = confirmText,
-        _cancelText = cancelText,
-        _firstDate = firstDate,
-        _lastDate = lastDate,
-        super(
-          initialValue:
-              _dateRangeFromControllers(startController, endController),
-          validator: validator,
-          builder: (state) => _DateRangeFieldBody(
-            state: state,
-            startController: startController,
-            endController: endController,
-          ),
-        );
+  }) : _label = label,
+       _enabled = enabled,
+       _hintText = hintText,
+       _helperText = helperText,
+       _clearText = clearText,
+       _confirmText = confirmText,
+       _cancelText = cancelText,
+       _firstDate = firstDate,
+       _lastDate = lastDate,
+       super(
+         initialValue: _dateRangeFromControllers(
+           startController,
+           endController,
+         ),
+         validator: validator,
+         builder: (state) => _DateRangeFieldBody(
+           state: state,
+           startController: startController,
+           endController: endController,
+         ),
+       );
 
   final String _label;
   final bool _enabled;
@@ -94,35 +96,37 @@ class _DateRangeFieldBody extends StatelessWidget {
         : (_field._hintText ?? '请选择日期范围');
 
     return InkWell(
-      onTap:
-          _field._enabled ? () => _pickDateRange(context, currentValue) : null,
-      borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+      onTap: _field._enabled
+          ? () => _pickDateRange(context, currentValue)
+          : null,
+      borderRadius: BorderRadius.circular(RadiusTokens.sm),
       child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: _field._label,
-          helperText: _field._helperText,
-          errorText: state.errorText,
-          prefixIcon: const Icon(Icons.date_range_outlined, size: 18),
-          suffixIcon: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (hasValue && _field._enabled)
-                IconButton(
-                  tooltip: _field._clearText,
-                  onPressed: () {
-                    startController.clear();
-                    endController.clear();
-                    state.didChange(null);
-                  },
-                  icon: const Icon(Icons.clear, size: 18),
-                ),
-              const Icon(Icons.keyboard_arrow_down_rounded),
-              SizedBox(width: LayoutTokens.gapMd),
-            ],
-          ),
-        )
-            .applyDefaults(theme.inputDecorationTheme)
-            .copyWith(enabled: _field._enabled),
+        decoration:
+            InputDecoration(
+                  labelText: _field._label,
+                  helperText: _field._helperText,
+                  errorText: state.errorText,
+                  prefixIcon: const Icon(Icons.date_range_outlined, size: 18),
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (hasValue && _field._enabled)
+                        IconButton(
+                          tooltip: _field._clearText,
+                          onPressed: () {
+                            startController.clear();
+                            endController.clear();
+                            state.didChange(null);
+                          },
+                          icon: const Icon(Icons.clear, size: 18),
+                        ),
+                      const Icon(Icons.keyboard_arrow_down_rounded),
+                      SizedBox(width: SpacingTokens.md),
+                    ],
+                  ),
+                )
+                .applyDefaults(theme.inputDecorationTheme)
+                .copyWith(enabled: _field._enabled),
         child: Text(
           text,
           style: theme.textTheme.bodyMedium?.copyWith(
@@ -134,7 +138,9 @@ class _DateRangeFieldBody extends StatelessWidget {
   }
 
   Future<void> _pickDateRange(
-      BuildContext context, DateTimeRange? currentValue) async {
+    BuildContext context,
+    DateTimeRange? currentValue,
+  ) async {
     final now = DateTime.now();
     final resolvedFirstDate = _field._firstDate ?? DateTime(now.year - 5);
     final resolvedLastDate = _field._lastDate ?? DateTime(now.year + 5, 12, 31);
@@ -153,8 +159,11 @@ class _DateRangeFieldBody extends StatelessWidget {
     endController.text = _formatDateYmd(picked.end);
     state.didChange(
       DateTimeRange(
-        start:
-            DateTime(picked.start.year, picked.start.month, picked.start.day),
+        start: DateTime(
+          picked.start.year,
+          picked.start.month,
+          picked.start.day,
+        ),
         end: DateTime(picked.end.year, picked.end.month, picked.end.day),
       ),
     );

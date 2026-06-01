@@ -9,9 +9,14 @@ abstract class ProductMaterialRepository {
 
   Future<Map<String, dynamic>> getProductMaterial(int id);
 
-  Future<Map<String, dynamic>> createProductMaterial(Map<String, dynamic> payload);
+  Future<Map<String, dynamic>> createProductMaterial(
+    Map<String, dynamic> payload,
+  );
 
-  Future<Map<String, dynamic>> updateProductMaterial(int id, Map<String, dynamic> payload);
+  Future<Map<String, dynamic>> updateProductMaterial(
+    int id,
+    Map<String, dynamic> payload,
+  );
 
   Future<void> deleteProductMaterial(int id);
 }

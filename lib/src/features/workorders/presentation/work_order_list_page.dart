@@ -74,7 +74,7 @@ class _WorkOrderListView extends StatefulWidget {
 class _WorkOrderListViewState extends State<_WorkOrderListView>
     with SingleTickerProviderStateMixin {
   static const double _searchWidth = 320;
-  static const double _spacingSm = LayoutTokens.gapSm;
+  static const double _spacingSm = SpacingTokens.sm;
   static const double _controlHeight = PageActionStyle.height;
   static const String _emptyCellText = '-';
 
@@ -502,12 +502,16 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
         : workOrder.orderNumber;
     final customer = workOrder.customerName ?? _emptyCellText;
     final product = workOrder.productName ?? _emptyCellText;
-    final status = (workOrder.approvalStatus != null &&
-            ['draft', 'submitted', 'rejected']
-                .contains(workOrder.approvalStatus))
+    final status =
+        (workOrder.approvalStatus != null &&
+            [
+              'draft',
+              'submitted',
+              'rejected',
+            ].contains(workOrder.approvalStatus))
         ? (workOrder.approvalStatusDisplay ??
-            workOrder.approvalStatus ??
-            _emptyCellText)
+              workOrder.approvalStatus ??
+              _emptyCellText)
         : (workOrder.statusDisplay ?? workOrder.status ?? _emptyCellText);
     final priority =
         workOrder.priorityDisplay ?? workOrder.priority ?? _emptyCellText;

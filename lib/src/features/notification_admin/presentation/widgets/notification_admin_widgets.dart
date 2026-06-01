@@ -33,7 +33,7 @@ class NotificationAdminSection extends StatelessWidget {
               if (trailing != null) trailing!,
             ],
           ),
-          const SizedBox(height: LayoutTokens.gapMd),
+          const SizedBox(height: SpacingTokens.md),
           child,
         ],
       ),
@@ -52,7 +52,7 @@ class NotificationFieldList extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (var index = 0; index < children.length; index++) ...[
-          if (index > 0) const SizedBox(height: LayoutTokens.gapMd),
+          if (index > 0) const SizedBox(height: SpacingTokens.md),
           children[index],
         ],
       ],
@@ -84,10 +84,7 @@ class NotificationLoadingIcon extends StatelessWidget {
 }
 
 class NotificationResultPanel extends StatelessWidget {
-  const NotificationResultPanel({
-    super.key,
-    required this.result,
-  });
+  const NotificationResultPanel({super.key, required this.result});
 
   final Map<String, dynamic> result;
 
@@ -96,10 +93,10 @@ class NotificationResultPanel extends StatelessWidget {
     final pretty = const JsonEncoder.withIndent('  ').convert(result);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(LayoutTokens.gapSm),
+      padding: const EdgeInsets.all(SpacingTokens.sm),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+        borderRadius: BorderRadius.circular(RadiusTokens.sm),
       ),
       child: SelectableText(
         pretty,

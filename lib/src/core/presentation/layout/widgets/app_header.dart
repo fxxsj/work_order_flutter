@@ -74,10 +74,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
     );
     final sectionStyle =
         (isMobile ? theme.textTheme.titleSmall : theme.textTheme.titleMedium)
-            ?.copyWith(
-      color: accent,
-      fontWeight: FontWeight.w700,
-    );
+            ?.copyWith(color: accent, fontWeight: FontWeight.w700);
     return AppBar(
       primary: isMobile,
       backgroundColor: surface,
@@ -85,16 +82,14 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
       scrolledUnderElevation: 0,
       shape: Border(
         bottom: BorderSide(
-            color: borderColor.withValues(alpha: OpacityTokens.borderStrong)),
+          color: borderColor.withValues(alpha: OpacityTokens.borderStrong),
+        ),
       ),
       toolbarHeight: height,
       iconTheme: IconThemeData(color: subtleText),
       titleSpacing: isMobile ? 0 : 8,
       leading: isMobile
-          ? IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: onMenuTap,
-            )
+          ? IconButton(icon: const Icon(Icons.menu), onPressed: onMenuTap)
           : null,
       title: Row(
         children: [
@@ -167,10 +162,12 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
               constraints: const BoxConstraints(minWidth: 280, maxWidth: 320),
               color: notificationSurface,
               surfaceTintColor: Colors.transparent,
-              shadowColor:
-                  semantic?.shadowStrong.withValues(alpha: OpacityTokens.mild),
+              shadowColor: semantic?.shadowStrong.withValues(
+                alpha: OpacityTokens.mild,
+              ),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(LayoutTokens.radiusMd)),
+                borderRadius: BorderRadius.circular(RadiusTokens.md),
+              ),
               onSelected: (value) {
                 if (value == _notificationMarkAllReadAction) {
                   notifyCtrl.markAllRead();
@@ -219,7 +216,9 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                 child: Badge(
                   isLabelVisible: unread > 0,
                   label: Text(label),
-                  backgroundColor: theme.extension<AppSemanticColors>()?.danger ?? theme.colorScheme.error,
+                  backgroundColor:
+                      theme.extension<AppSemanticColors>()?.danger ??
+                      theme.colorScheme.error,
                   offset: const Offset(6, -6),
                   child: const Icon(Icons.notifications_none_outlined),
                 ),
@@ -257,14 +256,14 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
               ),
             ],
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: LayoutTokens.gapSm),
+              padding: EdgeInsets.symmetric(horizontal: SpacingTokens.sm),
               child: Icon(Icons.more_vert),
             ),
           ),
         Padding(
           padding: EdgeInsets.only(
-            right: LayoutTokens.gapMd,
-            left: LayoutTokens.gapXs,
+            right: SpacingTokens.md,
+            left: SpacingTokens.xs,
           ),
           child: AvatarMenu(
             primary: primary,
@@ -290,41 +289,35 @@ List<PopupMenuEntry<String>> _buildNotificationMenuItems(
     color: accent,
     fontWeight: FontWeight.w600,
   );
-  final actionStyle =
-      (theme.textTheme.labelSmall ?? theme.textTheme.bodySmall)?.copyWith(
-    color: primary,
-    fontWeight: FontWeight.w600,
-  );
+  final actionStyle = (theme.textTheme.labelSmall ?? theme.textTheme.bodySmall)
+      ?.copyWith(color: primary, fontWeight: FontWeight.w600);
   final emptyStyle = theme.textTheme.bodySmall?.copyWith(color: subtleText);
   final items = <PopupMenuEntry<String>>[];
   items.add(
     PopupMenuItem<String>(
       value: _notificationMarkAllReadAction,
       padding: EdgeInsets.fromLTRB(
-        LayoutTokens.gapMd,
-        LayoutTokens.gapSm,
-        LayoutTokens.gapSm,
-        LayoutTokens.gapXs,
+        SpacingTokens.md,
+        SpacingTokens.sm,
+        SpacingTokens.sm,
+        SpacingTokens.xs,
       ),
       child: Row(
         children: [
-          Text(
-            '通知',
-            style: headerStyle,
-          ),
+          Text('通知', style: headerStyle),
           const Spacer(),
           DecoratedBox(
             decoration: BoxDecoration(
               color: primary.withValues(alpha: OpacityTokens.mild),
-              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+              borderRadius: BorderRadius.circular(RadiusTokens.sm),
               border: Border.all(
                 color: primary.withValues(alpha: OpacityTokens.strong),
               ),
             ),
             child: Padding(
               padding: EdgeInsets.symmetric(
-                horizontal: LayoutTokens.gapSm,
-                vertical: LayoutTokens.gapXs,
+                horizontal: SpacingTokens.sm,
+                vertical: SpacingTokens.xs,
               ),
               child: Text(
                 '全部已读',
@@ -345,11 +338,8 @@ List<PopupMenuEntry<String>> _buildNotificationMenuItems(
     items.add(
       PopupMenuItem<String>(
         enabled: false,
-        padding: EdgeInsets.all(LayoutTokens.gapMd),
-        child: Text(
-          '暂无通知',
-          style: emptyStyle,
-        ),
+        padding: EdgeInsets.all(SpacingTokens.md),
+        child: Text('暂无通知', style: emptyStyle),
       ),
     );
     return items;
@@ -394,10 +384,10 @@ List<PopupMenuEntry<String>> _buildNotificationMenuItems(
     PopupMenuItem<String>(
       enabled: false,
       padding: EdgeInsets.fromLTRB(
-        LayoutTokens.gapMd,
-        LayoutTokens.gapSm,
-        LayoutTokens.gapMd,
-        LayoutTokens.gapSm,
+        SpacingTokens.md,
+        SpacingTokens.sm,
+        SpacingTokens.md,
+        SpacingTokens.sm,
       ),
       child: Align(
         alignment: Alignment.centerRight,
@@ -409,8 +399,8 @@ List<PopupMenuEntry<String>> _buildNotificationMenuItems(
           style: TextButton.styleFrom(
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.symmetric(
-              horizontal: LayoutTokens.gapSm,
-              vertical: LayoutTokens.gapXs,
+              horizontal: SpacingTokens.sm,
+              vertical: SpacingTokens.xs,
             ),
             minimumSize: Size.zero,
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,

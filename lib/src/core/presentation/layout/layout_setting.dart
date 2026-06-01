@@ -13,9 +13,12 @@ class LayoutSetting extends StatelessWidget {
     final isXs = ResponsiveLayout.isXs(context);
     final isSm = ResponsiveLayout.isSm(context);
     final tilePadding = EdgeInsets.symmetric(
-        horizontal: isXs ? 12 : 16, vertical: isXs ? 4 : 6);
-    final density =
-        isXs || isSm ? VisualDensity.compact : VisualDensity.standard;
+      horizontal: isXs ? 12 : 16,
+      vertical: isXs ? 4 : 6,
+    );
+    final density = isXs || isSm
+        ? VisualDensity.compact
+        : VisualDensity.standard;
     final themeController = context.watch<ThemeController>();
     final theme = Theme.of(context);
 
@@ -38,8 +41,10 @@ class LayoutSetting extends StatelessWidget {
           DrawerHeader(
             decoration: BoxDecoration(color: headerColor),
             margin: EdgeInsets.zero,
-            padding:
-                EdgeInsets.symmetric(horizontal: 16, vertical: isXs ? 12 : 16),
+            padding: EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: isXs ? 12 : 16,
+            ),
             child: Text(
               '外观设置',
               style: TextStyle(color: isDarkText ? Colors.white : Colors.black),
@@ -86,8 +91,10 @@ class LayoutSetting extends StatelessWidget {
             child: Text('主题色', style: theme.textTheme.titleSmall),
           ),
           Padding(
-            padding:
-                EdgeInsets.symmetric(horizontal: isXs ? 8 : 12, vertical: 6),
+            padding: EdgeInsets.symmetric(
+              horizontal: isXs ? 8 : 12,
+              vertical: 6,
+            ),
             child: Column(
               children: [
                 Row(
@@ -107,8 +114,9 @@ class LayoutSetting extends StatelessWidget {
                           : null,
                       style: FilledButton.styleFrom(
                         backgroundColor: temp,
-                        foregroundColor:
-                            buttonIsDark ? Colors.white : Colors.black,
+                        foregroundColor: buttonIsDark
+                            ? Colors.white
+                            : Colors.black,
                       ),
                       child: const Text('应用'),
                     ),
@@ -149,7 +157,9 @@ class LayoutSetting extends StatelessWidget {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: color.withValues(alpha: OpacityTokens.heavy),
+                                  color: color.withValues(
+                                    alpha: OpacityTokens.heavy,
+                                  ),
                                   offset: const Offset(0, 2),
                                   blurRadius: compact ? 3 : 4,
                                 ),
@@ -161,8 +171,10 @@ class LayoutSetting extends StatelessWidget {
                               child: Icon(
                                 Icons.done,
                                 size: iconSize,
-                                color: ThemeData.estimateBrightnessForColor(
-                                            color) ==
+                                color:
+                                    ThemeData.estimateBrightnessForColor(
+                                          color,
+                                        ) ==
                                         Brightness.dark
                                     ? Colors.white
                                     : Colors.black,
@@ -183,8 +195,10 @@ class LayoutSetting extends StatelessWidget {
             child: Text('字号大小', style: theme.textTheme.titleSmall),
           ),
           Padding(
-            padding:
-                EdgeInsets.symmetric(horizontal: isXs ? 8 : 12, vertical: 6),
+            padding: EdgeInsets.symmetric(
+              horizontal: isXs ? 8 : 12,
+              vertical: 6,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

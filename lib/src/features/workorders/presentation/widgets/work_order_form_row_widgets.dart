@@ -42,10 +42,12 @@ class WorkOrderMultiSelectField extends StatelessWidget {
     return AppSelect<Object>(
       value: selected,
       isMultiSelect: true,
-      options: items.map((item) => AppDropdownOption<Object>(
-        value: item.id,
-        label: item.label,
-      )).toList(),
+      options: items
+          .map(
+            (item) =>
+                AppDropdownOption<Object>(value: item.id, label: item.label),
+          )
+          .toList(),
       decoration: InputDecoration(hintText: placeholder),
       selectHintText: placeholder,
       searchConfig: const AppDropdownSearchConfig(
@@ -103,9 +105,9 @@ class _WorkOrderProductRowState extends State<WorkOrderProductRow> {
     final salesOrderId = widget.draft.sourceSalesOrderId;
     if (salesOrderId == null) return null;
     return widget.salesOrders.cast<WorkOrderSalesOrderCandidate?>().firstWhere(
-          (item) => item?.id == salesOrderId,
-          orElse: () => null,
-        );
+      (item) => item?.id == salesOrderId,
+      orElse: () => null,
+    );
   }
 
   List<WorkOrderSalesOrderCandidateProduct> get _salesOrderItems {
@@ -133,10 +135,8 @@ class _WorkOrderProductRowState extends State<WorkOrderProductRow> {
 
     final productOptions = widget.products
         .map(
-          (item) => AppDropdownOption<int>(
-            value: item.id,
-            label: item.displayLabel,
-          ),
+          (item) =>
+              AppDropdownOption<int>(value: item.id, label: item.displayLabel),
         )
         .toList();
     if (!_isSalesOrderSource && widget.onCreateProduct != null) {
@@ -216,8 +216,9 @@ class _WorkOrderProductRowState extends State<WorkOrderProductRow> {
                       value: widget.draft.sourceSalesOrderId,
                       decoration: const InputDecoration(labelText: '来源客户订单'),
                       options: sourceOrderOptions,
-                      selectHintText:
-                          sourceOrderOptions.isEmpty ? '暂无可用订单' : '请选择',
+                      selectHintText: sourceOrderOptions.isEmpty
+                          ? '暂无可用订单'
+                          : '请选择',
                       minOptionsForSearch: 1,
                       onChanged: (value) {
                         setState(() {
@@ -480,9 +481,11 @@ class _WorkOrderFormRowCard extends StatelessWidget {
     final colors = theme.extension<AppColors>()!;
     return AppCard(
       padding: LayoutTokens.cardPadding(context),
-      background: theme.colorScheme.primary.withValues(alpha: OpacityTokens.faint),
+      background: theme.colorScheme.primary.withValues(
+        alpha: OpacityTokens.faint,
+      ),
       borderColor: colors.borderColor,
-      radius: LayoutTokens.radiusLg,
+      radius: RadiusTokens.lg,
       child: child,
     );
   }

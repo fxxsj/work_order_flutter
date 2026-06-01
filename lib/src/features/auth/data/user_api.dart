@@ -12,17 +12,25 @@ class UserApi {
     return ApiResult(message: response.message);
   }
 
-  Future<ApiResult<Map<String, dynamic>>> login(Map<String, dynamic> data) async {
+  Future<ApiResult<Map<String, dynamic>>> login(
+    Map<String, dynamic> data,
+  ) async {
     final response = await _client.post('/user/login', data: data);
     final payload = response.data;
-    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    final map = payload is Map
+        ? Map<String, dynamic>.from(payload)
+        : <String, dynamic>{};
     return ApiResult(data: map, message: response.message);
   }
 
-  Future<ApiResult<Map<String, dynamic>>> loginByFace(Map<String, dynamic> data) async {
+  Future<ApiResult<Map<String, dynamic>>> loginByFace(
+    Map<String, dynamic> data,
+  ) async {
     final response = await _client.post('/user/loginByFace', data: data);
     final payload = response.data;
-    final map = payload is Map ? Map<String, dynamic>.from(payload) : <String, dynamic>{};
+    final map = payload is Map
+        ? Map<String, dynamic>.from(payload)
+        : <String, dynamic>{};
     return ApiResult(data: map, message: response.message);
   }
 }

@@ -48,7 +48,7 @@ class TraceabilitySummarySection extends StatelessWidget {
               onItemTap: groups[i].onItemTap,
               emptyText: emptyText,
             ),
-            if (i != groups.length - 1) SizedBox(height: LayoutTokens.gapLg),
+            if (i != groups.length - 1) SizedBox(height: SpacingTokens.lg),
           ],
         ],
       ),
@@ -92,7 +92,7 @@ class _TraceabilitySummaryGroup extends StatelessWidget {
               ),
           ],
         ),
-        SizedBox(height: LayoutTokens.gapSm),
+        SizedBox(height: SpacingTokens.sm),
         if (items.isEmpty)
           Text(emptyText, style: theme.textTheme.bodyMedium)
         else
@@ -131,23 +131,27 @@ class _TraceabilitySummaryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
-    final width =
-        MediaQuery.sizeOf(context).width < 720 ? double.infinity : 280.0;
+    final width = MediaQuery.sizeOf(context).width < 720
+        ? double.infinity
+        : 280.0;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
+        borderRadius: BorderRadius.circular(RadiusTokens.lg),
         child: Container(
           width: width,
           padding: LayoutTokens.cardPadding(context),
           decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withValues(alpha: OpacityTokens.faint),
-            borderRadius: BorderRadius.circular(LayoutTokens.radiusLg),
+            color: theme.colorScheme.primary.withValues(
+              alpha: OpacityTokens.faint,
+            ),
+            borderRadius: BorderRadius.circular(RadiusTokens.lg),
             border: Border.all(
-              color: (colors?.borderColor ?? theme.dividerColor)
-                  .withValues(alpha: OpacityTokens.textProminent),
+              color: (colors?.borderColor ?? theme.dividerColor).withValues(
+                alpha: OpacityTokens.textProminent,
+              ),
             ),
           ),
           child: Column(
@@ -199,10 +203,7 @@ class _TraceabilitySummaryTile extends StatelessWidget {
 }
 
 class _SummaryMetaPill extends StatelessWidget {
-  const _SummaryMetaPill({
-    required this.label,
-    required this.value,
-  });
+  const _SummaryMetaPill({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -215,12 +216,13 @@ class _SummaryMetaPill extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: LayoutTokens.cardPaddingSm,
-        vertical: LayoutTokens.gapSm,
+        vertical: SpacingTokens.sm,
       ),
       decoration: BoxDecoration(
-        color:
-            theme.colorScheme.surfaceContainerHighest.withValues(alpha: OpacityTokens.borderMedium),
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusMd),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: OpacityTokens.borderMedium,
+        ),
+        borderRadius: BorderRadius.circular(RadiusTokens.md),
       ),
       child: RichText(
         text: TextSpan(

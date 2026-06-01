@@ -59,19 +59,19 @@ class ApprovalRejectionNoticeCard extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: LayoutTokens.gapLg),
+          SizedBox(height: SpacingTokens.lg),
           _NoticeBlock(label: reasonLabel, value: reason),
           if ((comment ?? '').trim().isNotEmpty) ...[
-            SizedBox(height: LayoutTokens.gapMd),
+            SizedBox(height: SpacingTokens.md),
             _NoticeBlock(label: commentLabel, value: comment!.trim()),
           ],
-          SizedBox(height: LayoutTokens.gapMd),
+          SizedBox(height: SpacingTokens.md),
           _NoticeBlock(label: nextStepLabel, value: nextStep),
           if (primaryAction != null || secondaryAction != null) ...[
-            SizedBox(height: LayoutTokens.gapLg),
+            SizedBox(height: SpacingTokens.lg),
             Wrap(
-              spacing: LayoutTokens.gapSm,
-              runSpacing: LayoutTokens.gapSm,
+              spacing: SpacingTokens.sm,
+              runSpacing: SpacingTokens.sm,
               children: [
                 if (primaryAction != null) primaryAction!,
                 if (secondaryAction != null) secondaryAction!,
@@ -85,10 +85,7 @@ class ApprovalRejectionNoticeCard extends StatelessWidget {
 }
 
 class _NoticeBlock extends StatelessWidget {
-  const _NoticeBlock({
-    required this.label,
-    required this.value,
-  });
+  const _NoticeBlock({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -107,11 +104,8 @@ class _NoticeBlock extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        SizedBox(height: LayoutTokens.gapXs),
-        Text(
-          value,
-          style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
-        ),
+        SizedBox(height: SpacingTokens.xs),
+        Text(value, style: theme.textTheme.bodyMedium?.copyWith(height: 1.5)),
       ],
     );
   }

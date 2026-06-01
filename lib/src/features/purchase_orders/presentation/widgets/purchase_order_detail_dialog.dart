@@ -24,10 +24,14 @@ Future<void> showPurchaseOrderDetailDialog(
             _DetailRow(label: '供应商', value: _displayText(detail.supplierName)),
             if ((detail.supplierContact ?? '').trim().isNotEmpty)
               _DetailRow(
-                  label: '联系人', value: _displayText(detail.supplierContact)),
+                label: '联系人',
+                value: _displayText(detail.supplierContact),
+              ),
             if ((detail.supplierPhone ?? '').trim().isNotEmpty)
               _DetailRow(
-                  label: '联系电话', value: _displayText(detail.supplierPhone)),
+                label: '联系电话',
+                value: _displayText(detail.supplierPhone),
+              ),
             _DetailRow(
               label: '状态',
               value: _displayText(detail.statusDisplay ?? detail.status),
@@ -42,29 +46,39 @@ Future<void> showPurchaseOrderDetailDialog(
             _DetailRow(label: '预计到货', value: _formatDate(detail.expectedDate)),
             _DetailRow(label: '下单日期', value: _formatDate(detail.orderedDate)),
             _DetailRow(
-                label: '实际到货', value: _formatDate(detail.actualReceivedDate)),
+              label: '实际到货',
+              value: _formatDate(detail.actualReceivedDate),
+            ),
             _DetailRow(label: '总金额', value: _formatAmount(detail.totalAmount)),
             _DetailRow(
-                label: '提交人', value: _displayText(detail.submittedByName)),
+              label: '提交人',
+              value: _displayText(detail.submittedByName),
+            ),
             _DetailRow(
-                label: '提交时间', value: _formatDateTime(detail.submittedAt)),
+              label: '提交时间',
+              value: _formatDateTime(detail.submittedAt),
+            ),
             _DetailRow(
-                label: '审核人', value: _displayText(detail.approvedByName)),
+              label: '审核人',
+              value: _displayText(detail.approvedByName),
+            ),
             _DetailRow(
-                label: '审核时间', value: _formatDateTime(detail.approvedAt)),
+              label: '审核时间',
+              value: _formatDateTime(detail.approvedAt),
+            ),
             if ((detail.notes ?? '').trim().isNotEmpty)
               _DetailRow(label: '备注', value: detail.notes ?? ''),
             if ((detail.rejectionReason ?? '').trim().isNotEmpty)
               _DetailRow(label: '拒绝原因', value: detail.rejectionReason ?? ''),
             if (detail.items.isNotEmpty) ...[
-              const SizedBox(height: LayoutTokens.gapMd),
+              const SizedBox(height: SpacingTokens.md),
               Text('采购明细', style: Theme.of(context).textTheme.titleSmall),
-              const SizedBox(height: LayoutTokens.gapSm),
+              const SizedBox(height: SpacingTokens.sm),
               ...detail.items.map((item) {
                 final quantity =
                     '${_formatAmount(item.quantity)} ${_displayText(item.materialUnit)}';
                 return Card(
-                  margin: const EdgeInsets.only(bottom: LayoutTokens.gapSm),
+                  margin: const EdgeInsets.only(bottom: SpacingTokens.sm),
                   child: Padding(
                     padding: const EdgeInsets.all(LayoutTokens.cardPaddingSm),
                     child: Column(
@@ -74,10 +88,10 @@ Future<void> showPurchaseOrderDetailDialog(
                           '${_displayText(item.materialCode)} ${_displayText(item.materialName)}',
                           style: Theme.of(context).textTheme.titleSmall,
                         ),
-                        const SizedBox(height: LayoutTokens.gapXxs),
+                        const SizedBox(height: SpacingTokens.xxs),
                         Wrap(
-                          spacing: LayoutTokens.gapMd,
-                          runSpacing: LayoutTokens.gapXs,
+                          spacing: SpacingTokens.md,
+                          runSpacing: SpacingTokens.xs,
                           children: [
                             _InlineMeta(label: '采购数量', value: quantity),
                             _InlineMeta(
@@ -95,12 +109,13 @@ Future<void> showPurchaseOrderDetailDialog(
                             _InlineMeta(
                               label: '状态',
                               value: _displayText(
-                                  item.statusDisplay ?? item.status),
+                                item.statusDisplay ?? item.status,
+                              ),
                             ),
                           ],
                         ),
                         if ((item.notes ?? '').trim().isNotEmpty) ...[
-                          const SizedBox(height: LayoutTokens.gapXxs),
+                          const SizedBox(height: SpacingTokens.xxs),
                           Text('备注: ${item.notes}'),
                         ],
                       ],
@@ -146,14 +161,11 @@ class _DetailRow extends StatelessWidget {
         ),
         Expanded(child: Text(value, style: theme.textTheme.bodyMedium)),
         if (onTap != null)
-          Icon(
-            Icons.arrow_outward,
-            size: 16,
-            color: theme.colorScheme.primary,
-          ),
+          Icon(Icons.arrow_outward, size: 16, color: theme.colorScheme.primary),
       ],
     );
-    if (onTap == null) return Padding(padding: const EdgeInsets.only(bottom: 8), child: content);
+    if (onTap == null)
+      return Padding(padding: const EdgeInsets.only(bottom: 8), child: content);
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: InkWell(

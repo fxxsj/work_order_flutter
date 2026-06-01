@@ -22,10 +22,7 @@ class WorkOrderListFilterOptions {
 }
 
 class WorkOrderExportResult {
-  const WorkOrderExportResult({
-    required this.bytes,
-    required this.filename,
-  });
+  const WorkOrderExportResult({required this.bytes, required this.filename});
 
   final Uint8List bytes;
   final String filename;
@@ -37,12 +34,15 @@ class WorkOrderListSupportService {
   final ApiClient _client;
 
   Future<WorkOrderListFilterOptions> loadFilterOptions() async {
-    final customerFuture =
-        CustomerApiService(_client).fetchCustomers(page: 1, pageSize: 50);
-    final productFuture =
-        ProductApiService(_client).fetchProducts(pageSize: 50, isActive: true);
-    final processFuture =
-        ProcessApiService(_client).fetchProcesses(page: 1, pageSize: 50);
+    final customerFuture = CustomerApiService(
+      _client,
+    ).fetchCustomers(page: 1, pageSize: 50);
+    final productFuture = ProductApiService(
+      _client,
+    ).fetchProducts(pageSize: 50, isActive: true);
+    final processFuture = ProcessApiService(
+      _client,
+    ).fetchProcesses(page: 1, pageSize: 50);
 
     final customerPage = await customerFuture;
     final productOptions = await productFuture;
@@ -61,8 +61,8 @@ class WorkOrderListSupportService {
     final bytes = data is Uint8List
         ? data
         : data is List<int>
-            ? Uint8List.fromList(data)
-            : null;
+        ? Uint8List.fromList(data)
+        : null;
     if (bytes == null) {
       throw const FormatException('返回格式不支持');
     }
@@ -72,19 +72,21 @@ class WorkOrderListSupportService {
     );
   }
 
-  String _resolveExportFilename(
-    dynamic response, {
-    required String fallback,
-  }) {
-    final timestamp =
-        DateTime.now().toIso8601String().replaceAll(':', '').split('.').first;
+  String _resolveExportFilename(dynamic response, {required String fallback}) {
+    final timestamp = DateTime.now()
+        .toIso8601String()
+        .replaceAll(':', '')
+        .split('.')
+        .first;
     try {
       final headers = response.headers;
-      final contentDisposition = headers.value('content-disposition') ??
+      final contentDisposition =
+          headers.value('content-disposition') ??
           headers.value('Content-Disposition');
       if (contentDisposition != null) {
-        final match =
-            RegExp('filename=\"?([^\";]+)\"?').firstMatch(contentDisposition);
+        final match = RegExp(
+          'filename=\"?([^\";]+)\"?',
+        ).firstMatch(contentDisposition);
         if (match != null) {
           return match.group(1) ?? '${fallback}_$timestamp.xlsx';
         }

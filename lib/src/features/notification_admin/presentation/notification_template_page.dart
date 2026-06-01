@@ -66,13 +66,15 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
         map.forEach((key, value) {
           if (value is Map) {
             final item = Map<String, dynamic>.from(value);
-            templates.add(_TemplateItem(
-              key: key,
-              title: item['title']?.toString() ?? '-',
-              message: item['message']?.toString() ?? '-',
-              variables: _parseVariables(item['variables']),
-              isActive: item['is_active'] != false,
-            ));
+            templates.add(
+              _TemplateItem(
+                key: key,
+                title: item['title']?.toString() ?? '-',
+                message: item['message']?.toString() ?? '-',
+                variables: _parseVariables(item['variables']),
+                isActive: item['is_active'] != false,
+              ),
+            );
           }
         });
       }
@@ -160,10 +162,7 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
       final response = await _runAuthorized(
         () => _apiClient!.post(
           '/notification-templates/preview_template/',
-          data: {
-            'template_name': selected.key,
-            'variables': variables,
-          },
+          data: {'template_name': selected.key, 'variables': variables},
         ),
       );
       final data = response.data;
@@ -260,15 +259,11 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
           ),
           SizedBox(height: spacing),
           if (_error != null)
-            AppCard(
-              child: Text('加载失败: $_error'),
-            )
+            AppCard(child: Text('加载失败: $_error'))
           else if (_loading && _templates.isEmpty)
             const Center(child: CircularProgressIndicator())
           else if (_templates.isEmpty)
-            AppCard(
-              child: const Text('暂无模板数据'),
-            )
+            AppCard(child: const Text('暂无模板数据'))
           else
             Column(
               children: [
@@ -330,8 +325,8 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
                           ),
                         ),
                         Wrap(
-                          spacing: LayoutTokens.gapSm,
-                          runSpacing: LayoutTokens.gapSm,
+                          spacing: SpacingTokens.sm,
+                          runSpacing: SpacingTokens.sm,
                           children: [
                             FilledButton.icon(
                               onPressed: _saving ? null : _saveTemplate,
@@ -352,14 +347,14 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
                           ],
                         ),
                         if (_previewResult != null) ...[
-                          const SizedBox(height: LayoutTokens.gapSm),
+                          const SizedBox(height: SpacingTokens.sm),
                           Container(
                             width: double.infinity,
-                            padding: const EdgeInsets.all(LayoutTokens.gapSm),
+                            padding: const EdgeInsets.all(SpacingTokens.sm),
                             decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .surfaceContainerHighest,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest,
                               borderRadius: RadiusTokens.bMd,
                             ),
                             child: Text(_previewResult!),
@@ -393,13 +388,13 @@ class _TemplateVariableChips extends StatelessWidget {
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
-        const SizedBox(height: LayoutTokens.gapSm),
+        const SizedBox(height: SpacingTokens.sm),
         if (variables.isEmpty)
           Text('该模板暂无变量', style: theme.textTheme.bodySmall)
         else
           Wrap(
-            spacing: LayoutTokens.gapSm,
-            runSpacing: LayoutTokens.gapSm,
+            spacing: SpacingTokens.sm,
+            runSpacing: SpacingTokens.sm,
             children: [
               for (final variable in variables)
                 Chip(label: Text('{$variable}')),

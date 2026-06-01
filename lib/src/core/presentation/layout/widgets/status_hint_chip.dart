@@ -2,13 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 
-enum StatusChipVariant {
-  warning,
-  info,
-  success,
-  danger,
-  primary,
-}
+enum StatusChipVariant { warning, info, success, danger, primary }
 
 class StatusHintChip extends StatelessWidget {
   const StatusHintChip({
@@ -34,9 +28,11 @@ class StatusHintChip extends StatelessWidget {
     final semantic = theme.extension<AppSemanticColors>();
 
     final baseColor = switch (variant) {
-      StatusChipVariant.warning => semantic?.warning ?? theme.colorScheme.primary,
+      StatusChipVariant.warning =>
+        semantic?.warning ?? theme.colorScheme.primary,
       StatusChipVariant.info => semantic?.info ?? theme.colorScheme.primary,
-      StatusChipVariant.success => semantic?.success ?? theme.colorScheme.primary,
+      StatusChipVariant.success =>
+        semantic?.success ?? theme.colorScheme.primary,
       StatusChipVariant.danger => semantic?.danger ?? theme.colorScheme.error,
       StatusChipVariant.primary => theme.colorScheme.primary,
     };
@@ -53,10 +49,15 @@ class StatusHintChip extends StatelessWidget {
       height: 36,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: baseColor.withValues(alpha: selected ? OpacityTokens.medium : OpacityTokens.subtle),
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+        color: baseColor.withValues(
+          alpha: selected ? OpacityTokens.medium : OpacityTokens.subtle,
+        ),
+        borderRadius: BorderRadius.circular(RadiusTokens.sm),
         border: Border.all(
-            color: baseColor.withValues(alpha: selected ? OpacityTokens.strong : OpacityTokens.borderMedium)),
+          color: baseColor.withValues(
+            alpha: selected ? OpacityTokens.strong : OpacityTokens.borderMedium,
+          ),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -80,7 +81,7 @@ class StatusHintChip extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+        borderRadius: BorderRadius.circular(RadiusTokens.sm),
         onTap: onTap,
         child: chip,
       ),

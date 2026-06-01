@@ -80,21 +80,14 @@ class AnimationTokens {
 /// 动画构建器扩展
 extension AnimationBuilderExtension on Widget {
   /// 淡入动画
-  Widget fadeIn({
-    Duration? duration,
-    Curve? curve,
-    VoidCallback? onComplete,
-  }) {
+  Widget fadeIn({Duration? duration, Curve? curve, VoidCallback? onComplete}) {
     return TweenAnimationBuilder<double>(
       duration: duration ?? AnimationTokens.fade,
       curve: curve ?? AnimationTokens.smooth,
       tween: Tween(begin: 0, end: 1),
       onEnd: onComplete,
       builder: (context, value, child) {
-        return Opacity(
-          opacity: value,
-          child: child,
-        );
+        return Opacity(opacity: value, child: child);
       },
       child: this,
     );
@@ -113,10 +106,7 @@ extension AnimationBuilderExtension on Widget {
       tween: Tween(begin: begin, end: Offset.zero),
       onEnd: onComplete,
       builder: (context, value, child) {
-        return FractionalTranslation(
-          translation: value,
-          child: child,
-        );
+        return FractionalTranslation(translation: value, child: child);
       },
       child: this,
     );
@@ -135,10 +125,7 @@ extension AnimationBuilderExtension on Widget {
       tween: Tween(begin: begin, end: 1),
       onEnd: onComplete,
       builder: (context, value, child) {
-        return Transform.scale(
-          scale: value,
-          child: child,
-        );
+        return Transform.scale(scale: value, child: child);
       },
       child: this,
     );
@@ -149,26 +136,23 @@ extension AnimationBuilderExtension on Widget {
 class PresetAnimations {
   /// 淡入 + 上滑
   static Widget fadeInUp(Widget child) {
-    return child.slideIn(
-      begin: const Offset(0, 0.1),
-      curve: Curves.easeOutCubic,
-    ).fadeIn(curve: Curves.easeOutCubic);
+    return child
+        .slideIn(begin: const Offset(0, 0.1), curve: Curves.easeOutCubic)
+        .fadeIn(curve: Curves.easeOutCubic);
   }
 
   /// 淡入 + 下滑
   static Widget fadeInDown(Widget child) {
-    return child.slideIn(
-      begin: const Offset(0, -0.1),
-      curve: Curves.easeOutCubic,
-    ).fadeIn(curve: Curves.easeOutCubic);
+    return child
+        .slideIn(begin: const Offset(0, -0.1), curve: Curves.easeOutCubic)
+        .fadeIn(curve: Curves.easeOutCubic);
   }
 
   /// 缩放淡入
   static Widget scaleFadeIn(Widget child) {
-    return child.scaleIn(
-      begin: 0.95,
-      curve: Curves.easeOutCubic,
-    ).fadeIn(curve: Curves.easeOutCubic);
+    return child
+        .scaleIn(begin: 0.95, curve: Curves.easeOutCubic)
+        .fadeIn(curve: Curves.easeOutCubic);
   }
 
   /// 延迟动画列表

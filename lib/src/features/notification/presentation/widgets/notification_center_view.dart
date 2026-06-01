@@ -38,7 +38,7 @@ class NotificationCenterView extends StatelessWidget {
           padding: LayoutTokens.cardPadding(context),
           decoration: BoxDecoration(
             color: surface,
-            borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+            borderRadius: BorderRadius.circular(RadiusTokens.sm),
             border: Border.all(color: borderColor),
           ),
           child: Column(
@@ -64,21 +64,21 @@ class NotificationCenterView extends StatelessWidget {
                 onMarkAllRead: controller.markAllRead,
                 onRefresh: controller.refreshAll,
               ),
-              SizedBox(height: LayoutTokens.gapMd),
+              SizedBox(height: SpacingTokens.md),
               if (controller.isLoading)
                 Center(
                   child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: LayoutTokens.gapXl),
+                    padding: EdgeInsets.symmetric(vertical: SpacingTokens.xl),
                     child: AppLoadingIndicator(color: primary),
                   ),
                 )
               else if (items.isEmpty)
                 Container(
                   width: double.infinity,
-                  padding: EdgeInsets.symmetric(vertical: LayoutTokens.gapXl),
+                  padding: EdgeInsets.symmetric(vertical: SpacingTokens.xl),
                   decoration: BoxDecoration(
                     color: primary.withAlpha(10),
-                    borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+                    borderRadius: BorderRadius.circular(RadiusTokens.sm),
                   ),
                   child: Center(
                     child: Text(
@@ -169,8 +169,8 @@ class _NotificationToolbar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Wrap(
-      spacing: LayoutTokens.gapMd,
-      runSpacing: LayoutTokens.gapMd,
+      spacing: SpacingTokens.md,
+      runSpacing: SpacingTokens.md,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         Text(
@@ -352,11 +352,11 @@ class _NotificationListItem extends StatelessWidget {
     final theme = Theme.of(context);
     final levelColor = _levelColorFor(item.level, primary, semantic);
     return Container(
-      margin: EdgeInsets.only(bottom: LayoutTokens.gapMd),
+      margin: EdgeInsets.only(bottom: SpacingTokens.md),
       padding: LayoutTokens.cardPadding(context),
       decoration: BoxDecoration(
         color: surface,
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+        borderRadius: BorderRadius.circular(RadiusTokens.sm),
         border: Border.all(
           color: item.isRead
               ? levelColor.withValues(alpha: OpacityTokens.invisible)
@@ -378,7 +378,7 @@ class _NotificationListItem extends StatelessWidget {
           Container(
             width: 10,
             height: 10,
-            margin: EdgeInsets.only(top: LayoutTokens.gapSm),
+            margin: EdgeInsets.only(top: SpacingTokens.sm),
             decoration: BoxDecoration(
               color: item.isRead
                   ? levelColor.withValues(alpha: OpacityTokens.invisible)
@@ -386,7 +386,7 @@ class _NotificationListItem extends StatelessWidget {
               shape: BoxShape.circle,
             ),
           ),
-          SizedBox(width: LayoutTokens.gapMd),
+          SizedBox(width: SpacingTokens.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -398,7 +398,7 @@ class _NotificationListItem extends StatelessWidget {
                     color: accent,
                   ),
                 ),
-                SizedBox(height: LayoutTokens.gapSm),
+                SizedBox(height: SpacingTokens.sm),
                 Text(
                   item.content,
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -406,7 +406,7 @@ class _NotificationListItem extends StatelessWidget {
                     height: 1.4,
                   ),
                 ),
-                SizedBox(height: LayoutTokens.gapMd),
+                SizedBox(height: SpacingTokens.md),
                 Text(
                   formatRelativeTime(item.createdAt),
                   style: theme.textTheme.labelSmall?.copyWith(

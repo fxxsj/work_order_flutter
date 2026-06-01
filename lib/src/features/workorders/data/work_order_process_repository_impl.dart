@@ -13,7 +13,11 @@ class WorkOrderProcessRepositoryImpl implements WorkOrderProcessRepository {
     int pageSize = 20,
     Map<String, dynamic>? params,
   }) {
-    return _apiService.fetchProcesses(page: page, pageSize: pageSize, params: params);
+    return _apiService.fetchProcesses(
+      page: page,
+      pageSize: pageSize,
+      params: params,
+    );
   }
 
   @override
@@ -27,7 +31,10 @@ class WorkOrderProcessRepositoryImpl implements WorkOrderProcessRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> updateProcess(int id, Map<String, dynamic> payload) {
+  Future<Map<String, dynamic>> updateProcess(
+    int id,
+    Map<String, dynamic> payload,
+  ) {
     return _apiService.updateProcess(id, payload);
   }
 
@@ -52,7 +59,10 @@ class WorkOrderProcessRepositoryImpl implements WorkOrderProcessRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> reassignTasks(int id, Map<String, dynamic> payload) {
+  Future<Map<String, dynamic>> reassignTasks(
+    int id,
+    Map<String, dynamic> payload,
+  ) {
     return _apiService.reassignTasks(id, payload);
   }
 }

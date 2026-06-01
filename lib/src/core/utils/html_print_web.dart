@@ -6,7 +6,8 @@ Future<void> printHtmlDocumentImpl({
   required String title,
   required String html,
 }) async {
-  final document = '''
+  final document =
+      '''
 <!doctype html>
 <html>
 <head>

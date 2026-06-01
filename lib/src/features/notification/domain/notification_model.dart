@@ -1,8 +1,4 @@
-enum NotificationLevel {
-  info,
-  warning,
-  urgent,
-}
+enum NotificationLevel { info, warning, urgent }
 
 class NotificationModel {
   const NotificationModel({
@@ -33,14 +29,20 @@ class NotificationModel {
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
     final data = json['data'];
-    final dataMap = data is Map ? Map<String, dynamic>.from(data) : const <String, dynamic>{};
-    final priority = (json['priority'] ?? dataMap['priority'])?.toString() ?? 'normal';
-    final title = _stringOrNull(dataMap['title']) ?? _stringOrNull(json['title']) ?? '';
-    final content = _stringOrNull(dataMap['message']) ??
+    final dataMap = data is Map
+        ? Map<String, dynamic>.from(data)
+        : const <String, dynamic>{};
+    final priority =
+        (json['priority'] ?? dataMap['priority'])?.toString() ?? 'normal';
+    final title =
+        _stringOrNull(dataMap['title']) ?? _stringOrNull(json['title']) ?? '';
+    final content =
+        _stringOrNull(dataMap['message']) ??
         _stringOrNull(json['message']) ??
         _stringOrNull(json['content']) ??
         '';
-    final createdAt = _toDateTime(json['created_at']) ??
+    final createdAt =
+        _toDateTime(json['created_at']) ??
         _toDateTime(json['timestamp']) ??
         _toDateTime(dataMap['created_at']) ??
         DateTime.now();
@@ -49,14 +51,17 @@ class NotificationModel {
       title: title,
       content: content,
       createdAt: createdAt,
-      notificationType: json['notification_type']?.toString() ??
+      notificationType:
+          json['notification_type']?.toString() ??
           dataMap['notification_type']?.toString() ??
           'system',
       priority: priority,
       isRead: json['is_read'] == true,
       readAt: DateTime.tryParse(json['read_at']?.toString() ?? ''),
       workOrderId:
-          _toInt(json['work_order_id']) ?? _toInt(dataMap['work_order_id']) ?? _toInt(dataMap['workorder_id']),
+          _toInt(json['work_order_id']) ??
+          _toInt(dataMap['work_order_id']) ??
+          _toInt(dataMap['workorder_id']),
       taskId: _toInt(json['task_id']) ?? _toInt(dataMap['task_id']),
       level: _levelForPriority(priority),
     );

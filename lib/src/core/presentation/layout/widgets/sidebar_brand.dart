@@ -22,22 +22,24 @@ class SidebarBrand extends StatelessWidget {
       return Container(
         height: LayoutTokens.navItemHeight,
         decoration: BoxDecoration(
-          color: Theme.of(context)
-              .colorScheme
-              .onPrimary
-              .withValues(alpha: OpacityTokens.medium),
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+          color: Theme.of(
+            context,
+          ).colorScheme.onPrimary.withValues(alpha: OpacityTokens.medium),
+          borderRadius: BorderRadius.circular(RadiusTokens.sm),
         ),
-        child: Icon(Icons.grid_view_rounded,
-            color: Theme.of(context).colorScheme.onPrimary, size: 18),
+        child: Icon(
+          Icons.grid_view_rounded,
+          color: Theme.of(context).colorScheme.onPrimary,
+          size: 18,
+        ),
       );
     }
 
     final onPrimary = Theme.of(context).colorScheme.onPrimary;
     return Padding(
       padding: EdgeInsets.symmetric(
-        horizontal: LayoutTokens.gapXs,
-        vertical: LayoutTokens.gapXxxs,
+        horizontal: SpacingTokens.xs,
+        vertical: SpacingTokens.xxxs,
       ),
       child: Row(
         children: [
@@ -46,7 +48,7 @@ class SidebarBrand extends StatelessWidget {
             height: 34,
             decoration: BoxDecoration(
               color: onPrimary.withValues(alpha: OpacityTokens.medium),
-              borderRadius: BorderRadius.circular(LayoutTokens.radiusSm),
+              borderRadius: BorderRadius.circular(RadiusTokens.sm),
             ),
             child: Icon(Icons.grid_view_rounded, color: onPrimary, size: 18),
           ),
@@ -55,9 +57,9 @@ class SidebarBrand extends StatelessWidget {
             child: Text(
               title,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: onPrimary,
-                    fontWeight: FontWeight.w700,
-                  ),
+                color: onPrimary,
+                fontWeight: FontWeight.w700,
+              ),
               overflow: TextOverflow.ellipsis,
             ),
           ),

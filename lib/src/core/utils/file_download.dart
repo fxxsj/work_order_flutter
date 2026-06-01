@@ -11,4 +11,3 @@ Future<String?> saveBytes(
 }) {
   return saveBytesImpl(bytes, filename, mimeType: mimeType);
 }
-

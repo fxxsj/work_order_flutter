@@ -56,127 +56,127 @@ class TextTokens {
   /// Display 样式
   static TextStyle displayLarge(BuildContext context) =>
       Theme.of(context).textTheme.displayLarge!.copyWith(
-            fontSize: fontSizeDisplayLarge,
-            fontWeight: semiBold,
-            height: lineHeightTight,
-            letterSpacing: letterSpacingTight,
-          );
+        fontSize: fontSizeDisplayLarge,
+        fontWeight: semiBold,
+        height: lineHeightTight,
+        letterSpacing: letterSpacingTight,
+      );
 
   static TextStyle displayMedium(BuildContext context) =>
       Theme.of(context).textTheme.displayMedium!.copyWith(
-            fontSize: fontSizeDisplayMedium,
-            fontWeight: semiBold,
-            height: lineHeightSnug,
-            letterSpacing: letterSpacingTight,
-          );
+        fontSize: fontSizeDisplayMedium,
+        fontWeight: semiBold,
+        height: lineHeightSnug,
+        letterSpacing: letterSpacingTight,
+      );
 
   static TextStyle displaySmall(BuildContext context) =>
       Theme.of(context).textTheme.displaySmall!.copyWith(
-            fontSize: fontSizeDisplaySmall,
-            fontWeight: semiBold,
-            height: lineHeightSnug,
-            letterSpacing: letterSpacingNormal,
-          );
+        fontSize: fontSizeDisplaySmall,
+        fontWeight: semiBold,
+        height: lineHeightSnug,
+        letterSpacing: letterSpacingNormal,
+      );
 
   /// Headline 样式
   static TextStyle headlineLarge(BuildContext context) =>
       Theme.of(context).textTheme.headlineLarge!.copyWith(
-            fontSize: fontSizeHeadlineLarge,
-            fontWeight: semiBold,
-            height: lineHeightSnug,
-            letterSpacing: letterSpacingNormal,
-          );
+        fontSize: fontSizeHeadlineLarge,
+        fontWeight: semiBold,
+        height: lineHeightSnug,
+        letterSpacing: letterSpacingNormal,
+      );
 
   static TextStyle headlineMedium(BuildContext context) =>
       Theme.of(context).textTheme.headlineMedium!.copyWith(
-            fontSize: fontSizeHeadlineMedium,
-            fontWeight: semiBold,
-            height: lineHeightSnug,
-            letterSpacing: letterSpacingNormal,
-          );
+        fontSize: fontSizeHeadlineMedium,
+        fontWeight: semiBold,
+        height: lineHeightSnug,
+        letterSpacing: letterSpacingNormal,
+      );
 
   static TextStyle headlineSmall(BuildContext context) =>
       Theme.of(context).textTheme.headlineSmall!.copyWith(
-            fontSize: fontSizeHeadlineSmall,
-            fontWeight: semiBold,
-            height: lineHeightNormal,
-            letterSpacing: letterSpacingNormal,
-          );
+        fontSize: fontSizeHeadlineSmall,
+        fontWeight: semiBold,
+        height: lineHeightNormal,
+        letterSpacing: letterSpacingNormal,
+      );
 
   /// Title 样式
   static TextStyle titleLarge(BuildContext context) =>
       Theme.of(context).textTheme.titleLarge!.copyWith(
-            fontSize: fontSizeTitleLarge,
-            fontWeight: semiBold,
-            height: lineHeightNormal,
-            letterSpacing: letterSpacingNormal,
-          );
+        fontSize: fontSizeTitleLarge,
+        fontWeight: semiBold,
+        height: lineHeightNormal,
+        letterSpacing: letterSpacingNormal,
+      );
 
   static TextStyle titleMedium(BuildContext context) =>
       Theme.of(context).textTheme.titleMedium!.copyWith(
-            fontSize: fontSizeTitleMedium,
-            fontWeight: medium,
-            height: lineHeightNormal,
-            letterSpacing: letterSpacingNormal,
-          );
+        fontSize: fontSizeTitleMedium,
+        fontWeight: medium,
+        height: lineHeightNormal,
+        letterSpacing: letterSpacingNormal,
+      );
 
   static TextStyle titleSmall(BuildContext context) =>
       Theme.of(context).textTheme.titleSmall!.copyWith(
-            fontSize: fontSizeTitleSmall,
-            fontWeight: medium,
-            height: lineHeightNormal,
-            letterSpacing: letterSpacingNormal,
-          );
+        fontSize: fontSizeTitleSmall,
+        fontWeight: medium,
+        height: lineHeightNormal,
+        letterSpacing: letterSpacingNormal,
+      );
 
   /// Body 样式
   static TextStyle bodyLarge(BuildContext context) =>
       Theme.of(context).textTheme.bodyLarge!.copyWith(
-            fontSize: fontSizeBodyLarge,
-            fontWeight: regular,
-            height: lineHeightNormal,
-            letterSpacing: letterSpacingNormal,
-          );
+        fontSize: fontSizeBodyLarge,
+        fontWeight: regular,
+        height: lineHeightNormal,
+        letterSpacing: letterSpacingNormal,
+      );
 
   static TextStyle bodyMedium(BuildContext context) =>
       Theme.of(context).textTheme.bodyMedium!.copyWith(
-            fontSize: fontSizeBodyMedium,
-            fontWeight: regular,
-            height: lineHeightNormal,
-            letterSpacing: letterSpacingNormal,
-          );
+        fontSize: fontSizeBodyMedium,
+        fontWeight: regular,
+        height: lineHeightNormal,
+        letterSpacing: letterSpacingNormal,
+      );
 
   static TextStyle bodySmall(BuildContext context) =>
       Theme.of(context).textTheme.bodySmall!.copyWith(
-            fontSize: fontSizeBodySmall,
-            fontWeight: regular,
-            height: lineHeightRelaxed,
-            letterSpacing: letterSpacingNormal,
-          );
+        fontSize: fontSizeBodySmall,
+        fontWeight: regular,
+        height: lineHeightRelaxed,
+        letterSpacing: letterSpacingNormal,
+      );
 
   /// Label 样式
   static TextStyle labelLarge(BuildContext context) =>
       Theme.of(context).textTheme.labelLarge!.copyWith(
-            fontSize: fontSizeLabelLarge,
-            fontWeight: medium,
-            height: lineHeightNormal,
-            letterSpacing: letterSpacingNormal,
-          );
+        fontSize: fontSizeLabelLarge,
+        fontWeight: medium,
+        height: lineHeightNormal,
+        letterSpacing: letterSpacingNormal,
+      );
 
   static TextStyle labelMedium(BuildContext context) =>
       Theme.of(context).textTheme.labelMedium!.copyWith(
-            fontSize: fontSizeLabelMedium,
-            fontWeight: medium,
-            height: lineHeightNormal,
-            letterSpacing: letterSpacingNormal,
-          );
+        fontSize: fontSizeLabelMedium,
+        fontWeight: medium,
+        height: lineHeightNormal,
+        letterSpacing: letterSpacingNormal,
+      );
 
   static TextStyle labelSmall(BuildContext context) =>
       Theme.of(context).textTheme.labelSmall!.copyWith(
-            fontSize: fontSizeLabelSmall,
-            fontWeight: medium,
-            height: lineHeightNormal,
-            letterSpacing: letterSpacingNormal,
-          );
+        fontSize: fontSizeLabelSmall,
+        fontWeight: medium,
+        height: lineHeightNormal,
+        letterSpacing: letterSpacingNormal,
+      );
 
   // ==================== 语义化样式 ====================
 
@@ -209,8 +209,9 @@ class TextTokens {
     return TextStyle(
       fontSize: fontSizeBodyMedium,
       fontWeight: regular,
-      color:
-          theme.colorScheme.onSurface.withValues(alpha: OpacityTokens.disabled),
+      color: theme.colorScheme.onSurface.withValues(
+        alpha: OpacityTokens.disabled,
+      ),
       height: lineHeightNormal,
     );
   }
@@ -271,20 +272,19 @@ extension TextStyleExtension on TextStyle {
   TextStyle get italic => copyWith(fontStyle: FontStyle.italic);
 
   /// 添加下划线
-  TextStyle get underline => copyWith(
-        decoration: TextDecoration.underline,
-        decorationColor: color,
-      );
+  TextStyle get underline =>
+      copyWith(decoration: TextDecoration.underline, decorationColor: color);
 
   /// 添加删除线
-  TextStyle get strikethrough => copyWith(
-        decoration: TextDecoration.lineThrough,
-        decorationColor: color,
-      );
+  TextStyle get strikethrough =>
+      copyWith(decoration: TextDecoration.lineThrough, decorationColor: color);
 
   /// 添加边框（描边）
-  TextStyle withOutline(BuildContext context,
-      {Color? color, double? strokeWidth}) {
+  TextStyle withOutline(
+    BuildContext context, {
+    Color? color,
+    double? strokeWidth,
+  }) {
     final outlineColor = color ?? Theme.of(context).colorScheme.surface;
     final outlineOffset = strokeWidth ?? 1.0;
     return copyWith(
@@ -334,37 +334,27 @@ class TextBuilder {
 
   /// 创建大标题
   TextBuilder displayLarge(BuildContext context) {
-    return copyWith(
-      style: TextTokens.displayLarge(context),
-    );
+    return copyWith(style: TextTokens.displayLarge(context));
   }
 
   /// 创建中标题
   TextBuilder headlineMedium(BuildContext context) {
-    return copyWith(
-      style: TextTokens.headlineMedium(context),
-    );
+    return copyWith(style: TextTokens.headlineMedium(context));
   }
 
   /// 创建标题
   TextBuilder titleMedium(BuildContext context) {
-    return copyWith(
-      style: TextTokens.titleMedium(context),
-    );
+    return copyWith(style: TextTokens.titleMedium(context));
   }
 
   /// 创建正文
   TextBuilder bodyMedium(BuildContext context) {
-    return copyWith(
-      style: TextTokens.bodyMedium(context),
-    );
+    return copyWith(style: TextTokens.bodyMedium(context));
   }
 
   /// 创建次要文本
   TextBuilder secondary(BuildContext context) {
-    return copyWith(
-      style: TextTokens.secondary(context),
-    );
+    return copyWith(style: TextTokens.secondary(context));
   }
 
   TextBuilder copyWith({

@@ -26,8 +26,9 @@ class DescriptionCell extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
-    final dividerColor =
-        colors?.borderColor.withValues(alpha: OpacityTokens.strong);
+    final dividerColor = colors?.borderColor.withValues(
+      alpha: OpacityTokens.strong,
+    );
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -51,8 +52,9 @@ class DescriptionCell extends StatelessWidget {
               borderRadius: RadiusTokens.bXs,
               child: LinearProgressIndicator(
                 value: progressValue! / 100,
-                backgroundColor:
-                    colors?.borderColor.withValues(alpha: OpacityTokens.medium),
+                backgroundColor: colors?.borderColor.withValues(
+                  alpha: OpacityTokens.medium,
+                ),
                 valueColor: AlwaysStoppedAnimation<Color>(
                   progressValue! >= 100
                       ? Colors.green
@@ -99,15 +101,16 @@ class StatusBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: OpacityTokens.mild),
         borderRadius: RadiusTokens.bXs,
-        border:
-            Border.all(color: color.withValues(alpha: OpacityTokens.strong)),
+        border: Border.all(
+          color: color.withValues(alpha: OpacityTokens.strong),
+        ),
       ),
       child: Text(
         text,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w600,
-            ),
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

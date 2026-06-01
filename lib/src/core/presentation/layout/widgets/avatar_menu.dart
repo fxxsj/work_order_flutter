@@ -20,7 +20,8 @@ class AvatarMenu extends StatelessWidget {
       tooltip: '账户',
       offset: const Offset(0, 48),
       shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(LayoutTokens.radiusMd)),
+        borderRadius: BorderRadius.circular(RadiusTokens.md),
+      ),
       onSelected: (value) {
         if (value == 'profile') {
           onProfileTap();

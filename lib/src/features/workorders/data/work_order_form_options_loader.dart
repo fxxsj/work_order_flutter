@@ -65,16 +65,20 @@ class WorkOrderFormOptionsLoader {
       excludeWorkOrderId: excludeWorkOrderId,
     );
     final customerFuture = customerApi.fetchCustomers(page: 1, pageSize: 50);
-    final productFuture =
-        productApi.fetchProducts(pageSize: 50, isActive: true);
+    final productFuture = productApi.fetchProducts(
+      pageSize: 50,
+      isActive: true,
+    );
     final productPageFuture = productApi.fetchProductPage(pageSize: 50);
     final materialFuture = materialApi.fetchMaterials(page: 1, pageSize: 50);
     final processFuture = processApi.fetchProcesses(page: 1, pageSize: 50);
     final artworkFuture = artworkApi.fetchArtworks(page: 1, pageSize: 50);
     final dieFuture = dieApi.fetchDies(page: 1, pageSize: 50);
     final foilingFuture = foilingApi.fetchFoilingPlates(page: 1, pageSize: 50);
-    final embossingFuture =
-        embossingApi.fetchEmbossingPlates(page: 1, pageSize: 50);
+    final embossingFuture = embossingApi.fetchEmbossingPlates(
+      page: 1,
+      pageSize: 50,
+    );
 
     final salesOrderPage = await salesOrderFuture;
     final customerPage = await customerFuture;
@@ -97,8 +101,9 @@ class WorkOrderFormOptionsLoader {
       artworks: artworkPage.items.map((item) => item.toEntity()).toList(),
       dies: diePage.items.map((item) => item.toEntity()).toList(),
       foilingPlates: foilingPage.items.map((item) => item.toEntity()).toList(),
-      embossingPlates:
-          embossingPage.items.map((item) => item.toEntity()).toList(),
+      embossingPlates: embossingPage.items
+          .map((item) => item.toEntity())
+          .toList(),
     );
   }
 }

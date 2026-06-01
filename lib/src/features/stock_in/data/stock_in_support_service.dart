@@ -6,10 +6,7 @@ class StockInSupportService {
 
   final ApiClient _client;
 
-  Future<void> save({
-    required Map<String, dynamic> payload,
-    int? id,
-  }) async {
+  Future<void> save({required Map<String, dynamic> payload, int? id}) async {
     final apiService = StockInApiService(_client);
     if (id != null) {
       await apiService.updateStockIn(id, payload);

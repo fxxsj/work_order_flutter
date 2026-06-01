@@ -72,8 +72,8 @@ class _RegisterPageState extends State<RegisterPage>
             child: Center(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: LayoutTokens.gapLg,
-                  vertical: LayoutTokens.gapXl,
+                  horizontal: SpacingTokens.lg,
+                  vertical: SpacingTokens.xl,
                 ),
                 child: FadeTransition(
                   opacity: _fadeAnimation,
@@ -90,17 +90,19 @@ class _RegisterPageState extends State<RegisterPage>
                           focusNode: _usernameFocus,
                           onSubmitted: () => _passwordFocus.requestFocus(),
                         ),
-                        SizedBox(height: LayoutTokens.gapLg),
+                        SizedBox(height: SpacingTokens.lg),
                         _RegisterPasswordField(
                           controller: _passwordController,
                           focusNode: _passwordFocus,
                           obscureText: _obscurePassword,
                           onVisibilityToggle: () {
-                            setState(() => _obscurePassword = !_obscurePassword);
+                            setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            );
                           },
                           onSubmitted: () => _confirmFocus.requestFocus(),
                         ),
-                        SizedBox(height: LayoutTokens.gapLg),
+                        SizedBox(height: SpacingTokens.lg),
                         _RegisterConfirmField(
                           controller: _confirmController,
                           focusNode: _confirmFocus,
@@ -111,7 +113,7 @@ class _RegisterPageState extends State<RegisterPage>
                           onSubmitted: _register,
                           passwordController: _passwordController,
                         ),
-                        SizedBox(height: LayoutTokens.gapLg + LayoutTokens.gapXs),
+                        SizedBox(height: SpacingTokens.lg + SpacingTokens.xs),
                         _RegisterSubmitButton(
                           isLoading: _isLoading,
                           onPressed: _register,
@@ -214,7 +216,9 @@ class _RegisterPasswordField extends StatelessWidget {
         suffixIcon: IconButton(
           onPressed: onVisibilityToggle,
           icon: Icon(
-            obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+            obscureText
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
           ),
         ),
       ),
@@ -256,7 +260,9 @@ class _RegisterConfirmField extends StatelessWidget {
         suffixIcon: IconButton(
           onPressed: onVisibilityToggle,
           icon: Icon(
-            obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+            obscureText
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
           ),
         ),
       ),
@@ -307,14 +313,8 @@ class _RegisterFooterLinks extends StatelessWidget {
 
     return Row(
       children: [
-        Text(
-          '已有账号？',
-          style: theme.textTheme.bodyMedium,
-        ),
-        TextButton(
-          onPressed: onLogin,
-          child: const Text('返回登录'),
-        ),
+        Text('已有账号？', style: theme.textTheme.bodyMedium),
+        TextButton(onPressed: onLogin, child: const Text('返回登录')),
       ],
     );
   }

@@ -59,7 +59,8 @@ class _CrudDrawerEditPanelState<T, VM extends ChangeNotifier>
 
     return Consumer<VM>(
       builder: (context, viewModel, _) {
-        final canSubmit = !_submitting &&
+        final canSubmit =
+            !_submitting &&
             (_config.canSave?.call(context, viewModel, widget.item) ?? true);
         return AdaptiveFormPanel(
           formKey: _formKey,
@@ -91,7 +92,7 @@ class _CrudDrawerSectionList extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (var index = 0; index < sections.length; index++) ...[
-          if (index > 0) const SizedBox(height: LayoutTokens.gapLg),
+          if (index > 0) const SizedBox(height: SpacingTokens.lg),
           _CrudDrawerSection(section: sections[index]),
         ],
       ],
@@ -106,7 +107,7 @@ class _CrudDrawerSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final spacing = LayoutTokens.gapMd;
+    final spacing = SpacingTokens.md;
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -13,8 +13,11 @@ class CustomerListEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FeatureEntry<CustomerApiService, CustomerRepository,
-        CustomerViewModel>(
+    return FeatureEntry<
+      CustomerApiService,
+      CustomerRepository,
+      CustomerViewModel
+    >(
       createService: (context) => CustomerApiService(context.read<ApiClient>()),
       createRepository: (context) =>
           CustomerRepositoryImpl(context.read<CustomerApiService>()),

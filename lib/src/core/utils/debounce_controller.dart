@@ -7,7 +7,7 @@ class DebounceController {
   final Duration duration;
 
   DebounceController({Duration? duration})
-      : duration = duration ?? AnimationTokens.slower;
+    : duration = duration ?? AnimationTokens.slower;
 
   void run(VoidCallback callback) {
     _timer?.cancel();

@@ -23,19 +23,17 @@ class RadioGroupField<T> extends FormField<T> {
     bool enabled = true,
     String? hintText,
     String? helperText,
-  })  : _label = label,
-        _onChanged = onChanged,
-        _enabled = enabled,
-        _hintText = hintText,
-        _helperText = helperText,
-        super(
-          initialValue: value,
-          validator: validator,
-          builder: (state) => _RadioGroupFieldBody<T>(
-            state: state,
-            options: options,
-          ),
-        );
+  }) : _label = label,
+       _onChanged = onChanged,
+       _enabled = enabled,
+       _hintText = hintText,
+       _helperText = helperText,
+       super(
+         initialValue: value,
+         validator: validator,
+         builder: (state) =>
+             _RadioGroupFieldBody<T>(state: state, options: options),
+       );
 
   final String _label;
   final ValueChanged<T>? _onChanged;
@@ -45,10 +43,7 @@ class RadioGroupField<T> extends FormField<T> {
 }
 
 class _RadioGroupFieldBody<T> extends StatelessWidget {
-  const _RadioGroupFieldBody({
-    required this.state,
-    required this.options,
-  });
+  const _RadioGroupFieldBody({required this.state, required this.options});
 
   final FormFieldState<T> state;
   final List<RadioGroupFieldOption<T>> options;
@@ -60,13 +55,14 @@ class _RadioGroupFieldBody<T> extends StatelessWidget {
     final currentValue = state.value;
 
     return InputDecorator(
-      decoration: InputDecoration(
-        labelText: widget._label,
-        helperText: widget._helperText ?? widget._hintText,
-        errorText: state.errorText,
-      )
-          .applyDefaults(theme.inputDecorationTheme)
-          .copyWith(enabled: widget._enabled),
+      decoration:
+          InputDecoration(
+                labelText: widget._label,
+                helperText: widget._helperText ?? widget._hintText,
+                errorText: state.errorText,
+              )
+              .applyDefaults(theme.inputDecorationTheme)
+              .copyWith(enabled: widget._enabled),
       child: RadioGroup<T>(
         groupValue: currentValue,
         onChanged: (nextValue) {

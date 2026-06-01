@@ -43,25 +43,25 @@ final class TextFieldConfig extends CrudFieldConfig {
 
   @override
   Widget build(BuildContext context) => TextInputField(
-        key: fieldKey,
-        label: label,
-        type: TextInputFieldType.text,
-        controller: controller,
-        initialValue: initialValue,
-        validator: validator,
-        enabled: enabled,
-        obscureText: obscureText,
-        textInputAction: textInputAction,
-        onChanged: onChanged,
-        onFieldSubmitted: onFieldSubmitted,
-        readOnly: readOnly,
-        onTap: onTap,
-        hintText: hintText,
-        helperText: helperText,
-        prefixIcon: prefixIcon,
-        suffixIcon: suffixIcon,
-        isDense: isDense,
-      );
+    key: fieldKey,
+    label: label,
+    type: TextInputFieldType.text,
+    controller: controller,
+    initialValue: initialValue,
+    validator: validator,
+    enabled: enabled,
+    obscureText: obscureText,
+    textInputAction: textInputAction,
+    onChanged: onChanged,
+    onFieldSubmitted: onFieldSubmitted,
+    readOnly: readOnly,
+    onTap: onTap,
+    hintText: hintText,
+    helperText: helperText,
+    prefixIcon: prefixIcon,
+    suffixIcon: suffixIcon,
+    isDense: isDense,
+  );
 }
 
 final class NumberFieldConfig extends CrudFieldConfig {
@@ -101,22 +101,22 @@ final class NumberFieldConfig extends CrudFieldConfig {
 
   @override
   Widget build(BuildContext context) => TextInputField(
-        key: fieldKey,
-        label: label,
-        type: TextInputFieldType.number,
-        controller: controller,
-        initialValue: initialValue,
-        validator: validator,
-        enabled: enabled,
-        textInputAction: textInputAction,
-        onChanged: onChanged,
-        onFieldSubmitted: onFieldSubmitted,
-        hintText: hintText,
-        helperText: helperText,
-        prefixIcon: prefixIcon,
-        suffixIcon: suffixIcon,
-        isDense: isDense,
-      );
+    key: fieldKey,
+    label: label,
+    type: TextInputFieldType.number,
+    controller: controller,
+    initialValue: initialValue,
+    validator: validator,
+    enabled: enabled,
+    textInputAction: textInputAction,
+    onChanged: onChanged,
+    onFieldSubmitted: onFieldSubmitted,
+    hintText: hintText,
+    helperText: helperText,
+    prefixIcon: prefixIcon,
+    suffixIcon: suffixIcon,
+    isDense: isDense,
+  );
 }
 
 final class EmailFieldConfig extends CrudFieldConfig {
@@ -150,22 +150,22 @@ final class EmailFieldConfig extends CrudFieldConfig {
 
   @override
   Widget build(BuildContext context) => TextInputField(
-        key: fieldKey,
-        label: label,
-        type: TextInputFieldType.email,
-        controller: controller,
-        initialValue: null,
-        validator: validator,
-        enabled: enabled,
-        textInputAction: textInputAction,
-        onChanged: onChanged,
-        onFieldSubmitted: onFieldSubmitted,
-        hintText: hintText,
-        helperText: helperText,
-        prefixIcon: prefixIcon,
-        suffixIcon: suffixIcon,
-        isDense: false,
-      );
+    key: fieldKey,
+    label: label,
+    type: TextInputFieldType.email,
+    controller: controller,
+    initialValue: null,
+    validator: validator,
+    enabled: enabled,
+    textInputAction: textInputAction,
+    onChanged: onChanged,
+    onFieldSubmitted: onFieldSubmitted,
+    hintText: hintText,
+    helperText: helperText,
+    prefixIcon: prefixIcon,
+    suffixIcon: suffixIcon,
+    isDense: false,
+  );
 }
 
 final class PhoneFieldConfig extends CrudFieldConfig {
@@ -199,22 +199,22 @@ final class PhoneFieldConfig extends CrudFieldConfig {
 
   @override
   Widget build(BuildContext context) => TextInputField(
-        key: fieldKey,
-        label: label,
-        type: TextInputFieldType.phone,
-        controller: controller,
-        initialValue: null,
-        validator: validator,
-        enabled: enabled,
-        textInputAction: textInputAction,
-        onChanged: onChanged,
-        onFieldSubmitted: onFieldSubmitted,
-        hintText: hintText,
-        helperText: helperText,
-        prefixIcon: prefixIcon,
-        suffixIcon: suffixIcon,
-        isDense: false,
-      );
+    key: fieldKey,
+    label: label,
+    type: TextInputFieldType.phone,
+    controller: controller,
+    initialValue: null,
+    validator: validator,
+    enabled: enabled,
+    textInputAction: textInputAction,
+    onChanged: onChanged,
+    onFieldSubmitted: onFieldSubmitted,
+    hintText: hintText,
+    helperText: helperText,
+    prefixIcon: prefixIcon,
+    suffixIcon: suffixIcon,
+    isDense: false,
+  );
 }
 
 final class TextareaFieldConfig extends CrudFieldConfig {
@@ -250,18 +250,18 @@ final class TextareaFieldConfig extends CrudFieldConfig {
 
   @override
   Widget build(BuildContext context) => TextareaField(
-        key: fieldKey,
-        label: label,
-        controller: controller,
-        initialValue: null,
-        validator: validator,
-        enabled: enabled,
-        hintText: hintText,
-        helperText: helperText,
-        prefixIcon: prefixIcon,
-        suffixIcon: suffixIcon,
-        maxLines: maxLines,
-        isDense: isDense,
-        onChanged: onChanged,
-      );
+    key: fieldKey,
+    label: label,
+    controller: controller,
+    initialValue: null,
+    validator: validator,
+    enabled: enabled,
+    hintText: hintText,
+    helperText: helperText,
+    prefixIcon: prefixIcon,
+    suffixIcon: suffixIcon,
+    maxLines: maxLines,
+    isDense: isDense,
+    onChanged: onChanged,
+  );
 }

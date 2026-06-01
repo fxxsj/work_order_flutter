@@ -15,10 +15,7 @@ class GenericApiService {
     String? search,
     Map<String, dynamic>? extraParams,
   }) async {
-    final params = <String, dynamic>{
-      'page': page,
-      'page_size': pageSize,
-    };
+    final params = <String, dynamic>{'page': page, 'page_size': pageSize};
     final trimmed = search?.trim();
     if (trimmed != null && trimmed.isNotEmpty) {
       params['search'] = trimmed;
@@ -34,13 +31,17 @@ class GenericApiService {
       final results = payload['results'];
       final list = results is List
           ? results
-              .whereType<Map>()
-              .map((item) => _mapRecord(Map<String, dynamic>.from(item)))
-              .toList()
+                .whereType<Map>()
+                .map((item) => _mapRecord(Map<String, dynamic>.from(item)))
+                .toList()
           : <GenericRecord>[];
       final total = toInt(payload['count']) ?? list.length;
       return PageData(
-          items: list, total: total, page: page, pageSize: pageSize);
+        items: list,
+        total: total,
+        page: page,
+        pageSize: pageSize,
+      );
     }
     if (payload is List) {
       final list = payload
@@ -48,7 +49,11 @@ class GenericApiService {
           .map((item) => _mapRecord(Map<String, dynamic>.from(item)))
           .toList();
       return PageData(
-          items: list, total: list.length, page: 1, pageSize: list.length);
+        items: list,
+        total: list.length,
+        page: 1,
+        pageSize: list.length,
+      );
     }
     return PageData(items: const [], total: 0, page: page, pageSize: pageSize);
   }
@@ -93,8 +98,9 @@ class GenericApiService {
 
   GenericRecord _mapRecord(Map<String, dynamic> json) {
     final idValue = json['id'];
-    final id =
-        idValue is int ? idValue : int.tryParse(idValue?.toString() ?? '') ?? 0;
+    final id = idValue is int
+        ? idValue
+        : int.tryParse(idValue?.toString() ?? '') ?? 0;
     return GenericRecord(id: id, data: json);
   }
 }

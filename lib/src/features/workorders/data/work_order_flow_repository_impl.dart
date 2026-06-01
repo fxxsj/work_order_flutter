@@ -9,13 +9,15 @@ class WorkOrderFlowRepositoryImpl implements WorkOrderFlowRepository {
 
   @override
   Future<Map<String, dynamic>> createFromSalesOrder(
-      Map<String, dynamic> payload) {
+    Map<String, dynamic> payload,
+  ) {
     return _apiService.createFromSalesOrder(payload);
   }
 
   @override
   Future<Map<String, dynamic>> createFromSalesOrders(
-      Map<String, dynamic> payload) {
+    Map<String, dynamic> payload,
+  ) {
     return _apiService.createFromSalesOrders(payload);
   }
 

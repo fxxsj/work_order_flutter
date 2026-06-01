@@ -12,25 +12,28 @@ class WorkOrderOptionItem {
 /// Draft model for work order product items.
 class WorkOrderProductDraft {
   WorkOrderProductDraft()
-      : quantityController = TextEditingController(text: '1'),
-        impositionQuantityController = TextEditingController(text: '1'),
-        unitController = TextEditingController(text: '件'),
-        specController = TextEditingController(),
-        sortOrderController = TextEditingController(text: '0');
+    : quantityController = TextEditingController(text: '1'),
+      impositionQuantityController = TextEditingController(text: '1'),
+      unitController = TextEditingController(text: '件'),
+      specController = TextEditingController(),
+      sortOrderController = TextEditingController(text: '0');
 
   WorkOrderProductDraft.fromDetail(WorkOrderProductItem item)
-      : productId = item.productId,
-        impositionQuantityController =
-            TextEditingController(text: item.impositionQuantity?.toString() ?? '1'),
-        sourceType = item.sourceType ?? 'stock',
-        sourceSalesOrderId = item.sourceSalesOrderId,
-        salesOrderItemId = item.salesOrderItemId,
-        quantityController =
-            TextEditingController(text: item.quantity?.toString() ?? '1'),
-        unitController = TextEditingController(text: item.unit ?? '件'),
-        specController = TextEditingController(text: item.specification ?? ''),
-        sortOrderController =
-            TextEditingController(text: item.sortOrder?.toString() ?? '0');
+    : productId = item.productId,
+      impositionQuantityController = TextEditingController(
+        text: item.impositionQuantity?.toString() ?? '1',
+      ),
+      sourceType = item.sourceType ?? 'stock',
+      sourceSalesOrderId = item.sourceSalesOrderId,
+      salesOrderItemId = item.salesOrderItemId,
+      quantityController = TextEditingController(
+        text: item.quantity?.toString() ?? '1',
+      ),
+      unitController = TextEditingController(text: item.unit ?? '件'),
+      specController = TextEditingController(text: item.specification ?? ''),
+      sortOrderController = TextEditingController(
+        text: item.sortOrder?.toString() ?? '0',
+      );
 
   int? productId;
   String sourceType = 'stock';
@@ -63,16 +66,16 @@ class WorkOrderProductDraft {
 /// Draft model for work order material items.
 class WorkOrderMaterialDraft {
   WorkOrderMaterialDraft()
-      : sizeController = TextEditingController(),
-        usageController = TextEditingController(),
-        notesController = TextEditingController();
+    : sizeController = TextEditingController(),
+      usageController = TextEditingController(),
+      notesController = TextEditingController();
 
   WorkOrderMaterialDraft.fromDetail(WorkOrderMaterialItem item)
-      : materialId = item.materialId,
-        sizeController = TextEditingController(text: item.materialSize ?? ''),
-        usageController = TextEditingController(text: item.materialUsage ?? ''),
-        notesController = TextEditingController(text: item.notes ?? ''),
-        needCutting = item.needCutting ?? false;
+    : materialId = item.materialId,
+      sizeController = TextEditingController(text: item.materialSize ?? ''),
+      usageController = TextEditingController(text: item.materialUsage ?? ''),
+      notesController = TextEditingController(text: item.notes ?? ''),
+      needCutting = item.needCutting ?? false;
 
   int? materialId;
   final TextEditingController sizeController;

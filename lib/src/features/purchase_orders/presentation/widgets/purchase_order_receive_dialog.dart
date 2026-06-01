@@ -91,7 +91,8 @@ class _PurchaseReceivePanelState extends State<_PurchaseReceivePanel> {
             materialCode: item.materialCode ?? '-',
             quantity: item.quantity ?? 0,
             receivedQuantity: item.receivedQuantity ?? 0,
-            remainingQuantity: item.remainingQuantity ??
+            remainingQuantity:
+                item.remainingQuantity ??
                 ((item.quantity ?? 0) - (item.receivedQuantity ?? 0)),
           ),
         )
@@ -109,8 +110,9 @@ class _PurchaseReceivePanelState extends State<_PurchaseReceivePanel> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedItems =
-        items.where((item) => item.receiveQuantity > 0).toList();
+    final selectedItems = items
+        .where((item) => item.receiveQuantity > 0)
+        .toList();
     final totalQty = selectedItems.fold<double>(
       0,
       (sum, item) => sum + item.receiveQuantity,
@@ -119,8 +121,9 @@ class _PurchaseReceivePanelState extends State<_PurchaseReceivePanel> {
         ? '本次收货 ${selectedItems.length} 种物料，共计 ${totalQty.toStringAsFixed(2)} 件'
         : '请输入本次收货数量';
     final supplier = _displayText(widget.detail.supplierName);
-    final status =
-        _displayText(widget.detail.statusDisplay ?? widget.detail.status);
+    final status = _displayText(
+      widget.detail.statusDisplay ?? widget.detail.status,
+    );
     final isCompact =
         ResponsiveLayout.isXs(context) || ResponsiveLayout.isSm(context);
 
@@ -137,19 +140,16 @@ class _PurchaseReceivePanelState extends State<_PurchaseReceivePanel> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '采购收货',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-                const SizedBox(height: LayoutTokens.gapXxs),
+                Text('采购收货', style: Theme.of(context).textTheme.titleSmall),
+                const SizedBox(height: SpacingTokens.xxs),
                 Text(
                   '按采购明细逐行录入本次收货数量，系统会据此更新后续质检与库存流转。',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
-                const SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: SpacingTokens.md),
                 Wrap(
-                  spacing: LayoutTokens.gapMd,
-                  runSpacing: LayoutTokens.gapSm,
+                  spacing: SpacingTokens.md,
+                  runSpacing: SpacingTokens.sm,
                   children: [
                     _ReceiveSummaryItem(
                       label: '采购单号',
@@ -166,23 +166,20 @@ class _PurchaseReceivePanelState extends State<_PurchaseReceivePanel> {
               ],
             ),
           ),
-          const SizedBox(height: LayoutTokens.gapLg),
+          const SizedBox(height: SpacingTokens.lg),
           AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '收货信息',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-                const SizedBox(height: LayoutTokens.gapMd),
+                Text('收货信息', style: Theme.of(context).textTheme.titleSmall),
+                const SizedBox(height: SpacingTokens.md),
                 if (isCompact) ...[
                   _DateField(
                     label: '收货日期',
                     value: receivedDate,
                     onPicked: (picked) => setState(() => receivedDate = picked),
                   ),
-                  const SizedBox(height: LayoutTokens.gapMd),
+                  const SizedBox(height: SpacingTokens.md),
                   CrudFieldConfig.text(
                     label: '送货单号',
                     controller: deliveryNoteController,
@@ -198,7 +195,7 @@ class _PurchaseReceivePanelState extends State<_PurchaseReceivePanel> {
                               setState(() => receivedDate = picked),
                         ),
                       ),
-                      const SizedBox(width: LayoutTokens.gapMd),
+                      const SizedBox(width: SpacingTokens.md),
                       Expanded(
                         child: CrudFieldConfig.text(
                           label: '送货单号',
@@ -210,21 +207,18 @@ class _PurchaseReceivePanelState extends State<_PurchaseReceivePanel> {
               ],
             ),
           ),
-          const SizedBox(height: LayoutTokens.gapLg),
+          const SizedBox(height: SpacingTokens.lg),
           AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '收货明细',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-                const SizedBox(height: LayoutTokens.gapXxxs),
+                Text('收货明细', style: Theme.of(context).textTheme.titleSmall),
+                const SizedBox(height: SpacingTokens.xxxs),
                 Text(
                   '已选择数量会用于生成本次收货提交。',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
-                const SizedBox(height: LayoutTokens.gapMd),
+                const SizedBox(height: SpacingTokens.md),
                 ...items.map(
                   (item) => _ReceiveItemRow(
                     item: item,
@@ -232,18 +226,15 @@ class _PurchaseReceivePanelState extends State<_PurchaseReceivePanel> {
                     onChanged: () => setState(() => quantityErrorText = null),
                   ),
                 ),
-                const SizedBox(height: LayoutTokens.gapSm),
-                Text(
-                  summaryText,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+                const SizedBox(height: SpacingTokens.sm),
+                Text(summaryText, style: Theme.of(context).textTheme.bodySmall),
                 if (quantityErrorText != null) ...[
-                  const SizedBox(height: LayoutTokens.gapXxs),
+                  const SizedBox(height: SpacingTokens.xxs),
                   Text(
                     quantityErrorText!,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
                 ],
               ],
@@ -300,8 +291,8 @@ class _ReceiveItemDraft {
     required this.quantity,
     required this.receivedQuantity,
     required this.remainingQuantity,
-  })  : receiveController = TextEditingController(text: '0'),
-        notesController = TextEditingController();
+  }) : receiveController = TextEditingController(text: '0'),
+       notesController = TextEditingController();
 
   final int itemId;
   final String materialName;
@@ -323,10 +314,7 @@ class _ReceiveItemDraft {
 }
 
 class _ReceiveSummaryItem extends StatelessWidget {
-  const _ReceiveSummaryItem({
-    required this.label,
-    required this.value,
-  });
+  const _ReceiveSummaryItem({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -339,7 +327,7 @@ class _ReceiveSummaryItem extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(label, style: theme.textTheme.bodySmall),
-        const SizedBox(height: LayoutTokens.gapXxxs),
+        const SizedBox(height: SpacingTokens.xxxs),
         Text(
           value,
           style: theme.textTheme.titleSmall?.copyWith(
@@ -369,7 +357,7 @@ class _ReceiveItemRow extends StatelessWidget {
     final isCompact =
         ResponsiveLayout.isXs(context) || ResponsiveLayout.isSm(context);
     return Padding(
-      padding: const EdgeInsets.only(bottom: LayoutTokens.gapSm),
+      padding: const EdgeInsets.only(bottom: SpacingTokens.sm),
       child: AppCard(
         padding: const EdgeInsets.all(LayoutTokens.cardPaddingSm),
         child: Column(
@@ -379,10 +367,10 @@ class _ReceiveItemRow extends StatelessWidget {
               '${item.materialCode} ${item.materialName}',
               style: theme.textTheme.titleSmall,
             ),
-            const SizedBox(height: LayoutTokens.gapXxs),
+            const SizedBox(height: SpacingTokens.xxs),
             Wrap(
-              spacing: LayoutTokens.gapMd,
-              runSpacing: LayoutTokens.gapXs,
+              spacing: SpacingTokens.md,
+              runSpacing: SpacingTokens.xs,
               children: [
                 _InlineMeta(
                   label: '采购数量',
@@ -401,7 +389,7 @@ class _ReceiveItemRow extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: LayoutTokens.gapSm),
+            const SizedBox(height: SpacingTokens.sm),
             if (isCompact)
               Column(
                 children: [
@@ -426,7 +414,7 @@ class _ReceiveItemRow extends StatelessWidget {
                       return null;
                     },
                   ).build(context),
-                  const SizedBox(height: LayoutTokens.gapSm),
+                  const SizedBox(height: SpacingTokens.sm),
                   CrudFieldConfig.text(
                     label: '备注',
                     controller: item.notesController,
@@ -462,7 +450,7 @@ class _ReceiveItemRow extends StatelessWidget {
                       },
                     ).build(context),
                   ),
-                  const SizedBox(width: LayoutTokens.gapMd),
+                  const SizedBox(width: SpacingTokens.md),
                   Expanded(
                     child: CrudFieldConfig.text(
                       label: '备注',

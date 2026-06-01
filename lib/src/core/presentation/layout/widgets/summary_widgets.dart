@@ -33,13 +33,8 @@ class SummaryField extends StatelessWidget {
                 width: _mobileLabelWidth,
                 child: Text(label, style: labelStyle),
               ),
-              const SizedBox(width: LayoutTokens.gapMd),
-              Expanded(
-                child: Text(
-                  value,
-                  style: valueStyle,
-                ),
-              ),
+              const SizedBox(width: SpacingTokens.md),
+              Expanded(child: Text(value, style: valueStyle)),
             ],
           );
         }
@@ -48,11 +43,8 @@ class SummaryField extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(label, style: labelStyle),
-            const SizedBox(height: LayoutTokens.gapXs),
-            Text(
-              value,
-              style: valueStyle,
-            ),
+            const SizedBox(height: SpacingTokens.xs),
+            Text(value, style: valueStyle),
           ],
         );
       },
@@ -74,7 +66,7 @@ class SummaryChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: theme.colorScheme.primary.withValues(alpha: OpacityTokens.faint),
-        borderRadius: BorderRadius.circular(LayoutTokens.radiusPill),
+        borderRadius: BorderRadius.circular(RadiusTokens.pill),
         border: Border.all(color: colors?.borderColor ?? theme.dividerColor),
       ),
       child: RichText(
@@ -132,12 +124,7 @@ class SummaryFieldWrap extends StatelessWidget {
       spacing: spacing,
       runSpacing: runSpacing,
       children: children
-          .map(
-            (child) => SizedBox(
-              width: desktopWidth,
-              child: child,
-            ),
-          )
+          .map((child) => SizedBox(width: desktopWidth, child: child))
           .toList(),
     );
   }

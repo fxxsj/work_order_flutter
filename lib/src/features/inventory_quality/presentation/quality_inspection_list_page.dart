@@ -77,7 +77,7 @@ class _QualityInspectionListView extends StatefulWidget {
 class _QualityInspectionListViewState
     extends State<_QualityInspectionListView> {
   static const double _searchWidth = 320;
-  static const double _spacingSm = LayoutTokens.gapSm;
+  static const double _spacingSm = SpacingTokens.sm;
   static const double _controlHeight = PageActionStyle.height;
   static const String _emptyCellText = '-';
 
@@ -188,7 +188,7 @@ class _QualityInspectionListViewState
         children: [
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.all(LayoutTokens.gapLg),
+              padding: const EdgeInsets.all(SpacingTokens.lg),
               children: [
                 AppCard(
                   child: Column(
@@ -198,15 +198,15 @@ class _QualityInspectionListViewState
                         inspection.inspectionNumber,
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
-                      const SizedBox(height: LayoutTokens.gapXxs),
+                      const SizedBox(height: SpacingTokens.xxs),
                       Text(
                         '在当前列表上下文中查看质检细节，并直接处理异常、附件和施工单跳转。',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
-                      const SizedBox(height: LayoutTokens.gapMd),
+                      const SizedBox(height: SpacingTokens.md),
                       Wrap(
-                        spacing: LayoutTokens.gapMd,
-                        runSpacing: LayoutTokens.gapSm,
+                        spacing: SpacingTokens.md,
+                        runSpacing: SpacingTokens.sm,
                         children: [
                           _buildDetailSummaryItem(
                             context,
@@ -230,7 +230,7 @@ class _QualityInspectionListViewState
                     ],
                   ),
                 ),
-                const SizedBox(height: LayoutTokens.gapLg),
+                const SizedBox(height: SpacingTokens.lg),
                 if (_needsExceptionFollowUp(inspection) ||
                     _hasRecordedExceptionAction(inspection)) ...[
                   ApprovalRejectionNoticeCard(
@@ -273,7 +273,7 @@ class _QualityInspectionListViewState
                             label: const Text('查看施工单'),
                           ),
                   ),
-                  const SizedBox(height: LayoutTokens.gapLg),
+                  const SizedBox(height: SpacingTokens.lg),
                 ],
                 AppCard(
                   child: Column(
@@ -283,7 +283,7 @@ class _QualityInspectionListViewState
                         '基础信息',
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
-                      const SizedBox(height: LayoutTokens.gapMd),
+                      const SizedBox(height: SpacingTokens.md),
                       _DetailRow(
                         label: '客户',
                         value: _displayText(inspection.customerName),
@@ -322,7 +322,7 @@ class _QualityInspectionListViewState
                     ],
                   ),
                 ),
-                const SizedBox(height: LayoutTokens.gapLg),
+                const SizedBox(height: SpacingTokens.lg),
                 AppCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -331,7 +331,7 @@ class _QualityInspectionListViewState
                         '结果与处置',
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
-                      const SizedBox(height: LayoutTokens.gapMd),
+                      const SizedBox(height: SpacingTokens.md),
                       _DetailRow(
                         label: '检验数量',
                         value: _formatAmount(inspection.inspectionQuantity),
@@ -404,10 +404,10 @@ class _QualityInspectionListViewState
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(
-              LayoutTokens.gapLg,
-              LayoutTokens.gapMd,
-              LayoutTokens.gapLg,
-              LayoutTokens.gapLg,
+              SpacingTokens.lg,
+              SpacingTokens.md,
+              SpacingTokens.lg,
+              SpacingTokens.lg,
             ),
             child: Row(
               children: [
@@ -419,7 +419,7 @@ class _QualityInspectionListViewState
                   icon: const Icon(Icons.upload_file_outlined, size: 18),
                   label: Text(_hasAttachment(inspection) ? '更新附件' : '上传附件'),
                 ),
-                const SizedBox(width: LayoutTokens.gapSm),
+                const SizedBox(width: SpacingTokens.sm),
                 if (_hasAttachment(inspection))
                   AttachmentOpenButton(
                     fileUrl: inspection.attachmentUrl,
@@ -1576,7 +1576,7 @@ Widget _buildDetailSummaryItem(
     mainAxisSize: MainAxisSize.min,
     children: [
       Text(label, style: theme.textTheme.bodySmall),
-      const SizedBox(height: LayoutTokens.gapXxxs),
+      const SizedBox(height: SpacingTokens.xxxs),
       Text(
         value,
         style: theme.textTheme.titleSmall?.copyWith(

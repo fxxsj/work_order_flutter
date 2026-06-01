@@ -121,7 +121,8 @@ class ShadowTokens {
 
   /// 成功状态阴影
   static List<BoxShadow> success(BuildContext context) {
-    final color = Theme.of(context).extension<AppSemanticColors>()?.success ??
+    final color =
+        Theme.of(context).extension<AppSemanticColors>()?.success ??
         const Color(0xFF27a644); // semanticSuccess
     return [
       BoxShadow(
@@ -135,7 +136,8 @@ class ShadowTokens {
 
   /// 警告状态阴影
   static List<BoxShadow> warning(BuildContext context) {
-    final color = Theme.of(context).extension<AppSemanticColors>()?.warning ??
+    final color =
+        Theme.of(context).extension<AppSemanticColors>()?.warning ??
         const Color(0xFF8a8f98); // inkSubtle
     return [
       BoxShadow(
@@ -149,7 +151,8 @@ class ShadowTokens {
 
   /// 危险状态阴影
   static List<BoxShadow> danger(BuildContext context) {
-    final color = Theme.of(context).extension<AppSemanticColors>()?.danger ??
+    final color =
+        Theme.of(context).extension<AppSemanticColors>()?.danger ??
         const Color(0xFFef4444); // danger
     return [
       BoxShadow(
@@ -163,7 +166,8 @@ class ShadowTokens {
 
   /// 信息状态阴影
   static List<BoxShadow> info(BuildContext context) {
-    final color = Theme.of(context).extension<AppSemanticColors>()?.info ??
+    final color =
+        Theme.of(context).extension<AppSemanticColors>()?.info ??
         const Color(0xFF5e6ad2); // primary
     return [
       BoxShadow(

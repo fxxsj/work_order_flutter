@@ -36,7 +36,8 @@ Future<void> showDeliveryOrderDetailDialog(
                     : FilledButton.icon(
                         onPressed: () {
                           Navigator.of(dialogContext).pop();
-                          final customerId = detail.customerId == null ||
+                          final customerId =
+                              detail.customerId == null ||
                                   detail.customerId! <= 0
                               ? ''
                               : '&customer_id=${detail.customerId}';
@@ -58,7 +59,7 @@ Future<void> showDeliveryOrderDetailDialog(
                         label: const Text('查看客户订单'),
                       ),
               ),
-              SizedBox(height: LayoutTokens.gapLg),
+              SizedBox(height: SpacingTokens.lg),
             ],
             if (_isRejected(detail)) ...[
               ApprovalRejectionNoticeCard(
@@ -79,12 +80,14 @@ Future<void> showDeliveryOrderDetailDialog(
                         label: const Text('查看客户订单'),
                       ),
               ),
-              SizedBox(height: LayoutTokens.gapLg),
+              SizedBox(height: SpacingTokens.lg),
             ],
             _DetailRow(label: '送货单号', value: detail.orderNumber),
             _DetailRow(label: '客户', value: _displayText(detail.customerName)),
             _DetailRow(
-                label: '客户订单', value: _displayText(detail.salesOrderNumber)),
+              label: '客户订单',
+              value: _displayText(detail.salesOrderNumber),
+            ),
             _DetailRow(
               label: '状态',
               value: _displayText(detail.statusDisplay ?? detail.status),
@@ -92,28 +95,35 @@ Future<void> showDeliveryOrderDetailDialog(
             _DetailRow(label: '发货日期', value: _formatDate(detail.deliveryDate)),
             _DetailRow(label: '收货人', value: _displayText(detail.receiverName)),
             _DetailRow(
-                label: '联系电话', value: _displayText(detail.receiverPhone)),
+              label: '联系电话',
+              value: _displayText(detail.receiverPhone),
+            ),
             _DetailRow(
-                label: '送货地址', value: _displayText(detail.deliveryAddress)),
+              label: '送货地址',
+              value: _displayText(detail.deliveryAddress),
+            ),
             _DetailRow(
-                label: '物流公司', value: _displayText(detail.logisticsCompany)),
+              label: '物流公司',
+              value: _displayText(detail.logisticsCompany),
+            ),
             _DetailRow(
-                label: '物流单号', value: _displayText(detail.trackingNumber)),
+              label: '物流单号',
+              value: _displayText(detail.trackingNumber),
+            ),
             _DetailRow(label: '运费', value: _formatAmount(detail.freight)),
             _DetailRow(
               label: '包裹数',
               value: detail.packageCount?.toString() ?? '-',
             ),
             _DetailRow(
-                label: '总重量', value: _formatAmount(detail.packageWeight)),
+              label: '总重量',
+              value: _formatAmount(detail.packageWeight),
+            ),
             _DetailRow(
               label: '签收附件',
               value: _hasReceiverSignature(detail) ? '已上传' : '-',
             ),
-            _DetailRow(
-              label: '关联发票',
-              value: _formatInvoiceSummary(detail),
-            ),
+            _DetailRow(label: '关联发票', value: _formatInvoiceSummary(detail)),
             if ((detail.receivedNotes ?? '').trim().isNotEmpty)
               _DetailRow(label: '签收备注', value: detail.receivedNotes ?? ''),
             if ((detail.exceptionResolutionDisplay ?? '').trim().isNotEmpty)
@@ -127,7 +137,7 @@ Future<void> showDeliveryOrderDetailDialog(
                 value: detail.exceptionResolutionNotes ?? '',
               ),
             if (_hasReceiverSignature(detail)) ...[
-              SizedBox(height: LayoutTokens.gapSm),
+              SizedBox(height: SpacingTokens.sm),
               AttachmentOpenButton(
                 fileUrl: detail.receiverSignatureUrl,
                 label: '查看签收附件',
@@ -135,9 +145,9 @@ Future<void> showDeliveryOrderDetailDialog(
               ),
             ],
             if (detail.items.isNotEmpty) ...[
-              SizedBox(height: LayoutTokens.gapMd),
+              SizedBox(height: SpacingTokens.md),
               Text('发货明细', style: Theme.of(context).textTheme.titleSmall),
-              SizedBox(height: LayoutTokens.gapSm),
+              SizedBox(height: SpacingTokens.sm),
               ...detail.items.map(
                 (item) => _DetailRow(
                   label: _displayText(item.productName),
@@ -147,7 +157,7 @@ Future<void> showDeliveryOrderDetailDialog(
               ),
             ],
             if ((detail.notes ?? '').trim().isNotEmpty) ...[
-              SizedBox(height: LayoutTokens.gapMd),
+              SizedBox(height: SpacingTokens.md),
               _DetailRow(label: '备注', value: detail.notes ?? ''),
             ],
           ],
@@ -217,7 +227,7 @@ class _DetailRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: EdgeInsets.only(bottom: LayoutTokens.gapSm),
+      padding: EdgeInsets.only(bottom: SpacingTokens.sm),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

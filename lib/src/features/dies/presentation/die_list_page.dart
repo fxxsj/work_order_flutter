@@ -233,7 +233,7 @@ class DieListPage extends StatelessWidget {
   }
 
   static Widget _buildCodeCell(BuildContext context, Die die) {
-    return _buildBodyText(context, CrudValueFormatter.text(die.code));
+    return _buildBodyText(context, AppValueFormatter.text(die.code));
   }
 
   static Widget _buildTypeCell(BuildContext context, Die die) {
@@ -241,15 +241,15 @@ class DieListPage extends StatelessWidget {
   }
 
   static Widget _buildSizeCell(BuildContext context, Die die) {
-    return _buildBodyText(context, CrudValueFormatter.text(die.size));
+    return _buildBodyText(context, AppValueFormatter.text(die.size));
   }
 
   static Widget _buildMaterialCell(BuildContext context, Die die) {
-    return _buildBodyText(context, CrudValueFormatter.text(die.material));
+    return _buildBodyText(context, AppValueFormatter.text(die.material));
   }
 
   static Widget _buildThicknessCell(BuildContext context, Die die) {
-    return _buildBodyText(context, CrudValueFormatter.text(die.thickness));
+    return _buildBodyText(context, AppValueFormatter.text(die.thickness));
   }
 
   static Widget _buildConfirmedCell(BuildContext context, Die die) {
@@ -261,7 +261,7 @@ class DieListPage extends StatelessWidget {
   }
 
   static Widget _buildCreatedAtCell(BuildContext context, Die die) {
-    return _buildBodyText(context, CrudValueFormatter.dateTime(die.createdAt));
+    return _buildBodyText(context, AppValueFormatter.dateTime(die.createdAt));
   }
 
   static Widget _buildBodyText(BuildContext context, String value) {
@@ -269,11 +269,11 @@ class DieListPage extends StatelessWidget {
   }
 
   static String _titleText(Die die) {
-    return CrudValueFormatter.text(die.name);
+    return AppValueFormatter.text(die.name);
   }
 
   static String _subtitleText(Die die) {
-    return '${CrudValueFormatter.text(die.code)} · ${_dieTypeText(die)}';
+    return '${AppValueFormatter.text(die.code)} · ${_dieTypeText(die)}';
   }
 
   static String _dieTypeText(Die die) {
@@ -289,7 +289,7 @@ class DieListPage extends StatelessWidget {
       case 'universal':
         return '通用刀模';
       default:
-        return CrudValueFormatter.empty;
+        return AppValueFormatter.empty;
     }
   }
 
@@ -299,7 +299,7 @@ class DieListPage extends StatelessWidget {
 
   static String _productSummary(List<DieProduct> products) {
     if (products.isEmpty) {
-      return CrudValueFormatter.empty;
+      return AppValueFormatter.empty;
     }
     return products
         .map((item) => '${item.productName}(${item.quantity ?? 1}拼)')
@@ -309,10 +309,7 @@ class DieListPage extends StatelessWidget {
   static List<CrudSummaryChipData> _summaryChips(Die die) {
     return [
       CrudSummaryChipData(label: '状态', value: _confirmedText(die)),
-      CrudSummaryChipData(
-        label: '尺寸',
-        value: CrudValueFormatter.text(die.size),
-      ),
+      CrudSummaryChipData(label: '尺寸', value: AppValueFormatter.text(die.size)),
     ];
   }
 
@@ -320,42 +317,42 @@ class DieListPage extends StatelessWidget {
     return [
       CrudSummaryFieldData(
         label: '编码',
-        value: CrudValueFormatter.text(die.code),
+        value: AppValueFormatter.text(die.code),
       ),
       CrudSummaryFieldData(label: '类型', value: _dieTypeText(die)),
       CrudSummaryFieldData(
         label: '尺寸',
-        value: CrudValueFormatter.text(die.size),
+        value: AppValueFormatter.text(die.size),
       ),
       CrudSummaryFieldData(
         label: '材质',
-        value: CrudValueFormatter.text(die.material),
+        value: AppValueFormatter.text(die.material),
       ),
       CrudSummaryFieldData(
         label: '厚度',
-        value: CrudValueFormatter.text(die.thickness),
+        value: AppValueFormatter.text(die.thickness),
       ),
       CrudSummaryFieldData(label: '确认状态', value: _confirmedText(die)),
       CrudSummaryFieldData(
         label: '确认人',
-        value: CrudValueFormatter.text(die.confirmedByName),
+        value: AppValueFormatter.text(die.confirmedByName),
       ),
       CrudSummaryFieldData(
         label: '确认时间',
-        value: CrudValueFormatter.dateTime(die.confirmedAt),
+        value: AppValueFormatter.dateTime(die.confirmedAt),
       ),
       CrudSummaryFieldData(label: '包含产品', value: _productSummary(die.products)),
       CrudSummaryFieldData(
         label: '备注',
-        value: CrudValueFormatter.text(die.notes),
+        value: AppValueFormatter.text(die.notes),
       ),
       CrudSummaryFieldData(
         label: '创建时间',
-        value: CrudValueFormatter.dateTime(die.createdAt),
+        value: AppValueFormatter.dateTime(die.createdAt),
       ),
       CrudSummaryFieldData(
         label: '更新时间',
-        value: CrudValueFormatter.dateTime(die.updatedAt),
+        value: AppValueFormatter.dateTime(die.updatedAt),
       ),
     ];
   }
@@ -366,7 +363,7 @@ class DieListPage extends StatelessWidget {
 
   static List<String> _buildDeleteImpacts(Die die) {
     return [
-      '刀模编码：${CrudValueFormatter.text(die.code)}',
+      '刀模编码：${AppValueFormatter.text(die.code)}',
       '刀模类型：${_dieTypeText(die)}',
       if (die.products.isNotEmpty) '包含产品：${_productSummary(die.products)}',
       '若已有施工单或产品绑定使用该刀模，删除可能失败或需要先解除关联',

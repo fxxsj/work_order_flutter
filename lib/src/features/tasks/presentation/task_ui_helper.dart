@@ -35,8 +35,9 @@ class TaskUiHelper {
     final total = task.productionQuantity ?? 0;
     final completed = task.quantityCompleted ?? 0;
     if (total <= 0) return '-';
-    final percentage =
-        (completed / total * 100).clamp(0, 100).toStringAsFixed(0);
+    final percentage = (completed / total * 100)
+        .clamp(0, 100)
+        .toStringAsFixed(0);
     return '$percentage%';
   }
 

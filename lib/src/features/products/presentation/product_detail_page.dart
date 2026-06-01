@@ -13,10 +13,7 @@ import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
 
 class ProductDetailPage extends StatefulWidget {
-  const ProductDetailPage({
-    super.key,
-    required this.product,
-  });
+  const ProductDetailPage({super.key, required this.product});
 
   final Product product;
 
@@ -41,10 +38,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     try {
       final apiClient = context.read<ApiClient>();
       final service = ProcessApiService(apiClient);
-      final page = await service.fetchProcesses(
-        page: 1,
-        pageSize: 50,
-      );
+      final page = await service.fetchProcesses(page: 1, pageSize: 50);
       if (!mounted) return;
       setState(() {
         _processes = page.items.map((dto) => dto.toEntity()).toList();
@@ -115,19 +109,35 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     child: Column(
                       children: [
                         _buildBasicInfoCard(
-                            context, product, itemSpacing, labelStyle),
+                          context,
+                          product,
+                          itemSpacing,
+                          labelStyle,
+                        ),
                         SizedBox(height: sectionSpacing),
                         _buildStockPriceCard(
-                            context, product, itemSpacing, labelStyle),
+                          context,
+                          product,
+                          itemSpacing,
+                          labelStyle,
+                        ),
                         if (product.productType == 'group_main') ...[
                           SizedBox(height: sectionSpacing),
                           _buildGroupCard(
-                              context, product, itemSpacing, labelStyle),
+                            context,
+                            product,
+                            itemSpacing,
+                            labelStyle,
+                          ),
                         ],
                         if (product.defaultMaterials.isNotEmpty) ...[
                           SizedBox(height: sectionSpacing),
                           _buildMaterialsCard(
-                              context, product, itemSpacing, labelStyle),
+                            context,
+                            product,
+                            itemSpacing,
+                            labelStyle,
+                          ),
                         ],
                       ],
                     ),
@@ -142,7 +152,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           SizedBox(height: sectionSpacing),
                         ],
                         _buildExtraInfoCard(
-                            context, product, itemSpacing, labelStyle),
+                          context,
+                          product,
+                          itemSpacing,
+                          labelStyle,
+                        ),
                         if (product.images.isNotEmpty) ...[
                           SizedBox(height: sectionSpacing),
                           _buildImageCard(context, product),
@@ -197,11 +211,22 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           _row(context, '产品名称', item.name, spacing, labelStyle),
           _row(context, '产品编码', item.code, spacing, labelStyle),
           _row(context, '产品类型', _productTypeText(item), spacing, labelStyle),
-          _row(context, '所属产品组', item.productGroupName ?? _empty, spacing,
-              labelStyle,
-              last: true),
-          _row(context, '规格', item.specification ?? _empty, spacing, labelStyle,
-              last: true),
+          _row(
+            context,
+            '所属产品组',
+            item.productGroupName ?? _empty,
+            spacing,
+            labelStyle,
+            last: true,
+          ),
+          _row(
+            context,
+            '规格',
+            item.specification ?? _empty,
+            spacing,
+            labelStyle,
+            last: true,
+          ),
         ],
       ),
     );
@@ -213,7 +238,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     double spacing,
     TextStyle? labelStyle,
   ) {
-    final isLowStock = item.stockQuantity != null &&
+    final isLowStock =
+        item.stockQuantity != null &&
         item.minStockQuantity != null &&
         item.stockQuantity! < item.minStockQuantity!;
     return DetailSectionCard(
@@ -221,8 +247,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       child: Column(
         children: [
           _row(context, '单位', item.unit ?? _empty, spacing, labelStyle),
-          _row(context, '单价', item.unitPrice?.toStringAsFixed(2) ?? _empty,
-              spacing, labelStyle),
+          _row(
+            context,
+            '单价',
+            item.unitPrice?.toStringAsFixed(2) ?? _empty,
+            spacing,
+            labelStyle,
+          ),
           _row(
             context,
             '库存数量',
@@ -232,13 +263,20 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             valueColor: isLowStock ? Colors.red : null,
           ),
           _row(
-              context,
-              '最小库存',
-              item.minStockQuantity?.toString() ?? _empty,
-              spacing,
-              labelStyle),
-          _row(context, '状态', _statusText(item), spacing, labelStyle,
-              last: true),
+            context,
+            '最小库存',
+            item.minStockQuantity?.toString() ?? _empty,
+            spacing,
+            labelStyle,
+          ),
+          _row(
+            context,
+            '状态',
+            _statusText(item),
+            spacing,
+            labelStyle,
+            last: true,
+          ),
         ],
       ),
     );
@@ -292,16 +330,18 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     return DetailSectionCard(
       title: '补充信息',
       child: _row(
-          context, '描述', item.description ?? _empty, spacing, labelStyle,
-          last: true),
+        context,
+        '描述',
+        item.description ?? _empty,
+        spacing,
+        labelStyle,
+        last: true,
+      ),
     );
   }
 
   Widget _buildProcessCard(BuildContext context, Product item) {
-    return DetailSectionCard(
-      title: '默认工序',
-      child: _buildProcessTags(item),
-    );
+    return DetailSectionCard(title: '默认工序', child: _buildProcessTags(item));
   }
 
   Widget _buildImageCard(BuildContext context, Product item) {
@@ -352,10 +392,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 100,
-            child: Text(label, style: labelStyle),
-          ),
+          SizedBox(width: 100, child: Text(label, style: labelStyle)),
           Expanded(
             child: Text(
               value.isEmpty ? _empty : value,
@@ -395,12 +432,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer
-                  .withValues(alpha: OpacityTokens.distinctStrong),
+              color: theme.colorScheme.primaryContainer.withValues(
+                alpha: OpacityTokens.distinctStrong,
+              ),
               borderRadius: RadiusTokens.bXs,
               border: Border.all(
-                color: theme.colorScheme.outlineVariant
-                    .withValues(alpha: OpacityTokens.borderMedium),
+                color: theme.colorScheme.outlineVariant.withValues(
+                  alpha: OpacityTokens.borderMedium,
+                ),
               ),
             ),
             child: Text(
@@ -485,8 +524,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     errorBuilder: (context, error, stackTrace) => Container(
                       width: 120,
                       height: 120,
-                      color:
-                          Theme.of(context).colorScheme.surfaceContainerHighest,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                       child: const Icon(Icons.broken_image_outlined),
                     ),
                   ),
@@ -496,8 +536,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     child: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: Colors.black
-                            .withValues(alpha: OpacityTokens.borderMedium),
+                        color: Colors.black.withValues(
+                          alpha: OpacityTokens.borderMedium,
+                        ),
                         borderRadius: RadiusTokens.bXs,
                       ),
                       child: const Icon(
@@ -523,10 +564,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     showDialog<void>(
       context: context,
       barrierColor: Colors.black87,
-      builder: (context) => _ImageViewerDialog(
-        images: images,
-        initialIndex: initialIndex,
-      ),
+      builder: (context) =>
+          _ImageViewerDialog(images: images, initialIndex: initialIndex),
     );
   }
 }
@@ -534,10 +573,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 // ---- 图片全屏查看器 ----
 
 class _ImageViewerDialog extends StatefulWidget {
-  const _ImageViewerDialog({
-    required this.images,
-    this.initialIndex = 0,
-  });
+  const _ImageViewerDialog({required this.images, this.initialIndex = 0});
 
   final List<ProductImage> images;
   final int initialIndex;
@@ -595,10 +631,10 @@ class _ImageViewerDialogState extends State<_ImageViewerDialog> {
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) =>
                             const Icon(
-                          Icons.broken_image_outlined,
-                          color: Colors.white54,
-                          size: 64,
-                        ),
+                              Icons.broken_image_outlined,
+                              color: Colors.white54,
+                              size: 64,
+                            ),
                       ),
                     ),
                   );
@@ -646,8 +682,9 @@ class _ImageViewerDialogState extends State<_ImageViewerDialog> {
                         icon: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.black
-                                .withValues(alpha: OpacityTokens.borderMedium),
+                            color: Colors.black.withValues(
+                              alpha: OpacityTokens.borderMedium,
+                            ),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -676,8 +713,9 @@ class _ImageViewerDialogState extends State<_ImageViewerDialog> {
                         icon: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.black
-                                .withValues(alpha: OpacityTokens.borderMedium),
+                            color: Colors.black.withValues(
+                              alpha: OpacityTokens.borderMedium,
+                            ),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(

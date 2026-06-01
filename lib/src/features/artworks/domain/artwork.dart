@@ -107,12 +107,17 @@ class Artwork {
       for (final item in rawProducts) {
         if (item is Map) {
           final productId = toInt(item['product']) ?? toInt(item['id']) ?? 0;
-          final productName = item['product_name']?.toString() ?? item['name']?.toString() ?? '';
-          artworkProducts.add(ArtworkProduct(
-            productId: productId,
-            productName: productName,
-            impositionQuantity: toInt(item['imposition_quantity']),
-          ));
+          final productName =
+              item['product_name']?.toString() ??
+              item['name']?.toString() ??
+              '';
+          artworkProducts.add(
+            ArtworkProduct(
+              productId: productId,
+              productName: productName,
+              impositionQuantity: toInt(item['imposition_quantity']),
+            ),
+          );
         }
       }
     }

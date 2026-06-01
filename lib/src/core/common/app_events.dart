@@ -12,7 +12,8 @@ class AuthExpiredEvent extends AppEvent {
 class AppEvents {
   AppEvents._();
 
-  static final StreamController<AppEvent> _controller = StreamController<AppEvent>.broadcast();
+  static final StreamController<AppEvent> _controller =
+      StreamController<AppEvent>.broadcast();
 
   static Stream<AppEvent> get stream => _controller.stream;
 

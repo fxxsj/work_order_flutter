@@ -32,12 +32,15 @@ class _UserNotificationSettingsPageState
   bool _quietHoursEnabled = false;
   bool _showAdvanced = false;
 
-  final TextEditingController _urgencyController =
-      TextEditingController(text: 'normal');
-  final TextEditingController _quietStartController =
-      TextEditingController(text: '22:00');
-  final TextEditingController _quietEndController =
-      TextEditingController(text: '08:00');
+  final TextEditingController _urgencyController = TextEditingController(
+    text: 'normal',
+  );
+  final TextEditingController _quietStartController = TextEditingController(
+    text: '22:00',
+  );
+  final TextEditingController _quietEndController = TextEditingController(
+    text: '08:00',
+  );
 
   Map<String, dynamic>? _lastResult;
 
@@ -201,18 +204,14 @@ class _UserNotificationSettingsPageState
                       Expanded(
                         child: TextField(
                           controller: _quietStartController,
-                          decoration: const InputDecoration(
-                            labelText: '开始时间',
-                          ),
+                          decoration: const InputDecoration(labelText: '开始时间'),
                         ),
                       ),
-                      const SizedBox(width: LayoutTokens.gapSm),
+                      const SizedBox(width: SpacingTokens.sm),
                       Expanded(
                         child: TextField(
                           controller: _quietEndController,
-                          decoration: const InputDecoration(
-                            labelText: '结束时间',
-                          ),
+                          decoration: const InputDecoration(labelText: '结束时间'),
                         ),
                       ),
                     ],
@@ -223,14 +222,15 @@ class _UserNotificationSettingsPageState
                     onPressed: () =>
                         setState(() => _showAdvanced = !_showAdvanced),
                     icon: Icon(
-                        _showAdvanced ? Icons.expand_less : Icons.expand_more),
+                      _showAdvanced ? Icons.expand_less : Icons.expand_more,
+                    ),
                     label: Text(_showAdvanced ? '收起高级规则' : '展开高级规则'),
                   ),
                 ),
                 if (_showAdvanced) _buildAdvancedSettings(context),
                 Wrap(
-                  spacing: LayoutTokens.gapSm,
-                  runSpacing: LayoutTokens.gapSm,
+                  spacing: SpacingTokens.sm,
+                  runSpacing: SpacingTokens.sm,
                   children: [
                     OutlinedButton.icon(
                       onPressed: _loading ? null : _loadSettings,

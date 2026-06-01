@@ -17,7 +17,6 @@ export 'radius_tokens.dart' show RadiusTokens;
 /// 布局尺寸令牌（对话框宽度、侧边栏、导航等结构尺寸）
 ///
 /// 间距相关请使用 [SpacingTokens]，圆角相关请使用 [RadiusTokens]。
-/// 旧的 gap* / radius* 成员保留为 const 兼容别名，新代码请直接用对应 Token 类。
 class LayoutTokens {
   const LayoutTokens._();
 
@@ -57,26 +56,7 @@ class LayoutTokens {
   static const double iconXxl = 32;
   static const double iconXxxl = 36;
 
-  // ── 兼容别名（spacing，const 保证不影响现有代码） ───────
-
-  static const double gapXxxs = SpacingTokens.xxxs;
-  static const double gapXxs = SpacingTokens.xxs;
-  static const double gapXs = SpacingTokens.xs;
-  static const double gapSm = SpacingTokens.sm;
-  static const double gapMd = SpacingTokens.md;
-  static const double gapLg = SpacingTokens.lg;
-  static const double gapXl = SpacingTokens.xl;
-
-  // ── 兼容别名（radius，const 保证不影响现有代码） ────────
-
-  static const double radiusXs = RadiusTokens.xs;
-  static const double radiusSm = RadiusTokens.sm;
-  static const double radiusMd = RadiusTokens.md;
-  static const double radiusLg = RadiusTokens.lg;
-  static const double radiusXl = RadiusTokens.xl;
-  static const double radiusPill = RadiusTokens.pill;
-
-  // ── 兼容方法（响应式，委托到 SpacingTokens） ────────────
+  // ── 响应式间距 ──────────────────────────────────────────
 
   static EdgeInsets pagePadding(BuildContext context) =>
       SpacingTokens.pagePadding(context);

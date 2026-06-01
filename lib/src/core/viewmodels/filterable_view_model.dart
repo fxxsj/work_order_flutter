@@ -20,9 +20,7 @@ abstract class FilterableViewModel<T> extends PaginatedViewModel<T> {
 
   /// Get filter params for API calls (only non-null values).
   Map<String, dynamic> getFilterParams() {
-    return Map.fromEntries(
-      _filters.entries.where((e) => e.value != null),
-    );
+    return Map.fromEntries(_filters.entries.where((e) => e.value != null));
   }
 
   /// Check if any filters are active.
