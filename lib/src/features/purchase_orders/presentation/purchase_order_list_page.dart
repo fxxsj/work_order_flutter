@@ -394,7 +394,10 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
 
     final formKey = GlobalKey<FormState>();
 
-    Future<void> submit(VoidCallback refresh, [bool autoApprove = false]) async {
+    Future<void> submit(
+      VoidCallback refresh, [
+      bool autoApprove = false,
+    ]) async {
       if (!PermissionUtil.snapshot(context).has(requiredPermission)) {
         ToastUtil.showError('当前账号无权执行该操作');
         return;
@@ -834,39 +837,57 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
                 DataCell(
                   RowActionGroup(
                     actions: [
-                      if (canChangePurchaseOrder && order.approvalStatus == 'draft')
+                      if (canChangePurchaseOrder &&
+                          order.approvalStatus == 'draft')
                         RowAction(
                           label: '编辑',
                           onPressed: () =>
                               _openFormDialog(viewModel, order: order),
                         ),
-                      if (canChangePurchaseOrder && order.approvalStatus == 'draft')
+                      if (canChangePurchaseOrder &&
+                          order.approvalStatus == 'draft')
                         RowAction(
                           label: '提交',
-                          onPressed: () => _handleStatusAction(viewModel, order, 'submit'),
-                        ),
-                      if (canChangePurchaseOrder && order.approvalStatus == 'submitted')
-                        RowAction(
-                          label: '批准',
-                          onPressed: () => _handleStatusAction(viewModel, order, 'approve'),
-                        ),
-                      if (canChangePurchaseOrder && order.approvalStatus == 'submitted')
-                        RowAction(
-                          label: '拒绝',
-                          onPressed: () => _handleStatusAction(viewModel, order, 'reject'),
+                          onPressed: () =>
+                              _handleStatusAction(viewModel, order, 'submit'),
                         ),
                       if (canChangePurchaseOrder &&
-                          order.approvalStatus == 'approved' && order.status == 'pending')
+                          order.approvalStatus == 'submitted')
+                        RowAction(
+                          label: '批准',
+                          onPressed: () =>
+                              _handleStatusAction(viewModel, order, 'approve'),
+                        ),
+                      if (canChangePurchaseOrder &&
+                          order.approvalStatus == 'submitted')
+                        RowAction(
+                          label: '拒绝',
+                          onPressed: () =>
+                              _handleStatusAction(viewModel, order, 'reject'),
+                        ),
+                      if (canChangePurchaseOrder &&
+                          order.approvalStatus == 'approved' &&
+                          order.status == 'pending')
                         RowAction(
                           label: '下单',
-                          onPressed: () => _handleStatusAction(viewModel, order, 'placeOrder'),
+                          onPressed: () => _handleStatusAction(
+                            viewModel,
+                            order,
+                            'placeOrder',
+                          ),
                         ),
-                      if (permissions.has('workorder.change_purchasereceiverecord') && order.status == 'ordered')
+                      if (permissions.has(
+                            'workorder.change_purchasereceiverecord',
+                          ) &&
+                          order.status == 'ordered')
                         RowAction(
                           label: '收货',
                           onPressed: () => _openReceiveDialog(viewModel, order),
                         ),
-                      if (permissions.has('workorder.change_purchaseinspectionrecord') && order.status == 'ordered')
+                      if (permissions.has(
+                            'workorder.change_purchaseinspectionrecord',
+                          ) &&
+                          order.status == 'ordered')
                         RowAction(
                           label: '质检',
                           onPressed: () => _openInspectionDialog(order),
@@ -874,10 +895,12 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
                       if (canChangePurchaseOrder &&
                           (order.approvalStatus == 'draft' ||
                               order.approvalStatus == 'submitted' ||
-                              order.approvalStatus == 'approved') && order.status != 'cancelled')
+                              order.approvalStatus == 'approved') &&
+                          order.status != 'cancelled')
                         RowAction(
                           label: '取消',
-                          onPressed: () => _handleStatusAction(viewModel, order, 'cancel'),
+                          onPressed: () =>
+                              _handleStatusAction(viewModel, order, 'cancel'),
                         ),
                     ],
                   ),
@@ -936,7 +959,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
                 AppDropdownOption(value: 'draft', label: '草稿'),
                 AppDropdownOption(value: 'submitted', label: '已提交'),
                 AppDropdownOption(value: 'approved', label: '已批准'),
-                AppDropdownOption(value: 'pending', label: '待处理'),
+                AppDropdownOption(value: 'pending', label: '待下单'),
                 AppDropdownOption(value: 'ordered', label: '已下单'),
                 AppDropdownOption(value: 'received', label: '已收货'),
                 AppDropdownOption(value: 'cancelled', label: '已取消'),
@@ -1124,8 +1147,12 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
         : order.orderNumber;
     final supplier = _displayText(order.supplierName);
     final approvalStatus = order.approvalStatus;
-    final isApprovalState = ['draft', 'submitted', 'rejected'].contains(approvalStatus);
-    final status = isApprovalState 
+    final isApprovalState = [
+      'draft',
+      'submitted',
+      'rejected',
+    ].contains(approvalStatus);
+    final status = isApprovalState
         ? (order.approvalStatusDisplay ?? approvalStatus ?? _emptyCellText)
         : (order.statusDisplay ?? order.status ?? _emptyCellText);
     final totalAmount = _formatAmount(order.totalAmount);
@@ -1153,14 +1180,18 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
     final canSubmit = approvalCode == 'draft' && canChangePurchaseOrder;
     final canApprove = approvalCode == 'submitted' && canChangePurchaseOrder;
     final canReject = approvalCode == 'submitted' && canChangePurchaseOrder;
-    final canPlaceOrder = approvalCode == 'approved' && statusCode == 'pending' && canChangePurchaseOrder;
+    final canPlaceOrder =
+        approvalCode == 'approved' &&
+        statusCode == 'pending' &&
+        canChangePurchaseOrder;
     final canReceive = statusCode == 'ordered' && canChangeReceiveRecord;
     final canInspect = statusCode == 'ordered' && canChangeReceiveRecord;
     final canCancel =
         canChangePurchaseOrder &&
         (approvalCode == 'draft' ||
             approvalCode == 'submitted' ||
-            approvalCode == 'approved') && statusCode != 'cancelled';
+            approvalCode == 'approved') &&
+        statusCode != 'cancelled';
 
     return ExpandableSummaryCard(
       headerBuilder: (context, expanded) {
