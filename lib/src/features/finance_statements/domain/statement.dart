@@ -28,17 +28,9 @@ abstract class Statement with _$Statement {
       fromJson: _stringOrNullFromJson,
     )
     String? customerName,
-    @JsonKey(
-      name: 'period_start',
-      readValue: _readPeriodStart,
-      fromJson: _dateTimeOrNullFromJson,
-    )
+    @JsonKey(name: 'start_date', fromJson: _dateTimeOrNullFromJson)
     DateTime? periodStart,
-    @JsonKey(
-      name: 'period_end',
-      readValue: _readPeriodEnd,
-      fromJson: _dateTimeOrNullFromJson,
-    )
+    @JsonKey(name: 'end_date', fromJson: _dateTimeOrNullFromJson)
     DateTime? periodEnd,
     @JsonKey(
       name: 'total_amount',
@@ -46,17 +38,9 @@ abstract class Statement with _$Statement {
       fromJson: _doubleOrNullFromJson,
     )
     double? totalAmount,
-    @JsonKey(
-      name: 'debit_amount',
-      readValue: _readDebitAmount,
-      fromJson: _doubleOrNullFromJson,
-    )
+    @JsonKey(name: 'total_debit', fromJson: _doubleOrNullFromJson)
     double? debitAmount,
-    @JsonKey(
-      name: 'credit_amount',
-      readValue: _readCreditAmount,
-      fromJson: _doubleOrNullFromJson,
-    )
+    @JsonKey(name: 'total_credit', fromJson: _doubleOrNullFromJson)
     double? creditAmount,
     @JsonKey(
       name: 'closing_balance',
@@ -105,24 +89,8 @@ Object? _readCustomerName(Map json, String key) {
   return json['partner_name'] ?? json[key] ?? json['supplier_name'];
 }
 
-Object? _readPeriodStart(Map json, String key) {
-  return json[key] ?? json['start_date'];
-}
-
-Object? _readPeriodEnd(Map json, String key) {
-  return json[key] ?? json['end_date'];
-}
-
 Object? _readTotalAmount(Map json, String key) {
   return json[key] ?? json['amount'];
-}
-
-Object? _readDebitAmount(Map json, String key) {
-  return json[key] ?? json['total_debit'];
-}
-
-Object? _readCreditAmount(Map json, String key) {
-  return json[key] ?? json['total_credit'];
 }
 
 Object? _readClosingBalance(Map json, String key) {

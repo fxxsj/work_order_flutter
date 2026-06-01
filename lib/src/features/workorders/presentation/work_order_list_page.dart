@@ -118,9 +118,8 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     }
     final uri = GoRouterState.of(context).uri;
     final routeSearch = uri.queryParameters['search']?.trim() ?? '';
-    final routeApprovalStatus = _normalizeApprovalStatus(
-      uri.queryParameters['approval_status']?.trim() ?? '',
-    );
+    final routeApprovalStatus =
+        uri.queryParameters['approval_status']?.trim() ?? '';
     final signature = '$routeSearch|$routeApprovalStatus';
     final hadRouteState = _routeSignature != null;
     if (_routeSignature == signature) return;
@@ -724,7 +723,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
             'pending_approval_count',
             fallback: viewModel.workOrders.where((item) {
               final status = item.approvalStatus ?? '';
-              return status == 'submitted' || status == 'pending';
+              return status == 'submitted';
             }).length,
           );
           final rejectedCount = _summaryCount(
@@ -936,15 +935,9 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     context.go(
       Uri(
         path: '/workorders',
-        queryParameters: {
-          'approval_status': _normalizeApprovalStatus(approvalStatus),
-        },
+        queryParameters: {'approval_status': approvalStatus},
       ).toString(),
     );
-  }
-
-  String _normalizeApprovalStatus(String value) {
-    return value == 'pending' ? 'submitted' : value;
   }
 
   Future<void> _confirmDelete(
@@ -998,7 +991,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     final status = workOrder.status ?? '';
     final total = workOrder.totalTaskCount ?? 0;
 
-    if (approvalStatus == 'submitted' || approvalStatus == 'pending') {
+    if (approvalStatus == 'submitted') {
       return '待审批后下发任务';
     }
     if (approvalStatus == 'rejected') {

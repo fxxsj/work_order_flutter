@@ -34,7 +34,7 @@ import 'package:work_order_app/src/features/workorders/data/work_order_repositor
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_sales_order_candidate.dart';
 import 'package:work_order_app/src/features/workorders/presentation/work_order_form_state.dart';
-import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_form_sections.dart';
+import 'package:work_order_app/src/features/workorders/presentation/widgets/sections/work_order_form_sections.dart';
 
 enum WorkOrderFormMode { create, edit }
 

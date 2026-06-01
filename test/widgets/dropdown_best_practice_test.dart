@@ -4,7 +4,7 @@ import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_form_row_widgets.dart';
-import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_form_sections.dart';
+import 'package:work_order_app/src/features/workorders/presentation/widgets/sections/work_order_form_sections.dart';
 
 void main() {
   ThemeData buildTheme() {
@@ -42,34 +42,36 @@ void main() {
   });
 
   testWidgets(
-      'UnifiedDropdown shows null option label for filter-style single select',
-      (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: buildTheme(),
-        home: Scaffold(
-          body: Padding(
-            padding: const EdgeInsets.all(16),
-            child: AppSelect<int?>(
-              value: null,
-              decoration: const InputDecoration(labelText: '客户'),
-              options: const [
-                AppDropdownOption<int?>(value: null, label: '全部客户'),
-                AppDropdownOption<int?>(value: 1, label: '客户 A'),
-              ],
-              onChanged: (_) {},
+    'UnifiedDropdown shows null option label for filter-style single select',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: buildTheme(),
+          home: Scaffold(
+            body: Padding(
+              padding: const EdgeInsets.all(16),
+              child: AppSelect<int?>(
+                value: null,
+                decoration: const InputDecoration(labelText: '客户'),
+                options: const [
+                  AppDropdownOption<int?>(value: null, label: '全部客户'),
+                  AppDropdownOption<int?>(value: 1, label: '客户 A'),
+                ],
+                onChanged: (_) {},
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
 
-    // Single-select now renders via InputDecorator + Text
-    expect(find.text('全部客户'), findsOneWidget);
-  });
+      // Single-select now renders via InputDecorator + Text
+      expect(find.text('全部客户'), findsOneWidget);
+    },
+  );
 
-  testWidgets('UnifiedDropdown multi select only commits on confirm',
-      (tester) async {
+  testWidgets('UnifiedDropdown multi select only commits on confirm', (
+    tester,
+  ) async {
     Set<dynamic>? committedValue;
 
     await tester.pumpWidget(
@@ -109,8 +111,9 @@ void main() {
     expect(committedValue, <dynamic>{'A', 'B'});
   });
 
-  testWidgets('AppSelect picker uses shared modal scaffold structure',
-      (tester) async {
+  testWidgets('AppSelect picker uses shared modal scaffold structure', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: buildTheme(),
@@ -147,73 +150,76 @@ void main() {
     expect(find.byType(Divider), findsWidgets);
   });
 
-  testWidgets('WorkOrderMultiSelectField now follows shared multi-select flow',
-      (tester) async {
-    final selected = <int>{1};
-    var changedCount = 0;
+  testWidgets(
+    'WorkOrderMultiSelectField now follows shared multi-select flow',
+    (tester) async {
+      final selected = <int>{1};
+      var changedCount = 0;
 
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: buildTheme(),
-        home: Scaffold(
-          body: Padding(
-            padding: const EdgeInsets.all(16),
-            child: WorkOrderMultiSelectField(
-              items: const [
-                WorkOrderOptionItem(1, '工序 A'),
-                WorkOrderOptionItem(2, '工序 B'),
-              ],
-              selected: selected,
-              emptyText: '暂无数据',
-              placeholder: '请选择工序（可多选）',
-              onChanged: () => changedCount += 1,
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: buildTheme(),
+          home: Scaffold(
+            body: Padding(
+              padding: const EdgeInsets.all(16),
+              child: WorkOrderMultiSelectField(
+                items: const [
+                  WorkOrderOptionItem(1, '工序 A'),
+                  WorkOrderOptionItem(2, '工序 B'),
+                ],
+                selected: selected,
+                emptyText: '暂无数据',
+                placeholder: '请选择工序（可多选）',
+                onChanged: () => changedCount += 1,
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
 
-    await tester.tap(find.text('工序 A'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('工序 A'));
+      await tester.pumpAndSettle();
 
-    expect(changedCount, 0);
+      expect(changedCount, 0);
 
-    await tester.tap(find.text('工序 B'));
-    await tester.pump();
+      await tester.tap(find.text('工序 B'));
+      await tester.pump();
 
-    expect(changedCount, 0);
+      expect(changedCount, 0);
 
-    await tester.tap(find.text('确定'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('确定'));
+      await tester.pumpAndSettle();
 
-    expect(selected, <int>{1, 2});
-    expect(changedCount, 1);
-  });
+      expect(selected, <int>{1, 2});
+      expect(changedCount, 1);
+    },
+  );
 
   testWidgets(
-      'ResponsivePaginationBar uses DropdownMenu and tolerates stale page size',
-      (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: buildTheme(),
-        home: Scaffold(
-          body: ResponsivePaginationBar(
-            infoText: '第 1 页',
-            page: 1,
-            pageSize: 30,
-            pageSizeOptions: const [10, 20, 50],
-            onPageSizeChanged: (_) {},
-            onPrev: () {},
-            onNext: () {},
-            hasPrev: false,
-            hasNext: true,
+    'ResponsivePaginationBar uses DropdownMenu and tolerates stale page size',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: buildTheme(),
+          home: Scaffold(
+            body: ResponsivePaginationBar(
+              infoText: '第 1 页',
+              page: 1,
+              pageSize: 30,
+              pageSizeOptions: const [10, 20, 50],
+              onPageSizeChanged: (_) {},
+              onPrev: () {},
+              onNext: () {},
+              hasPrev: false,
+              hasNext: true,
+            ),
           ),
         ),
-      ),
-    );
+      );
 
-    expect(find.byType(DropdownMenu<int>), findsOneWidget);
-  });
+      expect(find.byType(DropdownMenu<int>), findsOneWidget);
+    },
+  );
 }
 
 class _UnifiedDropdownHarness extends StatefulWidget {

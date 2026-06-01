@@ -8,7 +8,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.d
 import 'package:work_order_app/src/features/materials/domain/material.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_sales_order_candidate.dart';
-import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_form_sections.dart';
+import 'package:work_order_app/src/features/workorders/presentation/widgets/sections/work_order_form_sections.dart';
 
 class WorkOrderMultiSelectField extends StatelessWidget {
   const WorkOrderMultiSelectField({

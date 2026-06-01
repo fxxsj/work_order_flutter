@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -8,6 +7,7 @@ import 'package:work_order_app/src/core/common/app_config.dart';
 import 'package:work_order_app/src/core/common/app_dio_interceptors.dart';
 import 'package:work_order_app/src/core/constants/constant.dart';
 import 'package:work_order_app/src/core/models/api_response.dart';
+import 'package:work_order_app/src/core/utils/jwt_util.dart';
 import 'package:work_order_app/src/core/utils/store_util.dart';
 
 class HttpClient {
@@ -167,36 +167,7 @@ class HttpClient {
     if (token == null || token.isEmpty) {
       return false;
     }
-    final payload = _decodeJwtPayload(token);
-    if (payload == null) {
-      return false;
-    }
-    final exp = payload['exp'];
-    if (exp is! int) {
-      return false;
-    }
-    final expTime = DateTime.fromMillisecondsSinceEpoch(
-      exp * 1000,
-      isUtc: true,
-    );
-    final now = DateTime.now().toUtc();
-    return now.isAfter(expTime.subtract(Duration(seconds: leewaySeconds)));
-  }
-
-  static Map<String, dynamic>? _decodeJwtPayload(String token) {
-    try {
-      final parts = token.split('.');
-      if (parts.length != 3) {
-        return null;
-      }
-      final payloadBase64 = base64Url.normalize(parts[1]);
-      final payloadString = utf8.decode(base64Url.decode(payloadBase64));
-      final decoded = jsonDecode(payloadString);
-      if (decoded is Map<String, dynamic>) {
-        return decoded;
-      }
-    } catch (_) {}
-    return null;
+    return JwtUtil.isExpiring(token, leewaySeconds: leewaySeconds);
   }
 
   static Future<void> ensureFreshAccessToken() async {
@@ -250,12 +221,19 @@ class HttpClient {
     }
   }
 
-  static Future<ApiResponse> get(
+  static Future<ApiResponse> _requestWithParse(
+    String method,
     String path, {
+    dynamic data,
     Map<String, dynamic>? queryParameters,
   }) async {
     try {
-      final response = await _dio.get(path, queryParameters: queryParameters);
+      final response = await _dio.request(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: Options(method: method),
+      );
       final apiResponse = ApiResponse.fromJson(response.data);
       if (!apiResponse.success) {
         throw ApiException(
@@ -269,110 +247,65 @@ class HttpClient {
     } on DioException catch (err) {
       throw ApiException.fromDio(err);
     }
+  }
+
+  static Future<ApiResponse> get(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) {
+    return _requestWithParse('GET', path, queryParameters: queryParameters);
   }
 
   static Future<ApiResponse> post(
     String path, {
     dynamic data,
     Map<String, dynamic>? queryParameters,
-  }) async {
-    try {
-      final response = await _dio.post(
-        path,
-        data: data,
-        queryParameters: queryParameters,
-      );
-      final apiResponse = ApiResponse.fromJson(response.data);
-      if (!apiResponse.success) {
-        throw ApiException(
-          message: apiResponse.message ?? '请求失败',
-          statusCode: response.statusCode,
-          data: response.data,
-          response: apiResponse,
-        );
-      }
-      return apiResponse;
-    } on DioException catch (err) {
-      throw ApiException.fromDio(err);
-    }
+  }) {
+    return _requestWithParse(
+      'POST',
+      path,
+      data: data,
+      queryParameters: queryParameters,
+    );
   }
 
   static Future<ApiResponse> put(
     String path, {
     dynamic data,
     Map<String, dynamic>? queryParameters,
-  }) async {
-    try {
-      final response = await _dio.put(
-        path,
-        data: data,
-        queryParameters: queryParameters,
-      );
-      final apiResponse = ApiResponse.fromJson(response.data);
-      if (!apiResponse.success) {
-        throw ApiException(
-          message: apiResponse.message ?? '请求失败',
-          statusCode: response.statusCode,
-          data: response.data,
-          response: apiResponse,
-        );
-      }
-      return apiResponse;
-    } on DioException catch (err) {
-      throw ApiException.fromDio(err);
-    }
+  }) {
+    return _requestWithParse(
+      'PUT',
+      path,
+      data: data,
+      queryParameters: queryParameters,
+    );
   }
 
   static Future<ApiResponse> patch(
     String path, {
     dynamic data,
     Map<String, dynamic>? queryParameters,
-  }) async {
-    try {
-      final response = await _dio.patch(
-        path,
-        data: data,
-        queryParameters: queryParameters,
-      );
-      final apiResponse = ApiResponse.fromJson(response.data);
-      if (!apiResponse.success) {
-        throw ApiException(
-          message: apiResponse.message ?? '请求失败',
-          statusCode: response.statusCode,
-          data: response.data,
-          response: apiResponse,
-        );
-      }
-      return apiResponse;
-    } on DioException catch (err) {
-      throw ApiException.fromDio(err);
-    }
+  }) {
+    return _requestWithParse(
+      'PATCH',
+      path,
+      data: data,
+      queryParameters: queryParameters,
+    );
   }
 
   static Future<ApiResponse> delete(
     String path, {
     dynamic data,
     Map<String, dynamic>? queryParameters,
-  }) async {
-    try {
-      final response = await _dio.delete(
-        path,
-        data: data,
-        queryParameters: queryParameters,
-      );
-      final apiResponse = ApiResponse.fromJson(response.data);
-      if (!apiResponse.success) {
-        throw ApiException(
-          message: apiResponse.message ?? '请求失败',
-          statusCode: response.statusCode,
-          data: response.data,
-          response: apiResponse,
-        );
-      }
-      return apiResponse;
-    } on DioException catch (err) {
-      throw ApiException.fromDio(err);
-    }
+  }) {
+    return _requestWithParse(
+      'DELETE',
+      path,
+      data: data,
+      queryParameters: queryParameters,
+    );
   }
 }
 

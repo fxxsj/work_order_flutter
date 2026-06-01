@@ -1,4 +1,4 @@
-import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_form_sections.dart';
+import 'package:work_order_app/src/features/workorders/presentation/widgets/sections/work_order_form_sections.dart';
 
 class WorkOrderFormSubmissionInput {
   const WorkOrderFormSubmissionInput({

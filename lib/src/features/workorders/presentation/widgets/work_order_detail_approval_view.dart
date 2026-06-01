@@ -3,7 +3,7 @@ import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/approval_rejection_notice_card.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_data_sections.dart';
-import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_sections.dart';
+import 'package:work_order_app/src/features/workorders/presentation/widgets/detail_sections/work_order_detail_sections.dart';
 
 /// 审批流程视图：ApprovalSection + ApprovalLogs + RejectionNotice
 class WorkOrderDetailApprovalView extends StatelessWidget {

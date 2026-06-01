@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:work_order_app/src/core/constants/constant.dart';
 import 'package:work_order_app/src/core/models/user_info.dart';
+import 'package:work_order_app/src/core/utils/jwt_util.dart';
 
 class StoreUtil {
   static SharedPreferences? _prefs;
@@ -15,7 +16,7 @@ class StoreUtil {
     if (_prefs == null) return null;
     final value = _prefs!.get(key);
     if (value is String) {
-      // Try to decode JSON strings back to Map/List for backward compatibility.
+      // SharedPreferences stores structured values as JSON strings.
       try {
         final decoded = jsonDecode(value);
         if (decoded is Map || decoded is List) return decoded;
@@ -63,39 +64,6 @@ class StoreUtil {
     return null;
   }
 
-  static Map<String, dynamic>? _decodeJwtPayload(String token) {
-    try {
-      final parts = token.split('.');
-      if (parts.length != 3) {
-        return null;
-      }
-      final payloadBase64 = base64Url.normalize(parts[1]);
-      final payloadString = utf8.decode(base64Url.decode(payloadBase64));
-      final decoded = jsonDecode(payloadString);
-      if (decoded is Map<String, dynamic>) {
-        return decoded;
-      }
-    } catch (_) {}
-    return null;
-  }
-
-  static bool _isTokenExpired(String token) {
-    final payload = _decodeJwtPayload(token);
-    if (payload == null) {
-      return true;
-    }
-    final exp = payload['exp'];
-    if (exp is! int) {
-      return true;
-    }
-    final expTime = DateTime.fromMillisecondsSinceEpoch(
-      exp * 1000,
-      isUtc: true,
-    );
-    final now = DateTime.now().toUtc();
-    return now.isAfter(expTime.add(const Duration(seconds: 30)));
-  }
-
   static Future<void> writeTokens({
     required String access,
     String? refresh,
@@ -113,12 +81,12 @@ class StoreUtil {
 
   static bool isLoggedIn() {
     final access = readAccessToken();
-    if (access != null && access.isNotEmpty && !_isTokenExpired(access)) {
+    if (access != null && access.isNotEmpty && !JwtUtil.isExpired(access)) {
       return true;
     }
     final refresh = read(Constant.KEY_REFRESH_TOKEN);
     if (refresh != null && refresh.toString().isNotEmpty) {
-      return !_isTokenExpired(refresh.toString());
+      return !JwtUtil.isExpired(refresh.toString());
     }
     return false;
   }
