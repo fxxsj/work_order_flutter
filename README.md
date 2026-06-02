@@ -1,6 +1,4 @@
-# 工单管理系统 - Flutter 前端
-
-> 构建时通过 `--dart-define=APP_DISPLAY_NAME="我的印刷管理"` 指定显示名称，默认「工单管理系统」
+# 印刷生产管理系统 - Flutter 前端
 
 Flutter 3.x + Provider + GoRouter 跨平台应用
 
