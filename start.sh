@@ -1,7 +1,11 @@
 #!/bin/bash
 # Flutter 一键启动脚本
 
-set -e
+set -euo pipefail
+
+# 脚本目录
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
 # 颜色定义
 RED='\033[0;31m'
@@ -13,29 +17,35 @@ NC='\033[0m' # No Color
 PLATFORM="android"
 PROFILE="dev"
 API_URL="http://127.0.0.1:8000/api/v1/"
+RUN_DOCTOR=false
 
 # 帮助信息
 show_help() {
-    echo "用法: ./start.sh [平台] [环境]"
+    echo "用法: ./start.sh [平台] [环境] [选项]"
     echo ""
     echo "平台选项:"
     echo "  android - Android (默认)"
     echo "  chrome  - Chrome Web"
-    echo "  linux  - Linux 桌面"
+    echo "  linux   - Linux 桌面"
     echo "  windows - Windows 桌面"
-    echo "  macos  - macOS 桌面"
-    echo "  web    - Web (生产构建)"
+    echo "  macos   - macOS 桌面"
+    echo "  web     - Web (生产构建)"
     echo ""
     echo "环境选项:"
     echo "  dev  - 开发环境 (默认)"
     echo "  test - 测试环境"
     echo "  prod - 生产环境"
     echo ""
+    echo "选项:"
+    echo "  --check   运行 flutter doctor 检查环境"
+    echo "  -h, --help 显示帮助信息"
+    echo ""
     echo "示例:"
     echo "  ./start.sh              # 交互式选择"
     echo "  ./start.sh android dev  # Android 开发模式"
     echo "  ./start.sh chrome dev   # Chrome 开发模式"
-    echo "  ./start.sh linux prod  # Linux 生产环境"
+    echo "  ./start.sh linux prod   # Linux 生产环境"
+    echo "  ./start.sh --check      # 检查 Flutter 环境"
     echo ""
     echo "API 地址配置:"
     echo "  dev:  http://127.0.0.1:8000/api/v1/"
@@ -60,6 +70,15 @@ check_flutter() {
 # 获取 Flutter 版本
 get_flutter_version() {
     flutter --version | head -1
+}
+
+# 运行 flutter doctor
+run_doctor() {
+    if [ "$RUN_DOCTOR" = true ]; then
+        echo -e "${GREEN}运行 flutter doctor...${NC}"
+        flutter doctor
+        echo ""
+    fi
 }
 
 # 安装依赖
@@ -94,7 +113,7 @@ select_platform() {
     echo "  5) macOS 桌面"
     echo "  6) Web (生产构建)"
     echo ""
-    read -p "请输入选择 [1-6]: " choice
+    read -rp "请输入选择 [1-6]: " choice
 
     case $choice in
         1) PLATFORM="android" ;;
@@ -115,7 +134,7 @@ select_profile() {
     echo "  2) test - 测试环境"
     echo "  3) prod - 生产环境"
     echo ""
-    read -p "请输入选择 [1-3]: " choice
+    read -rp "请输入选择 [1-3]: " choice
 
     case $choice in
         1) PROFILE="dev" ;;
@@ -139,41 +158,16 @@ launch_flutter() {
     echo -e "${GREEN}=======================================${NC}"
     echo ""
 
-    case $PLATFORM in
-        android)
-            flutter run -d android \
-                --dart-define=APP_PROFILE=$PROFILE \
-                --dart-define=APP_API_BASE_URL=$API_URL
-            ;;
-        chrome)
-            flutter run -d chrome \
-                --dart-define=APP_PROFILE=$PROFILE \
-                --dart-define=APP_API_BASE_URL=$API_URL
-            ;;
-        linux)
-            flutter run -d linux \
-                --dart-define=APP_PROFILE=$PROFILE \
-                --dart-define=APP_API_BASE_URL=$API_URL
-            ;;
-        windows)
-            flutter run -d windows \
-                --dart-define=APP_PROFILE=$PROFILE \
-                --dart-define=APP_API_BASE_URL=$API_URL
-            ;;
-        macos)
-            flutter run -d macos \
-                --dart-define=APP_PROFILE=$PROFILE \
-                --dart-define=APP_API_BASE_URL=$API_URL
-            ;;
-        web)
-            echo "构建 Web 生产版本..."
-            flutter build web --release \
-                --dart-define=APP_PROFILE=$PROFILE \
-                --dart-define=APP_API_BASE_URL=$API_URL
-            echo ""
-            echo -e "${GREEN}构建完成！产物在 build/web/${NC}"
-            ;;
-    esac
+    local dart_defines="--dart-define=APP_PROFILE=$PROFILE --dart-define=APP_API_BASE_URL=$API_URL"
+
+    if [ "$PLATFORM" = "web" ]; then
+        echo "构建 Web 生产版本..."
+        flutter build web --release $dart_defines
+        echo ""
+        echo -e "${GREEN}构建完成！产物在 build/web/${NC}"
+    else
+        flutter run -d "$PLATFORM" $dart_defines
+    fi
 }
 
 # 主流程
@@ -183,19 +177,35 @@ main() {
     echo -e "${GREEN}Flutter 快速启动${NC}"
     get_flutter_version
 
-    # 解析命令行参数
-    if [ $# -ge 1 ]; then
+    local positional_args=()
+
+    # 先解析 -- 开头的选项
+    while [[ $# -gt 0 ]]; do
         case $1 in
             -h|--help)
                 show_help
                 exit 0
                 ;;
-            android) PLATFORM="android" ;;
-            chrome) PLATFORM="chrome" ;;
-            linux) PLATFORM="linux" ;;
-            windows) PLATFORM="windows" ;;
-            macos) PLATFORM="macos" ;;
-            web) PLATFORM="web" ;;
+            --check)
+                RUN_DOCTOR=true
+                shift
+                ;;
+            *)
+                positional_args+=("$1")
+                shift
+                ;;
+        esac
+    done
+
+    # 恢复位置参数
+    set -- "${positional_args[@]}"
+
+    # 解析平台参数
+    if [ $# -ge 1 ]; then
+        case $1 in
+            android|chrome|linux|windows|macos|web)
+                PLATFORM="$1"
+                ;;
             *)
                 echo -e "${RED}未知平台: $1${NC}"
                 show_help
@@ -206,6 +216,7 @@ main() {
         select_platform
     fi
 
+    # 解析环境参数（有传就用，没传且是完全无参数模式才交互）
     if [ $# -ge 2 ]; then
         case $2 in
             dev) PROFILE="dev" ;;
@@ -217,10 +228,9 @@ main() {
                 exit 1
                 ;;
         esac
-    else
-        select_profile
     fi
 
+    run_doctor
     install_deps
     launch_flutter
 }
