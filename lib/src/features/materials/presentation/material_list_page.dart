@@ -1,8 +1,10 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
+import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/materials/application/material_view_model.dart';
 import 'package:work_order_app/src/features/materials/domain/material.dart';
@@ -88,6 +90,9 @@ class MaterialListPage extends StatelessWidget {
     BuildContext context,
     MaterialViewModel viewModel,
   ) {
+    final permissions = PermissionUtil.snapshot(context);
+    final canChangeMaterial = permissions.has('workorder.change_material');
+
     return [
       SizedBox(
         width: 120,
@@ -130,12 +135,78 @@ class MaterialListPage extends StatelessWidget {
         ),
       ),
       const SizedBox(width: 8),
-      PageActionButton.filled(
-        onPressed: () => _openEditPage(context, viewModel, null),
-        icon: const Icon(Icons.add),
-        label: '新建物料',
+      if (canChangeMaterial)
+        PageActionButton.outlined(
+          onPressed: () => _handleExport(context, viewModel),
+          icon: const Icon(Icons.download),
+          label: '导出',
+        ),
+      PageActionButton.outlined(
+        onPressed: () => _handleImport(context, viewModel),
+        icon: const Icon(Icons.upload),
+        label: '导入',
       ),
+      if (canChangeMaterial)
+        PageActionButton.filled(
+          onPressed: () => _openEditPage(context, viewModel, null),
+          icon: const Icon(Icons.add),
+          label: '新建物料',
+        ),
     ];
+  }
+
+  static Future<void> _handleExport(
+    BuildContext context,
+    MaterialViewModel viewModel,
+  ) async {
+    try {
+      await viewModel.exportMaterials();
+      if (context.mounted) {
+        ToastUtil.showSuccess('导出成功');
+      }
+    } catch (err) {
+      if (context.mounted) {
+        ToastUtil.showError('导出失败: $err');
+      }
+    }
+  }
+
+  static Future<void> _handleImport(
+    BuildContext context,
+    MaterialViewModel viewModel,
+  ) async {
+    final result = await FilePicker.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['xlsx', 'xls'],
+    );
+    if (result == null || result.files.isEmpty) {
+      return;
+    }
+    final file = result.files.first;
+    if (file.bytes == null) {
+      if (context.mounted) {
+        ToastUtil.showError('无法读取文件');
+      }
+      return;
+    }
+    try {
+      final importResult = await viewModel.importMaterials(file);
+      if (context.mounted) {
+        final created = importResult.createdCount ?? 0;
+        final updated = importResult.updatedCount ?? 0;
+        if (importResult.errorCount == 0) {
+          ToastUtil.showSuccess('导入成功: 新增 $created 条, 更新 $updated 条');
+        } else {
+          ToastUtil.showError(
+            '导入完成: 新增 $created 条, 更新 $updated 条, 失败 ${importResult.errorCount} 条',
+          );
+        }
+      }
+    } catch (err) {
+      if (context.mounted) {
+        ToastUtil.showError('导入失败: $err');
+      }
+    }
   }
 
   static List<RowAction> _rowActions(
@@ -143,16 +214,22 @@ class MaterialListPage extends StatelessWidget {
     MaterialViewModel viewModel,
     MaterialItem material,
   ) {
+    final permissions = PermissionUtil.snapshot(context);
+    final canChangeMaterial = permissions.has('workorder.change_material');
+    final canDeleteMaterial = permissions.has('workorder.delete_material');
+
     return [
-      RowAction(
-        label: '编辑',
-        onPressed: () => _openEditPage(context, viewModel, material),
-      ),
-      RowAction(
-        label: '删除',
-        onPressed: () => _confirmDelete(context, viewModel, material),
-        destructive: true,
-      ),
+      if (canChangeMaterial)
+        RowAction(
+          label: '编辑',
+          onPressed: () => _openEditPage(context, viewModel, material),
+        ),
+      if (canDeleteMaterial)
+        RowAction(
+          label: '删除',
+          onPressed: () => _confirmDelete(context, viewModel, material),
+          destructive: true,
+        ),
     ];
   }
 

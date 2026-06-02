@@ -1,4 +1,6 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:work_order_app/src/core/data/page_data.dart';
+import 'package:work_order_app/src/core/utils/import_export_util.dart';
 import 'package:work_order_app/src/features/materials/data/material_api_service.dart';
 import 'package:work_order_app/src/features/materials/data/material_dto.dart';
 import 'package:work_order_app/src/features/materials/domain/material.dart';
@@ -8,6 +10,8 @@ class MaterialRepositoryImpl implements MaterialRepository {
   MaterialRepositoryImpl(this._apiService);
 
   final MaterialApiService _apiService;
+
+  ImportExportService get _importExport => _apiService.importExportService;
 
   @override
   Future<PageData<MaterialItem>> getMaterials({
@@ -52,5 +56,15 @@ class MaterialRepositoryImpl implements MaterialRepository {
   @override
   Future<List<MaterialSupplierOption>> getActiveSupplierOptions() {
     return _apiService.fetchActiveSupplierOptions();
+  }
+
+  @override
+  Future<void> exportMaterials() async {
+    await _importExport.export('/materials/export/', 'materials.xlsx');
+  }
+
+  @override
+  Future<ImportResult> importMaterials(PlatformFile file) async {
+    return _importExport.import('/materials/import_materials/', file);
   }
 }

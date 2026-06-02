@@ -1,4 +1,6 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:work_order_app/src/core/core.dart';
+import 'package:work_order_app/src/core/utils/import_export_util.dart';
 import 'package:work_order_app/src/features/materials/domain/material.dart';
 import 'package:work_order_app/src/features/materials/domain/material_repository.dart';
 
@@ -72,6 +74,18 @@ class MaterialViewModel extends PaginatedViewModel<MaterialItem> {
       isActive: _isActiveFilter,
       ordering: _ordering,
     );
+    return result;
+  }
+
+  /// 导出物料列表 Excel。
+  Future<void> exportMaterials() async {
+    await _repository.exportMaterials();
+  }
+
+  /// 导入物料 Excel。
+  Future<ImportResult> importMaterials(PlatformFile file) async {
+    final result = await _repository.importMaterials(file);
+    await loadItems(resetPage: true);
     return result;
   }
 }

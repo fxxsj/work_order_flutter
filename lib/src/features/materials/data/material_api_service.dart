@@ -1,5 +1,6 @@
 import 'package:work_order_app/src/core/data/page_data.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/utils/import_export_util.dart';
 import 'package:work_order_app/src/features/materials/data/material_dto.dart';
 import 'package:work_order_app/src/features/materials/domain/material.dart';
 
@@ -7,6 +8,8 @@ class MaterialApiService {
   MaterialApiService(this._client);
 
   final ApiClient _client;
+
+  ImportExportService get importExportService => ImportExportService(_client);
 
   Future<PageData<MaterialDto>> fetchMaterials({
     int page = 1,
