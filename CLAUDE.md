@@ -1,11 +1,11 @@
-# 印刷施工单跟踪系统 - Flutter
+# 印刷生产管理系统 - Flutter
 
-> Flutter 3.x + Riverpod + GoRouter 跨平台应用
+> Flutter 3.x + Provider + GoRouter 跨平台应用
 
 ## 技术栈
 
 - Flutter 3.41.2
-- Riverpod (状态管理)
+- Provider / ChangeNotifier (状态管理与 ViewModel 注入)
 - GoRouter (路由)
 - Dio (HTTP 客户端)
 
