@@ -46,6 +46,7 @@ class WorkOrderDetailPageViews extends StatelessWidget {
     required this.rejectionComment,
     required this.onEditPressed,
     required this.buildSection,
+    this.completenessErrors = const [],
   });
 
   final WorkOrderDetailViewMode viewMode;
@@ -77,6 +78,7 @@ class WorkOrderDetailPageViews extends StatelessWidget {
   final String? rejectionComment;
   final VoidCallback? onEditPressed;
   final Widget Function(String title, Widget child) buildSection;
+  final List<String> completenessErrors;
 
   @override
   Widget build(BuildContext context) {
@@ -196,6 +198,8 @@ class WorkOrderDetailPageViews extends StatelessWidget {
     if (message == null) return const SizedBox.shrink();
 
     final effectiveColor = color ?? theme.colorScheme.primary;
+    final hasErrors = completenessErrors.isNotEmpty &&
+        (status == 'draft' || status == 'rejected');
 
     return Container(
       margin: const EdgeInsets.only(bottom: SpacingTokens.md),
@@ -207,22 +211,44 @@ class WorkOrderDetailPageViews extends StatelessWidget {
           color: effectiveColor.withValues(alpha: OpacityTokens.distinct),
         ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: LayoutTokens.iconLg, color: effectiveColor),
-          const SizedBox(width: SpacingTokens.md),
-          Expanded(
-            child: Text(
-              message,
-              style: TextStyle(
-                fontSize: TextTokens.fontSizeBodyMedium,
-                color: effectiveColor.withValues(
-                  alpha: OpacityTokens.textProminent,
+          Row(
+            children: [
+              Icon(icon, size: LayoutTokens.iconLg, color: effectiveColor),
+              const SizedBox(width: SpacingTokens.md),
+              Expanded(
+                child: Text(
+                  hasErrors
+                      ? '$message，审核通过后将生成部门任务。'
+                      : message,
+                  style: TextStyle(
+                    fontSize: TextTokens.fontSizeBodyMedium,
+                    color: effectiveColor.withValues(
+                      alpha: OpacityTokens.textProminent,
+                    ),
+                    fontWeight: TextTokens.medium,
+                  ),
                 ),
-                fontWeight: TextTokens.medium,
+              ),
+            ],
+          ),
+          if (hasErrors) ...[
+            const SizedBox(height: 8),
+            ...completenessErrors.map(
+              (e) => Padding(
+                padding: const EdgeInsets.only(left: 40, bottom: 2),
+                child: Text(
+                  '• $e',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: effectiveColor.withValues(alpha: 0.8),
+                  ),
+                ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );

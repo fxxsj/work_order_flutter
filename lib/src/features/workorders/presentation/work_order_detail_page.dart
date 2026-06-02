@@ -22,6 +22,7 @@ import 'package:work_order_app/src/features/tasks/presentation/task_department_o
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_action_dialogs.dart';
 import 'package:work_order_app/src/features/workorders/application/work_order_view_model.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
+import 'package:work_order_app/src/features/workorders/data/work_order_flow_api_service.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_repository_impl.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
@@ -85,6 +86,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   bool _actionLoading = false;
   bool _syncNeeded = false;
   TaskListSupportService? _taskSupportService;
+  List<String> _completenessErrors = [];
 
   String? _statusSelection;
   WorkOrderDetailViewMode _viewMode = WorkOrderDetailViewMode.basic;
@@ -107,11 +109,17 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
       final viewModel = context.read<WorkOrderViewModel>();
       final detail = await viewModel.fetchDetail(widget.workOrderId);
       final syncNeeded = await _loadSyncNeeded(detail);
+      List<String> errors = [];
+      if (detail.approvalStatus == 'draft' ||
+          detail.approvalStatus == 'rejected') {
+        errors = await _loadCompletenessErrors();
+      }
       if (!mounted) return;
       setState(() {
         _detail = detail;
         _statusSelection = detail.status;
         _syncNeeded = syncNeeded;
+        _completenessErrors = errors;
       });
     } catch (err) {
       if (!mounted) return;
@@ -137,6 +145,20 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
       return result['sync_needed'] == true;
     } catch (_) {
       return false;
+    }
+  }
+
+  Future<List<String>> _loadCompletenessErrors() async {
+    try {
+      final flowApi = WorkOrderFlowApiService(context.read<ApiClient>());
+      final result = await flowApi.checkCompleteness(widget.workOrderId);
+      final errors = result['errors'];
+      if (errors is List) {
+        return errors.map((e) => e.toString()).toList();
+      }
+      return [];
+    } catch (_) {
+      return [];
     }
   }
 
@@ -783,6 +805,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
                   ? () => context.go('/workorders/${widget.workOrderId}/edit')
                   : null,
               buildSection: _buildSection,
+              completenessErrors: _completenessErrors,
             ),
     );
   }

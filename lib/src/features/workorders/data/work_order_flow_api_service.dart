@@ -72,6 +72,13 @@ class WorkOrderFlowApiService {
     return _mapFromResponse(response.data);
   }
 
+  Future<Map<String, dynamic>> checkCompleteness(int id) async {
+    final response = await _client.get(
+      '/workorders-flow/$id/check_completeness/',
+    );
+    return _mapFromResponse(response.data);
+  }
+
   Map<String, dynamic> _mapFromResponse(dynamic data) {
     if (data is Map<String, dynamic>) {
       return Map<String, dynamic>.from(data);

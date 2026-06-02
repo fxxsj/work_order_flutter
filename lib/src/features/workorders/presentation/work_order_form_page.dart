@@ -29,7 +29,11 @@ import 'package:work_order_app/src/features/products/presentation/widgets/quick_
 import 'package:work_order_app/src/features/workorders/application/work_order_view_model.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_form_options_loader.dart';
-import 'package:work_order_app/src/features/workorders/data/work_order_form_submission.dart';
+import 'package:work_order_app/src/features/workorders/data/work_order_form_submission.dart'
+    show
+        WorkOrderFormSubmission,
+        WorkOrderFormSubmissionInput,
+        ProcessCheckItem;
 import 'package:work_order_app/src/features/workorders/data/work_order_repository_impl.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_sales_order_candidate.dart';
@@ -605,9 +609,20 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
       return;
     }
     final submissionInput = _draft.submissionInput();
-    final validationMessage = WorkOrderFormSubmission.validate(submissionInput);
-    if (validationMessage != null) {
-      ToastUtil.showError(validationMessage);
+    final processCheckItems = _processes
+        .map((p) => ProcessCheckItem(
+              id: p.id,
+              name: p.name,
+              requiresArtwork: p.requiresArtwork,
+              requiresDie: p.requiresDie,
+              requiresFoilingPlate: p.requiresFoilingPlate,
+              requiresEmbossingPlate: p.requiresEmbossingPlate,
+            ))
+        .toList();
+    final validationErrors =
+        WorkOrderFormSubmission.validate(submissionInput, processes: processCheckItems);
+    if (validationErrors.isNotEmpty) {
+      ToastUtil.showError(validationErrors.join('；'));
       return;
     }
 
@@ -753,6 +768,25 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     );
   }
 
+  /// 实时校验表单，返回缺失项列表。
+  List<String> _getValidationErrors() {
+    final submissionInput = _draft.submissionInput();
+    final processCheckItems = _processes
+        .map((p) => ProcessCheckItem(
+              id: p.id,
+              name: p.name,
+              requiresArtwork: p.requiresArtwork,
+              requiresDie: p.requiresDie,
+              requiresFoilingPlate: p.requiresFoilingPlate,
+              requiresEmbossingPlate: p.requiresEmbossingPlate,
+            ))
+        .toList();
+    return WorkOrderFormSubmission.validate(
+      submissionInput,
+      processes: processCheckItems,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final permissions = PermissionUtil.snapshot(context);
@@ -761,6 +795,9 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
           ? 'workorder.add_workorder'
           : 'workorder.change_workorder',
     );
+    final validationErrors =
+        _loadingOptions || _loadingDetail ? <String>[] : _getValidationErrors();
+
     return ListPageScaffold(
       spacing: _spacing,
       header: PageHeaderBar(
@@ -807,7 +844,15 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
             )
           : Form(
               key: _formKey,
-              child: WorkOrderFormContent(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (validationErrors.isNotEmpty)
+                    _FormCard(
+                      child: _ValidationHints(errors: validationErrors),
+                    ),
+                  Expanded(
+                    child: WorkOrderFormContent(
                 mode: widget.mode,
                 salesOrderId: _draft.salesOrderId,
                 salesOrders: _filteredSalesOrders,
@@ -911,6 +956,9 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
                 onCreateProduct: _handleCreateProduct,
                 onCreateMaterial: _handleCreateMaterial,
               ),
+                  ),
+                ],
+              ),
             ),
     );
   }
@@ -924,5 +972,71 @@ class _FormCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DetailSurfaceCard(child: child);
+  }
+}
+
+/// 表单校验缺失项提示卡片。
+class _ValidationHints extends StatelessWidget {
+  const _ValidationHints({required this.errors});
+
+  final List<String> errors;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final warningColor = theme.colorScheme.error;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: warningColor.withValues(alpha: OpacityTokens.weak),
+        border: Border.all(
+          color: warningColor.withValues(alpha: OpacityTokens.medium),
+        ),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.info_outline,
+                  size: 20, color: warningColor.withValues(alpha: 0.9)),
+              const SizedBox(width: 8),
+              Text(
+                '以下信息待完善（${errors.length}项）',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: warningColor.withValues(alpha: 0.9),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ...errors.map(
+            (e) => Padding(
+              padding: const EdgeInsets.only(left: 28, bottom: 2),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('• ',
+                      style: TextStyle(
+                          fontSize: 13,
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.7))),
+                  Expanded(
+                    child: Text(e,
+                        style: TextStyle(
+                            fontSize: 13,
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.7))),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
