@@ -38,6 +38,9 @@
 - 硬编码颜色必须使用 Token 系统
 - 编辑页业务逻辑在 `*_edit_page.dart`
 - HTTP 错误处理统一走 `AppDioInterceptors`
+- FormData 文件上传优先使用 `ApiClient.requestRaw()`
+- CRUD 表单字段使用 `CrudFieldConfig` 静态工厂
+- 修改已有复杂页面使用精确 patch，避免整文件覆写
 
 ## 开发命令
 
@@ -75,3 +78,4 @@ flutter test
 ## Skill Activation
 
 - Flutter 页面 → `flutter-patterns` + `flutter-architecture`
+- Work Order Flutter 约定 → `work-order-flutter-patterns`
