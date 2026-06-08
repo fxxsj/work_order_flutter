@@ -4,6 +4,7 @@ import 'package:work_order_app/src/core/controllers/app_badge_controller.dart';
 import 'package:work_order_app/src/features/notification/application/notification_view_model.dart';
 import 'package:work_order_app/src/core/controllers/theme_controller.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/network/connectivity_service.dart';
 import 'package:work_order_app/src/core/storage/app_storage.dart';
 import 'package:work_order_app/src/features/auth/application/auth_controller.dart';
 import 'package:work_order_app/src/features/auth/application/auth_view_model.dart';
@@ -26,6 +27,7 @@ List<SingleChildWidget> buildAppProviders({
   return [
     Provider.value(value: storage),
     Provider.value(value: apiClient),
+    Provider.value(value: ConnectivityService.instance),
     Provider<AuthApi>(create: (context) => AuthApi(context.read<ApiClient>())),
     Provider<AuthRepository>(
       create: (context) => AuthRepositoryImpl(context.read<AuthApi>()),

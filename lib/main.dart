@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:work_order_app/app.dart';
 import 'package:work_order_app/src/core/common/app_metadata.dart';
+import 'package:work_order_app/src/core/presentation/widgets/offline_banner.dart';
 import 'package:work_order_app/src/features/notification/data/notification_api.dart';
 import 'package:work_order_app/src/features/auth/application/auth_controller.dart';
 import 'package:work_order_app/src/features/notification/application/notification_view_model.dart';
@@ -110,7 +111,9 @@ class _MyAppState extends State<MyApp> {
                 data: media.copyWith(
                   textScaler: TextScaler.linear(theme.fontScale),
                 ),
-                child: child ?? const SizedBox.shrink(),
+                child: OfflineBanner(
+                  child: child ?? const SizedBox.shrink(),
+                ),
               );
             },
           );
