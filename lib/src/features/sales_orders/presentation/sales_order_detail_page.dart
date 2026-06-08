@@ -289,6 +289,28 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
     );
   }
 
+  Future<void> _showDeleteDialog() async {
+    final confirmed = await showRiskActionConfirmDialog(
+      context,
+      title: '删除客户订单',
+      summary: '删除后无法恢复，相关施工单、发货和财务数据将不再关联到此订单。',
+      impacts: const ['订单数据将被永久删除', '已关联的施工单、送货单、发票、收款记录将失去订单关联'],
+      auditHint: '建议优先使用"取消订单"保留数据可追溯性，仅草稿状态可删除。',
+      confirmText: '确认删除',
+      destructive: true,
+    );
+    if (confirmed != true) return;
+    final viewModel = context.read<SalesOrderViewModel>();
+    try {
+      await viewModel.delete(widget.orderId);
+      if (!mounted) return;
+      ToastUtil.showSuccess('已删除');
+      context.pop();
+    } catch (err) {
+      ToastUtil.showError('删除失败: $err');
+    }
+  }
+
   Future<void> _showUpdatePaymentDialog() async {
     final result = await showSalesOrderPaymentDialog(
       context,
@@ -408,6 +430,14 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
           label: '取消订单',
           icon: Icons.block_outlined,
           onTap: _showCancelDialog,
+          destructive: true,
+        ),
+      if (permissions.has('workorder.delete_salesorder') &&
+          approvalStatus == 'draft')
+        SalesOrderActionItem(
+          label: '删除',
+          icon: Icons.delete_outline,
+          onTap: _showDeleteDialog,
           destructive: true,
         ),
     ];
@@ -625,6 +655,18 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
                   onOpenWorkOrderPage: () => context.go('/workorders'),
                   onOpenDeliveryPage: () => context.go('/inventory/delivery'),
                   onOpenInvoicePage: () => context.go('/finance/invoices'),
+                  onOpenDelivery: (item) {
+                    final id = item.id;
+                    if (id != null && id > 0) {
+                      context.go('/inventory/delivery/$id');
+                    }
+                  },
+                  onOpenInvoice: (item) {
+                    final id = item.id;
+                    if (id != null && id > 0) {
+                      context.go('/finance/invoices/$id');
+                    }
+                  },
                   emptyText: _emptyText,
                 ),
               ],

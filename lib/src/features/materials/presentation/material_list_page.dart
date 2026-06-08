@@ -233,13 +233,6 @@ class MaterialListPage extends StatelessWidget {
     ];
   }
 
-  static Widget _buildNameCell(BuildContext context, MaterialItem material) {
-    return Text(
-      _titleText(material),
-      style: Theme.of(context).textTheme.bodyMedium,
-    );
-  }
-
   static Widget _buildCodeCell(BuildContext context, MaterialItem material) {
     return _buildBodyText(context, AppValueFormatter.text(material.code));
   }
@@ -273,7 +266,30 @@ class MaterialListPage extends StatelessWidget {
   }
 
   static Widget _buildStatusCell(BuildContext context, MaterialItem material) {
-    return _buildBodyText(context, _statusText(material));
+    final isActive = material.isActive ?? true;
+    final text = _statusText(material);
+    final color = isActive
+        ? Theme.of(context).colorScheme.primary
+        : Theme.of(context).colorScheme.error;
+    return Text(
+      text,
+      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: color,
+            fontWeight: FontWeight.w500,
+          ),
+    );
+  }
+
+  static Widget _buildNameCell(BuildContext context, MaterialItem material) {
+    final isActive = material.isActive ?? true;
+    return Text(
+      _titleText(material),
+      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: isActive
+                ? null
+                : Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+    );
   }
 
   static Widget _buildBodyText(BuildContext context, String value) {

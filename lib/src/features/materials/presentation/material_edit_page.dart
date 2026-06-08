@@ -49,6 +49,7 @@ class _MaterialEditPageState extends State<MaterialEditPage> {
   static const String _supplierLabel = '默认供应商';
   static const String _leadTimeLabel = '采购周期（天）';
   static const String _needCuttingLabel = '需要开料';
+  static const String _isActiveLabel = '启用';
   static const String _notesLabel = '备注';
 
   static const String _submitText = '保存';
@@ -77,6 +78,7 @@ class _MaterialEditPageState extends State<MaterialEditPage> {
 
   int? _defaultSupplier;
   bool _needCutting = false;
+  bool _isActive = true;
 
   @override
   void initState() {
@@ -103,6 +105,7 @@ class _MaterialEditPageState extends State<MaterialEditPage> {
     _notesController = TextEditingController(text: material?.notes ?? '');
     _defaultSupplier = material?.defaultSupplier;
     _needCutting = material?.needCutting ?? false;
+    _isActive = material?.isActive ?? true;
   }
 
   @override
@@ -137,7 +140,7 @@ class _MaterialEditPageState extends State<MaterialEditPage> {
       defaultSupplier: _defaultSupplier,
       leadTimeDays: _parseInt(_leadTimeController.text) ?? 7,
       needCutting: _needCutting,
-      isActive: widget.material?.isActive,
+      isActive: _isActive,
       notes: _emptyToNull(_notesController.text),
     );
 
@@ -228,6 +231,11 @@ class _MaterialEditPageState extends State<MaterialEditPage> {
                   if (text.isEmpty) return _unitRequiredText;
                   return null;
                 },
+              ),
+              CrudFieldConfig.toggle(
+                label: _isActiveLabel,
+                value: _isActive,
+                onChanged: (value) => setState(() => _isActive = value),
               ),
             ],
           ),

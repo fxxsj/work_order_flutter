@@ -187,7 +187,11 @@ class _ProductEditPageState extends State<ProductEditPage> {
         isActive: true,
       );
       final processFuture = _processApi.fetchProcesses(page: 1, pageSize: 50);
-      final materialFuture = _materialApi.fetchMaterials(page: 1, pageSize: 50);
+      final materialFuture = _materialApi.fetchMaterials(
+        page: 1,
+        pageSize: 50,
+        isActive: true,
+      );
       final groupPage = await productGroupFuture;
       final processPage = await processFuture;
       final materialPage = await materialFuture;

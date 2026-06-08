@@ -206,6 +206,8 @@ class SalesOrderTraceabilitySection extends StatelessWidget {
     required this.onOpenWorkOrderPage,
     required this.onOpenDeliveryPage,
     required this.onOpenInvoicePage,
+    this.onOpenDelivery,
+    this.onOpenInvoice,
     required this.emptyText,
   });
 
@@ -216,6 +218,8 @@ class SalesOrderTraceabilitySection extends StatelessWidget {
   final VoidCallback onOpenWorkOrderPage;
   final VoidCallback onOpenDeliveryPage;
   final VoidCallback onOpenInvoicePage;
+  final ValueChanged<TraceabilitySummaryItem>? onOpenDelivery;
+  final ValueChanged<TraceabilitySummaryItem>? onOpenInvoice;
   final String emptyText;
 
   @override
@@ -236,12 +240,14 @@ class SalesOrderTraceabilitySection extends StatelessWidget {
           items: deliveryOrderSummaries,
           actionLabel: '发货列表',
           onActionTap: onOpenDeliveryPage,
+          onItemTap: onOpenDelivery,
         ),
         TraceabilitySummaryGroupData(
           title: '关联发票',
           items: invoiceSummaries,
           actionLabel: '发票列表',
           onActionTap: onOpenInvoicePage,
+          onItemTap: onOpenInvoice,
         ),
       ],
     );

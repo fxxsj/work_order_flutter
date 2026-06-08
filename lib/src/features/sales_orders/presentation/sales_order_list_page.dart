@@ -558,6 +558,30 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     }
   }
 
+  Future<void> _deleteOrder(
+    BuildContext context,
+    SalesOrderViewModel viewModel,
+    SalesOrder order,
+  ) async {
+    final confirmed = await showRiskActionConfirmDialog(
+      context,
+      title: '删除客户订单',
+      summary: '删除后无法恢复，相关施工单、发货和财务数据将不再关联到此订单。',
+      impacts: const ['订单数据将被永久删除', '已关联的施工单、送货单、发票、收款记录将失去订单关联'],
+      auditHint: '建议优先使用"取消订单"保留数据可追溯性，仅草稿状态可删除。',
+      confirmText: '确认删除',
+      destructive: true,
+    );
+    if (confirmed != true) return;
+    try {
+      await _actionService!.delete(order.id);
+      ToastUtil.showSuccess('已删除');
+      await viewModel.loadSalesOrders(resetPage: true);
+    } catch (err) {
+      ToastUtil.showError('删除失败: $err');
+    }
+  }
+
   Future<void> _updatePayment(
     SalesOrderViewModel viewModel,
     SalesOrder order,
@@ -655,6 +679,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     final canCreateDeliveryOrder = permissions.has(
       'workorder.add_deliveryorder',
     );
+    final canDeleteSalesOrder = permissions.has('workorder.delete_salesorder');
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
     if (viewModel.loading && orders.isEmpty) {
       return const Center(child: CircularProgressIndicator());
@@ -681,31 +706,37 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         canChangeSalesOrder: canChangeSalesOrder,
         canCreateWorkOrder: canCreateWorkOrder,
         canCreateDeliveryOrder: canCreateDeliveryOrder,
+        canDeleteSalesOrder: canDeleteSalesOrder,
       );
     }
 
-    return ListView.separated(
-      itemCount: orders.length,
-      separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
-      itemBuilder: (context, index) {
-        final order = orders[index];
-        return _SalesOrderSummaryCard(
-          order: order,
-          isMobile: isMobile,
-          selectionMode: _selectionMode,
-          selected: _selectedOrderIds.contains(order.id),
-          selectable: _isSelectableForWorkOrder(order),
-          onSelectedChanged: (value) =>
-              _toggleOrderSelection(order, value ?? false),
-          actions: _buildActionsForOrder(
-            context,
-            order,
-            canChangeSalesOrder: canChangeSalesOrder,
-            canCreateWorkOrder: canCreateWorkOrder,
-            canCreateDeliveryOrder: canCreateDeliveryOrder,
-          ),
-        );
-      },
+    return RefreshIndicator(
+      onRefresh: () => viewModel.loadSalesOrders(resetPage: true),
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: orders.length,
+        separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
+        itemBuilder: (context, index) {
+          final order = orders[index];
+          return _SalesOrderSummaryCard(
+            order: order,
+            isMobile: isMobile,
+            selectionMode: _selectionMode,
+            selected: _selectedOrderIds.contains(order.id),
+            selectable: _isSelectableForWorkOrder(order),
+            onSelectedChanged: (value) =>
+                _toggleOrderSelection(order, value ?? false),
+            actions: _buildActionsForOrder(
+              context,
+              order,
+              canChangeSalesOrder: canChangeSalesOrder,
+              canCreateWorkOrder: canCreateWorkOrder,
+              canCreateDeliveryOrder: canCreateDeliveryOrder,
+              canDeleteSalesOrder: canDeleteSalesOrder,
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -716,6 +747,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     required bool canChangeSalesOrder,
     required bool canCreateWorkOrder,
     required bool canCreateDeliveryOrder,
+    required bool canDeleteSalesOrder,
   }) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
@@ -830,6 +862,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
                       canChangeSalesOrder: canChangeSalesOrder,
                       canCreateWorkOrder: canCreateWorkOrder,
                       canCreateDeliveryOrder: canCreateDeliveryOrder,
+                      canDeleteSalesOrder: canDeleteSalesOrder,
                     ),
                     primaryCount: 2,
                   ),
@@ -847,6 +880,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     required bool canChangeSalesOrder,
     required bool canCreateWorkOrder,
     required bool canCreateDeliveryOrder,
+    required bool canDeleteSalesOrder,
   }) {
     final viewModel = context.read<SalesOrderViewModel>();
     final status = order.status ?? '';
@@ -947,6 +981,16 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
           icon: Icons.block_outlined,
           destructive: true,
           onPressed: () => _cancelOrder(viewModel, order),
+        ),
+      );
+    }
+    if (canDeleteSalesOrder && approvalStatus == 'draft') {
+      actions.add(
+        RowAction(
+          label: '删除',
+          icon: Icons.delete_outline,
+          destructive: true,
+          onPressed: () => _deleteOrder(context, viewModel, order),
         ),
       );
     }

@@ -715,13 +715,17 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
       return _buildDesktopTable(context, viewModel, orders);
     }
 
-    return ListView.separated(
-      itemCount: orders.length,
-      separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
-      itemBuilder: (context, index) {
-        final order = orders[index];
-        return _buildSummaryCard(context, viewModel, order, isMobile);
-      },
+    return RefreshIndicator(
+      onRefresh: () => viewModel.loadPurchaseOrders(resetPage: true),
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: orders.length,
+        separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
+        itemBuilder: (context, index) {
+          final order = orders[index];
+          return _buildSummaryCard(context, viewModel, order, isMobile);
+        },
+      ),
     );
   }
 

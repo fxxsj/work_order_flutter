@@ -328,18 +328,22 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
       );
     }
 
-    return ListView.separated(
-      itemCount: workOrders.length,
-      separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
-      itemBuilder: (context, index) {
-        final workOrder = workOrders[index];
-        return _buildSummaryCard(
-          context,
-          workOrder,
-          canChangeWorkOrder: canChangeWorkOrder,
-          canDeleteWorkOrder: canDeleteWorkOrder,
-        );
-      },
+    return RefreshIndicator(
+      onRefresh: () => viewModel.loadWorkOrders(resetPage: true),
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: workOrders.length,
+        separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
+        itemBuilder: (context, index) {
+          final workOrder = workOrders[index];
+          return _buildSummaryCard(
+            context,
+            workOrder,
+            canChangeWorkOrder: canChangeWorkOrder,
+            canDeleteWorkOrder: canDeleteWorkOrder,
+          );
+        },
+      ),
     );
   }
 

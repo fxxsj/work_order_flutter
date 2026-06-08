@@ -60,6 +60,10 @@ abstract class Task with _$Task {
     String? materialCode,
     @JsonKey(name: 'material_name', fromJson: _stringOrNullFromJson)
     String? materialName,
+    @JsonKey(name: 'material_size', fromJson: _stringOrNullFromJson)
+    String? materialSize,
+    @JsonKey(name: 'material_usage', fromJson: _stringOrNullFromJson)
+    String? materialUsage,
     @JsonKey(name: 'foiling_plate_code', fromJson: _stringOrNullFromJson)
     String? foilingPlateCode,
     @JsonKey(name: 'foiling_plate_name', fromJson: _stringOrNullFromJson)

@@ -8,6 +8,8 @@ import 'package:work_order_app/src/features/auth/presentation/login_page.dart';
 import 'package:work_order_app/src/features/auth/presentation/register_page.dart';
 import 'package:work_order_app/src/features/workorders/presentation/work_order_detail_page.dart';
 import 'package:work_order_app/src/features/workorders/presentation/work_order_form_page.dart';
+import 'package:work_order_app/src/features/finance_invoices/presentation/invoice_detail_page.dart';
+import 'package:work_order_app/src/features/inventory_delivery/presentation/delivery_order_detail_page.dart';
 import 'package:work_order_app/src/features/sales_orders/presentation/sales_order_detail_page.dart';
 import 'package:work_order_app/src/features/sales_orders/presentation/sales_order_form_page.dart';
 
@@ -193,6 +195,52 @@ List<GoRoute> _buildBranchRoutes(NavItem item) {
                 },
               ),
             ],
+          ),
+        ],
+      ),
+    ];
+  }
+
+  if (item.id == 'delivery') {
+    return [
+      GoRoute(
+        path: item.path ?? '/inventory/delivery',
+        name: item.id,
+        pageBuilder: (context, state) =>
+            NoTransitionPage(child: ContentPage(selectedId: item.id)),
+        routes: [
+          GoRoute(
+            path: ':id',
+            name: 'delivery_detail',
+            pageBuilder: (context, state) {
+              final id = int.tryParse(state.pathParameters['id'] ?? '');
+              return NoTransitionPage(
+                child: DeliveryOrderDetailEntry(deliveryOrderId: id ?? 0),
+              );
+            },
+          ),
+        ],
+      ),
+    ];
+  }
+
+  if (item.id == 'invoices') {
+    return [
+      GoRoute(
+        path: item.path ?? '/finance/invoices',
+        name: item.id,
+        pageBuilder: (context, state) =>
+            NoTransitionPage(child: ContentPage(selectedId: item.id)),
+        routes: [
+          GoRoute(
+            path: ':id',
+            name: 'invoice_detail',
+            pageBuilder: (context, state) {
+              final id = int.tryParse(state.pathParameters['id'] ?? '');
+              return NoTransitionPage(
+                child: InvoiceDetailEntry(invoiceId: id ?? 0),
+              );
+            },
           ),
         ],
       ),

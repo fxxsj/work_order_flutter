@@ -70,7 +70,11 @@ class WorkOrderFormOptionsLoader {
       isActive: true,
     );
     final productPageFuture = productApi.fetchProductPage(pageSize: 50);
-    final materialFuture = materialApi.fetchMaterials(page: 1, pageSize: 50);
+    final materialFuture = materialApi.fetchMaterials(
+      page: 1,
+      pageSize: 50,
+      isActive: true,
+    );
     final processFuture = processApi.fetchProcesses(page: 1, pageSize: 50);
     final artworkFuture = artworkApi.fetchArtworks(page: 1, pageSize: 50);
     final dieFuture = dieApi.fetchDies(page: 1, pageSize: 50);

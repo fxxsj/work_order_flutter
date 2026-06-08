@@ -329,13 +329,17 @@ class _TaskListViewState extends State<_TaskListView> {
       return _buildDesktopTable(context, viewModel, tasks);
     }
 
-    return ListView.separated(
-      itemCount: tasks.length,
-      separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
-      itemBuilder: (context, index) {
-        final task = tasks[index];
-        return _buildSummaryCard(context, viewModel, task, isMobile);
-      },
+    return RefreshIndicator(
+      onRefresh: () => viewModel.loadTasks(resetPage: true),
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: tasks.length,
+        separatorBuilder: (_, __) => SizedBox(height: sectionSpacing),
+        itemBuilder: (context, index) {
+          final task = tasks[index];
+          return _buildSummaryCard(context, viewModel, task, isMobile);
+        },
+      ),
     );
   }
 

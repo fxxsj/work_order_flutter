@@ -43,4 +43,8 @@ class SalesOrderActionService {
   Future<void> updatePayment(int orderId, Map<String, dynamic> payload) {
     return SalesOrderApiService(_client).updatePayment(orderId, payload);
   }
+
+  Future<void> delete(int orderId) {
+    return SalesOrderApiService(_client).deleteSalesOrder(orderId);
+  }
 }

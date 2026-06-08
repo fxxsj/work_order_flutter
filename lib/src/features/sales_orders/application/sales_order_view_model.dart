@@ -130,6 +130,11 @@ class SalesOrderViewModel extends PaginatedViewModel<SalesOrder> {
     return _repository.createWorkOrderFromSalesOrder(payload);
   }
 
+  Future<void> delete(int id) async {
+    await _repository.deleteSalesOrder(id);
+    await loadSalesOrders(resetPage: true);
+  }
+
   @override
   Future<PageData<SalesOrder>> fetchPage({
     required int page,

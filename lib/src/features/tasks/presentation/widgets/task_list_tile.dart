@@ -108,6 +108,10 @@ class TaskListTile extends StatelessWidget {
                     MetaChip(label: '风险', value: deadlineRisk),
                   if (followUp.isNotEmpty && followUp != '-')
                     MetaChip(label: '下一步', value: followUp),
+                  if (task.materialSize?.isNotEmpty == true)
+                    MetaChip(label: '开料尺寸', value: task.materialSize!),
+                  if (task.materialUsage?.isNotEmpty == true)
+                    MetaChip(label: '用量', value: task.materialUsage!),
                   if (showAssignee &&
                       task.assignedOperatorName?.isNotEmpty == true)
                     MetaChip(label: '执行人', value: task.assignedOperatorName!),

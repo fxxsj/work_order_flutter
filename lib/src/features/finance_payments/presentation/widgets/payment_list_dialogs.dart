@@ -231,6 +231,8 @@ class _PaymentCreatePanelState extends State<_PaymentCreatePanel> {
     };
     if (selectedSalesOrderId != null) {
       payload['sales_order'] = selectedSalesOrderId;
+      // 关联客户订单时，默认将收款金额全额核销到该订单
+      payload['applied_amount'] = amount;
     }
     if (selectedInvoiceId != null) {
       payload['invoice'] = selectedInvoiceId;

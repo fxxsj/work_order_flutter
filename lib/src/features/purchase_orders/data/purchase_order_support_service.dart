@@ -32,7 +32,10 @@ class PurchaseOrderSupportService {
     final workOrderApi = WorkOrderApiService(_client);
 
     final supplierFuture = supplierApi.fetchSuppliers(pageSize: 50);
-    final materialFuture = materialApi.fetchMaterials(pageSize: 400);
+    final materialFuture = materialApi.fetchMaterials(
+      pageSize: 400,
+      isActive: true,
+    );
     final workOrderFuture = workOrderApi.fetchWorkOrders(
       pageSize: 50,
       approvalStatus: 'approved',

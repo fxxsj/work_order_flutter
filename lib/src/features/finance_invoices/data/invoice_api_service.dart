@@ -118,6 +118,11 @@ class InvoiceApiService {
     return _mapFromResponse(response.data);
   }
 
+  Future<InvoiceDto> fetchDetail(int id) async {
+    final response = await _client.get('/invoices/$id/');
+    return InvoiceDto.fromJson(_mapFromResponse(response.data));
+  }
+
   Future<Map<String, dynamic>> fetchSummary({
     Map<String, dynamic>? params,
   }) async {
