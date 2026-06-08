@@ -18,6 +18,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
+import 'package:work_order_app/src/core/presentation/widgets/shimmer_loading.dart';
 import 'package:work_order_app/src/core/utils/file_download.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -302,7 +303,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
 
     if (viewModel.loading && workOrders.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const ShimmerLoading(child: ShimmerList());
     }
     if (viewModel.errorMessage != null && !viewModel.loading) {
       return ErrorStateCard(

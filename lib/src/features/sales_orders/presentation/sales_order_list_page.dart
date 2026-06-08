@@ -19,6 +19,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.
 import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
+import 'package:work_order_app/src/core/presentation/widgets/shimmer_loading.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/sales_orders/application/sales_order_view_model.dart';
@@ -682,7 +683,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     final canDeleteSalesOrder = permissions.has('workorder.delete_salesorder');
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
     if (viewModel.loading && orders.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const ShimmerLoading(child: ShimmerList());
     }
     if (viewModel.errorMessage != null && !viewModel.loading) {
       return ErrorStateCard(

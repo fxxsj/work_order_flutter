@@ -14,6 +14,7 @@ import 'package:work_order_app/src/core/presentation/providers/feature_entry.dar
 import 'package:work_order_app/src/core/utils/audit_log_navigation.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
+import 'package:work_order_app/src/core/presentation/widgets/shimmer_loading.dart';
 import 'package:work_order_app/src/features/sales_orders/application/sales_order_view_model.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_api_service.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_repository_impl.dart';
@@ -501,7 +502,7 @@ class _SalesOrderDetailPageState extends State<SalesOrderDetailPage> {
       ),
       body: _loading
           ? const DetailSurfaceCard(
-              child: Center(child: CircularProgressIndicator()),
+              child: ShimmerLoading(child: ShimmerCard()),
             )
           : _errorMessage != null
           ? DetailSurfaceCard(
