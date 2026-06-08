@@ -41,13 +41,36 @@
 
 ## 开发命令
 
+推荐使用 `scripts/` 目录下的脚本，保持与 `.claude/commands/` 一致：
+
+```bash
+bash scripts/setup.sh       # 初始化安装（flutter pub get + build_runner）
+bash scripts/analyze.sh     # 静态分析
+bash scripts/test.sh        # 运行全部测试
+bash scripts/test.sh test/e2e/  # 运行指定目录测试
+bash scripts/run-web.sh     # 启动 Web (chrome)
+bash scripts/build.sh web   # 构建 Web 生产包
+bash scripts/build.sh apk   # 构建 Android APK
+```
+
+也支持直接使用 Flutter CLI：
+
 ```bash
 flutter pub get
-flutter run -d chrome      # Web
-flutter run -d linux      # Linux
+flutter run -d chrome
+flutter run -d linux
 flutter analyze
 flutter test
 ```
+
+## AI 命令
+
+通过 `.claude/commands/` 提供快捷入口：
+
+- `/flutter-analyze` → `bash scripts/analyze.sh`
+- `/flutter-test` → `bash scripts/test.sh`
+- `/flutter-build` → `bash scripts/build.sh`
+- `/flutter-run-web` → `bash scripts/run-web.sh`
 
 ## Skill Activation
 

@@ -17,10 +17,12 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}  Flutter 子仓 - 停止开发环境${NC}"
+echo -e "${BLUE}  Flutter 子仓 - 启动开发环境${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
 
-echo -e "${YELLOW}Flutter 开发进程通常在前台运行，按 q 即可退出。${NC}"
-echo -e "${YELLOW}此脚本用于 CI/脚本编排场景，无额外后台进程需要清理。${NC}"
-echo ""
+# 默认使用 chrome，可通过参数指定设备
+DEVICE="${1:-chrome}"
+
+echo -e "${BLUE}启动 Flutter 开发服务器 (device: $DEVICE)...${NC}"
+flutter run -d "$DEVICE" --hot
