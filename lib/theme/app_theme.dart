@@ -28,6 +28,7 @@ class AppTheme {
     const linearInkMuted = Color(0xFFd0d6e0);
     const linearInkSubtle = Color(0xFF8a8f98);
     const linearSuccess = Color(0xFF27a644);
+    const linearLightInk = Color(0xFF0F172A);
 
     // ── ColorScheme (seed → primary family) ──────────────
     final scheme =
@@ -93,7 +94,7 @@ class AppTheme {
       if (states.contains(WidgetState.disabled)) {
         return appColors.subtleText.withValues(alpha: 0.44);
       }
-      return isDark ? linearInk : const Color(0xFF0F172A);
+      return isDark ? linearInk : linearLightInk;
     });
     final pickerDayShape = WidgetStateProperty.resolveWith<OutlinedBorder?>((
       states,
@@ -237,14 +238,14 @@ class AppTheme {
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: appColors.surface,
-        foregroundColor: isDark ? linearInk : const Color(0xFF0F172A),
+        foregroundColor: isDark ? linearInk : linearLightInk,
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
         titleTextStyle: TextStyle(
           fontSize: TextTokens.fontSizeTitleMedium,
           fontWeight: FontWeight.w600,
-          color: isDark ? linearInk : const Color(0xFF0F172A),
+          color: isDark ? linearInk : linearLightInk,
         ),
       ),
       iconTheme: IconThemeData(color: scheme.primary),
@@ -296,7 +297,7 @@ class AppTheme {
           ),
         ),
         headerBackgroundColor: pickerHeader,
-        headerForegroundColor: isDark ? linearInk : const Color(0xFF0F172A),
+        headerForegroundColor: isDark ? linearInk : linearLightInk,
         headerHeadlineStyle: textTheme.headlineSmall?.copyWith(
           fontFamily: bodyFont,
           fontSize: 20,
@@ -334,7 +335,7 @@ class AppTheme {
         rangePickerHeaderBackgroundColor: pickerHeader,
         rangePickerHeaderForegroundColor: isDark
             ? linearInk
-            : const Color(0xFF0F172A),
+            : linearLightInk,
         rangePickerHeaderHeadlineStyle: textTheme.titleMedium?.copyWith(
           fontFamily: bodyFont,
           fontSize: 18,
@@ -404,7 +405,7 @@ class AppTheme {
         }),
         hourMinuteTextColor: WidgetStateColor.resolveWith((states) {
           if (states.contains(WidgetState.selected)) return scheme.primary;
-          return isDark ? linearInk : const Color(0xFF0F172A);
+          return isDark ? linearInk : linearLightInk;
         }),
         dialBackgroundColor: isDark
             ? const Color(0xFF18191A)
@@ -475,7 +476,7 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: isDark ? linearSurface1 : const Color(0xFF0F172A),
+        backgroundColor: isDark ? linearSurface1 : linearLightInk,
         contentTextStyle: TextStyle(
           color: isDark ? linearInk : const Color(0xFFF1F5F9),
         ),

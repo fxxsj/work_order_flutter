@@ -7,6 +7,14 @@ import 'package:work_order_app/src/core/constants/response_code_constant.dart';
 import 'package:work_order_app/src/core/models/api_response.dart';
 
 class AppDioInterceptors extends InterceptorsWrapper {
+  static const List<String> _authPathsSkippingRefresh = [
+    '/auth/login',
+    '/auth/register',
+    '/auth/refresh',
+    '/user/login',
+    '/user/loginByFace',
+  ];
+
   @override
   void onRequest(
     RequestOptions options,
@@ -15,11 +23,7 @@ class AppDioInterceptors extends InterceptorsWrapper {
     final path = options.path;
     final skipRefresh =
         options.extra['skipAuthRefresh'] == true ||
-        path.contains('/auth/login') ||
-        path.contains('/auth/register') ||
-        path.contains('/auth/refresh') ||
-        path.contains('/user/login') ||
-        path.contains('/user/loginByFace');
+        _authPathsSkippingRefresh.any(path.contains);
     if (!skipRefresh) {
       await HttpClient.ensureFreshAccessToken();
     }

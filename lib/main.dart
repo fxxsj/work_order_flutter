@@ -13,12 +13,58 @@ import 'package:work_order_app/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await AppConfig.init();
-  final storage = AppStorage();
-  await storage.init();
-  final apiClient = ApiClient();
-  apiClient.init();
-  runApp(MyApp(storage: storage, apiClient: apiClient));
+  try {
+    await AppConfig.init();
+    final storage = AppStorage();
+    await storage.init();
+    final apiClient = ApiClient();
+    apiClient.init();
+    runApp(MyApp(storage: storage, apiClient: apiClient));
+  } catch (error, stackTrace) {
+    FlutterError.reportError(
+      FlutterErrorDetails(
+        exception: error,
+        stack: stackTrace,
+        library: 'main',
+        context: ErrorDescription('应用初始化失败'),
+      ),
+    );
+    runApp(_FatalErrorApp(error: error));
+  }
+}
+
+class _FatalErrorApp extends StatelessWidget {
+  const _FatalErrorApp({required this.error});
+
+  final Object error;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 48),
+                const SizedBox(height: 16),
+                const Text('应用启动失败，请重启或联系管理员。'),
+                const SizedBox(height: 8),
+                Text(
+                  '$error',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class MyApp extends StatefulWidget {
