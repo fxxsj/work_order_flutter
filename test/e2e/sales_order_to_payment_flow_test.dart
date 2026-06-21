@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_order_app/src/core/data/page_data.dart';
 import 'package:work_order_app/src/features/finance_invoices/application/invoice_view_model.dart';
@@ -13,6 +14,7 @@ import 'package:work_order_app/src/features/inventory_delivery/application/deliv
 import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_dto.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_detail.dart';
+import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_form_options.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_repository.dart';
 import 'package:work_order_app/src/features/sales_orders/application/sales_order_view_model.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_detail_dto.dart';
@@ -529,6 +531,90 @@ class _MockDeliveryOrderRepository implements DeliveryOrderRepository {
       customerName: order.customerName,
       status: order.status,
     );
+  }
+
+  @override
+  Future<DeliveryOrderDetail> createDeliveryOrder(
+    Map<String, dynamic> payload,
+  ) async {
+    _log('createDeliveryOrder');
+    final id = _orders.keys.isEmpty ? 1 : _orders.keys.reduce((a, b) => a > b ? a : b) + 1;
+    final order = DeliveryOrder(
+      id: id,
+      orderNumber: 'DO${id.toString().padLeft(5, '0')}',
+      status: 'pending',
+      customerName: payload['customer_name']?.toString(),
+    );
+    _orders[id] = order;
+    return DeliveryOrderDetail(
+      id: order.id,
+      orderNumber: order.orderNumber,
+      customerName: order.customerName,
+      status: order.status,
+    );
+  }
+
+  @override
+  Future<DeliveryOrderDetail> updateDeliveryOrder(
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
+    _log('updateDeliveryOrder:$id');
+    final order = _orders[id];
+    if (order == null) throw Exception('DeliveryOrder not found');
+    return DeliveryOrderDetail(
+      id: order.id,
+      orderNumber: order.orderNumber,
+      customerName: order.customerName,
+      status: order.status,
+    );
+  }
+
+  @override
+  Future<void> deleteDeliveryOrder(int id) async {
+    _log('deleteDeliveryOrder:$id');
+    _orders.remove(id);
+  }
+
+  @override
+  Future<Map<String, dynamic>> resolveException(
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
+    _log('resolveException:$id');
+    return {'status': 'resolved'};
+  }
+
+  @override
+  Future<DeliveryOrderDetail> uploadReceiverSignature(
+    int id,
+    MultipartFile receiverSignature,
+  ) async {
+    _log('uploadReceiverSignature:$id');
+    final order = _orders[id];
+    if (order == null) throw Exception('DeliveryOrder not found');
+    return DeliveryOrderDetail(
+      id: order.id,
+      orderNumber: order.orderNumber,
+      customerName: order.customerName,
+      status: order.status,
+    );
+  }
+
+  @override
+  Future<DeliveryOrderFormOptions> loadFormOptions() async {
+    _log('loadFormOptions');
+    return const DeliveryOrderFormOptions(
+      customers: [],
+      salesOrders: [],
+      products: [],
+    );
+  }
+
+  @override
+  Future<SalesOrderDetail> fetchSalesOrderDetail(int id) async {
+    _log('fetchSalesOrderDetail:$id');
+    return SalesOrderDetail(id: id, orderNumber: 'SO$id');
   }
 
   void seedDeliveryOrder(DeliveryOrder order) {

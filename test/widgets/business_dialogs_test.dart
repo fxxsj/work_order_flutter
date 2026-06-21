@@ -16,7 +16,6 @@ import 'package:work_order_app/src/features/purchase_orders/presentation/widgets
 import 'package:work_order_app/src/features/purchase_orders/presentation/widgets/purchase_order_receive_dialog.dart';
 import 'package:work_order_app/src/features/sales_orders/presentation/widgets/sales_order_list_dialogs.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order.dart';
-import 'package:work_order_app/src/features/sales_orders/data/sales_order_dto.dart';
 import 'package:work_order_app/src/features/suppliers/domain/supplier.dart';
 import 'package:work_order_app/src/features/suppliers/data/supplier_dto.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
@@ -540,7 +539,7 @@ void main() {
           submitText: '保存',
           productsLoading: false,
           formKey: formKey,
-          salesOrders: const [SalesOrderDto(id: 7, orderNumber: 'SO-007')],
+          salesOrders: const [SalesOrder(id: 7, orderNumber: 'SO-007')],
           products: const [
             ProductOption(id: 8, code: 'P-001', name: '产品A', unit: '件'),
           ],

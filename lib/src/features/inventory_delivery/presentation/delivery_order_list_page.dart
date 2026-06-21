@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/action_dialogs.dart';
@@ -18,15 +17,11 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.
 import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
-import 'package:work_order_app/src/features/customer/data/customer_dto.dart';
+import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/inventory_delivery/application/delivery_order_view_model.dart';
-import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_api_service.dart';
-import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_repository_impl.dart';
-import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_support_service.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_detail.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_repository.dart';
@@ -34,31 +29,8 @@ import 'package:work_order_app/src/features/inventory_delivery/presentation/widg
 import 'package:work_order_app/src/features/inventory_delivery/presentation/widgets/delivery_order_detail_dialog.dart';
 import 'package:work_order_app/src/features/inventory_delivery/presentation/widgets/delivery_order_form_dialog.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
-import 'package:work_order_app/src/features/sales_orders/data/sales_order_dto.dart';
+import 'package:work_order_app/src/features/sales_orders/domain/sales_order.dart';
 import 'package:work_order_app/src/core/utils/debounce_controller.dart';
-
-/// 送货单列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class DeliveryOrderListEntry extends StatelessWidget {
-  const DeliveryOrderListEntry({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FeatureEntry<
-      DeliveryOrderApiService,
-      DeliveryOrderRepository,
-      DeliveryOrderViewModel
-    >(
-      createService: (context) =>
-          DeliveryOrderApiService(context.read<ApiClient>()),
-      createRepository: (context) =>
-          DeliveryOrderRepositoryImpl(context.read<DeliveryOrderApiService>()),
-      createViewModel: (context) =>
-          DeliveryOrderViewModel(context.read<DeliveryOrderRepository>()),
-      initialize: (viewModel) => viewModel.initialize(),
-      child: const DeliveryOrderListPage(),
-    );
-  }
-}
 
 /// 送货单列表页视图，只负责渲染。
 class DeliveryOrderListPage extends StatelessWidget {
@@ -128,9 +100,9 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
 
   final TextEditingController _searchController = TextEditingController();
   final _debounce = DebounceController();
-  List<CustomerDto> _customers = [];
+  List<Customer> _customers = [];
   bool _customersLoading = false;
-  List<SalesOrderDto> _salesOrders = [];
+  List<SalesOrder> _salesOrders = [];
   bool _salesOrdersLoading = false;
   bool _salesOrdersLoaded = false;
   List<ProductOption> _products = [];
@@ -234,9 +206,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       _productsLoading = true;
     });
     try {
-      final data = await DeliveryOrderSupportService(
-        context.read<ApiClient>(),
-      ).loadFormOptions();
+      final data = await context.read<DeliveryOrderRepository>().loadFormOptions();
       if (!mounted) return;
       setState(() {
         _customers = data.customers;
@@ -262,9 +232,8 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
   }
 
   Future<DeliveryOrderDetail?> _fetchDetail(DeliveryOrder order) async {
-    final apiService = context.read<DeliveryOrderApiService>();
     try {
-      return await apiService.fetchDetail(order.id);
+      return await context.read<DeliveryOrderRepository>().getDeliveryOrderDetail(order.id);
     } catch (err) {
       ToastUtil.showError('获取送货单详情失败: $err');
       return null;
@@ -341,8 +310,10 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
 
     setState(() => _uploadingDeliveryId = order.id);
     try {
-      final apiService = context.read<DeliveryOrderApiService>();
-      await apiService.uploadReceiverSignature(order.id, receiverSignature);
+      await context.read<DeliveryOrderRepository>().uploadReceiverSignature(
+        order.id,
+        receiverSignature,
+      );
       if (!mounted) return;
       ToastUtil.showSuccess('签收附件已上传');
       await viewModel.loadDeliveryOrders(resetPage: false);
@@ -395,12 +366,12 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       ToastUtil.showError('当前账号无权执行该操作');
       return;
     }
-    final apiService = context.read<DeliveryOrderApiService>();
+    final repository = context.read<DeliveryOrderRepository>();
     await confirmCrudDeletion(
       context,
       item: order,
       onDelete: (item) async {
-        await apiService.deleteDeliveryOrder(item.id);
+        await repository.deleteDeliveryOrder(item.id);
         await viewModel.loadDeliveryOrders(resetPage: false);
       },
       config: _deleteConfig,
@@ -422,10 +393,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       return;
     }
 
-    final apiService = context.read<DeliveryOrderApiService>();
-    final supportService = DeliveryOrderSupportService(
-      context.read<ApiClient>(),
-    );
+    final repository = context.read<DeliveryOrderRepository>();
     DeliveryOrderDetail? detail;
     if (isEdit) {
       detail = await _fetchDetail(order);
@@ -486,8 +454,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
 
     Future<void> applySalesOrder(int id, {VoidCallback? refresh}) async {
       try {
-        final detailDto = await supportService.fetchSalesOrderDetail(id);
-        final salesDetail = detailDto.toEntity();
+        final salesDetail = await repository.fetchSalesOrderDetail(id);
         final customerId = salesDetail.customerId ?? 0;
         for (final item in items) {
           item.dispose();
@@ -570,7 +537,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
         };
 
         if (isEdit) {
-          await apiService.updateDeliveryOrder(order.id, payload);
+          await repository.updateDeliveryOrder(order.id, payload);
         } else {
           if (selectedSalesOrderId == null || selectedCustomerId == null) {
             ToastUtil.showError('请选择客户订单');
@@ -578,7 +545,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
           }
           payload['sales_order'] = selectedSalesOrderId;
           payload['customer'] = selectedCustomerId;
-          await apiService.createDeliveryOrder(payload);
+          await repository.createDeliveryOrder(payload);
         }
         if (!mounted) return;
         Navigator.of(context).pop();
@@ -641,7 +608,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       ToastUtil.showError('当前账号无权执行该操作');
       return;
     }
-    final apiService = context.read<DeliveryOrderApiService>();
+    final repository = context.read<DeliveryOrderRepository>();
     await showDeliveryShipDialog(
       context,
       cancelText: _cancelText,
@@ -658,7 +625,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
           if (tracking.isNotEmpty) {
             payload['tracking_number'] = tracking;
           }
-          await apiService.ship(order.id, payload);
+          await repository.ship(order.id, payload);
           if (!mounted) return;
           ToastUtil.showSuccess(_shipSuccessText);
           await viewModel.loadDeliveryOrders(resetPage: false);
@@ -680,7 +647,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       ToastUtil.showError('当前账号无权执行该操作');
       return;
     }
-    final apiService = context.read<DeliveryOrderApiService>();
+    final repository = context.read<DeliveryOrderRepository>();
     await showDeliveryReceiveDialog(
       context,
       cancelText: _cancelText,
@@ -692,7 +659,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
           if (notes.isNotEmpty) {
             payload['received_notes'] = notes;
           }
-          await apiService.receive(order.id, payload);
+          await repository.receive(order.id, payload);
           if (!mounted) return;
           ToastUtil.showSuccess(_receiveSuccessText);
           await viewModel.loadDeliveryOrders(resetPage: false);
@@ -714,7 +681,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       ToastUtil.showError('当前账号无权执行该操作');
       return;
     }
-    final apiService = context.read<DeliveryOrderApiService>();
+    final repository = context.read<DeliveryOrderRepository>();
     await showDeliveryRejectDialog(
       context,
       cancelText: _cancelText,
@@ -722,7 +689,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       title: _rejectTitle,
       onSubmit: (reason) async {
         try {
-          await apiService.reject(order.id, {'reject_reason': reason});
+          await repository.reject(order.id, {'reject_reason': reason});
           if (!mounted) return;
           ToastUtil.showSuccess(_rejectSuccessText);
           await viewModel.loadDeliveryOrders(resetPage: false);
@@ -743,7 +710,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       ToastUtil.showError('当前账号无权执行该操作');
       return;
     }
-    final apiService = context.read<DeliveryOrderApiService>();
+    final repository = context.read<DeliveryOrderRepository>();
     final decision = await showActionDecisionDialog<String>(
       context,
       title: _hasResolvedRejectedException(order) ? '更新拒收处理' : '登记拒收处理',
@@ -776,7 +743,7 @@ class _DeliveryOrderListViewState extends State<_DeliveryOrderListView> {
       return;
     }
     try {
-      await apiService.resolveException(order.id, {
+      await repository.resolveException(order.id, {
         'resolution': decision.selection,
         'resolution_notes': decision.notes,
       });

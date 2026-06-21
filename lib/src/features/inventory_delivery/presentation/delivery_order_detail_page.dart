@@ -1,26 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/attachment_open_button.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/approval_rejection_notice_card.dart';
 import 'package:work_order_app/src/core/utils/file_link_util.dart';
-import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_api_service.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_detail.dart';
-
-class DeliveryOrderDetailEntry extends StatelessWidget {
-  const DeliveryOrderDetailEntry({super.key, required this.deliveryOrderId});
-
-  final int deliveryOrderId;
-
-  @override
-  Widget build(BuildContext context) {
-    return DeliveryOrderDetailPage(deliveryOrderId: deliveryOrderId);
-  }
-}
+import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_repository.dart';
 
 class DeliveryOrderDetailPage extends StatefulWidget {
   const DeliveryOrderDetailPage({super.key, required this.deliveryOrderId});
@@ -52,8 +40,7 @@ class _DeliveryOrderDetailPageState extends State<DeliveryOrderDetailPage> {
       _errorMessage = null;
     });
     try {
-      final api = DeliveryOrderApiService(context.read<ApiClient>());
-      final detail = await api.fetchDetail(widget.deliveryOrderId);
+      final detail = await context.read<DeliveryOrderRepository>().getDeliveryOrderDetail(widget.deliveryOrderId);
       if (!mounted) return;
       setState(() {
         _detail = detail;

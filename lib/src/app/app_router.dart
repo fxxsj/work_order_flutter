@@ -9,7 +9,7 @@ import 'package:work_order_app/src/features/auth/presentation/register_page.dart
 import 'package:work_order_app/src/features/workorders/presentation/work_order_detail_page.dart';
 import 'package:work_order_app/src/features/workorders/presentation/work_order_form_page.dart';
 import 'package:work_order_app/src/features/finance_invoices/finance_invoices_module.dart';
-import 'package:work_order_app/src/features/inventory_delivery/presentation/delivery_order_detail_page.dart';
+import 'package:work_order_app/src/features/inventory_delivery/inventory_delivery_module.dart';
 import 'package:work_order_app/src/features/sales_orders/presentation/sales_order_detail_page.dart';
 import 'package:work_order_app/src/features/sales_orders/presentation/sales_order_form_page.dart';
 

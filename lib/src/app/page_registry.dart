@@ -15,7 +15,7 @@ import 'package:work_order_app/src/features/materials/material_module.dart';
 import 'package:work_order_app/src/features/product_groups/product_group_module.dart';
 import 'package:work_order_app/src/features/purchase_orders/presentation/purchase_order_list_page.dart';
 import 'package:work_order_app/src/features/inventory_stocks/inventory_stocks_module.dart';
-import 'package:work_order_app/src/features/inventory_delivery/presentation/delivery_order_list_page.dart';
+import 'package:work_order_app/src/features/inventory_delivery/inventory_delivery_module.dart';
 import 'package:work_order_app/src/features/inventory_quality/inventory_quality_module.dart';
 import 'package:work_order_app/src/features/finance_invoices/finance_invoices_module.dart';
 import 'package:work_order_app/src/features/finance_payments/finance_payments_module.dart';

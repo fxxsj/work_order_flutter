@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_api_service.dart';
 import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_repository_impl.dart';
+import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_support_service.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_repository.dart';
 import 'package:work_order_app/src/features/stock_out/data/stock_out_api_service.dart';
 import 'package:work_order_app/src/features/stock_out/data/stock_out_repository_impl.dart';
@@ -24,6 +25,7 @@ class StockOutListEntry extends StatelessWidget {
         Provider<DeliveryOrderRepository>(
           create: (context) => DeliveryOrderRepositoryImpl(
             DeliveryOrderApiService(context.read<ApiClient>()),
+            DeliveryOrderSupportService(context.read<ApiClient>()),
           ),
         ),
       ],

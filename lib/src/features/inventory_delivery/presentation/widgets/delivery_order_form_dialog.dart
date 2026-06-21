@@ -8,7 +8,7 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
-import 'package:work_order_app/src/features/sales_orders/data/sales_order_dto.dart';
+import 'package:work_order_app/src/features/sales_orders/domain/sales_order.dart';
 
 typedef DeliverySalesOrderChanged =
     Future<void> Function(int id, {VoidCallback? refresh});
@@ -23,7 +23,7 @@ Future<void> showDeliveryOrderFormDialog(
   required String submitText,
   required bool productsLoading,
   required GlobalKey<FormState> formKey,
-  required List<SalesOrderDto> salesOrders,
+  required List<SalesOrder> salesOrders,
   required List<ProductOption> products,
   required int? selectedSalesOrderId,
   required DateTime? deliveryDate,
@@ -104,7 +104,7 @@ class _DeliveryOrderFormPanel extends StatefulWidget {
   final String submitText;
   final bool productsLoading;
   final GlobalKey<FormState> formKey;
-  final List<SalesOrderDto> salesOrders;
+  final List<SalesOrder> salesOrders;
   final List<ProductOption> products;
   final int? selectedSalesOrderId;
   final DateTime? deliveryDate;
