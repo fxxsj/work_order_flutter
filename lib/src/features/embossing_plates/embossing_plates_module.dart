@@ -7,26 +7,34 @@ import 'package:work_order_app/src/features/embossing_plates/data/embossing_plat
 import 'package:work_order_app/src/features/embossing_plates/data/embossing_plate_repository_impl.dart';
 import 'package:work_order_app/src/features/embossing_plates/domain/embossing_plate_repository.dart';
 import 'package:work_order_app/src/features/embossing_plates/presentation/embossing_plate_list_page.dart';
+import 'package:work_order_app/src/features/products/data/product_api_service.dart';
+import 'package:work_order_app/src/features/products/data/product_repository_impl.dart';
+import 'package:work_order_app/src/features/products/domain/product_repository.dart';
 
 class EmbossingPlateListEntry extends StatelessWidget {
   const EmbossingPlateListEntry({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return FeatureEntry<
-      EmbossingPlateApiService,
-      EmbossingPlateRepository,
-      EmbossingPlateViewModel
-    >(
-      createService: (context) =>
-          EmbossingPlateApiService(context.read<ApiClient>()),
-      createRepository: (context) => EmbossingPlateRepositoryImpl(
-        context.read<EmbossingPlateApiService>(),
+    return Provider<ProductRepository>(
+      create: (context) => ProductRepositoryImpl(
+        ProductApiService(context.read<ApiClient>()),
       ),
-      createViewModel: (context) =>
-          EmbossingPlateViewModel(context.read<EmbossingPlateRepository>()),
-      initialize: (viewModel) => viewModel.initialize(),
-      child: const EmbossingPlateListPage(),
+      child: FeatureEntry<
+        EmbossingPlateApiService,
+        EmbossingPlateRepository,
+        EmbossingPlateViewModel
+      >(
+        createService: (context) =>
+            EmbossingPlateApiService(context.read<ApiClient>()),
+        createRepository: (context) => EmbossingPlateRepositoryImpl(
+          context.read<EmbossingPlateApiService>(),
+        ),
+        createViewModel: (context) =>
+            EmbossingPlateViewModel(context.read<EmbossingPlateRepository>()),
+        initialize: (viewModel) => viewModel.initialize(),
+        child: const EmbossingPlateListPage(),
+      ),
     );
   }
 }

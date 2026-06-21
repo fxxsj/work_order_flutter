@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_drawer_edit_panel.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
@@ -17,9 +16,8 @@ import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/foiling_plates/application/foiling_plate_view_model.dart';
 import 'package:work_order_app/src/features/foiling_plates/domain/foiling_plate.dart';
-import 'package:work_order_app/src/features/products/data/product_api_service.dart';
-import 'package:work_order_app/src/features/products/data/product_repository_impl.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
+import 'package:work_order_app/src/features/products/domain/product_repository.dart';
 import 'package:work_order_app/src/features/products/presentation/widgets/quick_product_create_dialog.dart';
 
 Future<bool> showFoilingPlateEditDrawer(
@@ -85,7 +83,7 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
   late final TextEditingController _notesController;
 
   String _foilingType = 'gold';
-  ProductApiService? _productApi;
+  ProductRepository? _productRepository;
   bool _loadingProducts = false;
   final List<ProductOption> _productOptions = [];
   final List<_PlateProductItem> _productItems = [];
@@ -134,15 +132,15 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_productApi != null) return;
-    _productApi = ProductApiService(context.read<ApiClient>());
+    if (_productRepository != null) return;
+    _productRepository = context.read<ProductRepository>();
     _loadProducts();
   }
 
   Future<void> _loadProducts() async {
     setState(() => _loadingProducts = true);
     try {
-      final products = await _productApi!.fetchProducts(isActive: true);
+      final products = await _productRepository!.getProductOptions(isActive: true);
       if (!mounted) return;
       setState(() {
         _productOptions
@@ -185,15 +183,15 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
       return null;
     }
 
-    final productApi = _productApi;
-    if (productApi == null) {
+    final repository = _productRepository;
+    if (repository == null) {
       ToastUtil.showError('产品数据尚未初始化');
       return null;
     }
 
     final created = await showQuickProductCreateDialog(
       context: context,
-      productRepository: ProductRepositoryImpl(productApi),
+      productRepository: repository,
     );
     if (created == null || !mounted) {
       return null;

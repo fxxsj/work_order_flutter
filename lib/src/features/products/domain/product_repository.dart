@@ -13,6 +13,8 @@ abstract class ProductRepository {
     String? ordering,
   });
 
+  Future<List<ProductOption>> getProductOptions({bool? isActive});
+
   Future<Product> createProduct(Product product);
 
   Future<Product> updateProduct(Product product);

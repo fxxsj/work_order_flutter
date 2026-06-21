@@ -39,6 +39,11 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
+  Future<List<ProductOption>> getProductOptions({bool? isActive}) {
+    return _apiService.fetchProducts(isActive: isActive);
+  }
+
+  @override
   Future<Product> createProduct(Product product) async {
     final dto = await _apiService.createProduct(product.toDto());
     return dto.toEntity();
