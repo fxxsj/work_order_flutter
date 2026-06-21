@@ -80,7 +80,45 @@ class ColorTokens {
   /// 反向墨水 - 白色表面上的文本
   static const Color inverseInk = Color(0xFF000000);
 
+  // ==================== 浅色模式调色板 ====================
+
+  /// 浅色画布背景
+  static const Color lightBackground = Color(0xFFF1F5F9);
+
+  /// 浅色表面
+  static const Color lightSurface = Color(0xFFFFFFFF);
+
+  /// 浅色表面替代
+  static const Color lightSurfaceAlt = Color(0xFFF8FAFC);
+
+  /// 浅色输入框填充
+  static const Color lightInputFill = Color(0xFFF8FAFC);
+
+  /// 浅色 hairline 边框
+  static const Color lightHairline = Color(0xFFE2E8F0);
+
+  /// 浅色主文本 - 深板岩
+  static const Color lightInk = Color(0xFF0F172A);
+
+  /// 浅色次要文本
+  static const Color lightInkMuted = Color(0xFF475569);
+
+  /// 浅色第三级文本
+  static const Color lightInkSubtle = Color(0xFF64748B);
+
+  /// 浅色第四级文本
+  static const Color lightInkTertiary = Color(0xFF334155);
+
+  /// 深色模式未读背景
+  static const Color unreadBackgroundDark = Color(0xFF1a1a1a);
+
+  /// 浅色模式未读背景
+  static const Color unreadBackgroundLight = Color(0xFFEDF2F7);
+
   // ==================== 语义色 ====================
+
+  /// 危险红
+  static const Color danger = Color(0xFFef4444);
 
   /// 成功绿 - 状态药丸和成功指示器
   static const Color semanticSuccess = Color(0xFF27a644);
@@ -100,11 +138,11 @@ class ColorTokens {
     'pending': inkMuted,
     'waiting': inkMuted,
     'in_progress': inkMuted,
-    'danger': Color(0xFFef4444),
-    'failed': Color(0xFFdc2626),
-    'rejected': Color(0xFFdc2626),
-    'cancelled': Color(0xFFef4444),
-    'error': Color(0xFFef4444),
+    'danger': danger,
+    'failed': danger,
+    'rejected': danger,
+    'cancelled': danger,
+    'error': danger,
     'info': primary,
     'processing': inkMuted,
     'new': primary,
