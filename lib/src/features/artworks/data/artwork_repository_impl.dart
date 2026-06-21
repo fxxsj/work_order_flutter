@@ -34,6 +34,12 @@ class ArtworkRepositoryImpl implements ArtworkRepository {
   }
 
   @override
+  Future<Artwork> getArtwork(int id) async {
+    final dto = await _api.fetchArtwork(id);
+    return dto.toEntity();
+  }
+
+  @override
   Future<Artwork> createArtwork(Artwork artwork) async {
     final dto = await _api.createArtwork(ArtworkDto.fromEntity(artwork));
     return dto.toEntity();

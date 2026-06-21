@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
@@ -13,36 +12,10 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/features/audit_logs/application/audit_log_view_model.dart';
-import 'package:work_order_app/src/features/audit_logs/data/audit_log_api_service.dart';
-import 'package:work_order_app/src/features/audit_logs/data/audit_log_repository_impl.dart';
 import 'package:work_order_app/src/features/audit_logs/domain/audit_log.dart';
-import 'package:work_order_app/src/features/audit_logs/domain/audit_log_repository.dart';
 import 'package:work_order_app/src/core/utils/debounce_controller.dart';
-
-/// 审计日志列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class AuditLogListEntry extends StatelessWidget {
-  const AuditLogListEntry({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FeatureEntry<
-      AuditLogApiService,
-      AuditLogRepository,
-      AuditLogViewModel
-    >(
-      createService: (context) => AuditLogApiService(context.read<ApiClient>()),
-      createRepository: (context) =>
-          AuditLogRepositoryImpl(context.read<AuditLogApiService>()),
-      createViewModel: (context) =>
-          AuditLogViewModel(context.read<AuditLogRepository>()),
-      initialize: (viewModel) => viewModel.initialize(),
-      child: const AuditLogListPage(),
-    );
-  }
-}
 
 /// 审计日志列表页视图，只负责渲染。
 class AuditLogListPage extends StatelessWidget {

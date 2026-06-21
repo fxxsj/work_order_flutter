@@ -12,6 +12,8 @@ abstract class FoilingPlateRepository {
     String? ordering,
   });
 
+  Future<FoilingPlate> getFoilingPlate(int id);
+
   Future<FoilingPlate> createFoilingPlate(FoilingPlate plate);
 
   Future<FoilingPlate> updateFoilingPlate(FoilingPlate plate);

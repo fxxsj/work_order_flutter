@@ -12,6 +12,8 @@ abstract class DieRepository {
     String? ordering,
   });
 
+  Future<Die> getDie(int id);
+
   Future<Die> createDie(Die die);
 
   Future<Die> updateDie(Die die);

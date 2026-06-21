@@ -1,35 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/artworks/application/artwork_view_model.dart';
-import 'package:work_order_app/src/features/artworks/data/artwork_api_service.dart';
-import 'package:work_order_app/src/features/artworks/data/artwork_repository_impl.dart';
 import 'package:work_order_app/src/features/artworks/domain/artwork.dart';
 import 'package:work_order_app/src/features/artworks/domain/artwork_repository.dart';
 import 'package:work_order_app/src/features/artworks/presentation/artwork_edit_page.dart';
-
-class ArtworkListEntry extends StatelessWidget {
-  const ArtworkListEntry({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FeatureEntry<ArtworkApiService, ArtworkRepository, ArtworkViewModel>(
-      createService: (context) => ArtworkApiService(context.read<ApiClient>()),
-      createRepository: (context) =>
-          ArtworkRepositoryImpl(context.read<ArtworkApiService>()),
-      createViewModel: (context) =>
-          ArtworkViewModel(context.read<ArtworkRepository>()),
-      initialize: (viewModel) => viewModel.initialize(),
-      child: const ArtworkListPage(),
-    );
-  }
-}
 
 class ArtworkListPage extends StatelessWidget {
   const ArtworkListPage({super.key});
@@ -109,12 +88,11 @@ class ArtworkListPage extends StatelessWidget {
     Artwork? target = artwork;
     if (artwork != null) {
       try {
-        final apiService = context.read<ArtworkApiService>();
-        final detail = await apiService.fetchArtwork(artwork.id);
+        final repository = context.read<ArtworkRepository>();
+        target = await repository.getArtwork(artwork.id);
         if (!context.mounted) {
           return;
         }
-        target = detail.toEntity();
       } catch (err) {
         if (!context.mounted) {
           return;

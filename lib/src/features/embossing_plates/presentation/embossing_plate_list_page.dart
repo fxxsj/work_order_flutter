@@ -1,41 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/embossing_plates/application/embossing_plate_view_model.dart';
-import 'package:work_order_app/src/features/embossing_plates/data/embossing_plate_api_service.dart';
-import 'package:work_order_app/src/features/embossing_plates/data/embossing_plate_repository_impl.dart';
 import 'package:work_order_app/src/features/embossing_plates/domain/embossing_plate.dart';
 import 'package:work_order_app/src/features/embossing_plates/domain/embossing_plate_repository.dart';
 import 'package:work_order_app/src/features/embossing_plates/presentation/embossing_plate_edit_page.dart';
-
-class EmbossingPlateListEntry extends StatelessWidget {
-  const EmbossingPlateListEntry({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FeatureEntry<
-      EmbossingPlateApiService,
-      EmbossingPlateRepository,
-      EmbossingPlateViewModel
-    >(
-      createService: (context) =>
-          EmbossingPlateApiService(context.read<ApiClient>()),
-      createRepository: (context) => EmbossingPlateRepositoryImpl(
-        context.read<EmbossingPlateApiService>(),
-      ),
-      createViewModel: (context) =>
-          EmbossingPlateViewModel(context.read<EmbossingPlateRepository>()),
-      initialize: (viewModel) => viewModel.initialize(),
-      child: const EmbossingPlateListPage(),
-    );
-  }
-}
 
 class EmbossingPlateListPage extends StatelessWidget {
   const EmbossingPlateListPage({super.key});
@@ -107,12 +80,11 @@ class EmbossingPlateListPage extends StatelessWidget {
     EmbossingPlate? target = plate;
     if (plate != null) {
       try {
-        final apiService = context.read<EmbossingPlateApiService>();
-        final detail = await apiService.fetchEmbossingPlate(plate.id);
+        final repository = context.read<EmbossingPlateRepository>();
+        target = await repository.getEmbossingPlate(plate.id);
         if (!context.mounted) {
           return;
         }
-        target = detail.toEntity();
       } catch (err) {
         if (!context.mounted) {
           return;

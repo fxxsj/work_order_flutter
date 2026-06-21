@@ -11,6 +11,8 @@ abstract class ArtworkRepository {
     String? ordering,
   });
 
+  Future<Artwork> getArtwork(int id);
+
   Future<Artwork> createArtwork(Artwork artwork);
 
   Future<Artwork> updateArtwork(Artwork artwork);

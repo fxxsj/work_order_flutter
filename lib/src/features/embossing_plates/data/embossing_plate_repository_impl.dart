@@ -34,6 +34,12 @@ class EmbossingPlateRepositoryImpl implements EmbossingPlateRepository {
   }
 
   @override
+  Future<EmbossingPlate> getEmbossingPlate(int id) async {
+    final dto = await _api.fetchEmbossingPlate(id);
+    return dto.toEntity();
+  }
+
+  @override
   Future<EmbossingPlate> createEmbossingPlate(EmbossingPlate plate) async {
     final dto = await _api.createEmbossingPlate(
       EmbossingPlateDto.fromEntity(plate),

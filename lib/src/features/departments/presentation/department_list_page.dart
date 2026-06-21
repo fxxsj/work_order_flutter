@@ -1,43 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/departments/application/department_view_model.dart';
-import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
-import 'package:work_order_app/src/features/departments/data/department_repository_impl.dart';
 import 'package:work_order_app/src/features/departments/domain/department.dart';
-import 'package:work_order_app/src/features/departments/domain/department_repository.dart';
 import 'package:work_order_app/src/features/departments/presentation/department_edit_page.dart';
-
-/// 部门列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class DepartmentListEntry extends StatelessWidget {
-  const DepartmentListEntry({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FeatureEntry<
-      DepartmentApiService,
-      DepartmentRepository,
-      DepartmentViewModel
-    >(
-      createService: (context) =>
-          DepartmentApiService(context.read<ApiClient>()),
-      createRepository: (context) =>
-          DepartmentRepositoryImpl(context.read<DepartmentApiService>()),
-      createViewModel: (context) =>
-          DepartmentViewModel(context.read<DepartmentRepository>()),
-      initialize: (viewModel) => viewModel.initialize(),
-      child: const DepartmentListPage(),
-    );
-  }
-}
 
 /// 部门列表页视图，只负责渲染。
 class DepartmentListPage extends StatelessWidget {

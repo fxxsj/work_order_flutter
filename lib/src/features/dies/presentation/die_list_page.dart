@@ -1,34 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/dies/application/die_view_model.dart';
-import 'package:work_order_app/src/features/dies/data/die_api_service.dart';
-import 'package:work_order_app/src/features/dies/data/die_repository_impl.dart';
 import 'package:work_order_app/src/features/dies/domain/die.dart';
 import 'package:work_order_app/src/features/dies/domain/die_repository.dart';
 import 'package:work_order_app/src/features/dies/presentation/die_edit_page.dart';
-
-class DieListEntry extends StatelessWidget {
-  const DieListEntry({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FeatureEntry<DieApiService, DieRepository, DieViewModel>(
-      createService: (context) => DieApiService(context.read<ApiClient>()),
-      createRepository: (context) =>
-          DieRepositoryImpl(context.read<DieApiService>()),
-      createViewModel: (context) => DieViewModel(context.read<DieRepository>()),
-      initialize: (viewModel) => viewModel.initialize(),
-      child: const DieListPage(),
-    );
-  }
-}
 
 class DieListPage extends StatelessWidget {
   const DieListPage({super.key});
@@ -86,12 +66,11 @@ class DieListPage extends StatelessWidget {
     Die? target = die;
     if (die != null) {
       try {
-        final apiService = context.read<DieApiService>();
-        final detail = await apiService.fetchDie(die.id);
+        final repository = context.read<DieRepository>();
+        target = await repository.getDie(die.id);
         if (!context.mounted) {
           return;
         }
-        target = detail.toEntity();
       } catch (err) {
         if (!context.mounted) {
           return;

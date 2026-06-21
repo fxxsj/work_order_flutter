@@ -1,36 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/processes/application/process_view_model.dart';
-import 'package:work_order_app/src/features/processes/data/process_api_service.dart';
-import 'package:work_order_app/src/features/processes/data/process_repository_impl.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
-import 'package:work_order_app/src/features/processes/domain/process_repository.dart';
 import 'package:work_order_app/src/features/processes/presentation/process_edit_page.dart';
-
-/// 工序列表入口。
-class ProcessListEntry extends StatelessWidget {
-  const ProcessListEntry({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FeatureEntry<ProcessApiService, ProcessRepository, ProcessViewModel>(
-      createService: (context) => ProcessApiService(context.read<ApiClient>()),
-      createRepository: (context) =>
-          ProcessRepositoryImpl(context.read<ProcessApiService>()),
-      createViewModel: (context) =>
-          ProcessViewModel(context.read<ProcessRepository>()),
-      initialize: (viewModel) => viewModel.initialize(),
-      child: const ProcessListPage(),
-    );
-  }
-}
 
 /// 工序列表页视图，只负责渲染。
 class ProcessListPage extends StatelessWidget {

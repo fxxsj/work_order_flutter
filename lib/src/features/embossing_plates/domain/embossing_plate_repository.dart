@@ -11,6 +11,8 @@ abstract class EmbossingPlateRepository {
     String? ordering,
   });
 
+  Future<EmbossingPlate> getEmbossingPlate(int id);
+
   Future<EmbossingPlate> createEmbossingPlate(EmbossingPlate plate);
 
   Future<EmbossingPlate> updateEmbossingPlate(EmbossingPlate plate);
