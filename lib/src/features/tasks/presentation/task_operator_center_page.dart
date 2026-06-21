@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/action_dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
@@ -20,69 +19,12 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/utils/debounce_controller.dart';
-import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
+import 'package:work_order_app/src/features/tasks/domain/task_operator_center_result.dart';
+import 'package:work_order_app/src/features/tasks/domain/task_repository.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_ui_helper.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_list_tile.dart';
 
-/// 操作员任务中心-summary 数据结构。
-class OperatorSummary {
-  const OperatorSummary({
-    this.myTotal = 0,
-    this.myPending = 0,
-    this.myInProgress = 0,
-    this.myCompleted = 0,
-    this.claimableCount = 0,
-  });
-
-  final int myTotal;
-  final int myPending;
-  final int myInProgress;
-  final int myCompleted;
-  final int claimableCount;
-
-  factory OperatorSummary.fromJson(Map<String, dynamic>? json) {
-    if (json == null) return const OperatorSummary();
-    return OperatorSummary(
-      myTotal: (json['my_total'] ?? 0) as int,
-      myPending: (json['my_pending'] ?? 0) as int,
-      myInProgress: (json['my_in_progress'] ?? 0) as int,
-      myCompleted: (json['my_completed'] ?? 0) as int,
-      claimableCount: (json['claimable_count'] ?? 0) as int,
-    );
-  }
-}
-
-/// 操作员任务中心-pagination meta。
-class PaginationMeta {
-  const PaginationMeta({
-    this.myTotal = 0,
-    this.myCount = 0,
-    this.myHasMore = false,
-    this.claimableTotal = 0,
-    this.claimableCount = 0,
-    this.claimableHasMore = false,
-  });
-
-  final int myTotal;
-  final int myCount;
-  final bool myHasMore;
-  final int claimableTotal;
-  final int claimableCount;
-  final bool claimableHasMore;
-
-  factory PaginationMeta.fromJson(Map<String, dynamic>? json) {
-    if (json == null) return const PaginationMeta();
-    return PaginationMeta(
-      myTotal: (json['my_total'] ?? 0) as int,
-      myCount: (json['my_count'] ?? 0) as int,
-      myHasMore: (json['my_has_more'] ?? false) as bool,
-      claimableTotal: (json['claimable_total'] ?? 0) as int,
-      claimableCount: (json['claimable_count'] ?? 0) as int,
-      claimableHasMore: (json['claimable_has_more'] ?? false) as bool,
-    );
-  }
-}
 
 /// 任务关联对象一行展示（产品/稿图/刀模/材料）。
 class _TaskContextRow extends StatelessWidget {
@@ -202,19 +144,6 @@ class _TaskLogRow extends StatelessWidget {
   }
 }
 
-/// 操作员任务中心入口。
-class TaskOperatorCenterEntry extends StatelessWidget {
-  const TaskOperatorCenterEntry({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Provider<TaskApiService>(
-      create: (context) => TaskApiService(context.read<ApiClient>()),
-      child: const TaskOperatorCenterPage(),
-    );
-  }
-}
-
 class TaskOperatorCenterPage extends StatelessWidget {
   const TaskOperatorCenterPage({super.key});
 
@@ -301,42 +230,26 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
       _errorMessage = null;
     });
     try {
-      final api = context.read<TaskApiService>();
+      final repository = context.read<TaskRepository>();
       final params = _buildParams();
-      final payload = await api.fetchOperatorCenterData(
+      final result = await repository.fetchOperatorCenterData(
         params: params,
         myLimit: _defaultLimit,
         myOffset: 0,
         claimableLimit: _defaultLimit,
         claimableOffset: 0,
       );
-      final myTasksPayload = payload['my_tasks'];
-      final claimablePayload = payload['claimable_tasks'];
-      final summaryPayload = payload['summary'] as Map<String, dynamic>?;
-      final metaPayload = payload['meta'] as Map<String, dynamic>?;
-      final myTasksRaw = (myTasksPayload is List)
-          ? myTasksPayload
-                .whereType<Map>()
-                .toList()
-                .cast<Map<String, dynamic>>()
-          : <Map<String, dynamic>>[];
-      final claimableTasksRaw = (claimablePayload is List)
-          ? claimablePayload
-                .whereType<Map>()
-                .toList()
-                .cast<Map<String, dynamic>>()
-          : <Map<String, dynamic>>[];
       setState(() {
-        _myTasks = _mapTasks(myTasksPayload);
-        _claimableTasks = _mapTasks(claimablePayload);
+        _myTasks = result.myTasks;
+        _claimableTasks = result.claimableTasks;
         _myTasksRaw
           ..clear()
-          ..addAll(myTasksRaw);
+          ..addAll(result.myTasksRaw);
         _claimableTasksRaw
           ..clear()
-          ..addAll(claimableTasksRaw);
-        _summary = OperatorSummary.fromJson(summaryPayload);
-        _meta = PaginationMeta.fromJson(metaPayload);
+          ..addAll(result.claimableTasksRaw);
+        _summary = result.summary;
+        _meta = result.meta;
       });
     } catch (err) {
       setState(() {
@@ -353,35 +266,20 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
     if (_loadingMoreMy || !_meta.myHasMore) return;
     setState(() => _loadingMoreMy = true);
     try {
-      final api = context.read<TaskApiService>();
+      final repository = context.read<TaskRepository>();
       final params = _buildParams();
       final currentOffset = _myTasks.length;
-      final payload = await api.fetchOperatorCenterData(
+      final result = await repository.fetchOperatorCenterData(
         params: params,
         myLimit: _defaultLimit,
         myOffset: currentOffset,
         claimableLimit: 0,
         claimableOffset: 0,
       );
-      final myTasksPayload = payload['my_tasks'] as List?;
-      final metaPayload = payload['meta'] as Map<String, dynamic>?;
-      final myTasksRaw = (myTasksPayload is List)
-          ? myTasksPayload
-                .whereType<Map>()
-                .toList()
-                .cast<Map<String, dynamic>>()
-          : <Map<String, dynamic>>[];
       setState(() {
-        if (myTasksPayload != null) {
-          _myTasks = [
-            ..._myTasks,
-            ...myTasksPayload.whereType<Map>().map(
-              (item) => Task.fromJson(Map<String, dynamic>.from(item)),
-            ),
-          ];
-          _myTasksRaw.addAll(myTasksRaw);
-        }
-        _meta = PaginationMeta.fromJson(metaPayload);
+        _myTasks = [..._myTasks, ...result.myTasks];
+        _myTasksRaw.addAll(result.myTasksRaw);
+        _meta = result.meta;
       });
     } catch (err) {
       ToastUtil.showError(
@@ -396,35 +294,20 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
     if (_loadingMoreClaimable || !_meta.claimableHasMore) return;
     setState(() => _loadingMoreClaimable = true);
     try {
-      final api = context.read<TaskApiService>();
+      final repository = context.read<TaskRepository>();
       final params = _buildParams();
       final currentOffset = _claimableTasks.length;
-      final payload = await api.fetchOperatorCenterData(
+      final result = await repository.fetchOperatorCenterData(
         params: params,
         myLimit: 0,
         myOffset: 0,
         claimableLimit: _defaultLimit,
         claimableOffset: currentOffset,
       );
-      final claimablePayload = payload['claimable_tasks'] as List?;
-      final metaPayload = payload['meta'] as Map<String, dynamic>?;
-      final claimableTasksRaw = (claimablePayload is List)
-          ? claimablePayload
-                .whereType<Map>()
-                .toList()
-                .cast<Map<String, dynamic>>()
-          : <Map<String, dynamic>>[];
       setState(() {
-        if (claimablePayload != null) {
-          _claimableTasks = [
-            ..._claimableTasks,
-            ...claimablePayload.whereType<Map>().map(
-              (item) => Task.fromJson(Map<String, dynamic>.from(item)),
-            ),
-          ];
-          _claimableTasksRaw.addAll(claimableTasksRaw);
-        }
-        _meta = PaginationMeta.fromJson(metaPayload);
+        _claimableTasks = [..._claimableTasks, ...result.claimableTasks];
+        _claimableTasksRaw.addAll(result.claimableTasksRaw);
+        _meta = result.meta;
       });
     } catch (err) {
       ToastUtil.showError(
@@ -435,21 +318,11 @@ class _TaskOperatorCenterViewState extends State<_TaskOperatorCenterView> {
     }
   }
 
-  List<Task> _mapTasks(dynamic payload) {
-    if (payload is List) {
-      return payload
-          .whereType<Map>()
-          .map((item) => Task.fromJson(Map<String, dynamic>.from(item)))
-          .toList();
-    }
-    return [];
-  }
-
   Future<void> _claimTask(Task task) async {
     setState(() => _claimingTaskId = task.id);
     try {
-      final api = context.read<TaskApiService>();
-      await api.claimTask(task.id);
+      final repository = context.read<TaskRepository>();
+      await repository.claimTask(task.id);
       ToastUtil.showSuccess('任务已认领');
       await _loadData();
     } catch (err) {
@@ -1534,7 +1407,7 @@ class _TaskUpdateDialogState extends State<_TaskUpdateDialog> {
     }
     setState(() => _submitting = true);
     try {
-      final api = context.read<TaskApiService>();
+      final repository = context.read<TaskRepository>();
       // 传递 version 实现乐观锁
       final payload = <String, dynamic>{
         'quantity_defective': _quantityDefective,
@@ -1544,9 +1417,9 @@ class _TaskUpdateDialogState extends State<_TaskUpdateDialog> {
         if (widget.task.version != null) 'version': widget.task.version,
       };
       if (_completeMode) {
-        await api.complete(widget.task.id, payload);
+        await repository.completeTask(widget.task.id, payload);
       } else {
-        await api.updateQuantity(widget.task.id, payload);
+        await repository.updateQuantity(widget.task.id, payload);
       }
       ToastUtil.showSuccess(_completeMode ? '任务已完成' : '进度已更新');
       widget.onSuccess();

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
-import 'package:work_order_app/src/features/tasks/presentation/task_operator_center_page.dart';
+import 'package:work_order_app/src/features/tasks/domain/task_operator_center_result.dart';
 
 void main() {
   group('OperatorSummary', () {

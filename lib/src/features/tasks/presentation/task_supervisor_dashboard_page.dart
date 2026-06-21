@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
@@ -16,24 +15,12 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widg
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
-import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
-import 'package:work_order_app/src/features/tasks/data/task_supervisor_support_service.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
+import 'package:work_order_app/src/features/tasks/domain/task_repository.dart';
+import 'package:work_order_app/src/features/tasks/domain/task_supervisor_dashboard_data.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_ui_helper.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_supervisor_sections.dart';
-
-class TaskSupervisorDashboardEntry extends StatelessWidget {
-  const TaskSupervisorDashboardEntry({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Provider<TaskApiService>(
-      create: (context) => TaskApiService(context.read<ApiClient>()),
-      child: const TaskSupervisorDashboardPage(),
-    );
-  }
-}
 
 class TaskSupervisorDashboardPage extends StatelessWidget {
   const TaskSupervisorDashboardPage({super.key});
@@ -69,13 +56,11 @@ class _TaskSupervisorDashboardViewState
   String _viewMode = 'dashboard';
   int? _assigningTaskId;
   String _taskStatusFilter = 'all';
-  TaskSupervisorSupportService? _supportService;
   bool _departmentsRequested = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _supportService ??= TaskSupervisorSupportService(context.read<ApiClient>());
     if (_departmentsRequested) return;
     _departmentsRequested = true;
     _loadDepartments();
@@ -84,7 +69,8 @@ class _TaskSupervisorDashboardViewState
   Future<void> _loadDepartments() async {
     setState(() => _loading = true);
     try {
-      final departments = await _supportService!.fetchDepartments();
+      final repository = context.read<TaskRepository>();
+      final departments = await repository.loadDepartments();
       if (!mounted) return;
       setState(() {
         _departments = departments;
@@ -109,9 +95,8 @@ class _TaskSupervisorDashboardViewState
       _errorMessage = null;
     });
     try {
-      final data = await _supportService!.loadDepartmentDashboard(
-        _departmentId!,
-      );
+      final repository = context.read<TaskRepository>();
+      final data = await repository.loadDepartmentDashboard(_departmentId!);
       if (!mounted) return;
       setState(() {
         _workload = data.workload;
@@ -749,7 +734,8 @@ class _TaskSupervisorDashboardViewState
         operators: _operators,
         onSubmit: (operatorId, notes) async {
           try {
-            await _supportService!.assignTask(
+            final repository = context.read<TaskRepository>();
+            await repository.assignTask(
               task.id,
               operatorId: operatorId,
               notes: notes,
@@ -774,7 +760,8 @@ class _TaskSupervisorDashboardViewState
     if (task.assignedOperatorId == operator.id) return;
     setState(() => _assigningTaskId = task.id);
     try {
-      await _supportService!.assignTask(
+      final repository = context.read<TaskRepository>();
+      await repository.assignTask(
         task.id,
         operatorId: operator.id,
         notes: '',

@@ -9,10 +9,13 @@ import 'package:work_order_app/src/features/tasks/data/task_assignment_rule_repo
 import 'package:work_order_app/src/features/tasks/data/task_assignment_rule_support_service.dart';
 import 'package:work_order_app/src/features/tasks/data/task_list_support_service.dart';
 import 'package:work_order_app/src/features/tasks/data/task_repository_impl.dart';
+import 'package:work_order_app/src/features/tasks/data/task_supervisor_support_service.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_assignment_rule_repository.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_repository.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_assignment_rule_page.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_list_page.dart';
+import 'package:work_order_app/src/features/tasks/presentation/task_operator_center_page.dart';
+import 'package:work_order_app/src/features/tasks/presentation/task_supervisor_dashboard_page.dart';
 
 class TaskListEntry extends StatelessWidget {
   const TaskListEntry({super.key});
@@ -27,10 +30,16 @@ class TaskListEntry extends StatelessWidget {
         Provider<TaskListSupportService>(
           create: (context) => TaskListSupportService(context.read<ApiClient>()),
         ),
+        Provider<TaskSupervisorSupportService>(
+          create: (context) => TaskSupervisorSupportService(
+            context.read<ApiClient>(),
+          ),
+        ),
         Provider<TaskRepository>(
           create: (context) => TaskRepositoryImpl(
             context.read<TaskApiService>(),
             context.read<TaskListSupportService>(),
+            context.read<TaskSupervisorSupportService>(),
           ),
         ),
         ChangeNotifierProvider<TaskViewModel>(
@@ -73,6 +82,68 @@ class TaskAssignmentRuleEntry extends StatelessWidget {
         ),
       ],
       child: const TaskAssignmentRulePage(),
+    );
+  }
+}
+
+class TaskOperatorCenterEntry extends StatelessWidget {
+  const TaskOperatorCenterEntry({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        Provider<TaskApiService>(
+          create: (context) => TaskApiService(context.read<ApiClient>()),
+        ),
+        Provider<TaskListSupportService>(
+          create: (context) => TaskListSupportService(context.read<ApiClient>()),
+        ),
+        Provider<TaskSupervisorSupportService>(
+          create: (context) => TaskSupervisorSupportService(
+            context.read<ApiClient>(),
+          ),
+        ),
+        Provider<TaskRepository>(
+          create: (context) => TaskRepositoryImpl(
+            context.read<TaskApiService>(),
+            context.read<TaskListSupportService>(),
+            context.read<TaskSupervisorSupportService>(),
+          ),
+        ),
+      ],
+      child: const TaskOperatorCenterPage(),
+    );
+  }
+}
+
+class TaskSupervisorDashboardEntry extends StatelessWidget {
+  const TaskSupervisorDashboardEntry({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        Provider<TaskApiService>(
+          create: (context) => TaskApiService(context.read<ApiClient>()),
+        ),
+        Provider<TaskListSupportService>(
+          create: (context) => TaskListSupportService(context.read<ApiClient>()),
+        ),
+        Provider<TaskSupervisorSupportService>(
+          create: (context) => TaskSupervisorSupportService(
+            context.read<ApiClient>(),
+          ),
+        ),
+        Provider<TaskRepository>(
+          create: (context) => TaskRepositoryImpl(
+            context.read<TaskApiService>(),
+            context.read<TaskListSupportService>(),
+            context.read<TaskSupervisorSupportService>(),
+          ),
+        ),
+      ],
+      child: const TaskSupervisorDashboardPage(),
     );
   }
 }

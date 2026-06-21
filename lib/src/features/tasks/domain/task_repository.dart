@@ -1,5 +1,7 @@
 import 'package:work_order_app/src/features/tasks/data/task_dto.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_list_filter_options.dart';
+import 'package:work_order_app/src/features/tasks/domain/task_operator_center_result.dart';
+import 'package:work_order_app/src/features/tasks/domain/task_supervisor_dashboard_data.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 
 abstract class TaskRepository {
@@ -48,4 +50,20 @@ abstract class TaskRepository {
     required int operatorId,
     required String notes,
   });
+
+  Future<TaskOperatorCenterResult> fetchOperatorCenterData({
+    Map<String, dynamic>? params,
+    int myLimit = 50,
+    int myOffset = 0,
+    int claimableLimit = 50,
+    int claimableOffset = 0,
+  });
+
+  Future<void> claimTask(int taskId, {String? notes});
+
+  Future<List<TaskDepartmentOption>> loadDepartments();
+
+  Future<TaskSupervisorDashboardData> loadDepartmentDashboard(
+    int departmentId,
+  );
 }

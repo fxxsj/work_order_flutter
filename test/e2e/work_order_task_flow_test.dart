@@ -5,7 +5,9 @@ import 'package:work_order_app/src/features/tasks/application/task_view_model.da
 import 'package:work_order_app/src/features/tasks/data/task_dto.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_list_filter_options.dart';
+import 'package:work_order_app/src/features/tasks/domain/task_operator_center_result.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_repository.dart';
+import 'package:work_order_app/src/features/tasks/domain/task_supervisor_dashboard_data.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 import 'package:work_order_app/src/features/workorders/application/work_order_view_model.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_detail_dto.dart';
@@ -365,6 +367,44 @@ class _MockTaskRepository implements TaskRepository {
     required int operatorId,
     required String notes,
   }) async {}
+
+  @override
+  Future<TaskOperatorCenterResult> fetchOperatorCenterData({
+    Map<String, dynamic>? params,
+    int myLimit = 50,
+    int myOffset = 0,
+    int claimableLimit = 50,
+    int claimableOffset = 0,
+  }) async {
+    return const TaskOperatorCenterResult(
+      myTasks: [],
+      claimableTasks: [],
+      myTasksRaw: [],
+      claimableTasksRaw: [],
+      summary: OperatorSummary(),
+      meta: PaginationMeta(),
+    );
+  }
+
+  @override
+  Future<void> claimTask(int taskId, {String? notes}) async {}
+
+  @override
+  Future<List<TaskDepartmentOption>> loadDepartments() async {
+    return [];
+  }
+
+  @override
+  Future<TaskSupervisorDashboardData> loadDepartmentDashboard(
+    int departmentId,
+  ) async {
+    return const TaskSupervisorDashboardData(
+      workload: {},
+      tasks: [],
+      operators: [],
+      flowSummary: TaskSupervisorFlowSummary(),
+    );
+  }
 }
 
 void main() {

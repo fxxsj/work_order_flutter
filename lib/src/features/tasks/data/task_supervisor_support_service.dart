@@ -3,60 +3,8 @@ import 'package:work_order_app/src/features/departments/data/department_api_serv
 import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_api_service.dart';
 import 'package:work_order_app/src/features/inventory_quality/data/quality_inspection_api_service.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
-import 'package:work_order_app/src/features/tasks/domain/task.dart';
+import 'package:work_order_app/src/features/tasks/domain/task_supervisor_dashboard_data.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
-
-class TaskSupervisorFlowSummary {
-  const TaskSupervisorFlowSummary({
-    this.pendingInspections = 0,
-    this.exceptionInspections = 0,
-    this.pendingReceipts = 0,
-    this.rejectedDeliveries = 0,
-  });
-
-  final int pendingInspections;
-  final int exceptionInspections;
-  final int pendingReceipts;
-  final int rejectedDeliveries;
-}
-
-class TaskSupervisorDashboardData {
-  const TaskSupervisorDashboardData({
-    required this.workload,
-    required this.tasks,
-    required this.operators,
-    required this.flowSummary,
-  });
-
-  final Map<String, dynamic> workload;
-  final List<Task> tasks;
-  final List<TaskSupervisorOperatorOption> operators;
-  final TaskSupervisorFlowSummary flowSummary;
-}
-
-class TaskSupervisorOperatorOption {
-  const TaskSupervisorOperatorOption({required this.id, required this.name});
-
-  final int id;
-  final String name;
-
-  factory TaskSupervisorOperatorOption.fromJson(Map<String, dynamic> json) {
-    final id = _toInt(json['id']);
-    final first = json['first_name']?.toString() ?? '';
-    final last = json['last_name']?.toString() ?? '';
-    final username = json['username']?.toString() ?? '';
-    final fullName = '$first$last'.trim();
-    final name = fullName.isNotEmpty
-        ? fullName
-        : (username.isNotEmpty ? username : '操作员 $id');
-    return TaskSupervisorOperatorOption(id: id, name: name);
-  }
-
-  static int _toInt(dynamic value) {
-    if (value is num) return value.toInt();
-    return int.tryParse(value?.toString() ?? '') ?? 0;
-  }
-}
 
 class TaskSupervisorSupportService {
   TaskSupervisorSupportService(this._client);
@@ -83,7 +31,7 @@ class TaskSupervisorSupportService {
     final flowSummaryFuture = _loadFlowSummary(departmentId: departmentId);
 
     final workload = await workloadFuture;
-    final totalTasks = TaskSupervisorOperatorOption._toInt(
+    final totalTasks = _toInt(
       (workload['summary'] as Map<String, dynamic>? ?? const {})['total_tasks'],
     );
     final tasksPage = await api.fetchTasks(
@@ -182,8 +130,13 @@ class TaskSupervisorSupportService {
       if (item is! Map) continue;
       final map = Map<String, dynamic>.from(item);
       if (map[keyName]?.toString() != keyValue) continue;
-      return TaskSupervisorOperatorOption._toInt(map['count']);
+      return _toInt(map['count']);
     }
     return 0;
+  }
+
+  static int _toInt(dynamic value) {
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 }
