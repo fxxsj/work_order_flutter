@@ -30,4 +30,6 @@ abstract class QualityInspectionRepository {
     String? startDate,
     String? endDate,
   });
+
+  Future<void> updateInspection(int id, Map<String, dynamic> payload);
 }

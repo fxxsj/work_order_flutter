@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:work_order_app/src/features/finance_invoices/data/invoice_dto.dart';
+import 'package:work_order_app/src/features/finance_invoices/domain/invoice_form_options.dart';
 
 abstract class InvoiceRepository {
   Future<InvoicePageDto> getInvoices({
@@ -24,4 +25,6 @@ abstract class InvoiceRepository {
   Future<Map<String, dynamic>> approve(int id, Map<String, dynamic> payload);
 
   Future<Map<String, dynamic>> getSummary({Map<String, dynamic>? params});
+
+  Future<InvoiceFormOptions> loadFormOptions();
 }

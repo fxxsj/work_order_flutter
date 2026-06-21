@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/action_dialogs.dart';
@@ -21,7 +20,6 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.d
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/audit_log_navigation.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/file_link_util.dart';
@@ -29,32 +27,11 @@ import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/finance_invoices/application/invoice_view_model.dart';
-import 'package:work_order_app/src/features/finance_invoices/data/invoice_api_service.dart';
-import 'package:work_order_app/src/features/finance_invoices/data/invoice_form_options_loader.dart';
-import 'package:work_order_app/src/features/finance_invoices/data/invoice_repository_impl.dart';
 import 'package:work_order_app/src/features/finance_invoices/domain/invoice.dart';
 import 'package:work_order_app/src/features/finance_invoices/domain/invoice_repository.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order.dart';
 import 'package:work_order_app/src/core/utils/debounce_controller.dart';
-
-/// 发票列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class InvoiceListEntry extends StatelessWidget {
-  const InvoiceListEntry({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FeatureEntry<InvoiceApiService, InvoiceRepository, InvoiceViewModel>(
-      createService: (context) => InvoiceApiService(context.read<ApiClient>()),
-      createRepository: (context) =>
-          InvoiceRepositoryImpl(context.read<InvoiceApiService>()),
-      createViewModel: (context) =>
-          InvoiceViewModel(context.read<InvoiceRepository>()),
-      initialize: (viewModel) => viewModel.initialize(),
-      child: const InvoiceListPage(),
-    );
-  }
-}
 
 /// 发票列表页视图，只负责渲染。
 class InvoiceListPage extends StatelessWidget {
@@ -338,14 +315,12 @@ class _InvoiceListViewState extends State<_InvoiceListView> {
     if (_optionsLoaded || _optionsLoading) return;
     setState(() => _optionsLoading = true);
     try {
-      final data = await InvoiceFormOptionsLoader(
-        context.read<ApiClient>(),
-      ).load();
+      final options = await context.read<InvoiceRepository>().loadFormOptions();
       if (!mounted) return;
       setState(() {
-        _customers = data.customers;
-        _salesOrders = data.salesOrders;
-        _workOrders = data.workOrders;
+        _customers = options.customers;
+        _salesOrders = options.salesOrders;
+        _workOrders = options.workOrders;
         _optionsLoaded = true;
       });
     } catch (err) {

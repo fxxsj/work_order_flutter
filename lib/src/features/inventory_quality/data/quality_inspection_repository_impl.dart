@@ -66,4 +66,9 @@ class QualityInspectionRepositoryImpl implements QualityInspectionRepository {
       endDate: endDate,
     );
   }
+
+  @override
+  Future<void> updateInspection(int id, Map<String, dynamic> payload) {
+    return _apiService.updateInspection(id, payload);
+  }
 }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/action_dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
@@ -20,43 +19,14 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.
 import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/attachment_open_button.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/file_link_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/inventory_quality/application/quality_inspection_view_model.dart';
-import 'package:work_order_app/src/features/inventory_quality/data/quality_inspection_api_service.dart';
-import 'package:work_order_app/src/features/inventory_quality/data/quality_inspection_repository_impl.dart';
 import 'package:work_order_app/src/features/inventory_quality/domain/quality_inspection.dart';
 import 'package:work_order_app/src/features/inventory_quality/domain/quality_inspection_repository.dart';
 import 'package:work_order_app/src/core/utils/debounce_controller.dart';
-
-/// 质检列表入口。
-class QualityInspectionListEntry extends StatelessWidget {
-  const QualityInspectionListEntry({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FeatureEntry<
-      QualityInspectionApiService,
-      QualityInspectionRepository,
-      QualityInspectionViewModel
-    >(
-      createService: (context) =>
-          QualityInspectionApiService(context.read<ApiClient>()),
-      createRepository: (context) => QualityInspectionRepositoryImpl(
-        context.read<QualityInspectionApiService>(),
-      ),
-      createViewModel: (context) => QualityInspectionViewModel(
-        context.read<QualityInspectionRepository>(),
-        context.read<QualityInspectionApiService>(),
-      ),
-      initialize: (viewModel) => viewModel.initialize(),
-      child: const QualityInspectionListPage(),
-    );
-  }
-}
 
 /// 质检列表页视图，只负责渲染。
 class QualityInspectionListPage extends StatelessWidget {
@@ -444,12 +414,12 @@ class _QualityInspectionListViewState
     QualityInspectionViewModel viewModel,
     QualityInspection inspection,
   ) async {
-    final apiService = context.read<QualityInspectionApiService>();
+    final repository = context.read<QualityInspectionRepository>();
     await showDialog<void>(
       context: context,
       builder: (_) => _QualityInspectionCompleteDialog(
         inspection: inspection,
-        apiService: apiService,
+        repository: repository,
         viewModel: viewModel,
       ),
     );
@@ -1407,12 +1377,12 @@ class _QualityInspectionListViewState
 class _QualityInspectionCompleteDialog extends StatefulWidget {
   const _QualityInspectionCompleteDialog({
     required this.inspection,
-    required this.apiService,
+    required this.repository,
     required this.viewModel,
   });
 
   final QualityInspection inspection;
-  final QualityInspectionApiService apiService;
+  final QualityInspectionRepository repository;
   final QualityInspectionViewModel viewModel;
 
   @override
@@ -1463,7 +1433,7 @@ class _QualityInspectionCompleteDialogState
     }
     setState(() => submitting = true);
     try {
-      await widget.apiService.complete(widget.inspection.id, {
+      await widget.repository.complete(widget.inspection.id, {
         'result': result,
         'passed_quantity': passed,
         'failed_quantity': failed,

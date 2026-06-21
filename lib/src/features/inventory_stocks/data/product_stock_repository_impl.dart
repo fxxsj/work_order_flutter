@@ -1,12 +1,14 @@
 import 'package:work_order_app/src/core/data/page_data.dart';
 import 'package:work_order_app/src/features/inventory_stocks/data/product_stock_api_service.dart';
+import 'package:work_order_app/src/features/inventory_stocks/data/product_stock_support_service.dart';
 import 'package:work_order_app/src/features/inventory_stocks/domain/product_stock.dart';
 import 'package:work_order_app/src/features/inventory_stocks/domain/product_stock_repository.dart';
 
 class ProductStockRepositoryImpl implements ProductStockRepository {
-  ProductStockRepositoryImpl(this._apiService);
+  ProductStockRepositoryImpl(this._apiService, this._supportService);
 
   final ProductStockApiService _apiService;
+  final ProductStockSupportService _supportService;
 
   @override
   Future<PageData<ProductStock>> getProductStocks({
@@ -32,13 +34,13 @@ class ProductStockRepositoryImpl implements ProductStockRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> getLowStock({Map<String, dynamic>? params}) {
-    return _apiService.fetchLowStock(params: params);
+  Future<List<ProductStock>> fetchLowStock() {
+    return _supportService.fetchLowStock();
   }
 
   @override
-  Future<Map<String, dynamic>> getExpired({Map<String, dynamic>? params}) {
-    return _apiService.fetchExpired(params: params);
+  Future<List<ProductStock>> fetchExpired() {
+    return _supportService.fetchExpired();
   }
 
   @override
@@ -52,10 +54,17 @@ class ProductStockRepositoryImpl implements ProductStockRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> adjustStock(
-    int id,
-    Map<String, dynamic> payload,
-  ) {
-    return _apiService.adjustStock(id, payload);
+  Future<void> adjustStock(
+    int id, {
+    required String adjustType,
+    required double quantity,
+    required String reason,
+  }) {
+    return _supportService.adjustStock(
+      id,
+      adjustType: adjustType,
+      quantity: quantity,
+      reason: reason,
+    );
   }
 }

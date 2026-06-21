@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
@@ -15,40 +14,13 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.
 import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/inventory_stocks/application/product_stock_view_model.dart';
-import 'package:work_order_app/src/features/inventory_stocks/data/product_stock_api_service.dart';
-import 'package:work_order_app/src/features/inventory_stocks/data/product_stock_support_service.dart';
-import 'package:work_order_app/src/features/inventory_stocks/data/product_stock_repository_impl.dart';
 import 'package:work_order_app/src/features/inventory_stocks/domain/product_stock.dart';
 import 'package:work_order_app/src/features/inventory_stocks/domain/product_stock_repository.dart';
 import 'package:work_order_app/src/features/inventory_stocks/presentation/widgets/product_stock_dialogs.dart';
 import 'package:work_order_app/src/core/utils/debounce_controller.dart';
-
-/// 成品库存列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class ProductStockListEntry extends StatelessWidget {
-  const ProductStockListEntry({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FeatureEntry<
-      ProductStockApiService,
-      ProductStockRepository,
-      ProductStockViewModel
-    >(
-      createService: (context) =>
-          ProductStockApiService(context.read<ApiClient>()),
-      createRepository: (context) =>
-          ProductStockRepositoryImpl(context.read<ProductStockApiService>()),
-      createViewModel: (context) =>
-          ProductStockViewModel(context.read<ProductStockRepository>()),
-      initialize: (viewModel) => viewModel.initialize(),
-      child: const ProductStockListPage(),
-    );
-  }
-}
 
 /// 成品库存列表页视图，只负责渲染。
 class ProductStockListPage extends StatelessWidget {
@@ -98,13 +70,11 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
   bool _expiredLoading = false;
   List<ProductStock> _lowStockList = [];
   List<ProductStock> _expiredList = [];
-  ProductStockSupportService? _supportService;
   String? _routeSignature;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _supportService ??= ProductStockSupportService(context.read<ApiClient>());
     final uri = GoRouterState.of(context).uri;
     final routeSearch = uri.queryParameters['search']?.trim() ?? '';
     final routeStatus = uri.queryParameters['status']?.trim() ?? '';
@@ -157,7 +127,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
       _lowStockList = [];
     });
     try {
-      final list = await _supportService!.fetchLowStock();
+      final list = await context.read<ProductStockRepository>().fetchLowStock();
       if (!mounted) return;
       setState(() => _lowStockList = list);
     } catch (err) {
@@ -185,7 +155,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
       _expiredList = [];
     });
     try {
-      final list = await _supportService!.fetchExpired();
+      final list = await context.read<ProductStockRepository>().fetchExpired();
       if (!mounted) return;
       setState(() => _expiredList = list);
     } catch (err) {
@@ -293,7 +263,7 @@ class _ProductStockListViewState extends State<_ProductStockListView> {
     );
     if (result == null) return;
     try {
-      await _supportService!.adjustStock(
+      await context.read<ProductStockRepository>().adjustStock(
         stock.id,
         adjustType: result.adjustType,
         quantity: result.quantity,

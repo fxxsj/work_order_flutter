@@ -1,12 +1,15 @@
 import 'package:dio/dio.dart';
 import 'package:work_order_app/src/features/finance_invoices/data/invoice_api_service.dart';
 import 'package:work_order_app/src/features/finance_invoices/data/invoice_dto.dart';
+import 'package:work_order_app/src/features/finance_invoices/data/invoice_form_options_loader.dart';
+import 'package:work_order_app/src/features/finance_invoices/domain/invoice_form_options.dart';
 import 'package:work_order_app/src/features/finance_invoices/domain/invoice_repository.dart';
 
 class InvoiceRepositoryImpl implements InvoiceRepository {
-  InvoiceRepositoryImpl(this._apiService);
+  InvoiceRepositoryImpl(this._apiService, this._formOptionsLoader);
 
   final InvoiceApiService _apiService;
+  final InvoiceFormOptionsLoader _formOptionsLoader;
 
   @override
   Future<InvoicePageDto> getInvoices({
@@ -55,5 +58,10 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
   @override
   Future<Map<String, dynamic>> getSummary({Map<String, dynamic>? params}) {
     return _apiService.fetchSummary(params: params);
+  }
+
+  @override
+  Future<InvoiceFormOptions> loadFormOptions() {
+    return _formOptionsLoader.load();
   }
 }

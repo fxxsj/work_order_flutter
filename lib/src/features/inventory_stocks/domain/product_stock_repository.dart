@@ -10,16 +10,18 @@ abstract class ProductStockRepository {
     String? ordering,
   });
 
-  Future<Map<String, dynamic>> getLowStock({Map<String, dynamic>? params});
+  Future<List<ProductStock>> fetchLowStock();
 
-  Future<Map<String, dynamic>> getExpired({Map<String, dynamic>? params});
+  Future<List<ProductStock>> fetchExpired();
 
   Future<Map<String, dynamic>> getExpiringSoon({Map<String, dynamic>? params});
 
   Future<Map<String, dynamic>> getSummary({Map<String, dynamic>? params});
 
-  Future<Map<String, dynamic>> adjustStock(
-    int id,
-    Map<String, dynamic> payload,
-  );
+  Future<void> adjustStock(
+    int id, {
+    required String adjustType,
+    required double quantity,
+    required String reason,
+  });
 }

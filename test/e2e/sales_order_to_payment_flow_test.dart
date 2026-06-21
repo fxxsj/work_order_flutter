@@ -3,6 +3,7 @@ import 'package:work_order_app/src/core/data/page_data.dart';
 import 'package:work_order_app/src/features/finance_invoices/application/invoice_view_model.dart';
 import 'package:work_order_app/src/features/finance_invoices/data/invoice_dto.dart';
 import 'package:work_order_app/src/features/finance_invoices/domain/invoice.dart';
+import 'package:work_order_app/src/features/finance_invoices/domain/invoice_form_options.dart';
 import 'package:work_order_app/src/features/finance_invoices/domain/invoice_repository.dart';
 import 'package:work_order_app/src/features/finance_payments/application/payment_view_model.dart';
 import 'package:work_order_app/src/features/finance_payments/domain/payment.dart';
@@ -619,6 +620,16 @@ class _MockInvoiceRepository implements InvoiceRepository {
   Future<Map<String, dynamic>> getSummary({Map<String, dynamic>? params}) async {
     _log('getSummary');
     return {};
+  }
+
+  @override
+  Future<InvoiceFormOptions> loadFormOptions() async {
+    _log('loadFormOptions');
+    return const InvoiceFormOptions(
+      customers: [],
+      salesOrders: [],
+      workOrders: [],
+    );
   }
 }
 
