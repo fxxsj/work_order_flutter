@@ -27,7 +27,7 @@ import 'package:work_order_app/src/features/foiling_plates/foiling_plates_module
 import 'package:work_order_app/src/features/embossing_plates/embossing_plates_module.dart';
 import 'package:work_order_app/src/features/stock_in/stock_in_module.dart';
 import 'package:work_order_app/src/features/stock_out/stock_out_module.dart';
-import 'package:work_order_app/src/features/finance_costs/presentation/cost_center_list_page.dart';
+import 'package:work_order_app/src/features/finance_costs/cost_center_module.dart';
 import 'package:work_order_app/src/features/finance_costs/presentation/cost_item_list_page.dart';
 import 'package:work_order_app/src/features/processes/presentation/process_log_list_page.dart';
 import 'package:work_order_app/src/features/notification_admin/notification_admin_module.dart';

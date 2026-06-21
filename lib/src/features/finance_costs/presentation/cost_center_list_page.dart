@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/data/generic_api_service.dart';
 import 'package:work_order_app/src/core/data/generic_repository.dart';
 import 'package:work_order_app/src/core/models/generic_record.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
@@ -12,10 +11,11 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
-import 'package:work_order_app/src/features/auth/data/auth_api.dart';
+import 'package:work_order_app/src/features/finance_costs/domain/cost_center_form_options.dart';
+import 'package:work_order_app/src/features/finance_costs/domain/cost_center_options_repository.dart';
 
-class CostCenterListEntry extends StatelessWidget {
-  const CostCenterListEntry({super.key});
+class CostCenterListPage extends StatelessWidget {
+  const CostCenterListPage({super.key});
 
   static const String _listRoute = '/finance/cost-centers';
 
@@ -300,7 +300,14 @@ class CostCenterListEntry extends StatelessWidget {
                 key: ValueKey<int?>(parentId),
                 value: parentId,
                 decoration: const InputDecoration(labelText: '上级成本中心'),
-                options: options.parentOptions,
+                options: options.parents
+                    .map(
+                      (item) => AppDropdownOption<int?>(
+                        value: item.id,
+                        label: item.label,
+                      ),
+                    )
+                    .toList(),
                 onChanged: submitting
                     ? null
                     : (value) => setDialogState(() => parentId = value),
@@ -310,7 +317,14 @@ class CostCenterListEntry extends StatelessWidget {
                 key: ValueKey<int?>(managerId),
                 value: managerId,
                 decoration: const InputDecoration(labelText: '负责人'),
-                options: options.managerOptions,
+                options: options.managers
+                    .map(
+                      (item) => AppDropdownOption<int?>(
+                        value: item.id,
+                        label: item.label,
+                      ),
+                    )
+                    .toList(),
                 onChanged: submitting
                     ? null
                     : (value) => setDialogState(() => managerId = value),
@@ -372,63 +386,13 @@ class CostCenterListEntry extends StatelessWidget {
     descriptionController.dispose();
   }
 
-  static Future<_CostCenterFormOptions> _loadFormOptions(
+  static Future<CostCenterFormOptions> _loadFormOptions(
     BuildContext context,
     GenericRecord? record,
-  ) async {
-    final parentOptions = <AppDropdownOption<int?>>[
-      const AppDropdownOption<int?>(value: null, label: '无上级'),
-    ];
-    final managerOptions = <AppDropdownOption<int?>>[
-      const AppDropdownOption<int?>(value: null, label: '未指定'),
-    ];
-
-    try {
-      final page = await context.read<GenericApiService>().fetchPage(
-        pageSize: 200,
-        extraParams: const {'ordering': 'code'},
-      );
-      for (final center in page.items) {
-        if (record != null && center.id == record.id) continue;
-        final code = center.getString('code') ?? '';
-        final name = center.getString('name') ?? '成本中心 #${center.id}';
-        parentOptions.add(
-          AppDropdownOption<int?>(
-            value: center.id,
-            label: code.isEmpty ? name : '$code · $name',
-          ),
+  ) {
+    return context.read<CostCenterOptionsRepository>().loadOptions(
+          currentRecord: record,
         );
-      }
-    } catch (_) {
-      // Keep the form usable even if optional lookup data fails to load.
-    }
-
-    try {
-      final usersResult = await context.read<AuthApi>().getUsersByDepartment();
-      for (final user in usersResult.data ?? const <Map<String, dynamic>>[]) {
-        final id = _intFrom(user['id']);
-        if (id == null) continue;
-        final label =
-            user['username']?.toString() ??
-            user['name']?.toString() ??
-            '用户 #$id';
-        managerOptions.add(AppDropdownOption<int?>(value: id, label: label));
-      }
-    } catch (_) {
-      // Manager is optional; an unavailable user lookup should not block edits.
-    }
-
-    return _CostCenterFormOptions(
-      parentOptions: parentOptions,
-      managerOptions: managerOptions,
-    );
-  }
-
-  static int? _intFrom(dynamic value) {
-    if (value is int) return value;
-    if (value is num) return value.toInt();
-    if (value is String) return int.tryParse(value);
-    return null;
   }
 
   static Future<void> _deleteCostCenter(
@@ -476,14 +440,4 @@ class CostCenterListEntry extends StatelessWidget {
         return value ?? '';
     }
   }
-}
-
-class _CostCenterFormOptions {
-  const _CostCenterFormOptions({
-    required this.parentOptions,
-    required this.managerOptions,
-  });
-
-  final List<AppDropdownOption<int?>> parentOptions;
-  final List<AppDropdownOption<int?>> managerOptions;
 }

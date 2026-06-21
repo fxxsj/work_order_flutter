@@ -35,7 +35,8 @@ class TaskAssignmentRuleViewModel
     _isActive = value;
   }
 
-  Future<TaskAssignmentRule> createRule(TaskAssignmentRuleDto dto) async {
+  Future<TaskAssignmentRule> createRule(TaskAssignmentRule rule) async {
+    final dto = TaskAssignmentRuleDto.fromEntity(rule);
     final created = await _repository.createRule(dto);
     await loadItems(resetPage: true);
     return created.toEntity();
@@ -43,10 +44,11 @@ class TaskAssignmentRuleViewModel
 
   Future<TaskAssignmentRule> updateRule(
     int id,
-    Map<String, dynamic> payload, {
+    TaskAssignmentRule rule, {
     bool reload = true,
   }) async {
-    final updated = await _repository.updateRule(id, payload);
+    final dto = TaskAssignmentRuleDto.fromEntity(rule);
+    final updated = await _repository.updateRule(id, dto.toPayload());
     if (reload) {
       await loadItems(resetPage: false);
     }

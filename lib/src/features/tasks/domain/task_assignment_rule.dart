@@ -1,5 +1,8 @@
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 
+/// 分派规则默认常量
+const kTaskAssignmentRuleDefaults = (priority: 50, strategy: 'least_tasks');
+
 class TaskAssignmentRule {
   const TaskAssignmentRule({
     required this.id,

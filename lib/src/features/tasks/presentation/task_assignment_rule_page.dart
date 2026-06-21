@@ -628,7 +628,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
       return;
     }
     try {
-      await viewModel.updateRule(rule.id, {'is_active': value});
+      await viewModel.updateRuleSilently(rule.id, {'is_active': value});
       ToastUtil.showSuccess(value ? '已启用' : '已禁用');
       _loadPreview();
     } catch (err) {
@@ -670,7 +670,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
             await viewModel.createRule(payload);
             ToastUtil.showSuccess('默认分派已创建');
           } else {
-            await viewModel.updateRule(rule.id, payload.toPayload());
+            await viewModel.updateRule(rule.id, payload);
             ToastUtil.showSuccess('默认分派已更新');
           }
           _loadPreview();

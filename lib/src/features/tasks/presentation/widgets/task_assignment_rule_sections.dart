@@ -9,7 +9,6 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.d
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
-import 'package:work_order_app/src/features/tasks/data/task_assignment_rule_dto.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_assignment_rule.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 
@@ -92,7 +91,7 @@ Future<bool> showTaskAssignmentRuleEditDrawer(
   required TaskAssignmentRule? rule,
   required List<Process> processes,
   required List<TaskDepartmentOption> departments,
-  required Future<void> Function(TaskAssignmentRuleDto payload) onSubmit,
+  required Future<void> Function(TaskAssignmentRule payload) onSubmit,
 }) async {
   var saved = false;
   await showAdaptiveFilterDrawer(
@@ -124,7 +123,7 @@ class TaskAssignmentRuleEditPanel extends StatefulWidget {
   final TaskAssignmentRule? rule;
   final List<Process> processes;
   final List<TaskDepartmentOption> departments;
-  final Future<void> Function(TaskAssignmentRuleDto payload) onSubmit;
+  final Future<void> Function(TaskAssignmentRule payload) onSubmit;
   final VoidCallback? onSaved;
 
   @override
@@ -263,7 +262,7 @@ class _TaskAssignmentRuleEditPanelState
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() => _submitting = true);
-    final payload = TaskAssignmentRuleDto(
+    final payload = TaskAssignmentRule(
       id: widget.rule?.id ?? 0,
       processId: _processId,
       departmentId: _departmentId,
