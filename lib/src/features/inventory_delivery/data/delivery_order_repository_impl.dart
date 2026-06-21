@@ -1,5 +1,6 @@
 import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_api_service.dart';
 import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_dto.dart';
+import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_detail.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_repository.dart';
 
 class DeliveryOrderRepositoryImpl implements DeliveryOrderRepository {
@@ -32,6 +33,11 @@ class DeliveryOrderRepositoryImpl implements DeliveryOrderRepository {
       endDate: endDate,
       ordering: ordering,
     );
+  }
+
+  @override
+  Future<DeliveryOrderDetail> getDeliveryOrderDetail(int id) {
+    return _apiService.fetchDetail(id);
   }
 
   @override

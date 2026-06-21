@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
@@ -14,39 +13,12 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawer.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/finance_costs/application/production_cost_view_model.dart';
-import 'package:work_order_app/src/features/finance_costs/data/production_cost_api_service.dart';
-import 'package:work_order_app/src/features/finance_costs/data/production_cost_repository_impl.dart';
 import 'package:work_order_app/src/features/finance_costs/domain/production_cost.dart';
 import 'package:work_order_app/src/features/finance_costs/domain/production_cost_repository.dart';
 import 'package:work_order_app/src/core/utils/debounce_controller.dart';
-
-/// 成本核算列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class ProductionCostListEntry extends StatelessWidget {
-  const ProductionCostListEntry({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FeatureEntry<
-      ProductionCostApiService,
-      ProductionCostRepository,
-      ProductionCostViewModel
-    >(
-      createService: (context) =>
-          ProductionCostApiService(context.read<ApiClient>()),
-      createRepository: (context) => ProductionCostRepositoryImpl(
-        context.read<ProductionCostApiService>(),
-      ),
-      createViewModel: (context) =>
-          ProductionCostViewModel(context.read<ProductionCostRepository>()),
-      initialize: (viewModel) => viewModel.initialize(),
-      child: const ProductionCostListPage(),
-    );
-  }
-}
 
 /// 成本核算列表页视图，只负责渲染。
 class ProductionCostListPage extends StatelessWidget {
@@ -140,8 +112,8 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
     ProductionCost cost,
   ) async {
     try {
-      final apiService = context.read<ProductionCostApiService>();
-      await apiService.calculateMaterial(cost.id);
+      final repository = context.read<ProductionCostRepository>();
+      await repository.calculateMaterial(cost.id);
       ToastUtil.showSuccess('材料成本已计算');
       await viewModel.loadCosts(resetPage: false);
     } catch (err) {
@@ -154,8 +126,8 @@ class _ProductionCostListViewState extends State<_ProductionCostListView> {
     ProductionCost cost,
   ) async {
     try {
-      final apiService = context.read<ProductionCostApiService>();
-      await apiService.calculateTotal(cost.id);
+      final repository = context.read<ProductionCostRepository>();
+      await repository.calculateTotal(cost.id);
       ToastUtil.showSuccess('总成本已更新');
       await viewModel.loadCosts(resetPage: false);
     } catch (err) {

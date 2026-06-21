@@ -10,6 +10,7 @@ import 'package:work_order_app/src/features/finance_payments/domain/payment_repo
 import 'package:work_order_app/src/features/inventory_delivery/application/delivery_order_view_model.dart';
 import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_dto.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order.dart';
+import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_detail.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_repository.dart';
 import 'package:work_order_app/src/features/sales_orders/application/sales_order_view_model.dart';
 import 'package:work_order_app/src/features/sales_orders/data/sales_order_detail_dto.dart';
@@ -513,6 +514,19 @@ class _MockDeliveryOrderRepository implements DeliveryOrderRepository {
   }) async {
     _log('getSummary');
     return {};
+  }
+
+  @override
+  Future<DeliveryOrderDetail> getDeliveryOrderDetail(int id) async {
+    _log('getDeliveryOrderDetail:$id');
+    final order = _orders[id];
+    if (order == null) throw Exception('DeliveryOrder not found');
+    return DeliveryOrderDetail(
+      id: order.id,
+      orderNumber: order.orderNumber,
+      customerName: order.customerName,
+      status: order.status,
+    );
   }
 
   void seedDeliveryOrder(DeliveryOrder order) {

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/models/generic_record.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/generic_resource_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
@@ -14,10 +13,11 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_detail.dart';
-import 'package:work_order_app/src/features/stock_out/data/stock_out_support_service.dart';
+import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_repository.dart';
+import 'package:work_order_app/src/features/stock_out/domain/stock_out_repository.dart';
 
-class StockOutListEntry extends StatelessWidget {
-  const StockOutListEntry({super.key});
+class StockOutListPage extends StatelessWidget {
+  const StockOutListPage({super.key});
 
   static const String _listRoute = '/inventory/stock-outs';
 
@@ -404,7 +404,7 @@ class StockOutListEntry extends StatelessWidget {
     BuildContext context, {
     GenericRecord? record,
   }) async {
-    final supportService = StockOutSupportService(context.read<ApiClient>());
+    final repository = context.read<StockOutRepository>();
     final isEdit = record != null;
     final recordId = record?.id;
     final outTypeController = TextEditingController(
@@ -470,10 +470,11 @@ class StockOutListEntry extends StatelessWidget {
           if (deliveryOrderId != null) {
             payload['delivery_order'] = deliveryOrderId;
           }
-          await supportService.save(
-            id: isEdit ? recordId : null,
-            payload: payload,
-          );
+          if (isEdit) {
+            await repository.updateStockOut(recordId!, payload);
+          } else {
+            await repository.createStockOut(payload);
+          }
           if (!context.mounted) return;
           context.read<GenericListViewModel>().reload(resetPage: true);
           Navigator.of(context).pop(true);
@@ -491,9 +492,9 @@ class StockOutListEntry extends StatelessWidget {
   }
 
   static Future<void> _submitStockOut(BuildContext context, int id) async {
-    final supportService = StockOutSupportService(context.read<ApiClient>());
+    final repository = context.read<StockOutRepository>();
     try {
-      await supportService.submit(id);
+      await repository.submit(id);
       if (!context.mounted) return;
       context.read<GenericListViewModel>().reload(resetPage: true);
       ToastUtil.showSuccess('已提交');
@@ -503,9 +504,9 @@ class StockOutListEntry extends StatelessWidget {
   }
 
   static Future<void> _approveStockOut(BuildContext context, int id) async {
-    final supportService = StockOutSupportService(context.read<ApiClient>());
+    final repository = context.read<StockOutRepository>();
     try {
-      await supportService.approve(id);
+      await repository.approve(id);
       if (!context.mounted) return;
       context.read<GenericListViewModel>().reload(resetPage: true);
       ToastUtil.showSuccess('已审核');
@@ -518,7 +519,7 @@ class StockOutListEntry extends StatelessWidget {
     BuildContext context,
     int orderId,
   ) async {
-    final supportService = StockOutSupportService(context.read<ApiClient>());
+    final deliveryOrderRepository = context.read<DeliveryOrderRepository>();
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AppDialog(
@@ -531,7 +532,7 @@ class StockOutListEntry extends StatelessWidget {
           ),
         ],
         content: FutureBuilder<DeliveryOrderDetail>(
-          future: supportService.fetchDeliveryOrderDetail(orderId),
+          future: deliveryOrderRepository.getDeliveryOrderDetail(orderId),
           builder: (context, snapshot) {
             if (snapshot.connectionState != ConnectionState.done) {
               return const SizedBox(
