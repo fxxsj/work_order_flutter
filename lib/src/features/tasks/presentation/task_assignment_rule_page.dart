@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_loading_indicator.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
@@ -9,45 +8,17 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/tasks/application/task_assignment_rule_view_model.dart';
-import 'package:work_order_app/src/features/tasks/data/task_assignment_rule_api_service.dart';
-import 'package:work_order_app/src/features/tasks/data/task_assignment_rule_support_service.dart';
-import 'package:work_order_app/src/features/tasks/data/task_assignment_rule_repository_impl.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_assignment_rule.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_assignment_rule_repository.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_assignment_rule_sections.dart';
 import 'package:work_order_app/src/core/utils/debounce_controller.dart';
-
-class TaskAssignmentRuleEntry extends StatelessWidget {
-  const TaskAssignmentRuleEntry({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FeatureEntry<
-      TaskAssignmentRuleApiService,
-      TaskAssignmentRuleRepository,
-      TaskAssignmentRuleViewModel
-    >(
-      createService: (context) =>
-          TaskAssignmentRuleApiService(context.read<ApiClient>()),
-      createRepository: (context) => TaskAssignmentRuleRepositoryImpl(
-        context.read<TaskAssignmentRuleApiService>(),
-      ),
-      createViewModel: (context) => TaskAssignmentRuleViewModel(
-        context.read<TaskAssignmentRuleRepository>(),
-      ),
-      initialize: (viewModel) => viewModel.initialize(),
-      child: const TaskAssignmentRulePage(),
-    );
-  }
-}
 
 class TaskAssignmentRulePage extends StatelessWidget {
   const TaskAssignmentRulePage({super.key});
@@ -84,15 +55,11 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
   bool _previewLoading = false;
   List<Map<String, dynamic>> _previewData = [];
   bool _globalEnabled = true;
-  TaskAssignmentRuleSupportService? _supportService;
   bool _setupRequested = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _supportService ??= TaskAssignmentRuleSupportService(
-      context.read<ApiClient>(),
-    );
     if (_setupRequested) return;
     _setupRequested = true;
     _loadLookup();
@@ -109,7 +76,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
 
   Future<void> _loadLookup() async {
     try {
-      final lookup = await _supportService!.loadLookup();
+      final lookup = await context.read<TaskAssignmentRuleRepository>().loadLookup();
       if (!mounted) return;
       setState(() {
         _processes = lookup.processes;
@@ -127,7 +94,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
   Future<void> _loadPreview() async {
     setState(() => _previewLoading = true);
     try {
-      final previewData = await _supportService!.loadPreview();
+      final previewData = await context.read<TaskAssignmentRuleRepository>().loadPreview();
       if (!mounted) return;
       setState(() {
         _previewData = previewData.previewItems;
@@ -146,7 +113,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
 
   Future<void> _loadGlobalState() async {
     try {
-      final enabled = await _supportService!.getGlobalState();
+      final enabled = await context.read<TaskAssignmentRuleRepository>().getGlobalState();
       if (!mounted) return;
       setState(() => _globalEnabled = enabled);
     } catch (_) {
@@ -162,7 +129,7 @@ class _TaskAssignmentRuleViewState extends State<_TaskAssignmentRuleView> {
     }
     setState(() => _globalEnabled = value);
     try {
-      final enabled = await _supportService!.setGlobalState(value);
+      final enabled = await context.read<TaskAssignmentRuleRepository>().setGlobalState(value);
       setState(() => _globalEnabled = enabled);
       ToastUtil.showSuccess(_globalEnabled ? '默认分派已启用' : '默认分派已禁用');
       _loadPreview();

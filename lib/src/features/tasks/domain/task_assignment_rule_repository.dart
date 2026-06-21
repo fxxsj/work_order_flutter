@@ -1,4 +1,5 @@
 import 'package:work_order_app/src/features/tasks/data/task_assignment_rule_dto.dart';
+import 'package:work_order_app/src/features/tasks/domain/task_assignment_rule_lookup_data.dart';
 
 abstract class TaskAssignmentRuleRepository {
   Future<TaskAssignmentRulePageDto> getRules({
@@ -20,9 +21,11 @@ abstract class TaskAssignmentRuleRepository {
 
   Future<void> deleteRule(int id);
 
-  Future<Map<String, dynamic>> preview({Map<String, dynamic>? params});
+  Future<TaskAssignmentRuleLookupData> loadLookup();
 
-  Future<Map<String, dynamic>> getGlobalState();
+  Future<TaskAssignmentRulePreviewData> loadPreview();
 
-  Future<Map<String, dynamic>> setGlobalState(bool enabled);
+  Future<bool> getGlobalState();
+
+  Future<bool> setGlobalState(bool enabled);
 }

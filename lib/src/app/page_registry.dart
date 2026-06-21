@@ -7,7 +7,6 @@ import 'package:work_order_app/src/features/workorders/presentation/work_order_l
 import 'package:work_order_app/src/features/tasks/tasks_module.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_operator_center_page.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_supervisor_dashboard_page.dart';
-import 'package:work_order_app/src/features/tasks/presentation/task_assignment_rule_page.dart';
 import 'package:work_order_app/src/features/sales_orders/presentation/sales_order_list_page.dart';
 import 'package:work_order_app/src/features/audit_logs/audit_logs_module.dart';
 import 'package:work_order_app/src/features/products/product_module.dart';

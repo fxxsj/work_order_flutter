@@ -1,11 +1,14 @@
 import 'package:work_order_app/src/features/tasks/data/task_assignment_rule_api_service.dart';
 import 'package:work_order_app/src/features/tasks/data/task_assignment_rule_dto.dart';
+import 'package:work_order_app/src/features/tasks/data/task_assignment_rule_support_service.dart';
+import 'package:work_order_app/src/features/tasks/domain/task_assignment_rule_lookup_data.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_assignment_rule_repository.dart';
 
 class TaskAssignmentRuleRepositoryImpl implements TaskAssignmentRuleRepository {
-  TaskAssignmentRuleRepositoryImpl(this._apiService);
+  TaskAssignmentRuleRepositoryImpl(this._apiService, this._supportService);
 
   final TaskAssignmentRuleApiService _apiService;
+  final TaskAssignmentRuleSupportService _supportService;
 
   @override
   Future<TaskAssignmentRulePageDto> getRules({
@@ -47,17 +50,22 @@ class TaskAssignmentRuleRepositoryImpl implements TaskAssignmentRuleRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> preview({Map<String, dynamic>? params}) {
-    return _apiService.preview(params: params);
+  Future<TaskAssignmentRuleLookupData> loadLookup() {
+    return _supportService.loadLookup();
   }
 
   @override
-  Future<Map<String, dynamic>> getGlobalState() {
-    return _apiService.getGlobalState();
+  Future<TaskAssignmentRulePreviewData> loadPreview() {
+    return _supportService.loadPreview();
   }
 
   @override
-  Future<Map<String, dynamic>> setGlobalState(bool enabled) {
-    return _apiService.setGlobalState(enabled);
+  Future<bool> getGlobalState() {
+    return _supportService.getGlobalState();
+  }
+
+  @override
+  Future<bool> setGlobalState(bool enabled) {
+    return _supportService.setGlobalState(enabled);
   }
 }
