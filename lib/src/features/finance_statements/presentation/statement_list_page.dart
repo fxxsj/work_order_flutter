@@ -212,7 +212,7 @@ class _StatementListViewState extends State<_StatementListView> {
     }
 
     final repository = context.read<CustomerRepository>();
-    final created = await showQuickCustomerCreateDialogWithRepository(
+    final created = await showQuickCustomerCreateDialog(
       context: context,
       customerRepository: repository,
     );
@@ -239,7 +239,7 @@ class _StatementListViewState extends State<_StatementListView> {
     }
 
     final repository = context.read<SupplierRepository>();
-    final created = await showQuickSupplierCreateDialogWithRepository(
+    final created = await showQuickSupplierCreateDialog(
       context: context,
       supplierRepository: repository,
     );

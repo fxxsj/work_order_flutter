@@ -19,6 +19,7 @@ import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/dies/application/die_view_model.dart';
 import 'package:work_order_app/src/features/dies/domain/die.dart';
 import 'package:work_order_app/src/features/products/data/product_api_service.dart';
+import 'package:work_order_app/src/features/products/data/product_repository_impl.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/products/presentation/widgets/quick_product_create_dialog.dart';
 
@@ -210,7 +211,7 @@ class _DieEditPageState extends State<DieEditPage> {
 
     final created = await showQuickProductCreateDialog(
       context: context,
-      productApi: productApi,
+      productRepository: ProductRepositoryImpl(productApi),
     );
     if (created == null || !mounted) {
       return null;

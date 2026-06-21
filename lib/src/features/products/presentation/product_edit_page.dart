@@ -14,6 +14,7 @@ import 'package:work_order_app/src/core/utils/image_upload_flow.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/materials/data/material_api_service.dart';
+import 'package:work_order_app/src/features/materials/data/material_repository_impl.dart';
 import 'package:work_order_app/src/features/materials/domain/material.dart';
 import 'package:work_order_app/src/features/materials/presentation/widgets/quick_material_create_dialog.dart';
 import 'package:work_order_app/src/features/processes/data/process_api_service.dart';
@@ -295,7 +296,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
 
     final created = await showQuickMaterialCreateDialog(
       context: context,
-      materialApi: _materialApi,
+      materialRepository: MaterialRepositoryImpl(_materialApi),
     );
     if (created == null || !mounted) {
       return null;

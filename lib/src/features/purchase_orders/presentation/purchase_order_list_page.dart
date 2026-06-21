@@ -20,6 +20,7 @@ import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/materials/data/material_api_service.dart';
+import 'package:work_order_app/src/features/materials/data/material_repository_impl.dart';
 import 'package:work_order_app/src/features/purchase_orders/application/purchase_order_view_model.dart';
 import 'package:work_order_app/src/features/purchase_orders/data/purchase_order_api_service.dart';
 import 'package:work_order_app/src/features/purchase_orders/data/purchase_order_repository_impl.dart';
@@ -35,6 +36,7 @@ import 'package:work_order_app/src/features/purchase_orders/presentation/widgets
 import 'package:work_order_app/src/features/purchase_orders/presentation/widgets/purchase_low_stock_dialog.dart';
 import 'package:work_order_app/src/features/materials/presentation/widgets/quick_material_create_dialog.dart';
 import 'package:work_order_app/src/features/suppliers/data/supplier_api_service.dart';
+import 'package:work_order_app/src/features/suppliers/data/supplier_repository_impl.dart';
 import 'package:work_order_app/src/features/suppliers/data/supplier_dto.dart';
 import 'package:work_order_app/src/features/suppliers/presentation/widgets/quick_supplier_create_dialog.dart';
 import 'package:work_order_app/src/features/materials/data/material_dto.dart';
@@ -458,7 +460,9 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
 
       final created = await showQuickMaterialCreateDialog(
         context: context,
-        materialApi: MaterialApiService(context.read<ApiClient>()),
+        materialRepository: MaterialRepositoryImpl(
+          MaterialApiService(context.read<ApiClient>()),
+        ),
       );
       if (created == null || !mounted) {
         return null;
@@ -488,7 +492,9 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
 
       final created = await showQuickSupplierCreateDialog(
         context: context,
-        supplierApi: SupplierApiService(context.read<ApiClient>()),
+        supplierRepository: SupplierRepositoryImpl(
+          SupplierApiService(context.read<ApiClient>()),
+        ),
       );
       if (created == null || !mounted) {
         return null;

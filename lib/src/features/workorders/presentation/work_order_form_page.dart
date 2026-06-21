@@ -13,17 +13,20 @@ import 'package:work_order_app/src/core/presentation/providers/feature_entry.dar
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
-import 'package:work_order_app/src/features/artworks/domain/artwork.dart';
+import 'package:work_order_app/src/features/customer/data/customer_repository_impl.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/customer/presentation/widgets/quick_customer_create_dialog.dart';
+import 'package:work_order_app/src/features/artworks/domain/artwork.dart';
 import 'package:work_order_app/src/features/dies/domain/die.dart';
 import 'package:work_order_app/src/features/embossing_plates/domain/embossing_plate.dart';
 import 'package:work_order_app/src/features/foiling_plates/domain/foiling_plate.dart';
 import 'package:work_order_app/src/features/materials/data/material_api_service.dart';
+import 'package:work_order_app/src/features/materials/data/material_repository_impl.dart';
 import 'package:work_order_app/src/features/materials/domain/material.dart';
 import 'package:work_order_app/src/features/materials/presentation/widgets/quick_material_create_dialog.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/products/data/product_api_service.dart';
+import 'package:work_order_app/src/features/products/data/product_repository_impl.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/products/presentation/widgets/quick_product_create_dialog.dart';
 import 'package:work_order_app/src/features/workorders/application/work_order_view_model.dart';
@@ -238,7 +241,9 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
 
     final created = await showQuickCustomerCreateDialog(
       context: context,
-      customerApi: CustomerApiService(context.read<ApiClient>()),
+      customerRepository: CustomerRepositoryImpl(
+        CustomerApiService(context.read<ApiClient>()),
+      ),
     );
     if (created == null || !mounted) {
       return;
@@ -274,7 +279,9 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
 
     final created = await showQuickProductCreateDialog(
       context: context,
-      productApi: ProductApiService(context.read<ApiClient>()),
+      productRepository: ProductRepositoryImpl(
+        ProductApiService(context.read<ApiClient>()),
+      ),
     );
     if (created == null || !mounted) {
       return null;
@@ -309,7 +316,9 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
 
     final created = await showQuickMaterialCreateDialog(
       context: context,
-      materialApi: MaterialApiService(context.read<ApiClient>()),
+      materialRepository: MaterialRepositoryImpl(
+        MaterialApiService(context.read<ApiClient>()),
+      ),
     );
     if (created == null || !mounted) {
       return null;

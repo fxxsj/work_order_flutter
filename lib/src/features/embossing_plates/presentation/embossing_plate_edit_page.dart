@@ -18,6 +18,7 @@ import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/embossing_plates/application/embossing_plate_view_model.dart';
 import 'package:work_order_app/src/features/embossing_plates/domain/embossing_plate.dart';
 import 'package:work_order_app/src/features/products/data/product_api_service.dart';
+import 'package:work_order_app/src/features/products/data/product_repository_impl.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/products/presentation/widgets/quick_product_create_dialog.dart';
 
@@ -189,7 +190,7 @@ class _EmbossingPlateEditPageState extends State<EmbossingPlateEditPage> {
 
     final created = await showQuickProductCreateDialog(
       context: context,
-      productApi: productApi,
+      productRepository: ProductRepositoryImpl(productApi),
     );
     if (created == null || !mounted) {
       return null;

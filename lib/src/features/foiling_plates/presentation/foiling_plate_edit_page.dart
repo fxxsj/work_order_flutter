@@ -18,6 +18,7 @@ import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/foiling_plates/application/foiling_plate_view_model.dart';
 import 'package:work_order_app/src/features/foiling_plates/domain/foiling_plate.dart';
 import 'package:work_order_app/src/features/products/data/product_api_service.dart';
+import 'package:work_order_app/src/features/products/data/product_repository_impl.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/products/presentation/widgets/quick_product_create_dialog.dart';
 
@@ -192,7 +193,7 @@ class _FoilingPlateEditPageState extends State<FoilingPlateEditPage> {
 
     final created = await showQuickProductCreateDialog(
       context: context,
-      productApi: productApi,
+      productRepository: ProductRepositoryImpl(productApi),
     );
     if (created == null || !mounted) {
       return null;
