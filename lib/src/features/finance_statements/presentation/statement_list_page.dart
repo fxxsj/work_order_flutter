@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
@@ -13,48 +12,21 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/audit_log_navigation.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
-import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
+import 'package:work_order_app/src/features/customer/domain/customer_repository.dart';
 import 'package:work_order_app/src/features/customer/presentation/widgets/quick_customer_create_dialog.dart';
 import 'package:work_order_app/src/features/finance_statements/application/statement_view_model.dart';
-import 'package:work_order_app/src/features/finance_statements/data/statement_api_service.dart';
-import 'package:work_order_app/src/features/finance_statements/data/statement_repository_impl.dart';
-import 'package:work_order_app/src/features/finance_statements/data/statement_support_service.dart';
 import 'package:work_order_app/src/features/finance_statements/domain/statement.dart';
 import 'package:work_order_app/src/features/finance_statements/domain/statement_repository.dart';
 import 'package:work_order_app/src/features/finance_statements/presentation/widgets/statement_list_dialogs.dart';
-import 'package:work_order_app/src/features/suppliers/data/supplier_api_service.dart';
 import 'package:work_order_app/src/features/suppliers/domain/supplier.dart';
+import 'package:work_order_app/src/features/suppliers/domain/supplier_repository.dart';
 import 'package:work_order_app/src/features/suppliers/presentation/widgets/quick_supplier_create_dialog.dart';
 import 'package:work_order_app/src/core/utils/debounce_controller.dart';
-
-/// 对账单列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class StatementListEntry extends StatelessWidget {
-  const StatementListEntry({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FeatureEntry<
-      StatementApiService,
-      StatementRepository,
-      StatementViewModel
-    >(
-      createService: (context) =>
-          StatementApiService(context.read<ApiClient>()),
-      createRepository: (context) =>
-          StatementRepositoryImpl(context.read<StatementApiService>()),
-      createViewModel: (context) =>
-          StatementViewModel(context.read<StatementRepository>()),
-      initialize: (viewModel) => viewModel.initialize(),
-      child: const StatementListPage(),
-    );
-  }
-}
 
 /// 对账单列表页视图，只负责渲染。
 class StatementListPage extends StatelessWidget {
@@ -91,13 +63,11 @@ class _StatementListViewState extends State<_StatementListView> {
   bool _optionsLoaded = false;
   List<Customer> _customers = [];
   List<Supplier> _suppliers = [];
-  StatementSupportService? _supportService;
   String? _lastRouteSignature;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _supportService ??= StatementSupportService(context.read<ApiClient>());
     final uri = GoRouterState.of(context).uri;
     final routeSearch = uri.queryParameters['search']?.trim() ?? '';
     final routeStatementType =
@@ -168,7 +138,8 @@ class _StatementListViewState extends State<_StatementListView> {
     if (_optionsLoaded || _optionsLoading) return;
     setState(() => _optionsLoading = true);
     try {
-      final options = await _supportService!.loadOptions();
+      final repository = context.read<StatementRepository>();
+      final options = await repository.loadOptions();
       if (!mounted) return;
       setState(() {
         _customers = options.customers;
@@ -199,7 +170,8 @@ class _StatementListViewState extends State<_StatementListView> {
     );
     if (result == null) return;
     try {
-      await _supportService!.createStatement(result.payload);
+      final repository = context.read<StatementRepository>();
+      await repository.createStatement(result.payload);
       ToastUtil.showSuccess('对账单已创建');
       await viewModel.loadStatements(resetPage: false);
     } catch (err) {
@@ -223,7 +195,8 @@ class _StatementListViewState extends State<_StatementListView> {
     );
     if (result == null) return;
     try {
-      final preview = await _supportService!.generate(result.params);
+      final repository = context.read<StatementRepository>();
+      final preview = await repository.generate(params: result.params);
       if (!mounted) return;
       await showStatementGeneratePreviewDialog(context, result: preview);
     } catch (err) {
@@ -238,9 +211,10 @@ class _StatementListViewState extends State<_StatementListView> {
       return null;
     }
 
-    final created = await showQuickCustomerCreateDialog(
+    final repository = context.read<CustomerRepository>();
+    final created = await showQuickCustomerCreateDialogWithRepository(
       context: context,
-      customerApi: CustomerApiService(context.read<ApiClient>()),
+      customerRepository: repository,
     );
     if (created == null || !mounted) {
       return created;
@@ -264,9 +238,10 @@ class _StatementListViewState extends State<_StatementListView> {
       return null;
     }
 
-    final created = await showQuickSupplierCreateDialog(
+    final repository = context.read<SupplierRepository>();
+    final created = await showQuickSupplierCreateDialogWithRepository(
       context: context,
-      supplierApi: SupplierApiService(context.read<ApiClient>()),
+      supplierRepository: repository,
     );
     if (created == null || !mounted) {
       return created;
@@ -299,7 +274,8 @@ class _StatementListViewState extends State<_StatementListView> {
     );
     if (notes == null) return;
     try {
-      await _supportService!.confirmStatement(
+      final repository = context.read<StatementRepository>();
+      await repository.confirmStatement(
         statement.id,
         confirmed: confirmed,
         notes: notes,

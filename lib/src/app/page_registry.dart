@@ -17,7 +17,7 @@ import 'package:work_order_app/src/features/inventory_quality/inventory_quality_
 import 'package:work_order_app/src/features/finance_invoices/finance_invoices_module.dart';
 import 'package:work_order_app/src/features/finance_payments/finance_payments_module.dart';
 import 'package:work_order_app/src/features/finance_costs/finance_costs_module.dart';
-import 'package:work_order_app/src/features/finance_statements/presentation/statement_list_page.dart';
+import 'package:work_order_app/src/features/finance_statements/finance_statements_module.dart';
 import 'package:work_order_app/src/features/suppliers/suppliers_module.dart';
 import 'package:work_order_app/src/features/departments/departments_module.dart';
 import 'package:work_order_app/src/features/processes/processes_module.dart';

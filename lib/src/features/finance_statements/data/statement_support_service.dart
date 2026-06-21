@@ -1,19 +1,8 @@
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
-import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/finance_statements/data/statement_api_service.dart';
+import 'package:work_order_app/src/features/finance_statements/domain/statement_options_data.dart';
 import 'package:work_order_app/src/features/suppliers/data/supplier_api_service.dart';
-import 'package:work_order_app/src/features/suppliers/domain/supplier.dart';
-
-class StatementOptionsData {
-  const StatementOptionsData({
-    required this.customers,
-    required this.suppliers,
-  });
-
-  final List<Customer> customers;
-  final List<Supplier> suppliers;
-}
 
 class StatementSupportService {
   StatementSupportService(this._client);

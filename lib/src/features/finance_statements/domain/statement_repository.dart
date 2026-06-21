@@ -1,5 +1,6 @@
 import 'package:work_order_app/src/core/data/page_data.dart';
 import 'package:work_order_app/src/features/finance_statements/domain/statement.dart';
+import 'package:work_order_app/src/features/finance_statements/domain/statement_options_data.dart';
 
 abstract class StatementRepository {
   Future<PageData<Statement>> getStatements({
@@ -21,4 +22,14 @@ abstract class StatementRepository {
   Future<Map<String, dynamic>> generate({Map<String, dynamic>? params});
 
   Future<Map<String, dynamic>> getSummary({Map<String, dynamic>? params});
+
+  Future<StatementOptionsData> loadOptions();
+
+  Future<void> createStatement(Map<String, dynamic> payload);
+
+  Future<void> confirmStatement(
+    int statementId, {
+    required bool confirmed,
+    required String notes,
+  });
 }
