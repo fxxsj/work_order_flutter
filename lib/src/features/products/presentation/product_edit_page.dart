@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_drawer_edit_panel.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
@@ -13,18 +12,17 @@ import 'package:work_order_app/src/core/utils/image_upload_config.dart';
 import 'package:work_order_app/src/core/utils/image_upload_flow.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
-import 'package:work_order_app/src/features/materials/data/material_api_service.dart';
-import 'package:work_order_app/src/features/materials/data/material_repository_impl.dart';
 import 'package:work_order_app/src/features/materials/domain/material.dart';
+import 'package:work_order_app/src/features/materials/domain/material_repository.dart';
 import 'package:work_order_app/src/features/materials/presentation/widgets/quick_material_create_dialog.dart';
-import 'package:work_order_app/src/features/processes/data/process_api_service.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
-import 'package:work_order_app/src/features/product_groups/data/product_group_api_service.dart';
+import 'package:work_order_app/src/features/processes/domain/process_repository.dart';
 import 'package:work_order_app/src/features/product_groups/domain/product_group.dart';
-import 'package:work_order_app/src/features/product_materials/data/product_material_api_service.dart';
+import 'package:work_order_app/src/features/product_groups/domain/product_group_repository.dart';
+import 'package:work_order_app/src/features/product_materials/domain/product_material_repository.dart';
 import 'package:work_order_app/src/features/products/application/product_view_model.dart';
-import 'package:work_order_app/src/features/products/data/product_api_service.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
+import 'package:work_order_app/src/features/products/domain/product_repository.dart';
 
 Future<bool> showProductEditDrawer(
   BuildContext context, {
@@ -96,11 +94,11 @@ class _ProductEditPageState extends State<ProductEditPage> {
   late final TextEditingController _minStockController;
   late final TextEditingController _descriptionController;
 
-  late final ProductApiService _productApi;
-  late final ProductGroupApiService _productGroupApi;
-  late final ProcessApiService _processApi;
-  late final MaterialApiService _materialApi;
-  late final ProductMaterialApiService _productMaterialApi;
+  ProductRepository? _productRepository;
+  ProductGroupRepository? _productGroupRepository;
+  ProcessRepository? _processRepository;
+  MaterialRepository? _materialRepository;
+  ProductMaterialRepository? _productMaterialRepository;
 
   String _productType = 'single';
   int? _productGroupId;
@@ -123,13 +121,6 @@ class _ProductEditPageState extends State<ProductEditPage> {
   @override
   void initState() {
     super.initState();
-    final apiClient = context.read<ApiClient>();
-    _productApi = ProductApiService(apiClient);
-    _productGroupApi = ProductGroupApiService(apiClient);
-    _processApi = ProcessApiService(apiClient);
-    _materialApi = MaterialApiService(apiClient);
-    _productMaterialApi = ProductMaterialApiService(apiClient);
-
     final product = _product;
     _codeController = TextEditingController(text: product?.code ?? '');
     _nameController = TextEditingController(text: product?.name ?? '');
@@ -157,7 +148,19 @@ class _ProductEditPageState extends State<ProductEditPage> {
     );
     _images.addAll(product?.images ?? const []);
     _isActive = product?.isActive ?? true;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_productRepository != null) return;
+    _productRepository = context.read<ProductRepository>();
+    _productGroupRepository = context.read<ProductGroupRepository>();
+    _processRepository = context.read<ProcessRepository>();
+    _materialRepository = context.read<MaterialRepository>();
+    _productMaterialRepository = context.read<ProductMaterialRepository>();
     _loadOptions();
+    final product = _product;
     if (product != null) {
       _loadDetail(product.id);
     }
@@ -182,13 +185,16 @@ class _ProductEditPageState extends State<ProductEditPage> {
   Future<void> _loadOptions() async {
     setState(() => _loadingOptions = true);
     try {
-      final productGroupFuture = _productGroupApi.fetchProductGroups(
+      final productGroupFuture = _productGroupRepository!.getProductGroups(
         page: 1,
         pageSize: 50,
         isActive: true,
       );
-      final processFuture = _processApi.fetchProcesses(page: 1, pageSize: 50);
-      final materialFuture = _materialApi.fetchMaterials(
+      final processFuture = _processRepository!.getProcesses(
+        page: 1,
+        pageSize: 50,
+      );
+      final materialFuture = _materialRepository!.getMaterials(
         page: 1,
         pageSize: 50,
         isActive: true,
@@ -198,11 +204,9 @@ class _ProductEditPageState extends State<ProductEditPage> {
       final materialPage = await materialFuture;
       if (!mounted) return;
       setState(() {
-        _productGroups = groupPage.items
-            .map((item) => item.toEntity())
-            .toList();
-        _processes = processPage.items.map((item) => item.toEntity()).toList();
-        _materials = materialPage.items.map((item) => item.toEntity()).toList();
+        _productGroups = groupPage.items;
+        _processes = processPage.items;
+        _materials = materialPage.items;
       });
     } catch (err) {
       ToastUtil.showError('加载基础数据失败: $err');
@@ -216,8 +220,8 @@ class _ProductEditPageState extends State<ProductEditPage> {
   Future<void> _loadDetail(int id) async {
     setState(() => _loadingDetail = true);
     try {
-      final dto = await _productApi.fetchProduct(id);
-      _applyDetail(dto.toEntity());
+      final detail = await _productRepository!.getProduct(id);
+      _applyDetail(detail);
     } catch (err) {
       ToastUtil.showError('加载产品详情失败: $err');
     } finally {
@@ -294,9 +298,15 @@ class _ProductEditPageState extends State<ProductEditPage> {
       return null;
     }
 
+    final repository = _materialRepository;
+    if (repository == null) {
+      ToastUtil.showError('物料数据尚未初始化');
+      return null;
+    }
+
     final created = await showQuickMaterialCreateDialog(
       context: context,
-      materialRepository: MaterialRepositoryImpl(_materialApi),
+      materialRepository: repository,
     );
     if (created == null || !mounted) {
       return null;
@@ -317,44 +327,23 @@ class _ProductEditPageState extends State<ProductEditPage> {
   }
 
   Future<bool> _saveProductMaterials(int productId) async {
-    var hasError = false;
-    try {
-      final existing = await _productMaterialApi.fetchProductMaterials(
-        page: 1,
-        pageSize: 50,
-        params: {'product': productId},
-      );
-      for (final item in existing.items) {
-        final rawId = item['id'];
-        final id = rawId is int ? rawId : int.tryParse(rawId?.toString() ?? '');
-        if (id != null) {
-          await _productMaterialApi.deleteProductMaterial(id);
-        }
-      }
-    } catch (_) {
-      hasError = true;
-    }
-
-    for (var i = 0; i < _materialDrafts.length; i++) {
-      final draft = _materialDrafts[i];
-      if (draft.materialId == null || draft.materialId == 0) {
-        continue;
-      }
-      try {
-        await _productMaterialApi.createProductMaterial({
-          'product': productId,
-          'material': draft.materialId,
-          'material_size': draft.materialSizeValue,
-          'material_usage': draft.materialUsageValue,
-          'need_cutting': draft.needCutting,
-          'notes': draft.notesValue,
-          'sort_order': i,
-        });
-      } catch (_) {
-        hasError = true;
-      }
-    }
-    return hasError;
+    final materials = _materialDrafts
+        .where((draft) => draft.materialId != null && draft.materialId != 0)
+        .map(
+          (draft) => ProductMaterialItem(
+            materialId: draft.materialId!,
+            materialSize: draft.materialSizeValue.isEmpty
+                ? null
+                : draft.materialSizeValue,
+            materialUsage: draft.materialUsageValue.isEmpty
+                ? null
+                : draft.materialUsageValue,
+            needCutting: draft.needCutting,
+            notes: draft.notesValue.isEmpty ? null : draft.notesValue,
+          ),
+        )
+        .toList();
+    return _productMaterialRepository!.saveProductMaterials(productId, materials);
   }
 
   Product _buildPayload() {

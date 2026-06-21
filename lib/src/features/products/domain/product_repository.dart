@@ -15,6 +15,8 @@ abstract class ProductRepository {
 
   Future<List<ProductOption>> getProductOptions({bool? isActive});
 
+  Future<Product> getProduct(int id);
+
   Future<Product> createProduct(Product product);
 
   Future<Product> updateProduct(Product product);

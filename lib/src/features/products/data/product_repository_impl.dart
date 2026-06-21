@@ -44,6 +44,12 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
+  Future<Product> getProduct(int id) async {
+    final dto = await _apiService.fetchProduct(id);
+    return dto.toEntity();
+  }
+
+  @override
   Future<Product> createProduct(Product product) async {
     final dto = await _apiService.createProduct(product.toDto());
     return dto.toEntity();

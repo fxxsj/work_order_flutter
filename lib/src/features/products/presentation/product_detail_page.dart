@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
-import 'package:work_order_app/src/features/processes/data/process_api_service.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
+import 'package:work_order_app/src/features/processes/domain/process_repository.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
 
 class ProductDetailPage extends StatefulWidget {
@@ -24,10 +23,18 @@ class ProductDetailPage extends StatefulWidget {
 class _ProductDetailPageState extends State<ProductDetailPage> {
   List<Process> _processes = [];
   bool _loadingProcesses = false;
+  ProcessRepository? _processRepository;
 
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_processRepository != null) return;
+    _processRepository = context.read<ProcessRepository>();
     if (widget.product.defaultProcessIds.isNotEmpty) {
       _loadProcesses();
     }
@@ -36,12 +43,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   Future<void> _loadProcesses() async {
     setState(() => _loadingProcesses = true);
     try {
-      final apiClient = context.read<ApiClient>();
-      final service = ProcessApiService(apiClient);
-      final page = await service.fetchProcesses(page: 1, pageSize: 50);
+      final page = await _processRepository!.getProcesses(
+        page: 1,
+        pageSize: 50,
+      );
       if (!mounted) return;
       setState(() {
-        _processes = page.items.map((dto) => dto.toEntity()).toList();
+        _processes = page.items;
       });
     } catch (_) {
       // 工序名称加载失败不影响整体展示
