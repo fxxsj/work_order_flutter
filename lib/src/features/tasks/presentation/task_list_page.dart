@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
@@ -14,7 +13,6 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/presentation/widgets/shimmer_loading.dart';
@@ -22,33 +20,12 @@ import 'package:work_order_app/src/core/utils/file_download.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/tasks/application/task_view_model.dart';
-import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
-import 'package:work_order_app/src/features/tasks/data/task_list_support_service.dart';
-import 'package:work_order_app/src/features/tasks/data/task_repository_impl.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
+import 'package:work_order_app/src/features/tasks/domain/task_repository.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_ui_helper.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
-import 'package:work_order_app/src/features/tasks/domain/task_repository.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_action_dialogs.dart';
 import 'package:work_order_app/src/core/utils/debounce_controller.dart';
-
-/// 任务列表入口。
-class TaskListEntry extends StatelessWidget {
-  const TaskListEntry({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FeatureEntry<TaskApiService, TaskRepository, TaskViewModel>(
-      createService: (context) => TaskApiService(context.read<ApiClient>()),
-      createRepository: (context) =>
-          TaskRepositoryImpl(context.read<TaskApiService>()),
-      createViewModel: (context) =>
-          TaskViewModel(context.read<TaskRepository>()),
-      initialize: (viewModel) => viewModel.initialize(),
-      child: const TaskListPage(),
-    );
-  }
-}
 
 /// 任务列表页视图，只负责渲染。
 class TaskListPage extends StatelessWidget {
@@ -95,14 +72,12 @@ class _TaskListViewState extends State<_TaskListView> {
   List<TaskDepartmentOption> _departments = [];
   List<Process> _processes = [];
   bool _exporting = false;
-  TaskListSupportService? _supportService;
   bool _optionsRequested = false;
   String? _routeSignature;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _supportService ??= TaskListSupportService(context.read<ApiClient>());
     if (!_optionsRequested) {
       _optionsRequested = true;
       _loadFilterOptions();
@@ -224,7 +199,7 @@ class _TaskListViewState extends State<_TaskListView> {
           'todo': viewModel.todoFilter,
         if (viewModel.ordering.isNotEmpty) 'ordering': viewModel.ordering,
       };
-      final result = await _supportService!.export(params);
+      final result = await context.read<TaskRepository>().export(params);
       final savedPath = await saveBytes(
         result.bytes,
         result.filename,
@@ -246,7 +221,7 @@ class _TaskListViewState extends State<_TaskListView> {
   Future<void> _loadFilterOptions() async {
     setState(() => _loadingOptions = true);
     try {
-      final options = await _supportService!.loadFilterOptions();
+      final options = await context.read<TaskRepository>().loadFilterOptions();
       if (!mounted) return;
       setState(() {
         _departments = options.departments;
@@ -1009,8 +984,9 @@ class _TaskListViewState extends State<_TaskListView> {
     }
 
     final List<TaskDepartmentOption> processDepartments;
+    final repository = context.read<TaskRepository>();
     try {
-      processDepartments = await _supportService!.loadProcessDepartments(
+      processDepartments = await repository.loadProcessDepartments(
         processId,
       );
     } catch (err) {
@@ -1027,10 +1003,9 @@ class _TaskListViewState extends State<_TaskListView> {
       context,
       task: task,
       departments: processDepartments,
-      loadOperators: (departmentId) =>
-          _supportService!.loadOperators(departmentId),
+      loadOperators: (departmentId) => repository.loadOperators(departmentId),
       onSubmit: (operatorId, notes) =>
-          _submitAssign(viewModel, task, operatorId, notes),
+          _submitAssign(viewModel, task, operatorId, notes, repository),
     );
   }
 
@@ -1040,7 +1015,7 @@ class _TaskListViewState extends State<_TaskListView> {
     Map<String, dynamic> payload,
   ) async {
     try {
-      await _supportService!.updateQuantity(task.id, payload);
+      await context.read<TaskRepository>().updateQuantity(task.id, payload);
       ToastUtil.showSuccess('已更新任务进度');
       await viewModel.loadTasks(resetPage: false);
     } catch (err) {
@@ -1054,7 +1029,7 @@ class _TaskListViewState extends State<_TaskListView> {
     Map<String, dynamic> payload,
   ) async {
     try {
-      await _supportService!.completeTask(task.id, payload);
+      await context.read<TaskRepository>().completeTask(task.id, payload);
       ToastUtil.showSuccess('任务已完成');
       await viewModel.loadTasks(resetPage: false);
     } catch (err) {
@@ -1067,9 +1042,10 @@ class _TaskListViewState extends State<_TaskListView> {
     Task task,
     int operatorId,
     String notes,
+    TaskRepository repository,
   ) async {
     try {
-      await _supportService!.assignTask(
+      await repository.assignTask(
         task.id,
         operatorId: operatorId,
         notes: notes,

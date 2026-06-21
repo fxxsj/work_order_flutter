@@ -4,26 +4,9 @@ import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/features/departments/data/department_api_service.dart';
 import 'package:work_order_app/src/features/processes/data/process_api_service.dart';
-import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
+import 'package:work_order_app/src/features/tasks/domain/task_list_filter_options.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
-
-class TaskListFilterOptions {
-  const TaskListFilterOptions({
-    required this.departments,
-    required this.processes,
-  });
-
-  final List<TaskDepartmentOption> departments;
-  final List<Process> processes;
-}
-
-class TaskExportResult {
-  const TaskExportResult({required this.bytes, required this.filename});
-
-  final Uint8List bytes;
-  final String filename;
-}
 
 class TaskListSupportService {
   TaskListSupportService(this._client);

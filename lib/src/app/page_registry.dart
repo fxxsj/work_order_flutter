@@ -4,7 +4,7 @@ import 'package:work_order_app/src/features/notification/presentation/widgets/no
 import 'package:work_order_app/src/features/auth/presentation/profile_page.dart';
 import 'package:work_order_app/src/features/customer/customer_module.dart';
 import 'package:work_order_app/src/features/workorders/presentation/work_order_list_page.dart';
-import 'package:work_order_app/src/features/tasks/presentation/task_list_page.dart';
+import 'package:work_order_app/src/features/tasks/tasks_module.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_operator_center_page.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_supervisor_dashboard_page.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_assignment_rule_page.dart';

@@ -1,8 +1,12 @@
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_order_app/src/features/tasks/application/task_view_model.dart';
 import 'package:work_order_app/src/features/tasks/data/task_dto.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
+import 'package:work_order_app/src/features/tasks/domain/task_list_filter_options.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_repository.dart';
+import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 import 'package:work_order_app/src/features/workorders/application/work_order_view_model.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_detail_dto.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
@@ -325,6 +329,42 @@ class _MockTaskRepository implements TaskRepository {
   }) async {
     return {};
   }
+
+  @override
+  Future<TaskListFilterOptions> loadFilterOptions() async {
+    return const TaskListFilterOptions(departments: [], processes: []);
+  }
+
+  @override
+  Future<TaskExportResult> export(Map<String, dynamic> params) async {
+    return TaskExportResult(
+      bytes: Uint8List(0),
+      filename: 'tasks.xlsx',
+    );
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> loadOperators(int departmentId) async {
+    return [];
+  }
+
+  @override
+  Future<List<TaskDepartmentOption>> loadProcessDepartments(int processId) async {
+    return [];
+  }
+
+  @override
+  Future<void> updateQuantity(int taskId, Map<String, dynamic> payload) async {}
+
+  @override
+  Future<void> completeTask(int taskId, Map<String, dynamic> payload) async {}
+
+  @override
+  Future<void> assignTask(
+    int taskId, {
+    required int operatorId,
+    required String notes,
+  }) async {}
 }
 
 void main() {

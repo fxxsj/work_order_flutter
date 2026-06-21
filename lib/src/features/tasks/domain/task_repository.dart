@@ -1,4 +1,6 @@
 import 'package:work_order_app/src/features/tasks/data/task_dto.dart';
+import 'package:work_order_app/src/features/tasks/domain/task_list_filter_options.dart';
+import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 
 abstract class TaskRepository {
   Future<TaskPageDto> getTasks({
@@ -27,5 +29,23 @@ abstract class TaskRepository {
     int? departmentId,
     int? processId,
     String? todo,
+  });
+
+  Future<TaskListFilterOptions> loadFilterOptions();
+
+  Future<TaskExportResult> export(Map<String, dynamic> params);
+
+  Future<List<Map<String, dynamic>>> loadOperators(int departmentId);
+
+  Future<List<TaskDepartmentOption>> loadProcessDepartments(int processId);
+
+  Future<void> updateQuantity(int taskId, Map<String, dynamic> payload);
+
+  Future<void> completeTask(int taskId, Map<String, dynamic> payload);
+
+  Future<void> assignTask(
+    int taskId, {
+    required int operatorId,
+    required String notes,
   });
 }
