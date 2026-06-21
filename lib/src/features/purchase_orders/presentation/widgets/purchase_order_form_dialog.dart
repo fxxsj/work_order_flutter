@@ -6,9 +6,9 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/filter_drawe
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
-import 'package:work_order_app/src/features/materials/data/material_dto.dart';
-import 'package:work_order_app/src/features/suppliers/data/supplier_dto.dart';
-import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
+import 'package:work_order_app/src/features/materials/domain/material.dart';
+import 'package:work_order_app/src/features/suppliers/domain/supplier.dart';
+import 'package:work_order_app/src/features/workorders/domain/work_order.dart';
 
 typedef PurchaseFormSubmit =
     Future<void> Function(VoidCallback refresh, [bool autoApprove]);
@@ -21,16 +21,16 @@ Future<void> showPurchaseOrderFormDialog(
   required String submitText,
   required bool materialsLoading,
   required GlobalKey<FormState> formKey,
-  required List<SupplierDto> suppliers,
-  required List<WorkOrderDto> workOrders,
+  required List<Supplier> suppliers,
+  required List<WorkOrder> workOrders,
   required int? selectedSupplierId,
   required int? selectedWorkOrderId,
   required String? fallbackWorkOrderNumber,
   required TextEditingController notesController,
-  required List<MaterialDto> materials,
+  required List<MaterialItem> materials,
   required List<PurchaseItemDraft> items,
-  required Future<SupplierDto?> Function() onCreateSupplier,
-  required Future<MaterialDto?> Function() onCreateMaterial,
+  required Future<Supplier?> Function() onCreateSupplier,
+  required Future<MaterialItem?> Function() onCreateMaterial,
   required ValueChanged<int?> onSupplierChanged,
   required ValueChanged<int?> onWorkOrderChanged,
   required PurchaseFormSubmit onSubmit,
@@ -87,16 +87,16 @@ class _PurchaseOrderFormPanel extends StatefulWidget {
   final String cancelText;
   final String submitText;
   final bool materialsLoading;
-  final List<SupplierDto> suppliers;
-  final List<WorkOrderDto> workOrders;
+  final List<Supplier> suppliers;
+  final List<WorkOrder> workOrders;
   final int? selectedSupplierId;
   final int? selectedWorkOrderId;
   final String? fallbackWorkOrderNumber;
   final TextEditingController notesController;
-  final List<MaterialDto> materials;
+  final List<MaterialItem> materials;
   final List<PurchaseItemDraft> items;
-  final Future<SupplierDto?> Function() onCreateSupplier;
-  final Future<MaterialDto?> Function() onCreateMaterial;
+  final Future<Supplier?> Function() onCreateSupplier;
+  final Future<MaterialItem?> Function() onCreateMaterial;
   final ValueChanged<int?> onSupplierChanged;
   final ValueChanged<int?> onWorkOrderChanged;
   final PurchaseFormSubmit onSubmit;
@@ -111,13 +111,13 @@ class _PurchaseOrderFormPanelState extends State<_PurchaseOrderFormPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final workOrderOptions = List<WorkOrderDto>.from(widget.workOrders);
+    final workOrderOptions = List<WorkOrder>.from(widget.workOrders);
     final selectedWorkOrderId = widget.selectedWorkOrderId;
     if (selectedWorkOrderId != null &&
         selectedWorkOrderId != 0 &&
         !workOrderOptions.any((order) => order.id == selectedWorkOrderId)) {
       workOrderOptions.add(
-        WorkOrderDto(
+        WorkOrder(
           id: selectedWorkOrderId,
           orderNumber:
               widget.fallbackWorkOrderNumber ?? '施工单 #$selectedWorkOrderId',
@@ -421,10 +421,10 @@ class PurchaseItemRow extends StatelessWidget {
 
   final PurchaseItemDraft item;
   final bool enabled;
-  final List<MaterialDto> materials;
-  final Future<MaterialDto?> Function() onCreateMaterial;
+  final List<MaterialItem> materials;
+  final Future<MaterialItem?> Function() onCreateMaterial;
   final VoidCallback onRemove;
-  final ValueChanged<MaterialDto> onMaterialChanged;
+  final ValueChanged<MaterialItem> onMaterialChanged;
   final VoidCallback? onChanged;
 
   @override

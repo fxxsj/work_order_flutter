@@ -1,11 +1,19 @@
 import 'package:work_order_app/src/features/purchase_orders/data/purchase_order_api_service.dart';
 import 'package:work_order_app/src/features/purchase_orders/data/purchase_order_dto.dart';
+import 'package:work_order_app/src/features/purchase_orders/data/purchase_order_support_service.dart';
+import 'package:work_order_app/src/features/purchase_orders/domain/purchase_order_detail.dart';
+import 'package:work_order_app/src/features/purchase_orders/domain/purchase_order_form_options.dart';
 import 'package:work_order_app/src/features/purchase_orders/domain/purchase_order_repository.dart';
 
 class PurchaseOrderRepositoryImpl implements PurchaseOrderRepository {
-  PurchaseOrderRepositoryImpl(this._apiService);
+  PurchaseOrderRepositoryImpl(
+    this._apiService, {
+    PurchaseOrderSupportService? supportService,
+  }) : _supportService = supportService ??
+            PurchaseOrderSupportService(_apiService.client);
 
   final PurchaseOrderApiService _apiService;
+  final PurchaseOrderSupportService _supportService;
 
   @override
   Future<PurchaseOrderPageDto> getPurchaseOrders({
@@ -27,8 +35,38 @@ class PurchaseOrderRepositoryImpl implements PurchaseOrderRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> submit(int id) {
-    return _apiService.submit(id);
+  Future<PurchaseOrderFormOptions> loadFormOptions() {
+    return _supportService.loadFormOptions();
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> loadLowStockMaterials() {
+    return _supportService.loadLowStockMaterials();
+  }
+
+  @override
+  Future<PurchaseOrderDetail> fetchDetail(int id) {
+    return _supportService.fetchDetail(id);
+  }
+
+  @override
+  Future<PurchaseOrderDetail> createPurchaseOrder(
+    Map<String, dynamic> payload,
+  ) {
+    return _apiService.createPurchaseOrder(payload);
+  }
+
+  @override
+  Future<PurchaseOrderDetail> updatePurchaseOrder(
+    int id,
+    Map<String, dynamic> payload,
+  ) {
+    return _apiService.updatePurchaseOrder(id, payload);
+  }
+
+  @override
+  Future<Map<String, dynamic>> submit(int id, [Map<String, dynamic>? payload]) {
+    return _apiService.submit(id, payload);
   }
 
   @override
@@ -55,22 +93,25 @@ class PurchaseOrderRepositoryImpl implements PurchaseOrderRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> getReceiveRecords(int id) {
-    return _apiService.getReceiveRecords(id);
+  Future<List<Map<String, dynamic>>> loadInspectionRecords(int id) {
+    return _supportService.loadInspectionRecords(id);
   }
 
   @override
-  Future<Map<String, dynamic>> getPendingInspections(int id) {
-    return _apiService.getPendingInspections(id);
+  Future<void> confirmInspection(
+    int recordId,
+    Map<String, dynamic> payload,
+  ) {
+    return _supportService.confirmInspection(recordId, payload);
+  }
+
+  @override
+  Future<void> stockIn(int recordId) {
+    return _supportService.stockIn(recordId);
   }
 
   @override
   Future<Map<String, dynamic>> cancel(int id) {
     return _apiService.cancel(id);
-  }
-
-  @override
-  Future<Map<String, dynamic>> getLowStockMaterials() {
-    return _apiService.getLowStockMaterials();
   }
 }

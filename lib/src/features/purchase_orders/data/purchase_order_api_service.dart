@@ -8,6 +8,8 @@ class PurchaseOrderApiService {
 
   final ApiClient _client;
 
+  ApiClient get client => _client;
+
   Future<PurchaseOrderPageDto> fetchPurchaseOrders({
     int page = 1,
     int pageSize = 20,

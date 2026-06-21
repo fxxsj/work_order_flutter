@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_detail_dto.dart';
+import 'package:work_order_app/src/features/workorders/domain/work_order.dart';
 
 abstract class WorkOrderRepository {
   Future<WorkOrderPageDto> getWorkOrders({
@@ -67,5 +68,11 @@ abstract class WorkOrderRepository {
   Future<Map<String, dynamic>> syncTasksExecute(
     int id, {
     List<int>? processIds,
+  });
+
+  /// 按关键字搜索施工单并返回 domain 实体列表。
+  Future<List<WorkOrder>> searchWorkOrders(
+    String query, {
+    int pageSize = 20,
   });
 }

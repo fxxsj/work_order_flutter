@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
@@ -13,18 +12,15 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
-import 'package:work_order_app/src/features/materials/data/material_api_service.dart';
-import 'package:work_order_app/src/features/materials/data/material_repository_impl.dart';
+import 'package:work_order_app/src/features/materials/domain/material.dart';
+import 'package:work_order_app/src/features/materials/domain/material_repository.dart';
+import 'package:work_order_app/src/features/materials/presentation/widgets/quick_material_create_dialog.dart';
 import 'package:work_order_app/src/features/purchase_orders/application/purchase_order_view_model.dart';
-import 'package:work_order_app/src/features/purchase_orders/data/purchase_order_api_service.dart';
-import 'package:work_order_app/src/features/purchase_orders/data/purchase_order_repository_impl.dart';
-import 'package:work_order_app/src/features/purchase_orders/data/purchase_order_support_service.dart';
 import 'package:work_order_app/src/features/purchase_orders/domain/purchase_order.dart';
 import 'package:work_order_app/src/features/purchase_orders/domain/purchase_order_detail.dart';
 import 'package:work_order_app/src/features/purchase_orders/domain/purchase_order_repository.dart';
@@ -34,38 +30,12 @@ import 'package:work_order_app/src/features/purchase_orders/presentation/widgets
 import 'package:work_order_app/src/features/purchase_orders/presentation/widgets/purchase_order_inspection_dialogs.dart';
 import 'package:work_order_app/src/features/purchase_orders/presentation/widgets/purchase_order_receive_dialog.dart';
 import 'package:work_order_app/src/features/purchase_orders/presentation/widgets/purchase_low_stock_dialog.dart';
-import 'package:work_order_app/src/features/materials/presentation/widgets/quick_material_create_dialog.dart';
-import 'package:work_order_app/src/features/suppliers/data/supplier_api_service.dart';
-import 'package:work_order_app/src/features/suppliers/data/supplier_repository_impl.dart';
-import 'package:work_order_app/src/features/suppliers/data/supplier_dto.dart';
+import 'package:work_order_app/src/features/suppliers/domain/supplier.dart';
+import 'package:work_order_app/src/features/suppliers/domain/supplier_repository.dart';
 import 'package:work_order_app/src/features/suppliers/presentation/widgets/quick_supplier_create_dialog.dart';
-import 'package:work_order_app/src/features/materials/data/material_dto.dart';
-import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
-import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
+import 'package:work_order_app/src/features/workorders/domain/work_order.dart';
+import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
 import 'package:work_order_app/src/core/utils/debounce_controller.dart';
-
-/// 采购单列表入口。
-class PurchaseOrderListEntry extends StatelessWidget {
-  const PurchaseOrderListEntry({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FeatureEntry<
-      PurchaseOrderApiService,
-      PurchaseOrderRepository,
-      PurchaseOrderViewModel
-    >(
-      createService: (context) =>
-          PurchaseOrderApiService(context.read<ApiClient>()),
-      createRepository: (context) =>
-          PurchaseOrderRepositoryImpl(context.read<PurchaseOrderApiService>()),
-      createViewModel: (context) =>
-          PurchaseOrderViewModel(context.read<PurchaseOrderRepository>()),
-      initialize: (viewModel) => viewModel.initialize(),
-      child: const PurchaseOrderListPage(),
-    );
-  }
-}
 
 /// 采购单列表页视图，只负责渲染。
 class PurchaseOrderListPage extends StatelessWidget {
@@ -128,11 +98,11 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
 
   final TextEditingController _searchController = TextEditingController();
   final _debounce = DebounceController();
-  List<SupplierDto> _suppliers = [];
+  List<Supplier> _suppliers = [];
   bool _suppliersLoading = false;
-  List<MaterialDto> _materials = [];
+  List<MaterialItem> _materials = [];
   bool _materialsLoading = false;
-  List<WorkOrderDto> _workOrders = [];
+  List<WorkOrder> _workOrders = [];
 
   @override
   void initState() {
@@ -169,14 +139,12 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
       _materialsLoading = true;
     });
     try {
-      final data = await PurchaseOrderSupportService(
-        context.read<ApiClient>(),
-      ).loadFormOptions();
+      final options = await context.read<PurchaseOrderRepository>().loadFormOptions();
       if (!mounted) return;
       setState(() {
-        _suppliers = data.suppliers;
-        _materials = data.materials;
-        _workOrders = data.workOrders;
+        _suppliers = options.suppliers;
+        _materials = options.materials;
+        _workOrders = options.workOrders;
       });
     } catch (_) {
       if (!mounted) return;
@@ -250,9 +218,8 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
   }
 
   Future<PurchaseOrderDetail?> _fetchDetail(int id) async {
-    final apiService = context.read<PurchaseOrderApiService>();
     try {
-      return await apiService.fetchDetail(id);
+      return await context.read<PurchaseOrderRepository>().fetchDetail(id);
     } catch (err) {
       ToastUtil.showError('获取采购单详情失败: $err');
       return null;
@@ -286,12 +253,9 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
   }
 
   Future<void> _openLowStockDialog(PurchaseOrderViewModel viewModel) async {
-    final supportService = PurchaseOrderSupportService(
-      context.read<ApiClient>(),
-    );
     List<Map<String, dynamic>> materials = [];
     try {
-      materials = await supportService.loadLowStockMaterials();
+      materials = await context.read<PurchaseOrderRepository>().loadLowStockMaterials();
     } catch (err) {
       ToastUtil.showError('获取库存预警失败: $err');
     }
@@ -312,12 +276,12 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
     String workOrderNumber,
   ) {
     // 从采购单列表跳转到施工单，需要先查询施工单 ID
-    final api = context.read<WorkOrderApiService>();
-    api
-        .fetchWorkOrders(search: workOrderNumber, approvalStatus: '')
+    context
+        .read<WorkOrderRepository>()
+        .searchWorkOrders(workOrderNumber)
         .then((result) {
           if (!mounted) return;
-          final matched = result.items.where(
+          final matched = result.where(
             (wo) => wo.orderNumber == workOrderNumber,
           );
           if (matched.isNotEmpty) {
@@ -346,7 +310,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
       return;
     }
 
-    final apiService = context.read<PurchaseOrderApiService>();
+    final repository = context.read<PurchaseOrderRepository>();
     PurchaseOrderDetail? detail;
     if (isEdit) {
       detail = await _fetchDetail(order.id);
@@ -379,7 +343,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
         final materialName = item['name']?.toString() ?? '-';
         final materialCode = item['code']?.toString() ?? '';
         final needed = _toDouble(item['needed_quantity']) ?? 0;
-        final match = _materials.cast<MaterialDto?>().firstWhere(
+        final match = _materials.cast<MaterialItem?>().firstWhere(
           (m) => m?.id == materialId,
           orElse: () => null,
         );
@@ -430,13 +394,16 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
         };
 
         if (isEdit) {
-          await apiService.updatePurchaseOrder(order.id, payload);
+          await repository.updatePurchaseOrder(order.id, payload);
           if (!mounted) return;
           ToastUtil.showSuccess('采购单已更新');
         } else {
-          final res = await apiService.createPurchaseOrder(payload);
+          final res = await repository.createPurchaseOrder(payload);
           if (autoApprove) {
-            await apiService.submit(res.id, {'auto_approve': true});
+            await repository.submit(
+              res.id,
+              {'auto_approve': true},
+            );
             if (!mounted) return;
             ToastUtil.showSuccess('发布成功');
           } else {
@@ -451,7 +418,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
       }
     }
 
-    Future<MaterialDto?> createMaterial() async {
+    Future<MaterialItem?> createMaterial() async {
       final permissions = PermissionUtil.snapshot(context);
       if (!permissions.has('workorder.add_material')) {
         ToastUtil.showError('当前账号无权新增物料');
@@ -460,19 +427,16 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
 
       final created = await showQuickMaterialCreateDialog(
         context: context,
-        materialRepository: MaterialRepositoryImpl(
-          MaterialApiService(context.read<ApiClient>()),
-        ),
+        materialRepository: context.read<MaterialRepository>(),
       );
       if (created == null || !mounted) {
         return null;
       }
 
-      final dto = created.toDto();
       setState(() {
-        _materials = List<MaterialDto>.from(_materials)
-          ..removeWhere((item) => item.id == dto.id)
-          ..add(dto)
+        _materials = List<MaterialItem>.from(_materials)
+          ..removeWhere((item) => item.id == created.id)
+          ..add(created)
           ..sort((left, right) {
             final leftLabel = '${left.code} ${left.name}';
             final rightLabel = '${right.code} ${right.name}';
@@ -480,10 +444,10 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
           });
       });
       ToastUtil.showSuccess('物料已新增');
-      return dto;
+      return created;
     }
 
-    Future<SupplierDto?> createSupplier() async {
+    Future<Supplier?> createSupplier() async {
       final permissions = PermissionUtil.snapshot(context);
       if (!permissions.has('workorder.add_supplier')) {
         ToastUtil.showError('当前账号无权新增供应商');
@@ -492,23 +456,20 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
 
       final created = await showQuickSupplierCreateDialog(
         context: context,
-        supplierRepository: SupplierRepositoryImpl(
-          SupplierApiService(context.read<ApiClient>()),
-        ),
+        supplierRepository: context.read<SupplierRepository>(),
       );
       if (created == null || !mounted) {
         return null;
       }
 
-      final dto = SupplierDto.fromEntity(created);
       setState(() {
-        _suppliers = List<SupplierDto>.from(_suppliers)
-          ..removeWhere((item) => item.id == dto.id)
-          ..add(dto)
+        _suppliers = List<Supplier>.from(_suppliers)
+          ..removeWhere((item) => item.id == created.id)
+          ..add(created)
           ..sort((left, right) => left.name.compareTo(right.name));
       });
       ToastUtil.showSuccess('供应商已新增');
-      return dto;
+      return created;
     }
 
     await showPurchaseOrderFormDialog(
@@ -549,7 +510,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
       ToastUtil.showError('当前账号无权执行该操作');
       return;
     }
-    final apiService = context.read<PurchaseOrderApiService>();
+    final repository = context.read<PurchaseOrderRepository>();
     final detail = await _fetchDetail(order.id);
     if (detail == null) return;
     try {
@@ -559,7 +520,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
         title: _receiveTitle,
         cancelText: _cancelText,
         onSubmit: (submission) {
-          return apiService.receive(order.id, {
+          return repository.receive(order.id, {
             'items': submission.items
                 .map(
                   (item) => {
@@ -590,17 +551,15 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
       ToastUtil.showError('当前账号无权执行该操作');
       return;
     }
-    final supportService = PurchaseOrderSupportService(
-      context.read<ApiClient>(),
-    );
+    final repository = context.read<PurchaseOrderRepository>();
     if (!mounted) return;
     await showPurchaseInspectionDialog(
       context,
       title: _inspectionTitle,
       cancelText: _cancelText,
-      loadRecords: () => supportService.loadInspectionRecords(order.id),
-      confirmInspection: supportService.confirmInspection,
-      stockIn: supportService.stockIn,
+      loadRecords: () => repository.loadInspectionRecords(order.id),
+      confirmInspection: repository.confirmInspection,
+      stockIn: repository.stockIn,
     );
   }
 
@@ -614,13 +573,13 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
       ToastUtil.showError('当前账号无权执行该操作');
       return;
     }
-    final apiService = context.read<PurchaseOrderApiService>();
+    final repository = context.read<PurchaseOrderRepository>();
     try {
       if (action == 'submit') {
-        await apiService.submit(order.id);
+        await repository.submit(order.id);
         ToastUtil.showSuccess('提交成功');
       } else if (action == 'approve') {
-        await apiService.approve(order.id);
+        await repository.approve(order.id);
         ToastUtil.showSuccess('批准成功');
       } else if (action == 'reject') {
         final reason = await showPurchaseReasonDialog(
@@ -629,7 +588,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
           cancelText: _cancelText,
         );
         if (reason == null) return;
-        await apiService.reject(order.id, {'rejection_reason': reason});
+        await repository.reject(order.id, {'rejection_reason': reason});
         ToastUtil.showSuccess('已拒绝，采购单已退回草稿');
       } else if (action == 'place') {
         final date = await showPurchaseDateDialog(context, title: '下单日期');
@@ -637,13 +596,13 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
         if (date != null) {
           payload['ordered_date'] = _formatDate(date);
         }
-        await apiService.placeOrder(order.id, payload);
+        await repository.placeOrder(order.id, payload);
         ToastUtil.showSuccess('下单成功');
       } else if (action == 'cancel') {
         await confirmCrudAction(
           context,
           item: order,
-          onConfirm: (item) => apiService.cancel(item.id),
+          onConfirm: (item) => repository.cancel(item.id),
           config: _cancelOrderConfig,
         );
       } else {

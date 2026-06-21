@@ -3,6 +3,7 @@ import 'package:work_order_app/src/features/workorders/data/work_order_api_servi
 import 'package:work_order_app/src/features/workorders/data/work_order_detail_dto.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_flow_api_service.dart';
+import 'package:work_order_app/src/features/workorders/domain/work_order.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
 
 class WorkOrderRepositoryImpl implements WorkOrderRepository {
@@ -163,5 +164,18 @@ class WorkOrderRepositoryImpl implements WorkOrderRepository {
     List<int>? processIds,
   }) {
     return _apiService.syncTasksExecute(id, processIds: processIds);
+  }
+
+  @override
+  Future<List<WorkOrder>> searchWorkOrders(
+    String query, {
+    int pageSize = 20,
+  }) async {
+    final page = await getWorkOrders(
+      pageSize: pageSize,
+      search: query,
+      approvalStatus: '',
+    );
+    return page.items.map((dto) => dto.toEntity()).toList();
   }
 }

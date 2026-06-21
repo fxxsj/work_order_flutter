@@ -1,4 +1,6 @@
 import 'package:work_order_app/src/features/purchase_orders/data/purchase_order_dto.dart';
+import 'package:work_order_app/src/features/purchase_orders/domain/purchase_order_detail.dart';
+import 'package:work_order_app/src/features/purchase_orders/domain/purchase_order_form_options.dart';
 
 abstract class PurchaseOrderRepository {
   Future<PurchaseOrderPageDto> getPurchaseOrders({
@@ -10,21 +12,42 @@ abstract class PurchaseOrderRepository {
     String? ordering,
   });
 
-  Future<Map<String, dynamic>> submit(int id);
+  Future<PurchaseOrderFormOptions> loadFormOptions();
+
+  Future<List<Map<String, dynamic>>> loadLowStockMaterials();
+
+  Future<PurchaseOrderDetail> fetchDetail(int id);
+
+  Future<PurchaseOrderDetail> createPurchaseOrder(
+    Map<String, dynamic> payload,
+  );
+
+  Future<PurchaseOrderDetail> updatePurchaseOrder(
+    int id,
+    Map<String, dynamic> payload,
+  );
+
+  Future<Map<String, dynamic>> submit(int id, [Map<String, dynamic>? payload]);
 
   Future<Map<String, dynamic>> approve(int id);
 
   Future<Map<String, dynamic>> reject(int id, Map<String, dynamic> payload);
 
-  Future<Map<String, dynamic>> placeOrder(int id, Map<String, dynamic> payload);
+  Future<Map<String, dynamic>> placeOrder(
+    int id,
+    Map<String, dynamic> payload,
+  );
 
   Future<Map<String, dynamic>> receive(int id, Map<String, dynamic> payload);
 
-  Future<Map<String, dynamic>> getReceiveRecords(int id);
+  Future<List<Map<String, dynamic>>> loadInspectionRecords(int id);
 
-  Future<Map<String, dynamic>> getPendingInspections(int id);
+  Future<void> confirmInspection(
+    int recordId,
+    Map<String, dynamic> payload,
+  );
+
+  Future<void> stockIn(int recordId);
 
   Future<Map<String, dynamic>> cancel(int id);
-
-  Future<Map<String, dynamic>> getLowStockMaterials();
 }

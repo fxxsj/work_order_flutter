@@ -1,32 +1,18 @@
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/features/materials/data/material_api_service.dart';
-import 'package:work_order_app/src/features/materials/data/material_dto.dart';
 import 'package:work_order_app/src/features/purchase_orders/data/purchase_order_api_service.dart';
 import 'package:work_order_app/src/features/purchase_orders/data/purchase_receive_record_api_service.dart';
 import 'package:work_order_app/src/features/purchase_orders/domain/purchase_order_detail.dart';
+import 'package:work_order_app/src/features/purchase_orders/domain/purchase_order_form_options.dart';
 import 'package:work_order_app/src/features/suppliers/data/supplier_api_service.dart';
-import 'package:work_order_app/src/features/suppliers/data/supplier_dto.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
-import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
-
-class PurchaseOrderSupportData {
-  const PurchaseOrderSupportData({
-    required this.suppliers,
-    required this.materials,
-    required this.workOrders,
-  });
-
-  final List<SupplierDto> suppliers;
-  final List<MaterialDto> materials;
-  final List<WorkOrderDto> workOrders;
-}
 
 class PurchaseOrderSupportService {
   PurchaseOrderSupportService(this._client);
 
   final ApiClient _client;
 
-  Future<PurchaseOrderSupportData> loadFormOptions() async {
+  Future<PurchaseOrderFormOptions> loadFormOptions() async {
     final supplierApi = SupplierApiService(_client);
     final materialApi = MaterialApiService(_client);
     final workOrderApi = WorkOrderApiService(_client);
@@ -46,12 +32,15 @@ class PurchaseOrderSupportService {
     final materialPage = await materialFuture;
     final workOrderPage = await workOrderFuture;
 
-    return PurchaseOrderSupportData(
-      suppliers: List<SupplierDto>.from(supplierPage.items),
-      materials: List<MaterialDto>.from(materialPage.items),
-      workOrders: List<WorkOrderDto>.from(workOrderPage.items).where((order) {
-        return order.status != 'completed' && order.status != 'cancelled';
-      }).toList(),
+    return PurchaseOrderFormOptions(
+      suppliers: supplierPage.items.map((dto) => dto.toEntity()).toList(),
+      materials: materialPage.items.map((dto) => dto.toEntity()).toList(),
+      workOrders: workOrderPage.items
+          .map((dto) => dto.toEntity())
+          .where((order) {
+            return order.status != 'completed' && order.status != 'cancelled';
+          })
+          .toList(),
     );
   }
 

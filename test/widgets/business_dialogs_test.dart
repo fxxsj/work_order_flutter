@@ -17,14 +17,13 @@ import 'package:work_order_app/src/features/purchase_orders/presentation/widgets
 import 'package:work_order_app/src/features/sales_orders/presentation/widgets/sales_order_list_dialogs.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order.dart';
 import 'package:work_order_app/src/features/suppliers/domain/supplier.dart';
-import 'package:work_order_app/src/features/suppliers/data/supplier_dto.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_action_dialogs.dart';
-import 'package:work_order_app/src/features/materials/data/material_dto.dart';
+import 'package:work_order_app/src/features/materials/domain/material.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
+import 'package:work_order_app/src/features/workorders/domain/work_order.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
-import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_sync_preview_dialog.dart';
 
 void main() {
@@ -841,14 +840,14 @@ void main() {
           submitText: '保存',
           materialsLoading: false,
           formKey: formKey,
-          suppliers: [SupplierDto(id: 3, name: '默认供应商')],
-          workOrders: const [WorkOrderDto(id: 4, orderNumber: 'WO-001')],
+          suppliers: [Supplier(id: 3, name: '默认供应商')],
+          workOrders: const [WorkOrder(id: 4, orderNumber: 'WO-001')],
           selectedSupplierId: supplierId,
           selectedWorkOrderId: workOrderId,
           fallbackWorkOrderNumber: null,
           notesController: notesController,
           materials: const [
-            MaterialDto(
+            MaterialItem(
               id: 5,
               code: 'M-001',
               name: '纸张',

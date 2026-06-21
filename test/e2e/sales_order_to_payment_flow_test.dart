@@ -24,6 +24,7 @@ import 'package:work_order_app/src/features/sales_orders/domain/sales_order_repo
 import 'package:work_order_app/src/features/workorders/application/work_order_view_model.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_detail_dto.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
+import 'package:work_order_app/src/features/workorders/domain/work_order.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
 
@@ -427,6 +428,19 @@ class _MockWorkOrderRepository implements WorkOrderRepository {
   }) async {
     _log('syncTasksExecute:$id');
     return {};
+  }
+
+  @override
+  Future<List<WorkOrder>> searchWorkOrders(
+    String query, {
+    int pageSize = 20,
+  }) async {
+    _log('searchWorkOrders:$query');
+    final all = await getWorkOrders(pageSize: pageSize, search: query);
+    return all.items
+        .where((dto) => dto.orderNumber == query)
+        .map((dto) => dto.toEntity())
+        .toList();
   }
 
   WorkOrderDetailDto _updateDetail(

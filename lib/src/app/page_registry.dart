@@ -10,7 +10,7 @@ import 'package:work_order_app/src/features/audit_logs/audit_logs_module.dart';
 import 'package:work_order_app/src/features/products/product_module.dart';
 import 'package:work_order_app/src/features/materials/material_module.dart';
 import 'package:work_order_app/src/features/product_groups/product_group_module.dart';
-import 'package:work_order_app/src/features/purchase_orders/presentation/purchase_order_list_page.dart';
+import 'package:work_order_app/src/features/purchase_orders/purchase_order_module.dart';
 import 'package:work_order_app/src/features/inventory_stocks/inventory_stocks_module.dart';
 import 'package:work_order_app/src/features/inventory_delivery/inventory_delivery_module.dart';
 import 'package:work_order_app/src/features/inventory_quality/inventory_quality_module.dart';
