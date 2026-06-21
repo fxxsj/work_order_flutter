@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/api_exception.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
+import 'package:work_order_app/src/features/notification_admin/domain/notification_admin_repository.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -18,7 +18,7 @@ class NotificationTemplatePage extends StatefulWidget {
 }
 
 class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
-  ApiClient? _apiClient;
+  NotificationAdminRepository? _repository;
   AuthController? _authController;
   bool _loading = false;
   bool _saving = false;
@@ -35,7 +35,7 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _apiClient ??= context.read<ApiClient>();
+    _repository ??= context.read<NotificationAdminRepository>();
     _authController ??= context.read<AuthController>();
     if (_templates.isEmpty && !_loading) {
       _loadTemplates();
@@ -56,28 +56,24 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
       _error = null;
     });
     try {
-      final response = await _runAuthorized(
-        () => _apiClient!.get('/notification-templates/get_templates/'),
+      final data = await _runAuthorized(
+        () => _repository!.getTemplates(),
       );
-      final data = response.data;
       final templates = <_TemplateItem>[];
-      if (data is Map) {
-        final map = Map<String, dynamic>.from(data);
-        map.forEach((key, value) {
-          if (value is Map) {
-            final item = Map<String, dynamic>.from(value);
-            templates.add(
-              _TemplateItem(
-                key: key,
-                title: item['title']?.toString() ?? '-',
-                message: item['message']?.toString() ?? '-',
-                variables: _parseVariables(item['variables']),
-                isActive: item['is_active'] != false,
-              ),
-            );
-          }
-        });
-      }
+      data.forEach((key, value) {
+        if (value is Map) {
+          final item = Map<String, dynamic>.from(value);
+          templates.add(
+            _TemplateItem(
+              key: key,
+              title: item['title']?.toString() ?? '-',
+              message: item['message']?.toString() ?? '-',
+              variables: _parseVariables(item['variables']),
+              isActive: item['is_active'] != false,
+            ),
+          );
+        }
+      });
       setState(() {
         _templates
           ..clear()
@@ -131,15 +127,12 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
     setState(() => _saving = true);
     try {
       await _runAuthorized(
-        () => _apiClient!.post(
-          '/notification-templates/update_template/',
-          data: {
-            'template_name': selected.key,
-            'title': _titleController.text.trim(),
-            'message': _messageController.text.trim(),
-            'variables': selected.variables,
-            'is_active': _isActive,
-          },
+        () => _repository!.updateTemplate(
+          templateName: selected.key,
+          title: _titleController.text.trim(),
+          message: _messageController.text.trim(),
+          variables: selected.variables,
+          isActive: _isActive,
         ),
       );
       await _loadTemplates();
@@ -159,13 +152,12 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
     setState(() => _previewing = true);
     try {
       final variables = _parsePreviewVariables(_previewController.text.trim());
-      final response = await _runAuthorized(
-        () => _apiClient!.post(
-          '/notification-templates/preview_template/',
-          data: {'template_name': selected.key, 'variables': variables},
+      final data = await _runAuthorized(
+        () => _repository!.previewTemplate(
+          templateName: selected.key,
+          variables: variables,
         ),
       );
-      final data = response.data;
       if (!mounted) {
         return;
       }
@@ -188,15 +180,7 @@ class _NotificationTemplatePageState extends State<NotificationTemplatePage> {
         throw const ApiException(message: '登录状态已失效，请重新登录', statusCode: 401);
       }
     }
-    try {
-      return await action();
-    } on ApiException catch (err) {
-      if (err.statusCode == 401 &&
-          await (_apiClient?.refreshAccessToken() ?? Future.value(false))) {
-        return action();
-      }
-      rethrow;
-    }
+    return await action();
   }
 
   Map<String, dynamic> _parsePreviewVariables(String raw) {

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/api_exception.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/auth/application/auth_controller.dart';
+import 'package:work_order_app/src/features/notification_admin/domain/notification_admin_repository.dart';
 import 'package:work_order_app/src/features/notification_admin/presentation/widgets/notification_admin_widgets.dart';
 
 class UserNotificationSettingsPage extends StatefulWidget {
@@ -18,7 +18,7 @@ class UserNotificationSettingsPage extends StatefulWidget {
 
 class _UserNotificationSettingsPageState
     extends State<UserNotificationSettingsPage> {
-  ApiClient? _apiClient;
+  NotificationAdminRepository? _repository;
   AuthController? _authController;
   bool _loading = false;
   bool _saving = false;
@@ -47,7 +47,7 @@ class _UserNotificationSettingsPageState
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _apiClient ??= context.read<ApiClient>();
+    _repository ??= context.read<NotificationAdminRepository>();
     _authController ??= context.read<AuthController>();
     if (_lastResult == null) {
       _loadSettings();
@@ -65,10 +65,9 @@ class _UserNotificationSettingsPageState
   Future<void> _loadSettings() async {
     setState(() => _loading = true);
     try {
-      final response = await _runAuthorized(
-        () => _apiClient!.get('/user-notification-settings/get_settings/'),
+      final data = await _runAuthorized(
+        () => _repository!.getUserSettings(),
       );
-      final data = _asMap(response.data);
       setState(() {
         _emailNotifications = data['email_notifications'] == true;
         _websocketNotifications = data['websocket_notifications'] == true;
@@ -107,13 +106,10 @@ class _UserNotificationSettingsPageState
         'quiet_hours_start': _quietStartController.text.trim(),
         'quiet_hours_end': _quietEndController.text.trim(),
       };
-      final response = await _runAuthorized(
-        () => _apiClient!.post(
-          '/user-notification-settings/update_settings/',
-          data: payload,
-        ),
+      final result = await _runAuthorized(
+        () => _repository!.updateUserSettings(payload),
       );
-      setState(() => _lastResult = _asMap(response.data));
+      setState(() => _lastResult = result);
       ToastUtil.showSuccess('通知设置已保存');
     } catch (err) {
       _showRequestError('保存失败', err);
@@ -130,25 +126,7 @@ class _UserNotificationSettingsPageState
         throw const ApiException(message: '登录状态已失效，请重新登录', statusCode: 401);
       }
     }
-    try {
-      return await action();
-    } on ApiException catch (err) {
-      if (err.statusCode == 401 &&
-          await (_apiClient?.refreshAccessToken() ?? Future.value(false))) {
-        return action();
-      }
-      rethrow;
-    }
-  }
-
-  Map<String, dynamic> _asMap(dynamic value) {
-    if (value is Map<String, dynamic>) {
-      return value;
-    }
-    if (value is Map) {
-      return Map<String, dynamic>.from(value);
-    }
-    return {'data': value};
+    return await action();
   }
 
   void _showError(String message) {

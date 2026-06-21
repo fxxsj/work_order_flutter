@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/api_exception.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/auth/application/auth_controller.dart';
+import 'package:work_order_app/src/features/notification_admin/domain/notification_admin_repository.dart';
 import 'package:work_order_app/src/features/notification_admin/presentation/widgets/notification_admin_widgets.dart';
 
 class SystemNotificationPage extends StatefulWidget {
@@ -18,7 +18,7 @@ class SystemNotificationPage extends StatefulWidget {
 }
 
 class _SystemNotificationPageState extends State<SystemNotificationPage> {
-  ApiClient? _apiClient;
+  NotificationAdminRepository? _repository;
   AuthController? _authController;
   bool _initialized = false;
 
@@ -56,7 +56,7 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _apiClient ??= context.read<ApiClient>();
+    _repository ??= context.read<NotificationAdminRepository>();
     _authController ??= context.read<AuthController>();
     if (!_initialized) {
       _initialized = true;
@@ -102,13 +102,16 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
       if (expires != null) {
         data['expires_in_days'] = expires;
       }
-      final response = await _runAuthorized(
-        () => _apiClient!.post(
-          '/system-notifications/create_announcement/',
-          data: data,
+      final result = await _runAuthorized(
+        () => _repository!.createAnnouncement(
+          title: title,
+          content: content,
+          onlyStaff: _announcementOnlyStaff,
+          recipientIds: recipients,
+          expiresInDays: expires,
         ),
       );
-      setState(() => _announcementResult = _asMap(response.data));
+      setState(() => _announcementResult = result);
     } catch (err) {
       _showRequestError('发送失败', err);
     } finally {
@@ -134,13 +137,15 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
       if (recipients.isNotEmpty) {
         data['recipient_ids'] = recipients;
       }
-      final response = await _runAuthorized(
-        () => _apiClient!.post(
-          '/system-notifications/send_urgent_alert/',
-          data: data,
+      final result = await _runAuthorized(
+        () => _repository!.sendUrgentAlert(
+          title: title,
+          content: content,
+          onlyStaff: _alertOnlyStaff,
+          recipientIds: recipients,
         ),
       );
-      setState(() => _alertResult = _asMap(response.data));
+      setState(() => _alertResult = result);
     } catch (err) {
       _showRequestError('发送失败', err);
     } finally {
@@ -151,10 +156,9 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
   Future<void> _loadSettings() async {
     setState(() => _loadingSettings = true);
     try {
-      final response = await _runAuthorized(
-        () => _apiClient!.get('/system-notifications/notification_settings/'),
+      final data = await _runAuthorized(
+        () => _repository!.getSystemSettings(),
       );
-      final data = _asMap(response.data);
       setState(() {
         _settingsResult = data;
         _settingsJsonController.text = const JsonEncoder.withIndent(
@@ -176,14 +180,11 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
     }
     setState(() => _loadingUpdateSettings = true);
     try {
-      final data = jsonDecode(raw);
-      final response = await _runAuthorized(
-        () => _apiClient!.post(
-          '/system-notifications/update_notification_settings/',
-          data: data,
-        ),
+      final decoded = jsonDecode(raw);
+      final result = await _runAuthorized(
+        () => _repository!.updateSystemSettings(decoded),
       );
-      setState(() => _settingsResult = _asMap(response.data));
+      setState(() => _settingsResult = result);
     } catch (err) {
       _showRequestError('更新失败', err);
     } finally {
@@ -194,10 +195,10 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
   Future<void> _loadStatus() async {
     setState(() => _loadingStatus = true);
     try {
-      final response = await _runAuthorized(
-        () => _apiClient!.get('/system-notifications/system_status/'),
+      final data = await _runAuthorized(
+        () => _repository!.getSystemStatus(),
       );
-      setState(() => _statusResult = _asMap(response.data));
+      setState(() => _statusResult = data);
     } catch (err) {
       _showRequestError('获取状态失败', err);
     } finally {
@@ -213,15 +214,7 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
         throw const ApiException(message: '登录状态已失效，请重新登录', statusCode: 401);
       }
     }
-    try {
-      return await action();
-    } on ApiException catch (err) {
-      if (err.statusCode == 401 &&
-          await (_apiClient?.refreshAccessToken() ?? Future.value(false))) {
-        return action();
-      }
-      rethrow;
-    }
+    return await action();
   }
 
   List<int> _parseIds(String raw) {
@@ -230,16 +223,6 @@ class _SystemNotificationPageState extends State<SystemNotificationPage> {
         .map((e) => int.tryParse(e.trim()))
         .whereType<int>()
         .toList();
-  }
-
-  Map<String, dynamic> _asMap(dynamic value) {
-    if (value is Map<String, dynamic>) {
-      return value;
-    }
-    if (value is Map) {
-      return Map<String, dynamic>.from(value);
-    }
-    return {'data': value};
   }
 
   void _showError(String message) {

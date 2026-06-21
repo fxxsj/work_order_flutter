@@ -30,7 +30,7 @@ import 'package:work_order_app/src/features/stock_out/stock_out_module.dart';
 import 'package:work_order_app/src/features/finance_costs/presentation/cost_center_list_page.dart';
 import 'package:work_order_app/src/features/finance_costs/presentation/cost_item_list_page.dart';
 import 'package:work_order_app/src/features/processes/presentation/process_log_list_page.dart';
-import 'package:work_order_app/src/features/notification_admin/presentation/notification_management_page.dart';
+import 'package:work_order_app/src/features/notification_admin/notification_admin_module.dart';
 
 final _pages = <String, Widget Function()>{
   'profile': () => const ProfilePage(),
@@ -66,7 +66,7 @@ final _pages = <String, Widget Function()>{
   'cost_items': () => const CostItemListEntry(),
   'payment_plans': () => const PaymentPlanListEntry(),
   'process_logs': () => const ProcessLogListEntry(),
-  'system_notifications': () => const NotificationManagementPage(),
+  'system_notifications': () => const NotificationManagementEntry(),
 };
 
 Widget? buildFullPage(String id) => _pages[id]?.call();
