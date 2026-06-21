@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_drawer_edit_panel.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_edit_page.dart';
@@ -17,15 +16,14 @@ import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/artworks/application/artwork_view_model.dart';
 import 'package:work_order_app/src/features/artworks/domain/artwork.dart';
-import 'package:work_order_app/src/features/dies/data/die_api_service.dart';
 import 'package:work_order_app/src/features/dies/domain/die.dart';
-import 'package:work_order_app/src/features/embossing_plates/data/embossing_plate_api_service.dart';
+import 'package:work_order_app/src/features/dies/domain/die_repository.dart';
 import 'package:work_order_app/src/features/embossing_plates/domain/embossing_plate.dart';
-import 'package:work_order_app/src/features/foiling_plates/data/foiling_plate_api_service.dart';
+import 'package:work_order_app/src/features/embossing_plates/domain/embossing_plate_repository.dart';
 import 'package:work_order_app/src/features/foiling_plates/domain/foiling_plate.dart';
-import 'package:work_order_app/src/features/products/data/product_api_service.dart';
-import 'package:work_order_app/src/features/products/data/product_repository_impl.dart';
+import 'package:work_order_app/src/features/foiling_plates/domain/foiling_plate_repository.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
+import 'package:work_order_app/src/features/products/domain/product_repository.dart';
 import 'package:work_order_app/src/features/products/presentation/widgets/quick_product_create_dialog.dart';
 
 Future<bool> showArtworkEditDrawer(
@@ -92,10 +90,10 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
   final Set<String> _cmykColors = {'C', 'M', 'Y', 'K'};
   final Set<String> _selectedCmyk = {};
   final List<String> _otherColors = [];
-  ProductApiService? _productApi;
-  DieApiService? _dieApi;
-  FoilingPlateApiService? _foilingApi;
-  EmbossingPlateApiService? _embossingApi;
+  ProductRepository? _productRepository;
+  DieRepository? _dieRepository;
+  FoilingPlateRepository? _foilingRepository;
+  EmbossingPlateRepository? _embossingRepository;
   bool _loadingPicklists = false;
   final List<ProductOption> _productOptions = [];
   final List<Die> _dieOptions = [];
@@ -152,22 +150,27 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_productApi != null) return;
-    final apiClient = context.read<ApiClient>();
-    _productApi = ProductApiService(apiClient);
-    _dieApi = DieApiService(apiClient);
-    _foilingApi = FoilingPlateApiService(apiClient);
-    _embossingApi = EmbossingPlateApiService(apiClient);
+    if (_productRepository != null) return;
+    _productRepository = context.read<ProductRepository>();
+    _dieRepository = context.read<DieRepository>();
+    _foilingRepository = context.read<FoilingPlateRepository>();
+    _embossingRepository = context.read<EmbossingPlateRepository>();
     _loadPicklists();
   }
 
   Future<void> _loadPicklists() async {
     setState(() => _loadingPicklists = true);
     try {
-      final products = await _productApi!.fetchProducts(isActive: true);
-      final dies = await _dieApi!.fetchDies(pageSize: 50);
-      final foiling = await _foilingApi!.fetchFoilingPlates(pageSize: 50);
-      final embossing = await _embossingApi!.fetchEmbossingPlates(pageSize: 50);
+      final products = await _productRepository!.getProductOptions(isActive: true);
+      final dies = await _dieRepository!.getDies(page: 1, pageSize: 50);
+      final foiling = await _foilingRepository!.getFoilingPlates(
+        page: 1,
+        pageSize: 50,
+      );
+      final embossing = await _embossingRepository!.getEmbossingPlates(
+        page: 1,
+        pageSize: 50,
+      );
       if (!mounted) return;
       setState(() {
         _productOptions
@@ -175,13 +178,13 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
           ..addAll(products);
         _dieOptions
           ..clear()
-          ..addAll(dies.items.map((dto) => dto.toEntity()));
+          ..addAll(dies.items);
         _foilingOptions
           ..clear()
-          ..addAll(foiling.items.map((dto) => dto.toEntity()));
+          ..addAll(foiling.items);
         _embossingOptions
           ..clear()
-          ..addAll(embossing.items.map((dto) => dto.toEntity()));
+          ..addAll(embossing.items);
       });
     } catch (err) {
       if (!mounted) return;
@@ -211,15 +214,15 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
       return null;
     }
 
-    final productApi = _productApi;
-    if (productApi == null) {
+    final repository = _productRepository;
+    if (repository == null) {
       ToastUtil.showError('产品数据尚未初始化');
       return null;
     }
 
     final created = await showQuickProductCreateDialog(
       context: context,
-      productRepository: ProductRepositoryImpl(productApi),
+      productRepository: repository,
     );
     if (created == null || !mounted) {
       return null;
