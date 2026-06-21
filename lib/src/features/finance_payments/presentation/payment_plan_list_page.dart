@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/models/generic_record.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/generic_resource_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
-import 'package:work_order_app/src/features/finance_payments/data/payment_plan_api_service.dart';
+import 'package:work_order_app/src/features/finance_payments/domain/payment_plan_repository.dart';
 
-class PaymentPlanListEntry extends StatelessWidget {
-  const PaymentPlanListEntry({super.key});
+/// 收款计划列表页视图，只负责渲染。
+class PaymentPlanListPage extends StatelessWidget {
+  const PaymentPlanListPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -65,8 +65,7 @@ class PaymentPlanListEntry extends StatelessWidget {
     GenericRecord record,
   ) async {
     try {
-      final actionService = PaymentPlanActionService(context.read<ApiClient>());
-      await actionService.updateStatus(record.id);
+      await context.read<PaymentPlanRepository>().updateStatus(record.id);
       ToastUtil.showSuccess('状态已更新');
       final viewModel = context.read<GenericListViewModel>();
       await viewModel.loadItems(resetPage: false);

@@ -18,7 +18,7 @@ import 'package:work_order_app/src/features/inventory_stocks/inventory_stocks_mo
 import 'package:work_order_app/src/features/inventory_delivery/presentation/delivery_order_list_page.dart';
 import 'package:work_order_app/src/features/inventory_quality/inventory_quality_module.dart';
 import 'package:work_order_app/src/features/finance_invoices/finance_invoices_module.dart';
-import 'package:work_order_app/src/features/finance_payments/presentation/payment_list_page.dart';
+import 'package:work_order_app/src/features/finance_payments/finance_payments_module.dart';
 import 'package:work_order_app/src/features/finance_costs/finance_costs_module.dart';
 import 'package:work_order_app/src/features/finance_statements/presentation/statement_list_page.dart';
 import 'package:work_order_app/src/features/suppliers/suppliers_module.dart';
@@ -32,7 +32,6 @@ import 'package:work_order_app/src/features/stock_in/stock_in_module.dart';
 import 'package:work_order_app/src/features/stock_out/stock_out_module.dart';
 import 'package:work_order_app/src/features/finance_costs/presentation/cost_center_list_page.dart';
 import 'package:work_order_app/src/features/finance_costs/presentation/cost_item_list_page.dart';
-import 'package:work_order_app/src/features/finance_payments/presentation/payment_plan_list_page.dart';
 import 'package:work_order_app/src/features/processes/presentation/process_log_list_page.dart';
 import 'package:work_order_app/src/features/notification_admin/presentation/notification_management_page.dart';
 

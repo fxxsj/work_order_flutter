@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
@@ -15,39 +14,17 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/finance_payments/application/payment_view_model.dart';
-import 'package:work_order_app/src/features/finance_payments/data/payment_api_service.dart';
-import 'package:work_order_app/src/features/finance_payments/data/payment_repository_impl.dart';
-import 'package:work_order_app/src/features/finance_payments/data/payment_support_service.dart';
 import 'package:work_order_app/src/features/finance_payments/domain/payment.dart';
 import 'package:work_order_app/src/features/finance_payments/domain/payment_repository.dart';
 import 'package:work_order_app/src/features/finance_invoices/domain/invoice.dart';
 import 'package:work_order_app/src/features/finance_payments/presentation/widgets/payment_list_dialogs.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order.dart';
 import 'package:work_order_app/src/core/utils/debounce_controller.dart';
-
-/// 收款列表入口，负责创建并缓存依赖，避免页面重建时重复初始化。
-class PaymentListEntry extends StatelessWidget {
-  const PaymentListEntry({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FeatureEntry<PaymentApiService, PaymentRepository, PaymentViewModel>(
-      createService: (context) => PaymentApiService(context.read<ApiClient>()),
-      createRepository: (context) =>
-          PaymentRepositoryImpl(context.read<PaymentApiService>()),
-      createViewModel: (context) =>
-          PaymentViewModel(context.read<PaymentRepository>()),
-      initialize: (viewModel) => viewModel.initialize(),
-      child: const PaymentListPage(),
-    );
-  }
-}
 
 /// 收款列表页视图，只负责渲染。
 class PaymentListPage extends StatelessWidget {
@@ -90,13 +67,11 @@ class _PaymentListViewState extends State<_PaymentListView> {
   List<Customer> _customers = [];
   List<SalesOrder> _salesOrders = [];
   List<Invoice> _invoices = [];
-  PaymentSupportService? _supportService;
   String? _lastRouteSignature;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _supportService ??= PaymentSupportService(context.read<ApiClient>());
     final uri = GoRouterState.of(context).uri;
     final routeSearch = uri.queryParameters['search']?.trim() ?? '';
     final routeCustomer = uri.queryParameters['customer']?.trim() ?? '';
@@ -156,7 +131,7 @@ class _PaymentListViewState extends State<_PaymentListView> {
     if (_optionsLoaded || _optionsLoading) return;
     setState(() => _optionsLoading = true);
     try {
-      final options = await _supportService!.loadOptions();
+      final options = await context.read<PaymentRepository>().loadFormOptions();
       if (!mounted) return;
       setState(() {
         _customers = options.customers;
@@ -191,7 +166,7 @@ class _PaymentListViewState extends State<_PaymentListView> {
     );
     if (result == null) return;
     try {
-      await _supportService!.createPayment(result.payload);
+      await context.read<PaymentRepository>().createPayment(result.payload);
       ToastUtil.showSuccess('收款已登记');
       await viewModel.loadPayments(resetPage: false);
     } catch (err) {

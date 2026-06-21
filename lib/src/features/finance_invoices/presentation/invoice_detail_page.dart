@@ -1,24 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/utils/file_link_util.dart';
-import 'package:work_order_app/src/features/finance_invoices/data/invoice_api_service.dart';
 import 'package:work_order_app/src/features/finance_invoices/domain/invoice.dart';
-
-class InvoiceDetailEntry extends StatelessWidget {
-  const InvoiceDetailEntry({super.key, required this.invoiceId});
-
-  final int invoiceId;
-
-  @override
-  Widget build(BuildContext context) {
-    return InvoiceDetailPage(invoiceId: invoiceId);
-  }
-}
+import 'package:work_order_app/src/features/finance_invoices/domain/invoice_repository.dart';
 
 class InvoiceDetailPage extends StatefulWidget {
   const InvoiceDetailPage({super.key, required this.invoiceId});
@@ -49,11 +37,12 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
       _errorMessage = null;
     });
     try {
-      final api = InvoiceApiService(context.read<ApiClient>());
-      final invoice = await api.fetchDetail(widget.invoiceId);
+      final invoice = await context
+          .read<InvoiceRepository>()
+          .getInvoiceDetail(widget.invoiceId);
       if (!mounted) return;
       setState(() {
-        _invoice = invoice.toEntity();
+        _invoice = invoice;
         _loading = false;
       });
     } catch (err) {

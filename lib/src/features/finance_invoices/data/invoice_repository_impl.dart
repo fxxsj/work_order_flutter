@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:work_order_app/src/features/finance_invoices/data/invoice_api_service.dart';
 import 'package:work_order_app/src/features/finance_invoices/data/invoice_dto.dart';
 import 'package:work_order_app/src/features/finance_invoices/data/invoice_form_options_loader.dart';
+import 'package:work_order_app/src/features/finance_invoices/domain/invoice.dart';
 import 'package:work_order_app/src/features/finance_invoices/domain/invoice_form_options.dart';
 import 'package:work_order_app/src/features/finance_invoices/domain/invoice_repository.dart';
 
@@ -30,6 +31,12 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
       todo: todo,
       ordering: ordering,
     );
+  }
+
+  @override
+  Future<Invoice> getInvoiceDetail(int id) async {
+    final dto = await _apiService.fetchDetail(id);
+    return dto.toEntity();
   }
 
   @override

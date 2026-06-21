@@ -1,12 +1,15 @@
 import 'package:work_order_app/src/core/data/page_data.dart';
 import 'package:work_order_app/src/features/finance_payments/data/payment_api_service.dart';
+import 'package:work_order_app/src/features/finance_payments/data/payment_support_service.dart';
 import 'package:work_order_app/src/features/finance_payments/domain/payment.dart';
+import 'package:work_order_app/src/features/finance_payments/domain/payment_form_options.dart';
 import 'package:work_order_app/src/features/finance_payments/domain/payment_repository.dart';
 
 class PaymentRepositoryImpl implements PaymentRepository {
-  PaymentRepositoryImpl(this._apiService);
+  PaymentRepositoryImpl(this._apiService, this._supportService);
 
   final PaymentApiService _apiService;
+  final PaymentSupportService _supportService;
 
   @override
   Future<PageData<Payment>> getPayments({
@@ -42,5 +45,15 @@ class PaymentRepositoryImpl implements PaymentRepository {
   @override
   Future<Map<String, dynamic>> getSummary({Map<String, dynamic>? params}) {
     return _apiService.fetchSummary(params: params);
+  }
+
+  @override
+  Future<PaymentFormOptions> loadFormOptions() {
+    return _supportService.loadOptions();
+  }
+
+  @override
+  Future<void> createPayment(Map<String, dynamic> payload) {
+    return _supportService.createPayment(payload);
   }
 }

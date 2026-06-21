@@ -7,6 +7,7 @@ import 'package:work_order_app/src/features/finance_invoices/domain/invoice_form
 import 'package:work_order_app/src/features/finance_invoices/domain/invoice_repository.dart';
 import 'package:work_order_app/src/features/finance_payments/application/payment_view_model.dart';
 import 'package:work_order_app/src/features/finance_payments/domain/payment.dart';
+import 'package:work_order_app/src/features/finance_payments/domain/payment_form_options.dart';
 import 'package:work_order_app/src/features/finance_payments/domain/payment_repository.dart';
 import 'package:work_order_app/src/features/inventory_delivery/application/delivery_order_view_model.dart';
 import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_dto.dart';
@@ -631,6 +632,19 @@ class _MockInvoiceRepository implements InvoiceRepository {
       workOrders: [],
     );
   }
+
+  @override
+  Future<Invoice> getInvoiceDetail(int id) async {
+    _log('getInvoiceDetail:$id');
+    final existing = _invoices[id];
+    if (existing != null) return existing;
+    return Invoice(
+      id: id,
+      invoiceNumber: 'INV$id',
+      status: 'draft',
+      issueDate: DateTime.now(),
+    );
+  }
 }
 
 class _MockPaymentRepository implements PaymentRepository {
@@ -659,6 +673,20 @@ class _MockPaymentRepository implements PaymentRepository {
   @override
   Future<Map<String, dynamic>> getSummary({Map<String, dynamic>? params}) async {
     return {};
+  }
+
+  @override
+  Future<PaymentFormOptions> loadFormOptions() async {
+    return const PaymentFormOptions(
+      customers: [],
+      salesOrders: [],
+      invoices: [],
+    );
+  }
+
+  @override
+  Future<void> createPayment(Map<String, dynamic> payload) async {
+    return;
   }
 
   void seedPayment(Payment payment) {
