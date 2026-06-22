@@ -1,60 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_date_picker.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/crud_form_field.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
-import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
-import 'package:work_order_app/src/features/customer/data/customer_repository_impl.dart';
 import 'package:work_order_app/src/features/customer/domain/customer.dart';
+import 'package:work_order_app/src/features/customer/domain/customer_repository.dart';
 import 'package:work_order_app/src/features/customer/presentation/widgets/quick_customer_create_dialog.dart';
-import 'package:work_order_app/src/features/products/data/product_api_service.dart';
-import 'package:work_order_app/src/features/products/data/product_repository_impl.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
+import 'package:work_order_app/src/features/products/domain/product_repository.dart';
 import 'package:work_order_app/src/features/products/presentation/widgets/quick_product_create_dialog.dart';
 import 'package:work_order_app/src/features/sales_orders/application/sales_order_view_model.dart';
-import 'package:work_order_app/src/features/sales_orders/data/sales_order_api_service.dart';
-import 'package:work_order_app/src/features/sales_orders/data/sales_order_repository_impl.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order_detail.dart';
-import 'package:work_order_app/src/features/sales_orders/domain/sales_order_repository.dart';
-import 'package:work_order_app/src/features/workorders/data/work_order_flow_api_service.dart';
 
 enum SalesOrderFormMode { create, edit }
-
-class SalesOrderFormEntry extends StatelessWidget {
-  const SalesOrderFormEntry({super.key, required this.mode, this.orderId});
-
-  final SalesOrderFormMode mode;
-  final int? orderId;
-
-  @override
-  Widget build(BuildContext context) {
-    return FeatureEntry<
-      SalesOrderApiService,
-      SalesOrderRepository,
-      SalesOrderViewModel
-    >(
-      createService: (context) =>
-          SalesOrderApiService(context.read<ApiClient>()),
-      createRepository: (context) => SalesOrderRepositoryImpl(
-        context.read<SalesOrderApiService>(),
-        WorkOrderFlowApiService(context.read<ApiClient>()),
-      ),
-      createViewModel: (context) =>
-          SalesOrderViewModel(context.read<SalesOrderRepository>()),
-      child: SalesOrderFormPage(mode: mode, orderId: orderId),
-    );
-  }
-}
 
 class SalesOrderFormPage extends StatefulWidget {
   const SalesOrderFormPage({super.key, required this.mode, this.orderId});
@@ -152,19 +118,15 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
 
   Future<void> _loadOptions() async {
     setState(() => _loadingOptions = true);
-    final apiClient = context.read<ApiClient>();
-    final customerApi = CustomerApiService(apiClient);
-    final productApi = ProductApiService(apiClient);
+    final customerRepo = context.read<CustomerRepository>();
+    final productRepo = context.read<ProductRepository>();
     try {
-      final customerFuture = customerApi.fetchCustomers(page: 1, pageSize: 50);
-      final productFuture = productApi.fetchProducts(
-        pageSize: 50,
-        isActive: true,
-      );
+      final customerFuture = customerRepo.getCustomers(page: 1, pageSize: 50);
+      final productFuture = productRepo.getProductOptions(isActive: true);
       final customerPage = await customerFuture;
       final productOptions = await productFuture;
       setState(() {
-        _customers = customerPage.items.map((item) => item.toEntity()).toList();
+        _customers = customerPage.items;
         _products = productOptions;
       });
     } catch (err) {
@@ -299,9 +261,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
 
     final created = await showQuickCustomerCreateDialog(
       context: context,
-      customerRepository: CustomerRepositoryImpl(
-        CustomerApiService(context.read<ApiClient>()),
-      ),
+      customerRepository: context.read<CustomerRepository>(),
     );
     if (created == null || !mounted) {
       return;
@@ -327,9 +287,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
 
     final created = await showQuickProductCreateDialog(
       context: context,
-      productRepository: ProductRepositoryImpl(
-        ProductApiService(context.read<ApiClient>()),
-      ),
+      productRepository: context.read<ProductRepository>(),
     );
     if (created == null || !mounted) {
       return null;

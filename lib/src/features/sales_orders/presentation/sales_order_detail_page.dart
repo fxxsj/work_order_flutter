@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/approval_rejection_notice_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
@@ -10,44 +9,14 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/detail_secti
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/action_dialogs.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/audit_log_navigation.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/presentation/widgets/shimmer_loading.dart';
 import 'package:work_order_app/src/features/sales_orders/application/sales_order_view_model.dart';
-import 'package:work_order_app/src/features/sales_orders/data/sales_order_api_service.dart';
-import 'package:work_order_app/src/features/sales_orders/data/sales_order_repository_impl.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order_detail.dart';
-import 'package:work_order_app/src/features/sales_orders/domain/sales_order_repository.dart';
 import 'package:work_order_app/src/features/sales_orders/presentation/widgets/sales_order_detail_sections.dart';
 import 'package:work_order_app/src/features/sales_orders/presentation/widgets/sales_order_list_dialogs.dart';
-import 'package:work_order_app/src/features/workorders/data/work_order_flow_api_service.dart';
-
-class SalesOrderDetailEntry extends StatelessWidget {
-  const SalesOrderDetailEntry({super.key, required this.orderId});
-
-  final int orderId;
-
-  @override
-  Widget build(BuildContext context) {
-    return FeatureEntry<
-      SalesOrderApiService,
-      SalesOrderRepository,
-      SalesOrderViewModel
-    >(
-      createService: (context) =>
-          SalesOrderApiService(context.read<ApiClient>()),
-      createRepository: (context) => SalesOrderRepositoryImpl(
-        context.read<SalesOrderApiService>(),
-        WorkOrderFlowApiService(context.read<ApiClient>()),
-      ),
-      createViewModel: (context) =>
-          SalesOrderViewModel(context.read<SalesOrderRepository>()),
-      child: SalesOrderDetailPage(orderId: orderId),
-    );
-  }
-}
 
 class SalesOrderDetailPage extends StatefulWidget {
   const SalesOrderDetailPage({super.key, required this.orderId});

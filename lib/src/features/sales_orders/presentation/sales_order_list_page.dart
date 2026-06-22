@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
@@ -14,49 +13,18 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/presentation/widgets/shimmer_loading.dart';
+import 'package:work_order_app/src/core/utils/debounce_controller.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/sales_orders/application/sales_order_view_model.dart';
-import 'package:work_order_app/src/features/sales_orders/data/sales_order_action_service.dart';
-import 'package:work_order_app/src/features/sales_orders/data/sales_order_api_service.dart';
-import 'package:work_order_app/src/features/sales_orders/data/sales_order_repository_impl.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order_detail.dart';
-import 'package:work_order_app/src/features/sales_orders/domain/sales_order_repository.dart';
 import 'package:work_order_app/src/features/sales_orders/presentation/widgets/sales_order_list_dialogs.dart';
-import 'package:work_order_app/src/features/workorders/data/work_order_flow_api_service.dart';
-import 'package:work_order_app/src/core/utils/debounce_controller.dart';
-
-/// 客户订单列表入口。
-class SalesOrderListEntry extends StatelessWidget {
-  const SalesOrderListEntry({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FeatureEntry<
-      SalesOrderApiService,
-      SalesOrderRepository,
-      SalesOrderViewModel
-    >(
-      createService: (context) =>
-          SalesOrderApiService(context.read<ApiClient>()),
-      createRepository: (context) => SalesOrderRepositoryImpl(
-        context.read<SalesOrderApiService>(),
-        WorkOrderFlowApiService(context.read<ApiClient>()),
-      ),
-      createViewModel: (context) =>
-          SalesOrderViewModel(context.read<SalesOrderRepository>()),
-      initialize: (viewModel) => viewModel.initialize(),
-      child: const SalesOrderListPage(),
-    );
-  }
-}
 
 /// 客户订单列表页视图，只负责渲染。
 class SalesOrderListPage extends StatelessWidget {
@@ -101,7 +69,6 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
 
   final TextEditingController _searchController = TextEditingController();
   final _debounce = DebounceController();
-  SalesOrderActionService? _actionService;
   String? _routeSignature;
   bool _selectionMode = false;
   final Set<int> _selectedOrderIds = <int>{};
@@ -109,7 +76,6 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _actionService ??= SalesOrderActionService(context.read<ApiClient>());
     final uri = GoRouterState.of(context).uri;
     final routeSearch = uri.queryParameters['search']?.trim() ?? '';
     final routeStatus = uri.queryParameters['status']?.trim() ?? '';
@@ -444,7 +410,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
       context,
       item: order,
       onConfirm: (item) async {
-        await _actionService!.submit(item.id);
+        await viewModel.submit(item.id);
         await viewModel.loadSalesOrders(resetPage: false);
       },
       config: _submitOrderConfig,
@@ -467,7 +433,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     );
     if (result == null) return;
     try {
-      await _actionService!.approve(order.id, comment: result.notes);
+      await viewModel.approve(order.id, {'approval_comment': result.notes});
       ToastUtil.showSuccess('已审核通过');
       await viewModel.loadSalesOrders(resetPage: false);
     } catch (err) {
@@ -495,11 +461,10 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     );
     if (result == null) return;
     try {
-      await _actionService!.reject(
-        order.id,
-        reason: result.notes,
-        comment: result.extraNotes,
-      );
+      await viewModel.reject(order.id, {
+        'reason': result.notes,
+        'approval_comment': result.extraNotes,
+      });
       ToastUtil.showSuccess('已拒绝');
       await viewModel.loadSalesOrders(resetPage: false);
     } catch (err) {
@@ -519,10 +484,10 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         requireReason: !_isAllItemsDelivered(detail.items),
       );
       if (result == null) return;
-      await _actionService!.complete(
-        order.id,
-        completionReason: result.completionReason,
-      );
+      await viewModel.complete(order.id, {
+        if (result.completionReason.trim().isNotEmpty)
+          'completion_reason': result.completionReason.trim(),
+      });
       ToastUtil.showSuccess('已完成');
       await viewModel.loadSalesOrders(resetPage: false);
     } catch (err) {
@@ -551,7 +516,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     );
     if (result == null) return;
     try {
-      await _actionService!.cancel(order.id, reason: result.notes.trim());
+      await viewModel.cancel(order.id, {'reason': result.notes.trim()});
       ToastUtil.showSuccess('已取消');
       await viewModel.loadSalesOrders(resetPage: false);
     } catch (err) {
@@ -575,9 +540,8 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     );
     if (confirmed != true) return;
     try {
-      await _actionService!.delete(order.id);
+      await viewModel.delete(order.id);
       ToastUtil.showSuccess('已删除');
-      await viewModel.loadSalesOrders(resetPage: true);
     } catch (err) {
       ToastUtil.showError('删除失败: $err');
     }
@@ -607,7 +571,7 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     };
 
     try {
-      await _actionService!.updatePayment(order.id, payload);
+      await viewModel.updatePayment(order.id, payload);
       ToastUtil.showSuccess('已更新付款信息');
       await viewModel.loadSalesOrders(resetPage: false);
     } catch (err) {
