@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_detail_dto.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order.dart';
+import 'package:work_order_app/src/features/workorders/domain/work_order_form_options.dart';
+import 'package:work_order_app/src/features/workorders/domain/work_order_list_support.dart';
 
 abstract class WorkOrderRepository {
   Future<WorkOrderPageDto> getWorkOrders({
@@ -57,6 +59,12 @@ abstract class WorkOrderRepository {
   Future<Map<String, dynamic>> getSummary({Map<String, dynamic>? params});
 
   Future<dynamic> export({Map<String, dynamic>? params});
+
+  Future<WorkOrderListFilterOptions> loadFilterOptions();
+
+  Future<WorkOrderExportResult> exportWorkOrders(Map<String, dynamic> params);
+
+  Future<WorkOrderFormOptionsData> loadFormOptions({int? excludeWorkOrderId});
 
   Future<Map<String, dynamic>> checkSyncNeeded(int id, {List<int>? processIds});
 

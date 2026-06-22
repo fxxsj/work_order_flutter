@@ -114,4 +114,9 @@ class PurchaseOrderRepositoryImpl implements PurchaseOrderRepository {
   Future<Map<String, dynamic>> cancel(int id) {
     return _apiService.cancel(id);
   }
+
+  @override
+  Future<Map<String, dynamic>> createFromWorkOrder(int workOrderId) {
+    return _apiService.createFromWorkOrder(workOrderId);
+  }
 }

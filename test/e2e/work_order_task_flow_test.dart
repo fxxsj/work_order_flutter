@@ -14,6 +14,8 @@ import 'package:work_order_app/src/features/workorders/data/work_order_detail_dt
 import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
+import 'package:work_order_app/src/features/workorders/domain/work_order_form_options.dart';
+import 'package:work_order_app/src/features/workorders/domain/work_order_list_support.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
 
 /// 端到端测试：施工单提交审核 → 生成任务 → 任务查询
@@ -256,6 +258,42 @@ class _MockWorkOrderRepository implements WorkOrderRepository {
       orderDate: source.orderDate,
     );
   }
+  @override
+  Future<WorkOrderListFilterOptions> loadFilterOptions() async {
+    _log('loadFilterOptions');
+    return const WorkOrderListFilterOptions(
+      customers: [],
+      products: [],
+      processes: [],
+    );
+  }
+
+  @override
+  Future<WorkOrderExportResult> exportWorkOrders(Map<String, dynamic> params) async {
+    _log('exportWorkOrders');
+    return WorkOrderExportResult(
+      bytes: Uint8List(0),
+      filename: 'workorders.xlsx',
+    );
+  }
+
+  @override
+  Future<WorkOrderFormOptionsData> loadFormOptions({int? excludeWorkOrderId}) async {
+    _log('loadFormOptions');
+    return const WorkOrderFormOptionsData(
+      salesOrders: [],
+      customers: [],
+      products: [],
+      fullProducts: [],
+      materials: [],
+      processes: [],
+      artworks: [],
+      dies: [],
+      foilingPlates: [],
+      embossingPlates: [],
+    );
+  }
+
   @override
   Future<List<WorkOrder>> searchWorkOrders(
     String query, {

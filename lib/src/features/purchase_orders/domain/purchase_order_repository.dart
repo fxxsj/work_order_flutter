@@ -50,4 +50,7 @@ abstract class PurchaseOrderRepository {
   Future<void> stockIn(int recordId);
 
   Future<Map<String, dynamic>> cancel(int id);
+
+  /// 根据施工单创建采购单。
+  Future<Map<String, dynamic>> createFromWorkOrder(int workOrderId);
 }

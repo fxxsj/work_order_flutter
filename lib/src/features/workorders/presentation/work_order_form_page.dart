@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_date_picker.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
@@ -9,74 +8,30 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
-import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
-import 'package:work_order_app/src/features/customer/data/customer_repository_impl.dart';
-import 'package:work_order_app/src/features/customer/domain/customer.dart';
-import 'package:work_order_app/src/features/customer/presentation/widgets/quick_customer_create_dialog.dart';
 import 'package:work_order_app/src/features/artworks/domain/artwork.dart';
+import 'package:work_order_app/src/features/customer/domain/customer.dart';
+import 'package:work_order_app/src/features/customer/domain/customer_repository.dart';
+import 'package:work_order_app/src/features/customer/presentation/widgets/quick_customer_create_dialog.dart';
 import 'package:work_order_app/src/features/dies/domain/die.dart';
 import 'package:work_order_app/src/features/embossing_plates/domain/embossing_plate.dart';
 import 'package:work_order_app/src/features/foiling_plates/domain/foiling_plate.dart';
-import 'package:work_order_app/src/features/materials/data/material_api_service.dart';
-import 'package:work_order_app/src/features/materials/data/material_repository_impl.dart';
 import 'package:work_order_app/src/features/materials/domain/material.dart';
+import 'package:work_order_app/src/features/materials/domain/material_repository.dart';
 import 'package:work_order_app/src/features/materials/presentation/widgets/quick_material_create_dialog.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
-import 'package:work_order_app/src/features/products/data/product_api_service.dart';
-import 'package:work_order_app/src/features/products/data/product_repository_impl.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
+import 'package:work_order_app/src/features/products/domain/product_repository.dart';
 import 'package:work_order_app/src/features/products/presentation/widgets/quick_product_create_dialog.dart';
 import 'package:work_order_app/src/features/workorders/application/work_order_view_model.dart';
-import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
-import 'package:work_order_app/src/features/workorders/data/work_order_form_options_loader.dart';
-import 'package:work_order_app/src/features/workorders/data/work_order_form_submission.dart'
-    show
-        WorkOrderFormSubmission,
-        ProcessCheckItem;
-import 'package:work_order_app/src/features/workorders/data/work_order_repository_impl.dart';
+import 'package:work_order_app/src/features/workorders/domain/work_order_form_submission.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_sales_order_candidate.dart';
 import 'package:work_order_app/src/features/workorders/presentation/work_order_form_state.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/sections/work_order_form_sections.dart';
 
 enum WorkOrderFormMode { create, edit }
-
-class WorkOrderFormEntry extends StatelessWidget {
-  const WorkOrderFormEntry({
-    super.key,
-    required this.mode,
-    this.workOrderId,
-    this.initialSalesOrderId,
-  });
-
-  final WorkOrderFormMode mode;
-  final int? workOrderId;
-  final int? initialSalesOrderId;
-
-  @override
-  Widget build(BuildContext context) {
-    return FeatureEntry<
-      WorkOrderApiService,
-      WorkOrderRepository,
-      WorkOrderViewModel
-    >(
-      createService: (context) =>
-          WorkOrderApiService(context.read<ApiClient>()),
-      createRepository: (context) =>
-          WorkOrderRepositoryImpl(context.read<WorkOrderApiService>()),
-      createViewModel: (context) =>
-          WorkOrderViewModel(context.read<WorkOrderRepository>()),
-      child: WorkOrderFormPage(
-        mode: mode,
-        workOrderId: workOrderId,
-        initialSalesOrderId: initialSalesOrderId,
-      ),
-    );
-  }
-}
 
 class WorkOrderFormPage extends StatefulWidget {
   const WorkOrderFormPage({
@@ -149,10 +104,9 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
   Future<void> _loadOptions() async {
     setState(() => _loadingOptions = true);
     try {
-      final options = await WorkOrderFormOptionsLoader(
-        context.read<ApiClient>(),
-        excludeWorkOrderId: widget.workOrderId,
-      ).load();
+      final options = await context
+          .read<WorkOrderRepository>()
+          .loadFormOptions(excludeWorkOrderId: widget.workOrderId);
 
       setState(() {
         _salesOrders = options.salesOrders;
@@ -223,12 +177,10 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
     if (customerId == null) return;
     final exists = _customers.any((c) => c.id == customerId);
     if (exists) return;
-    final dto = await CustomerApiService(
-      context.read<ApiClient>(),
-    ).fetchCustomerById(customerId);
-    if (dto == null || !mounted) return;
+    final customer = await context.read<CustomerRepository>().getCustomer(customerId);
+    if (customer == null || !mounted) return;
     setState(() {
-      _customers = [..._customers, dto.toEntity()];
+      _customers = [..._customers, customer];
     });
   }
 
@@ -241,9 +193,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
 
     final created = await showQuickCustomerCreateDialog(
       context: context,
-      customerRepository: CustomerRepositoryImpl(
-        CustomerApiService(context.read<ApiClient>()),
-      ),
+      customerRepository: context.read<CustomerRepository>(),
     );
     if (created == null || !mounted) {
       return;
@@ -262,11 +212,14 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
   Future<List<AppDropdownOption<int>>> _handleSearchCustomer(
     String query,
   ) async {
-    final page = await CustomerApiService(
-      context.read<ApiClient>(),
-    ).fetchCustomers(search: query, pageSize: 50);
+    final page = await context
+        .read<CustomerRepository>()
+        .getCustomers(search: query, pageSize: 50);
     return page.items
-        .map((dto) => AppDropdownOption<int>(value: dto.id, label: dto.name))
+        .map((customer) => AppDropdownOption<int>(
+              value: customer.id,
+              label: customer.name,
+            ))
         .toList();
   }
 
@@ -279,9 +232,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
 
     final created = await showQuickProductCreateDialog(
       context: context,
-      productRepository: ProductRepositoryImpl(
-        ProductApiService(context.read<ApiClient>()),
-      ),
+      productRepository: context.read<ProductRepository>(),
     );
     if (created == null || !mounted) {
       return null;
@@ -316,9 +267,7 @@ class _WorkOrderFormPageState extends State<WorkOrderFormPage> {
 
     final created = await showQuickMaterialCreateDialog(
       context: context,
-      materialRepository: MaterialRepositoryImpl(
-        MaterialApiService(context.read<ApiClient>()),
-      ),
+      materialRepository: context.read<MaterialRepository>(),
     );
     if (created == null || !mounted) {
       return null;

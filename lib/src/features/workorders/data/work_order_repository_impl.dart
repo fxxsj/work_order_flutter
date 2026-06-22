@@ -3,7 +3,11 @@ import 'package:work_order_app/src/features/workorders/data/work_order_api_servi
 import 'package:work_order_app/src/features/workorders/data/work_order_detail_dto.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_flow_api_service.dart';
+import 'package:work_order_app/src/features/workorders/data/work_order_form_options_loader.dart';
+import 'package:work_order_app/src/features/workorders/data/work_order_list_support_service.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order.dart';
+import 'package:work_order_app/src/features/workorders/domain/work_order_form_options.dart';
+import 'package:work_order_app/src/features/workorders/domain/work_order_list_support.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
 
 class WorkOrderRepositoryImpl implements WorkOrderRepository {
@@ -140,6 +144,26 @@ class WorkOrderRepositoryImpl implements WorkOrderRepository {
   @override
   Future<dynamic> export({Map<String, dynamic>? params}) {
     return _apiService.export(params: params);
+  }
+
+  @override
+  Future<WorkOrderListFilterOptions> loadFilterOptions() {
+    return WorkOrderListSupportService(_apiService.client).loadFilterOptions();
+  }
+
+  @override
+  Future<WorkOrderExportResult> exportWorkOrders(Map<String, dynamic> params) {
+    return WorkOrderListSupportService(_apiService.client).export(params);
+  }
+
+  @override
+  Future<WorkOrderFormOptionsData> loadFormOptions({
+    int? excludeWorkOrderId,
+  }) {
+    return WorkOrderFormOptionsLoader(
+      _apiService.client,
+      excludeWorkOrderId: excludeWorkOrderId,
+    ).load();
   }
 
   @override

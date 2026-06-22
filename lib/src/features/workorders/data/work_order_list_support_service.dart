@@ -2,31 +2,10 @@ import 'dart:typed_data';
 
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/features/customer/data/customer_api_service.dart';
-import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/processes/data/process_api_service.dart';
-import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/products/data/product_api_service.dart';
-import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
-
-class WorkOrderListFilterOptions {
-  const WorkOrderListFilterOptions({
-    required this.customers,
-    required this.products,
-    required this.processes,
-  });
-
-  final List<Customer> customers;
-  final List<ProductOption> products;
-  final List<Process> processes;
-}
-
-class WorkOrderExportResult {
-  const WorkOrderExportResult({required this.bytes, required this.filename});
-
-  final Uint8List bytes;
-  final String filename;
-}
+import 'package:work_order_app/src/features/workorders/domain/work_order_list_support.dart';
 
 class WorkOrderListSupportService {
   WorkOrderListSupportService(this._client);

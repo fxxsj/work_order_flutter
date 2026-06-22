@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_order_app/src/features/artworks/domain/artwork.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
-import 'package:work_order_app/src/features/workorders/data/work_order_form_submission.dart';
+import 'package:work_order_app/src/features/workorders/domain/work_order_form_submission.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/sections/work_order_form_sections.dart';
 

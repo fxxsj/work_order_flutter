@@ -39,6 +39,19 @@ class CustomerRepositoryImpl implements CustomerRepository {
     }
   }
 
+  /// 获取单个客户。
+  @override
+  Future<Customer?> getCustomer(int id) async {
+    try {
+      final dto = await _apiService.fetchCustomerById(id);
+      return dto?.toEntity();
+    } on ApiException catch (err) {
+      throw Exception(err.message.isNotEmpty ? err.message : '获取客户失败');
+    } catch (err) {
+      throw Exception('获取客户失败: $err');
+    }
+  }
+
   /// 创建客户。
   @override
   Future<Customer> createCustomer(Customer customer) async {

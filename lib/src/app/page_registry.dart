@@ -3,7 +3,7 @@ import 'package:work_order_app/src/core/presentation/layout/content_page_types.d
 import 'package:work_order_app/src/features/notification/presentation/widgets/notification_center_view.dart';
 import 'package:work_order_app/src/features/auth/presentation/profile_page.dart';
 import 'package:work_order_app/src/features/customer/customer_module.dart';
-import 'package:work_order_app/src/features/workorders/presentation/work_order_list_page.dart';
+import 'package:work_order_app/src/features/workorders/work_order_module.dart';
 import 'package:work_order_app/src/features/tasks/tasks_module.dart';
 import 'package:work_order_app/src/features/sales_orders/sales_order_module.dart';
 import 'package:work_order_app/src/features/audit_logs/audit_logs_module.dart';

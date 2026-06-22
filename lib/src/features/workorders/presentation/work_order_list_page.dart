@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
@@ -12,13 +11,13 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedbac
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart'
     show StatusHintChip, StatusChipVariant;
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
 import 'package:work_order_app/src/core/presentation/widgets/shimmer_loading.dart';
+import 'package:work_order_app/src/core/utils/debounce_controller.dart';
 import 'package:work_order_app/src/core/utils/file_download.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
@@ -26,36 +25,9 @@ import 'package:work_order_app/src/features/customer/domain/customer.dart';
 import 'package:work_order_app/src/features/processes/domain/process.dart';
 import 'package:work_order_app/src/features/products/domain/product.dart';
 import 'package:work_order_app/src/features/workorders/application/work_order_view_model.dart';
-import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
-import 'package:work_order_app/src/features/workorders/data/work_order_list_support_service.dart';
-import 'package:work_order_app/src/features/workorders/data/work_order_repository_impl.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_delete_confirm_dialog.dart';
-import 'package:work_order_app/src/core/utils/debounce_controller.dart';
-
-/// 施工单列表入口。
-class WorkOrderListEntry extends StatelessWidget {
-  const WorkOrderListEntry({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FeatureEntry<
-      WorkOrderApiService,
-      WorkOrderRepository,
-      WorkOrderViewModel
-    >(
-      createService: (context) =>
-          WorkOrderApiService(context.read<ApiClient>()),
-      createRepository: (context) =>
-          WorkOrderRepositoryImpl(context.read<WorkOrderApiService>()),
-      createViewModel: (context) =>
-          WorkOrderViewModel(context.read<WorkOrderRepository>()),
-      initialize: (viewModel) => viewModel.initialize(),
-      child: const WorkOrderListPage(),
-    );
-  }
-}
 
 /// 施工单列表页视图，只负责渲染。
 class WorkOrderListPage extends StatelessWidget {
@@ -105,14 +77,12 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
   List<ProductOption> _products = [];
   List<Process> _processes = [];
   bool _exporting = false;
-  WorkOrderListSupportService? _supportService;
   bool _optionsRequested = false;
   String? _routeSignature;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _supportService ??= WorkOrderListSupportService(context.read<ApiClient>());
     if (!_optionsRequested) {
       _optionsRequested = true;
       _loadFilterOptions();
@@ -210,7 +180,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
         if ((viewModel.processFilterId ?? 0) > 0)
           'process': viewModel.processFilterId,
       };
-      final result = await _supportService!.export(params);
+      final result = await context.read<WorkOrderRepository>().exportWorkOrders(params);
       final savedPath = await saveBytes(
         result.bytes,
         result.filename,
@@ -232,7 +202,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView>
   Future<void> _loadFilterOptions() async {
     setState(() => _loadingOptions = true);
     try {
-      final options = await _supportService!.loadFilterOptions();
+      final options = await context.read<WorkOrderRepository>().loadFilterOptions();
       if (!mounted) return;
       setState(() {
         _customers = options.customers;

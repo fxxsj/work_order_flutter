@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/api_exception.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/detail_section_card.dart';
@@ -11,50 +10,23 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_sc
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_mode_toggle.dart';
-
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/utils/audit_log_navigation.dart';
 import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/presentation/widgets/shimmer_loading.dart';
-import 'package:work_order_app/src/features/tasks/data/task_list_support_service.dart';
+import 'package:work_order_app/src/features/purchase_orders/domain/purchase_order_repository.dart';
 import 'package:work_order_app/src/features/tasks/domain/task.dart';
+import 'package:work_order_app/src/features/tasks/domain/task_repository.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 import 'package:work_order_app/src/features/tasks/presentation/widgets/task_action_dialogs.dart';
 import 'package:work_order_app/src/features/workorders/application/work_order_view_model.dart';
-import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
-import 'package:work_order_app/src/features/workorders/data/work_order_flow_api_service.dart';
-import 'package:work_order_app/src/features/workorders/data/work_order_repository_impl.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
+import 'package:work_order_app/src/features/workorders/domain/work_order_flow_repository.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_dialogs.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_page_views.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_print_preview_dialog.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_sync_preview_dialog.dart';
-import 'package:work_order_app/src/features/purchase_orders/data/purchase_order_api_service.dart';
-
-class WorkOrderDetailEntry extends StatelessWidget {
-  const WorkOrderDetailEntry({super.key, required this.workOrderId});
-
-  final int workOrderId;
-
-  @override
-  Widget build(BuildContext context) {
-    return FeatureEntry<
-      WorkOrderApiService,
-      WorkOrderRepository,
-      WorkOrderViewModel
-    >(
-      createService: (context) =>
-          WorkOrderApiService(context.read<ApiClient>()),
-      createRepository: (context) =>
-          WorkOrderRepositoryImpl(context.read<WorkOrderApiService>()),
-      createViewModel: (context) =>
-          WorkOrderViewModel(context.read<WorkOrderRepository>()),
-      child: WorkOrderDetailPage(workOrderId: workOrderId),
-    );
-  }
-}
 
 class WorkOrderDetailPage extends StatefulWidget {
   const WorkOrderDetailPage({super.key, required this.workOrderId});
@@ -86,7 +58,6 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   bool _initialized = false;
   bool _actionLoading = false;
   bool _syncNeeded = false;
-  TaskListSupportService? _taskSupportService;
   List<String> _completenessErrors = [];
 
   String? _statusSelection;
@@ -95,7 +66,6 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _taskSupportService ??= TaskListSupportService(context.read<ApiClient>());
     if (_initialized) return;
     _initialized = true;
     _loadDetail();
@@ -139,10 +109,12 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
       return false;
     }
     try {
-      final result = await context.read<WorkOrderApiService>().checkSyncNeeded(
-        detail.id,
-        processIds: detail.processes.map((item) => item.id).toList(),
-      );
+      final result = await context
+          .read<WorkOrderRepository>()
+          .checkSyncNeeded(
+            detail.id,
+            processIds: detail.processes.map((item) => item.id).toList(),
+          );
       return result['sync_needed'] == true;
     } catch (_) {
       return false;
@@ -151,8 +123,9 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
 
   Future<List<String>> _loadCompletenessErrors() async {
     try {
-      final flowApi = WorkOrderFlowApiService(context.read<ApiClient>());
-      final result = await flowApi.checkCompleteness(widget.workOrderId);
+      final result = await context
+          .read<WorkOrderFlowRepository>()
+          .checkCompletion(widget.workOrderId);
       final errors = result['errors'];
       if (errors is List) {
         return errors.map((e) => e.toString()).toList();
@@ -432,9 +405,9 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
       context,
       task: task,
       departments: departments,
-      loadOperators: (value) => _taskSupportService!.loadOperators(value),
+      loadOperators: (value) => context.read<TaskRepository>().loadOperators(value),
       onSubmit: (operatorId, notes) async {
-        await _taskSupportService!.assignTask(
+        await context.read<TaskRepository>().assignTask(
           task.id,
           operatorId: operatorId,
           notes: notes,
@@ -449,9 +422,9 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
     int processId,
   ) async {
     try {
-      final departments = await _taskSupportService!.loadProcessDepartments(
-        processId,
-      );
+      final departments = await context
+          .read<TaskRepository>()
+          .loadProcessDepartments(processId);
       if (departments.isEmpty) {
         ToastUtil.showError('当前工序未配置负责部门');
         return null;
@@ -468,7 +441,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
       context,
       task: task,
       onSubmit: (payload) async {
-        await _taskSupportService!.updateQuantity(task.id, payload);
+        await context.read<TaskRepository>().updateQuantity(task.id, payload);
         ToastUtil.showSuccess('已更新任务进度');
         await _loadDetail();
       },
@@ -480,7 +453,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
       context,
       task: task,
       onSubmit: (payload) async {
-        await _taskSupportService!.completeTask(task.id, payload);
+        await context.read<TaskRepository>().completeTask(task.id, payload);
         ToastUtil.showSuccess('任务已完成');
         await _loadDetail();
       },
@@ -490,8 +463,9 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   Future<void> _handleCreatePurchaseOrder() async {
     if (_detail == null) return;
     try {
-      final api = context.read<PurchaseOrderApiService>();
-      final result = await api.createFromWorkOrder(_detail!.id);
+      final result = await context
+          .read<PurchaseOrderRepository>()
+          .createFromWorkOrder(_detail!.id);
       final orders = result['purchase_orders'];
       final createdCount = orders is List ? orders.length : 0;
       final itemCount = result['created_item_count'] ?? 0;
@@ -530,7 +504,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
       emptyText: _emptyText,
       loadPreview: (selectedIds) async {
         try {
-          final api = context.read<WorkOrderApiService>();
+          final api = context.read<WorkOrderRepository>();
           final result = await api.syncTasksPreview(
             detail.id,
             processIds: selectedIds,
@@ -554,7 +528,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
       },
       executeSync: (selectedIds) async {
         try {
-          final api = context.read<WorkOrderApiService>();
+          final api = context.read<WorkOrderRepository>();
           final result = await api.syncTasksExecute(
             detail.id,
             processIds: selectedIds,

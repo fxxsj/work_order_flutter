@@ -13,6 +13,9 @@ abstract class CustomerRepository {
     String? ordering,
   });
 
+  /// 获取单个客户。
+  Future<Customer?> getCustomer(int id);
+
   /// 创建客户。
   Future<Customer> createCustomer(Customer customer);
 
