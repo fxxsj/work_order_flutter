@@ -1,0 +1,29 @@
+import 'package:work_order_app/src/core/data/generic_api_service.dart';
+import 'package:work_order_app/src/core/models/generic_record.dart';
+import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/features/finance_costs/domain/cost_item_repository.dart';
+
+class CostItemRepositoryImpl implements CostItemRepository {
+  CostItemRepositoryImpl(ApiClient client)
+      : _apiService = GenericApiService(
+          client,
+          resourcePath: '/cost-items/',
+        );
+
+  final GenericApiService _apiService;
+
+  @override
+  Future<GenericRecord> createRecord(Map<String, dynamic> payload) {
+    return _apiService.create(payload);
+  }
+
+  @override
+  Future<GenericRecord> updateRecord(int id, Map<String, dynamic> payload) {
+    return _apiService.update(id, payload);
+  }
+
+  @override
+  Future<void> deleteRecord(int id) {
+    return _apiService.delete(id);
+  }
+}

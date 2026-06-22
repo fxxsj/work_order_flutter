@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:work_order_app/src/core/data/generic_repository.dart';
 import 'package:work_order_app/src/core/models/generic_record.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
@@ -13,6 +12,7 @@ import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
 import 'package:work_order_app/src/features/finance_costs/domain/cost_center_form_options.dart';
 import 'package:work_order_app/src/features/finance_costs/domain/cost_center_options_repository.dart';
+import 'package:work_order_app/src/features/finance_costs/domain/cost_center_repository.dart';
 
 class CostCenterListPage extends StatelessWidget {
   const CostCenterListPage({super.key});
@@ -240,7 +240,7 @@ class CostCenterListPage extends StatelessWidget {
     GenericRecord? record,
   }) async {
     final formKey = GlobalKey<FormState>();
-    final repository = context.read<GenericRepository>();
+    final repository = context.read<CostCenterRepository>();
     final codeController = TextEditingController(
       text: record?.getString('code') ?? '',
     );
@@ -399,7 +399,7 @@ class CostCenterListPage extends StatelessWidget {
     BuildContext context,
     GenericRecord record,
   ) async {
-    final repository = context.read<GenericRepository>();
+    final repository = context.read<CostCenterRepository>();
     try {
       await repository.deleteRecord(record.id);
       if (!context.mounted) return;
