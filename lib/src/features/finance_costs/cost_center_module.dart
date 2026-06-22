@@ -1,7 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/data/generic_api_service.dart';
+import 'package:work_order_app/src/core/data/generic_repository_impl.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
 import 'package:work_order_app/src/features/auth/data/auth_api.dart';
 import 'package:work_order_app/src/features/finance_costs/data/cost_center_options_repository_impl.dart';
 import 'package:work_order_app/src/features/finance_costs/data/cost_center_repository_impl.dart';
@@ -16,6 +18,17 @@ class CostCenterListEntry extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider<GenericListViewModel>(
+          create: (context) => GenericListViewModel(
+            GenericRepositoryImpl(
+              GenericApiService(
+                context.read<ApiClient>(),
+                resourcePath: '/cost-centers/',
+              ),
+            ),
+            enableSummary: false,
+          )..initialize(),
+        ),
         Provider<CostCenterRepository>(
           create: (context) => CostCenterRepositoryImpl(context.read<ApiClient>()),
         ),

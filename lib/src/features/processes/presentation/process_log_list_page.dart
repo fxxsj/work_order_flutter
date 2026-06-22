@@ -6,8 +6,8 @@ import 'package:work_order_app/src/core/presentation/layout/widgets/generic_reso
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
 
-class ProcessLogListEntry extends StatelessWidget {
-  const ProcessLogListEntry({super.key});
+class ProcessLogListPage extends StatelessWidget {
+  const ProcessLogListPage({super.key});
 
   static const String _listRoute = '/process-logs';
 

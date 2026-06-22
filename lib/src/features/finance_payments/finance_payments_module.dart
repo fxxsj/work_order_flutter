@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/data/generic_api_service.dart';
+import 'package:work_order_app/src/core/data/generic_repository_impl.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
 import 'package:work_order_app/src/features/finance_payments/application/payment_view_model.dart';
 import 'package:work_order_app/src/features/finance_payments/data/payment_api_service.dart';
 import 'package:work_order_app/src/features/finance_payments/data/payment_plan_repository_impl.dart';
@@ -45,8 +48,23 @@ class PaymentPlanListEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Provider<PaymentPlanRepository>(
-      create: (context) => PaymentPlanRepositoryImpl(context.read<ApiClient>()),
+    return MultiProvider(
+      providers: [
+        Provider<PaymentPlanRepository>(
+          create: (context) => PaymentPlanRepositoryImpl(context.read<ApiClient>()),
+        ),
+        ChangeNotifierProvider<GenericListViewModel>(
+          create: (context) => GenericListViewModel(
+            GenericRepositoryImpl(
+              GenericApiService(
+                context.read<ApiClient>(),
+                resourcePath: '/payment-plans/',
+              ),
+            ),
+            enableSummary: false,
+          )..initialize(),
+        ),
+      ],
       child: const PaymentPlanListPage(),
     );
   }

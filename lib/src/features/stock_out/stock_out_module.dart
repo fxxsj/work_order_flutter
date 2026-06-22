@@ -1,6 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
+import 'package:work_order_app/src/core/data/generic_api_service.dart';
+import 'package:work_order_app/src/core/data/generic_repository_impl.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
+import 'package:work_order_app/src/core/viewmodels/generic_list_view_model.dart';
 import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_api_service.dart';
 import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_repository_impl.dart';
 import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_support_service.dart';
@@ -27,6 +30,17 @@ class StockOutListEntry extends StatelessWidget {
             DeliveryOrderApiService(context.read<ApiClient>()),
             DeliveryOrderSupportService(context.read<ApiClient>()),
           ),
+        ),
+        ChangeNotifierProvider<GenericListViewModel>(
+          create: (context) => GenericListViewModel(
+            GenericRepositoryImpl(
+              GenericApiService(
+                context.read<ApiClient>(),
+                resourcePath: '/stock-outs/',
+              ),
+            ),
+            enableSummary: false,
+          )..initialize(),
         ),
       ],
       child: const StockOutListPage(),

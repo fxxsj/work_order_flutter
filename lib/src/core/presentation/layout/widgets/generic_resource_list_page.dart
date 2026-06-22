@@ -3,13 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
-import 'package:work_order_app/src/core/data/generic_api_service.dart';
-import 'package:work_order_app/src/core/data/generic_repository.dart';
-import 'package:work_order_app/src/core/data/generic_repository_impl.dart';
 import 'package:work_order_app/src/core/models/generic_record.dart';
-import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
-import 'package:work_order_app/src/core/presentation/providers/feature_entry.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
@@ -121,24 +116,7 @@ class GenericResourceListEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FeatureEntry<
-      GenericApiService,
-      GenericRepository,
-      GenericListViewModel
-    >(
-      createService: (context) => GenericApiService(
-        context.read<ApiClient>(),
-        resourcePath: config.endpoint,
-      ),
-      createRepository: (context) =>
-          GenericRepositoryImpl(context.read<GenericApiService>()),
-      createViewModel: (context) => GenericListViewModel(
-        context.read<GenericRepository>(),
-        enableSummary: config.enableSummary,
-      ),
-      initialize: (viewModel) => viewModel.initialize(),
-      child: GenericResourceListPage(config: config),
-    );
+    return GenericResourceListPage(config: config);
   }
 }
 
