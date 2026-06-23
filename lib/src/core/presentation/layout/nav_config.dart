@@ -125,6 +125,8 @@ class _NavAccessContext {
   }
 }
 
+enum MenuMode { production, full }
+
 // Keep this in sync with leaf routes. New menu items should be added here
 // to preserve branch order across sidebar reorderings.
 const List<String> branchOrder = [
@@ -484,9 +486,60 @@ const List<NavItem> navItems = [
   ),
 ];
 
-List<NavItem> sidebarNavItems({Map<String, dynamic>? currentUser}) {
+/// 生产版（MVP）默认导航：只保留高频主流程入口。
+const List<NavItem> _productionNavItems = [
+  NavItem(
+    id: 'dashboard',
+    label: '工作台',
+    icon: Icons.dashboard_outlined,
+    path: '/dashboard',
+  ),
+  NavItem(
+    id: 'sales_orders',
+    label: '客户订单',
+    icon: Icons.point_of_sale_outlined,
+    path: '/sales-orders',
+    requiredPermissions: ['workorder.view_salesorder'],
+  ),
+  NavItem(
+    id: 'workorders',
+    label: '施工单',
+    icon: Icons.description_outlined,
+    path: '/workorders',
+    requiredPermissions: ['workorder.view_workorder'],
+  ),
+  NavItem(
+    id: 'tasks_list',
+    label: '任务列表',
+    icon: Icons.view_list_outlined,
+    path: '/tasks',
+    requiredPermissions: [
+      'workorder.view_workordertask',
+      'workorder.view_workorder',
+    ],
+  ),
+  NavItem(
+    id: 'products',
+    label: '产品管理',
+    icon: Icons.inventory_2_outlined,
+    path: '/products',
+    requiredPermissions: ['workorder.view_product'],
+  ),
+  NavItem(
+    id: 'customers',
+    label: '客户管理',
+    icon: Icons.people_outline,
+    path: '/customers',
+    requiredPermissions: ['workorder.view_customer'],
+  ),
+];
+
+List<NavItem> sidebarNavItems({
+  Map<String, dynamic>? currentUser,
+  MenuMode menuMode = MenuMode.production,
+}) {
   return _filterNavItems(
-    navItems,
+    menuMode == MenuMode.production ? _productionNavItems : navItems,
     access: _NavAccessContext.fromUser(currentUser),
     includeHidden: false,
   );

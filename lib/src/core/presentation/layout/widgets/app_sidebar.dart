@@ -14,6 +14,8 @@ class AppSidebarDrawer extends StatelessWidget {
     required this.currentId,
     required this.onToggleExpand,
     required this.onSelectId,
+    required this.onToggleMenuMode,
+    required this.isFullMode,
     required this.primary,
     required this.sidebarText,
     required this.badgeTextForItem,
@@ -26,6 +28,8 @@ class AppSidebarDrawer extends StatelessWidget {
   final String currentId;
   final void Function(String id, bool expanded) onToggleExpand;
   final ValueChanged<String> onSelectId;
+  final VoidCallback onToggleMenuMode;
+  final bool isFullMode;
   final Color primary;
   final Color sidebarText;
   final String? Function(NavItem) badgeTextForItem;
@@ -111,6 +115,19 @@ class AppSidebarDrawer extends StatelessWidget {
             child: ListView(padding: EdgeInsets.zero, children: tiles),
           ),
         ),
+        const Divider(height: 1),
+        ListTile(
+          leading: Icon(
+            isFullMode ? Icons.unfold_less : Icons.unfold_more,
+            color: sidebarText,
+            size: 20,
+          ),
+          title: Text(
+            isFullMode ? '精简菜单' : '完整菜单',
+            style: theme.textTheme.bodySmall?.copyWith(color: sidebarText),
+          ),
+          onTap: onToggleMenuMode,
+        ),
       ],
     );
   }
@@ -125,6 +142,8 @@ class AppSidebarRail extends StatelessWidget {
     required this.currentId,
     required this.onToggleExpand,
     required this.onSelectId,
+    required this.onToggleMenuMode,
+    required this.isFullMode,
     required this.primary,
     required this.sidebarText,
     required this.railExtended,
@@ -139,6 +158,8 @@ class AppSidebarRail extends StatelessWidget {
   final String currentId;
   final void Function(String id, bool expanded) onToggleExpand;
   final ValueChanged<String> onSelectId;
+  final VoidCallback onToggleMenuMode;
+  final bool isFullMode;
   final Color primary;
   final Color sidebarText;
   final bool railExtended;
@@ -178,6 +199,20 @@ class AppSidebarRail extends StatelessWidget {
               ),
               children: _buildRailItems(context),
             ),
+          ),
+        ),
+        Divider(height: 1, color: sidebarText.withValues(alpha: OpacityTokens.subtle)),
+        Padding(
+          padding: EdgeInsets.all(LayoutTokens.cardPaddingSm),
+          child: _buildRailTile(
+            context,
+            NavItem(
+              id: 'menu_mode_toggle',
+              label: isFullMode ? '精简菜单' : '完整菜单',
+              icon: isFullMode ? Icons.unfold_less : Icons.unfold_more,
+            ),
+            isSelected: false,
+            onTap: onToggleMenuMode,
           ),
         ),
       ],

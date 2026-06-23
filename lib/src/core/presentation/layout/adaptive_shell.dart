@@ -31,6 +31,7 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   final ScrollController _railScrollController = ScrollController();
   bool _sidebarCollapsed = false;
+  MenuMode _menuMode = MenuMode.production;
   final Set<String> _expandedIds = <String>{};
   late final Map<String, String> _pathToId;
   late final Map<String, int> _idToBranchIndex;
@@ -47,6 +48,8 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     if (savedExpanded is List) {
       _expandedIds.addAll(savedExpanded.map((e) => e.toString()));
     }
+    final savedMenuMode = storage.read(Constant.KEY_MENU_MODE);
+    _menuMode = savedMenuMode == 'full' ? MenuMode.full : MenuMode.production;
   }
 
   @override
@@ -77,7 +80,11 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     );
     final sidebar = colors.sidebar;
     final sidebarText = colors.sidebarText;
-    final sidebarItems = sidebarNavItems(currentUser: currentUser);
+    final sidebarItems = sidebarNavItems(
+      currentUser: currentUser,
+      menuMode: _menuMode,
+    );
+    final isFullMode = _menuMode == MenuMode.full;
     final borderColor = colors.borderColor;
     final headerBorderColor = Colors.transparent;
     final appBarHeight = isXs ? 52.0 : 54.0;
@@ -133,6 +140,8 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
                   currentId: currentId,
                   onToggleExpand: _setExpanded,
                   onSelectId: _handleSelectId,
+                  onToggleMenuMode: _toggleMenuMode,
+                  isFullMode: isFullMode,
                   primary: primary,
                   sidebarText: sidebarText,
                   badgeTextForItem: _badgeTextForItem,
@@ -165,6 +174,8 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
                 currentId: currentId,
                 onToggleExpand: _setExpanded,
                 onSelectId: _handleSelectId,
+                onToggleMenuMode: _toggleMenuMode,
+                isFullMode: isFullMode,
                 primary: primary,
                 sidebarText: sidebarText,
                 railExtended: railExtended,
@@ -245,6 +256,17 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     context.read<AppStorage>().write(
       Constant.KEY_SIDEBAR_EXPANDED,
       _expandedIds.toList(),
+    );
+  }
+
+  void _toggleMenuMode() {
+    setState(() {
+      _menuMode =
+          _menuMode == MenuMode.production ? MenuMode.full : MenuMode.production;
+    });
+    context.read<AppStorage>().write(
+      Constant.KEY_MENU_MODE,
+      _menuMode == MenuMode.full ? 'full' : 'production',
     );
   }
 
