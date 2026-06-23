@@ -60,6 +60,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
   late final TextEditingController _emailController;
   late final TextEditingController _addressController;
   late final TextEditingController _notesController;
+  late final TextEditingController _defaultTaxRateController;
 
   int? _salespersonId;
   bool _submitting = false;
@@ -77,6 +78,9 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
     _emailController = TextEditingController(text: customer?.email ?? '');
     _addressController = TextEditingController(text: customer?.address ?? '');
     _notesController = TextEditingController(text: customer?.notes ?? '');
+    _defaultTaxRateController = TextEditingController(
+      text: (customer?.defaultTaxRate ?? 13.0).toStringAsFixed(2),
+    );
     _salespersonId = customer?.salespersonId;
 
     // 监听名称变化，清除错误提示
@@ -97,6 +101,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
     _emailController.dispose();
     _addressController.dispose();
     _notesController.dispose();
+    _defaultTaxRateController.dispose();
     super.dispose();
   }
 
@@ -150,6 +155,8 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
         email: _emailController.text.trim(),
         address: _addressController.text.trim(),
         notes: _notesController.text.trim(),
+        defaultTaxRate: double.tryParse(_defaultTaxRateController.text.trim()) ??
+            13.0,
         salespersonId: _salespersonId,
         salespersonName: salespersonName,
         createdAt: widget.customer?.createdAt,
@@ -304,6 +311,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
             emailController: _emailController,
             addressController: _addressController,
             notesController: _notesController,
+            defaultTaxRateController: _defaultTaxRateController,
             readonlyField: _readonlyField,
             salespersonStateField: _salespersonStateField,
             onSalespersonChanged: (value) {
@@ -327,6 +335,7 @@ class _CustomerFormBody extends StatelessWidget {
     required this.emailController,
     required this.addressController,
     required this.notesController,
+    required this.defaultTaxRateController,
     required this.readonlyField,
     required this.salespersonStateField,
     required this.onSalespersonChanged,
@@ -341,6 +350,7 @@ class _CustomerFormBody extends StatelessWidget {
   final TextEditingController emailController;
   final TextEditingController addressController;
   final TextEditingController notesController;
+  final TextEditingController defaultTaxRateController;
   final Widget Function(ThemeData theme, String label, String value)
   readonlyField;
   final Widget Function(
@@ -389,6 +399,21 @@ class _CustomerFormBody extends StatelessWidget {
             ).build(context),
             if (showSalespersonState)
               salespersonStateField(context, viewModel, theme),
+            CrudFieldConfig.number(
+              label: '默认税率 (%)',
+              controller: defaultTaxRateController,
+              decimal: true,
+              validator: FormValidators.compose<String>([
+                FormValidators.required('请输入默认税率'),
+                (value) {
+                  final rate = double.tryParse(value?.trim() ?? '') ?? -1;
+                  if (rate < 0 || rate > 100) {
+                    return '税率必须在 0-100 之间';
+                  }
+                  return null;
+                },
+              ]),
+            ).build(context),
           ],
         ),
       ),

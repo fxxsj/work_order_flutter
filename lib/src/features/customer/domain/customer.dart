@@ -18,6 +18,7 @@ abstract class Customer with _$Customer {
     @JsonKey(fromJson: _stringOrNullFromJson) String? email,
     @JsonKey(fromJson: _stringOrNullFromJson) String? address,
     @JsonKey(fromJson: _stringOrNullFromJson) String? notes,
+    @JsonKey(fromJson: _doubleOrNullFromJson) double? defaultTaxRate,
     @JsonKey(fromJson: _intOrNullFromJson) int? salespersonId,
     @JsonKey(fromJson: _stringOrNullFromJson) String? salespersonName,
     @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson)
@@ -42,6 +43,12 @@ String? _stringOrNullFromJson(Object? value) => toStringOrNull(value);
 DateTime? _dateTimeOrNullFromJson(Object? value) => toDateTime(value);
 
 String? _dateTimeOrNullToJson(DateTime? value) => value?.toIso8601String();
+
+double? _doubleOrNullFromJson(Object? value) {
+  if (value == null) return null;
+  if (value is double) return value;
+  return double.tryParse(value.toString());
+}
 
 /// 客户列表分页结果。
 class CustomerPage {

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Customer {
 
-@JsonKey(fromJson: _intFromJson) int get id;@JsonKey(fromJson: _stringFromJson) String get name;@JsonKey(fromJson: _stringOrNullFromJson) String? get contactPerson;@JsonKey(fromJson: _stringOrNullFromJson) String? get phone;@JsonKey(fromJson: _stringOrNullFromJson) String? get email;@JsonKey(fromJson: _stringOrNullFromJson) String? get address;@JsonKey(fromJson: _stringOrNullFromJson) String? get notes;@JsonKey(fromJson: _intOrNullFromJson) int? get salespersonId;@JsonKey(fromJson: _stringOrNullFromJson) String? get salespersonName;@JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) DateTime? get createdAt;@JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) DateTime? get updatedAt;
+@JsonKey(fromJson: _intFromJson) int get id;@JsonKey(fromJson: _stringFromJson) String get name;@JsonKey(fromJson: _stringOrNullFromJson) String? get contactPerson;@JsonKey(fromJson: _stringOrNullFromJson) String? get phone;@JsonKey(fromJson: _stringOrNullFromJson) String? get email;@JsonKey(fromJson: _stringOrNullFromJson) String? get address;@JsonKey(fromJson: _stringOrNullFromJson) String? get notes;@JsonKey(fromJson: _doubleOrNullFromJson) double? get defaultTaxRate;@JsonKey(fromJson: _intOrNullFromJson) int? get salespersonId;@JsonKey(fromJson: _stringOrNullFromJson) String? get salespersonName;@JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) DateTime? get createdAt;@JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) DateTime? get updatedAt;
 /// Create a copy of Customer
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $CustomerCopyWith<Customer> get copyWith => _$CustomerCopyWithImpl<Customer>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Customer&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.contactPerson, contactPerson) || other.contactPerson == contactPerson)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.email, email) || other.email == email)&&(identical(other.address, address) || other.address == address)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.salespersonId, salespersonId) || other.salespersonId == salespersonId)&&(identical(other.salespersonName, salespersonName) || other.salespersonName == salespersonName)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Customer&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.contactPerson, contactPerson) || other.contactPerson == contactPerson)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.email, email) || other.email == email)&&(identical(other.address, address) || other.address == address)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.defaultTaxRate, defaultTaxRate) || other.defaultTaxRate == defaultTaxRate)&&(identical(other.salespersonId, salespersonId) || other.salespersonId == salespersonId)&&(identical(other.salespersonName, salespersonName) || other.salespersonName == salespersonName)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,contactPerson,phone,email,address,notes,salespersonId,salespersonName,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,name,contactPerson,phone,email,address,notes,defaultTaxRate,salespersonId,salespersonName,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'Customer(id: $id, name: $name, contactPerson: $contactPerson, phone: $phone, email: $email, address: $address, notes: $notes, salespersonId: $salespersonId, salespersonName: $salespersonName, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'Customer(id: $id, name: $name, contactPerson: $contactPerson, phone: $phone, email: $email, address: $address, notes: $notes, defaultTaxRate: $defaultTaxRate, salespersonId: $salespersonId, salespersonName: $salespersonName, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $CustomerCopyWith<$Res>  {
   factory $CustomerCopyWith(Customer value, $Res Function(Customer) _then) = _$CustomerCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(fromJson: _intFromJson) int id,@JsonKey(fromJson: _stringFromJson) String name,@JsonKey(fromJson: _stringOrNullFromJson) String? contactPerson,@JsonKey(fromJson: _stringOrNullFromJson) String? phone,@JsonKey(fromJson: _stringOrNullFromJson) String? email,@JsonKey(fromJson: _stringOrNullFromJson) String? address,@JsonKey(fromJson: _stringOrNullFromJson) String? notes,@JsonKey(fromJson: _intOrNullFromJson) int? salespersonId,@JsonKey(fromJson: _stringOrNullFromJson) String? salespersonName,@JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) DateTime? createdAt,@JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) DateTime? updatedAt
+@JsonKey(fromJson: _intFromJson) int id,@JsonKey(fromJson: _stringFromJson) String name,@JsonKey(fromJson: _stringOrNullFromJson) String? contactPerson,@JsonKey(fromJson: _stringOrNullFromJson) String? phone,@JsonKey(fromJson: _stringOrNullFromJson) String? email,@JsonKey(fromJson: _stringOrNullFromJson) String? address,@JsonKey(fromJson: _stringOrNullFromJson) String? notes,@JsonKey(fromJson: _doubleOrNullFromJson) double? defaultTaxRate,@JsonKey(fromJson: _intOrNullFromJson) int? salespersonId,@JsonKey(fromJson: _stringOrNullFromJson) String? salespersonName,@JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) DateTime? createdAt,@JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) DateTime? updatedAt
 });
 
 
@@ -65,7 +65,7 @@ class _$CustomerCopyWithImpl<$Res>
 
 /// Create a copy of Customer
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? contactPerson = freezed,Object? phone = freezed,Object? email = freezed,Object? address = freezed,Object? notes = freezed,Object? salespersonId = freezed,Object? salespersonName = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? contactPerson = freezed,Object? phone = freezed,Object? email = freezed,Object? address = freezed,Object? notes = freezed,Object? defaultTaxRate = freezed,Object? salespersonId = freezed,Object? salespersonName = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -74,7 +74,8 @@ as String?,phone: freezed == phone ? _self.phone : phone // ignore: cast_nullabl
 as String?,email: freezed == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String?,address: freezed == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
 as String?,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
-as String?,salespersonId: freezed == salespersonId ? _self.salespersonId : salespersonId // ignore: cast_nullable_to_non_nullable
+as String?,defaultTaxRate: freezed == defaultTaxRate ? _self.defaultTaxRate : defaultTaxRate // ignore: cast_nullable_to_non_nullable
+as double?,salespersonId: freezed == salespersonId ? _self.salespersonId : salespersonId // ignore: cast_nullable_to_non_nullable
 as int?,salespersonName: freezed == salespersonName ? _self.salespersonName : salespersonName // ignore: cast_nullable_to_non_nullable
 as String?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
@@ -163,10 +164,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(fromJson: _stringFromJson)  String name, @JsonKey(fromJson: _stringOrNullFromJson)  String? contactPerson, @JsonKey(fromJson: _stringOrNullFromJson)  String? phone, @JsonKey(fromJson: _stringOrNullFromJson)  String? email, @JsonKey(fromJson: _stringOrNullFromJson)  String? address, @JsonKey(fromJson: _stringOrNullFromJson)  String? notes, @JsonKey(fromJson: _intOrNullFromJson)  int? salespersonId, @JsonKey(fromJson: _stringOrNullFromJson)  String? salespersonName, @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson)  DateTime? createdAt, @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson)  DateTime? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(fromJson: _stringFromJson)  String name, @JsonKey(fromJson: _stringOrNullFromJson)  String? contactPerson, @JsonKey(fromJson: _stringOrNullFromJson)  String? phone, @JsonKey(fromJson: _stringOrNullFromJson)  String? email, @JsonKey(fromJson: _stringOrNullFromJson)  String? address, @JsonKey(fromJson: _stringOrNullFromJson)  String? notes, @JsonKey(fromJson: _doubleOrNullFromJson)  double? defaultTaxRate, @JsonKey(fromJson: _intOrNullFromJson)  int? salespersonId, @JsonKey(fromJson: _stringOrNullFromJson)  String? salespersonName, @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson)  DateTime? createdAt, @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson)  DateTime? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Customer() when $default != null:
-return $default(_that.id,_that.name,_that.contactPerson,_that.phone,_that.email,_that.address,_that.notes,_that.salespersonId,_that.salespersonName,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.name,_that.contactPerson,_that.phone,_that.email,_that.address,_that.notes,_that.defaultTaxRate,_that.salespersonId,_that.salespersonName,_that.createdAt,_that.updatedAt);case _:
   return orElse();
 
 }
@@ -184,10 +185,10 @@ return $default(_that.id,_that.name,_that.contactPerson,_that.phone,_that.email,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(fromJson: _stringFromJson)  String name, @JsonKey(fromJson: _stringOrNullFromJson)  String? contactPerson, @JsonKey(fromJson: _stringOrNullFromJson)  String? phone, @JsonKey(fromJson: _stringOrNullFromJson)  String? email, @JsonKey(fromJson: _stringOrNullFromJson)  String? address, @JsonKey(fromJson: _stringOrNullFromJson)  String? notes, @JsonKey(fromJson: _intOrNullFromJson)  int? salespersonId, @JsonKey(fromJson: _stringOrNullFromJson)  String? salespersonName, @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson)  DateTime? createdAt, @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson)  DateTime? updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(fromJson: _stringFromJson)  String name, @JsonKey(fromJson: _stringOrNullFromJson)  String? contactPerson, @JsonKey(fromJson: _stringOrNullFromJson)  String? phone, @JsonKey(fromJson: _stringOrNullFromJson)  String? email, @JsonKey(fromJson: _stringOrNullFromJson)  String? address, @JsonKey(fromJson: _stringOrNullFromJson)  String? notes, @JsonKey(fromJson: _doubleOrNullFromJson)  double? defaultTaxRate, @JsonKey(fromJson: _intOrNullFromJson)  int? salespersonId, @JsonKey(fromJson: _stringOrNullFromJson)  String? salespersonName, @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson)  DateTime? createdAt, @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson)  DateTime? updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _Customer():
-return $default(_that.id,_that.name,_that.contactPerson,_that.phone,_that.email,_that.address,_that.notes,_that.salespersonId,_that.salespersonName,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.name,_that.contactPerson,_that.phone,_that.email,_that.address,_that.notes,_that.defaultTaxRate,_that.salespersonId,_that.salespersonName,_that.createdAt,_that.updatedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -204,10 +205,10 @@ return $default(_that.id,_that.name,_that.contactPerson,_that.phone,_that.email,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(fromJson: _stringFromJson)  String name, @JsonKey(fromJson: _stringOrNullFromJson)  String? contactPerson, @JsonKey(fromJson: _stringOrNullFromJson)  String? phone, @JsonKey(fromJson: _stringOrNullFromJson)  String? email, @JsonKey(fromJson: _stringOrNullFromJson)  String? address, @JsonKey(fromJson: _stringOrNullFromJson)  String? notes, @JsonKey(fromJson: _intOrNullFromJson)  int? salespersonId, @JsonKey(fromJson: _stringOrNullFromJson)  String? salespersonName, @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson)  DateTime? createdAt, @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson)  DateTime? updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(fromJson: _stringFromJson)  String name, @JsonKey(fromJson: _stringOrNullFromJson)  String? contactPerson, @JsonKey(fromJson: _stringOrNullFromJson)  String? phone, @JsonKey(fromJson: _stringOrNullFromJson)  String? email, @JsonKey(fromJson: _stringOrNullFromJson)  String? address, @JsonKey(fromJson: _stringOrNullFromJson)  String? notes, @JsonKey(fromJson: _doubleOrNullFromJson)  double? defaultTaxRate, @JsonKey(fromJson: _intOrNullFromJson)  int? salespersonId, @JsonKey(fromJson: _stringOrNullFromJson)  String? salespersonName, @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson)  DateTime? createdAt, @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson)  DateTime? updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _Customer() when $default != null:
-return $default(_that.id,_that.name,_that.contactPerson,_that.phone,_that.email,_that.address,_that.notes,_that.salespersonId,_that.salespersonName,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.name,_that.contactPerson,_that.phone,_that.email,_that.address,_that.notes,_that.defaultTaxRate,_that.salespersonId,_that.salespersonName,_that.createdAt,_that.updatedAt);case _:
   return null;
 
 }
@@ -219,7 +220,7 @@ return $default(_that.id,_that.name,_that.contactPerson,_that.phone,_that.email,
 @JsonSerializable()
 
 class _Customer implements Customer {
-  const _Customer({@JsonKey(fromJson: _intFromJson) required this.id, @JsonKey(fromJson: _stringFromJson) required this.name, @JsonKey(fromJson: _stringOrNullFromJson) this.contactPerson, @JsonKey(fromJson: _stringOrNullFromJson) this.phone, @JsonKey(fromJson: _stringOrNullFromJson) this.email, @JsonKey(fromJson: _stringOrNullFromJson) this.address, @JsonKey(fromJson: _stringOrNullFromJson) this.notes, @JsonKey(fromJson: _intOrNullFromJson) this.salespersonId, @JsonKey(fromJson: _stringOrNullFromJson) this.salespersonName, @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) this.createdAt, @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) this.updatedAt});
+  const _Customer({@JsonKey(fromJson: _intFromJson) required this.id, @JsonKey(fromJson: _stringFromJson) required this.name, @JsonKey(fromJson: _stringOrNullFromJson) this.contactPerson, @JsonKey(fromJson: _stringOrNullFromJson) this.phone, @JsonKey(fromJson: _stringOrNullFromJson) this.email, @JsonKey(fromJson: _stringOrNullFromJson) this.address, @JsonKey(fromJson: _stringOrNullFromJson) this.notes, @JsonKey(fromJson: _doubleOrNullFromJson) this.defaultTaxRate, @JsonKey(fromJson: _intOrNullFromJson) this.salespersonId, @JsonKey(fromJson: _stringOrNullFromJson) this.salespersonName, @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) this.createdAt, @JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) this.updatedAt});
   factory _Customer.fromJson(Map<String, dynamic> json) => _$CustomerFromJson(json);
 
 @override@JsonKey(fromJson: _intFromJson) final  int id;
@@ -229,6 +230,7 @@ class _Customer implements Customer {
 @override@JsonKey(fromJson: _stringOrNullFromJson) final  String? email;
 @override@JsonKey(fromJson: _stringOrNullFromJson) final  String? address;
 @override@JsonKey(fromJson: _stringOrNullFromJson) final  String? notes;
+@override@JsonKey(fromJson: _doubleOrNullFromJson) final  double? defaultTaxRate;
 @override@JsonKey(fromJson: _intOrNullFromJson) final  int? salespersonId;
 @override@JsonKey(fromJson: _stringOrNullFromJson) final  String? salespersonName;
 @override@JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) final  DateTime? createdAt;
@@ -247,16 +249,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Customer&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.contactPerson, contactPerson) || other.contactPerson == contactPerson)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.email, email) || other.email == email)&&(identical(other.address, address) || other.address == address)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.salespersonId, salespersonId) || other.salespersonId == salespersonId)&&(identical(other.salespersonName, salespersonName) || other.salespersonName == salespersonName)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Customer&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.contactPerson, contactPerson) || other.contactPerson == contactPerson)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.email, email) || other.email == email)&&(identical(other.address, address) || other.address == address)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.defaultTaxRate, defaultTaxRate) || other.defaultTaxRate == defaultTaxRate)&&(identical(other.salespersonId, salespersonId) || other.salespersonId == salespersonId)&&(identical(other.salespersonName, salespersonName) || other.salespersonName == salespersonName)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,contactPerson,phone,email,address,notes,salespersonId,salespersonName,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,name,contactPerson,phone,email,address,notes,defaultTaxRate,salespersonId,salespersonName,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'Customer(id: $id, name: $name, contactPerson: $contactPerson, phone: $phone, email: $email, address: $address, notes: $notes, salespersonId: $salespersonId, salespersonName: $salespersonName, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'Customer(id: $id, name: $name, contactPerson: $contactPerson, phone: $phone, email: $email, address: $address, notes: $notes, defaultTaxRate: $defaultTaxRate, salespersonId: $salespersonId, salespersonName: $salespersonName, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -267,7 +269,7 @@ abstract mixin class _$CustomerCopyWith<$Res> implements $CustomerCopyWith<$Res>
   factory _$CustomerCopyWith(_Customer value, $Res Function(_Customer) _then) = __$CustomerCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(fromJson: _intFromJson) int id,@JsonKey(fromJson: _stringFromJson) String name,@JsonKey(fromJson: _stringOrNullFromJson) String? contactPerson,@JsonKey(fromJson: _stringOrNullFromJson) String? phone,@JsonKey(fromJson: _stringOrNullFromJson) String? email,@JsonKey(fromJson: _stringOrNullFromJson) String? address,@JsonKey(fromJson: _stringOrNullFromJson) String? notes,@JsonKey(fromJson: _intOrNullFromJson) int? salespersonId,@JsonKey(fromJson: _stringOrNullFromJson) String? salespersonName,@JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) DateTime? createdAt,@JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) DateTime? updatedAt
+@JsonKey(fromJson: _intFromJson) int id,@JsonKey(fromJson: _stringFromJson) String name,@JsonKey(fromJson: _stringOrNullFromJson) String? contactPerson,@JsonKey(fromJson: _stringOrNullFromJson) String? phone,@JsonKey(fromJson: _stringOrNullFromJson) String? email,@JsonKey(fromJson: _stringOrNullFromJson) String? address,@JsonKey(fromJson: _stringOrNullFromJson) String? notes,@JsonKey(fromJson: _doubleOrNullFromJson) double? defaultTaxRate,@JsonKey(fromJson: _intOrNullFromJson) int? salespersonId,@JsonKey(fromJson: _stringOrNullFromJson) String? salespersonName,@JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) DateTime? createdAt,@JsonKey(fromJson: _dateTimeOrNullFromJson, toJson: _dateTimeOrNullToJson) DateTime? updatedAt
 });
 
 
@@ -284,7 +286,7 @@ class __$CustomerCopyWithImpl<$Res>
 
 /// Create a copy of Customer
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? contactPerson = freezed,Object? phone = freezed,Object? email = freezed,Object? address = freezed,Object? notes = freezed,Object? salespersonId = freezed,Object? salespersonName = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? contactPerson = freezed,Object? phone = freezed,Object? email = freezed,Object? address = freezed,Object? notes = freezed,Object? defaultTaxRate = freezed,Object? salespersonId = freezed,Object? salespersonName = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
   return _then(_Customer(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -293,7 +295,8 @@ as String?,phone: freezed == phone ? _self.phone : phone // ignore: cast_nullabl
 as String?,email: freezed == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String?,address: freezed == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
 as String?,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
-as String?,salespersonId: freezed == salespersonId ? _self.salespersonId : salespersonId // ignore: cast_nullable_to_non_nullable
+as String?,defaultTaxRate: freezed == defaultTaxRate ? _self.defaultTaxRate : defaultTaxRate // ignore: cast_nullable_to_non_nullable
+as double?,salespersonId: freezed == salespersonId ? _self.salespersonId : salespersonId // ignore: cast_nullable_to_non_nullable
 as int?,salespersonName: freezed == salespersonName ? _self.salespersonName : salespersonName // ignore: cast_nullable_to_non_nullable
 as String?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable

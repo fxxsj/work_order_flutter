@@ -80,6 +80,8 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
   bool _loadingOptions = false;
   bool _loadingDetail = false;
   bool _submitting = false;
+  bool _showAdvancedItemFields = false;
+  bool _showFinanceSection = false;
   SalesOrderDetail? _detail;
 
   @override
@@ -229,6 +231,21 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
       _autoFilledShippingAddress,
     )) {
       _shippingAddressController.text = shippingAddress;
+    }
+
+    // 同步客户默认税率到整单和未设置税率的明细行
+    final defaultTaxRate = customer.defaultTaxRate;
+    if (defaultTaxRate != null) {
+      _taxRateController.text = defaultTaxRate.toStringAsFixed(2);
+      for (final draft in _itemDrafts) {
+        final currentTaxRate = double.tryParse(
+              draft.taxRateController.text.trim(),
+            ) ??
+            0;
+        if (currentTaxRate == 0) {
+          draft.taxRateController.text = defaultTaxRate.toStringAsFixed(2);
+        }
+      }
     }
 
     _autoFilledCustomerId = customer.id;
@@ -744,6 +761,20 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
                 value: _formatAmount(_itemsTaxAmountValue),
               ),
               _InlineBadge(label: '合计', value: _formatAmount(_itemsTotalValue)),
+              TextButton.icon(
+                onPressed: () => setState(
+                  () => _showAdvancedItemFields = !_showAdvancedItemFields,
+                ),
+                icon: Icon(
+                  _showAdvancedItemFields
+                      ? Icons.visibility_off
+                      : Icons.visibility,
+                  size: 16,
+                ),
+                label: Text(
+                  _showAdvancedItemFields ? '隐藏税率/折扣' : '显示税率/折扣',
+                ),
+              ),
             ],
           ),
           SpacingTokens.vMd,
@@ -755,6 +786,7 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
               draft: _itemDrafts[index],
               products: _products,
               isDesktop: isDesktop,
+              showAdvancedFields: _showAdvancedItemFields,
               onCreateProduct: _handleCreateProduct,
               onChanged: () => setState(() {}),
               onRemove: _itemDrafts.length > 1
@@ -804,99 +836,121 @@ class _SalesOrderFormPageState extends State<SalesOrderFormPage> {
   }
 
   Widget _buildSettlementSection(double fieldWidth) {
+    final summaryChildren = [
+      _ReadOnlyMetric(
+        label: '小计',
+        value: '¥${_formatAmount(_itemsSubtotalValue)}',
+      ),
+      _ReadOnlyMetric(
+        label: '税额',
+        value: '¥${_formatAmount(_orderLevelTaxAmount)}',
+      ),
+      _ReadOnlyMetric(
+        label: '合计',
+        value: '¥${_formatAmount(_grandTotalValue)}',
+      ),
+    ];
+
     return _buildSection(
       '金额与结算',
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 摘要始终可见
           Wrap(
-            spacing: 16,
+            spacing: 12,
             runSpacing: 12,
-            children: [
-              SizedBox(
-                width: fieldWidth,
-                child: CrudFieldConfig.number(
-                  label: '整单税率 (%)',
-                  controller: _taxRateController,
-                  decimal: true,
-                  onChanged: (_) => setState(() {}),
-                ).build(context),
-              ),
-              SizedBox(
-                width: fieldWidth,
-                child: CrudFieldConfig.number(
-                  label: '整单折扣金额',
-                  controller: _discountAmountController,
-                  decimal: true,
-                  onChanged: (_) => setState(() {}),
-                ).build(context),
-              ),
-              SizedBox(
-                width: fieldWidth,
-                child: CrudFieldConfig.text(
-                  label: '小计',
-                  initialValue: _formatAmount(_itemsSubtotalValue),
-                  enabled: false,
-                  readOnly: true,
-                ).build(context),
-              ),
-              SizedBox(
-                width: fieldWidth,
-                child: CrudFieldConfig.text(
-                  label: '整单税额',
-                  initialValue: _formatAmount(_orderLevelTaxAmount),
-                  enabled: false,
-                  readOnly: true,
-                ).build(context),
-              ),
-              SizedBox(
-                width: fieldWidth,
-                child: CrudFieldConfig.text(
-                  label: '总金额',
-                  initialValue: _formatAmount(_grandTotalValue),
-                  enabled: false,
-                  readOnly: true,
-                ).build(context),
-              ),
-              SizedBox(
-                width: fieldWidth,
-                child: CrudFieldConfig.text(
-                  label: '未付金额',
-                  initialValue: _formatAmount(_unpaidAmountValue),
-                  enabled: false,
-                  readOnly: true,
-                ).build(context),
-              ),
-              SizedBox(
-                width: fieldWidth,
-                child: CrudFieldConfig.number(
-                  label: '定金',
-                  controller: _depositAmountController,
-                  decimal: true,
-                  onChanged: (_) => setState(() {}),
-                ).build(context),
-              ),
-              SizedBox(
-                width: fieldWidth,
-                child: CrudFieldConfig.number(
-                  label: '已付金额',
-                  controller: _paidAmountController,
-                  decimal: true,
-                  onChanged: (_) => setState(() {}),
-                ).build(context),
-              ),
-              SizedBox(
-                width: fieldWidth,
-                child: CrudFieldConfig.text(
-                  label: '付款日期',
-                  controller: _paymentDateController,
-                  readOnly: true,
-                  onTap: () =>
-                      _pickDate(isOrderDate: false, isPaymentDate: true),
-                ).build(context),
-              ),
-            ],
+            children: summaryChildren,
           ),
+          // 展开/收起按钮
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () => setState(
+                () => _showFinanceSection = !_showFinanceSection,
+              ),
+              icon: Icon(
+                _showFinanceSection
+                    ? Icons.keyboard_arrow_up
+                    : Icons.keyboard_arrow_down,
+              ),
+              label: Text(
+                _showFinanceSection ? '收起高级选项' : '展开高级选项',
+              ),
+            ),
+          ),
+          // 高级字段
+          if (_showFinanceSection)
+            Wrap(
+              spacing: 16,
+              runSpacing: 12,
+              children: [
+                SizedBox(
+                  width: fieldWidth,
+                  child: CrudFieldConfig.number(
+                    label: '整单税率 (%)',
+                    controller: _taxRateController,
+                    decimal: true,
+                    onChanged: (_) => setState(() {}),
+                  ).build(context),
+                ),
+                SizedBox(
+                  width: fieldWidth,
+                  child: CrudFieldConfig.number(
+                    label: '整单折扣金额',
+                    controller: _discountAmountController,
+                    decimal: true,
+                    onChanged: (_) => setState(() {}),
+                  ).build(context),
+                ),
+                SizedBox(
+                  width: fieldWidth,
+                  child: CrudFieldConfig.text(
+                    label: '整单税额',
+                    initialValue: _formatAmount(_orderLevelTaxAmount),
+                    enabled: false,
+                    readOnly: true,
+                  ).build(context),
+                ),
+                SizedBox(
+                  width: fieldWidth,
+                  child: CrudFieldConfig.text(
+                    label: '未付金额',
+                    initialValue: _formatAmount(_unpaidAmountValue),
+                    enabled: false,
+                    readOnly: true,
+                  ).build(context),
+                ),
+                SizedBox(
+                  width: fieldWidth,
+                  child: CrudFieldConfig.number(
+                    label: '定金',
+                    controller: _depositAmountController,
+                    decimal: true,
+                    onChanged: (_) => setState(() {}),
+                  ).build(context),
+                ),
+                SizedBox(
+                  width: fieldWidth,
+                  child: CrudFieldConfig.number(
+                    label: '已付金额',
+                    controller: _paidAmountController,
+                    decimal: true,
+                    onChanged: (_) => setState(() {}),
+                  ).build(context),
+                ),
+                SizedBox(
+                  width: fieldWidth,
+                  child: CrudFieldConfig.text(
+                    label: '付款日期',
+                    controller: _paymentDateController,
+                    readOnly: true,
+                    onTap: () =>
+                        _pickDate(isOrderDate: false, isPaymentDate: true),
+                  ).build(context),
+                ),
+              ],
+            ),
         ],
       ),
     );
@@ -1097,6 +1151,7 @@ class _ItemRow extends StatefulWidget {
     required this.onCreateProduct,
     required this.onChanged,
     required this.isDesktop,
+    this.showAdvancedFields = false,
     this.onRemove,
   });
 
@@ -1105,6 +1160,7 @@ class _ItemRow extends StatefulWidget {
   final Future<ProductOption?> Function() onCreateProduct;
   final VoidCallback onChanged;
   final bool isDesktop;
+  final bool showAdvancedFields;
   final VoidCallback? onRemove;
 
   @override
@@ -1245,26 +1301,28 @@ class _ItemRowState extends State<_ItemRow> {
                     onChanged: (_) => widget.onChanged(),
                   ).build(context),
                 ),
-                const SizedBox(width: 12),
-                SizedBox(
-                  width: 100,
-                  child: CrudFieldConfig.number(
-                    label: '税率',
-                    controller: widget.draft.taxRateController,
-                    decimal: true,
-                    onChanged: (_) => widget.onChanged(),
-                  ).build(context),
-                ),
-                const SizedBox(width: 12),
-                SizedBox(
-                  width: 100,
-                  child: CrudFieldConfig.number(
-                    label: '折扣',
-                    controller: widget.draft.discountAmountController,
-                    decimal: true,
-                    onChanged: (_) => widget.onChanged(),
-                  ).build(context),
-                ),
+                if (widget.showAdvancedFields) ...[
+                  const SizedBox(width: 12),
+                  SizedBox(
+                    width: 100,
+                    child: CrudFieldConfig.number(
+                      label: '税率',
+                      controller: widget.draft.taxRateController,
+                      decimal: true,
+                      onChanged: (_) => widget.onChanged(),
+                    ).build(context),
+                  ),
+                  const SizedBox(width: 12),
+                  SizedBox(
+                    width: 100,
+                    child: CrudFieldConfig.number(
+                      label: '折扣',
+                      controller: widget.draft.discountAmountController,
+                      decimal: true,
+                      onChanged: (_) => widget.onChanged(),
+                    ).build(context),
+                  ),
+                ],
                 const Spacer(),
                 if (widget.onRemove != null)
                   IconButton(
