@@ -119,6 +119,8 @@ class Product {
     this.images = const [],
     this.availableGroupStock,
     this.groupItems = const [],
+    this.createdAt,
+    this.updatedAt,
   });
 
   final int id;
@@ -141,4 +143,6 @@ class Product {
   final List<ProductImage> images;
   final int? availableGroupStock;
   final List<GroupItem> groupItems;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 }

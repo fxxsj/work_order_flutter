@@ -23,6 +23,8 @@ class ProductDto {
     this.images = const [],
     this.availableGroupStock,
     this.groupItems = const [],
+    this.createdAt,
+    this.updatedAt,
   });
 
   final int id;
@@ -45,6 +47,8 @@ class ProductDto {
   final List<ProductImage> images;
   final int? availableGroupStock;
   final List<GroupItem> groupItems;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   factory ProductDto.fromJson(Map<String, dynamic> json) {
     final processes = json['default_processes'];
@@ -105,6 +109,8 @@ class ProductDto {
       images: imageItems,
       availableGroupStock: toInt(json['available_group_stock']),
       groupItems: groupItemList,
+      createdAt: toDateTime(json['created_at']),
+      updatedAt: toDateTime(json['updated_at']),
     );
   }
 
@@ -148,6 +154,8 @@ class ProductDto {
       images: images,
       availableGroupStock: availableGroupStock,
       groupItems: groupItems,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
     );
   }
 
@@ -181,6 +189,8 @@ extension ProductMapper on Product {
       images: images,
       availableGroupStock: availableGroupStock,
       groupItems: groupItems,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
     );
   }
 }

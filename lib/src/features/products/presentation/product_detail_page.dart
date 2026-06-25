@@ -154,21 +154,23 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   Expanded(
                     child: Column(
                       children: [
-                        if (product.defaultProcessIds.isNotEmpty ||
-                            _loadingProcesses) ...[
-                          _buildProcessCard(context, product),
-                          SizedBox(height: sectionSpacing),
-                        ],
+                        _buildProcessCard(context, product),
+                        SizedBox(height: sectionSpacing),
                         _buildExtraInfoCard(
                           context,
                           product,
                           itemSpacing,
                           labelStyle,
                         ),
-                        if (product.images.isNotEmpty) ...[
-                          SizedBox(height: sectionSpacing),
-                          _buildImageCard(context, product),
-                        ],
+                        SizedBox(height: sectionSpacing),
+                        _buildImageCard(context, product),
+                        SizedBox(height: sectionSpacing),
+                        _buildSystemInfoCard(
+                          context,
+                          product,
+                          itemSpacing,
+                          labelStyle,
+                        ),
                       ],
                     ),
                   ),
@@ -184,20 +186,16 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               SizedBox(height: sectionSpacing),
               _buildGroupCard(context, product, itemSpacing, labelStyle),
             ],
-            if (product.defaultProcessIds.isNotEmpty || _loadingProcesses) ...[
-              SizedBox(height: sectionSpacing),
-              _buildProcessCard(context, product),
-            ],
+            SizedBox(height: sectionSpacing),
+            _buildProcessCard(context, product),
             SizedBox(height: sectionSpacing),
             _buildExtraInfoCard(context, product, itemSpacing, labelStyle),
-            if (product.images.isNotEmpty) ...[
-              SizedBox(height: sectionSpacing),
-              _buildImageCard(context, product),
-            ],
-            if (product.defaultMaterials.isNotEmpty) ...[
-              SizedBox(height: sectionSpacing),
-              _buildMaterialsCard(context, product, itemSpacing, labelStyle),
-            ],
+            SizedBox(height: sectionSpacing),
+            _buildImageCard(context, product),
+            SizedBox(height: sectionSpacing),
+            _buildMaterialsCard(context, product, itemSpacing, labelStyle),
+            SizedBox(height: sectionSpacing),
+            _buildSystemInfoCard(context, product, itemSpacing, labelStyle),
           ],
         ],
       ),
@@ -222,7 +220,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           _row(
             context,
             '所属产品组',
-            item.productGroupName ?? _empty,
+            _productGroupText(item),
             spacing,
             labelStyle,
             last: true,
@@ -348,6 +346,36 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     );
   }
 
+  Widget _buildSystemInfoCard(
+    BuildContext context,
+    Product item,
+    double spacing,
+    TextStyle? labelStyle,
+  ) {
+    return DetailSectionCard(
+      title: '系统信息',
+      child: Column(
+        children: [
+          _row(
+            context,
+            '创建时间',
+            _formatDateTime(item.createdAt),
+            spacing,
+            labelStyle,
+          ),
+          _row(
+            context,
+            '更新时间',
+            _formatDateTime(item.updatedAt),
+            spacing,
+            labelStyle,
+            last: true,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildProcessCard(BuildContext context, Product item) {
     return DetailSectionCard(title: '默认工序', child: _buildProcessTags(item));
   }
@@ -365,6 +393,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     double spacing,
     TextStyle? labelStyle,
   ) {
+    if (item.defaultMaterials.isEmpty) {
+      return DetailSectionCard(
+        title: '默认物料',
+        child: _buildEmptyHint('暂无默认物料'),
+      );
+    }
     return DetailSectionCard(
       title: '默认物料',
       child: Column(
@@ -430,6 +464,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         ),
       );
     }
+    if (item.defaultProcessIds.isEmpty) {
+      return _buildEmptyHint('暂无默认工序');
+    }
     final names = _resolveProcessNames(item.defaultProcessIds);
     final theme = Theme.of(context);
     return Wrap(
@@ -461,6 +498,20 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     );
   }
 
+  Widget _buildEmptyHint(String text) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<AppColors>();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Text(
+        text,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: colors?.subtleText ?? theme.hintColor,
+        ),
+      ),
+    );
+  }
+
   // ---- 静态工具方法 ----
 
   static String _productTypeText(Product product) {
@@ -482,6 +533,28 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     final isActive = product.isActive;
     if (isActive == null) return _empty;
     return isActive ? '启用' : '停用';
+  }
+
+  static String _productGroupText(Product product) {
+    final name = product.productGroupName;
+    final code = product.productGroupCode;
+    if (name == null || name.isEmpty) {
+      if (code != null && code.isNotEmpty) return code;
+      return _empty;
+    }
+    if (code != null && code.isNotEmpty) return '$name ($code)';
+    return name;
+  }
+
+  String _formatDateTime(DateTime? value) {
+    if (value == null) return _empty;
+    final local = value.toLocal();
+    final year = local.year.toString().padLeft(4, '0');
+    final month = local.month.toString().padLeft(2, '0');
+    final day = local.day.toString().padLeft(2, '0');
+    final hour = local.hour.toString().padLeft(2, '0');
+    final minute = local.minute.toString().padLeft(2, '0');
+    return '$year-$month-$day $hour:$minute';
   }
 
   static String _materialLabel(ProductMaterialItem material) {
@@ -512,6 +585,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   // ---- 图片画廊 ----
 
   Widget _buildImageGallery(BuildContext context, List<ProductImage> images) {
+    if (images.isEmpty) {
+      return _buildEmptyHint('暂无产品图片');
+    }
     return Wrap(
       spacing: 8,
       runSpacing: 8,
