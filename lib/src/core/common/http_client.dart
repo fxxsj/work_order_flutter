@@ -180,6 +180,9 @@ class HttpClient {
     await refreshAccessTokenLocked();
   }
 
+  static Duration get _rawRequestTimeout =>
+      Duration(milliseconds: AppConfig.transferTimeoutMs);
+
   static Future<Response<dynamic>> requestRaw(
     String path, {
     String method = 'get',
@@ -198,9 +201,7 @@ class HttpClient {
       final options = Options(
         method: method.toUpperCase(),
         responseType: responseType,
-        receiveTimeout:
-            receiveTimeout ??
-            Duration(milliseconds: AppConfig.transferTimeoutMs),
+        receiveTimeout: receiveTimeout ?? _rawRequestTimeout,
       );
       if (contentType != null) {
         options.contentType = contentType;

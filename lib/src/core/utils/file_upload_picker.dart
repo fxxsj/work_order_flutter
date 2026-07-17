@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 
 class FileUploadPickException implements Exception {
   const FileUploadPickException(this.message);
@@ -10,6 +11,21 @@ class FileUploadPickException implements Exception {
   String toString() => message;
 }
 
+Future<MultipartFile> multipartFileFromPathOrBytes({
+  required String? path,
+  required Uint8List? bytes,
+  required String filename,
+}) async {
+  final trimmedPath = path?.trim() ?? '';
+  if (trimmedPath.isNotEmpty) {
+    return MultipartFile.fromFile(trimmedPath, filename: filename);
+  }
+  if (bytes != null && bytes.isNotEmpty) {
+    return MultipartFile.fromBytes(bytes, filename: filename);
+  }
+  throw const FileUploadPickException('无法读取所选文件');
+}
+
 Future<MultipartFile?> pickMultipartFile({
   required List<String> allowedExtensions,
   required String fallbackFilename,
@@ -18,7 +34,7 @@ Future<MultipartFile?> pickMultipartFile({
   final result = await FilePicker.pickFiles(
     type: FileType.custom,
     allowedExtensions: allowedExtensions,
-    withData: true,
+    withData: kIsWeb,
   );
   if (result == null || result.files.isEmpty) {
     return null;
@@ -28,7 +44,6 @@ Future<MultipartFile?> pickMultipartFile({
   final fileName = picked.name.trim().isEmpty
       ? fallbackFilename
       : picked.name.trim();
-  final bytes = picked.bytes;
   final fileSize = picked.size;
 
   if (maxBytes != null && maxBytes > 0 && fileSize > maxBytes) {
@@ -36,14 +51,9 @@ Future<MultipartFile?> pickMultipartFile({
     throw FileUploadPickException('所选文件过大，不能超过 ${maxMb}MB');
   }
 
-  if (bytes != null && bytes.isNotEmpty) {
-    return MultipartFile.fromBytes(bytes, filename: fileName);
-  }
-
-  final path = picked.path?.trim() ?? '';
-  if (path.isNotEmpty) {
-    return MultipartFile.fromFile(path, filename: fileName);
-  }
-
-  throw const FileUploadPickException('无法读取所选文件');
+  return multipartFileFromPathOrBytes(
+    path: picked.path,
+    bytes: picked.bytes,
+    filename: fileName,
+  );
 }

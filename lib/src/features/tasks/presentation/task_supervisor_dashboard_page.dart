@@ -51,6 +51,10 @@ class _TaskSupervisorDashboardViewState
   int? _departmentId;
   Map<String, dynamic>? _workload;
   List<Task> _departmentTasks = [];
+  List<Task>? _departmentBoardTasks;
+  int _taskTotal = 0;
+  int _taskPage = 1;
+  int _taskPageSize = 50;
   List<TaskSupervisorOperatorOption> _operators = [];
   TaskSupervisorFlowSummary _flowSummary = const TaskSupervisorFlowSummary();
   String _viewMode = 'dashboard';
@@ -88,19 +92,27 @@ class _TaskSupervisorDashboardViewState
     }
   }
 
-  Future<void> _loadWorkload() async {
+  Future<void> _loadWorkload({int? taskPage}) async {
     if (_departmentId == null) return;
+    final requestedTaskPage = taskPage ?? _taskPage;
     setState(() {
       _loading = true;
       _errorMessage = null;
     });
     try {
       final repository = context.read<TaskRepository>();
-      final data = await repository.loadDepartmentDashboard(_departmentId!);
+      final data = await repository.loadDepartmentDashboard(
+        _departmentId!,
+        taskPage: requestedTaskPage,
+      );
       if (!mounted) return;
       setState(() {
         _workload = data.workload;
         _departmentTasks = data.tasks;
+        _departmentBoardTasks = null;
+        _taskTotal = data.taskTotal;
+        _taskPage = data.taskPage;
+        _taskPageSize = data.taskPageSize;
         _operators = data.operators;
         _flowSummary = data.flowSummary;
       });
@@ -222,7 +234,7 @@ class _TaskSupervisorDashboardViewState
                 PageModeOption(value: 'tasks', label: '任务列表'),
                 PageModeOption(value: 'dragdrop', label: '拖拽分派'),
               ],
-              onChanged: (value) => setState(() => _viewMode = value),
+              onChanged: _setViewMode,
             ),
             PageActionButton.outlined(
               onPressed: openFilterDrawer,
@@ -249,8 +261,11 @@ class _TaskSupervisorDashboardViewState
           decoration: const InputDecoration(labelText: '部门'),
           options: deptItems,
           onChanged: (value) {
-            setState(() => _departmentId = value);
-            _loadWorkload();
+            setState(() {
+              _departmentId = value;
+              _taskPage = 1;
+            });
+            _loadWorkload(taskPage: 1);
           },
         ),
         SizedBox(height: spacing),
@@ -287,6 +302,28 @@ class _TaskSupervisorDashboardViewState
       return _buildDragDropView();
     }
     return _buildDashboardView();
+  }
+
+  Future<void> _setViewMode(String value) async {
+    if (_viewMode == value) return;
+    setState(() => _viewMode = value);
+    if (value == 'dragdrop') await _loadBoardTasks();
+  }
+
+  Future<void> _loadBoardTasks() async {
+    if (_departmentId == null || _departmentBoardTasks != null) return;
+    try {
+      final tasks = await context
+          .read<TaskRepository>()
+          .loadDepartmentBoardTasks(_departmentId!);
+      if (mounted) setState(() => _departmentBoardTasks = tasks);
+    } catch (err) {
+      if (mounted) {
+        ToastUtil.showError(
+          '加载拖拽任务失败: ${err.toString().replaceFirst('Exception: ', '')}',
+        );
+      }
+    }
   }
 
   Widget _buildTaskListView() {
@@ -331,6 +368,20 @@ class _TaskSupervisorDashboardViewState
                 )
               : _buildTaskTable(filteredTasks),
         ),
+        if (_taskTotal > _taskPageSize) ...[
+          SizedBox(height: SpacingTokens.sm),
+          ResponsivePaginationBar(
+            infoText: '共 $_taskTotal 条任务',
+            page: _taskPage,
+            pageSize: _taskPageSize,
+            pageSizeOptions: const [50],
+            onPageSizeChanged: (_) {},
+            onPrev: () => _loadWorkload(taskPage: _taskPage - 1),
+            onNext: () => _loadWorkload(taskPage: _taskPage + 1),
+            hasPrev: _taskPage > 1,
+            hasNext: _taskPage * _taskPageSize < _taskTotal,
+          ),
+        ],
       ],
     );
   }
@@ -669,17 +720,21 @@ class _TaskSupervisorDashboardViewState
   }
 
   Widget _buildDragDropView() {
+    final boardTasks = _departmentBoardTasks;
+    if (boardTasks == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
     if (_operators.isEmpty) {
       return const EmptyStateCard(icon: Icons.groups_outlined, text: '暂无可用操作员');
     }
-    if (_departmentTasks.isEmpty) {
+    if (boardTasks.isEmpty) {
       return const EmptyStateCard(
         icon: Icons.view_kanban_outlined,
         text: '暂无任务数据',
       );
     }
 
-    final unassigned = _departmentTasks
+    final unassigned = boardTasks
         .where((task) => task.assignedOperatorId == null)
         .toList();
 
@@ -706,7 +761,7 @@ class _TaskSupervisorDashboardViewState
                   title: operator.name,
                   subtitle: '操作员任务',
                   height: height,
-                  tasks: _departmentTasks
+                  tasks: boardTasks
                       .where((task) => task.assignedOperatorId == operator.id)
                       .toList(),
                   operatorId: operator.id,
@@ -761,11 +816,7 @@ class _TaskSupervisorDashboardViewState
     setState(() => _assigningTaskId = task.id);
     try {
       final repository = context.read<TaskRepository>();
-      await repository.assignTask(
-        task.id,
-        operatorId: operator.id,
-        notes: '',
-      );
+      await repository.assignTask(task.id, operatorId: operator.id, notes: '');
       ToastUtil.showSuccess('已分派给 ${operator.name}');
       await _loadWorkload();
     } catch (err) {

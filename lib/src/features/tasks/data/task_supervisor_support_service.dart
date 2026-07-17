@@ -3,11 +3,14 @@ import 'package:work_order_app/src/features/departments/data/department_api_serv
 import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_api_service.dart';
 import 'package:work_order_app/src/features/inventory_quality/data/quality_inspection_api_service.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
+import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_supervisor_dashboard_data.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 
 class TaskSupervisorSupportService {
   TaskSupervisorSupportService(this._client);
+
+  static const int taskPageSize = 50;
 
   final ApiClient _client;
 
@@ -21,8 +24,9 @@ class TaskSupervisorSupportService {
   }
 
   Future<TaskSupervisorDashboardData> loadDepartmentDashboard(
-    int departmentId,
-  ) async {
+    int departmentId, {
+    int taskPage = 1,
+  }) async {
     final api = TaskApiService(_client);
     final workloadFuture = api.fetchDepartmentWorkload(
       params: {'department_id': departmentId},
@@ -31,13 +35,10 @@ class TaskSupervisorSupportService {
     final flowSummaryFuture = _loadFlowSummary(departmentId: departmentId);
 
     final workload = await workloadFuture;
-    final totalTasks = _toInt(
-      (workload['summary'] as Map<String, dynamic>? ?? const {})['total_tasks'],
-    );
     final tasksPage = await api.fetchTasks(
       departmentId: departmentId,
-      page: 1,
-      pageSize: totalTasks <= 0 ? 50 : totalTasks,
+      page: taskPage,
+      pageSize: taskPageSize,
       ordering: '-created_at',
     );
     final operators = await operatorsFuture;
@@ -45,12 +46,33 @@ class TaskSupervisorSupportService {
     return TaskSupervisorDashboardData(
       workload: workload,
       tasks: tasksPage.items.map((dto) => dto.toEntity()).toList(),
+      taskTotal: tasksPage.total,
+      taskPage: tasksPage.page,
+      taskPageSize: tasksPage.pageSize,
       operators: operators
           .map((item) => TaskSupervisorOperatorOption.fromJson(item))
           .where((item) => item.id > 0)
           .toList(),
       flowSummary: flowSummary,
     );
+  }
+
+  Future<List<Task>> loadDepartmentBoardTasks(int departmentId) async {
+    final api = TaskApiService(_client);
+    final tasks = <Task>[];
+    var page = 1;
+    while (true) {
+      final taskPage = await api.fetchTasks(
+        departmentId: departmentId,
+        page: page,
+        pageSize: taskPageSize,
+        ordering: '-created_at',
+      );
+      tasks.addAll(taskPage.items.map((dto) => dto.toEntity()));
+      if (tasks.length >= taskPage.total || taskPage.items.isEmpty) break;
+      page += 1;
+    }
+    return tasks;
   }
 
   Future<void> assignTask(

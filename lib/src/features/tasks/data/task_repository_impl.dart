@@ -10,7 +10,11 @@ import 'package:work_order_app/src/features/tasks/domain/task_supervisor_dashboa
 import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 
 class TaskRepositoryImpl implements TaskRepository {
-  TaskRepositoryImpl(this._apiService, this._listSupportService, this._supervisorSupportService);
+  TaskRepositoryImpl(
+    this._apiService,
+    this._listSupportService,
+    this._supervisorSupportService,
+  );
 
   final TaskApiService _apiService;
   final TaskListSupportService _listSupportService;
@@ -135,10 +139,7 @@ class TaskRepositoryImpl implements TaskRepository {
     final myTasksPayload = payload['my_tasks'];
     final claimablePayload = payload['claimable_tasks'];
     final myTasksRaw = (myTasksPayload is List)
-        ? myTasksPayload
-              .whereType<Map>()
-              .toList()
-              .cast<Map<String, dynamic>>()
+        ? myTasksPayload.whereType<Map>().toList().cast<Map<String, dynamic>>()
         : <Map<String, dynamic>>[];
     final claimableTasksRaw = (claimablePayload is List)
         ? claimablePayload
@@ -154,9 +155,7 @@ class TaskRepositoryImpl implements TaskRepository {
       summary: OperatorSummary.fromJson(
         payload['summary'] as Map<String, dynamic>?,
       ),
-      meta: PaginationMeta.fromJson(
-        payload['meta'] as Map<String, dynamic>?,
-      ),
+      meta: PaginationMeta.fromJson(payload['meta'] as Map<String, dynamic>?),
     );
   }
 
@@ -181,9 +180,18 @@ class TaskRepositoryImpl implements TaskRepository {
   }
 
   @override
+  Future<List<Task>> loadDepartmentBoardTasks(int departmentId) {
+    return _supervisorSupportService.loadDepartmentBoardTasks(departmentId);
+  }
+
+  @override
   Future<TaskSupervisorDashboardData> loadDepartmentDashboard(
-    int departmentId,
-  ) {
-    return _supervisorSupportService.loadDepartmentDashboard(departmentId);
+    int departmentId, {
+    int taskPage = 1,
+  }) {
+    return _supervisorSupportService.loadDepartmentDashboard(
+      departmentId,
+      taskPage: taskPage,
+    );
   }
 }

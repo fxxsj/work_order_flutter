@@ -183,6 +183,8 @@ class _ImageGalleryTile extends StatelessWidget {
                           width: 100,
                           height: 100,
                           fit: BoxFit.cover,
+                          cacheWidth: 200,
+                          cacheHeight: 200,
                           errorBuilder: (_, __, ___) =>
                               _buildBrokenPlaceholder(theme, subtleText),
                         ),

@@ -42,12 +42,18 @@ class TaskSupervisorDashboardData {
   const TaskSupervisorDashboardData({
     required this.workload,
     required this.tasks,
+    required this.taskTotal,
+    required this.taskPage,
+    required this.taskPageSize,
     required this.operators,
     required this.flowSummary,
   });
 
   final Map<String, dynamic> workload;
   final List<Task> tasks;
+  final int taskTotal;
+  final int taskPage;
+  final int taskPageSize;
   final List<TaskSupervisorOperatorOption> operators;
   final TaskSupervisorFlowSummary flowSummary;
 }

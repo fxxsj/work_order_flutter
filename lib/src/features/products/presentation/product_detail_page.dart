@@ -394,10 +394,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     TextStyle? labelStyle,
   ) {
     if (item.defaultMaterials.isEmpty) {
-      return DetailSectionCard(
-        title: '默认物料',
-        child: _buildEmptyHint('暂无默认物料'),
-      );
+      return DetailSectionCard(title: '默认物料', child: _buildEmptyHint('暂无默认物料'));
     }
     return DetailSectionCard(
       title: '默认物料',
@@ -605,6 +602,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     width: 120,
                     height: 120,
                     fit: BoxFit.cover,
+                    cacheWidth: 240,
+                    cacheHeight: 240,
                     errorBuilder: (context, error, stackTrace) => Container(
                       width: 120,
                       height: 120,

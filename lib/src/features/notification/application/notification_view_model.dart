@@ -34,6 +34,8 @@ class NotificationViewModel extends ChangeNotifier {
   bool _disposed = false;
   NotificationSocket? _socket;
   bool _connectingSocket = false;
+  Future<void>? _unreadCountRefresh;
+  Future<void>? _recentRefresh;
 
   int get unreadCount => _unreadCount;
   List<NotificationModel> get recentList => _recentList;
@@ -295,7 +297,13 @@ class NotificationViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> _refreshUnreadCount() async {
+  Future<void> _refreshUnreadCount() {
+    return _unreadCountRefresh ??= _fetchUnreadCount().whenComplete(() {
+      _unreadCountRefresh = null;
+    });
+  }
+
+  Future<void> _fetchUnreadCount() async {
     try {
       _unreadCount = await _api.fetchUnreadCount();
       _safeNotify();
@@ -304,7 +312,13 @@ class NotificationViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> _refreshRecent() async {
+  Future<void> _refreshRecent() {
+    return _recentRefresh ??= _fetchRecent().whenComplete(() {
+      _recentRefresh = null;
+    });
+  }
+
+  Future<void> _fetchRecent() async {
     try {
       final page = await _api.fetchNotifications(
         page: 1,
