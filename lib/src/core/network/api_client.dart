@@ -55,6 +55,7 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     ResponseType responseType = ResponseType.json,
     String? contentType,
+    Duration? receiveTimeout,
   }) {
     return HttpClient.requestRaw(
       path,
@@ -63,6 +64,7 @@ class ApiClient {
       queryParameters: queryParameters,
       responseType: responseType,
       contentType: contentType,
+      receiveTimeout: receiveTimeout,
     );
   }
 

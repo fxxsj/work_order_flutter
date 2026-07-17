@@ -7,7 +7,8 @@ class AppConfig {
   static String activeProfile = 'dev';
   static String apiBaseUrl = '';
   static int connectTimeoutMs = 10000;
-  static int receiveTimeoutMs = 3000;
+  static int receiveTimeoutMs = 15000;
+  static int transferTimeoutMs = 120000;
 
   static Future<void> init() async {
     const profileOverride = String.fromEnvironment('APP_PROFILE');
@@ -31,6 +32,9 @@ class AppConfig {
     receiveTimeoutMs =
         _readInt(baseConfig, ['app', 'api', 'receiveTimeout']) ??
         receiveTimeoutMs;
+    transferTimeoutMs =
+        _readInt(baseConfig, ['app', 'api', 'transferTimeout']) ??
+        transferTimeoutMs;
 
     if (apiBaseUrl.trim().isEmpty) {
       throw StateError(

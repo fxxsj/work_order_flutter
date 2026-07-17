@@ -187,6 +187,7 @@ class HttpClient {
     Map<String, dynamic>? queryParameters,
     ResponseType responseType = ResponseType.json,
     String? contentType,
+    Duration? receiveTimeout,
   }) async {
     try {
       // 调试日志：打印完整的请求信息
@@ -197,6 +198,9 @@ class HttpClient {
       final options = Options(
         method: method.toUpperCase(),
         responseType: responseType,
+        receiveTimeout:
+            receiveTimeout ??
+            Duration(milliseconds: AppConfig.transferTimeoutMs),
       );
       if (contentType != null) {
         options.contentType = contentType;
