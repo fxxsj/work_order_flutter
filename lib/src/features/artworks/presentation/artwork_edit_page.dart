@@ -161,16 +161,22 @@ class _ArtworkEditPageState extends State<ArtworkEditPage> {
   Future<void> _loadPicklists() async {
     setState(() => _loadingPicklists = true);
     try {
-      final products = await _productRepository!.getProductOptions(isActive: true);
-      final dies = await _dieRepository!.getDies(page: 1, pageSize: 50);
-      final foiling = await _foilingRepository!.getFoilingPlates(
+      final productsFuture = _productRepository!.getProductOptions(
+        isActive: true,
+      );
+      final diesFuture = _dieRepository!.getDies(page: 1, pageSize: 50);
+      final foilingFuture = _foilingRepository!.getFoilingPlates(
         page: 1,
         pageSize: 50,
       );
-      final embossing = await _embossingRepository!.getEmbossingPlates(
+      final embossingFuture = _embossingRepository!.getEmbossingPlates(
         page: 1,
         pageSize: 50,
       );
+      final products = await productsFuture;
+      final dies = await diesFuture;
+      final foiling = await foilingFuture;
+      final embossing = await embossingFuture;
       if (!mounted) return;
       setState(() {
         _productOptions
