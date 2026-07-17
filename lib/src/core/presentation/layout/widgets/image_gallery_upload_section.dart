@@ -89,6 +89,7 @@ class ImageGalleryUploadSection<T> extends StatelessWidget {
           Align(
             alignment: Alignment.centerLeft,
             child: OutlinedButton.icon(
+              key: const ValueKey('image_gallery_upload_button'),
               onPressed: reachedMaxCount ? null : onUpload,
               icon: const Icon(Icons.add_photo_alternate, size: 18),
               label: Text(uploadButtonText),

@@ -453,6 +453,7 @@ class _StatementGenerateDialogState extends State<_StatementGenerateDialog> {
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
+              key: const ValueKey('statement_generate_add_customer'),
               onPressed: _handleCreateCustomer,
               icon: const Icon(Icons.add, size: 18),
               label: const Text('新增客户'),
@@ -504,6 +505,7 @@ class _StatementGenerateDialogState extends State<_StatementGenerateDialog> {
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
+              key: const ValueKey('statement_generate_add_supplier'),
               onPressed: _handleCreateSupplier,
               icon: const Icon(Icons.add, size: 18),
               label: const Text('新增供应商'),

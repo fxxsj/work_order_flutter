@@ -90,7 +90,9 @@ void main() {
     );
 
     expect(find.text('最多上传 1 张图片'), findsOneWidget);
-    final button = tester.widget<OutlinedButton>(find.byType(OutlinedButton));
+    final button = tester.widget<OutlinedButton>(
+      find.byKey(const ValueKey('image_gallery_upload_button')),
+    );
     expect(button.onPressed, isNull);
   });
 

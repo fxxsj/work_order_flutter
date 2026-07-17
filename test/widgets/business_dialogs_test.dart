@@ -1066,12 +1066,13 @@ void main() {
     await tester.tap(find.text('打开'));
     await tester.pumpAndSettle();
 
+    const addCustomerKey = ValueKey('statement_generate_add_customer');
     await tester.scrollUntilVisible(
-      find.widgetWithText(TextButton, '新增客户'),
+      find.byKey(addCustomerKey),
       120,
       scrollable: find.byType(Scrollable).first,
     );
-    await tester.tap(find.widgetWithText(TextButton, '新增客户'));
+    await tester.tap(find.byKey(addCustomerKey));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextFormField), ' 2026-05 ');
     await tester.tap(find.text('生成'));

@@ -4,16 +4,13 @@ import 'package:provider/provider.dart';
 import 'package:work_order_app/src/core/common/theme_ext.dart';
 import 'package:work_order_app/src/core/presentation/layout/layout_tokens.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_data_table.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/action_dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/app_select.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/crud_list_page.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/dialogs.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/expandable_summary_card.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_feedback.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_page_scaffold.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/page_header_bar.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/list_toolbar.dart';
-import 'package:work_order_app/src/core/presentation/layout/widgets/row_actions.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/status_hint_chip.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/summary_widgets.dart';
 import 'package:work_order_app/src/core/presentation/layout/widgets/responsive_layout.dart';
@@ -23,7 +20,6 @@ import 'package:work_order_app/src/core/utils/permission_util.dart';
 import 'package:work_order_app/src/core/utils/toast_util.dart';
 import 'package:work_order_app/src/features/sales_orders/application/sales_order_view_model.dart';
 import 'package:work_order_app/src/features/sales_orders/domain/sales_order.dart';
-import 'package:work_order_app/src/features/sales_orders/domain/sales_order_detail.dart';
 import 'package:work_order_app/src/features/sales_orders/presentation/widgets/sales_order_list_dialogs.dart';
 
 /// 客户订单列表页视图，只负责渲染。
@@ -56,16 +52,6 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
   static const String _retryText = '重新加载';
   static const String _pageInfoTemplate = '第 {page} / {total} 页，共 {count} 条';
   static const String _pageSizeLabel = '每页 {size}';
-  static const CrudActionConfig<SalesOrder> _submitOrderConfig =
-      CrudActionConfig(
-        title: '提交订单',
-        summaryBuilder: _submitSummary,
-        impactsBuilder: _submitImpacts,
-        auditHintBuilder: _submitAuditHint,
-        confirmText: '确认提交',
-        successMessageBuilder: _submitSuccessMessage,
-        errorMessagePrefix: '提交失败: ',
-      );
 
   final TextEditingController _searchController = TextEditingController();
   final _debounce = DebounceController();
@@ -402,205 +388,6 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         .replaceFirst('{count}', viewModel.total.toString());
   }
 
-  Future<void> _submitOrder(
-    SalesOrderViewModel viewModel,
-    SalesOrder order,
-  ) async {
-    await confirmCrudAction(
-      context,
-      item: order,
-      onConfirm: (item) async {
-        await viewModel.submit(item.id);
-        await viewModel.loadSalesOrders(resetPage: false);
-      },
-      config: _submitOrderConfig,
-    );
-  }
-
-  Future<void> _approveOrder(
-    SalesOrderViewModel viewModel,
-    SalesOrder order,
-  ) async {
-    final result = await showActionDecisionDialog<void>(
-      context,
-      title: '审核通过',
-      summary: '通过后，客户订单会进入生产准备和后续履约流程。',
-      impacts: const ['请确认客户信息、产品规格、交期与金额已核对无误', '通过后通常会进入施工单生成和排产准备'],
-      auditHint: '审批说明会进入业务与审计记录，建议保留必要结论。',
-      notesLabel: '审核意见（可选）',
-      notesMaxLines: 3,
-      submitText: '通过',
-    );
-    if (result == null) return;
-    try {
-      await viewModel.approve(order.id, {'approval_comment': result.notes});
-      ToastUtil.showSuccess('已审核通过');
-      await viewModel.loadSalesOrders(resetPage: false);
-    } catch (err) {
-      ToastUtil.showError('审核失败: $err');
-    }
-  }
-
-  Future<void> _rejectOrder(
-    SalesOrderViewModel viewModel,
-    SalesOrder order,
-  ) async {
-    final result = await showActionDecisionDialog<void>(
-      context,
-      title: '审核拒绝',
-      summary: '拒绝客户订单后，业务需要补充资料或重新确认交期后再提交。',
-      impacts: const ['请把缺少的资料、需要修改的内容写清楚', '只写“有问题”会导致业务反复确认，无法直接修正'],
-      auditHint: '拒绝原因会直接进入审批和审计记录，后续会被客户、业务、生产共同参考。',
-      destructive: true,
-      notesLabel: '拒绝原因',
-      requireNotes: true,
-      notesErrorText: '请填写拒绝原因',
-      extraNotesLabel: '审核意见（可选）',
-      extraNotesMaxLines: 3,
-      submitText: '拒绝',
-    );
-    if (result == null) return;
-    try {
-      await viewModel.reject(order.id, {
-        'reason': result.notes,
-        'approval_comment': result.extraNotes,
-      });
-      ToastUtil.showSuccess('已拒绝');
-      await viewModel.loadSalesOrders(resetPage: false);
-    } catch (err) {
-      ToastUtil.showError('拒绝失败: $err');
-    }
-  }
-
-  Future<void> _completeOrder(
-    SalesOrderViewModel viewModel,
-    SalesOrder order,
-  ) async {
-    try {
-      final detail = await viewModel.fetchDetail(order.id);
-      if (!mounted) return;
-      final result = await showSalesOrderCompleteDialog(
-        context,
-        requireReason: !_isAllItemsDelivered(detail.items),
-      );
-      if (result == null) return;
-      await viewModel.complete(order.id, {
-        if (result.completionReason.trim().isNotEmpty)
-          'completion_reason': result.completionReason.trim(),
-      });
-      ToastUtil.showSuccess('已完成');
-      await viewModel.loadSalesOrders(resetPage: false);
-    } catch (err) {
-      ToastUtil.showError('完成失败: $err');
-    }
-  }
-
-  void _goToCreateDeliveryOrder(SalesOrder order) {
-    context.go('/inventory/delivery?create=1&sales_order_id=${order.id}');
-  }
-
-  Future<void> _cancelOrder(
-    SalesOrderViewModel viewModel,
-    SalesOrder order,
-  ) async {
-    final result = await showActionDecisionDialog<void>(
-      context,
-      title: '取消订单',
-      summary: '取消客户订单会中断后续施工、发货和财务闭环，相关部门需要同步停单。',
-      impacts: const ['如果已排产或已出货，请先确认是否应走变更、退货或异常流程', '建议填写取消原因，便于业务和财务后续对账追踪'],
-      auditHint: '订单取消原因会影响后续争议处理和经营复盘。',
-      destructive: true,
-      notesLabel: '取消原因（可选）',
-      notesMaxLines: 3,
-      submitText: '确认取消',
-    );
-    if (result == null) return;
-    try {
-      await viewModel.cancel(order.id, {'reason': result.notes.trim()});
-      ToastUtil.showSuccess('已取消');
-      await viewModel.loadSalesOrders(resetPage: false);
-    } catch (err) {
-      ToastUtil.showError('取消失败: $err');
-    }
-  }
-
-  Future<void> _deleteOrder(
-    BuildContext context,
-    SalesOrderViewModel viewModel,
-    SalesOrder order,
-  ) async {
-    final confirmed = await showRiskActionConfirmDialog(
-      context,
-      title: '删除客户订单',
-      summary: '删除后无法恢复，相关施工单、发货和财务数据将不再关联到此订单。',
-      impacts: const ['订单数据将被永久删除', '已关联的施工单、送货单、发票、收款记录将失去订单关联'],
-      auditHint: '建议优先使用"取消订单"保留数据可追溯性，仅草稿状态可删除。',
-      confirmText: '确认删除',
-      destructive: true,
-    );
-    if (confirmed != true) return;
-    try {
-      await viewModel.delete(order.id);
-      ToastUtil.showSuccess('已删除');
-    } catch (err) {
-      ToastUtil.showError('删除失败: $err');
-    }
-  }
-
-  Future<void> _updatePayment(
-    SalesOrderViewModel viewModel,
-    SalesOrder order,
-  ) async {
-    final result = await showSalesOrderPaymentDialog(context);
-    if (result == null) return;
-
-    final amountText = result.amountText.trim();
-    final dateText = result.dateText.trim();
-    if (amountText.isEmpty && dateText.isEmpty) {
-      ToastUtil.showError('请至少填写一项');
-      return;
-    }
-    final amount = amountText.isEmpty ? null : double.tryParse(amountText);
-    if (amountText.isNotEmpty && (amount == null || amount < 0)) {
-      ToastUtil.showError('请输入正确的金额');
-      return;
-    }
-    final payload = <String, dynamic>{
-      if (amount != null) 'paid_amount': amount,
-      if (dateText.isNotEmpty) 'payment_date': dateText,
-    };
-
-    try {
-      await viewModel.updatePayment(order.id, payload);
-      ToastUtil.showSuccess('已更新付款信息');
-      await viewModel.loadSalesOrders(resetPage: false);
-    } catch (err) {
-      ToastUtil.showError('更新付款失败: $err');
-    }
-  }
-
-  Future<void> _createWorkOrderDraft(
-    SalesOrderViewModel viewModel,
-    SalesOrder order,
-  ) async {
-    try {
-      final result = await viewModel.createWorkOrderFromSalesOrder({
-        'sales_order_id': order.id,
-      });
-      final workOrderId =
-          int.tryParse(result['id']?.toString() ?? '') ??
-          int.tryParse(result['work_order_id']?.toString() ?? '');
-      ToastUtil.showSuccess('已生成施工单草稿');
-      await viewModel.loadSalesOrders(resetPage: false);
-      if (!mounted) return;
-      if (workOrderId != null && workOrderId > 0) {
-        context.go('/workorders/$workOrderId/edit');
-      }
-    } catch (err) {
-      ToastUtil.showError('生成施工单草稿失败: $err');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final isMobile = ResponsiveLayout.isMobile(context);
@@ -638,13 +425,6 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     List<SalesOrder> orders,
     bool isMobile,
   ) {
-    final permissions = PermissionUtil.snapshot(context);
-    final canChangeSalesOrder = permissions.has('workorder.change_salesorder');
-    final canCreateWorkOrder = permissions.has('workorder.add_workorder');
-    final canCreateDeliveryOrder = permissions.has(
-      'workorder.add_deliveryorder',
-    );
-    final canDeleteSalesOrder = permissions.has('workorder.delete_salesorder');
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
     if (viewModel.loading && orders.isEmpty) {
       return const ShimmerLoading(child: ShimmerList());
@@ -668,10 +448,6 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         context,
         orders,
         selectionMode: _selectionMode,
-        canChangeSalesOrder: canChangeSalesOrder,
-        canCreateWorkOrder: canCreateWorkOrder,
-        canCreateDeliveryOrder: canCreateDeliveryOrder,
-        canDeleteSalesOrder: canDeleteSalesOrder,
       );
     }
 
@@ -691,14 +467,6 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
             selectable: _isSelectableForWorkOrder(order),
             onSelectedChanged: (value) =>
                 _toggleOrderSelection(order, value ?? false),
-            actions: _buildActionsForOrder(
-              context,
-              order,
-              canChangeSalesOrder: canChangeSalesOrder,
-              canCreateWorkOrder: canCreateWorkOrder,
-              canCreateDeliveryOrder: canCreateDeliveryOrder,
-              canDeleteSalesOrder: canDeleteSalesOrder,
-            ),
           );
         },
       ),
@@ -709,10 +477,6 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     BuildContext context,
     List<SalesOrder> orders, {
     required bool selectionMode,
-    required bool canChangeSalesOrder,
-    required bool canCreateWorkOrder,
-    required bool canCreateDeliveryOrder,
-    required bool canDeleteSalesOrder,
   }) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>();
@@ -756,7 +520,6 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
         DataColumn(label: Text('下单日期')),
         DataColumn(label: Text('交货日期')),
         DataColumn(label: Text('金额')),
-        DataColumn(label: Text('操作')),
       ],
       rows: orders
           .map(
@@ -819,19 +582,6 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
                     style: theme.textTheme.bodyMedium,
                   ),
                 ),
-                DataCell(
-                  RowActionGroup(
-                    actions: _buildActionsForOrder(
-                      context,
-                      order,
-                      canChangeSalesOrder: canChangeSalesOrder,
-                      canCreateWorkOrder: canCreateWorkOrder,
-                      canCreateDeliveryOrder: canCreateDeliveryOrder,
-                      canDeleteSalesOrder: canDeleteSalesOrder,
-                    ),
-                    primaryCount: 2,
-                  ),
-                ),
               ],
             ),
           )
@@ -839,156 +589,10 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
     );
   }
 
-  List<RowAction> _buildActionsForOrder(
-    BuildContext context,
-    SalesOrder order, {
-    required bool canChangeSalesOrder,
-    required bool canCreateWorkOrder,
-    required bool canCreateDeliveryOrder,
-    required bool canDeleteSalesOrder,
-  }) {
-    final viewModel = context.read<SalesOrderViewModel>();
-    final status = order.status ?? '';
-    final approvalStatus = order.approvalStatus ?? '';
-    final actions = <RowAction>[
-      if (canChangeSalesOrder &&
-          (approvalStatus == 'draft' || approvalStatus == 'rejected'))
-        RowAction(
-          label: '编辑',
-          icon: Icons.edit_outlined,
-          onPressed: () => context.go('/sales-orders/${order.id}/edit'),
-        ),
-    ];
-    if (canChangeSalesOrder && approvalStatus == 'draft') {
-      actions.add(
-        RowAction(
-          label: '提交',
-          icon: Icons.send_outlined,
-          onPressed: () => _submitOrder(viewModel, order),
-        ),
-      );
-    }
-    if (canChangeSalesOrder && approvalStatus == 'rejected') {
-      actions.add(
-        RowAction(
-          label: '重新提交',
-          icon: Icons.send_outlined,
-          onPressed: () => _submitOrder(viewModel, order),
-        ),
-      );
-    }
-    if (canChangeSalesOrder && approvalStatus == 'submitted') {
-      actions.add(
-        RowAction(
-          label: '审核通过',
-          icon: Icons.check_circle_outline,
-          onPressed: () => _approveOrder(viewModel, order),
-        ),
-      );
-      actions.add(
-        RowAction(
-          label: '审核拒绝',
-          icon: Icons.cancel_outlined,
-          destructive: true,
-          onPressed: () => _rejectOrder(viewModel, order),
-        ),
-      );
-    }
-    if (canCreateWorkOrder &&
-        (approvalStatus == 'approved' &&
-            status != 'completed' &&
-            status != 'cancelled')) {
-      actions.add(
-        RowAction(
-          label: '生成施工单草稿',
-          icon: Icons.assignment_outlined,
-          onPressed: () => _createWorkOrderDraft(viewModel, order),
-        ),
-      );
-    }
-    if (canCreateDeliveryOrder && (approvalStatus == 'approved')) {
-      actions.add(
-        RowAction(
-          label: '生成送货单',
-          icon: Icons.local_shipping_outlined,
-          onPressed: () => _goToCreateDeliveryOrder(order),
-        ),
-      );
-    }
-    if (canChangeSalesOrder) {
-      actions.add(
-        RowAction(
-          label: '更新付款',
-          icon: Icons.payments_outlined,
-          onPressed: () => _updatePayment(viewModel, order),
-        ),
-      );
-    }
-    if (canChangeSalesOrder &&
-        (approvalStatus == 'approved' &&
-            status != 'completed' &&
-            status != 'cancelled')) {
-      actions.add(
-        RowAction(
-          label: '完成订单',
-          icon: Icons.task_alt_outlined,
-          onPressed: () => _completeOrder(viewModel, order),
-        ),
-      );
-    }
-    if (canChangeSalesOrder &&
-        status.isNotEmpty &&
-        status != 'completed' &&
-        status != 'cancelled') {
-      actions.add(
-        RowAction(
-          label: '取消订单',
-          icon: Icons.block_outlined,
-          destructive: true,
-          onPressed: () => _cancelOrder(viewModel, order),
-        ),
-      );
-    }
-    if (canDeleteSalesOrder && approvalStatus == 'draft') {
-      actions.add(
-        RowAction(
-          label: '删除',
-          icon: Icons.delete_outline,
-          destructive: true,
-          onPressed: () => _deleteOrder(context, viewModel, order),
-        ),
-      );
-    }
-
-    return actions;
-  }
-
   static String _displayText(String? value) {
     final text = value?.trim() ?? '';
     return text.isEmpty ? _SalesOrderSummaryCard._emptyCellText : text;
   }
-
-  static String _orderLabel(SalesOrder order) {
-    return _displayText(order.orderNumber);
-  }
-
-  static String _customerLabel(SalesOrder order) {
-    return _displayText(order.customerName);
-  }
-
-  static String _submitSummary(SalesOrder order) {
-    return '即将提交客户订单 ${_orderLabel(order)}。提交后，订单会进入业务审核流程。';
-  }
-
-  static List<String> _submitImpacts(SalesOrder order) {
-    return ['客户：${_customerLabel(order)}', '提交后建议尽快跟进审核，避免影响交期和生产准备'];
-  }
-
-  static String _submitAuditHint(SalesOrder order) {
-    return '提交记录会进入订单流转日志，建议先确认核心字段已填写完整。';
-  }
-
-  static String _submitSuccessMessage(SalesOrder order) => '已提交';
 
   static String _workOrderText(SalesOrder order) {
     final count = order.workOrderCount ?? 0;
@@ -1031,15 +635,6 @@ class _SalesOrderListViewState extends State<_SalesOrderListView> {
   String _formatAmount(double? value) {
     if (value == null) return _SalesOrderSummaryCard._emptyCellText;
     return value.toStringAsFixed(2);
-  }
-
-  bool _isAllItemsDelivered(List<SalesOrderItem> items) {
-    if (items.isEmpty) return false;
-    return items.every((item) {
-      final delivered = item.deliveredQuantity ?? 0;
-      final quantity = item.quantity ?? 0;
-      return delivered >= quantity;
-    });
   }
 
   Widget _buildPageHeader(
@@ -1312,7 +907,6 @@ class _SalesOrderSummaryCard extends StatelessWidget {
     required this.selected,
     required this.selectable,
     required this.onSelectedChanged,
-    required this.actions,
   });
 
   static const String _emptyCellText = '-';
@@ -1323,7 +917,6 @@ class _SalesOrderSummaryCard extends StatelessWidget {
   final bool selected;
   final bool selectable;
   final ValueChanged<bool?>? onSelectedChanged;
-  final List<RowAction> actions;
 
   @override
   Widget build(BuildContext context) {
@@ -1442,9 +1035,6 @@ class _SalesOrderSummaryCard extends StatelessWidget {
             payment: payment,
             itemsCount: itemsCount,
           ),
-          SizedBox(height: sectionSpacing),
-          if (actions.isNotEmpty)
-            RowActionGroup(actions: actions, primaryCount: 2),
         ],
       ),
     );
