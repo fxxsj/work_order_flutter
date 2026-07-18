@@ -23,8 +23,11 @@ import 'package:work_order_app/src/features/workorders/application/work_order_vi
 import 'package:work_order_app/src/features/workorders/data/work_order_api_service.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_flow_api_service.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_flow_repository_impl.dart';
+import 'package:work_order_app/src/features/workorders/data/work_order_material_api_service.dart';
+import 'package:work_order_app/src/features/workorders/data/work_order_material_repository_impl.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_repository_impl.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_flow_repository.dart';
+import 'package:work_order_app/src/features/workorders/domain/work_order_material_repository.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
 import 'package:work_order_app/src/features/workorders/presentation/work_order_detail_page.dart';
 import 'package:work_order_app/src/features/workorders/presentation/work_order_form_page.dart';
@@ -157,6 +160,11 @@ List<Provider> get _crossFeatureProviders => [
   Provider<WorkOrderFlowRepository>(
     create: (context) => WorkOrderFlowRepositoryImpl(
       WorkOrderFlowApiService(context.read<ApiClient>()),
+    ),
+  ),
+  Provider<WorkOrderMaterialRepository>(
+    create: (context) => WorkOrderMaterialRepositoryImpl(
+      WorkOrderMaterialApiService(context.read<ApiClient>()),
     ),
   ),
 ];

@@ -129,8 +129,9 @@ class WorkOrderFormSubmission {
           .where((p) => input.processIds.contains(p.id))
           .toList();
 
-      final artworkProcesses =
-          selected.where((p) => p.requiresArtwork).toList();
+      final artworkProcesses = selected
+          .where((p) => p.requiresArtwork)
+          .toList();
       if (artworkProcesses.isNotEmpty && input.artworkIds.isEmpty) {
         final names = artworkProcesses.map((p) => p.name).join(', ');
         errors.add('选择了需要图稿的工序（$names），请至少选择一个图稿');
@@ -142,15 +143,17 @@ class WorkOrderFormSubmission {
         errors.add('选择了需要刀模的工序（$names），请至少选择一个刀模');
       }
 
-      final foilingProcesses =
-          selected.where((p) => p.requiresFoilingPlate).toList();
+      final foilingProcesses = selected
+          .where((p) => p.requiresFoilingPlate)
+          .toList();
       if (foilingProcesses.isNotEmpty && input.foilingPlateIds.isEmpty) {
         final names = foilingProcesses.map((p) => p.name).join(', ');
         errors.add('选择了需要烫金版的工序（$names），请至少选择一个烫金版');
       }
 
-      final embossingProcesses =
-          selected.where((p) => p.requiresEmbossingPlate).toList();
+      final embossingProcesses = selected
+          .where((p) => p.requiresEmbossingPlate)
+          .toList();
       if (embossingProcesses.isNotEmpty && input.embossingPlateIds.isEmpty) {
         final names = embossingProcesses.map((p) => p.name).join(', ');
         errors.add('选择了需要压凸版的工序（$names），请至少选择一个压凸版');
@@ -197,6 +200,7 @@ class WorkOrderFormSubmission {
             'material_size': draft.sizeValue,
             'material_usage': draft.usageValue,
             'need_cutting': draft.needCutting,
+            'planning_required': draft.planningRequired,
             'notes': draft.notesValue,
           },
         )

@@ -44,6 +44,32 @@ class WorkOrderMaterialRepositoryImpl implements WorkOrderMaterialRepository {
   }
 
   @override
+  Future<List<Map<String, dynamic>>> getStockMaterials() {
+    return _apiService.fetchStockMaterials();
+  }
+
+  @override
+  Future<Map<String, dynamic>> calculatePlan(
+    int id,
+    Map<String, dynamic> payload,
+  ) {
+    return _apiService.calculatePlan(id, payload);
+  }
+
+  @override
+  Future<Map<String, dynamic>> confirmPlan(int id) {
+    return _apiService.confirmPlan(id);
+  }
+
+  @override
+  Future<Map<String, dynamic>> invalidatePlan(
+    int id, {
+    required String reason,
+  }) {
+    return _apiService.invalidatePlan(id, reason: reason);
+  }
+
+  @override
   Future<Map<String, dynamic>> batchCheckout(Map<String, dynamic> payload) {
     return _apiService.batchCheckout(payload);
   }

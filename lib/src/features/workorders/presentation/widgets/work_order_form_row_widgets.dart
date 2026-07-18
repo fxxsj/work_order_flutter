@@ -449,6 +449,18 @@ class _WorkOrderMaterialRowState extends State<WorkOrderMaterialRow> {
                     const Text('需要开料'),
                   ],
                 ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Checkbox(
+                      value: widget.draft.planningRequired,
+                      onChanged: (value) => setState(
+                        () => widget.draft.planningRequired = value ?? false,
+                      ),
+                    ),
+                    const Text('制版后确定采购规格'),
+                  ],
+                ),
                 SizedBox(
                   width: notesWidth,
                   child: CrudFieldConfig.text(

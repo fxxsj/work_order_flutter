@@ -18,6 +18,17 @@ abstract class WorkOrderMaterialRepository {
 
   Future<void> deleteMaterial(int id);
 
+  Future<List<Map<String, dynamic>>> getStockMaterials();
+
+  Future<Map<String, dynamic>> calculatePlan(
+    int id,
+    Map<String, dynamic> payload,
+  );
+
+  Future<Map<String, dynamic>> confirmPlan(int id);
+
+  Future<Map<String, dynamic>> invalidatePlan(int id, {required String reason});
+
   Future<Map<String, dynamic>> batchCheckout(Map<String, dynamic> payload);
 
   Future<Map<String, dynamic>> batchCheckin(Map<String, dynamic> payload);

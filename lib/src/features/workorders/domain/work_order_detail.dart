@@ -367,6 +367,19 @@ class WorkOrderMaterialItem {
     this.purchaseDate,
     this.receivedDate,
     this.cutDate,
+    this.planningRequired = false,
+    this.planningStatus,
+    this.planningStatusDisplay,
+    this.purchaseMaterialId,
+    this.purchaseMaterialName,
+    this.cutWidthMm,
+    this.cutHeightMm,
+    this.requiredCutQuantity,
+    this.piecesPerParentSheet,
+    this.plannedParentQuantity,
+    this.wastageRate,
+    this.reservedQuantity,
+    this.purchaseQuantity,
   });
 
   final int id;
@@ -383,6 +396,19 @@ class WorkOrderMaterialItem {
   final DateTime? purchaseDate;
   final DateTime? receivedDate;
   final DateTime? cutDate;
+  final bool planningRequired;
+  final String? planningStatus;
+  final String? planningStatusDisplay;
+  final int? purchaseMaterialId;
+  final String? purchaseMaterialName;
+  final double? cutWidthMm;
+  final double? cutHeightMm;
+  final double? requiredCutQuantity;
+  final int? piecesPerParentSheet;
+  final double? plannedParentQuantity;
+  final double? wastageRate;
+  final double? reservedQuantity;
+  final double? purchaseQuantity;
 
   factory WorkOrderMaterialItem.fromJson(Map<String, dynamic> json) {
     return WorkOrderMaterialItem(
@@ -402,6 +428,23 @@ class WorkOrderMaterialItem {
       purchaseDate: toDateTime(json['purchase_date']),
       receivedDate: toDateTime(json['received_date']),
       cutDate: toDateTime(json['cut_date']),
+      planningRequired: json['planning_required'] == true,
+      planningStatus: toStringOrNull(json['planning_status']),
+      planningStatusDisplay: toStringOrNull(json['planning_status_display']),
+      purchaseMaterialId: toInt(json['purchase_material']),
+      purchaseMaterialName: toStringOrNull(json['purchase_material_name']),
+      cutWidthMm: WorkOrderDetail._toDouble(json['cut_width_mm']),
+      cutHeightMm: WorkOrderDetail._toDouble(json['cut_height_mm']),
+      requiredCutQuantity: WorkOrderDetail._toDouble(
+        json['required_cut_quantity'],
+      ),
+      piecesPerParentSheet: toInt(json['pieces_per_parent_sheet']),
+      plannedParentQuantity: WorkOrderDetail._toDouble(
+        json['planned_parent_quantity'],
+      ),
+      wastageRate: WorkOrderDetail._toDouble(json['wastage_rate']),
+      reservedQuantity: WorkOrderDetail._toDouble(json['reserved_quantity']),
+      purchaseQuantity: WorkOrderDetail._toDouble(json['purchase_quantity']),
     );
   }
 }

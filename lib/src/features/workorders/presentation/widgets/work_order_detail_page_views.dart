@@ -38,6 +38,7 @@ class WorkOrderDetailPageViews extends StatelessWidget {
     this.onCreatePurchaseOrder,
     this.onViewPurchaseOrder,
     this.onViewPurchaseOrdersList,
+    this.onPlanMaterial,
     required this.emptyText,
     required this.formatDate,
     required this.formatAmount,
@@ -70,6 +71,7 @@ class WorkOrderDetailPageViews extends StatelessWidget {
   final VoidCallback? onCreatePurchaseOrder;
   final ValueChanged<int>? onViewPurchaseOrder;
   final VoidCallback? onViewPurchaseOrdersList;
+  final ValueChanged<WorkOrderMaterialItem>? onPlanMaterial;
   final String emptyText;
   final String Function(DateTime? value) formatDate;
   final String Function(double? value) formatAmount;
@@ -158,6 +160,7 @@ class WorkOrderDetailPageViews extends StatelessWidget {
           onCreatePurchaseOrder: onCreatePurchaseOrder,
           onViewPurchaseOrder: onViewPurchaseOrder,
           onViewPurchaseOrdersList: onViewPurchaseOrdersList,
+          onPlanMaterial: onPlanMaterial,
         );
     }
   }
@@ -198,7 +201,8 @@ class WorkOrderDetailPageViews extends StatelessWidget {
     if (message == null) return const SizedBox.shrink();
 
     final effectiveColor = color ?? theme.colorScheme.primary;
-    final hasErrors = completenessErrors.isNotEmpty &&
+    final hasErrors =
+        completenessErrors.isNotEmpty &&
         (status == 'draft' || status == 'rejected');
 
     return Container(
@@ -220,9 +224,7 @@ class WorkOrderDetailPageViews extends StatelessWidget {
               const SizedBox(width: SpacingTokens.md),
               Expanded(
                 child: Text(
-                  hasErrors
-                      ? '$message，审核通过后将生成部门任务。'
-                      : message,
+                  hasErrors ? '$message，审核通过后将生成部门任务。' : message,
                   style: TextStyle(
                     fontSize: TextTokens.fontSizeBodyMedium,
                     color: effectiveColor.withValues(

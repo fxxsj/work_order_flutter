@@ -51,6 +51,57 @@ class WorkOrderMaterialApiService {
     await _client.delete('/workorder-materials/$id/');
   }
 
+  Future<List<Map<String, dynamic>>> fetchStockMaterials() async {
+    final response = await _client.get(
+      '/materials/',
+      queryParameters: {
+        'specification_level': 'stock',
+        'material_type': 'paper',
+        'is_active': true,
+        'page_size': 200,
+      },
+    );
+    final payload = response.data;
+    final results = payload is Map<String, dynamic>
+        ? payload['results']
+        : payload;
+    if (results is! List) return const [];
+    return results
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList(growable: false);
+  }
+
+  Future<Map<String, dynamic>> calculatePlan(
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
+    final response = await _client.post(
+      '/workorder-materials/$id/calculate_plan/',
+      data: payload,
+    );
+    return _unwrapData(response.data);
+  }
+
+  Future<Map<String, dynamic>> confirmPlan(int id) async {
+    final response = await _client.post(
+      '/workorder-materials/$id/confirm_plan/',
+      data: const <String, dynamic>{},
+    );
+    return _unwrapData(response.data);
+  }
+
+  Future<Map<String, dynamic>> invalidatePlan(
+    int id, {
+    required String reason,
+  }) async {
+    final response = await _client.post(
+      '/workorder-materials/$id/invalidate_plan/',
+      data: {'reason': reason},
+    );
+    return _unwrapData(response.data);
+  }
+
   Future<Map<String, dynamic>> batchCheckout(
     Map<String, dynamic> payload,
   ) async {
@@ -112,5 +163,11 @@ class WorkOrderMaterialApiService {
       return Map<String, dynamic>.from(data);
     }
     return {};
+  }
+
+  Map<String, dynamic> _unwrapData(dynamic data) {
+    final mapped = _mapFromResponse(data);
+    final nested = mapped['data'];
+    return nested is Map ? Map<String, dynamic>.from(nested) : mapped;
   }
 }

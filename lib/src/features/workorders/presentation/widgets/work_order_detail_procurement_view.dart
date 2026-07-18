@@ -14,6 +14,7 @@ class WorkOrderDetailProcurementView extends StatelessWidget {
     required this.onCreatePurchaseOrder,
     required this.onViewPurchaseOrder,
     required this.onViewPurchaseOrdersList,
+    this.onPlanMaterial,
   });
 
   final WorkOrderDetail detail;
@@ -22,12 +23,16 @@ class WorkOrderDetailProcurementView extends StatelessWidget {
   final VoidCallback? onCreatePurchaseOrder;
   final ValueChanged<int>? onViewPurchaseOrder;
   final VoidCallback? onViewPurchaseOrdersList;
+  final ValueChanged<WorkOrderMaterialItem>? onPlanMaterial;
 
   @override
   Widget build(BuildContext context) {
     final hasPendingMaterials = detail.materials.any(
       (m) => m.purchaseStatus == 'pending' || m.purchaseStatus == null,
     );
+    final plansReady = detail.materials
+        .where((m) => m.planningRequired)
+        .every((m) => m.planningStatus == 'confirmed');
 
     return SingleChildScrollView(
       padding: LayoutTokens.pagePadding(context),
@@ -39,7 +44,7 @@ class WorkOrderDetailProcurementView extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: SpacingTokens.md),
               child: FilledButton.icon(
-                onPressed: onCreatePurchaseOrder,
+                onPressed: plansReady ? onCreatePurchaseOrder : null,
                 icon: const Icon(Icons.add_shopping_cart),
                 label: const Text('创建待处理采购单'),
               ),
@@ -78,6 +83,14 @@ class WorkOrderDetailProcurementView extends StatelessWidget {
                   purchaseStatusDisplay: m.purchaseStatusDisplay ?? '待采购',
                   unit: m.materialUnit ?? '',
                   usage: m.materialUsage ?? '',
+                  planningRequired: m.planningRequired,
+                  planningStatus: m.planningStatus,
+                  planningStatusDisplay: m.planningStatusDisplay,
+                  purchaseMaterialName: m.purchaseMaterialName,
+                  purchaseQuantity: m.purchaseQuantity,
+                  onPlan: onPlanMaterial == null
+                      ? null
+                      : () => onPlanMaterial!(m),
                 ),
               ),
             ),
@@ -117,6 +130,12 @@ class _MaterialStatusCard extends StatelessWidget {
     required this.purchaseStatusDisplay,
     required this.unit,
     required this.usage,
+    required this.planningRequired,
+    this.planningStatus,
+    this.planningStatusDisplay,
+    this.purchaseMaterialName,
+    this.purchaseQuantity,
+    this.onPlan,
   });
 
   final String materialName;
@@ -125,6 +144,12 @@ class _MaterialStatusCard extends StatelessWidget {
   final String purchaseStatusDisplay;
   final String unit;
   final String usage;
+  final bool planningRequired;
+  final String? planningStatus;
+  final String? planningStatusDisplay;
+  final String? purchaseMaterialName;
+  final double? purchaseQuantity;
+  final VoidCallback? onPlan;
 
   @override
   Widget build(BuildContext context) {
@@ -137,56 +162,81 @@ class _MaterialStatusCard extends StatelessWidget {
         border: Border.all(color: theme.dividerColor),
         borderRadius: BorderRadius.circular(RadiusTokens.md),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            width: 4,
-            height: 48,
-            decoration: BoxDecoration(
-              color: statusColor,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(width: SpacingTokens.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  materialName,
-                  style: theme.textTheme.titleSmall?.copyWith(
+          Row(
+            children: [
+              Container(
+                width: 4,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: statusColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: SpacingTokens.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      materialName,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$materialCode · $usage $unit',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.textTheme.bodySmall?.color?.withValues(
+                          alpha: 0.7,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: SpacingTokens.sm,
+                  vertical: SpacingTokens.sm,
+                ),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(RadiusTokens.md),
+                ),
+                child: Text(
+                  purchaseStatusDisplay,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: statusColor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  '$materialCode · $usage $unit',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.textTheme.bodySmall?.color?.withValues(
-                      alpha: 0.7,
-                    ),
+              ),
+            ],
+          ),
+          if (planningRequired) ...[
+            const SizedBox(height: SpacingTokens.sm),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    planningStatus == 'confirmed'
+                        ? '已选 ${purchaseMaterialName ?? '-'}，需采购 ${purchaseQuantity ?? 0}'
+                        : '需在制版后确认开料尺寸和采购原纸规格',
+                    style: theme.textTheme.bodySmall,
                   ),
                 ),
+                TextButton(
+                  onPressed: onPlan,
+                  child: Text(planningStatus == 'confirmed' ? '查看/作废' : '规划规格'),
+                ),
+                Text(planningStatusDisplay ?? planningStatus ?? '待规划'),
               ],
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: SpacingTokens.sm,
-              vertical: SpacingTokens.sm,
-            ),
-            decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(RadiusTokens.md),
-            ),
-            child: Text(
-              purchaseStatusDisplay,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: statusColor,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
+          ],
         ],
       ),
     );

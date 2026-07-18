@@ -75,13 +75,15 @@ class WorkOrderMaterialDraft {
       sizeController = TextEditingController(text: item.materialSize ?? ''),
       usageController = TextEditingController(text: item.materialUsage ?? ''),
       notesController = TextEditingController(text: item.notes ?? ''),
-      needCutting = item.needCutting ?? false;
+      needCutting = item.needCutting ?? false,
+      planningRequired = item.planningRequired;
 
   int? materialId;
   final TextEditingController sizeController;
   final TextEditingController usageController;
   final TextEditingController notesController;
   bool needCutting = false;
+  bool planningRequired = false;
 
   String get sizeValue => sizeController.text.trim();
   String get usageValue => usageController.text.trim();

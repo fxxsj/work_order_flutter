@@ -22,8 +22,10 @@ import 'package:work_order_app/src/features/tasks/presentation/widgets/task_acti
 import 'package:work_order_app/src/features/workorders/application/work_order_view_model.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_detail.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_flow_repository.dart';
+import 'package:work_order_app/src/features/workorders/domain/work_order_material_repository.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_repository.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_dialogs.dart';
+import 'package:work_order_app/src/features/workorders/presentation/widgets/material_plan_dialog.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_detail_page_views.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_print_preview_dialog.dart';
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_sync_preview_dialog.dart';
@@ -109,12 +111,10 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
       return false;
     }
     try {
-      final result = await context
-          .read<WorkOrderRepository>()
-          .checkSyncNeeded(
-            detail.id,
-            processIds: detail.processes.map((item) => item.id).toList(),
-          );
+      final result = await context.read<WorkOrderRepository>().checkSyncNeeded(
+        detail.id,
+        processIds: detail.processes.map((item) => item.id).toList(),
+      );
       return result['sync_needed'] == true;
     } catch (_) {
       return false;
@@ -405,7 +405,8 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
       context,
       task: task,
       departments: departments,
-      loadOperators: (value) => context.read<TaskRepository>().loadOperators(value),
+      loadOperators: (value) =>
+          context.read<TaskRepository>().loadOperators(value),
       onSubmit: (operatorId, notes) async {
         await context.read<TaskRepository>().assignTask(
           task.id,
@@ -479,6 +480,41 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
       await _loadDetail();
     } catch (err) {
       ToastUtil.showError('创建采购单失败: $err');
+    }
+  }
+
+  Future<void> _handlePlanMaterial(WorkOrderMaterialItem material) async {
+    final repository = context.read<WorkOrderMaterialRepository>();
+    try {
+      final stockMaterials = await repository.getStockMaterials();
+      if (!mounted) return;
+      final changed = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => MaterialPlanDialog(
+          material: material,
+          stockMaterials: stockMaterials,
+          onCalculate: (payload) =>
+              repository.calculatePlan(material.id, payload),
+          onConfirm: () => repository.confirmPlan(material.id),
+          onInvalidate: () async {
+            final reason = await showWorkOrderReasonDialog(
+              dialogContext,
+              title: '作废物料计划',
+              label: '作废原因',
+            );
+            if (reason == null || reason.trim().isEmpty) return false;
+            await repository.invalidatePlan(material.id, reason: reason.trim());
+            return true;
+          },
+        ),
+      );
+      if (changed == true && mounted) {
+        ToastUtil.showSuccess('物料计划已更新');
+        await _loadDetail();
+      }
+    } catch (err) {
+      ToastUtil.showError('物料计划操作失败: $err');
     }
   }
 
@@ -714,9 +750,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
         ),
       ),
       body: _loading
-          ? const DetailSurfaceCard(
-              child: ShimmerLoading(child: ShimmerCard()),
-            )
+          ? const DetailSurfaceCard(child: ShimmerLoading(child: ShimmerCard()))
           : _errorMessage != null
           ? DetailSurfaceCard(
               child: Center(
@@ -770,6 +804,7 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
               onCreatePurchaseOrder: _handleCreatePurchaseOrder,
               onViewPurchaseOrder: (id) => _openPurchaseOrderDetail(id),
               onViewPurchaseOrdersList: _openPurchaseOrdersList,
+              onPlanMaterial: canChangeWorkOrder ? _handlePlanMaterial : null,
               emptyText: _emptyText,
               formatDate: _formatDate,
               formatAmount: _formatAmount,
