@@ -127,9 +127,11 @@ class QualityInspectionApiService {
     int id,
     MultipartFile attachment,
   ) async {
-    final response = await _client.patch(
+    final response = await _client.requestRaw(
       '/quality-inspections/$id/',
+      method: 'patch',
       data: FormData.fromMap({'attachment': attachment}),
+      sendTimeout: const Duration(minutes: 2),
     );
     return _mapFromResponse(response.data);
   }

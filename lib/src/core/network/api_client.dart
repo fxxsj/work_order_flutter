@@ -56,6 +56,7 @@ class ApiClient {
     ResponseType responseType = ResponseType.json,
     String? contentType,
     Duration? receiveTimeout,
+    Duration? sendTimeout,
   }) {
     return HttpClient.requestRaw(
       path,
@@ -65,6 +66,7 @@ class ApiClient {
       responseType: responseType,
       contentType: contentType,
       receiveTimeout: receiveTimeout,
+      sendTimeout: sendTimeout,
     );
   }
 

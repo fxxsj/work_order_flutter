@@ -147,9 +147,11 @@ class WorkOrderApiService {
     int id,
     MultipartFile designFile,
   ) async {
-    final response = await _client.patch(
+    final response = await _client.requestRaw(
       '/workorders/$id/',
+      method: 'patch',
       data: FormData.fromMap({'design_file': designFile}),
+      sendTimeout: const Duration(minutes: 2),
     );
     return _detailFromResponse(response.data, label: '上传设计文件');
   }

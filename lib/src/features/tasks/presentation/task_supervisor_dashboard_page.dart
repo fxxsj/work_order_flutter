@@ -39,6 +39,8 @@ class _TaskSupervisorDashboardView extends StatefulWidget {
 
 class _TaskSupervisorDashboardViewState
     extends State<_TaskSupervisorDashboardView> {
+  static const int _boardInitialPage = 1;
+  static const int _boardPageSize = 50;
   static const double _spacingSm = SpacingTokens.sm;
   static const String _refreshButtonText = '刷新';
   static const String _emptyText = '暂无数据';
@@ -52,6 +54,11 @@ class _TaskSupervisorDashboardViewState
   Map<String, dynamic>? _workload;
   List<Task> _departmentTasks = [];
   List<Task>? _departmentBoardTasks;
+  final Map<int?, List<Task>> _boardTasksByOperator = {};
+  int _boardTaskTotal = 0;
+  int _boardTaskPage = _boardInitialPage;
+  int _boardTaskPageSize = _boardPageSize;
+  bool _loadingBoardTasks = false;
   int _taskTotal = 0;
   int _taskPage = 1;
   int _taskPageSize = 50;
@@ -109,7 +116,7 @@ class _TaskSupervisorDashboardViewState
       setState(() {
         _workload = data.workload;
         _departmentTasks = data.tasks;
-        _departmentBoardTasks = null;
+        _resetBoardTasks();
         _taskTotal = data.taskTotal;
         _taskPage = data.taskPage;
         _taskPageSize = data.taskPageSize;
@@ -310,19 +317,46 @@ class _TaskSupervisorDashboardViewState
     if (value == 'dragdrop') await _loadBoardTasks();
   }
 
-  Future<void> _loadBoardTasks() async {
-    if (_departmentId == null || _departmentBoardTasks != null) return;
+  Future<void> _loadBoardTasks({int taskPage = _boardInitialPage}) async {
+    if (_departmentId == null || _loadingBoardTasks) return;
+    if (_departmentBoardTasks != null && _boardTaskPage == taskPage) return;
+    setState(() => _loadingBoardTasks = true);
     try {
-      final tasks = await context
+      final data = await context
           .read<TaskRepository>()
-          .loadDepartmentBoardTasks(_departmentId!);
-      if (mounted) setState(() => _departmentBoardTasks = tasks);
+          .loadDepartmentBoardTasks(_departmentId!, taskPage: taskPage);
+      if (mounted) {
+        setState(() {
+          _departmentBoardTasks = data.tasks;
+          _boardTaskTotal = data.taskTotal;
+          _boardTaskPage = data.taskPage;
+          _boardTaskPageSize = data.taskPageSize;
+          _cacheBoardTasksByOperator(data.tasks);
+        });
+      }
     } catch (err) {
       if (mounted) {
         ToastUtil.showError(
           '加载拖拽任务失败: ${err.toString().replaceFirst('Exception: ', '')}',
         );
       }
+    } finally {
+      if (mounted) setState(() => _loadingBoardTasks = false);
+    }
+  }
+
+  void _resetBoardTasks() {
+    _departmentBoardTasks = null;
+    _boardTasksByOperator.clear();
+    _boardTaskTotal = 0;
+    _boardTaskPage = _boardInitialPage;
+    _boardTaskPageSize = _boardPageSize;
+  }
+
+  void _cacheBoardTasksByOperator(List<Task> tasks) {
+    _boardTasksByOperator.clear();
+    for (final task in tasks) {
+      (_boardTasksByOperator[task.assignedOperatorId] ??= []).add(task);
     }
   }
 
@@ -721,7 +755,7 @@ class _TaskSupervisorDashboardViewState
 
   Widget _buildDragDropView() {
     final boardTasks = _departmentBoardTasks;
-    if (boardTasks == null) {
+    if (boardTasks == null || _loadingBoardTasks) {
       return const Center(child: CircularProgressIndicator());
     }
     if (_operators.isEmpty) {
@@ -734,46 +768,64 @@ class _TaskSupervisorDashboardViewState
       );
     }
 
-    final unassigned = boardTasks
-        .where((task) => task.assignedOperatorId == null)
-        .toList();
+    final unassigned = _boardTasksByOperator[null] ?? const <Task>[];
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final height = constraints.maxHeight;
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TaskSupervisorDragColumn(
-                title: '待分派',
-                subtitle: '未分配操作员',
-                height: height,
-                tasks: unassigned,
-                operatorId: null,
-                onDrop: null,
-                assigningTaskId: _assigningTaskId,
-              ),
-              SizedBox(width: SpacingTokens.lg),
-              for (final operator in _operators) ...[
-                TaskSupervisorDragColumn(
-                  title: operator.name,
-                  subtitle: '操作员任务',
-                  height: height,
-                  tasks: boardTasks
-                      .where((task) => task.assignedOperatorId == operator.id)
-                      .toList(),
-                  operatorId: operator.id,
-                  onDrop: (task) => _assignToOperator(task, operator),
-                  assigningTaskId: _assigningTaskId,
+    return Column(
+      children: [
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final height = constraints.maxHeight;
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TaskSupervisorDragColumn(
+                      title: '待分派',
+                      subtitle: '未分配操作员',
+                      height: height,
+                      tasks: unassigned,
+                      operatorId: null,
+                      onDrop: null,
+                      assigningTaskId: _assigningTaskId,
+                    ),
+                    SizedBox(width: SpacingTokens.lg),
+                    for (final operator in _operators) ...[
+                      TaskSupervisorDragColumn(
+                        title: operator.name,
+                        subtitle: '操作员任务',
+                        height: height,
+                        tasks:
+                            _boardTasksByOperator[operator.id] ??
+                            const <Task>[],
+                        operatorId: operator.id,
+                        onDrop: (task) => _assignToOperator(task, operator),
+                        assigningTaskId: _assigningTaskId,
+                      ),
+                      SizedBox(width: SpacingTokens.lg),
+                    ],
+                  ],
                 ),
-                SizedBox(width: SpacingTokens.lg),
-              ],
-            ],
+              );
+            },
           ),
-        );
-      },
+        ),
+        if (_boardTaskTotal > _boardTaskPageSize) ...[
+          SizedBox(height: SpacingTokens.sm),
+          ResponsivePaginationBar(
+            infoText: '当前显示 ${boardTasks.length} / 共 $_boardTaskTotal 条任务',
+            page: _boardTaskPage,
+            pageSize: _boardTaskPageSize,
+            pageSizeOptions: const [_boardPageSize],
+            onPageSizeChanged: (_) {},
+            onPrev: () => _loadBoardTasks(taskPage: _boardTaskPage - 1),
+            onNext: () => _loadBoardTasks(taskPage: _boardTaskPage + 1),
+            hasPrev: _boardTaskPage > _boardInitialPage,
+            hasNext: _boardTaskPage * _boardTaskPageSize < _boardTaskTotal,
+          ),
+        ],
+      ],
     );
   }
 

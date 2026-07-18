@@ -180,8 +180,14 @@ class TaskRepositoryImpl implements TaskRepository {
   }
 
   @override
-  Future<List<Task>> loadDepartmentBoardTasks(int departmentId) {
-    return _supervisorSupportService.loadDepartmentBoardTasks(departmentId);
+  Future<TaskSupervisorBoardData> loadDepartmentBoardTasks(
+    int departmentId, {
+    int taskPage = 1,
+  }) {
+    return _supervisorSupportService.loadDepartmentBoardTasks(
+      departmentId,
+      taskPage: taskPage,
+    );
   }
 
   @override

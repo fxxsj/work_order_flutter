@@ -1,4 +1,3 @@
-import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/tasks/data/task_dto.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_list_filter_options.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_operator_center_result.dart';
@@ -69,5 +68,8 @@ abstract class TaskRepository {
     int taskPage = 1,
   });
 
-  Future<List<Task>> loadDepartmentBoardTasks(int departmentId);
+  Future<TaskSupervisorBoardData> loadDepartmentBoardTasks(
+    int departmentId, {
+    int taskPage = 1,
+  });
 }

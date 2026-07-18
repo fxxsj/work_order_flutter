@@ -3,7 +3,6 @@ import 'package:work_order_app/src/features/departments/data/department_api_serv
 import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_api_service.dart';
 import 'package:work_order_app/src/features/inventory_quality/data/quality_inspection_api_service.dart';
 import 'package:work_order_app/src/features/tasks/data/task_api_service.dart';
-import 'package:work_order_app/src/features/tasks/domain/task.dart';
 import 'package:work_order_app/src/features/tasks/domain/task_supervisor_dashboard_data.dart';
 import 'package:work_order_app/src/features/tasks/presentation/task_department_option.dart';
 
@@ -57,22 +56,22 @@ class TaskSupervisorSupportService {
     );
   }
 
-  Future<List<Task>> loadDepartmentBoardTasks(int departmentId) async {
-    final api = TaskApiService(_client);
-    final tasks = <Task>[];
-    var page = 1;
-    while (true) {
-      final taskPage = await api.fetchTasks(
-        departmentId: departmentId,
-        page: page,
-        pageSize: taskPageSize,
-        ordering: '-created_at',
-      );
-      tasks.addAll(taskPage.items.map((dto) => dto.toEntity()));
-      if (tasks.length >= taskPage.total || taskPage.items.isEmpty) break;
-      page += 1;
-    }
-    return tasks;
+  Future<TaskSupervisorBoardData> loadDepartmentBoardTasks(
+    int departmentId, {
+    int taskPage = 1,
+  }) async {
+    final taskPageData = await TaskApiService(_client).fetchTasks(
+      departmentId: departmentId,
+      page: taskPage,
+      pageSize: taskPageSize,
+      ordering: '-created_at',
+    );
+    return TaskSupervisorBoardData(
+      tasks: taskPageData.items.map((dto) => dto.toEntity()).toList(),
+      taskTotal: taskPageData.total,
+      taskPage: taskPageData.page,
+      taskPageSize: taskPageData.pageSize,
+    );
   }
 
   Future<void> assignTask(

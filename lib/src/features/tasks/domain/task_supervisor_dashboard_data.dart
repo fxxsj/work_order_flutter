@@ -38,6 +38,20 @@ class TaskSupervisorOperatorOption {
   }
 }
 
+class TaskSupervisorBoardData {
+  const TaskSupervisorBoardData({
+    required this.tasks,
+    required this.taskTotal,
+    required this.taskPage,
+    required this.taskPageSize,
+  });
+
+  final List<Task> tasks;
+  final int taskTotal;
+  final int taskPage;
+  final int taskPageSize;
+}
+
 class TaskSupervisorDashboardData {
   const TaskSupervisorDashboardData({
     required this.workload,

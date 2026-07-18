@@ -217,9 +217,11 @@ class DeliveryOrderApiService {
     int id,
     MultipartFile receiverSignature,
   ) async {
-    final response = await _client.patch(
+    final response = await _client.requestRaw(
       '/delivery-orders/$id/',
+      method: 'patch',
       data: FormData.fromMap({'receiver_signature': receiverSignature}),
+      sendTimeout: const Duration(minutes: 2),
     );
     final map = response.data is Map
         ? Map<String, dynamic>.from(response.data)

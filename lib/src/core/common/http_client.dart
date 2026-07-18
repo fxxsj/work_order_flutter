@@ -191,6 +191,7 @@ class HttpClient {
     ResponseType responseType = ResponseType.json,
     String? contentType,
     Duration? receiveTimeout,
+    Duration? sendTimeout,
   }) async {
     try {
       // 调试日志：打印完整的请求信息
@@ -202,6 +203,7 @@ class HttpClient {
         method: method.toUpperCase(),
         responseType: responseType,
         receiveTimeout: receiveTimeout ?? _rawRequestTimeout,
+        sendTimeout: sendTimeout,
       );
       if (contentType != null) {
         options.contentType = contentType;

@@ -447,13 +447,30 @@ class _MockTaskRepository implements TaskRepository {
 
   @override
   Future<TaskSupervisorDashboardData> loadDepartmentDashboard(
-    int departmentId,
-  ) async {
+    int departmentId, {
+    int taskPage = 1,
+  }) async {
     return const TaskSupervisorDashboardData(
       workload: {},
       tasks: [],
+      taskTotal: 0,
+      taskPage: 1,
+      taskPageSize: 50,
       operators: [],
       flowSummary: TaskSupervisorFlowSummary(),
+    );
+  }
+
+  @override
+  Future<TaskSupervisorBoardData> loadDepartmentBoardTasks(
+    int departmentId, {
+    int taskPage = 1,
+  }) async {
+    return const TaskSupervisorBoardData(
+      tasks: [],
+      taskTotal: 0,
+      taskPage: 1,
+      taskPageSize: 50,
     );
   }
 }
