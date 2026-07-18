@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/common/api_exception.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
+import 'package:work_order_app/src/core/utils/raw_api_response.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_detail_dto.dart';
 import 'package:work_order_app/src/features/workorders/data/work_order_dto.dart';
 import 'package:work_order_app/src/features/workorders/domain/work_order_sales_order_candidate.dart';
@@ -153,7 +154,10 @@ class WorkOrderApiService {
       data: FormData.fromMap({'design_file': designFile}),
       sendTimeout: const Duration(minutes: 2),
     );
-    return _detailFromResponse(response.data, label: '上传设计文件');
+    return _detailFromResponse(
+      requireRawApiResponseData(label: '上传设计文件', data: response.data),
+      label: '上传设计文件',
+    );
   }
 
   Future<void> deleteWorkOrder(int id) async {

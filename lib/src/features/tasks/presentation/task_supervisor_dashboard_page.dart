@@ -68,6 +68,8 @@ class _TaskSupervisorDashboardViewState
   int? _assigningTaskId;
   String _taskStatusFilter = 'all';
   bool _departmentsRequested = false;
+  int _workloadRequestId = 0;
+  int _boardRequestId = 0;
 
   @override
   void didChangeDependencies() {
@@ -101,7 +103,9 @@ class _TaskSupervisorDashboardViewState
 
   Future<void> _loadWorkload({int? taskPage}) async {
     if (_departmentId == null) return;
+    final departmentId = _departmentId!;
     final requestedTaskPage = taskPage ?? _taskPage;
+    final requestId = ++_workloadRequestId;
     setState(() {
       _loading = true;
       _errorMessage = null;
@@ -109,14 +113,17 @@ class _TaskSupervisorDashboardViewState
     try {
       final repository = context.read<TaskRepository>();
       final data = await repository.loadDepartmentDashboard(
-        _departmentId!,
+        departmentId,
         taskPage: requestedTaskPage,
       );
-      if (!mounted) return;
+      if (!mounted ||
+          requestId != _workloadRequestId ||
+          departmentId != _departmentId) {
+        return;
+      }
       setState(() {
         _workload = data.workload;
         _departmentTasks = data.tasks;
-        _resetBoardTasks();
         _taskTotal = data.taskTotal;
         _taskPage = data.taskPage;
         _taskPageSize = data.taskPageSize;
@@ -124,12 +131,23 @@ class _TaskSupervisorDashboardViewState
         _flowSummary = data.flowSummary;
       });
     } catch (err) {
+      if (!mounted || requestId != _workloadRequestId) return;
       setState(() {
         _errorMessage = err.toString().replaceFirst('Exception: ', '');
       });
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && requestId == _workloadRequestId) {
+        setState(() => _loading = false);
+      }
     }
+  }
+
+  Future<void> _refreshCurrentView() async {
+    final requests = <Future<void>>[_loadWorkload()];
+    if (_viewMode == 'dragdrop') {
+      requests.add(_loadBoardTasks(taskPage: _boardTaskPage, force: true));
+    }
+    await Future.wait(requests);
   }
 
   @override
@@ -230,7 +248,7 @@ class _TaskSupervisorDashboardViewState
           isMobile: isMobile,
           actions: [
             PageActionButton.outlined(
-              onPressed: _loadWorkload,
+              onPressed: _refreshCurrentView,
               icon: const Icon(Icons.refresh, size: 16),
               label: _refreshButtonText,
             ),
@@ -267,13 +285,7 @@ class _TaskSupervisorDashboardViewState
           value: _departmentId,
           decoration: const InputDecoration(labelText: '部门'),
           options: deptItems,
-          onChanged: (value) {
-            setState(() {
-              _departmentId = value;
-              _taskPage = 1;
-            });
-            _loadWorkload(taskPage: 1);
-          },
+          onChanged: _changeDepartment,
         ),
         SizedBox(height: spacing),
         PageActionButton.filled(
@@ -317,15 +329,40 @@ class _TaskSupervisorDashboardViewState
     if (value == 'dragdrop') await _loadBoardTasks();
   }
 
-  Future<void> _loadBoardTasks({int taskPage = _boardInitialPage}) async {
-    if (_departmentId == null || _loadingBoardTasks) return;
-    if (_departmentBoardTasks != null && _boardTaskPage == taskPage) return;
+  Future<void> _changeDepartment(int? value) async {
+    if (_departmentId == value) return;
+    setState(() {
+      _departmentId = value;
+      _taskPage = 1;
+      _workloadRequestId++;
+      _boardRequestId++;
+      _loadingBoardTasks = false;
+      _resetBoardTasks();
+    });
+    await _loadWorkload(taskPage: 1);
+    if (mounted && _viewMode == 'dragdrop' && _departmentId == value) {
+      await _loadBoardTasks();
+    }
+  }
+
+  Future<void> _loadBoardTasks({
+    int taskPage = _boardInitialPage,
+    bool force = false,
+  }) async {
+    if (_departmentId == null) return;
+    if (!force && _departmentBoardTasks != null && _boardTaskPage == taskPage) {
+      return;
+    }
+    final departmentId = _departmentId!;
+    final requestId = ++_boardRequestId;
     setState(() => _loadingBoardTasks = true);
     try {
       final data = await context
           .read<TaskRepository>()
-          .loadDepartmentBoardTasks(_departmentId!, taskPage: taskPage);
-      if (mounted) {
+          .loadDepartmentBoardTasks(departmentId, taskPage: taskPage);
+      if (mounted &&
+          requestId == _boardRequestId &&
+          departmentId == _departmentId) {
         setState(() {
           _departmentBoardTasks = data.tasks;
           _boardTaskTotal = data.taskTotal;
@@ -335,13 +372,15 @@ class _TaskSupervisorDashboardViewState
         });
       }
     } catch (err) {
-      if (mounted) {
+      if (mounted && requestId == _boardRequestId) {
         ToastUtil.showError(
           '加载拖拽任务失败: ${err.toString().replaceFirst('Exception: ', '')}',
         );
       }
     } finally {
-      if (mounted) setState(() => _loadingBoardTasks = false);
+      if (mounted && requestId == _boardRequestId) {
+        setState(() => _loadingBoardTasks = false);
+      }
     }
   }
 
@@ -848,7 +887,7 @@ class _TaskSupervisorDashboardViewState
               notes: notes,
             );
             ToastUtil.showSuccess('任务已分派');
-            await _loadWorkload();
+            await _refreshCurrentView();
           } catch (err) {
             ToastUtil.showError(
               '分派失败: ${err.toString().replaceFirst('Exception: ', '')}',
@@ -870,7 +909,7 @@ class _TaskSupervisorDashboardViewState
       final repository = context.read<TaskRepository>();
       await repository.assignTask(task.id, operatorId: operator.id, notes: '');
       ToastUtil.showSuccess('已分派给 ${operator.name}');
-      await _loadWorkload();
+      await _refreshCurrentView();
     } catch (err) {
       ToastUtil.showError(
         '分派失败: ${err.toString().replaceFirst('Exception: ', '')}',

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
+import 'package:work_order_app/src/core/utils/raw_api_response.dart';
 import 'package:work_order_app/src/features/inventory_delivery/data/delivery_order_dto.dart';
 import 'package:work_order_app/src/features/inventory_delivery/domain/delivery_order_detail.dart';
 
@@ -223,9 +224,7 @@ class DeliveryOrderApiService {
       data: FormData.fromMap({'receiver_signature': receiverSignature}),
       sendTimeout: const Duration(minutes: 2),
     );
-    final map = response.data is Map
-        ? Map<String, dynamic>.from(response.data)
-        : <String, dynamic>{};
+    final map = requireRawApiResponseData(label: '上传签收签名', data: response.data);
     return DeliveryOrderDetail.fromJson(map);
   }
 

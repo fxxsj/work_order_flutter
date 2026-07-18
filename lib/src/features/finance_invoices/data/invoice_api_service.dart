@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:work_order_app/src/core/network/api_client.dart';
 import 'package:work_order_app/src/core/utils/parse_utils.dart';
+import 'package:work_order_app/src/core/utils/raw_api_response.dart';
 import 'package:work_order_app/src/features/finance_invoices/data/invoice_dto.dart';
 
 class InvoiceApiService {
@@ -106,7 +107,7 @@ class InvoiceApiService {
       data: FormData.fromMap({'attachment': attachment}),
       sendTimeout: const Duration(minutes: 2),
     );
-    return _mapFromResponse(response.data);
+    return requireRawApiResponseData(label: '上传发票附件', data: response.data);
   }
 
   Future<Map<String, dynamic>> approve(
