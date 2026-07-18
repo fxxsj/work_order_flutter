@@ -471,12 +471,20 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
       final createdCount = orders is List ? orders.length : 0;
       final itemCount = result['created_item_count'] ?? 0;
       final skippedCount = result['skipped_item_count'] ?? 0;
+      final blockedCount = result['blocked_item_count'] ?? 0;
       final skippedText = skippedCount is int && skippedCount > 0
           ? '，跳过 $skippedCount 项'
           : '';
-      ToastUtil.showSuccess(
-        '已创建 $createdCount 个采购单，包含 $itemCount 个物料明细$skippedText',
-      );
+      final blockedText = blockedCount is int && blockedCount > 0
+          ? '，$blockedCount 项待处理'
+          : '';
+      final message =
+          '已创建 $createdCount 个采购单，包含 $itemCount 个物料明细$skippedText$blockedText';
+      if (createdCount == 0 && blockedCount is int && blockedCount > 0) {
+        ToastUtil.show(message: message);
+      } else {
+        ToastUtil.showSuccess(message);
+      }
       await _loadDetail();
     } catch (err) {
       ToastUtil.showError('创建采购单失败: $err');

@@ -379,6 +379,15 @@ class WorkOrderMaterialItem {
     this.purchaseMaterialIsTemporary = false,
     this.purchaseMaterialSupplier,
     this.purchaseMaterialUnitPrice,
+    this.procurementMaterialId,
+    this.procurementMaterialName,
+    this.procurementMaterialCode,
+    this.procurementMaterialUnit,
+    this.procurementSupplierId,
+    this.procurementSupplierName,
+    this.procurementQuantity,
+    this.procurementReady = false,
+    this.procurementBlockReason,
     this.parentSheetWidthMm,
     this.parentSheetHeightMm,
     this.cutWidthMm,
@@ -418,6 +427,15 @@ class WorkOrderMaterialItem {
   final bool purchaseMaterialIsTemporary;
   final int? purchaseMaterialSupplier;
   final double? purchaseMaterialUnitPrice;
+  final int? procurementMaterialId;
+  final String? procurementMaterialName;
+  final String? procurementMaterialCode;
+  final String? procurementMaterialUnit;
+  final int? procurementSupplierId;
+  final String? procurementSupplierName;
+  final double? procurementQuantity;
+  final bool procurementReady;
+  final String? procurementBlockReason;
   final double? parentSheetWidthMm;
   final double? parentSheetHeightMm;
   final double? cutWidthMm;
@@ -474,6 +492,25 @@ class WorkOrderMaterialItem {
       purchaseMaterialUnitPrice: WorkOrderDetail._toDouble(
         json['purchase_material_unit_price'],
       ),
+      procurementMaterialId: toInt(json['procurement_material_id']),
+      procurementMaterialName: toStringOrNull(
+        json['procurement_material_name'],
+      ),
+      procurementMaterialCode: toStringOrNull(
+        json['procurement_material_code'],
+      ),
+      procurementMaterialUnit: toStringOrNull(
+        json['procurement_material_unit'],
+      ),
+      procurementSupplierId: toInt(json['procurement_supplier_id']),
+      procurementSupplierName: toStringOrNull(
+        json['procurement_supplier_name'],
+      ),
+      procurementQuantity: WorkOrderDetail._toDouble(
+        json['procurement_quantity'],
+      ),
+      procurementReady: json['procurement_ready'] == true,
+      procurementBlockReason: toStringOrNull(json['procurement_block_reason']),
       parentSheetWidthMm: WorkOrderDetail._toDouble(
         json['parent_sheet_width_mm'],
       ),

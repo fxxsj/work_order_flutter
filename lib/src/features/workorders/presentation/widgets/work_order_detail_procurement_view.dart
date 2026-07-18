@@ -27,12 +27,9 @@ class WorkOrderDetailProcurementView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasPendingMaterials = detail.materials.any(
-      (m) => m.purchaseStatus == 'pending' || m.purchaseStatus == null,
+    final hasPurchasableMaterials = detail.materials.any(
+      (m) => m.procurementReady,
     );
-    final plansReady = detail.materials
-        .where((m) => m.planningRequired)
-        .every((m) => m.planningStatus == 'confirmed');
 
     return SingleChildScrollView(
       padding: LayoutTokens.pagePadding(context),
@@ -40,11 +37,11 @@ class WorkOrderDetailProcurementView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // 创建采购单按钮
-          if (hasPendingMaterials)
+          if (hasPurchasableMaterials)
             Padding(
               padding: const EdgeInsets.only(bottom: SpacingTokens.md),
               child: FilledButton.icon(
-                onPressed: plansReady ? onCreatePurchaseOrder : null,
+                onPressed: onCreatePurchaseOrder,
                 icon: const Icon(Icons.add_shopping_cart),
                 label: const Text('创建待处理采购单'),
               ),
@@ -87,8 +84,12 @@ class WorkOrderDetailProcurementView extends StatelessWidget {
                   planningRequired: m.planningRequired,
                   planningStatus: m.planningStatus,
                   planningStatusDisplay: m.planningStatusDisplay,
-                  purchaseMaterialName: m.purchaseMaterialName,
-                  purchaseQuantity: m.purchaseQuantity,
+                  procurementMaterialName: m.procurementMaterialName,
+                  procurementMaterialCode: m.procurementMaterialCode,
+                  procurementMaterialUnit: m.procurementMaterialUnit,
+                  procurementSupplierName: m.procurementSupplierName,
+                  procurementQuantity: m.procurementQuantity,
+                  procurementBlockReason: m.procurementBlockReason,
                   onPlan: onPlanMaterial == null
                       ? null
                       : () => onPlanMaterial!(m),
@@ -135,8 +136,12 @@ class _MaterialStatusCard extends StatelessWidget {
     required this.planningRequired,
     this.planningStatus,
     this.planningStatusDisplay,
-    this.purchaseMaterialName,
-    this.purchaseQuantity,
+    this.procurementMaterialName,
+    this.procurementMaterialCode,
+    this.procurementMaterialUnit,
+    this.procurementSupplierName,
+    this.procurementQuantity,
+    this.procurementBlockReason,
     this.onPlan,
   });
 
@@ -150,8 +155,12 @@ class _MaterialStatusCard extends StatelessWidget {
   final bool planningRequired;
   final String? planningStatus;
   final String? planningStatusDisplay;
-  final String? purchaseMaterialName;
-  final double? purchaseQuantity;
+  final String? procurementMaterialName;
+  final String? procurementMaterialCode;
+  final String? procurementMaterialUnit;
+  final String? procurementSupplierName;
+  final double? procurementQuantity;
+  final String? procurementBlockReason;
   final VoidCallback? onPlan;
 
   @override
@@ -220,6 +229,25 @@ class _MaterialStatusCard extends StatelessWidget {
               ),
             ],
           ),
+          if (procurementMaterialName != null) ...[
+            const SizedBox(height: SpacingTokens.sm),
+            Text(
+              '采购：$procurementMaterialName'
+              '${procurementMaterialCode?.isNotEmpty == true ? ' ($procurementMaterialCode)' : ''}'
+              ' · 缺口 ${procurementQuantity ?? 0}${procurementMaterialUnit ?? ''}'
+              '${procurementSupplierName?.isNotEmpty == true ? ' · $procurementSupplierName' : ''}',
+              style: theme.textTheme.bodySmall,
+            ),
+          ],
+          if (procurementBlockReason?.isNotEmpty == true) ...[
+            const SizedBox(height: SpacingTokens.sm),
+            Text(
+              procurementBlockReason!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.error,
+              ),
+            ),
+          ],
           if (planningRequired) ...[
             const SizedBox(height: SpacingTokens.sm),
             Row(
@@ -227,7 +255,7 @@ class _MaterialStatusCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     planningStatus == 'confirmed'
-                        ? '已选 ${purchaseMaterialName ?? '-'}，需采购 ${purchaseQuantity ?? 0}'
+                        ? '规格计划已确认'
                         : calculationMode == 'specification_selection'
                         ? '待确认本单实际使用的物料规格和数量'
                         : '待拼版后确认原纸、开料尺寸和备料方式',
