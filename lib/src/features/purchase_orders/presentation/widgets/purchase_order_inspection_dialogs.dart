@@ -212,6 +212,11 @@ class _PurchaseInspectionPanelState extends State<_PurchaseInspectionPanel> {
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: SpacingTokens.xxs),
+            Text(
+              '规格：${_displaySpecification(record['material_specification'])}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: SpacingTokens.xxs),
             Wrap(
               spacing: SpacingTokens.md,
               runSpacing: SpacingTokens.xs,
@@ -484,4 +489,9 @@ double? _toDouble(dynamic value) {
   if (value == null) return null;
   if (value is num) return value.toDouble();
   return double.tryParse(value.toString());
+}
+
+String _displaySpecification(dynamic value) {
+  final specification = value?.toString().trim() ?? '';
+  return specification.isEmpty ? '未填写' : specification;
 }

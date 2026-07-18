@@ -382,6 +382,7 @@ class WorkOrderMaterialItem {
     this.procurementMaterialId,
     this.procurementMaterialName,
     this.procurementMaterialCode,
+    this.procurementMaterialSpecification,
     this.procurementMaterialUnit,
     this.procurementSupplierId,
     this.procurementSupplierName,
@@ -430,6 +431,7 @@ class WorkOrderMaterialItem {
   final int? procurementMaterialId;
   final String? procurementMaterialName;
   final String? procurementMaterialCode;
+  final String? procurementMaterialSpecification;
   final String? procurementMaterialUnit;
   final int? procurementSupplierId;
   final String? procurementSupplierName;
@@ -498,6 +500,9 @@ class WorkOrderMaterialItem {
       ),
       procurementMaterialCode: toStringOrNull(
         json['procurement_material_code'],
+      ),
+      procurementMaterialSpecification: toStringOrNull(
+        json['procurement_material_specification'],
       ),
       procurementMaterialUnit: toStringOrNull(
         json['procurement_material_unit'],

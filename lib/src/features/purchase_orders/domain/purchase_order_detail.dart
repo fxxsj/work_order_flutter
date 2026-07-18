@@ -70,6 +70,8 @@ abstract class PurchaseOrderItemDetail with _$PurchaseOrderItemDetail {
     String? materialName,
     @JsonKey(name: 'material_code', fromJson: _stringOrNullFromJson)
     String? materialCode,
+    @JsonKey(name: 'material_specification', fromJson: _stringOrNullFromJson)
+    String? materialSpecification,
     @JsonKey(
       name: 'material_unit',
       readValue: _readMaterialUnit,

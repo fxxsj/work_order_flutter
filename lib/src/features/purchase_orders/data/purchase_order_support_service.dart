@@ -21,6 +21,7 @@ class PurchaseOrderSupportService {
     final materialFuture = materialApi.fetchMaterials(
       pageSize: 400,
       isActive: true,
+      specificationLevel: 'stock',
     );
     final workOrderFuture = workOrderApi.fetchWorkOrders(
       pageSize: 50,
@@ -35,12 +36,11 @@ class PurchaseOrderSupportService {
     return PurchaseOrderFormOptions(
       suppliers: supplierPage.items.map((dto) => dto.toEntity()).toList(),
       materials: materialPage.items.map((dto) => dto.toEntity()).toList(),
-      workOrders: workOrderPage.items
-          .map((dto) => dto.toEntity())
-          .where((order) {
-            return order.status != 'completed' && order.status != 'cancelled';
-          })
-          .toList(),
+      workOrders: workOrderPage.items.map((dto) => dto.toEntity()).where((
+        order,
+      ) {
+        return order.status != 'completed' && order.status != 'cancelled';
+      }).toList(),
     );
   }
 

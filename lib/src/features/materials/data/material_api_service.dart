@@ -16,6 +16,7 @@ class MaterialApiService {
     int pageSize = 20,
     String? search,
     bool? isActive,
+    String? specificationLevel,
     String? ordering,
   }) async {
     final params = <String, dynamic>{'page': page, 'page_size': pageSize};
@@ -25,6 +26,11 @@ class MaterialApiService {
     }
     if (isActive != null) {
       params['is_active'] = isActive;
+    }
+    final trimmedSpecificationLevel = specificationLevel?.trim();
+    if (trimmedSpecificationLevel != null &&
+        trimmedSpecificationLevel.isNotEmpty) {
+      params['specification_level'] = trimmedSpecificationLevel;
     }
     final trimmedOrdering = ordering?.trim();
     if (trimmedOrdering != null && trimmedOrdering.isNotEmpty) {

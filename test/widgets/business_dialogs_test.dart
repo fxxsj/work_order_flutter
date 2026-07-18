@@ -27,8 +27,9 @@ import 'package:work_order_app/src/features/workorders/domain/work_order_detail.
 import 'package:work_order_app/src/features/workorders/presentation/widgets/work_order_sync_preview_dialog.dart';
 
 void main() {
-  testWidgets('product stock adjust dialog validates required fields',
-      (tester) async {
+  testWidgets('product stock adjust dialog validates required fields', (
+    tester,
+  ) async {
     ProductStockAdjustResult? result;
 
     await _pumpButton(
@@ -54,8 +55,9 @@ void main() {
     expect(result, isNull);
   });
 
-  testWidgets('product stock adjust dialog returns submitted payload',
-      (tester) async {
+  testWidgets('product stock adjust dialog returns submitted payload', (
+    tester,
+  ) async {
     ProductStockAdjustResult? result;
 
     await _pumpButton(
@@ -175,8 +177,9 @@ void main() {
     expect(payload, isNull);
   });
 
-  testWidgets('task complete dialog submits completion payload',
-      (tester) async {
+  testWidgets('task complete dialog submits completion payload', (
+    tester,
+  ) async {
     Map<String, dynamic>? payload;
 
     await _pumpButton(
@@ -207,8 +210,9 @@ void main() {
     });
   });
 
-  testWidgets('task assign dialog loads operators and submits selection',
-      (tester) async {
+  testWidgets('task assign dialog loads operators and submits selection', (
+    tester,
+  ) async {
     int? operatorId;
     String? notes;
     var loadedDepartmentId = 0;
@@ -251,8 +255,9 @@ void main() {
     expect(notes, '优先安排');
   });
 
-  testWidgets('sales order payment dialog returns submitted values',
-      (tester) async {
+  testWidgets('sales order payment dialog returns submitted values', (
+    tester,
+  ) async {
     SalesOrderPaymentUpdateResult? result;
 
     await _pumpButton(
@@ -279,8 +284,9 @@ void main() {
     expect(result?.dateText, '2026-05-21');
   });
 
-  testWidgets('sales order complete dialog validates required reason',
-      (tester) async {
+  testWidgets('sales order complete dialog validates required reason', (
+    tester,
+  ) async {
     SalesOrderCompleteResult? result;
 
     await _pumpButton(
@@ -303,8 +309,9 @@ void main() {
     expect(result, isNull);
   });
 
-  testWidgets('sales order complete dialog returns trimmed reason',
-      (tester) async {
+  testWidgets('sales order complete dialog returns trimmed reason', (
+    tester,
+  ) async {
     SalesOrderCompleteResult? result;
 
     await _pumpButton(
@@ -327,8 +334,9 @@ void main() {
     expect(result?.completionReason, '客户确认尾差结案');
   });
 
-  testWidgets('sales order batch create dialog returns defaults and notes',
-      (tester) async {
+  testWidgets('sales order batch create dialog returns defaults and notes', (
+    tester,
+  ) async {
     SalesOrderBatchCreateWorkOrderResult? result;
 
     await _pumpButton(
@@ -357,8 +365,9 @@ void main() {
     expect(result?.notes, '统一备注');
   });
 
-  testWidgets('delivery ship dialog submits trimmed logistics data',
-      (tester) async {
+  testWidgets('delivery ship dialog submits trimmed logistics data', (
+    tester,
+  ) async {
     String? logisticsCompany;
     String? trackingNumber;
 
@@ -419,8 +428,9 @@ void main() {
     expect(notes, '已签收');
   });
 
-  testWidgets('delivery reject dialog validates and submits reason',
-      (tester) async {
+  testWidgets('delivery reject dialog validates and submits reason', (
+    tester,
+  ) async {
     String? reason;
 
     await _pumpButton(
@@ -452,8 +462,9 @@ void main() {
     expect(reason, '包装破损');
   });
 
-  testWidgets('delivery reject dialog fits mobile width and validates reason',
-      (tester) async {
+  testWidgets('delivery reject dialog fits mobile width and validates reason', (
+    tester,
+  ) async {
     String? reason;
 
     _setTestViewSize(tester, const Size(320, 640));
@@ -492,8 +503,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('delivery order form fits desktop width and submits',
-      (tester) async {
+  testWidgets('delivery order form fits desktop width and submits', (
+    tester,
+  ) async {
     final formKey = GlobalKey<FormState>();
     final receiverNameController = TextEditingController();
     final receiverPhoneController = TextEditingController();
@@ -622,8 +634,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('purchase reason dialog trims text and returns null for empty',
-      (tester) async {
+  testWidgets('purchase reason dialog trims text and returns null for empty', (
+    tester,
+  ) async {
     String? result;
 
     await _pumpButton(
@@ -667,8 +680,9 @@ void main() {
     expect(result, isNull);
   });
 
-  testWidgets('purchase receive dialog blocks empty receive quantities',
-      (tester) async {
+  testWidgets('purchase receive dialog blocks empty receive quantities', (
+    tester,
+  ) async {
     PurchaseReceiveSubmission? submission;
     bool? result;
 
@@ -685,6 +699,7 @@ void main() {
 
     await tester.tap(find.text('打开'));
     await tester.pumpAndSettle();
+    expect(find.text('规格：大度 889×1194mm'), findsOneWidget);
     await tester.tap(find.text('确认收货'));
     await tester.pump();
 
@@ -694,8 +709,9 @@ void main() {
     expect(find.text('采购收货'), findsWidgets);
   });
 
-  testWidgets('purchase receive dialog submits selected item quantities',
-      (tester) async {
+  testWidgets('purchase receive dialog submits selected item quantities', (
+    tester,
+  ) async {
     PurchaseReceiveSubmission? submission;
     bool? result;
 
@@ -728,8 +744,9 @@ void main() {
     expect(submission?.items.single.notes, '本批先收');
   });
 
-  testWidgets('purchase inspection dialog confirms inspection payload',
-      (tester) async {
+  testWidgets('purchase inspection dialog confirms inspection payload', (
+    tester,
+  ) async {
     Map<String, dynamic>? payload;
     var recordId = 0;
     var loadCount = 0;
@@ -758,6 +775,7 @@ void main() {
     expect(loadCount, 1);
     expect(find.text('收货记录质检'), findsOneWidget);
     expect(find.text('M-001 纸张'), findsOneWidget);
+    expect(find.text('规格：大度 889×1194mm'), findsOneWidget);
 
     await tester.tap(find.text('质检'));
     await tester.pumpAndSettle();
@@ -778,8 +796,9 @@ void main() {
     expect(loadCount, 2);
   });
 
-  testWidgets('purchase inspection dialog stocks in qualified record',
-      (tester) async {
+  testWidgets('purchase inspection dialog stocks in qualified record', (
+    tester,
+  ) async {
     var stockedRecordId = 0;
     var loadCount = 0;
 
@@ -813,8 +832,9 @@ void main() {
     expect(loadCount, 2);
   });
 
-  testWidgets('purchase order form adds material row and submits',
-      (tester) async {
+  testWidgets('purchase order form adds material row and submits', (
+    tester,
+  ) async {
     final formKey = GlobalKey<FormState>();
     final notesController = TextEditingController();
     final items = <PurchaseItemDraft>[];
@@ -851,6 +871,7 @@ void main() {
               id: 5,
               code: 'M-001',
               name: '纸张',
+              specification: '大度 889×1194mm',
               unit: '张',
               unitPrice: 2.5,
             ),
@@ -900,9 +921,10 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('物料'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('M-001 纸张').last);
+    await tester.tap(find.text('M-001 纸张 · 大度 889×1194mm').last);
     await tester.pumpAndSettle();
 
+    expect(find.text('规格：大度 889×1194mm'), findsOneWidget);
     expect(find.text('张'), findsOneWidget);
     expect(find.text('2.50'), findsOneWidget);
 
@@ -914,8 +936,9 @@ void main() {
     expect(submitted, isTrue);
   });
 
-  testWidgets('payment create dialog validates customer and returns payload',
-      (tester) async {
+  testWidgets('payment create dialog validates customer and returns payload', (
+    tester,
+  ) async {
     PaymentCreateResult? result;
 
     await _pumpButton(
@@ -963,8 +986,9 @@ void main() {
     });
   });
 
-  testWidgets('inventory document form refreshes custom fields and submits',
-      (tester) async {
+  testWidgets('inventory document form refreshes custom fields and submits', (
+    tester,
+  ) async {
     final dateController = TextEditingController(text: '2026-05-21');
     final notesController = TextEditingController(text: '初始备注');
     var counter = 0;
@@ -1017,8 +1041,9 @@ void main() {
     expect(notesController.text, ' 更新备注 ');
   });
 
-  testWidgets('statement create dialog validates required fields',
-      (tester) async {
+  testWidgets('statement create dialog validates required fields', (
+    tester,
+  ) async {
     StatementCreateResult? result;
 
     await _pumpButton(
@@ -1046,8 +1071,9 @@ void main() {
     expect(result, isNull);
   });
 
-  testWidgets('statement generate dialog creates customer and returns params',
-      (tester) async {
+  testWidgets('statement generate dialog creates customer and returns params', (
+    tester,
+  ) async {
     StatementGenerateResult? result;
 
     await _pumpButton(
@@ -1078,14 +1104,12 @@ void main() {
     await tester.tap(find.text('生成'));
     await tester.pumpAndSettle();
 
-    expect(result?.params, {
-      'period': '2026-05',
-      'customer': 9,
-    });
+    expect(result?.params, {'period': '2026-05', 'customer': 9});
   });
 
-  testWidgets('statement generate dialog validates required period',
-      (tester) async {
+  testWidgets('statement generate dialog validates required period', (
+    tester,
+  ) async {
     StatementGenerateResult? result;
 
     await _pumpButton(
@@ -1120,8 +1144,9 @@ void main() {
     expect(result, isNull);
   });
 
-  testWidgets('statement generate dialog fits mobile width and submits',
-      (tester) async {
+  testWidgets('statement generate dialog fits mobile width and submits', (
+    tester,
+  ) async {
     StatementGenerateResult? result;
 
     _setTestViewSize(tester, const Size(320, 640));
@@ -1159,15 +1184,13 @@ void main() {
     await tester.tap(find.text('生成'));
     await tester.pumpAndSettle();
 
-    expect(result?.params, {
-      'period': '2026-05',
-      'customer': 9,
-    });
+    expect(result?.params, {'period': '2026-05', 'customer': 9});
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('work order sync preview loads preview and executes selection',
-      (tester) async {
+  testWidgets('work order sync preview loads preview and executes selection', (
+    tester,
+  ) async {
     List<int>? previewIds;
     List<int>? executedIds;
 
@@ -1241,6 +1264,7 @@ const _purchaseDetail = PurchaseOrderDetail(
       id: 101,
       materialName: '纸张',
       materialCode: 'M-001',
+      materialSpecification: '大度 889×1194mm',
       quantity: 10,
       receivedQuantity: 2,
       remainingQuantity: 8,
@@ -1252,6 +1276,7 @@ final _pendingInspectionRecord = <String, dynamic>{
   'id': 201,
   'material_code': 'M-001',
   'material_name': '纸张',
+  'material_specification': '大度 889×1194mm',
   'received_quantity': 10,
   'inspection_status': 'pending',
   'inspection_status_display': '待质检',
@@ -1272,16 +1297,8 @@ final _qualifiedInspectionRecord = <String, dynamic>{
 };
 
 const _workOrderProcesses = [
-  WorkOrderProcessItem(
-    id: 1,
-    processName: '印刷',
-    processCode: 'PRINT',
-  ),
-  WorkOrderProcessItem(
-    id: 2,
-    processName: '模切',
-    processCode: 'DIE',
-  ),
+  WorkOrderProcessItem(id: 1, processName: '印刷', processCode: 'PRINT'),
+  WorkOrderProcessItem(id: 2, processName: '模切', processCode: 'DIE'),
 ];
 
 Future<void> _pumpButton(

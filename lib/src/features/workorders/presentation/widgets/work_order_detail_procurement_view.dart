@@ -86,6 +86,8 @@ class WorkOrderDetailProcurementView extends StatelessWidget {
                   planningStatusDisplay: m.planningStatusDisplay,
                   procurementMaterialName: m.procurementMaterialName,
                   procurementMaterialCode: m.procurementMaterialCode,
+                  procurementMaterialSpecification:
+                      m.procurementMaterialSpecification,
                   procurementMaterialUnit: m.procurementMaterialUnit,
                   procurementSupplierName: m.procurementSupplierName,
                   procurementQuantity: m.procurementQuantity,
@@ -138,6 +140,7 @@ class _MaterialStatusCard extends StatelessWidget {
     this.planningStatusDisplay,
     this.procurementMaterialName,
     this.procurementMaterialCode,
+    this.procurementMaterialSpecification,
     this.procurementMaterialUnit,
     this.procurementSupplierName,
     this.procurementQuantity,
@@ -157,6 +160,7 @@ class _MaterialStatusCard extends StatelessWidget {
   final String? planningStatusDisplay;
   final String? procurementMaterialName;
   final String? procurementMaterialCode;
+  final String? procurementMaterialSpecification;
   final String? procurementMaterialUnit;
   final String? procurementSupplierName;
   final double? procurementQuantity;
@@ -234,6 +238,7 @@ class _MaterialStatusCard extends StatelessWidget {
             Text(
               '采购：$procurementMaterialName'
               '${procurementMaterialCode?.isNotEmpty == true ? ' ($procurementMaterialCode)' : ''}'
+              ' · 规格 ${procurementMaterialSpecification?.trim().isNotEmpty == true ? procurementMaterialSpecification : '未填写'}'
               ' · 缺口 ${procurementQuantity ?? 0}${procurementMaterialUnit ?? ''}'
               '${procurementSupplierName?.isNotEmpty == true ? ' · $procurementSupplierName' : ''}',
               style: theme.textTheme.bodySmall,

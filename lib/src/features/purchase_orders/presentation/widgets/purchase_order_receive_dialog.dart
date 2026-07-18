@@ -89,6 +89,7 @@ class _PurchaseReceivePanelState extends State<_PurchaseReceivePanel> {
             itemId: item.id,
             materialName: item.materialName ?? '-',
             materialCode: item.materialCode ?? '-',
+            materialSpecification: item.materialSpecification ?? '',
             quantity: item.quantity ?? 0,
             receivedQuantity: item.receivedQuantity ?? 0,
             remainingQuantity:
@@ -288,6 +289,7 @@ class _ReceiveItemDraft {
     required this.itemId,
     required this.materialName,
     required this.materialCode,
+    required this.materialSpecification,
     required this.quantity,
     required this.receivedQuantity,
     required this.remainingQuantity,
@@ -297,6 +299,7 @@ class _ReceiveItemDraft {
   final int itemId;
   final String materialName;
   final String materialCode;
+  final String materialSpecification;
   final double quantity;
   final double receivedQuantity;
   final double remainingQuantity;
@@ -366,6 +369,11 @@ class _ReceiveItemRow extends StatelessWidget {
             Text(
               '${item.materialCode} ${item.materialName}',
               style: theme.textTheme.titleSmall,
+            ),
+            const SizedBox(height: SpacingTokens.xxs),
+            Text(
+              '规格：${item.materialSpecification.trim().isEmpty ? '未填写' : item.materialSpecification}',
+              style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: SpacingTokens.xxs),
             Wrap(

@@ -139,7 +139,9 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
       _materialsLoading = true;
     });
     try {
-      final options = await context.read<PurchaseOrderRepository>().loadFormOptions();
+      final options = await context
+          .read<PurchaseOrderRepository>()
+          .loadFormOptions();
       if (!mounted) return;
       setState(() {
         _suppliers = options.suppliers;
@@ -255,7 +257,9 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
   Future<void> _openLowStockDialog(PurchaseOrderViewModel viewModel) async {
     List<Map<String, dynamic>> materials = [];
     try {
-      materials = await context.read<PurchaseOrderRepository>().loadLowStockMaterials();
+      materials = await context
+          .read<PurchaseOrderRepository>()
+          .loadLowStockMaterials();
     } catch (err) {
       ToastUtil.showError('获取库存预警失败: $err');
     }
@@ -329,6 +333,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
               materialId: item.materialId ?? 0,
               materialName: item.materialName ?? '-',
               materialCode: item.materialCode ?? '',
+              materialSpecification: item.materialSpecification ?? '',
               unit: item.materialUnit ?? '',
               unitPrice: item.unitPrice ?? 0,
               quantity: item.quantity ?? 0,
@@ -342,6 +347,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
         final materialId = toInt(item['id']) ?? 0;
         final materialName = item['name']?.toString() ?? '-';
         final materialCode = item['code']?.toString() ?? '';
+        final materialSpecification = item['specification']?.toString() ?? '';
         final needed = _toDouble(item['needed_quantity']) ?? 0;
         final match = _materials.cast<MaterialItem?>().firstWhere(
           (m) => m?.id == materialId,
@@ -351,6 +357,9 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
           materialId: materialId,
           materialName: materialName,
           materialCode: materialCode,
+          materialSpecification: materialSpecification.isNotEmpty
+              ? materialSpecification
+              : match?.specification ?? '',
           unit: match?.unit ?? '',
           unitPrice: match?.unitPrice ?? 0,
           quantity: needed,
@@ -400,10 +409,7 @@ class _PurchaseOrderListViewState extends State<_PurchaseOrderListView> {
         } else {
           final res = await repository.createPurchaseOrder(payload);
           if (autoApprove) {
-            await repository.submit(
-              res.id,
-              {'auto_approve': true},
-            );
+            await repository.submit(res.id, {'auto_approve': true});
             if (!mounted) return;
             ToastUtil.showSuccess('发布成功');
           } else {

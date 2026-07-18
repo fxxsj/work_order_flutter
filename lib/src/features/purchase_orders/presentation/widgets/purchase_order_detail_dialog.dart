@@ -93,6 +93,10 @@ Future<void> showPurchaseOrderDetailDialog(
                           spacing: SpacingTokens.md,
                           runSpacing: SpacingTokens.xs,
                           children: [
+                            _InlineMeta(
+                              label: '规格',
+                              value: _displayText(item.materialSpecification),
+                            ),
                             _InlineMeta(label: '采购数量', value: quantity),
                             _InlineMeta(
                               label: '已收货',

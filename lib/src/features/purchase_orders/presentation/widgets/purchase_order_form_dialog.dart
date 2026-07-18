@@ -192,6 +192,7 @@ class _PurchaseOrderFormPanelState extends State<_PurchaseOrderFormPanel> {
                             materialId: 0,
                             materialName: '-',
                             materialCode: '',
+                            materialSpecification: '',
                             quantity: 1,
                             unitPrice: 0,
                             unit: '',
@@ -226,6 +227,8 @@ class _PurchaseOrderFormPanelState extends State<_PurchaseOrderFormPanel> {
                                 item.materialId = material.id;
                                 item.materialName = material.name;
                                 item.materialCode = material.code;
+                                item.materialSpecification =
+                                    material.specification ?? '';
                                 item.setUnit(material.unit ?? item.unit);
                                 item.setUnitPrice(
                                   material.unitPrice ?? item.unitPrice,
@@ -370,6 +373,7 @@ class PurchaseItemDraft {
     required this.materialId,
     required this.materialName,
     required this.materialCode,
+    required this.materialSpecification,
     required double quantity,
     required double unitPrice,
     String unit = '',
@@ -384,6 +388,7 @@ class PurchaseItemDraft {
   int materialId;
   String materialName;
   String materialCode;
+  String materialSpecification;
   final TextEditingController quantityController;
   final TextEditingController unitController;
   final TextEditingController unitPriceController;
@@ -441,7 +446,8 @@ class PurchaseItemRow extends StatelessWidget {
               (material) => AppDropdownOption<int>(
                 value: material.id,
                 label:
-                    '${material.code.isEmpty ? '-' : material.code} ${material.name}',
+                    '${material.code.isEmpty ? '-' : material.code} ${material.name}'
+                    '${material.specification?.trim().isNotEmpty == true ? ' · ${material.specification}' : ''}',
               ),
             )
             .toList()
@@ -507,6 +513,13 @@ class PurchaseItemRow extends StatelessWidget {
                 ),
               ],
             ),
+            if (item.materialId != 0) ...[
+              const SizedBox(height: SpacingTokens.xs),
+              Text(
+                '规格：${item.materialSpecification.trim().isEmpty ? '未填写' : item.materialSpecification}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
             const SizedBox(height: SpacingTokens.sm),
             if (isCompact) ...[
               Row(
