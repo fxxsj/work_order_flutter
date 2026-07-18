@@ -360,12 +360,37 @@ class WorkOrderMaterialRow extends StatefulWidget {
 }
 
 class _WorkOrderMaterialRowState extends State<WorkOrderMaterialRow> {
+  MaterialItem? get _selectedMaterial {
+    for (final material in widget.materials) {
+      if (material.id == widget.draft.materialId) return material;
+    }
+    return null;
+  }
+
+  void _handleMaterialChange(int? value) {
+    setState(() {
+      widget.draft.materialId = value;
+      final selected = _selectedMaterial;
+      if (selected?.specificationLevel == 'requirement' &&
+          selected?.materialType == 'paper') {
+        widget.draft.calculationMode = 'sheet_imposition';
+        widget.draft.preparationMode = 'pending';
+      } else if (selected?.specificationLevel == 'requirement') {
+        widget.draft.calculationMode = 'specification_selection';
+        widget.draft.preparationMode = 'pending';
+      } else {
+        widget.draft.calculationMode = 'fixed';
+        widget.draft.preparationMode = 'direct';
+      }
+    });
+  }
+
   Future<void> _handleCreateMaterial() async {
     final created = await widget.onCreateMaterial?.call();
     if (created == null || !mounted) {
       return;
     }
-    setState(() => widget.draft.materialId = created.id);
+    _handleMaterialChange(created.id);
   }
 
   @override
@@ -413,8 +438,7 @@ class _WorkOrderMaterialRowState extends State<WorkOrderMaterialRow> {
                     options: materialOptions,
                     selectHintText: widget.materials.isEmpty ? '新增物料' : '请选择',
                     minOptionsForSearch: 1,
-                    onChanged: (value) =>
-                        setState(() => widget.draft.materialId = value),
+                    onChanged: _handleMaterialChange,
                   ),
                 ),
                 if (widget.materials.isEmpty && widget.onCreateMaterial != null)
@@ -436,30 +460,6 @@ class _WorkOrderMaterialRowState extends State<WorkOrderMaterialRow> {
                     label: '用量',
                     controller: widget.draft.usageController,
                   ).build(context),
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Checkbox(
-                      value: widget.draft.needCutting,
-                      onChanged: (value) => setState(
-                        () => widget.draft.needCutting = value ?? false,
-                      ),
-                    ),
-                    const Text('需要开料'),
-                  ],
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Checkbox(
-                      value: widget.draft.planningRequired,
-                      onChanged: (value) => setState(
-                        () => widget.draft.planningRequired = value ?? false,
-                      ),
-                    ),
-                    const Text('制版后确定采购规格'),
-                  ],
                 ),
                 SizedBox(
                   width: notesWidth,

@@ -85,6 +85,8 @@ class ProductMaterialRepositoryImpl implements ProductMaterialRepository {
           'material_size': material.materialSize,
           'material_usage': material.materialUsage,
           'need_cutting': material.needCutting,
+          'calculation_mode': material.calculationMode,
+          'preparation_mode': material.preparationMode,
           'notes': material.notes,
           'sort_order': i,
         });

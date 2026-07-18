@@ -29,6 +29,8 @@ class ProductMaterialItem {
     this.materialSize,
     this.materialUsage,
     this.needCutting,
+    this.calculationMode = 'fixed',
+    this.preparationMode = 'direct',
     this.notes,
     this.sortOrder,
   });
@@ -40,6 +42,8 @@ class ProductMaterialItem {
   final String? materialSize;
   final String? materialUsage;
   final bool? needCutting;
+  final String calculationMode;
+  final String preparationMode;
   final String? notes;
   final int? sortOrder;
 
@@ -52,6 +56,16 @@ class ProductMaterialItem {
       materialSize: toStringOrNull(json['material_size']),
       materialUsage: toStringOrNull(json['material_usage']),
       needCutting: json['need_cutting'] == true,
+      calculationMode:
+          toStringOrNull(json['calculation_mode']) ??
+          (json['planning_required'] == true ? 'sheet_imposition' : 'fixed'),
+      preparationMode:
+          toStringOrNull(json['preparation_mode']) ??
+          (json['need_cutting'] == true
+              ? 'internal_cutting'
+              : (json['planning_required'] == true
+                    ? 'supplier_cutting'
+                    : 'direct')),
       notes: toStringOrNull(json['notes']),
       sortOrder: toInt(json['sort_order']),
     );

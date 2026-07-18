@@ -75,15 +75,20 @@ class WorkOrderMaterialDraft {
       sizeController = TextEditingController(text: item.materialSize ?? ''),
       usageController = TextEditingController(text: item.materialUsage ?? ''),
       notesController = TextEditingController(text: item.notes ?? ''),
-      needCutting = item.needCutting ?? false,
-      planningRequired = item.planningRequired;
+      calculationMode = item.calculationMode,
+      preparationMode = item.preparationMode;
 
   int? materialId;
   final TextEditingController sizeController;
   final TextEditingController usageController;
   final TextEditingController notesController;
-  bool needCutting = false;
-  bool planningRequired = false;
+  String calculationMode = 'fixed';
+  String preparationMode = 'direct';
+
+  bool get needCutting => preparationMode == 'internal_cutting';
+  bool get planningRequired =>
+      calculationMode == 'sheet_imposition' ||
+      calculationMode == 'specification_selection';
 
   String get sizeValue => sizeController.text.trim();
   String get usageValue => usageController.text.trim();

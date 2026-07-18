@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$MaterialItem {
 
-@JsonKey(fromJson: _intFromJson) int get id;@JsonKey(fromJson: _stringFromJson) String get code;@JsonKey(fromJson: _stringFromJson) String get name;@JsonKey(fromJson: _stringOrNullFromJson) String? get specification;@JsonKey(fromJson: _stringOrNullFromJson) String? get unit;@JsonKey(name: 'unit_price', fromJson: _doubleOrNullFromJson) double? get unitPrice;@JsonKey(name: 'stock_quantity', fromJson: _doubleOrNullFromJson) double? get stockQuantity;@JsonKey(name: 'min_stock_quantity', fromJson: _doubleOrNullFromJson) double? get minStockQuantity;@JsonKey(name: 'default_supplier', fromJson: _intOrNullFromJson) int? get defaultSupplier;@JsonKey(name: 'lead_time_days', fromJson: _intOrNullFromJson) int? get leadTimeDays;@JsonKey(name: 'need_cutting', fromJson: _boolOrNullFromJson) bool? get needCutting;@JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson) bool? get isActive;@JsonKey(fromJson: _stringOrNullFromJson) String? get notes;
+@JsonKey(fromJson: _intFromJson) int get id;@JsonKey(fromJson: _stringFromJson) String get code;@JsonKey(fromJson: _stringFromJson) String get name;@JsonKey(fromJson: _stringOrNullFromJson) String? get specification;@JsonKey(name: 'specification_level', fromJson: _stringOrNullFromJson) String? get specificationLevel;@JsonKey(name: 'material_type', fromJson: _stringOrNullFromJson) String? get materialType;@JsonKey(fromJson: _stringOrNullFromJson) String? get unit;@JsonKey(name: 'unit_price', fromJson: _doubleOrNullFromJson) double? get unitPrice;@JsonKey(name: 'stock_quantity', fromJson: _doubleOrNullFromJson) double? get stockQuantity;@JsonKey(name: 'min_stock_quantity', fromJson: _doubleOrNullFromJson) double? get minStockQuantity;@JsonKey(name: 'default_supplier', fromJson: _intOrNullFromJson) int? get defaultSupplier;@JsonKey(name: 'lead_time_days', fromJson: _intOrNullFromJson) int? get leadTimeDays;@JsonKey(name: 'need_cutting', fromJson: _boolOrNullFromJson) bool? get needCutting;@JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson) bool? get isActive;@JsonKey(fromJson: _stringOrNullFromJson) String? get notes;
 /// Create a copy of MaterialItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $MaterialItemCopyWith<MaterialItem> get copyWith => _$MaterialItemCopyWithImpl<M
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MaterialItem&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.specification, specification) || other.specification == specification)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.unitPrice, unitPrice) || other.unitPrice == unitPrice)&&(identical(other.stockQuantity, stockQuantity) || other.stockQuantity == stockQuantity)&&(identical(other.minStockQuantity, minStockQuantity) || other.minStockQuantity == minStockQuantity)&&(identical(other.defaultSupplier, defaultSupplier) || other.defaultSupplier == defaultSupplier)&&(identical(other.leadTimeDays, leadTimeDays) || other.leadTimeDays == leadTimeDays)&&(identical(other.needCutting, needCutting) || other.needCutting == needCutting)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.notes, notes) || other.notes == notes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MaterialItem&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.specification, specification) || other.specification == specification)&&(identical(other.specificationLevel, specificationLevel) || other.specificationLevel == specificationLevel)&&(identical(other.materialType, materialType) || other.materialType == materialType)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.unitPrice, unitPrice) || other.unitPrice == unitPrice)&&(identical(other.stockQuantity, stockQuantity) || other.stockQuantity == stockQuantity)&&(identical(other.minStockQuantity, minStockQuantity) || other.minStockQuantity == minStockQuantity)&&(identical(other.defaultSupplier, defaultSupplier) || other.defaultSupplier == defaultSupplier)&&(identical(other.leadTimeDays, leadTimeDays) || other.leadTimeDays == leadTimeDays)&&(identical(other.needCutting, needCutting) || other.needCutting == needCutting)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.notes, notes) || other.notes == notes));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,code,name,specification,unit,unitPrice,stockQuantity,minStockQuantity,defaultSupplier,leadTimeDays,needCutting,isActive,notes);
+int get hashCode => Object.hash(runtimeType,id,code,name,specification,specificationLevel,materialType,unit,unitPrice,stockQuantity,minStockQuantity,defaultSupplier,leadTimeDays,needCutting,isActive,notes);
 
 @override
 String toString() {
-  return 'MaterialItem(id: $id, code: $code, name: $name, specification: $specification, unit: $unit, unitPrice: $unitPrice, stockQuantity: $stockQuantity, minStockQuantity: $minStockQuantity, defaultSupplier: $defaultSupplier, leadTimeDays: $leadTimeDays, needCutting: $needCutting, isActive: $isActive, notes: $notes)';
+  return 'MaterialItem(id: $id, code: $code, name: $name, specification: $specification, specificationLevel: $specificationLevel, materialType: $materialType, unit: $unit, unitPrice: $unitPrice, stockQuantity: $stockQuantity, minStockQuantity: $minStockQuantity, defaultSupplier: $defaultSupplier, leadTimeDays: $leadTimeDays, needCutting: $needCutting, isActive: $isActive, notes: $notes)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $MaterialItemCopyWith<$Res>  {
   factory $MaterialItemCopyWith(MaterialItem value, $Res Function(MaterialItem) _then) = _$MaterialItemCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(fromJson: _intFromJson) int id,@JsonKey(fromJson: _stringFromJson) String code,@JsonKey(fromJson: _stringFromJson) String name,@JsonKey(fromJson: _stringOrNullFromJson) String? specification,@JsonKey(fromJson: _stringOrNullFromJson) String? unit,@JsonKey(name: 'unit_price', fromJson: _doubleOrNullFromJson) double? unitPrice,@JsonKey(name: 'stock_quantity', fromJson: _doubleOrNullFromJson) double? stockQuantity,@JsonKey(name: 'min_stock_quantity', fromJson: _doubleOrNullFromJson) double? minStockQuantity,@JsonKey(name: 'default_supplier', fromJson: _intOrNullFromJson) int? defaultSupplier,@JsonKey(name: 'lead_time_days', fromJson: _intOrNullFromJson) int? leadTimeDays,@JsonKey(name: 'need_cutting', fromJson: _boolOrNullFromJson) bool? needCutting,@JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson) bool? isActive,@JsonKey(fromJson: _stringOrNullFromJson) String? notes
+@JsonKey(fromJson: _intFromJson) int id,@JsonKey(fromJson: _stringFromJson) String code,@JsonKey(fromJson: _stringFromJson) String name,@JsonKey(fromJson: _stringOrNullFromJson) String? specification,@JsonKey(name: 'specification_level', fromJson: _stringOrNullFromJson) String? specificationLevel,@JsonKey(name: 'material_type', fromJson: _stringOrNullFromJson) String? materialType,@JsonKey(fromJson: _stringOrNullFromJson) String? unit,@JsonKey(name: 'unit_price', fromJson: _doubleOrNullFromJson) double? unitPrice,@JsonKey(name: 'stock_quantity', fromJson: _doubleOrNullFromJson) double? stockQuantity,@JsonKey(name: 'min_stock_quantity', fromJson: _doubleOrNullFromJson) double? minStockQuantity,@JsonKey(name: 'default_supplier', fromJson: _intOrNullFromJson) int? defaultSupplier,@JsonKey(name: 'lead_time_days', fromJson: _intOrNullFromJson) int? leadTimeDays,@JsonKey(name: 'need_cutting', fromJson: _boolOrNullFromJson) bool? needCutting,@JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson) bool? isActive,@JsonKey(fromJson: _stringOrNullFromJson) String? notes
 });
 
 
@@ -65,12 +65,14 @@ class _$MaterialItemCopyWithImpl<$Res>
 
 /// Create a copy of MaterialItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? code = null,Object? name = null,Object? specification = freezed,Object? unit = freezed,Object? unitPrice = freezed,Object? stockQuantity = freezed,Object? minStockQuantity = freezed,Object? defaultSupplier = freezed,Object? leadTimeDays = freezed,Object? needCutting = freezed,Object? isActive = freezed,Object? notes = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? code = null,Object? name = null,Object? specification = freezed,Object? specificationLevel = freezed,Object? materialType = freezed,Object? unit = freezed,Object? unitPrice = freezed,Object? stockQuantity = freezed,Object? minStockQuantity = freezed,Object? defaultSupplier = freezed,Object? leadTimeDays = freezed,Object? needCutting = freezed,Object? isActive = freezed,Object? notes = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,specification: freezed == specification ? _self.specification : specification // ignore: cast_nullable_to_non_nullable
+as String?,specificationLevel: freezed == specificationLevel ? _self.specificationLevel : specificationLevel // ignore: cast_nullable_to_non_nullable
+as String?,materialType: freezed == materialType ? _self.materialType : materialType // ignore: cast_nullable_to_non_nullable
 as String?,unit: freezed == unit ? _self.unit : unit // ignore: cast_nullable_to_non_nullable
 as String?,unitPrice: freezed == unitPrice ? _self.unitPrice : unitPrice // ignore: cast_nullable_to_non_nullable
 as double?,stockQuantity: freezed == stockQuantity ? _self.stockQuantity : stockQuantity // ignore: cast_nullable_to_non_nullable
@@ -165,10 +167,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(fromJson: _stringFromJson)  String code, @JsonKey(fromJson: _stringFromJson)  String name, @JsonKey(fromJson: _stringOrNullFromJson)  String? specification, @JsonKey(fromJson: _stringOrNullFromJson)  String? unit, @JsonKey(name: 'unit_price', fromJson: _doubleOrNullFromJson)  double? unitPrice, @JsonKey(name: 'stock_quantity', fromJson: _doubleOrNullFromJson)  double? stockQuantity, @JsonKey(name: 'min_stock_quantity', fromJson: _doubleOrNullFromJson)  double? minStockQuantity, @JsonKey(name: 'default_supplier', fromJson: _intOrNullFromJson)  int? defaultSupplier, @JsonKey(name: 'lead_time_days', fromJson: _intOrNullFromJson)  int? leadTimeDays, @JsonKey(name: 'need_cutting', fromJson: _boolOrNullFromJson)  bool? needCutting, @JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson)  bool? isActive, @JsonKey(fromJson: _stringOrNullFromJson)  String? notes)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(fromJson: _stringFromJson)  String code, @JsonKey(fromJson: _stringFromJson)  String name, @JsonKey(fromJson: _stringOrNullFromJson)  String? specification, @JsonKey(name: 'specification_level', fromJson: _stringOrNullFromJson)  String? specificationLevel, @JsonKey(name: 'material_type', fromJson: _stringOrNullFromJson)  String? materialType, @JsonKey(fromJson: _stringOrNullFromJson)  String? unit, @JsonKey(name: 'unit_price', fromJson: _doubleOrNullFromJson)  double? unitPrice, @JsonKey(name: 'stock_quantity', fromJson: _doubleOrNullFromJson)  double? stockQuantity, @JsonKey(name: 'min_stock_quantity', fromJson: _doubleOrNullFromJson)  double? minStockQuantity, @JsonKey(name: 'default_supplier', fromJson: _intOrNullFromJson)  int? defaultSupplier, @JsonKey(name: 'lead_time_days', fromJson: _intOrNullFromJson)  int? leadTimeDays, @JsonKey(name: 'need_cutting', fromJson: _boolOrNullFromJson)  bool? needCutting, @JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson)  bool? isActive, @JsonKey(fromJson: _stringOrNullFromJson)  String? notes)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MaterialItem() when $default != null:
-return $default(_that.id,_that.code,_that.name,_that.specification,_that.unit,_that.unitPrice,_that.stockQuantity,_that.minStockQuantity,_that.defaultSupplier,_that.leadTimeDays,_that.needCutting,_that.isActive,_that.notes);case _:
+return $default(_that.id,_that.code,_that.name,_that.specification,_that.specificationLevel,_that.materialType,_that.unit,_that.unitPrice,_that.stockQuantity,_that.minStockQuantity,_that.defaultSupplier,_that.leadTimeDays,_that.needCutting,_that.isActive,_that.notes);case _:
   return orElse();
 
 }
@@ -186,10 +188,10 @@ return $default(_that.id,_that.code,_that.name,_that.specification,_that.unit,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(fromJson: _stringFromJson)  String code, @JsonKey(fromJson: _stringFromJson)  String name, @JsonKey(fromJson: _stringOrNullFromJson)  String? specification, @JsonKey(fromJson: _stringOrNullFromJson)  String? unit, @JsonKey(name: 'unit_price', fromJson: _doubleOrNullFromJson)  double? unitPrice, @JsonKey(name: 'stock_quantity', fromJson: _doubleOrNullFromJson)  double? stockQuantity, @JsonKey(name: 'min_stock_quantity', fromJson: _doubleOrNullFromJson)  double? minStockQuantity, @JsonKey(name: 'default_supplier', fromJson: _intOrNullFromJson)  int? defaultSupplier, @JsonKey(name: 'lead_time_days', fromJson: _intOrNullFromJson)  int? leadTimeDays, @JsonKey(name: 'need_cutting', fromJson: _boolOrNullFromJson)  bool? needCutting, @JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson)  bool? isActive, @JsonKey(fromJson: _stringOrNullFromJson)  String? notes)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(fromJson: _stringFromJson)  String code, @JsonKey(fromJson: _stringFromJson)  String name, @JsonKey(fromJson: _stringOrNullFromJson)  String? specification, @JsonKey(name: 'specification_level', fromJson: _stringOrNullFromJson)  String? specificationLevel, @JsonKey(name: 'material_type', fromJson: _stringOrNullFromJson)  String? materialType, @JsonKey(fromJson: _stringOrNullFromJson)  String? unit, @JsonKey(name: 'unit_price', fromJson: _doubleOrNullFromJson)  double? unitPrice, @JsonKey(name: 'stock_quantity', fromJson: _doubleOrNullFromJson)  double? stockQuantity, @JsonKey(name: 'min_stock_quantity', fromJson: _doubleOrNullFromJson)  double? minStockQuantity, @JsonKey(name: 'default_supplier', fromJson: _intOrNullFromJson)  int? defaultSupplier, @JsonKey(name: 'lead_time_days', fromJson: _intOrNullFromJson)  int? leadTimeDays, @JsonKey(name: 'need_cutting', fromJson: _boolOrNullFromJson)  bool? needCutting, @JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson)  bool? isActive, @JsonKey(fromJson: _stringOrNullFromJson)  String? notes)  $default,) {final _that = this;
 switch (_that) {
 case _MaterialItem():
-return $default(_that.id,_that.code,_that.name,_that.specification,_that.unit,_that.unitPrice,_that.stockQuantity,_that.minStockQuantity,_that.defaultSupplier,_that.leadTimeDays,_that.needCutting,_that.isActive,_that.notes);case _:
+return $default(_that.id,_that.code,_that.name,_that.specification,_that.specificationLevel,_that.materialType,_that.unit,_that.unitPrice,_that.stockQuantity,_that.minStockQuantity,_that.defaultSupplier,_that.leadTimeDays,_that.needCutting,_that.isActive,_that.notes);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -206,10 +208,10 @@ return $default(_that.id,_that.code,_that.name,_that.specification,_that.unit,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(fromJson: _stringFromJson)  String code, @JsonKey(fromJson: _stringFromJson)  String name, @JsonKey(fromJson: _stringOrNullFromJson)  String? specification, @JsonKey(fromJson: _stringOrNullFromJson)  String? unit, @JsonKey(name: 'unit_price', fromJson: _doubleOrNullFromJson)  double? unitPrice, @JsonKey(name: 'stock_quantity', fromJson: _doubleOrNullFromJson)  double? stockQuantity, @JsonKey(name: 'min_stock_quantity', fromJson: _doubleOrNullFromJson)  double? minStockQuantity, @JsonKey(name: 'default_supplier', fromJson: _intOrNullFromJson)  int? defaultSupplier, @JsonKey(name: 'lead_time_days', fromJson: _intOrNullFromJson)  int? leadTimeDays, @JsonKey(name: 'need_cutting', fromJson: _boolOrNullFromJson)  bool? needCutting, @JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson)  bool? isActive, @JsonKey(fromJson: _stringOrNullFromJson)  String? notes)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(fromJson: _intFromJson)  int id, @JsonKey(fromJson: _stringFromJson)  String code, @JsonKey(fromJson: _stringFromJson)  String name, @JsonKey(fromJson: _stringOrNullFromJson)  String? specification, @JsonKey(name: 'specification_level', fromJson: _stringOrNullFromJson)  String? specificationLevel, @JsonKey(name: 'material_type', fromJson: _stringOrNullFromJson)  String? materialType, @JsonKey(fromJson: _stringOrNullFromJson)  String? unit, @JsonKey(name: 'unit_price', fromJson: _doubleOrNullFromJson)  double? unitPrice, @JsonKey(name: 'stock_quantity', fromJson: _doubleOrNullFromJson)  double? stockQuantity, @JsonKey(name: 'min_stock_quantity', fromJson: _doubleOrNullFromJson)  double? minStockQuantity, @JsonKey(name: 'default_supplier', fromJson: _intOrNullFromJson)  int? defaultSupplier, @JsonKey(name: 'lead_time_days', fromJson: _intOrNullFromJson)  int? leadTimeDays, @JsonKey(name: 'need_cutting', fromJson: _boolOrNullFromJson)  bool? needCutting, @JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson)  bool? isActive, @JsonKey(fromJson: _stringOrNullFromJson)  String? notes)?  $default,) {final _that = this;
 switch (_that) {
 case _MaterialItem() when $default != null:
-return $default(_that.id,_that.code,_that.name,_that.specification,_that.unit,_that.unitPrice,_that.stockQuantity,_that.minStockQuantity,_that.defaultSupplier,_that.leadTimeDays,_that.needCutting,_that.isActive,_that.notes);case _:
+return $default(_that.id,_that.code,_that.name,_that.specification,_that.specificationLevel,_that.materialType,_that.unit,_that.unitPrice,_that.stockQuantity,_that.minStockQuantity,_that.defaultSupplier,_that.leadTimeDays,_that.needCutting,_that.isActive,_that.notes);case _:
   return null;
 
 }
@@ -221,13 +223,15 @@ return $default(_that.id,_that.code,_that.name,_that.specification,_that.unit,_t
 @JsonSerializable()
 
 class _MaterialItem implements MaterialItem {
-  const _MaterialItem({@JsonKey(fromJson: _intFromJson) required this.id, @JsonKey(fromJson: _stringFromJson) required this.code, @JsonKey(fromJson: _stringFromJson) required this.name, @JsonKey(fromJson: _stringOrNullFromJson) this.specification, @JsonKey(fromJson: _stringOrNullFromJson) this.unit, @JsonKey(name: 'unit_price', fromJson: _doubleOrNullFromJson) this.unitPrice, @JsonKey(name: 'stock_quantity', fromJson: _doubleOrNullFromJson) this.stockQuantity, @JsonKey(name: 'min_stock_quantity', fromJson: _doubleOrNullFromJson) this.minStockQuantity, @JsonKey(name: 'default_supplier', fromJson: _intOrNullFromJson) this.defaultSupplier, @JsonKey(name: 'lead_time_days', fromJson: _intOrNullFromJson) this.leadTimeDays, @JsonKey(name: 'need_cutting', fromJson: _boolOrNullFromJson) this.needCutting, @JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson) this.isActive, @JsonKey(fromJson: _stringOrNullFromJson) this.notes});
+  const _MaterialItem({@JsonKey(fromJson: _intFromJson) required this.id, @JsonKey(fromJson: _stringFromJson) required this.code, @JsonKey(fromJson: _stringFromJson) required this.name, @JsonKey(fromJson: _stringOrNullFromJson) this.specification, @JsonKey(name: 'specification_level', fromJson: _stringOrNullFromJson) this.specificationLevel, @JsonKey(name: 'material_type', fromJson: _stringOrNullFromJson) this.materialType, @JsonKey(fromJson: _stringOrNullFromJson) this.unit, @JsonKey(name: 'unit_price', fromJson: _doubleOrNullFromJson) this.unitPrice, @JsonKey(name: 'stock_quantity', fromJson: _doubleOrNullFromJson) this.stockQuantity, @JsonKey(name: 'min_stock_quantity', fromJson: _doubleOrNullFromJson) this.minStockQuantity, @JsonKey(name: 'default_supplier', fromJson: _intOrNullFromJson) this.defaultSupplier, @JsonKey(name: 'lead_time_days', fromJson: _intOrNullFromJson) this.leadTimeDays, @JsonKey(name: 'need_cutting', fromJson: _boolOrNullFromJson) this.needCutting, @JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson) this.isActive, @JsonKey(fromJson: _stringOrNullFromJson) this.notes});
   factory _MaterialItem.fromJson(Map<String, dynamic> json) => _$MaterialItemFromJson(json);
 
 @override@JsonKey(fromJson: _intFromJson) final  int id;
 @override@JsonKey(fromJson: _stringFromJson) final  String code;
 @override@JsonKey(fromJson: _stringFromJson) final  String name;
 @override@JsonKey(fromJson: _stringOrNullFromJson) final  String? specification;
+@override@JsonKey(name: 'specification_level', fromJson: _stringOrNullFromJson) final  String? specificationLevel;
+@override@JsonKey(name: 'material_type', fromJson: _stringOrNullFromJson) final  String? materialType;
 @override@JsonKey(fromJson: _stringOrNullFromJson) final  String? unit;
 @override@JsonKey(name: 'unit_price', fromJson: _doubleOrNullFromJson) final  double? unitPrice;
 @override@JsonKey(name: 'stock_quantity', fromJson: _doubleOrNullFromJson) final  double? stockQuantity;
@@ -251,16 +255,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MaterialItem&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.specification, specification) || other.specification == specification)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.unitPrice, unitPrice) || other.unitPrice == unitPrice)&&(identical(other.stockQuantity, stockQuantity) || other.stockQuantity == stockQuantity)&&(identical(other.minStockQuantity, minStockQuantity) || other.minStockQuantity == minStockQuantity)&&(identical(other.defaultSupplier, defaultSupplier) || other.defaultSupplier == defaultSupplier)&&(identical(other.leadTimeDays, leadTimeDays) || other.leadTimeDays == leadTimeDays)&&(identical(other.needCutting, needCutting) || other.needCutting == needCutting)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.notes, notes) || other.notes == notes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MaterialItem&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.specification, specification) || other.specification == specification)&&(identical(other.specificationLevel, specificationLevel) || other.specificationLevel == specificationLevel)&&(identical(other.materialType, materialType) || other.materialType == materialType)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.unitPrice, unitPrice) || other.unitPrice == unitPrice)&&(identical(other.stockQuantity, stockQuantity) || other.stockQuantity == stockQuantity)&&(identical(other.minStockQuantity, minStockQuantity) || other.minStockQuantity == minStockQuantity)&&(identical(other.defaultSupplier, defaultSupplier) || other.defaultSupplier == defaultSupplier)&&(identical(other.leadTimeDays, leadTimeDays) || other.leadTimeDays == leadTimeDays)&&(identical(other.needCutting, needCutting) || other.needCutting == needCutting)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.notes, notes) || other.notes == notes));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,code,name,specification,unit,unitPrice,stockQuantity,minStockQuantity,defaultSupplier,leadTimeDays,needCutting,isActive,notes);
+int get hashCode => Object.hash(runtimeType,id,code,name,specification,specificationLevel,materialType,unit,unitPrice,stockQuantity,minStockQuantity,defaultSupplier,leadTimeDays,needCutting,isActive,notes);
 
 @override
 String toString() {
-  return 'MaterialItem(id: $id, code: $code, name: $name, specification: $specification, unit: $unit, unitPrice: $unitPrice, stockQuantity: $stockQuantity, minStockQuantity: $minStockQuantity, defaultSupplier: $defaultSupplier, leadTimeDays: $leadTimeDays, needCutting: $needCutting, isActive: $isActive, notes: $notes)';
+  return 'MaterialItem(id: $id, code: $code, name: $name, specification: $specification, specificationLevel: $specificationLevel, materialType: $materialType, unit: $unit, unitPrice: $unitPrice, stockQuantity: $stockQuantity, minStockQuantity: $minStockQuantity, defaultSupplier: $defaultSupplier, leadTimeDays: $leadTimeDays, needCutting: $needCutting, isActive: $isActive, notes: $notes)';
 }
 
 
@@ -271,7 +275,7 @@ abstract mixin class _$MaterialItemCopyWith<$Res> implements $MaterialItemCopyWi
   factory _$MaterialItemCopyWith(_MaterialItem value, $Res Function(_MaterialItem) _then) = __$MaterialItemCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(fromJson: _intFromJson) int id,@JsonKey(fromJson: _stringFromJson) String code,@JsonKey(fromJson: _stringFromJson) String name,@JsonKey(fromJson: _stringOrNullFromJson) String? specification,@JsonKey(fromJson: _stringOrNullFromJson) String? unit,@JsonKey(name: 'unit_price', fromJson: _doubleOrNullFromJson) double? unitPrice,@JsonKey(name: 'stock_quantity', fromJson: _doubleOrNullFromJson) double? stockQuantity,@JsonKey(name: 'min_stock_quantity', fromJson: _doubleOrNullFromJson) double? minStockQuantity,@JsonKey(name: 'default_supplier', fromJson: _intOrNullFromJson) int? defaultSupplier,@JsonKey(name: 'lead_time_days', fromJson: _intOrNullFromJson) int? leadTimeDays,@JsonKey(name: 'need_cutting', fromJson: _boolOrNullFromJson) bool? needCutting,@JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson) bool? isActive,@JsonKey(fromJson: _stringOrNullFromJson) String? notes
+@JsonKey(fromJson: _intFromJson) int id,@JsonKey(fromJson: _stringFromJson) String code,@JsonKey(fromJson: _stringFromJson) String name,@JsonKey(fromJson: _stringOrNullFromJson) String? specification,@JsonKey(name: 'specification_level', fromJson: _stringOrNullFromJson) String? specificationLevel,@JsonKey(name: 'material_type', fromJson: _stringOrNullFromJson) String? materialType,@JsonKey(fromJson: _stringOrNullFromJson) String? unit,@JsonKey(name: 'unit_price', fromJson: _doubleOrNullFromJson) double? unitPrice,@JsonKey(name: 'stock_quantity', fromJson: _doubleOrNullFromJson) double? stockQuantity,@JsonKey(name: 'min_stock_quantity', fromJson: _doubleOrNullFromJson) double? minStockQuantity,@JsonKey(name: 'default_supplier', fromJson: _intOrNullFromJson) int? defaultSupplier,@JsonKey(name: 'lead_time_days', fromJson: _intOrNullFromJson) int? leadTimeDays,@JsonKey(name: 'need_cutting', fromJson: _boolOrNullFromJson) bool? needCutting,@JsonKey(name: 'is_active', fromJson: _boolOrNullFromJson) bool? isActive,@JsonKey(fromJson: _stringOrNullFromJson) String? notes
 });
 
 
@@ -288,12 +292,14 @@ class __$MaterialItemCopyWithImpl<$Res>
 
 /// Create a copy of MaterialItem
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? code = null,Object? name = null,Object? specification = freezed,Object? unit = freezed,Object? unitPrice = freezed,Object? stockQuantity = freezed,Object? minStockQuantity = freezed,Object? defaultSupplier = freezed,Object? leadTimeDays = freezed,Object? needCutting = freezed,Object? isActive = freezed,Object? notes = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? code = null,Object? name = null,Object? specification = freezed,Object? specificationLevel = freezed,Object? materialType = freezed,Object? unit = freezed,Object? unitPrice = freezed,Object? stockQuantity = freezed,Object? minStockQuantity = freezed,Object? defaultSupplier = freezed,Object? leadTimeDays = freezed,Object? needCutting = freezed,Object? isActive = freezed,Object? notes = freezed,}) {
   return _then(_MaterialItem(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,specification: freezed == specification ? _self.specification : specification // ignore: cast_nullable_to_non_nullable
+as String?,specificationLevel: freezed == specificationLevel ? _self.specificationLevel : specificationLevel // ignore: cast_nullable_to_non_nullable
+as String?,materialType: freezed == materialType ? _self.materialType : materialType // ignore: cast_nullable_to_non_nullable
 as String?,unit: freezed == unit ? _self.unit : unit // ignore: cast_nullable_to_non_nullable
 as String?,unitPrice: freezed == unitPrice ? _self.unitPrice : unitPrice // ignore: cast_nullable_to_non_nullable
 as double?,stockQuantity: freezed == stockQuantity ? _self.stockQuantity : stockQuantity // ignore: cast_nullable_to_non_nullable

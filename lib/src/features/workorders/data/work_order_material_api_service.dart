@@ -56,9 +56,28 @@ class WorkOrderMaterialApiService {
       '/materials/',
       queryParameters: {
         'specification_level': 'stock',
-        'material_type': 'paper',
         'is_active': true,
         'page_size': 200,
+      },
+    );
+    final payload = response.data;
+    final results = payload is Map<String, dynamic>
+        ? payload['results']
+        : payload;
+    if (results is! List) return const [];
+    return results
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList(growable: false);
+  }
+
+  Future<List<Map<String, dynamic>>> fetchActiveSuppliers() async {
+    final response = await _client.get(
+      '/suppliers/',
+      queryParameters: const {
+        'status': 'active',
+        'page_size': 100,
+        'ordering': 'code',
       },
     );
     final payload = response.data;
@@ -78,6 +97,17 @@ class WorkOrderMaterialApiService {
   ) async {
     final response = await _client.post(
       '/workorder-materials/$id/calculate_plan/',
+      data: payload,
+    );
+    return _unwrapData(response.data);
+  }
+
+  Future<Map<String, dynamic>> resolveSpecification(
+    int id,
+    Map<String, dynamic> payload,
+  ) async {
+    final response = await _client.post(
+      '/workorder-materials/$id/resolve_specification/',
       data: payload,
     );
     return _unwrapData(response.data);

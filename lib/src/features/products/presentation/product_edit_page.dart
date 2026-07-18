@@ -338,12 +338,17 @@ class _ProductEditPageState extends State<ProductEditPage> {
             materialUsage: draft.materialUsageValue.isEmpty
                 ? null
                 : draft.materialUsageValue,
-            needCutting: draft.needCutting,
+            needCutting: draft.preparationMode == 'internal_cutting',
+            calculationMode: draft.calculationMode,
+            preparationMode: draft.preparationMode,
             notes: draft.notesValue.isEmpty ? null : draft.notesValue,
           ),
         )
         .toList();
-    return _productMaterialRepository!.saveProductMaterials(productId, materials);
+    return _productMaterialRepository!.saveProductMaterials(
+      productId,
+      materials,
+    );
   }
 
   Product _buildPayload() {
@@ -479,6 +484,11 @@ class _ProductEditPageState extends State<ProductEditPage> {
             fontWeight: FontWeight.w600,
             color: theme.colorScheme.onSurface,
           ),
+        ),
+        SizedBox(height: SpacingTokens.sm),
+        Text(
+          '只需选择已知的物料名称；规格、开料和备料方式将在施工单阶段确认，尺寸和用量不知道时可以留空。',
+          style: theme.textTheme.bodySmall,
         ),
         SizedBox(height: sectionSpacing),
         if (_materialDrafts.isEmpty)
@@ -760,13 +770,17 @@ class _MaterialDraft {
     String? materialSize,
     String? materialUsage,
     bool? needCutting,
+    String? calculationMode,
+    String? preparationMode,
     String? notes,
   }) : materialSizeController = TextEditingController(text: materialSize ?? ''),
        materialUsageController = TextEditingController(
          text: materialUsage ?? '',
        ),
        notesController = TextEditingController(text: notes ?? ''),
-       needCutting = needCutting ?? false;
+       needCutting = needCutting ?? false,
+       calculationMode = calculationMode ?? 'fixed',
+       preparationMode = preparationMode ?? 'direct';
 
   factory _MaterialDraft.fromItem(ProductMaterialItem item) {
     return _MaterialDraft(
@@ -774,6 +788,8 @@ class _MaterialDraft {
       materialSize: item.materialSize,
       materialUsage: item.materialUsage,
       needCutting: item.needCutting ?? false,
+      calculationMode: item.calculationMode,
+      preparationMode: item.preparationMode,
       notes: item.notes,
     );
   }
@@ -783,6 +799,8 @@ class _MaterialDraft {
   final TextEditingController materialUsageController;
   final TextEditingController notesController;
   bool needCutting;
+  String calculationMode;
+  String preparationMode;
 
   String get materialSizeValue => materialSizeController.text.trim();
   String get materialUsageValue => materialUsageController.text.trim();
@@ -814,12 +832,40 @@ class _MaterialCard extends StatefulWidget {
 }
 
 class _MaterialCardState extends State<_MaterialCard> {
+  MaterialItem? get _selectedMaterial {
+    for (final material in widget.materials) {
+      if (material.id == widget.draft.materialId) return material;
+    }
+    return null;
+  }
+
+  void _handleMaterialChange(int? value) {
+    setState(() {
+      widget.draft.materialId = value;
+      final material = _selectedMaterial;
+      if (material?.specificationLevel == 'requirement' &&
+          material?.materialType == 'paper') {
+        widget.draft.calculationMode = 'sheet_imposition';
+        widget.draft.preparationMode = 'pending';
+        widget.draft.needCutting = false;
+      } else if (material?.specificationLevel == 'requirement') {
+        widget.draft.calculationMode = 'specification_selection';
+        widget.draft.preparationMode = 'pending';
+        widget.draft.needCutting = false;
+      } else if (material?.specificationLevel == 'stock') {
+        widget.draft.calculationMode = 'fixed';
+        widget.draft.preparationMode = 'direct';
+        widget.draft.needCutting = false;
+      }
+    });
+  }
+
   Future<void> _handleCreateMaterial() async {
     final created = await widget.onCreateMaterial();
     if (created == null || !mounted) {
       return;
     }
-    setState(() => widget.draft.materialId = created.id);
+    _handleMaterialChange(created.id);
   }
 
   @override
@@ -827,11 +873,19 @@ class _MaterialCardState extends State<_MaterialCard> {
     final theme = Theme.of(context);
     final sectionSpacing = LayoutTokens.sectionSpacing(context);
     final draft = widget.draft;
-    final materialOptions = widget.materials
+    final sortedMaterials = [...widget.materials]
+      ..sort((left, right) {
+        final leftRank = left.specificationLevel == 'requirement' ? 0 : 1;
+        final rightRank = right.specificationLevel == 'requirement' ? 0 : 1;
+        return leftRank.compareTo(rightRank);
+      });
+    final materialOptions = sortedMaterials
         .map(
           (material) => AppDropdownOption<int>(
             value: material.id,
-            label: '${material.code} ${material.name}',
+            label:
+                '${material.specificationLevel == 'requirement' ? '[材料要求]' : '[固定规格]'} '
+                '${material.code} ${material.name}',
           ),
         )
         .toList();
@@ -861,8 +915,7 @@ class _MaterialCardState extends State<_MaterialCard> {
                     options: materialOptions,
                     selectHintText: widget.materials.isEmpty ? '新增物料' : '请选择',
                     minOptionsForSearch: 1,
-                    onChanged: (value) =>
-                        setState(() => draft.materialId = value),
+                    onChanged: _handleMaterialChange,
                   ),
                 ),
                 if (widget.materials.isEmpty)
@@ -900,13 +953,6 @@ class _MaterialCardState extends State<_MaterialCard> {
                   ).build(context),
                 ),
               ],
-            ),
-            SizedBox(height: sectionSpacing),
-            SwitchListTile.adaptive(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('需要开料'),
-              value: draft.needCutting,
-              onChanged: (value) => setState(() => draft.needCutting = value),
             ),
             SizedBox(height: sectionSpacing),
             CrudFieldConfig.textarea(

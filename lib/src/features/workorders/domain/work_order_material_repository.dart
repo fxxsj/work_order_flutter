@@ -20,7 +20,14 @@ abstract class WorkOrderMaterialRepository {
 
   Future<List<Map<String, dynamic>>> getStockMaterials();
 
+  Future<List<Map<String, dynamic>>> getActiveSuppliers();
+
   Future<Map<String, dynamic>> calculatePlan(
+    int id,
+    Map<String, dynamic> payload,
+  );
+
+  Future<Map<String, dynamic>> resolveSpecification(
     int id,
     Map<String, dynamic> payload,
   );

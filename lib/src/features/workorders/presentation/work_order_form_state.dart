@@ -359,7 +359,8 @@ class WorkOrderFormDraftState {
               ..materialId = dm.materialId
               ..sizeController.text = dm.materialSize ?? ''
               ..usageController.text = dm.materialUsage ?? ''
-              ..needCutting = dm.needCutting ?? false
+              ..calculationMode = dm.calculationMode
+              ..preparationMode = dm.preparationMode
               ..notesController.text = dm.notes ?? '';
             materialDrafts.add(draft);
             existingMaterialIds.add(dm.materialId);

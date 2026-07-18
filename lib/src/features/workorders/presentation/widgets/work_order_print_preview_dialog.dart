@@ -152,7 +152,7 @@ class WorkOrderPrintSheet extends StatelessWidget {
             _Section(
               title: '物料需求',
               child: _SimpleTable(
-                headers: const ['物料', '编码', '尺寸', '用量', '需开料', '采购状态'],
+                headers: const ['物料', '编码', '尺寸', '用量', '备料方式', '采购状态'],
                 rows: data.materialRows,
                 emptyText: '暂无物料需求',
               ),
@@ -534,7 +534,7 @@ class _PrintData {
             _text(item.materialCode),
             _text(item.materialSize),
             _text(item.materialUsage),
-            item.needCutting == true ? '是' : '否',
+            _text(item.preparationModeDisplay ?? item.preparationMode),
             _text(item.purchaseStatusDisplay ?? item.purchaseStatus),
           ],
         )
@@ -600,7 +600,7 @@ th { background: #f7f9fc; text-align: left; }
   </div>
   ${_infoGridHtml(data.basicItems)}
   ${_sectionHtml('产品清单', _tableHtml(const ['产品', '编码', '数量', '单位', '规格', '拼版数'], data.productRows, '暂无产品信息'))}
-  ${_sectionHtml('物料需求', _tableHtml(const ['物料', '编码', '尺寸', '用量', '需开料', '采购状态'], data.materialRows, '暂无物料需求'))}
+  ${_sectionHtml('物料需求', _tableHtml(const ['物料', '编码', '尺寸', '用量', '备料方式', '采购状态'], data.materialRows, '暂无物料需求'))}
   ${_sectionHtml('工序与任务', processHtml)}
   ${_sectionHtml('图稿与版材', _infoGridHtml(data.resourceItems))}
   ${_sectionHtml('备注与审批', _infoGridHtml(data.noteItems))}

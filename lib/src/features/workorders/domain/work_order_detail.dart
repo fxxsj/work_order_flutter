@@ -368,15 +368,25 @@ class WorkOrderMaterialItem {
     this.receivedDate,
     this.cutDate,
     this.planningRequired = false,
+    this.calculationMode = 'fixed',
+    this.calculationModeDisplay,
+    this.preparationMode = 'direct',
+    this.preparationModeDisplay,
     this.planningStatus,
     this.planningStatusDisplay,
     this.purchaseMaterialId,
     this.purchaseMaterialName,
+    this.purchaseMaterialIsTemporary = false,
+    this.purchaseMaterialSupplier,
+    this.purchaseMaterialUnitPrice,
+    this.parentSheetWidthMm,
+    this.parentSheetHeightMm,
     this.cutWidthMm,
     this.cutHeightMm,
     this.requiredCutQuantity,
     this.piecesPerParentSheet,
     this.plannedParentQuantity,
+    this.plannedMaterialQuantity,
     this.wastageRate,
     this.reservedQuantity,
     this.purchaseQuantity,
@@ -397,15 +407,25 @@ class WorkOrderMaterialItem {
   final DateTime? receivedDate;
   final DateTime? cutDate;
   final bool planningRequired;
+  final String calculationMode;
+  final String? calculationModeDisplay;
+  final String preparationMode;
+  final String? preparationModeDisplay;
   final String? planningStatus;
   final String? planningStatusDisplay;
   final int? purchaseMaterialId;
   final String? purchaseMaterialName;
+  final bool purchaseMaterialIsTemporary;
+  final int? purchaseMaterialSupplier;
+  final double? purchaseMaterialUnitPrice;
+  final double? parentSheetWidthMm;
+  final double? parentSheetHeightMm;
   final double? cutWidthMm;
   final double? cutHeightMm;
   final double? requiredCutQuantity;
   final int? piecesPerParentSheet;
   final double? plannedParentQuantity;
+  final double? plannedMaterialQuantity;
   final double? wastageRate;
   final double? reservedQuantity;
   final double? purchaseQuantity;
@@ -428,11 +448,38 @@ class WorkOrderMaterialItem {
       purchaseDate: toDateTime(json['purchase_date']),
       receivedDate: toDateTime(json['received_date']),
       cutDate: toDateTime(json['cut_date']),
-      planningRequired: json['planning_required'] == true,
+      planningRequired:
+          json['calculation_mode'] == 'sheet_imposition' ||
+          json['calculation_mode'] == 'specification_selection' ||
+          json['planning_required'] == true,
+      calculationMode:
+          toStringOrNull(json['calculation_mode']) ??
+          (json['planning_required'] == true ? 'sheet_imposition' : 'fixed'),
+      calculationModeDisplay: toStringOrNull(json['calculation_mode_display']),
+      preparationMode:
+          toStringOrNull(json['preparation_mode']) ??
+          (json['need_cutting'] == true
+              ? 'internal_cutting'
+              : (json['planning_required'] == true
+                    ? 'supplier_cutting'
+                    : 'direct')),
+      preparationModeDisplay: toStringOrNull(json['preparation_mode_display']),
       planningStatus: toStringOrNull(json['planning_status']),
       planningStatusDisplay: toStringOrNull(json['planning_status_display']),
       purchaseMaterialId: toInt(json['purchase_material']),
       purchaseMaterialName: toStringOrNull(json['purchase_material_name']),
+      purchaseMaterialIsTemporary:
+          json['purchase_material_is_temporary'] == true,
+      purchaseMaterialSupplier: toInt(json['purchase_material_supplier']),
+      purchaseMaterialUnitPrice: WorkOrderDetail._toDouble(
+        json['purchase_material_unit_price'],
+      ),
+      parentSheetWidthMm: WorkOrderDetail._toDouble(
+        json['parent_sheet_width_mm'],
+      ),
+      parentSheetHeightMm: WorkOrderDetail._toDouble(
+        json['parent_sheet_height_mm'],
+      ),
       cutWidthMm: WorkOrderDetail._toDouble(json['cut_width_mm']),
       cutHeightMm: WorkOrderDetail._toDouble(json['cut_height_mm']),
       requiredCutQuantity: WorkOrderDetail._toDouble(
@@ -441,6 +488,9 @@ class WorkOrderMaterialItem {
       piecesPerParentSheet: toInt(json['pieces_per_parent_sheet']),
       plannedParentQuantity: WorkOrderDetail._toDouble(
         json['planned_parent_quantity'],
+      ),
+      plannedMaterialQuantity: WorkOrderDetail._toDouble(
+        json['planned_material_quantity'],
       ),
       wastageRate: WorkOrderDetail._toDouble(json['wastage_rate']),
       reservedQuantity: WorkOrderDetail._toDouble(json['reserved_quantity']),

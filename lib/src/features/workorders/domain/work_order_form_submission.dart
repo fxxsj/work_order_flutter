@@ -163,8 +163,10 @@ class WorkOrderFormSubmission {
     // 物料用量
     for (final draft in input.materialDrafts) {
       if (draft.materialId == null) continue;
-      if (draft.needCutting && draft.usageValue.isEmpty) {
-        errors.add('需要开料的物料请填写物料用量');
+      if (draft.needCutting &&
+          !draft.planningRequired &&
+          draft.usageValue.isEmpty) {
+        errors.add('厂内开料的固定用量物料请填写物料用量');
         break;
       }
     }
@@ -199,8 +201,8 @@ class WorkOrderFormSubmission {
             'material': draft.materialId,
             'material_size': draft.sizeValue,
             'material_usage': draft.usageValue,
-            'need_cutting': draft.needCutting,
-            'planning_required': draft.planningRequired,
+            'calculation_mode': draft.calculationMode,
+            'preparation_mode': draft.preparationMode,
             'notes': draft.notesValue,
           },
         )

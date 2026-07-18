@@ -389,10 +389,12 @@ class WorkOrderMaterialsSection extends StatelessWidget {
                 _DetailField('规格', item.materialSize ?? emptyText),
                 _DetailField('用量', item.materialUsage ?? emptyText),
                 _DetailField(
-                  '需裁切',
-                  item.needCutting == null
-                      ? emptyText
-                      : (item.needCutting! ? '是' : '否'),
+                  '需求计算',
+                  item.calculationModeDisplay ?? item.calculationMode,
+                ),
+                _DetailField(
+                  '备料方式',
+                  item.preparationModeDisplay ?? item.preparationMode,
                 ),
                 _DetailField(
                   '采购状态',

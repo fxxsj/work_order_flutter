@@ -486,7 +486,12 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
   Future<void> _handlePlanMaterial(WorkOrderMaterialItem material) async {
     final repository = context.read<WorkOrderMaterialRepository>();
     try {
-      final stockMaterials = await repository.getStockMaterials();
+      final results = await Future.wait([
+        repository.getStockMaterials(),
+        repository.getActiveSuppliers(),
+      ]);
+      final stockMaterials = results[0];
+      final suppliers = results[1];
       if (!mounted) return;
       final changed = await showDialog<bool>(
         context: context,
@@ -494,8 +499,11 @@ class _WorkOrderDetailPageState extends State<WorkOrderDetailPage> {
         builder: (dialogContext) => MaterialPlanDialog(
           material: material,
           stockMaterials: stockMaterials,
+          suppliers: suppliers,
           onCalculate: (payload) =>
-              repository.calculatePlan(material.id, payload),
+              material.calculationMode == 'specification_selection'
+              ? repository.resolveSpecification(material.id, payload)
+              : repository.calculatePlan(material.id, payload),
           onConfirm: () => repository.confirmPlan(material.id),
           onInvalidate: () async {
             final reason = await showWorkOrderReasonDialog(

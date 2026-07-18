@@ -13,6 +13,10 @@ abstract class MaterialItem with _$MaterialItem {
     @JsonKey(fromJson: _stringFromJson) required String code,
     @JsonKey(fromJson: _stringFromJson) required String name,
     @JsonKey(fromJson: _stringOrNullFromJson) String? specification,
+    @JsonKey(name: 'specification_level', fromJson: _stringOrNullFromJson)
+    String? specificationLevel,
+    @JsonKey(name: 'material_type', fromJson: _stringOrNullFromJson)
+    String? materialType,
     @JsonKey(fromJson: _stringOrNullFromJson) String? unit,
     @JsonKey(name: 'unit_price', fromJson: _doubleOrNullFromJson)
     double? unitPrice,

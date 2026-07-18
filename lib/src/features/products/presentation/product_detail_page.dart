@@ -572,7 +572,17 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     if (material.materialUsage != null && material.materialUsage!.isNotEmpty) {
       parts.add('用量: ${material.materialUsage}');
     }
-    if (material.needCutting == true) parts.add('需开料');
+    parts.add(
+      material.calculationMode == 'sheet_imposition' ? '拼版后算纸' : '固定/直接填写',
+    );
+    const preparationLabels = {
+      'direct': '直接领用/采购',
+      'internal_cutting': '厂内开料',
+      'supplier_cutting': '供应商裁切',
+    };
+    parts.add(
+      preparationLabels[material.preparationMode] ?? material.preparationMode,
+    );
     if (material.notes != null && material.notes!.isNotEmpty) {
       parts.add('备注: ${material.notes}');
     }

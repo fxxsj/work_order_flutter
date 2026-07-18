@@ -83,6 +83,7 @@ class WorkOrderDetailProcurementView extends StatelessWidget {
                   purchaseStatusDisplay: m.purchaseStatusDisplay ?? '待采购',
                   unit: m.materialUnit ?? '',
                   usage: m.materialUsage ?? '',
+                  calculationMode: m.calculationMode,
                   planningRequired: m.planningRequired,
                   planningStatus: m.planningStatus,
                   planningStatusDisplay: m.planningStatusDisplay,
@@ -130,6 +131,7 @@ class _MaterialStatusCard extends StatelessWidget {
     required this.purchaseStatusDisplay,
     required this.unit,
     required this.usage,
+    required this.calculationMode,
     required this.planningRequired,
     this.planningStatus,
     this.planningStatusDisplay,
@@ -144,6 +146,7 @@ class _MaterialStatusCard extends StatelessWidget {
   final String purchaseStatusDisplay;
   final String unit;
   final String usage;
+  final String calculationMode;
   final bool planningRequired;
   final String? planningStatus;
   final String? planningStatusDisplay;
@@ -225,7 +228,9 @@ class _MaterialStatusCard extends StatelessWidget {
                   child: Text(
                     planningStatus == 'confirmed'
                         ? '已选 ${purchaseMaterialName ?? '-'}，需采购 ${purchaseQuantity ?? 0}'
-                        : '需在制版后确认开料尺寸和采购原纸规格',
+                        : calculationMode == 'specification_selection'
+                        ? '待确认本单实际使用的物料规格和数量'
+                        : '待拼版后确认原纸、开料尺寸和备料方式',
                     style: theme.textTheme.bodySmall,
                   ),
                 ),
