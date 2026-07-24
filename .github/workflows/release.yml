@@ -15,7 +15,7 @@ concurrency:
 env:
   FLUTTER_VERSION: '3.41.2'
   APP_PROFILE: prod
-  PROD_API_BASE_URL: ${{ vars.PROD_API_BASE_URL }}
+  PROD_API_BASE_URL: ${{ secrets.PROD_API_BASE_URL }}
 
 jobs:
   quality:
@@ -55,7 +55,7 @@ jobs:
           fi
 
           if [[ -z "$PROD_API_BASE_URL" ]]; then
-            echo "::error::Repository variable PROD_API_BASE_URL is not configured."
+            echo "::error::Repository secret PROD_API_BASE_URL is not configured."
             exit 1
           fi
 

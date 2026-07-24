@@ -83,7 +83,7 @@ v1.2.3-beta.1
 正式发布前：
 
 1. 更新 `pubspec.yaml` 中的 `version`，版本名必须与 Tag 一致；
-2. 在 GitHub 仓库的 **Settings → Secrets and variables → Actions → Variables**
+2. 在 GitHub 仓库的 **Settings → Secrets and variables → Actions → Secrets**
    中配置 `PROD_API_BASE_URL`，值使用 HTTPS 并以 `/api/v1/` 结尾；
 3. 提交并推送代码；
 4. 创建并推送 Tag。
@@ -105,7 +105,8 @@ git push origin v1.2.3
 Artifact Attestation。预发布 Tag（如 `v1.2.3-beta.1`）会生成
 Prerelease。
 
-生产 API 地址只保存在 GitHub Actions 仓库变量中，不写入公共仓库。
+生产 API 地址只保存在 GitHub Actions 仓库 Secret 中，不写入公共仓库，
+也不会以明文出现在 Actions 日志中。
 `--dart-define` 会把它编译进客户端，因此它是部署配置，不应被当作密钥。
 
 Android 正式产物需要长期保存的发布签名密钥。仓库尚未配置签名密钥时，
