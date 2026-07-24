@@ -71,6 +71,47 @@ flutter analyze
 flutter test
 ```
 
+## GitHub Tag 自动发布
+
+`.github/workflows/release.yml` 监听语义化版本 Tag：
+
+```text
+v1.2.3
+v1.2.3-beta.1
+```
+
+正式发布前：
+
+1. 更新 `pubspec.yaml` 中的 `version`，版本名必须与 Tag 一致；
+2. 在 GitHub 仓库的 **Settings → Secrets and variables → Actions → Variables**
+   中配置 `PROD_API_BASE_URL`，值使用 HTTPS 并以 `/api/v1/` 结尾；
+3. 提交并推送代码；
+4. 创建并推送 Tag。
+
+例如，`pubspec.yaml` 为 `version: 1.2.3+12` 时：
+
+```bash
+git tag -a v1.2.3 -m "Release v1.2.3"
+git push origin v1.2.3
+```
+
+工作流会先执行静态分析和测试，再并行构建：
+
+- Web：`work-order-web-v1.2.3.tar.gz`
+- Linux x64：`work-order-linux-x64-v1.2.3.tar.gz`
+- Windows x64：`work-order-windows-x64-v1.2.3.zip`
+
+构建成功后会自动创建 GitHub Release，附带 `SHA256SUMS` 和 GitHub
+Artifact Attestation。预发布 Tag（如 `v1.2.3-beta.1`）会生成
+Prerelease。
+
+生产 API 地址只保存在 GitHub Actions 仓库变量中，不写入公共仓库。
+`--dart-define` 会把它编译进客户端，因此它是部署配置，不应被当作密钥。
+
+Android 正式产物需要长期保存的发布签名密钥。仓库尚未配置签名密钥时，
+发布工作流不会生成临时 debug 签名 APK，避免后续版本因签名变化而无法覆盖
+升级。
+
 ## 开发规范
 
 详见 docs/ 目录下的文档：

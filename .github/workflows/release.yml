@@ -1,138 +1,292 @@
 name: Flutter Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      profile:
-        description: Build profile
-        required: true
-        default: prod
-        type: choice
-        options:
-          - prod
-          - test
-          - dev
-      api_base_url:
-        description: API base URL
-        required: true
-        default: https://api.example.com/api/v1/
   push:
     tags:
-      - 'flutter-v*'
+      - 'v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
   FLUTTER_VERSION: '3.41.2'
-  APP_DISPLAY_NAME: '新西彩订单管理'
+  APP_PROFILE: prod
+  PROD_API_BASE_URL: ${{ vars.PROD_API_BASE_URL }}
 
 jobs:
-  build-web:
+  quality:
+    name: Validate tag and run checks
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.profile || 'prod' }}
+    outputs:
+      release-tag: ${{ steps.release.outputs.release-tag }}
+      prerelease: ${{ steps.release.outputs.prerelease }}
 
     steps:
-      - uses: actions/checkout@v6
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - uses: subosito/flutter-action@v2
+      - name: Validate release configuration
+        id: release
+        shell: bash
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          if [[ ! "$TAG_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z][0-9A-Za-z.-]*)?$ ]]; then
+            echo "::error::Release tags must use vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH-prerelease."
+            exit 1
+          fi
+
+          tag_version="${TAG_NAME#v}"
+          tag_version="${tag_version%%-*}"
+          pubspec_version="$(awk '/^version: / { print $2; exit }' pubspec.yaml)"
+          pubspec_version="${pubspec_version%%+*}"
+
+          if [[ "$tag_version" != "$pubspec_version" ]]; then
+            echo "::error::Tag version $tag_version does not match pubspec.yaml version $pubspec_version."
+            exit 1
+          fi
+
+          if [[ -z "$PROD_API_BASE_URL" ]]; then
+            echo "::error::Repository variable PROD_API_BASE_URL is not configured."
+            exit 1
+          fi
+
+          if [[ "$PROD_API_BASE_URL" != https://*/api/v1/ ]]; then
+            echo "::error::PROD_API_BASE_URL must use HTTPS and end with /api/v1/."
+            exit 1
+          fi
+
+          echo "release-tag=$TAG_NAME" >> "$GITHUB_OUTPUT"
+          if [[ "$TAG_NAME" == *-* ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: 'stable'
+          channel: stable
           cache: true
 
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Install locked dependencies
+        run: flutter pub get --enforce-lockfile
 
-      - name: Build Flutter Web
-        run: |
-          flutter build web --release \
-            --dart-define=APP_PROFILE=${{ github.event.inputs.profile || 'prod' }} \
-            --dart-define=APP_API_BASE_URL=${{ github.event.inputs.api_base_url }}
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
 
-      - name: Upload web artifacts
-        uses: actions/upload-artifact@v4
+      - name: Test
+        run: flutter test
+
+  build-web:
+    name: Build Web
+    needs: quality
+    runs-on: ubuntu-latest
+    env:
+      TAG_NAME: ${{ needs.quality.outputs.release-tag }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          name: flutter-web-${{ github.event.inputs.profile || 'prod' }}
-          path: build/web/
-          retention-days: 30
+          persist-credentials: false
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install locked dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: Build Web
+        run: >-
+          flutter build web --release
+          --dart-define=APP_PROFILE=${APP_PROFILE}
+          --dart-define=APP_API_BASE_URL=${PROD_API_BASE_URL}
+
+      - name: Package Web
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets
+          tar -C build/web -czf "release-assets/work-order-web-${TAG_NAME}.tar.gz" .
+
+      - name: Upload Web archive
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-web-${{ env.TAG_NAME }}
+          path: release-assets/*.tar.gz
+          if-no-files-found: error
+          retention-days: 14
 
   build-linux:
+    name: Build Linux x64
+    needs: quality
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:jammy
+    env:
+      TAG_NAME: ${{ needs.quality.outputs.release-tag }}
 
     steps:
-      - uses: actions/checkout@v6
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - name: Install Linux dependencies
+      - name: Install Linux build dependencies
         run: |
-          apt-get update
-          apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev
+          sudo apt-get update
+          sudo apt-get install --yes \
+            clang \
+            cmake \
+            libgtk-3-dev \
+            liblzma-dev \
+            libstdc++-12-dev \
+            ninja-build \
+            pkg-config
 
-      - uses: subosito/flutter-action@v2
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: 'stable'
+          channel: stable
           cache: true
 
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Install locked dependencies
+        run: flutter pub get --enforce-lockfile
 
-      - name: Build Flutter Linux
+      - name: Build Linux
+        run: >-
+          flutter build linux --release
+          --dart-define=APP_PROFILE=${APP_PROFILE}
+          --dart-define=APP_API_BASE_URL=${PROD_API_BASE_URL}
+
+      - name: Package Linux
+        shell: bash
         run: |
-          flutter build linux --release \
-            --dart-define=APP_PROFILE=${{ github.event.inputs.profile || 'prod' }} \
-            --dart-define=APP_API_BASE_URL=${{ github.event.inputs.api_base_url }}
+          set -euo pipefail
+          mkdir -p release-assets
+          tar -C build/linux/x64/release/bundle \
+            -czf "release-assets/work-order-linux-x64-${TAG_NAME}.tar.gz" .
 
-      - name: Upload linux artifacts
-        uses: actions/upload-artifact@v4
+      - name: Upload Linux archive
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: flutter-linux-${{ github.event.inputs.profile || 'prod' }}
-          path: build/linux/x64/release/bundle/
-          retention-days: 30
+          name: release-linux-${{ env.TAG_NAME }}
+          path: release-assets/*.tar.gz
+          if-no-files-found: error
+          retention-days: 14
 
   build-windows:
+    name: Build Windows x64
+    needs: quality
     runs-on: windows-latest
+    env:
+      TAG_NAME: ${{ needs.quality.outputs.release-tag }}
 
     steps:
-      - uses: actions/checkout@v6
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - uses: subosito/flutter-action@v2
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: 'stable'
+          channel: stable
           cache: true
 
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Install locked dependencies
+        run: flutter pub get --enforce-lockfile
 
-      - name: Build Flutter Windows
-        run: |
+      - name: Build Windows
+        shell: pwsh
+        run: >-
           flutter build windows --release
+          --dart-define=APP_PROFILE=$env:APP_PROFILE
+          --dart-define=APP_API_BASE_URL=$env:PROD_API_BASE_URL
 
-      - name: Upload windows artifacts
-        uses: actions/upload-artifact@v4
+      - name: Package Windows
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path release-assets | Out-Null
+          Compress-Archive `
+            -Path "build/windows/x64/runner/Release/*" `
+            -DestinationPath "release-assets/work-order-windows-x64-$env:TAG_NAME.zip"
+
+      - name: Upload Windows archive
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: flutter-windows-${{ github.event.inputs.profile || 'prod' }}
-          path: build/windows/runner/Release/
-          retention-days: 30
+          name: release-windows-${{ env.TAG_NAME }}
+          path: release-assets/*.zip
+          if-no-files-found: error
+          retention-days: 14
 
-  release:
-    needs: [build-web, build-linux, build-windows]
+  publish:
+    name: Publish GitHub Release
+    needs:
+      - quality
+      - build-web
+      - build-linux
+      - build-windows
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      attestations: write
+      contents: write
+      id-token: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TAG_NAME: ${{ needs.quality.outputs.release-tag }}
+      IS_PRERELEASE: ${{ needs.quality.outputs.prerelease }}
 
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Download release archives
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          path: release
+          pattern: release-*
+          path: release-assets
+          merge-multiple: true
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
+      - name: Generate SHA-256 checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd release-assets
+          sha256sum ./* > SHA256SUMS
+
+      - name: Attest release archives
+        uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6 # v4.2.0
         with:
-          draft: true
-          prerelease: ${{ contains(github.ref, 'beta') }}
-          files: |
-            release/flutter-web-*/**
-            release/flutter-linux-*/**
-            release/flutter-windows-*/**
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          subject-path: release-assets/*
+
+      - name: Create GitHub Release
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          release_args=(
+            "$TAG_NAME"
+            release-assets/*
+            --generate-notes
+            --title "Work Order ERP $TAG_NAME"
+            --verify-tag
+          )
+
+          if [[ "$IS_PRERELEASE" == "true" ]]; then
+            release_args+=(--prerelease)
+          fi
+
+          gh release create "${release_args[@]}"
